@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { hasFocusRing, openExample } from "./example.ts";
+import { drawnEdges, hasFocusRing, openExample } from "./example.ts";
 
 test("its line opens and closes the steps, and says so with aria-expanded", async ({
   page,
@@ -139,4 +139,20 @@ test("a step's picture stands under its line, named by its caption", async ({
   await expect(
     figure.getByRole("img", { name: "A bar chart of churn by quarter" })
   ).toBeVisible();
+});
+
+test("its line is its words alone, with no mark before them", async ({
+  page,
+}) => {
+  await openExample(page, "chain-of-thought", "basic");
+  const line = page.getByRole("button", {
+    name: /read 2 files and changed 1 file/u,
+  });
+  const words = line.getByText(/^Searched 3 times/u);
+  const [drawn, box] = await Promise.all([
+    drawnEdges(line),
+    words.boundingBox(),
+  ]);
+  // Nothing is drawn before the words: no dot, no mark.
+  expect(drawn.start).toBe(Math.round(box?.x ?? 0));
 });

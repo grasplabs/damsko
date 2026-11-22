@@ -41,6 +41,8 @@ const over: Record<string, { requests?: number; bytes?: number }> = {
   "/components/message": { requests: 32, bytes: 620 * 1024 },
   // Reasoning, which loads Markdown with it for its thoughts.
   "/components/reasoning": { requests: 29, bytes: 620 * 1024 },
+  // Prism, for the commit example's diffs: it is the row that opens, in view on the first screen.
+  "/components/trace": { requests: 27 },
   // Tool, which loads Code block and Prism with it for its input and output.
   "/components/tool": { requests: 28 },
 };

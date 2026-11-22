@@ -814,10 +814,14 @@ export interface I18nCatalog {
     error: string;
     input: string;
     output: string;
-    /** Where the call stands, after its title, for the AI SDK's tool states its line's status cannot say. */
+    /** Where the call stands, in its Badge after the title, by the AI SDK's tool state. */
     states: {
+      "input-streaming": string;
+      "input-available": string;
       "approval-requested": string;
       "approval-responded": string;
+      "output-available": string;
+      "output-error": string;
       "output-denied": string;
     };
   };
@@ -1449,8 +1453,12 @@ const english: I18nCatalog = {
     input: "Input",
     output: "Output",
     states: {
+      "input-streaming": "Pending",
+      "input-available": "Running",
       "approval-requested": "Awaiting approval",
       "approval-responded": "Responded",
+      "output-available": "Completed",
+      "output-error": "Error",
       "output-denied": "Denied",
     },
   },
