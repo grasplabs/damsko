@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
-import { fixedTime, openExample } from "./example.ts";
+import { fixedTime, hasFocusRing, openExample } from "./example.ts";
 
 test.use({ permissions: ["clipboard-read", "clipboard-write"] });
 
@@ -88,7 +88,7 @@ test("a long value that scrolls is still one tab stop", async ({ page }) => {
   ).toBeFocused();
 });
 
-test("under the pointer and pressed, the button draws no fill of its own inside the field", async ({
+test("the field has one fill: under the pointer and pressed, the button draws none of its own, and its icon goes from quiet to ink", async ({
   page,
 }) => {
   await openExample(page, "snippet", "basic");
@@ -102,11 +102,133 @@ test("under the pointer and pressed, the button draws no fill of its own inside 
       );
     });
   };
+  const ink = async (token: string) =>
+    await button.evaluate((node, name) => {
+      const probe = document.createElement("span");
+      probe.style.color = `var(${name})`;
+      node.append(probe);
+      const { color } = getComputedStyle(probe);
+      probe.remove();
+      return color;
+    }, token);
+  await expect(button).toHaveCSS(
+    "color",
+    await ink("--damsko-muted-foreground")
+  );
   await button.hover();
   await eased();
   await expect(button).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await expect(button).toHaveCSS("color", await ink("--damsko-foreground"));
+  await expect(button).toHaveCSS("text-decoration-line", "none");
   await page.mouse.down();
   await eased();
   await expect(button).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
   await page.mouse.up();
+});
+
+test("the keyboard's ring goes round the whole field, not the button inside it", async ({
+  page,
+}) => {
+  await openExample(page, "snippet", "basic");
+  await page.keyboard.press("Tab");
+  const button = page.getByRole("button", {
+    name: "Copy the install command",
+  });
+  await expect(button).toBeFocused();
+  const [onButton, onField] = await button.evaluate((node) =>
+    [node, node.closest("label")].map((element) => {
+      if (element === null) {
+        return false;
+      }
+      const style = getComputedStyle(element);
+      return (
+        style.outlineStyle !== "none" &&
+        style.outlineWidth !== "0px" &&
+        style.outlineColor !== "rgba(0, 0, 0, 0)"
+      );
+    })
+  );
+  expect({ button: onButton, field: onField }).toEqual({
+    button: false,
+    field: true,
+  });
+  expect(await hasFocusRing(button)).toBe(true);
+});
+
+test("once copied, the tick is in the result's own colour", async ({
+  page,
+}) => {
+  await openExample(page, "snippet", "basic");
+  const button = page.getByRole("button", {
+    name: "Copy the install command",
+  });
+  await button.click();
+  const mint = await button.evaluate((node) => {
+    const probe = document.createElement("span");
+    probe.style.color = "var(--damsko-mint-deep)";
+    node.append(probe);
+    const { color } = getComputedStyle(probe);
+    probe.remove();
+    return color;
+  });
+  await expect(button).toHaveCSS("color", mint);
+});
+
+test("in each size the words start 12px in, the icon ends 12px in, and the icon stands clear of the words by the room round it", async ({
+  page,
+}) => {
+  await openExample(page, "snippet", "sizes");
+  const buttons = page.getByRole("button", { name: "Copy the user ID" });
+  await expect(buttons).toHaveCount(2);
+  const measured = await buttons.evaluateAll((nodes) =>
+    nodes.map((node) => {
+      const field = node.closest("label");
+      const icon = node.querySelector("svg");
+      const words = document.createRange();
+      const value = field?.querySelector("[dir=ltr]");
+      if (field === null || icon === null || !value) {
+        return null;
+      }
+      words.selectNodeContents(value);
+      const box = field.getBoundingClientRect();
+      const text = words.getBoundingClientRect();
+      const mark = icon.getBoundingClientRect();
+      return {
+        height: box.height,
+        start: text.left - box.left,
+        gap: mark.left - text.right,
+        end: box.right - mark.right,
+        button: node.getBoundingClientRect().width,
+      };
+    })
+  );
+  expect(measured).toEqual([
+    { height: 28, start: 12, gap: 6, end: 12, button: 28 },
+    { height: 32, start: 12, gap: 8, end: 12, button: 32 },
+  ]);
+});
+
+test("a colour stands 12px in, a round of 12px, 8px before the words", async ({
+  page,
+}) => {
+  await openExample(page, "snippet", "colours");
+  const measured = await page
+    .getByRole("button")
+    .first()
+    .evaluate((node) => {
+      const field = node.closest("label");
+      const swatch = field?.firstElementChild;
+      const value = field?.querySelector("[dir=ltr]");
+      if (!(field && swatch && value)) {
+        return null;
+      }
+      const round = swatch.getBoundingClientRect();
+      return {
+        start: round.left - field.getBoundingClientRect().left,
+        width: round.width,
+        height: round.height,
+        gap: value.getBoundingClientRect().left - round.right,
+      };
+    });
+  expect(measured).toEqual({ start: 12, width: 12, height: 12, gap: 8 });
 });

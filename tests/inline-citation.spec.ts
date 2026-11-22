@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { hasFocusRing, openExample } from "./example.ts";
+import { hasFocusRing, openExample, ringCut } from "./example.ts";
 
 test("each chip is a button named by where its source lives", async ({
   page,
@@ -67,6 +67,21 @@ test("several sources: the chip counts the rest, and the card pages through them
   await carousel.getByRole("button", { name: "Next" }).click();
   await expect(carousel.getByText("2/3")).toBeVisible();
   await expect(page.getByText("A weekly rhythm")).toBeInViewport();
+});
+
+test("several sources: the link to a source keeps its whole focus ring inside the slides' window", async ({
+  page,
+}) => {
+  await openExample(page, "inline-citation", "several");
+  await page.keyboard.press("Tab");
+  await expect(
+    page.getByRole("button", { name: "research.example.com +2" })
+  ).toBeFocused();
+  const link = page.getByRole("link", { name: /^research\.example\.com/u });
+  await expect(link).toBeVisible();
+  await link.focus();
+  expect(await hasFocusRing(link)).toBe(true);
+  expect(await ringCut(link)).toBeLessThanOrEqual(0);
 });
 
 test("an address that leads nowhere safe is words, not a link, and the chip says Source", async ({

@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 
 import { openExample } from "./example.ts";
 
@@ -20,6 +20,10 @@ const pressKeys = async (page: Page): Promise<void> => {
   expect(keys).toMatch(/\+B$/u);
   await page.keyboard.press(keys?.replace(/B$/u, "b") ?? "");
 };
+
+/** Where a row ends, across the page. */
+const endOf = async (row: Locator): Promise<number> =>
+  await row.evaluate((node) => node.getBoundingClientRect().right);
 
 const focusedName = async (page: Page): Promise<string> =>
   await page.evaluate(() => {
@@ -332,27 +336,86 @@ test("the page's own control folds it with an updater, and two in one moment bui
   await expect(trigger).toHaveAttribute("aria-expanded", "true");
 });
 
-test("a name longer than its row ends in an ellipsis, inside the row", async ({
+test("a name longer than its row ends in an ellipsis and gives way to the row's mark, and the pointer shows it whole", async ({
   page,
 }) => {
   await openExample(page, "sidebar", "actions");
-  const row = page.getByRole("link", {
-    name: "Every supplier contract and the day each one is up for renewal",
-  });
-  const words = row.getByText("Every supplier contract");
+  const name = "Every supplier contract and the day each one is up for renewal";
+  const row = page.getByRole("link", { name: new RegExp(`^${name}`, "u") });
+  const words = row.getByText(name);
   await expect(words).toHaveCSS("text-overflow", "ellipsis");
-  const [inside, cut] = await words.evaluate((node) => {
-    const link = node.closest("a");
-    const edge =
-      link === null
-        ? 0
-        : link.getBoundingClientRect().right -
-          Number(getComputedStyle(link).paddingInlineEnd.replace(/px$/u, ""));
-    return [
-      node.getBoundingClientRect().right <= edge,
-      node.scrollWidth > node.clientWidth,
-    ];
-  });
+  const short = page
+    .getByRole("link", { name: /^Spring launch plan/u })
+    .getByRole("status");
+  const mark = row.getByRole("status");
+  const [inside, cut, markWidth, shortWidth] = await Promise.all([
+    words.evaluate((node) => {
+      const link = node.closest("a");
+      return (
+        link !== null &&
+        node.getBoundingClientRect().right <=
+          link.getBoundingClientRect().right -
+            Number(getComputedStyle(link).paddingInlineEnd.replace(/px$/u, ""))
+      );
+    }),
+    words.evaluate((node) => node.scrollWidth > node.clientWidth),
+    mark.evaluate((node) => node.getBoundingClientRect().width),
+    short.evaluate((node) => node.getBoundingClientRect().width),
+  ]);
   expect(inside).toBe(true);
   expect(cut).toBe(true);
+  expect(markWidth).toBe(shortWidth);
+  await words.hover();
+  await expect(words).toHaveAttribute("title", name);
+  // A name that fits says nothing more under the pointer.
+  const fits = page
+    .getByRole("link", { name: "Supplier invoices" })
+    .getByText("Supplier invoices");
+  await fits.hover();
+  await expect(fits).not.toHaveAttribute("title", /.+/u);
+});
+
+test("the current page under a row, in a group that folds, shows its whole edge, as far from the end as the rows over it", async ({
+  page,
+}) => {
+  await openExample(page, "sidebar", "groups");
+  const current = page.getByRole("link", { name: "Plan", exact: true });
+  await expect(current).toHaveAttribute("aria-current", "page");
+  const over = page.getByRole("link", { name: "Supplier review" });
+  expect(await endOf(current)).toBe(await endOf(over));
+  const { cut, corners } = await current.evaluate((node) => {
+    const box = node.getBoundingClientRect();
+    // How far its edge is drawn outside its box: a shadow's spread, none when it is inset.
+    const shadow = getComputedStyle(node).boxShadow;
+    const spread = shadow.includes("inset")
+      ? 0
+      : Number(/(?<spread>[\d.]+)px$/u.exec(shadow)?.groups?.spread ?? 0);
+    let clip = node.parentElement;
+    while (clip !== null && getComputedStyle(clip).overflowX === "visible") {
+      clip = clip.parentElement;
+    }
+    const edge = clip?.getBoundingClientRect();
+    const at = (x: number, y: number) => {
+      const hit = document.elementFromPoint(x, y);
+      return hit !== null && node.contains(hit);
+    };
+    const middle = (box.top + box.bottom) / 2;
+    return {
+      cut:
+        edge === undefined
+          ? 0
+          : Math.max(
+              box.right + spread - edge.right,
+              edge.left - (box.left - spread)
+            ),
+      corners: [
+        at(box.right - 1, middle - 4),
+        at(box.right - 1, middle + 4),
+        at(box.left + 1, middle - 4),
+        at(box.left + 1, middle + 4),
+      ],
+    };
+  });
+  expect(cut).toBeLessThanOrEqual(0);
+  expect(corners).toEqual([true, true, true, true]);
 });

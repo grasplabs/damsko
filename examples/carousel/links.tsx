@@ -5,7 +5,7 @@ import {
   CarouselPrevious,
   CarouselNext,
 } from "@grasp-os/ui/components/carousel";
-import { focusRing } from "@grasp-os/ui/lib/styles";
+import { focusRingInset } from "@grasp-os/ui/lib/styles";
 import {
   colors,
   font,
@@ -47,8 +47,8 @@ const rooms = [
   { name: "Workshop", seats: "Seats 8" },
 ];
 
-// Each slide is a link. Tab goes to each link in view, and its ring shows whole, at the slides'
-// own edge too.
+// Each slide is a link. The slides' window clips what stands past its edge, a ring round a slide
+// with it, so a slide that takes focus draws its ring just inside its own edge (`focusRingInset`).
 export default function CarouselLinks() {
   return (
     <div {...stylex.props(layout.box)}>
@@ -58,7 +58,7 @@ export default function CarouselLinks() {
             <CarouselItem key={room.name}>
               <a
                 href={`#${room.name.toLowerCase().replace(" ", "-")}`}
-                {...stylex.props(layout.slide, focusRing)}
+                {...stylex.props(layout.slide, focusRingInset)}
               >
                 <span {...stylex.props(layout.title)}>{room.name}</span>
                 <span {...stylex.props(layout.words)}>{room.seats}</span>

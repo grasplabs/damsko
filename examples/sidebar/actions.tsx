@@ -44,6 +44,8 @@ const layout = stylex.create({
     paddingInline: space["3"],
     boxShadow: `inset 0 calc(-1 * ${size.hairline}) 0 ${colors.border}`,
   },
+  // The row's mark keeps its size: a long name gives way to it.
+  mark: { flexShrink: 0 },
   title: {
     margin: 0,
     fontFamily: font.sans,
@@ -60,7 +62,7 @@ const threads = [
   { name: "Weekly numbers", working: false },
   {
     name: "Every supplier contract and the day each one is up for renewal",
-    working: false,
+    working: true,
   },
 ];
 
@@ -81,9 +83,12 @@ export default function SidebarActions() {
                       <SidebarMenuButton asChild isActive={index === 0}>
                         <a href={`#thread-${index + 1}`}>
                           <Icon icon={MessageSquareIcon} />
-                          <span>{thread.name}</span>
+                          {thread.name}
                           {thread.working && (
-                            <AgentIndicator aria-label="Working" />
+                            <AgentIndicator
+                              aria-label="Working"
+                              style={layout.mark}
+                            />
                           )}
                         </a>
                       </SidebarMenuButton>

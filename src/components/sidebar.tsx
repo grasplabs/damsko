@@ -47,7 +47,6 @@ import {
   createContext,
   createElement,
   Fragment,
-  isValidElement,
   use,
   useEffect,
   useId,
@@ -55,7 +54,12 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
-import type { ComponentProps, MouseEvent, ReactNode } from "react";
+import type {
+  ComponentProps,
+  MouseEvent,
+  PointerEvent,
+  ReactNode,
+} from "react";
 
 import { useI18n } from "../lib/i18n";
 import { Icon, PanelLeftIcon } from "../lib/icons";
@@ -530,8 +534,10 @@ const styles = stylex.create({
       "color, background-color, width, height, padding, margin",
     transitionDuration: duration.hover,
   },
-  // A row's words: longer than the row, they end in an ellipsis before its end, or its action.
-  words: {
+  // A row's name: it takes the room the row has left and gives way before anything beside it;
+  // longer than that, it ends in an ellipsis.
+  name: {
+    flexShrink: 1,
     minWidth: 0,
     overflow: "hidden",
     textOverflow: "ellipsis",
@@ -590,7 +596,9 @@ const styles = stylex.create({
   active: {
     color: colors.sidebarText,
     backgroundColor: colors.sidebarAccent,
-    boxShadow: `0 0 0 ${size.hairline} ${colors.sidebarRule}`,
+    // Its edge is drawn inside its box: a row often ends where its holder clips (a group or a
+    // list under a row that folds), which would cut an edge drawn outside it.
+    boxShadow: `inset 0 0 0 ${size.hairline} ${colors.sidebarRule}`,
     borderColor: { default: "transparent", [FORCED]: "Highlight" },
   },
 
@@ -1342,32 +1350,31 @@ const drawn = (
   );
 };
 
-/**
- * A row's children, its words ending in an ellipsis where the row does: StyleX gives a part no
- * selector for its children (shadcn's `[&>span:last-child]:truncate`), so a `<span>` of words alone
- * is drawn with that look. An icon, a mark and a span the caller laid out stay as given.
- */
-const cutWords = (children: ReactNode): ReactNode =>
-  listOf(children).map((child, index) => {
-    const key = isValidElement(child) && child.key !== null ? child.key : index;
-    if (
-      isValidElement<{ children?: ReactNode; className?: string }>(child) &&
-      child.type === "span" &&
-      (typeof child.props.children === "string" ||
-        typeof child.props.children === "number")
-    ) {
-      const look = stylex.props(styles.words).className ?? "";
-      const own = child.props.className ?? "";
-      return createElement("span", {
-        ...child.props,
-        key,
-        className: own === "" ? look : `${look} ${own}`,
-      });
-    }
-    return <Fragment key={key}>{child}</Fragment>;
-  });
+/** A cut name shows whole under the pointer, as the browser's own tip; one that fits shows none. */
+const tellWhenCut = (event: PointerEvent<HTMLSpanElement>) => {
+  const name = event.currentTarget;
+  if (name.scrollWidth > name.clientWidth) {
+    name.title = name.textContent;
+  } else {
+    name.removeAttribute("title");
+  }
+};
 
-/** As `drawn`, for a row of the menu: its words are cut where the row ends (`cutWords`). */
+/** A row's child as the row draws it: plain words in the name's span, an element as given. */
+const rowChild = (child: ReactNode): ReactNode =>
+  typeof child === "string" || typeof child === "number" ? (
+    <span onPointerEnter={tellWhenCut} {...stylex.props(styles.name)}>
+      {child}
+    </span>
+  ) : (
+    child
+  );
+
+/**
+ * As `drawn`, for a row of the menu. The words written straight into the row are its name: the
+ * row draws them in a span of its own, which ends in an ellipsis where the row does. Every element
+ * the caller gives (an icon, a mark, a span of its own) stays as given.
+ */
 const drawnRow = (
   tag: string,
   asChild: boolean | undefined,
@@ -1376,9 +1383,15 @@ const drawnRow = (
   own: Record<string, unknown>
 ) => {
   const slot = slotWords(asChild, children);
+  // Given as the fragment's own children, not as a list: nothing of the caller's needs a key.
+  const named = createElement(
+    Fragment,
+    null,
+    ...listOf(slot.children).map(rowChild)
+  );
   return renderElement(
     tag,
-    mergeProps(rest, own, { children: cutWords(slot.children) }),
+    mergeProps(rest, own, { children: named }),
     slot.render
   );
 };
@@ -1470,8 +1483,9 @@ export const SidebarMenuItem = (props: SidebarMenuItemProps) =>
 /** Every prop a SidebarMenuButton takes: these, and the rest of a <button>. */
 export interface SidebarMenuButtonProps extends SlotPartProps, Own<"button"> {
   /**
-   * An `<Icon />` and the words in a `<span>`; with `asChild`, the link that holds them
-   * (`<a href>`, a router's link). A product's mark (a working indicator) goes in here too.
+   * An `<Icon />` and its name as plain words; with `asChild`, the link that holds them
+   * (`<a href>`, a router's link). A name longer than the row ends in an ellipsis. A product's
+   * mark (a working indicator) goes in here too, with `flexShrink: 0` to keep its size.
    */
   children: ReactNode;
   /**

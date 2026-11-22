@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { hasFocusRing, openExample } from "./example.ts";
+import { hasFocusRing, openExample, ringCut } from "./example.ts";
 
 test("it is a region named by its label, with Previous, Next and a mark per page", async ({
   page,
@@ -162,34 +162,20 @@ test("running down, the up and down arrows page it", async ({ page }) => {
   );
 });
 
-test("a link in a slide keeps its whole focus ring inside the slides' window", async ({
+test("a slide that is a link keeps its whole focus ring inside the slides' window, on the first page and the last", async ({
   page,
 }) => {
   await openExample(page, "carousel", "links");
-  const link = page.getByRole("link", { name: "Studio A" });
+  const first = page.getByRole("link", { name: "Studio A" });
   await page.keyboard.press("Tab");
-  await expect(link).toBeFocused();
-  expect(await hasFocusRing(link)).toBe(true);
-  // How far the ring stands past the nearest box that clips it, on its worst side: none.
-  const cut = await link.evaluate((node) => {
-    const style = getComputedStyle(node);
-    const reach =
-      Number(style.outlineWidth.replace(/px$/u, "")) +
-      Number(style.outlineOffset.replace(/px$/u, ""));
-    const box = node.getBoundingClientRect();
-    let clip = node.parentElement;
-    while (clip !== null && getComputedStyle(clip).overflowX === "visible") {
-      clip = clip.parentElement;
-    }
-    if (clip === null) {
-      return 0;
-    }
-    const edge = clip.getBoundingClientRect();
-    return Math.max(
-      edge.left + clip.clientLeft - (box.left - reach),
-      edge.top + clip.clientTop - (box.top - reach),
-      box.bottom + reach - (edge.top + clip.clientTop + clip.clientHeight)
-    );
-  });
-  expect(cut).toBeLessThanOrEqual(0);
+  await expect(first).toBeFocused();
+  expect(await hasFocusRing(first)).toBe(true);
+  expect(await ringCut(first)).toBeLessThanOrEqual(0);
+  await page.getByRole("tab", { name: "Page 2" }).click();
+  const last = page.getByRole("link", { name: "Workshop" });
+  await expect(last).toBeInViewport({ ratio: 1 });
+  await page.getByRole("tab", { name: "Page 2" }).press("Shift+Tab");
+  await expect(last).toBeFocused();
+  expect(await hasFocusRing(last)).toBe(true);
+  expect(await ringCut(last)).toBeLessThanOrEqual(0);
 });

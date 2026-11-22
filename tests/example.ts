@@ -140,6 +140,30 @@ export const hasFocusRing = async (element: Locator): Promise<boolean> =>
     );
   });
 
+/** How far a focused element's ring stands past the nearest box that clips it, on its worst side: 0 or less when it shows whole. */
+export const ringCut = async (focused: Locator): Promise<number> =>
+  await focused.evaluate((node) => {
+    const style = getComputedStyle(node);
+    const reach =
+      Number(style.outlineWidth.replace(/px$/u, "")) +
+      Number(style.outlineOffset.replace(/px$/u, ""));
+    const box = node.getBoundingClientRect();
+    let clip = node.parentElement;
+    while (clip !== null && getComputedStyle(clip).overflowX === "visible") {
+      clip = clip.parentElement;
+    }
+    if (clip === null) {
+      return 0;
+    }
+    const edge = clip.getBoundingClientRect();
+    return Math.max(
+      edge.left - (box.left - reach),
+      box.right + reach - edge.right,
+      edge.top - (box.top - reach),
+      box.bottom + reach - edge.bottom
+    );
+  });
+
 /** Waits until the page's fonts have loaded and it has drawn twice, so what is measured stands still. */
 export const settled = async (page: Page): Promise<void> => {
   await page.evaluate(async () => {

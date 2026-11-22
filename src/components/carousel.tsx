@@ -45,7 +45,7 @@ import {
   ChevronUpIcon,
   Icon,
 } from "../lib/icons";
-import { focusRing, focusRingInset } from "../lib/styles";
+import { focusRing, focusRingOffset } from "../lib/styles";
 import {
   colors,
   duration,
@@ -135,8 +135,6 @@ export interface CarouselNextProps {
 const COARSE = media.pointerCoarse;
 const FORCED = media.forcedColors;
 const SELECTED = ":is([data-selected])";
-// The room a focus ring takes outside what it is on: its offset off a mark, and its width.
-const RING = `calc(${size.ringOffsetMark} + ${size.ringWidth})`;
 
 const styles = stylex.create({
   carousel: {
@@ -145,21 +143,12 @@ const styles = stylex.create({
     width: "100%",
     minWidth: 0,
   },
-  // It clips what is scrolled out of view, and would clip a ring at the slides' own edge with it (a
-  // slide that is a link): it reaches RING past the slides on every side, drawn no wider, and its
-  // pages still come to rest on the slides' edge.
   viewport: {
     overflow: "hidden",
     // UI SDK makes it scroll natively; the marks and buttons say where it is, not a scrollbar.
     scrollbarWidth: "none",
-    // The room is outside the size it is given (a height, running down).
-    boxSizing: "content-box",
-    margin: `calc(-1 * ${RING})`,
-    padding: RING,
-    scrollPadding: RING,
-    // Its own ring, at its edge, stands as far off the slides as a ring round one, and follows
-    // their corner.
-    borderRadius: `calc(${radius.base} + ${RING})`,
+    // The slides' room for the focus ring, which follows the viewport's corner.
+    borderRadius: radius.base,
     cornerShape: radius.shape,
   },
   content: {
@@ -313,9 +302,10 @@ export const CarouselItem = ({
 export const CarouselContent = ({ children, style }: CarouselContentProps) => {
   const { orientation } = use(ShapeContext);
   return (
-    // Its ring stands off the slides' own edges, never on a card's border: just inside its own
-    // edge, which is RING past them.
-    <CarouselViewport {...stylex.props(styles.viewport, focusRingInset, style)}>
+    // Its ring stands off the slides' own edges, never on a card's border.
+    <CarouselViewport
+      {...stylex.props(styles.viewport, focusRingOffset, style)}
+    >
       <ContentPrimitive
         {...stylex.props(
           styles.content,

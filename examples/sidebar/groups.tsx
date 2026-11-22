@@ -18,6 +18,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
   SidebarProvider,
   SidebarTrigger,
 } from "@grasp-os/ui/components/sidebar";
@@ -59,6 +62,13 @@ const layout = stylex.create({
   },
   chevron: { display: "inline-flex" },
 });
+
+// One project's own pages, on a stem under it; the page you are on is one of them.
+const launch = {
+  row: "Spring launch",
+  pages: ["Plan", "Budget"],
+  current: "Plan",
+};
 
 const groups = [
   { label: "Projects", rows: ["Spring launch", "Supplier review", "Hiring"] },
@@ -114,9 +124,23 @@ export default function SidebarGroups() {
                                 href={`#${row.toLowerCase().replaceAll(" ", "-")}`}
                               >
                                 <Icon icon={FolderIcon} />
-                                <span>{row}</span>
+                                {row}
                               </a>
                             </SidebarMenuButton>
+                            {row === launch.row && (
+                              <SidebarMenuSub>
+                                {launch.pages.map((page) => (
+                                  <SidebarMenuSubItem key={page}>
+                                    <SidebarMenuSubButton
+                                      href={`#${page.toLowerCase()}`}
+                                      isActive={page === launch.current}
+                                    >
+                                      {page}
+                                    </SidebarMenuSubButton>
+                                  </SidebarMenuSubItem>
+                                ))}
+                              </SidebarMenuSub>
+                            )}
                           </SidebarMenuItem>
                         ))}
                       </SidebarMenu>

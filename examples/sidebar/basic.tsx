@@ -80,7 +80,7 @@ export default function SidebarBasic() {
                     <Avatar size="sm" name="Northwind" decorative>
                       <AvatarFallback />
                     </Avatar>
-                    <span>Northwind</span>
+                    Northwind
                   </a>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -99,7 +99,7 @@ export default function SidebarBasic() {
                       >
                         <a href={`#${place.name.toLowerCase()}`}>
                           <Icon icon={place.icon} />
-                          <span>{place.name}</span>
+                          {place.name}
                         </a>
                       </SidebarMenuButton>
                       {place.count !== undefined && (
@@ -118,7 +118,7 @@ export default function SidebarBasic() {
                     <SidebarMenuButton asChild tooltip="Spring launch">
                       <a href="#spring-launch">
                         <Icon icon={FolderKanbanIcon} />
-                        <span>Spring launch</span>
+                        Spring launch
                       </a>
                     </SidebarMenuButton>
                     <SidebarMenuSub>
@@ -138,7 +138,7 @@ export default function SidebarBasic() {
                     <SidebarMenuButton asChild tooltip="Settings">
                       <a href="#settings">
                         <Icon icon={SettingsIcon} />
-                        <span>Settings</span>
+                        Settings
                       </a>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

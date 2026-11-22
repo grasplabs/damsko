@@ -18,6 +18,7 @@
 import * as stylex from "@stylexjs/stylex";
 
 import { useScrollEdges } from "../hooks/use-scroll-edges";
+import { focusWithin } from "../lib/styles";
 import {
   colors,
   duration,
@@ -29,6 +30,7 @@ import {
 } from "../lib/tokens.stylex";
 import type { LayoutStyle } from "../lib/utils";
 import { motionVars } from "../lib/vars.stylex";
+import { ghostVars } from "./button.stylex";
 import { CopyButton } from "./copy-button";
 
 /** Every prop a Snippet takes. */
@@ -67,8 +69,23 @@ const fadeStart = `linear-gradient(to left, black calc(100% - ${space["8"]}), tr
 const fadeBoth = `linear-gradient(to right, transparent, black ${space["8"]}, black calc(100% - ${space["8"]}), transparent)`;
 
 const styles = stylex.create({
-  // The field: a quiet fill in the system's corner, one line.
+  // The field: a quiet fill in the system's corner, one line. It is one surface: its copy button
+  // draws no fill or ring of its own in it (ghostVars), the field's fill answers the pointer and
+  // the field takes the keyboard's ring (focusWithin); the icon is quiet until the pointer comes.
   field: {
+    [ghostVars.hover]: "transparent",
+    [ghostVars.active]: "transparent",
+    [ghostVars.ring]: "transparent",
+    // Its mark: quiet at rest, ink under the pointer, then the result's own colour.
+    [ghostVars.ink]: {
+      default: colors.mutedForeground,
+      [`${RESTING}:hover`]: {
+        default: null,
+        [media.hover]: colors.foreground,
+      },
+      [`:is(${COPIED})`]: colors.mintDeep,
+      [`:is(${FAILED})`]: colors.destructive,
+    },
     position: "relative",
     display: "inline-flex",
     alignItems: "center",
@@ -146,7 +163,7 @@ const styles = stylex.create({
     overflowY: "hidden",
     whiteSpace: "nowrap",
     scrollbarWidth: "none",
-    // Out of the tab order (below), but a press can still focus it: the button's ring shows focus.
+    // Out of the tab order (below), but a press can still focus it: the field's ring shows focus.
     outline: "none",
     maskImage: {
       default: "none",
@@ -177,6 +194,7 @@ export const Snippet = ({
       {...stylex.props(
         styles.field,
         sized === "sm" ? styles.sm : styles.default,
+        focusWithin,
         style
       )}
     >
@@ -194,12 +212,9 @@ export const Snippet = ({
       >
         {value}
       </span>
-      {/* Button's `link` look: no fill of its own under a pointer or a press, so the field keeps
-          its one fill, which answers the pointer for both. */}
       <CopyButton
         value={value}
         onCopy={onCopy}
-        variant="link"
         size={sized === "sm" ? "icon-xs" : "icon-sm"}
         aria-label={label}
       />
