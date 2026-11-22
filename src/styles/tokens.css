@@ -173,7 +173,7 @@
   --damsko-prompt-input-radius: 24px;
   /* Marks under 24px tall: a key, inline code. */
   --damsko-radius-mark: 6px;
-  /* A pill: a chip, a tag, the track of a switch or a slider. Never a control that holds buttons. */
+  /* A pill: a chip, a badge, the track of a switch or a slider. Never a control that holds buttons. */
   --damsko-radius-full: 999px;
   /* A circle: an avatar, a dot. */
   --damsko-radius-circle: 50%;
@@ -542,8 +542,16 @@
   --damsko-badge-height-sm: 18px;
   /* Room at each end of a badge, inside its pill. */
   --damsko-badge-padding: 6px;
-  /* An icon before a badge's words. */
+  /* An icon before a badge's words, and a label's remove cross. */
   --damsko-badge-icon: 12px;
+  /* The height of a label: a secondary or outline badge, which sorts or names something. */
+  --damsko-badge-label-height: var(--damsko-chip);
+  /* The height of a small label, in a dense row. */
+  --damsko-badge-label-height-sm: 20px;
+  /* Room at each end of a label's words. */
+  --damsko-badge-label-padding: var(--damsko-space-2);
+  /* A secondary badge's fill: a veil of ink, so it shows on paper and on soft. */
+  --damsko-badge-secondary: var(--damsko-accent-active);
   /* The mark of a severity: a dot beside neutral words, so the colour never paints the whole line. */
   --damsko-severity-dot: 6px;
   /* Empty: empty. */
@@ -824,17 +832,6 @@
   --damsko-resizable-handle-length: 24px;
   /* The width of a handle's grip. */
   --damsko-resizable-handle-width: 4px;
-  /* Tag: tag. */
-  /* The height of a tag. */
-  --damsko-tag-height: var(--damsko-chip);
-  /* The height of a small tag, in a dense row. */
-  --damsko-tag-height-sm: 20px;
-  /* Room at each end of a tag's words. */
-  --damsko-tag-padding: var(--damsko-space-2);
-  /* The size of an icon in a tag, and of its remove cross. */
-  --damsko-tag-icon: var(--damsko-badge-icon);
-  /* A soft tag's fill: a veil of ink, so it shows on paper and on soft. */
-  --damsko-tag-bg: var(--damsko-accent-active);
   /* Section header: section header. */
   /* Room between a section's header and each part under it. */
   --damsko-section-header-gap: var(--damsko-space-6);

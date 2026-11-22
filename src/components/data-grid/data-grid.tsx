@@ -418,7 +418,7 @@ const styles = stylex.create({
   chip: {
     display: "inline-flex",
     alignItems: "center",
-    height: size.tagHeightSm,
+    height: size.badgeLabelHeightSm,
     paddingInline: space[2],
     borderRadius: radius.full,
     backgroundColor: colors.secondary,

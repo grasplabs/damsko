@@ -128,6 +128,9 @@
   --damsko-tab-line: var(--damsko-mint-deep);
   --damsko-tab-gap: var(--damsko-space-4);
   --damsko-tab-bg-selected: var(--damsko-card);
+  --damsko-badge-label-height: var(--damsko-chip);
+  --damsko-badge-label-padding: var(--damsko-space-2);
+  --damsko-badge-secondary: var(--damsko-accent-active);
   --damsko-separator-width: var(--damsko-hairline);
   --damsko-avatar-border: inset 0 0 0 1px var(--damsko-border-strong-color);
   --damsko-alert-bg-default: var(--damsko-accent);
@@ -176,10 +179,6 @@
   --damsko-kbd-padding: var(--damsko-space-1);
   --damsko-resizable-line: var(--damsko-border);
   --damsko-resizable-line-active: var(--damsko-muted-foreground);
-  --damsko-tag-height: var(--damsko-chip);
-  --damsko-tag-padding: var(--damsko-space-2);
-  --damsko-tag-icon: var(--damsko-badge-icon);
-  --damsko-tag-bg: var(--damsko-accent-active);
   --damsko-section-header-gap: var(--damsko-space-6);
   --damsko-table-of-contents-read: var(--damsko-mint-deep);
   --damsko-table-of-contents-tick: var(--damsko-space-3);
@@ -404,6 +403,9 @@
   --damsko-tab-line: var(--damsko-mint-deep);
   --damsko-tab-gap: var(--damsko-space-4);
   --damsko-tab-bg-selected: var(--damsko-card);
+  --damsko-badge-label-height: var(--damsko-chip);
+  --damsko-badge-label-padding: var(--damsko-space-2);
+  --damsko-badge-secondary: var(--damsko-accent-active);
   --damsko-separator-width: var(--damsko-hairline);
   --damsko-avatar-border: inset 0 0 0 1px var(--damsko-border-strong-color);
   --damsko-alert-bg-default: var(--damsko-accent);
@@ -452,10 +454,6 @@
   --damsko-kbd-padding: var(--damsko-space-1);
   --damsko-resizable-line: var(--damsko-border);
   --damsko-resizable-line-active: var(--damsko-muted-foreground);
-  --damsko-tag-height: var(--damsko-chip);
-  --damsko-tag-padding: var(--damsko-space-2);
-  --damsko-tag-icon: var(--damsko-badge-icon);
-  --damsko-tag-bg: var(--damsko-accent-active);
   --damsko-section-header-gap: var(--damsko-space-6);
   --damsko-table-of-contents-read: var(--damsko-mint-deep);
   --damsko-table-of-contents-tick: var(--damsko-space-3);
@@ -680,6 +678,9 @@
   --damsko-tab-line: var(--damsko-mint-deep);
   --damsko-tab-gap: var(--damsko-space-4);
   --damsko-tab-bg-selected: var(--damsko-card);
+  --damsko-badge-label-height: var(--damsko-chip);
+  --damsko-badge-label-padding: var(--damsko-space-2);
+  --damsko-badge-secondary: var(--damsko-accent-active);
   --damsko-separator-width: var(--damsko-hairline);
   --damsko-avatar-border: inset 0 0 0 1px var(--damsko-border-strong-color);
   --damsko-alert-bg-default: var(--damsko-accent);
@@ -728,10 +729,6 @@
   --damsko-kbd-padding: var(--damsko-space-1);
   --damsko-resizable-line: var(--damsko-border);
   --damsko-resizable-line-active: var(--damsko-muted-foreground);
-  --damsko-tag-height: var(--damsko-chip);
-  --damsko-tag-padding: var(--damsko-space-2);
-  --damsko-tag-icon: var(--damsko-badge-icon);
-  --damsko-tag-bg: var(--damsko-accent-active);
   --damsko-section-header-gap: var(--damsko-space-6);
   --damsko-table-of-contents-read: var(--damsko-mint-deep);
   --damsko-table-of-contents-tick: var(--damsko-space-3);

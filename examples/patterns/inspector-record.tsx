@@ -7,7 +7,6 @@ import { Button } from "@grasp-os/ui/components/button";
 import { Field, FieldError, FieldLabel } from "@grasp-os/ui/components/field";
 import { Input } from "@grasp-os/ui/components/input";
 import { Markdown } from "@grasp-os/ui/components/markdown";
-import { Tag } from "@grasp-os/ui/components/tag";
 import { Textarea } from "@grasp-os/ui/components/textarea";
 import {
   BuildingIcon,
@@ -412,9 +411,9 @@ function RecordInspector({ onClose, toast }: InspectorOptions) {
             content: (
               <div {...stylex.props(layout.tags)}>
                 {tags.map((tag) => (
-                  <Tag key={tag} size="sm">
+                  <Badge key={tag} variant="secondary" size="sm">
                     {tag}
-                  </Tag>
+                  </Badge>
                 ))}
               </div>
             ),
