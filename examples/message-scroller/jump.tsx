@@ -60,7 +60,7 @@ function Outline() {
       {questions.map((turn) => (
         <Button
           key={turn.id}
-          variant={turn.id === currentAnchorId ? "outline" : "ghost"}
+          variant="ghost"
           size="sm"
           aria-pressed={turn.id === currentAnchorId}
           onClick={() => {

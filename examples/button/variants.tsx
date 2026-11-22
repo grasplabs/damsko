@@ -7,7 +7,7 @@ const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const work = () => wait(900);
 
 // Each button does its work and says so: while it works a spinner stands over its words, then it
-// says how it went. Filter, Edit and the guide would open something this page has not, so they say
+// says how it went. Duplicate, Edit and the guide would do something this page has not, so they say
 // that. Delete can be undone, so it happens at once, with Undo in a toast.
 export default function ButtonVariants() {
   const [toast] = useState(() => createToaster());
@@ -25,9 +25,9 @@ export default function ButtonVariants() {
       </Button>
       <Button
         variant="secondary"
-        onClick={() => toast("The filters would open here")}
+        onClick={() => toast("A copy would be made here")}
       >
-        Filter
+        Duplicate
       </Button>
       <Button
         variant="ghost"

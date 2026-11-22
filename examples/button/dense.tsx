@@ -7,18 +7,12 @@ import {
   CardTitle,
 } from "@grasp-os/ui/components/card";
 import { Toaster, createToaster } from "@grasp-os/ui/components/toast";
-import { ChevronDownIcon, Icon } from "@grasp-os/ui/lib/icons";
 import { colors, font, space } from "@grasp-os/ui/lib/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
 import { useState } from "react";
 
 const layout = stylex.create({
   box: { width: "100%", maxWidth: 480 },
-  filters: {
-    display: "flex",
-    flexWrap: "wrap",
-    gap: space["2"],
-  },
   rows: {
     display: "grid",
     gap: space["3"],
@@ -39,11 +33,11 @@ const layout = stylex.create({
 const requests = [
   { name: "Q3 budget review", due: "Due Friday" },
   { name: "Brand refresh brief", due: "Due Monday" },
+  { name: "Office move plan", due: "Due next week" },
 ];
 
-// Where several outlined buttons would be too many edges: a row of filters, and an action on each
-// row of a card that already has its own edge. Each is `secondary`, flat, a step quieter than
-// `outline`. Each press says what it would do.
+// The same action on every row of a list: a column of edged, lifted buttons would be too heavy, so
+// each is `secondary`, flat, a step quieter than `outline`. Each press says what it would do.
 export default function ButtonDense() {
   const [toast] = useState(() => createToaster());
   return (
@@ -55,23 +49,6 @@ export default function ButtonDense() {
             <CardDescription>Waiting on someone in the team.</CardDescription>
           </CardHeader>
           <CardContent>
-            <div {...stylex.props(layout.filters)}>
-              {["Status", "Owner", "Due date"].map((filter) => (
-                <Button
-                  key={filter}
-                  variant="secondary"
-                  size="sm"
-                  onClick={() =>
-                    toast(`The ${filter.toLowerCase()} filter would open here`)
-                  }
-                >
-                  {filter}
-                  <Icon icon={ChevronDownIcon} />
-                </Button>
-              ))}
-            </div>
-          </CardContent>
-          <CardContent>
             <ul {...stylex.props(layout.rows)}>
               {requests.map((request) => (
                 <li key={request.name} {...stylex.props(layout.row)}>
@@ -82,10 +59,10 @@ export default function ButtonDense() {
                   <Button
                     variant="secondary"
                     size="sm"
-                    aria-label={`Remind ${request.name}`}
-                    onClick={() => toast(`Reminder sent for ${request.name}`)}
+                    aria-label={`Duplicate ${request.name}`}
+                    onClick={() => toast(`${request.name} duplicated`)}
                   >
-                    Remind
+                    Duplicate
                   </Button>
                 </li>
               ))}

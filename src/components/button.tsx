@@ -78,8 +78,9 @@ interface ButtonBase extends Omit<
 > {
   /**
    * The weight of the action: `default` for the one main step of a view, `outline` for the
-   * ordinary button (the lesser one beside it, a standalone action or trigger), `secondary` for a
-   * flat, quieter one in a dense place (a row of filters, an action in a card), `ghost` for
+   * ordinary button anywhere (the lesser one beside it, a standalone action or trigger),
+   * `secondary` for a flat one repeated or dense (the same action on every row; never a filter or
+   * an on/off control, which is a Toggle), `ghost` for
    * toolbars, rows and icon buttons, `destructive` for what cannot be undone, `link` for an action
    * that reads as words.
    * @default "default"
@@ -325,7 +326,10 @@ const styles = stylex.create({
         default: null,
         [HOVER]: 1,
       },
-      [stylex.when.ancestor(":active", buttonMarker)]: 0.3,
+      [stylex.when.ancestor(":active", buttonMarker)]: {
+        default: 0.3,
+        [HOVER]: 0.3,
+      },
     },
   },
   // A finger needs 44px: on a touch screen an unseen area makes up the difference.
@@ -449,8 +453,8 @@ const variantStyles = stylex.create({
     backgroundColor: colors.primary,
     boxShadow: shadow.bevelInk,
   },
-  // A flat veil of ink, no edge and no lift: quieter than outline, firmer than ghost, for a dense
-  // place where several outlined buttons would be too many edges.
+  // A flat veil of ink, no edge and no lift: quieter than outline, firmer than ghost, for a repeated
+  // or dense action where a row of edged, lifted buttons would be too heavy.
   secondary: {
     color: colors.foreground,
     backgroundColor: colors.buttonSecondary,
@@ -477,23 +481,30 @@ const variantStyles = stylex.create({
     },
     boxShadow: "none",
   },
-  // Words that act: underlined under a pointer, with no fill or edge.
+  // Words that act, drawn as a Link is: a soft underline at rest that takes the words' colour under
+  // a pointer, with no fill or edge.
   link: {
     color: colors.foreground,
     backgroundColor: "transparent",
     boxShadow: "none",
+    textDecorationLine: "underline",
     textDecorationThickness: sizes.linkUnderlineWidth,
     textUnderlineOffset: sizes.linkUnderlineOffset,
     textDecorationColor: colors.linkUnderline,
   },
 });
 
+// The press is written under the hover's media query too: a hover inside a media query outranks a
+// bare :active, and the pressed fill never showed under a mouse.
 const liveStyles = stylex.create({
   default: {
     boxShadow: {
       default: shadow.bevelInk,
       ":hover": { default: null, [HOVER]: shadow.bevelInkHover },
-      ":active": shadow.bevelInkPress,
+      ":active": {
+        default: shadow.bevelInkPress,
+        [HOVER]: shadow.bevelInkPress,
+      },
     },
     // Under a pointer the fill lightens a step as the bevel brightens; in dark it goes to white.
     backgroundColor: {
@@ -502,21 +513,30 @@ const liveStyles = stylex.create({
         default: null,
         [HOVER]: `light-dark(oklch(from ${colors.primary} calc(l + 0.08) c h), ${colors.primaryHover})`,
       },
-      ":active": colors.primaryActive,
+      ":active": {
+        default: colors.primaryActive,
+        [HOVER]: colors.primaryActive,
+      },
     },
   },
   secondary: {
     backgroundColor: {
       default: colors.buttonSecondary,
       ":hover": { default: null, [HOVER]: colors.buttonSecondaryHover },
-      ":active": colors.buttonSecondaryActive,
+      ":active": {
+        default: colors.buttonSecondaryActive,
+        [HOVER]: colors.buttonSecondaryActive,
+      },
     },
   },
   destructive: {
     boxShadow: {
       default: shadow.bevelDestructive,
       ":hover": { default: null, [HOVER]: shadow.bevelDestructiveHover },
-      ":active": shadow.bevelDestructivePress,
+      ":active": {
+        default: shadow.bevelDestructivePress,
+        [HOVER]: shadow.bevelDestructivePress,
+      },
     },
     backgroundColor: {
       default: colors.destructiveFill,
@@ -524,14 +544,20 @@ const liveStyles = stylex.create({
         default: null,
         [HOVER]: `oklch(from ${colors.destructiveFill} calc(l + 0.06) c h)`,
       },
-      ":active": colors.destructiveFillActive,
+      ":active": {
+        default: colors.destructiveFillActive,
+        [HOVER]: colors.destructiveFillActive,
+      },
     },
   },
   outline: {
     backgroundColor: {
       default: colors.secondary,
       ":hover": { default: null, [HOVER]: colors.secondaryHover },
-      ":active": colors.secondaryActive,
+      ":active": {
+        default: colors.secondaryActive,
+        [HOVER]: colors.secondaryActive,
+      },
     },
   },
   ghost: {
@@ -543,13 +569,13 @@ const liveStyles = stylex.create({
         [HOVER]: colors.accent,
         ":is([aria-pressed=true])": colors.accentActive,
       },
-      ":active": colors.accentActive,
+      ":active": { default: colors.accentActive, [HOVER]: colors.accentActive },
     },
   },
   link: {
-    textDecorationLine: {
-      default: "none",
-      ":hover": { default: null, [HOVER]: "underline" },
+    textDecorationColor: {
+      default: colors.linkUnderline,
+      ":hover": { default: null, [HOVER]: "currentColor" },
     },
   },
 });

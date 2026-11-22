@@ -12,7 +12,7 @@ for (const theme of ["light", "dark"] as const) {
       [
         "Save changes",
         "Invite people",
-        "Filter",
+        "Duplicate",
         "Edit",
         "Delete workspace",
         "Read the guide",
@@ -20,6 +20,34 @@ for (const theme of ["light", "dark"] as const) {
         await expect(page.getByRole("button", { name })).toBeVisible();
       })
     );
+  });
+}
+
+for (const theme of ["light", "dark"] as const) {
+  test(`no two variants look the same at rest, ${theme}`, async ({ page }) => {
+    await openExample(page, "button", "variants", { theme });
+    // One button of each variant, read by its words: its fill, edge and lift, and its underline.
+    const looks = await Promise.all(
+      [
+        "Save changes",
+        "Invite people",
+        "Duplicate",
+        "Edit",
+        "Delete workspace",
+        "Read the guide",
+      ].map(
+        async (name) =>
+          await page.getByRole("button", { name }).evaluate((node) => {
+            const style = getComputedStyle(node);
+            return [
+              style.backgroundColor,
+              style.boxShadow,
+              style.textDecorationLine,
+            ].join(" | ");
+          })
+      )
+    );
+    expect(new Set(looks).size).toBe(looks.length);
   });
 }
 

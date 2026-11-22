@@ -705,7 +705,7 @@ export default function ApprovalsInbox({
           // Data table has no row to choose, so each row ends in a button that opens its request.
           cell: (item) => (
             <Button
-              variant={item.id === openId ? "outline" : "ghost"}
+              variant="ghost"
               size="icon-sm"
               aria-label={`Open: ${item.title}`}
               aria-pressed={item.id === openId}

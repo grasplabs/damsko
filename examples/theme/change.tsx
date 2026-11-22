@@ -125,7 +125,7 @@ export default function ThemeChangeWays() {
           <Button
             key={entry.id}
             size="sm"
-            variant={entry.id === way ? "default" : "outline"}
+            variant="ghost"
             aria-pressed={entry.id === way}
             onClick={() => {
               setWay(entry.id);
