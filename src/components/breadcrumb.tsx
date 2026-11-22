@@ -60,7 +60,7 @@ import {
   space,
 } from "../lib/tokens.stylex";
 import type { LayoutStyle } from "../lib/utils";
-import { iconVars, motionVars } from "../lib/vars.stylex";
+import { iconVars, motionVars, ringInsetMarker } from "../lib/vars.stylex";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -451,7 +451,7 @@ export const BreadcrumbList = ({ children, style }: BreadcrumbListProps) => {
     <ol
       ref={list}
       data-slot="breadcrumb-list"
-      {...stylex.props(styles.list, style)}
+      {...stylex.props(styles.list, ringInsetMarker, style)}
     >
       {children}
     </ol>

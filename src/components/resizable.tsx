@@ -131,7 +131,7 @@ export interface ResizableHandleProps {
 
 // The shared ring's line, drawn here on a part inside the handle.
 const ring = `${size.ringWidth} solid ${colors.ring}`;
-const forcedRing = `calc(2 * ${size.ringWidth}) solid Highlight`;
+const forcedRing = `calc(2 * ${size.lineStrong}) solid Highlight`;
 const FORCED = media.forcedColors;
 
 const styles = stylex.create({

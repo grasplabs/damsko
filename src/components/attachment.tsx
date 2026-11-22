@@ -78,7 +78,7 @@ import {
 } from "../lib/tokens.stylex";
 import { safeMediaSrc } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
-import { iconVars } from "../lib/vars.stylex";
+import { iconVars, ringInsetMarker } from "../lib/vars.stylex";
 import { attachmentVars } from "./attachment.stylex";
 
 /** Where the file is on its way: `done` once it is there. */
@@ -712,6 +712,7 @@ export const AttachmentActions = ({
       {...stylex.props(
         styles.actions,
         vertical && styles.actionsVertical,
+        ringInsetMarker,
         style
       )}
     >

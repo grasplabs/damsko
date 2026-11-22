@@ -525,29 +525,6 @@
       ]
     },
     {
-      "name": "checkpoint",
-      "type": "registry:ui",
-      "title": "Checkpoint",
-      "description": "A point in the conversation the person can return to.",
-      "dependencies": [
-        "@stylexjs/stylex"
-      ],
-      "registryDependencies": [
-        "@damsko/button",
-        "@damsko/lib",
-        "@damsko/marker",
-        "@damsko/tooltip"
-      ],
-      "docs": "https://damsko.joingrasp.com/components/checkpoint",
-      "files": [
-        {
-          "path": "src/components/checkpoint.tsx",
-          "type": "registry:file",
-          "target": "~/src/components/checkpoint.tsx"
-        }
-      ]
-    },
-    {
       "name": "code-block",
       "type": "registry:ui",
       "title": "Code block",

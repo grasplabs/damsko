@@ -41,6 +41,7 @@ export const colors = stylex.defineConsts({
   infoSubtle: "var(--damsko-info-subtle)",
   // Colour: focus.
   ring: "var(--damsko-ring)",
+  ringOnColor: "var(--damsko-ring-on-color)",
   ringHaloInvalid: "var(--damsko-ring-halo-invalid)",
   destructiveBorder: "var(--damsko-destructive-border)",
   destructiveShadowColor: "var(--damsko-destructive-shadow-color)",
@@ -471,6 +472,7 @@ export const size = stylex.defineConsts({
   controlLg: "var(--damsko-control-lg)",
   chip: "var(--damsko-chip)",
   hairline: "var(--damsko-hairline)",
+  lineStrong: "var(--damsko-line-strong)",
   ringWidth: "var(--damsko-ring-width)",
   ringOffset: "var(--damsko-ring-offset)",
   ringOffsetMark: "var(--damsko-ring-offset-mark)",

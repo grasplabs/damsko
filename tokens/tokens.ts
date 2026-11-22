@@ -362,7 +362,14 @@ export const groups: TokenGroup[] = [
             category: "colors",
             value: "oklch(0.45 0.03 165)",
             dark: "oklch(0.78 0.02 155)",
-            use: "The keyboard focus ring on a control: a neutral ink, fine, never colour. 3:1 on every ground, so the keyboard can find it.",
+            use: "The keyboard focus ring on a control: a neutral ink, never colour. 3:1 on every ground, so the keyboard can find it.",
+          },
+          {
+            name: "ring-on-color",
+            category: "colors",
+            value: "oklch(0.78 0.02 155)",
+            dark: "oklch(0.45 0.03 165)",
+            use: "The focus ring of what stands on action-fill (a link in a filled bubble): the other mode's ring, since that ground is the other mode's. 3:1 on action-fill.",
           },
           {
             name: "ring-halo-invalid",
@@ -851,16 +858,22 @@ export const groups: TokenGroup[] = [
             use: "The weight of every rule and line in the system: a separator, a row's divider, the docs frame.",
           },
           {
-            name: "ring-width",
+            name: "line-strong",
             category: "size",
             value: "1.5px",
-            use: "The width of the focus ring on a control: fine, so focus is clear without a heavy frame.",
+            use: "A line one step heavier than the hairline, for a mark that must be found: today's underline in a calendar, the active cell's edge in a grid, where a dragged column will land, and the system's focus line in forced colours (doubled for the keyboard).",
+          },
+          {
+            name: "ring-width",
+            category: "size",
+            value: "2px",
+            use: "The width of the focus ring: as thick as WCAG 2.4.13 asks, so focus is found at a glance.",
           },
           {
             name: "ring-offset",
             category: "size",
-            value: "0px",
-            use: "Where the focus ring sits on a control: on its edge, following its shape, never a second frame.",
+            value: "2px",
+            use: "How far the focus ring stands off a control's edge, the ground showing between them, so it reads as a ring round the control and never as its border. It follows the control's shape.",
           },
           {
             name: "ring-offset-mark",
@@ -4668,6 +4681,8 @@ export const contrastPairs: ContrastPair[] = [
   { kind: "text", on: "input-selection", text: "foreground" },
   // The focus ring round a field focused by the keyboard: against the field's own fill as well as the grounds.
   { kind: "ui", on: "input-bg", text: "ring" },
+  // A ring on action-fill, round a link in a filled bubble.
+  { kind: "ui", on: "primary", text: "ring-on-color" },
   ...["background", "muted", "card", "input-bg"].map((on): ContrastPair => ({
     kind: "ui",
     on,

@@ -82,6 +82,7 @@ import {
 } from "../../lib/tokens.stylex";
 import { ownValue } from "../../lib/utils";
 import type { LayoutStyle } from "../../lib/utils";
+import { ringInsetMarker } from "../../lib/vars.stylex";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -436,7 +437,7 @@ export interface DataTableProps<Row> {
 const HOVER = media.hover;
 const COARSE = media.pointerCoarse;
 const endLine = (color: string, side: "left" | "right") =>
-  `linear-gradient(to ${side}, ${color} ${size.ringWidth}, transparent ${size.ringWidth})`;
+  `linear-gradient(to ${side}, ${color} ${size.lineStrong}, transparent ${size.lineStrong})`;
 
 const styles = stylex.create({
   root: { display: "grid", gap: space[3], width: "100%", minWidth: 0 },
@@ -2074,7 +2075,7 @@ const HeadEnd = <Row extends RowData>({
   return (
     <>
       {description !== undefined && (
-        <span {...stylex.props(styles.after)}>
+        <span {...stylex.props(styles.after, ringInsetMarker)}>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
@@ -2090,7 +2091,7 @@ const HeadEnd = <Row extends RowData>({
         </span>
       )}
       {menu && (
-        <span {...stylex.props(styles.after)}>
+        <span {...stylex.props(styles.after, ringInsetMarker)}>
           <ColumnMenu ctx={ctx} column={column} header={header} />
         </span>
       )}

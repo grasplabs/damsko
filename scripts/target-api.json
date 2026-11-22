@@ -1571,16 +1571,6 @@
       "MarkerContentProps"
     ]
   },
-  "checkpoint": {
-    "src/components/checkpoint.tsx": [
-      "Checkpoint",
-      "CheckpointIcon",
-      "CheckpointTrigger",
-      "CheckpointProps",
-      "CheckpointIconProps",
-      "CheckpointTriggerProps"
-    ]
-  },
   "reasoning": {
     "src/components/reasoning.tsx": [
       "Reasoning",

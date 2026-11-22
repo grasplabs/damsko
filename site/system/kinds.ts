@@ -189,7 +189,6 @@ export const kinds: Kind[] = [
       "chat",
       "bubble",
       "marker",
-      "checkpoint",
       "sources",
       "inline-citation",
       "confirmation",
