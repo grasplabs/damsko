@@ -40,9 +40,9 @@ const over: Record<string, { requests?: number; bytes?: number }> = {
   // MessageResponse's Markdown, once its answers draw, Message scroller, and Reasoning in a turn.
   "/components/message": { requests: 32, bytes: 620 * 1024 },
   // The Model selector among its tools (Command, Listbox and Toggle group with it), in its model
-  // example; and what its states draw with: Agent indicator and Shimmer on the band under the
-  // card, Skeleton while the page loads, and a Queue (Trace) above the card.
-  "/components/prompt-input": { requests: 32, bytes: 630 * 1024 },
+  // example; Agent indicator and Shimmer, which the band under the card says the work with; and a
+  // page of twenty examples, drawn on the server.
+  "/components/prompt-input": { requests: 30, bytes: 640 * 1024 },
   // Reasoning, which loads Markdown with it for its thoughts.
   "/components/reasoning": { requests: 29, bytes: 620 * 1024 },
   // Prism, for the commit example's diffs: it is the row that opens, in view on the first screen.

@@ -554,7 +554,8 @@
       "AttachmentActionsProps",
       "AttachmentActionProps",
       "AttachmentTriggerProps"
-    ]
+    ],
+    "src/components/attachment.stylex.ts": null
   },
   "audio-player": {
     "src/components/audio-player.tsx": [
@@ -1119,6 +1120,7 @@
       "PromptInputNote",
       "PromptInputBanner",
       "PromptInputQueue",
+      "PromptInputQueueItem",
       "PromptInputMention",
       "PromptInputMentionContent",
       "PromptInputMentionItem",
@@ -1145,6 +1147,7 @@
       "PromptInputNoteProps",
       "PromptInputBannerProps",
       "PromptInputQueueProps",
+      "PromptInputQueueItemProps",
       "PromptInputMentionProps",
       "PromptInputMentionContentProps",
       "PromptInputMentionItemProps",

@@ -150,12 +150,16 @@
         "@ui-sdk/react"
       ],
       "registryDependencies": [
-        "@damsko/button",
         "@damsko/hooks",
         "@damsko/lib"
       ],
       "docs": "https://damsko.joingrasp.com/components/attachment",
       "files": [
+        {
+          "path": "src/components/attachment.stylex.ts",
+          "type": "registry:file",
+          "target": "~/src/components/attachment.stylex.ts"
+        },
         {
           "path": "src/components/attachment.tsx",
           "type": "registry:file",
@@ -1926,6 +1930,7 @@
       "registryDependencies": [
         "@damsko/attachment",
         "@damsko/button",
+        "@damsko/collapsible",
         "@damsko/dropdown-menu",
         "@damsko/lib",
         "@damsko/skeleton",

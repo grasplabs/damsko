@@ -105,7 +105,7 @@ Return a Promise from `onSubmit` that settles when the message is taken, and the
 
 ## Queued messages
 
-`PromptInputQueue` is the panel above the card, its foot behind the card, that a `Queue` of the messages written while an answer was still coming stands in. The product keeps the queue and what each action does.
+`PromptInputQueue` is the panel above the card, its foot behind the card, for the messages written while an answer was still coming: its `label` on a fold ("2 queued"), and a `PromptInputQueueItem` for each, with its `actions` at the row's end. The product keeps the queue and what each action does.
 
 <Stage path="prompt-input/queue" label="Queued messages" />
 
@@ -504,6 +504,14 @@ const answer: Record<ChatStatus, MessageStatus> = {
   source="src/components/prompt-input.tsx"
   type="PromptInputQueueProps"
   label="PromptInputQueue"
+/>
+
+### PromptInputQueueItem
+
+<Props
+  source="src/components/prompt-input.tsx"
+  type="PromptInputQueueItemProps"
+  label="PromptInputQueueItem"
 />
 
 ### PromptInputMention

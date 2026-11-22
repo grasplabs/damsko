@@ -3,27 +3,16 @@
 import {
   PromptInput,
   PromptInputBody,
+  PromptInputButton,
   PromptInputFooter,
   PromptInputQueue,
+  PromptInputQueueItem,
   PromptInputSubmit,
   PromptInputTextarea,
 } from "@grasp-os/ui/components/prompt-input";
 import {
-  Queue,
-  QueueItem,
-  QueueItemAction,
-  QueueItemActions,
-  QueueItemContent,
-  QueueList,
-  QueueSection,
-  QueueSectionContent,
-  QueueSectionLabel,
-  QueueSectionTrigger,
-} from "@grasp-os/ui/components/queue";
-import {
   ArrowUpIcon,
   Icon,
-  MessageSquareIcon,
   PencilIcon,
   TrashIcon,
 } from "@grasp-os/ui/lib/icons";
@@ -35,9 +24,9 @@ const first = [
   { id: "m2", text: "And say which region moved most" },
 ];
 
-// Messages written while an answer is still coming wait their turn in a Queue above the card,
-// its foot behind the card. Each can be sent now, put back into the text to change, or taken off.
-// Stop ends the work.
+// Messages written while an answer is still coming wait their turn above the card, in a panel
+// that folds, its foot behind the card. Each can be put back into the text to change, sent now,
+// or taken off. Stop ends the work.
 export default function PromptInputQueueExample() {
   const [working, setWorking] = useState(true);
   const [waiting, setWaiting] = useState(first);
@@ -55,55 +44,44 @@ export default function PromptInputQueueExample() {
       }}
     >
       {waiting.length > 0 && (
-        <PromptInputQueue>
-          <Queue>
-            <QueueSection>
-              <QueueSectionTrigger>
-                <QueueSectionLabel
-                  count={waiting.length}
-                  label="queued"
-                  icon={MessageSquareIcon}
-                />
-              </QueueSectionTrigger>
-              <QueueSectionContent>
-                <QueueList>
-                  {waiting.map((message) => (
-                    <QueueItem key={message.id}>
-                      <QueueItemContent>{message.text}</QueueItemContent>
-                      <QueueItemActions>
-                        <QueueItemAction
-                          aria-label={`Edit: ${message.text}`}
-                          onClick={() => {
-                            controller.setValue([message.text]);
-                            controller.focus({ at: "end" });
-                            take(message.id);
-                          }}
-                        >
-                          <Icon icon={PencilIcon} />
-                        </QueueItemAction>
-                        <QueueItemAction
-                          aria-label={`Send now: ${message.text}`}
-                          onClick={() => {
-                            take(message.id);
-                          }}
-                        >
-                          <Icon icon={ArrowUpIcon} />
-                        </QueueItemAction>
-                        <QueueItemAction
-                          aria-label={`Remove: ${message.text}`}
-                          onClick={() => {
-                            take(message.id);
-                          }}
-                        >
-                          <Icon icon={TrashIcon} />
-                        </QueueItemAction>
-                      </QueueItemActions>
-                    </QueueItem>
-                  ))}
-                </QueueList>
-              </QueueSectionContent>
-            </QueueSection>
-          </Queue>
+        <PromptInputQueue label={`${waiting.length} queued`}>
+          {waiting.map((message) => (
+            <PromptInputQueueItem
+              key={message.id}
+              actions={
+                <>
+                  <PromptInputButton
+                    aria-label={`Edit: ${message.text}`}
+                    onClick={() => {
+                      controller.setValue([message.text]);
+                      controller.focus({ at: "end" });
+                      take(message.id);
+                    }}
+                  >
+                    <Icon icon={PencilIcon} />
+                  </PromptInputButton>
+                  <PromptInputButton
+                    aria-label={`Send now: ${message.text}`}
+                    onClick={() => {
+                      take(message.id);
+                    }}
+                  >
+                    <Icon icon={ArrowUpIcon} />
+                  </PromptInputButton>
+                  <PromptInputButton
+                    aria-label={`Remove: ${message.text}`}
+                    onClick={() => {
+                      take(message.id);
+                    }}
+                  >
+                    <Icon icon={TrashIcon} />
+                  </PromptInputButton>
+                </>
+              }
+            >
+              {message.text}
+            </PromptInputQueueItem>
+          ))}
         </PromptInputQueue>
       )}
       <PromptInputBody>

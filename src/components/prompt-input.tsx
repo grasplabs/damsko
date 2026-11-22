@@ -159,7 +159,13 @@ import {
   AttachmentTitle,
 } from "./attachment";
 import type { AttachmentState } from "./attachment";
+import { attachmentVars } from "./attachment.stylex";
 import { Button } from "./button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "./collapsible";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -503,8 +509,28 @@ export interface PromptInputBannerProps {
 
 /** Every prop a PromptInputQueue takes. */
 export interface PromptInputQueueProps {
-  /** A Queue of the messages written while an answer was still coming, the next one first. */
+  /** Its PromptInputQueueItems: the messages written while an answer was still coming, the next one first. */
   children: ReactNode;
+  /** The words on its fold, with the count ("2 queued"). */
+  label: string;
+  /**
+   * Whether it starts open.
+   * @default true
+   */
+  defaultOpen?: boolean;
+  /** Layout only. */
+  style?: LayoutStyle;
+}
+
+/** Every prop a PromptInputQueueItem takes. */
+export interface PromptInputQueueItemProps {
+  /** The message, as written. */
+  children: ReactNode;
+  /**
+   * Its actions at the row's end, each a PromptInputButton named from the message ("Edit: …",
+   * "Send now: …", "Remove: …").
+   */
+  actions?: ReactNode;
   /** Layout only. */
   style?: LayoutStyle;
 }
@@ -953,17 +979,19 @@ const styles = stylex.create({
     marginBlockStart: `calc(-1 * ${space["3"]})`,
     marginBlockEnd: space["1"],
   },
-  // The files take the header's whole line, their cards 16px from the card's top and side (the
-  // row keeps 4px of its own round them for a focus ring), and the text stands 12px under them:
-  // the text's own top room is for a card with no files, so the row takes it back. Above the drop
-  // words, and above the text's top room its foot lies over, so a press there is the file's.
+  // The files take the card's whole width, their row scrolling to its edges, their cards 16px from
+  // the card's top and side (the row keeps 4px of its own above and below them for a focus ring),
+  // and the text stands 12px under them: the text's own top room is for a card with no files, so
+  // the row takes it back. Above the drop words, and above the text's top room its foot lies over,
+  // so a press there is the file's.
   attachments: {
+    [attachmentVars.inset]: space["4"],
     position: "relative",
     zIndex: 2,
-    flexBasis: `calc(100% + 2 * ${space["1"]})`,
+    flexBasis: `calc(100% + 2 * ${space["4"]})`,
     flexShrink: 0,
     minWidth: 0,
-    marginInline: `calc(-1 * ${space["1"]})`,
+    marginInline: `calc(-1 * ${space["4"]})`,
     marginBlockStart: `calc(-1 * ${space["1"]})`,
     marginBlockEnd: `calc(${space["3"]} - ${space["1"]} - ${space["4"]})`,
   },
@@ -1216,6 +1244,34 @@ const styles = stylex.create({
     backgroundColor: colors.card,
     boxShadow: shadow.sm,
   },
+  queueList: {
+    display: "grid",
+    gap: space["1"],
+    margin: 0,
+    padding: 0,
+    paddingBlockEnd: space["2"],
+    listStyle: "none",
+  },
+  queueItem: {
+    display: "flex",
+    alignItems: "center",
+    gap: space["1"],
+    minWidth: 0,
+  },
+  queueText: {
+    flexGrow: 1,
+    minWidth: 0,
+    color: colors.foreground,
+    fontSize: font.textSm,
+    lineHeight: font.textSmLine,
+    overflowWrap: "anywhere",
+  },
+  queueActions: {
+    display: "flex",
+    alignItems: "center",
+    flexShrink: 0,
+    gap: space["1"],
+  },
   // While the page loads: a part kept in its room but not drawn, and the text's quiet line.
   kept: { display: "inline-flex", opacity: 0 },
   pending: { position: "relative", minWidth: 0 },
@@ -1303,6 +1359,13 @@ const styles = stylex.create({
     opacity: { default: 1, ":is([aria-busy=true])": size.opacityDisabled },
     transitionProperty: "opacity",
     transitionDuration: duration.hover,
+  },
+  // Two lines in a row: the name in the text's size, a quiet line under it, 4px above and below.
+  mentionItem: {
+    paddingBlock: space["1"],
+    fontSize: font.textSm,
+    lineHeight: font.textSmLine,
+    fontWeight: font.weightNormal,
   },
   mentionText: { display: "grid" },
   mentionDescription: {
@@ -2120,10 +2183,12 @@ export const PromptInputBanner = ({
 
 /**
  * The messages written while an answer was still coming, waiting their turn above the card: a
- * panel a Queue stands in, its foot behind the card.
+ * panel that folds open and shut, its foot behind the card. The product keeps the queue.
  */
 export const PromptInputQueue = ({
   children,
+  label,
+  defaultOpen = true,
   style,
 }: PromptInputQueueProps) => {
   if (!use(OutsideContext)) {
@@ -2134,10 +2199,32 @@ export const PromptInputQueue = ({
       data-slot="prompt-input-queue"
       {...stylex.props(styles.above, styles.queue, style)}
     >
-      {children}
+      <Collapsible defaultOpen={defaultOpen}>
+        <CollapsibleTrigger>{label}</CollapsibleTrigger>
+        <CollapsibleContent>
+          <ul {...stylex.props(styles.queueList)}>{children}</ul>
+        </CollapsibleContent>
+      </Collapsible>
     </div>
   );
 };
+
+/** One waiting message: its words, and its actions at the row's end. */
+export const PromptInputQueueItem = ({
+  children,
+  actions,
+  style,
+}: PromptInputQueueItemProps) => (
+  <li
+    data-slot="prompt-input-queue-item"
+    {...stylex.props(styles.queueItem, style)}
+  >
+    <span {...stylex.props(styles.queueText)}>{children}</span>
+    {!isBlank(actions) && (
+      <span {...stylex.props(styles.queueActions)}>{actions}</span>
+    )}
+  </li>
+);
 
 const inOrder = (part: ReactNode, at: number) => (
   <Fragment key={at}>{part}</Fragment>
@@ -3303,6 +3390,7 @@ export const PromptInputMentionItem = ({
     className={(state: TriggerMenuItemState) =>
       stylex.props(
         menuStyles.item,
+        styles.mentionItem,
         state.highlighted && menuStyles.highlighted,
         state.disabled && menuStyles.disabled,
         style

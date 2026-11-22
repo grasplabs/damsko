@@ -1,5 +1,5 @@
 // Attachment: a file or picture that goes with a message, in
-// StyleX on our Button: a small card with its picture or a mark for its kind, its name and a line
+// StyleX: a small card with its picture or a mark for its kind, its name and a line
 // about it, and its actions. A prompt input shows them above its text and a message under its
 // words; neither is known here.
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
@@ -61,8 +61,10 @@ import {
 import type { IconData } from "../lib/icons";
 import {
   edgeFade,
+  focusRing,
   focusRingInset,
   scrollbarHidden,
+  tapTarget,
   tileEdge,
 } from "../lib/styles";
 import {
@@ -77,8 +79,7 @@ import {
 import { safeMediaSrc } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { iconVars } from "../lib/vars.stylex";
-import { Button } from "./button";
-import type { ButtonSize, ButtonVariant } from "./button";
+import { attachmentVars } from "./attachment.stylex";
 
 /** Where the file is on its way: `done` once it is there. */
 export type AttachmentState =
@@ -204,16 +205,6 @@ export interface AttachmentActionProps {
   /** What it does. When that takes the file off, focus goes on to the next file's first action. */
   onClick?: MouseEventHandler<HTMLButtonElement>;
   /**
-   * The button's look.
-   * @default "ghost"
-   */
-  variant?: ButtonVariant;
-  /**
-   * The button's size.
-   * @default "icon-xs"
-   */
-  size?: Extract<ButtonSize, "icon" | "icon-xs" | "icon-sm" | "icon-lg">;
-  /**
    * Out of use.
    * @default false
    */
@@ -248,8 +239,10 @@ const styles = stylex.create({
     gap: space["2"],
     minWidth: 0,
     margin: 0,
-    // Room for a card's edge and focus ring inside the sideways scroll.
-    padding: space["1"],
+    // Room for a card's edge and focus ring inside the sideways scroll; more at the sides where
+    // the part round it says so (attachment.stylex.ts).
+    paddingBlock: space["1"],
+    paddingInline: attachmentVars.inset,
     listStyle: "none",
     overflowX: "auto",
     overflowY: "hidden",
@@ -404,6 +397,8 @@ const styles = stylex.create({
     zIndex: 1,
     display: "flex",
     alignItems: "center",
+    // Two small actions keep a finger's least distance between them.
+    gap: space["1"],
     flexShrink: 0,
     opacity: {
       default: 1,
@@ -421,6 +416,32 @@ const styles = stylex.create({
     position: "absolute",
     top: space["2"],
     insetInlineEnd: space["2"],
+  },
+  // An action: a small circle, quiet until a pointer is on it, with a finger's room round it on
+  // a touch screen (tapTarget).
+  action: {
+    position: "relative",
+    display: "inline-grid",
+    placeItems: "center",
+    flexShrink: 0,
+    boxSizing: "border-box",
+    width: sizes.badgeHeight,
+    height: sizes.badgeHeight,
+    margin: 0,
+    padding: 0,
+    borderWidth: 0,
+    borderRadius: radius.circle,
+    backgroundColor: {
+      default: "transparent",
+      ":hover": { default: null, [HOVER]: colors.accent },
+      ":active": colors.accentActive,
+    },
+    color: colors.mutedForeground,
+    cursor: { default: "pointer", ":disabled": "not-allowed" },
+    opacity: { default: 1, ":disabled": sizes.opacityDisabled },
+    transitionProperty: "background-color",
+    transitionDuration: duration.hover,
+    transitionTimingFunction: duration.ease,
   },
   trigger: {
     position: "absolute",
@@ -724,53 +745,46 @@ const neighbourOf = (
   return group ? placeNear(group) : null;
 };
 
-/** One of the file's actions: an icon button named for what it does to the file. */
+/** One of the file's actions: a small round icon button named for what it does to the file. */
 export const AttachmentAction = ({
   children,
   "aria-label": label,
   onClick,
-  variant = "ghost",
-  size = "icon-xs",
   disabled = false,
   style,
 }: AttachmentActionProps) => (
-  <Button
-    asChild
-    variant={variant}
-    size={size}
-    disabled={disabled}
+  <button
+    type="button"
+    data-slot="attachment-action"
     aria-label={label}
-    style={style}
-  >
-    <button
-      type="button"
-      data-slot="attachment-action"
-      onClick={(event) => {
-        const button = event.currentTarget;
-        const neighbour =
-          button === document.activeElement ? neighbourOf(button) : null;
-        onClick?.(event);
-        if (neighbour === null) {
-          return;
+    disabled={disabled}
+    onClick={(event) => {
+      const button = event.currentTarget;
+      const neighbour =
+        button === document.activeElement ? neighbourOf(button) : null;
+      onClick?.(event);
+      if (neighbour === null) {
+        return;
+      }
+      // Once the press has drawn, a file taken off has taken its focused button with it: focus
+      // goes on to the neighbour, unless something else has taken it.
+      requestAnimationFrame(() => {
+        const place = neighbour();
+        if (
+          !button.isConnected &&
+          place?.isConnected === true &&
+          (document.activeElement === null ||
+            document.activeElement === document.body)
+        ) {
+          place.focus();
         }
-        // Once the press has drawn, a file taken off has taken its focused button with it: focus
-        // goes on to the neighbour, unless something else has taken it.
-        requestAnimationFrame(() => {
-          const place = neighbour();
-          if (
-            !button.isConnected &&
-            place?.isConnected === true &&
-            (document.activeElement === null ||
-              document.activeElement === document.body)
-          ) {
-            place.focus();
-          }
-        });
-      }}
-    >
-      {children}
-    </button>
-  </Button>
+      });
+    }}
+    {...stylex.props(styles.action, focusRing, style)}
+  >
+    <span aria-hidden="true" {...stylex.props(tapTarget)} />
+    {children}
+  </button>
 );
 
 /** The whole card as one press, behind its actions: it opens the file, a link or a dialog. */
