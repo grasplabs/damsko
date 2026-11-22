@@ -215,7 +215,7 @@ const styles = stylex.create({
     width: "100%",
     minWidth: 0,
     margin: 0,
-    borderRadius: radius.base,
+    borderRadius: radius.row,
     cornerShape: radius.shape,
     color: colors.foreground,
     fontFamily: font.sans,
@@ -478,6 +478,7 @@ const waits = stylex.create({
     height: sizes.iconSm,
     overflow: "hidden",
     borderRadius: radius.mark,
+    cornerShape: radius.shape,
   },
   // The title's and the description's lines, as long as a short name and a short line.
   title: { display: "flex", width: "10rem", maxWidth: "100%" },

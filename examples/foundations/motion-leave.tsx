@@ -111,6 +111,7 @@ const styles = stylex.create({
     width: size.controlSm,
     height: size.controlSm,
     borderRadius: radius.mark,
+    cornerShape: radius.shape,
     backgroundColor: colors.muted,
     color: colors.foreground,
   },

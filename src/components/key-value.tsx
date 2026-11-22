@@ -251,7 +251,7 @@ const styles = stylex.create({
     margin: 0,
     padding: 0,
     borderWidth: 0,
-    borderRadius: `min(${radius.base}, calc(${size.controlDefault} / 2))`,
+    borderRadius: `min(${radius.row}, calc(${size.controlDefault} / 2))`,
     cornerShape: radius.shape,
     cursor: "pointer",
     transitionProperty: "background-color",

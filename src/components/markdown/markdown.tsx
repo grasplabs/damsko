@@ -383,6 +383,7 @@ const sectionStyles = stylex.create({
     margin: 0,
     borderWidth: 0,
     borderRadius: radius.mark,
+    cornerShape: radius.shape,
     backgroundColor: {
       default: "transparent",
       ":hover": { default: null, [HOVER]: colors.accent },

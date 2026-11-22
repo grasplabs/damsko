@@ -301,7 +301,7 @@ const styles = stylex.create({
     minHeight: { default: size.controlDefault, [COARSE]: size.tapTarget },
     paddingBlock: space[2],
     paddingInline: space[3],
-    borderRadius: `min(calc(${radius.base} - ${space.popupPadding}), calc(${size.controlLg} / 2))`,
+    borderRadius: `min(${radius.row}, calc(${size.controlLg} / 2))`,
     cornerShape: radius.shape,
     color: colors.foreground,
     textDecoration: "none",

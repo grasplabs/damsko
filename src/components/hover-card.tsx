@@ -180,6 +180,7 @@ const styles = stylex.create({
       ":hover": { default: null, [HOVER]: "currentColor" },
     },
     borderRadius: radius.mark,
+    cornerShape: radius.shape,
     transitionProperty: "text-decoration-color",
     transitionDuration: motionVars.hover,
     transitionTimingFunction: duration.ease,

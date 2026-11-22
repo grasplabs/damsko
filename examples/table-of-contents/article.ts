@@ -388,6 +388,7 @@ export const look = stylex.create({
     paddingInline: space["1"],
     marginInline: `calc(-1 * ${space["1"]})`,
     borderRadius: radius.mark,
+    cornerShape: radius.shape,
   },
   foldHeading: {
     marginBlockStart: 0,
@@ -428,6 +429,7 @@ export const look = stylex.create({
     paddingInline: space["1"],
     borderWidth: 0,
     borderRadius: radius.mark,
+    cornerShape: radius.shape,
     backgroundColor: "transparent",
     color: {
       default: colors.mutedForeground,

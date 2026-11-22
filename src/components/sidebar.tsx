@@ -377,7 +377,8 @@ const styles = stylex.create({
     paddingBlockEnd: space["1"],
     paddingInline: size.sidebarRowInline,
     borderWidth: 0,
-    borderRadius: radius.sidebarRadius,
+    borderRadius: radius.row,
+    cornerShape: radius.shape,
     backgroundColor: "transparent",
     // Drawn as a button or a link (`asChild`), it answers the pointer as a row's words do.
     color: {
@@ -432,7 +433,8 @@ const styles = stylex.create({
     borderWidth: { default: 0, [FORCED]: size.hairline },
     borderStyle: "solid",
     borderColor: "ButtonText",
-    borderRadius: radius.sidebarRadius,
+    borderRadius: radius.row,
+    cornerShape: radius.shape,
     color: {
       default: colors.sidebarTextSecondary,
       [HOVER]: { default: null, ":hover": colors.sidebarText },
@@ -540,7 +542,8 @@ const styles = stylex.create({
     borderWidth: { default: 0, [FORCED]: size.hairline },
     borderStyle: "solid",
     borderColor: "transparent",
-    borderRadius: radius.sidebarRadius,
+    borderRadius: radius.row,
+    cornerShape: radius.shape,
     overflow: "hidden",
     color: {
       default: colors.sidebarTextSecondary,
@@ -595,7 +598,7 @@ const styles = stylex.create({
   },
   // A large row (a person, a workspace), in the words read first; it folds to its picture alone.
   lg: {
-    borderRadius: radius.sidebarRadiusLg,
+    borderRadius: radius.row,
     color: colors.sidebarText,
     height: {
       default: size.sidebarMenuButtonHeightLg,
@@ -645,6 +648,8 @@ const styles = stylex.create({
     paddingInlineStart: 0,
     paddingInlineEnd: 0,
     borderRadius: radius.full,
+    // A circle, as the original drew it: the rows' squircle does not reach it.
+    cornerShape: "round",
   },
   // The page you are on: ink laid flat over the ground, the words in the ink read first. In forced
   // colours a border marks it.
@@ -706,6 +711,7 @@ const styles = stylex.create({
     height: ICON,
     overflow: "hidden",
     borderRadius: radius.mark,
+    cornerShape: radius.shape,
   },
 
   // The rows under a row, their words in line with its words; folded to its icons, they go.

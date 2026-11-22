@@ -346,7 +346,7 @@ const styles = stylex.create({
     paddingBlock: `calc(${ROOM})`,
     columnGap: space["2"],
     borderRadius: {
-      default: `min(${radius.base}, calc(${size.controlSm} / 2))`,
+      default: `min(${radius.row}, calc(${size.controlSm} / 2))`,
       [stylex.when.ancestor(":is(*)", traceCardMarker)]: radius.base,
     },
     lineHeight: font.textSmLine,

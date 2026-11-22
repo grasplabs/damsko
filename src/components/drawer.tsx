@@ -226,6 +226,7 @@ const styles = stylex.create({
     padding: 0,
     borderWidth: 0,
     borderRadius: radius.mark,
+    cornerShape: radius.shape,
     backgroundColor: "transparent",
     cursor: { default: "grab", ":active": "grabbing" },
     touchAction: "none",

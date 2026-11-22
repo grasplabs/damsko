@@ -131,6 +131,7 @@ const styles = stylex.create({
     height: 52,
     backgroundColor: colors.muted,
     borderRadius: radius.mark,
+    cornerShape: radius.shape,
   },
   raised: {
     display: "block",
@@ -138,12 +139,14 @@ const styles = stylex.create({
     height: 32,
     backgroundColor: colors.card,
     borderRadius: radius.mark,
+    cornerShape: radius.shape,
   },
   swatch: {
     display: "block",
     width: 36,
     height: 36,
     borderRadius: radius.mark,
+    cornerShape: radius.shape,
     boxShadow: `inset 0 0 0 1px ${siteColors.chipRing}`,
   },
   // Motion: a track, and a dot that crosses it.

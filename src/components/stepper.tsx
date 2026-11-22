@@ -447,7 +447,7 @@ const styles = stylex.create({
   dotError: {
     width: size.stepperDotActive,
     height: size.stepperDotActive,
-    borderRadius: 2,
+    borderRadius: radius.hairline,
     backgroundColor: { default: colors.destructive, [FORCED]: "CanvasText" },
     borderColor: { default: colors.destructive, [FORCED]: "CanvasText" },
   },
@@ -483,7 +483,7 @@ const styles = stylex.create({
   },
   // The hairline drawn in the middle of the segment's room; once done it fills that room.
   segLine: {
-    borderRadius: 1,
+    borderRadius: radius.full,
     backgroundColor: { default: colors.border, [FORCED]: "GrayText" },
     forcedColorAdjust: "none",
     transitionProperty: "background-color, width, height",
@@ -536,7 +536,7 @@ const styles = stylex.create({
   travelRoom: {
     position: "absolute",
     overflow: "hidden",
-    borderRadius: 1,
+    borderRadius: radius.full,
     display: { default: null, [FORCED]: "none" },
   },
   // The stretch itself: 40% of the line. Still under reduced motion, a short lit stretch at rest at

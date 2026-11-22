@@ -446,6 +446,7 @@ const styles = stylex.create({
   recommended: {
     paddingInline: space["1"],
     borderRadius: radius.mark,
+    cornerShape: radius.shape,
     backgroundColor: colors.muted,
     color: colors.mutedForeground,
     fontSize: font.textXs,
