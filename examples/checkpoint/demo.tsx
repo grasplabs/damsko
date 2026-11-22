@@ -54,7 +54,7 @@ export default function CheckpointDemo() {
       </Checkpoint>
       {restored ? (
         <Button
-          variant="secondary"
+          variant="outline"
           size="sm"
           style={layout.continue}
           onClick={() => {

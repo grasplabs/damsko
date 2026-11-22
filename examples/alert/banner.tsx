@@ -33,7 +33,7 @@ export default function AlertBanner() {
           Sign-in is paused on Sunday from 02:00 to 04:00.
         </AlertDescription>
         <AlertAction>
-          <Button size="xs" variant="secondary">
+          <Button size="xs" variant="outline">
             Read more
           </Button>
         </AlertAction>

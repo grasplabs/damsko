@@ -1719,7 +1719,7 @@ const ViewMenu = <Row extends RowData>({
   <DropdownMenu>
     <span {...stylex.props(atEnd && styles.atEnd)}>
       <DropdownMenuTrigger asChild>
-        <Button variant="secondary">
+        <Button variant="outline">
           <Icon icon={SlidersHorizontalIcon} />
           {words.view}
         </Button>
@@ -1799,7 +1799,7 @@ const Selected = <Row extends RowData>({
         ) : (
           <Button
             key={action.label}
-            variant={action.severity === "grave" ? "destructive" : "secondary"}
+            variant={action.severity === "grave" ? "destructive" : "outline"}
             onClick={() => {
               (action.severity === "grave" ? onAsk : onAct)(action);
             }}
@@ -1809,7 +1809,7 @@ const Selected = <Row extends RowData>({
         );
       })}
       <Button
-        variant="secondary"
+        variant="outline"
         onClick={() => {
           model.table.resetRowSelection(true);
         }}
@@ -1873,7 +1873,7 @@ const Bar = <Row extends RowData>({
         // At the end with View beside it; where the count stands before it, the count already
         // takes the bar to its end.
         <span {...stylex.props(!selectable && styles.atEnd)}>
-          <Button variant="secondary" onClick={onExport}>
+          <Button variant="outline" onClick={onExport}>
             <Icon icon={DownloadIcon} />
             {words.exportCsv}
           </Button>
@@ -2635,7 +2635,7 @@ const Failed = <Row extends RowData>({
         {onRetry !== undefined && (
           <Button
             size="sm"
-            variant="secondary"
+            variant="outline"
             onClick={() => {
               onRetry();
             }}

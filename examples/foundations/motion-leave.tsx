@@ -344,7 +344,7 @@ export default function MotionLeave() {
         </Field>
         <Button
           size="sm"
-          variant="secondary"
+          variant="outline"
           onClick={() => {
             setRun("start");
           }}

@@ -33,7 +33,7 @@ export default function DataTableNoMatch() {
             : `No reports match “${asked.query}”`,
         description: `Check the spelling or try a shorter word. All ${reports.length} reports are still here.`,
         action: (
-          <Button variant="secondary" size="sm" onClick={asked.clear}>
+          <Button variant="outline" size="sm" onClick={asked.clear}>
             {asked.query === "" ? "Clear the filter" : "Clear the search"}
           </Button>
         ),

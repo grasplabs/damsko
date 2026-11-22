@@ -369,7 +369,7 @@ export default function MembersTeamDialog() {
     <>
       <Button
         size="sm"
-        variant="secondary"
+        variant="outline"
         onClick={() => {
           setOpened(opened + 1);
           setOpen(finance);

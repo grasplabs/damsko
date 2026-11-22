@@ -89,7 +89,7 @@ export const Icons = () => (
 );
 
 export const IconsPickup = () => (
-  <Button variant="secondary" size="sm" asChild>
+  <Button variant="outline" size="sm" asChild>
     <a href={iconWords.foundationsHref}>
       {iconWords.foundations}
       <Icon icon={ArrowRightIcon} />

@@ -20,7 +20,7 @@ export default function SheetMounted() {
   return (
     <>
       <Button
-        variant="secondary"
+        variant="outline"
         onClick={() => {
           setAsking("Send the report?");
         }}

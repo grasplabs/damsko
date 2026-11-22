@@ -125,7 +125,7 @@ export default function ItemRhythm() {
                   <ItemTitle>OpenAI</ItemTitle>
                 </ItemContent>
                 <ItemActions>
-                  <Button size="sm" variant="secondary">
+                  <Button size="sm" variant="outline">
                     Test
                   </Button>
                 </ItemActions>
@@ -139,7 +139,7 @@ export default function ItemRhythm() {
                   <ItemTitle>Anthropic</ItemTitle>
                 </ItemContent>
                 <ItemActions>
-                  <Button size="sm" variant="secondary">
+                  <Button size="sm" variant="outline">
                     Test
                   </Button>
                 </ItemActions>

@@ -44,7 +44,7 @@ export default function DidNotLoad() {
           </EmptyHeader>
           <EmptyContent>
             <Button
-              variant="secondary"
+              variant="outline"
               size="sm"
               onClick={retry}
               loadingLabel="Trying again"

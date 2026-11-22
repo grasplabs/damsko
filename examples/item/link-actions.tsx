@@ -48,7 +48,7 @@ export default function ItemLinkActions() {
       <ItemActions>
         <Button
           size="sm"
-          variant="secondary"
+          variant="outline"
           onClick={() => {
             setSaid("Restored Archive 2025");
           }}
@@ -92,7 +92,7 @@ export default function ItemLinkActions() {
           <ItemActions>
             <Button
               size="sm"
-              variant="secondary"
+              variant="outline"
               onClick={() => {
                 setSaid("Shared Supplier list");
               }}
@@ -111,7 +111,7 @@ export default function ItemLinkActions() {
             <ItemActions>
               <Button
                 size="sm"
-                variant="secondary"
+                variant="outline"
                 onClick={() => {
                   setSaid("Removed Budget");
                 }}

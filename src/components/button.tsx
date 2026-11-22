@@ -4,7 +4,7 @@
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
 //   <Button>Save changes</Button>
-//   <Button variant="secondary"><Icon icon={PlusIcon} />Invite people</Button>
+//   <Button variant="outline"><Icon icon={PlusIcon} />Invite people</Button>
 //   <Button variant="ghost" size="icon-sm" aria-label="More actions"><Icon icon={DotsIcon} /></Button>
 //   <Button asChild><a href="/settings">Settings</a></Button>
 //   <Button onClick={saveChanges}>Save changes</Button>          saveChanges returns a Promise
@@ -77,9 +77,12 @@ interface ButtonBase extends Omit<
   "className" | "style" | "render" | "children" | "onClick"
 > {
   /**
-   * The weight of the action: `default` for the one step you want taken, `secondary` for the
-   * others, `outline` beside them on a busy surface, `ghost` for toolbars and rows, `destructive`
-   * for what deletes, `link` for an action that reads as words.
+   * The weight of the action: `default` for the one main step of a view, `outline` for the
+   * ordinary button anywhere (the lesser one beside it, a standalone action or trigger),
+   * `secondary` for a flat one repeated or dense (the same action on every row; never a filter or
+   * an on/off control, which is a Toggle), `ghost` for
+   * toolbars, rows and icon buttons, `destructive` for what cannot be undone, `link` for an action
+   * that reads as words.
    * @default "default"
    */
   variant?: ButtonVariant;
@@ -323,7 +326,10 @@ const styles = stylex.create({
         default: null,
         [HOVER]: 1,
       },
-      [stylex.when.ancestor(":active", buttonMarker)]: 0.3,
+      [stylex.when.ancestor(":active", buttonMarker)]: {
+        default: 0.3,
+        [HOVER]: 0.3,
+      },
     },
   },
   // A finger needs 44px: on a touch screen an unseen area makes up the difference.
@@ -447,21 +453,24 @@ const variantStyles = stylex.create({
     backgroundColor: colors.primary,
     boxShadow: shadow.bevelInk,
   },
+  // A flat veil of ink, no edge and no lift: quieter than outline, firmer than ghost, for a repeated
+  // or dense action where a row of edged, lifted buttons would be too heavy.
   secondary: {
     color: colors.foreground,
-    backgroundColor: colors.secondary,
-    boxShadow: shadow.bevelMuted,
+    backgroundColor: colors.buttonSecondary,
+    boxShadow: "none",
   },
   destructive: {
     color: colors.destructiveFillForeground,
     backgroundColor: colors.destructiveFill,
     boxShadow: shadow.bevelDestructive,
   },
-  // A hairline edge and no fill, for a surface where a filled button would be too loud.
+  // The ordinary button: the quiet fill, a field's edge and its lift, so it stands as tall as an
+  // input beside it.
   outline: {
     color: colors.foreground,
-    backgroundColor: "transparent",
-    boxShadow: `inset 0 0 0 ${sizes.hairline} ${colors.borderStrongColor}`,
+    backgroundColor: colors.secondary,
+    boxShadow: shadow.bevelMuted,
   },
   ghost: {
     color: colors.foreground,
@@ -483,12 +492,17 @@ const variantStyles = stylex.create({
   },
 });
 
+// The press is written under the hover's media query too: a hover inside a media query outranks a
+// bare :active, and the pressed fill never showed under a mouse.
 const liveStyles = stylex.create({
   default: {
     boxShadow: {
       default: shadow.bevelInk,
       ":hover": { default: null, [HOVER]: shadow.bevelInkHover },
-      ":active": shadow.bevelInkPress,
+      ":active": {
+        default: shadow.bevelInkPress,
+        [HOVER]: shadow.bevelInkPress,
+      },
     },
     // Under a pointer the fill lightens a step as the bevel brightens; in dark it goes to white.
     backgroundColor: {
@@ -497,21 +511,30 @@ const liveStyles = stylex.create({
         default: null,
         [HOVER]: `light-dark(oklch(from ${colors.primary} calc(l + 0.08) c h), ${colors.primaryHover})`,
       },
-      ":active": colors.primaryActive,
+      ":active": {
+        default: colors.primaryActive,
+        [HOVER]: colors.primaryActive,
+      },
     },
   },
   secondary: {
     backgroundColor: {
-      default: colors.secondary,
-      ":hover": { default: null, [HOVER]: colors.secondaryHover },
-      ":active": colors.secondaryActive,
+      default: colors.buttonSecondary,
+      ":hover": { default: null, [HOVER]: colors.buttonSecondaryHover },
+      ":active": {
+        default: colors.buttonSecondaryActive,
+        [HOVER]: colors.buttonSecondaryActive,
+      },
     },
   },
   destructive: {
     boxShadow: {
       default: shadow.bevelDestructive,
       ":hover": { default: null, [HOVER]: shadow.bevelDestructiveHover },
-      ":active": shadow.bevelDestructivePress,
+      ":active": {
+        default: shadow.bevelDestructivePress,
+        [HOVER]: shadow.bevelDestructivePress,
+      },
     },
     backgroundColor: {
       default: colors.destructiveFill,
@@ -519,14 +542,20 @@ const liveStyles = stylex.create({
         default: null,
         [HOVER]: `oklch(from ${colors.destructiveFill} calc(l + 0.06) c h)`,
       },
-      ":active": colors.destructiveFillActive,
+      ":active": {
+        default: colors.destructiveFillActive,
+        [HOVER]: colors.destructiveFillActive,
+      },
     },
   },
   outline: {
     backgroundColor: {
-      default: "transparent",
-      ":hover": { default: null, [HOVER]: colors.accent },
-      ":active": colors.accentActive,
+      default: colors.secondary,
+      ":hover": { default: null, [HOVER]: colors.secondaryHover },
+      ":active": {
+        default: colors.secondaryActive,
+        [HOVER]: colors.secondaryActive,
+      },
     },
   },
   ghost: {
@@ -538,7 +567,7 @@ const liveStyles = stylex.create({
         [HOVER]: colors.accent,
         ":is([aria-pressed=true])": colors.accentActive,
       },
-      ":active": colors.accentActive,
+      ":active": { default: colors.accentActive, [HOVER]: colors.accentActive },
     },
   },
   link: {

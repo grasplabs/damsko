@@ -25,7 +25,7 @@ export default function InlineEditControlled() {
         />
       </Heading>
       <Button
-        variant="secondary"
+        variant="outline"
         size="sm"
         onClick={() => {
           setEditing(true);

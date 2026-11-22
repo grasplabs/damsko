@@ -51,7 +51,7 @@ export default function DialogFormTest() {
       }}
     >
       <DialogTrigger asChild>
-        <Button variant="secondary">Rename project</Button>
+        <Button variant="outline">Rename project</Button>
       </DialogTrigger>
       {/* A ref of the caller's own, so the spec can see the panel hand it the element. */}
       <DialogContent

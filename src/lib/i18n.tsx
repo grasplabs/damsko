@@ -440,10 +440,6 @@ export interface I18nCatalog {
     /** Said once it saved. */
     statusSuccess: string;
   };
-  fileTree: {
-    /** The tree's name, when it is given none. */
-    name: string;
-  };
   fileUpload: {
     /** Said once files join the list, from how many. */
     added: (count: number) => string;
@@ -1154,9 +1150,6 @@ const english: I18nCatalog = {
     statusLoading: "Saving",
     statusRetry: "Try again",
     statusSuccess: "Saved",
-  },
-  fileTree: {
-    name: "Files",
   },
   fileUpload: {
     added: (count) => (count === 1 ? "1 file added" : `${count} files added`),

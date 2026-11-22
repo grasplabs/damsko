@@ -93,7 +93,7 @@ export default function IconsWork() {
       <div {...stylex.props(styles.part, styles.topStart)}>
         <p {...stylex.props(styles.label)}>In a button</p>
         <div {...stylex.props(styles.row)}>
-          <Button variant="secondary">
+          <Button variant="outline">
             <Icon icon={PlusIcon} />
             New report
           </Button>
@@ -101,7 +101,7 @@ export default function IconsWork() {
             <Icon icon={CheckIcon} />
             Approve
           </Button>
-          <Button variant="secondary" size="icon" aria-label="More actions">
+          <Button variant="outline" size="icon" aria-label="More actions">
             <Icon icon={EllipsisIcon} />
           </Button>
         </div>

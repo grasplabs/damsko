@@ -1071,32 +1071,6 @@
       ]
     },
     {
-      "name": "file-tree",
-      "type": "registry:ui",
-      "title": "File tree",
-      "description": "The files an assistant changed or made, as folders that open, one file chosen.",
-      "dependencies": [
-        "@stylexjs/stylex"
-      ],
-      "registryDependencies": [
-        "@damsko/lib",
-        "@damsko/tree-view"
-      ],
-      "docs": "https://damsko.joingrasp.com/components/file-tree",
-      "files": [
-        {
-          "path": "src/components/file-tree-icon.ts",
-          "type": "registry:file",
-          "target": "~/src/components/file-tree-icon.ts"
-        },
-        {
-          "path": "src/components/file-tree.tsx",
-          "type": "registry:file",
-          "target": "~/src/components/file-tree.tsx"
-        }
-      ]
-    },
-    {
       "name": "file-upload",
       "type": "registry:ui",
       "title": "File upload",
@@ -1876,27 +1850,6 @@
           "path": "src/components/pagination.tsx",
           "type": "registry:file",
           "target": "~/src/components/pagination.tsx"
-        }
-      ]
-    },
-    {
-      "name": "plan",
-      "type": "registry:ui",
-      "title": "Plan",
-      "description": "What the assistant proposes to do, every step shown before it starts, with an action to go ahead and how far it has got.",
-      "dependencies": [
-        "@stylexjs/stylex"
-      ],
-      "registryDependencies": [
-        "@damsko/lib",
-        "@damsko/trace"
-      ],
-      "docs": "https://damsko.joingrasp.com/components/plan",
-      "files": [
-        {
-          "path": "src/components/plan.tsx",
-          "type": "registry:file",
-          "target": "~/src/components/plan.tsx"
         }
       ]
     },
@@ -2714,27 +2667,6 @@
           "path": "src/components/tags-input.tsx",
           "type": "registry:file",
           "target": "~/src/components/tags-input.tsx"
-        }
-      ]
-    },
-    {
-      "name": "task",
-      "type": "registry:ui",
-      "title": "Task",
-      "description": "One piece of work being done, behind a line that opens on the steps it took and the files it touched.",
-      "dependencies": [
-        "@stylexjs/stylex"
-      ],
-      "registryDependencies": [
-        "@damsko/lib",
-        "@damsko/trace"
-      ],
-      "docs": "https://damsko.joingrasp.com/components/task",
-      "files": [
-        {
-          "path": "src/components/task.tsx",
-          "type": "registry:file",
-          "target": "~/src/components/task.tsx"
         }
       ]
     },
