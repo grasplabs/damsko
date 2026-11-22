@@ -19,17 +19,23 @@ export type MarkdownRoot = ReturnType<typeof fromMarkdown>;
 // The parser's work on one paragraph (or heading, or table cell) grows faster than its length: it
 // weighs every mark of emphasis against the marks before it, looks back from every `]` for the `[`
 // it closes, and joins the words again around every escape, reference, code span or tag, each time
-// moving the rest of the paragraph (micromark's resolveAllText). A paragraph of 100 KB of those
-// took seconds. No real answer has a paragraph of MAX_INLINE characters that
-// needs its marks, so a longer one is not read for marks at all: it is its own characters, as
-// plain text, in its place (in its list item, quote or cell). To find them, the source is read
-// first for its blocks alone, with nothing inline, which takes time in step with its length. Then
-// it is read whole with each long one's characters stood in for by one that starts no mark (every
-// mark of the quotes, lists and tables round it kept, so its blocks are the same), and they are
-// given back.
+// moving the rest of the paragraph (micromark's resolveAllText). Measured on a laptop, the costliest
+// marks (stars, `a* `, `](`) take about 0.1 s in a paragraph of 8,000 characters and 0.4 to 0.6 s
+// in one of 16,000; a paragraph of 100 KB of escapes took seconds. A real answer's paragraphs are
+// far shorter than MAX_INLINE (some 1,300 words), so a longer one is not read for marks at all: it
+// is its own characters, as plain text, in its place (in its list item, quote or cell). Many
+// paragraphs just under it would still add up, so one read reads the marks of MAX_MARKED characters
+// at most (at worst about a second), and the blocks after are plain text too.
+//
+// To find them, the source is read first for its blocks alone, with nothing inline, which takes time
+// in step with its length. Then it is read whole with each plain block's characters stood in for by
+// one that starts no mark (every mark of the quotes, lists and tables round it kept, so its blocks
+// are the same), and they are given back.
 
 /** The longest paragraph, heading or table cell read for its marks. */
-const MAX_INLINE = 2000;
+const MAX_INLINE = 8000;
+/** The most characters read for their marks in one read; past them, blocks are plain text. */
+const MAX_MARKED = 64_000;
 
 /** Every construct the parser reads inside a paragraph, by name: off while the blocks are found. */
 const INLINE = [
@@ -126,21 +132,35 @@ const mayBeLong = (source: string): boolean => {
   return false;
 };
 
-/** Where the characters of each paragraph, heading or table cell over MAX_INLINE are, or null. */
+/**
+ * Where the characters of each paragraph, heading or table cell over MAX_INLINE are, and of every
+ * one after MAX_MARKED characters were read for their marks, or null.
+ */
 const longInline = (source: string): Uint8Array | null => {
-  if (!mayBeLong(source)) {
+  if (source.length <= MAX_MARKED && !mayBeLong(source)) {
     return null;
   }
   const long = new Uint8Array(source.length);
   let any = false;
+  let marked = 0;
   each(parsed(source, false), (node) => {
     const texts = (node.children ?? []).filter(({ type }) => type === "text");
     const length = texts.reduce(
       (sum, text) => sum + (text.value?.length ?? 0),
       0
     );
+    if (texts.length === 0) {
+      return;
+    }
+    if (length <= MAX_INLINE) {
+      if (marked + length <= MAX_MARKED) {
+        marked += length;
+        return;
+      }
+      marked = Number.POSITIVE_INFINITY;
+    }
     const places = texts.map((text) => placesOf(source, text));
-    if (length > MAX_INLINE && places.every((place) => place !== null)) {
+    if (places.every((place) => place !== null)) {
       any = true;
       for (const [from, to] of places.flat()) {
         long.fill(1, from, to);
@@ -178,7 +198,7 @@ const givenBack = (tree: MarkdownRoot, source: string, long: Uint8Array) => {
 
 /**
  * The tree of `source`. Each node keeps its offsets in the source. A paragraph, heading or table
- * cell longer than MAX_INLINE is its own characters, as plain text. Should the parser fail all the
+ * cell longer than MAX_INLINE, or past MAX_MARKED, is its own characters, as plain text. Should the parser fail all the
  * same, the source is one paragraph of its own words: an answer is always drawn.
  */
 export const parseMarkdown = (source: string): MarkdownRoot => {

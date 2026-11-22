@@ -348,6 +348,10 @@ const boundedTree = (source: string) => parseMarkdown(bounded(source));
 
 const noSpace = (text: string) => text.replaceAll(/\s/gu, "");
 
+/** A sentence a real answer may hold: a link, bold and code. */
+const sentenceOf = (n: number) =>
+  `See [the report ${n}](https://example.com/${n}), which says **point ${n}** holds, as \`run ${n}\` shows. `;
+
 describe("a paragraph longer than any answer's", () => {
   // The parser's work on one paragraph grows as its square when it is full of escapes, code, tags,
   // references or marks: a paragraph of 100 KB took seconds, of 500 KB a minute. A paragraph
@@ -408,7 +412,7 @@ describe("a paragraph longer than any answer's", () => {
   );
 
   test("a long one is its own characters, in its place in a list, a quote, a table, a heading and a note", () => {
-    const long = `words *not* \\* \`code\` [x](y) &amp; <!-- ${"word ".repeat(450)}end`;
+    const long = `words *not* \\* \`code\` [x](y) &amp; <!-- ${"word ".repeat(1700)}end`;
     const cases = [
       [
         `- one\n- ${long}\n- three`,
@@ -446,12 +450,46 @@ describe("a paragraph longer than any answer's", () => {
 
   test("a short one beside it is still read for its marks", () => {
     const tree = parseMarkdown(
-      `Some **bold** and \`code\`.\n\n${"word ".repeat(500)}`
+      `Some **bold** and \`code\`.\n\n${"word ".repeat(1700)}`
     );
     expect(shapeOf(tree.children[0] ?? { type: "none" })).toBe(
       "paragraph(text,strong(text),text,inlineCode,text)"
     );
   });
+
+  test("a paragraph of 5,000 characters with links, bold and code keeps every mark", () => {
+    const paragraph = Array.from({ length: 55 }, (_, n) => sentenceOf(n)).join(
+      ""
+    );
+    expect(paragraph.length).toBeGreaterThan(5000);
+    const [node] = parseMarkdown(paragraph).children;
+    const kinds = (node?.type === "paragraph" ? node.children : []).map(
+      ({ type }) => type
+    );
+    expect(kinds.filter((type) => type === "link")).toHaveLength(55);
+    expect(kinds.filter((type) => type === "strong")).toHaveLength(55);
+    expect(kinds.filter((type) => type === "inlineCode")).toHaveLength(55);
+  });
+
+  // Each paragraph just under the bound costs its most; a long answer of them is read for marks
+  // only so far, and plain text after.
+  test(
+    "400 KB of the costliest paragraphs just under the bound is read within the budget",
+    () => {
+      const paragraph = "a* ".repeat(2667).slice(0, 7999);
+      const source = filled(`${paragraph}\n\n`)(400_000);
+      boundedTree(source);
+      const time = Math.min(
+        ...[1, 2].map(() => {
+          const start = now();
+          boundedTree(source);
+          return now() - start;
+        })
+      );
+      expect(time).toBeLessThan(3000);
+    },
+    SLOW_TEST
+  );
 
   // Text made at random in every place a paragraph can stand, each past the bound: whatever its
   // characters (marks, escapes, tags, tabs, two-unit characters, the character that stands in for
@@ -488,7 +526,7 @@ describe("a paragraph longer than any answer's", () => {
     const contentOf = (cell: boolean) => {
       const lines: string[] = [];
       let line = "word";
-      while (lines.join("").length + line.length < 2200) {
+      while (lines.join("").length + line.length < 8200) {
         const piece = pieces[random(pieces.length)] ?? "";
         line += ` ${cell && (piece === "|" || piece === "\\") ? "x" : piece}`;
         if (!cell && random(12) === 0) {
