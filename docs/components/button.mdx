@@ -56,6 +56,12 @@ Keep it focusable with `focusableWhenDisabled` and tie the reason to it by `aria
 
 <Stage path="button/disabled-why" label="Out of use, and why" />
 
+## A long name in a narrow head
+
+A label wraps when its room is short. `truncate` keeps it on one line and cuts it with an ellipsis instead, the button shrinking as far as its square, so the control beside it stays in view; its name stays whole.
+
+<Stage path="button/truncate" label="A long name in a narrow head" />
+
 ## Every state
 
 Loading shows a Spinner before the words and keeps focus on the button.
@@ -106,7 +112,7 @@ Loading shows a Spinner before the words and keeps focus on the button.
   never={[
     "Two `default` buttons in one view, or `secondary` for Cancel beside the main step or a lone action: it is `outline`.",
     "A `secondary` Button for a filter or anything on or off: it is a Toggle, since `secondary` at rest wears a pressed toggle's fill; a variant never shows a chosen state (a ghost Button takes `aria-pressed`).",
-    "A fixed width, or words cut by your own CSS: Text's `truncate` cuts, with its tooltip.",
+    "A fixed width, or words cut by your own CSS: `truncate` cuts them.",
     "Colours, sizes or corners set from outside: `style` takes layout only.",
   ]}
 />

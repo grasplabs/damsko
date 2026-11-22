@@ -44,7 +44,13 @@ import {
   size as sizes,
   space,
 } from "../lib/tokens.stylex";
-import { isIconSize, isInvalid, isThenable, textOf } from "../lib/utils";
+import {
+  isIconSize,
+  isInvalid,
+  isThenable,
+  listOf,
+  textOf,
+} from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { iconVars, layerFooterMarker, motionVars } from "../lib/vars.stylex";
 import { buttonMarker, ghostVars } from "./button.stylex";
@@ -126,6 +132,13 @@ interface ButtonBase extends Omit<
    * `onClick` alone. Whoever runs the work says how it went.
    */
   status?: ActionStatus;
+  /**
+   * Squeezed, the words stay on one line and end in an ellipsis instead of wrapping, and the button
+   * may shrink to its square. They stay its name whole. An icon-only button has no words to cut. For a name in a narrow head, where a second
+   * line would push the next control off.
+   * @default false
+   */
+  truncate?: boolean;
   /** Layout only: where it sits and how much room it takes. Its look belongs to `variant` and `size`. */
   style?: LayoutStyle;
 }
@@ -297,6 +310,11 @@ const styles = stylex.create({
   // Loading: it looks like itself, and the pointer says it is busy.
   busy: {
     cursor: "progress",
+  },
+  // Truncated: the button may shrink to its square floor (each size's minWidth), on one line.
+  cut: {
+    flexShrink: 1,
+    whiteSpace: "nowrap",
   },
   // In forced colours the focus ring is the system's highlight, apart from the border's ButtonText.
   forcedFocus: {
@@ -656,8 +674,9 @@ const ownOf = (
     variant,
     size,
     disabled,
+    truncate,
     style,
-  }: Required<Pick<ButtonBase, "variant" | "disabled">> &
+  }: Required<Pick<ButtonBase, "variant" | "disabled" | "truncate">> &
     Pick<ButtonBase, "style"> & { size: ButtonSize },
   extra: Record<string, unknown>,
   agentConfirm: string | undefined,
@@ -672,6 +691,7 @@ const ownOf = (
   return {
     ...stylex.props(
       lookOf(variant, size, !disabled),
+      truncate && styles.cut,
       disabled && !busy && styles.disabled,
       disabled && !busy && variant === "default" && styles.defaultDisabled,
       busy && styles.busy,
@@ -782,6 +802,20 @@ const statusStyles = stylex.create({
   unseen: {
     color: "transparent",
   },
+  // Truncated: the content is a row of its own that may shrink, its icons whole and its words cut.
+  cutRow: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: space["2"],
+    minWidth: 0,
+    maxWidth: "100%",
+  },
+  cutWords: {
+    minWidth: 0,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+  },
   // A state's mark, centred over the words.
   mark: {
     position: "absolute",
@@ -852,15 +886,31 @@ const Mark = ({ status }: { status: Exclude<ActionStatus, "idle"> }) => {
  * The words, and over them the state's mark; with words for a state, every state stacked in one
  * cell. Mounted only while it shows, a mark never turns unseen.
  */
+/** The content with each run of words in a box that cuts them with an ellipsis (`truncate`). */
+const cutWords = (children: ReactNode): ReactNode[] =>
+  listOf(children).map((child, index): ReactNode =>
+    typeof child === "string" || typeof child === "number" ? (
+      // Words have no id of their own; their place among the icons is their key.
+      <span key={index} {...stylex.props(statusStyles.cutWords)}>
+        {child}
+      </span>
+    ) : (
+      child
+    )
+  );
+
 const Status = ({
   status,
   labels,
-  children,
+  truncate,
+  children: given,
 }: {
   status: ActionStatus;
   labels: Labels;
+  truncate: boolean;
   children: ReactNode;
 }) => {
+  const children = truncate ? cutWords(given) : given;
   const resting = status === "idle";
   const label = resting ? undefined : labels[status];
   const mark =
@@ -876,7 +926,7 @@ const Status = ({
         <span
           data-slot="button-content"
           {...stylex.props(
-            statusStyles.contents,
+            truncate ? statusStyles.cutRow : statusStyles.contents,
             !resting && statusStyles.unseen
           )}
         >
@@ -979,6 +1029,7 @@ export const Button = ({
   status: held,
   onClick,
   style,
+  truncate = false,
   children,
   ...rest
 }: ButtonProps) => {
@@ -992,7 +1043,7 @@ export const Button = ({
   const extra = withStatus(rest, status);
   const off = disabled || working;
   const own = ownOf(
-    { variant, size, disabled: off, style },
+    { variant, size, disabled: off, truncate, style },
     extra,
     agentConfirm,
     textOf(children) || extra["aria-label"],
@@ -1007,6 +1058,7 @@ export const Button = ({
   const words = (content: ReactNode) => (
     <Status
       status={status}
+      truncate={truncate}
       labels={
         isIconSize(size)
           ? {}
