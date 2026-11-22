@@ -9,31 +9,47 @@ import {
   ModelSelectorItem,
   ModelSelectorList,
   ModelSelectorLogo,
+  ModelSelectorMaker,
+  ModelSelectorMakers,
   ModelSelectorName,
   ModelSelectorTrigger,
 } from "@grasp-os/ui/components/model-selector";
 import { useState } from "react";
 
-import { makers, models } from "./models";
+import { logoOf, makers, modelOf, models } from "./models";
 
-// The models by maker, each with its maker's logo. Typing narrows the list; the arrows and Enter
-// pick, and the trigger then says the model picked.
+// The makers down the side, the chosen maker's models beside them. Typing searches every maker;
+// picking a model closes the panel, and the chip then names it.
 export default function ModelSelectorBasic() {
   const [value, setValue] = useState("sonnet");
-  const current = models.find((model) => model.id === value);
-  const logo = makers.find((maker) => maker.id === current?.maker)?.logo;
+  const current = modelOf(value);
+  const logo = current === undefined ? undefined : logoOf(current.maker);
   return (
-    <ModelSelector>
+    <ModelSelector value={value} onValueChange={setValue}>
       <ModelSelectorTrigger>
         {logo === undefined ? null : <ModelSelectorLogo logo={logo} />}
         <ModelSelectorName>{current?.name}</ModelSelectorName>
       </ModelSelectorTrigger>
       <ModelSelectorContent>
         <ModelSelectorInput />
-        <ModelSelectorEmpty />
-        <ModelSelectorList value={value} onValueChange={setValue}>
+        <ModelSelectorMakers>
           {makers.map((maker) => (
-            <ModelSelectorGroup key={maker.id} heading={maker.name}>
+            <ModelSelectorMaker
+              key={maker.id}
+              value={maker.id}
+              label={maker.name}
+              logo={maker.logo}
+            />
+          ))}
+        </ModelSelectorMakers>
+        <ModelSelectorList>
+          <ModelSelectorEmpty />
+          {makers.map((maker) => (
+            <ModelSelectorGroup
+              key={maker.id}
+              value={maker.id}
+              heading={maker.name}
+            >
               {models
                 .filter((model) => model.maker === maker.id)
                 .map((model) => (
@@ -41,8 +57,8 @@ export default function ModelSelectorBasic() {
                     key={model.id}
                     value={model.id}
                     keywords={[maker.name]}
-                    description={model.unavailable ?? model.description}
-                    disabled={model.unavailable !== undefined}
+                    description={model.description}
+                    disabled={model.unavailable}
                   >
                     <ModelSelectorLogo logo={maker.logo} />
                     <ModelSelectorName>{model.name}</ModelSelectorName>

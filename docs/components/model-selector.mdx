@@ -1,6 +1,6 @@
 ---
 title: Model selector
-description: The model an assistant answers with, picked from a searchable list beside its trigger.
+description: The model an assistant answers with, and how hard it thinks, chosen from one chip that opens one panel.
 ---
 
 <Head
@@ -10,21 +10,29 @@ description: The model an assistant answers with, picked from a searchable list 
 
 ## By maker
 
-The models are yours: group them by maker with `ModelSelectorGroup`, each with its maker's logo (`ModelSelectorLogo`, an IconData of the product's). `ModelSelectorList` holds the chosen model (`value` and `onValueChange`). Typing narrows the list; the arrows and Enter pick; the trigger then names the model picked.
+A search field across the top; down the side, a column of the makers' logos (`ModelSelectorMakers`, each a `ModelSelectorMaker`); beside it, the chosen maker's models under its name (`ModelSelectorGroup`, its `value` the maker's). The panel opens on the chosen model's maker. Typing searches every maker. The models, makers and logos are yours; `ModelSelector` holds the chosen model (`value` and `onValueChange`). Picking closes the panel, and the chip then names the model.
 
 <Stage path="model-selector/basic" label="By maker" />
 
-## With a footer
+## Favourites
 
-`footer` on `ModelSelectorContent` holds what the product adds under the list, such as how hard the model thinks.
+With `favorites`, a star heads the column and lists them. A row's `ModelSelectorFavorite` adds its model or takes it out without picking it, through `onFavoritesChange`; from the search, the arrow toward the line's end does the same for the highlighted model. The change is said. Leave `favorites` out for a product without them.
 
-<Stage path="model-selector/footer" label="With a footer" />
+<Stage path="model-selector/favorites" label="Favourites" />
 
-## Model and effort
+## Effort
 
-Two menus under a message field: the model, searched, and how hard it thinks, a Dropdown menu of three beside it.
+`ModelSelectorEffort` at the panel's foot takes the chosen model's levels and shows each by name as one row of segments, the chosen one raised (`effort` and `onEffortChange`). With an effort to set, picking a model keeps the panel open, so both are chosen in one opening. A model with one level or none has no row: it folds away. The chip shows the maker's logo and the level in a word, and says the model in its `tooltip`.
 
-<Stage path="model-selector/effort" label="Model and effort" />
+<Stage path="model-selector/effort" label="Effort" />
+
+This is the one effort control for a chat: a Slider's `levels` stays for a level set on its own, not beside a model.
+
+## In a prompt input
+
+Among a [Prompt input](/components/prompt-input)'s tools, opening upwards with `side="top"`.
+
+<Stage path="prompt-input/model" label="In a prompt input" />
 
 <Part title="Using it" />
 
@@ -33,12 +41,14 @@ Two menus under a message field: the model, searched, and how hard it thinks, a 
 <Intent
   of="model-selector"
   always={[
-    "Choosing the model an assistant answers with, in a prompt input's tools or a settings row.",
-    "Models grouped by maker, each with its maker's logo, from the product's own list.",
+    "Choosing the model an assistant answers with, and its effort, from one chip in a prompt input's tools or a settings row.",
+    "The models grouped by maker, each with its maker's logo, from the product's own list.",
+    "The effort as ModelSelectorEffort's segments in the same panel, never a second menu beside it.",
   ]}
   never={[
     "A short list of plain choices with no search: use Select.",
     "Actions to run, not a value to choose: use Command.",
+    "A second model menu built from a Dropdown menu: there is one way to pick a model.",
   ]}
 />
 
@@ -48,49 +58,103 @@ Two menus under a message field: the model, searched, and how hard it thinks, a 
   title="Values"
   rows={[
     {
-      group: "Trigger",
+      group: "Chip",
       key: "Look",
       value:
-        "A small ghost Button: the logo, the name cut with an ellipsis, a chevron",
+        "An extra-small ghost Button, 28px: the logo, the words a size down (text-xs), a quiet chevron",
+      tokens: ["control-xs"],
     },
     {
       group: "Panel",
       key: "Surface",
       value:
-        "Command's: the popup's fill, lift and corner, {popover-width} wide at most",
-      tokens: ["popover"],
+        "The popup's fill, lift and corner, {popover-width} wide at most, {popup-height} tall at most; each column scrolls its own",
+      tokens: ["popover", "popup-shadow", "radius"],
     },
     {
       group: "Panel",
-      key: "Footer",
-      value: "Under a hairline, on the popup's padding",
-      tokens: ["border"],
+      key: "Search",
+      value: "36px, the icon and the words in text-sm, a hairline under it",
+      tokens: ["control-default", "border"],
     },
     {
-      group: "Items",
-      key: "Chosen",
-      value: "Medium weight and a tick at the end",
-      tokens: ["foreground"],
+      group: "Column",
+      key: "Makers",
+      value:
+        "28px squares on the rows' step, a hairline at their end; the chosen one on the highlight's fill, in ink",
+      tokens: ["control-xs", "accent-highlight"],
+    },
+    {
+      group: "List",
+      key: "Rows",
+      value:
+        "28px (44 on touch), text-sm at the regular weight; the chosen one ticked at the end",
+      tokens: ["control-xs", "tap-target"],
+    },
+    {
+      group: "List",
+      key: "Heading",
+      value: "The maker's name, text-xs and muted, in the first logo's row",
+      tokens: ["muted-foreground"],
+    },
+    {
+      group: "Effort",
+      key: "Segments",
+      value:
+        "Toggle group at the default size under its heading, across the panel, under a hairline",
+      tokens: ["toggle-track-padding", "border"],
+    },
+    {
+      group: "Motion",
+      key: "Panel",
+      value:
+        "Grows from the chip; the effort's row eases its height as it comes and goes; at once with reduced motion",
+      tokens: ["duration-popup", "duration-ui"],
     },
   ]}
 />
 <Rows
   title="Behaviour"
   rows={[
-    { key: "Opening", value: "The trigger opens it on the search field." },
+    {
+      key: "Opening",
+      value:
+        "The chip opens it on the search, the column on the chosen model's maker.",
+    },
+    {
+      key: "Column",
+      value:
+        "A press, the arrows or a first letter choose a maker, or the star; its models show. One tab stop.",
+    },
+    {
+      key: "Search",
+      value:
+        "Typing searches every maker, the column unchosen; the arrows move in the list and Enter picks.",
+    },
     {
       key: "Picking",
       value:
-        "Enter or a press picks; the panel closes and focus goes back to the trigger.",
+        "Closes the panel and focus goes back to the chip; with an effort to set, the panel stays open and says the model chosen.",
+    },
+    {
+      key: "Star",
+      value:
+        "A row's star adds or takes out its model without picking it; from the search, the arrow toward the line's end does it for the highlighted row.",
     },
     {
       key: "Escape",
       value:
-        "Closes the panel, focus back on the trigger; stopped there, so the page does not also hear it.",
+        "Closes the panel, focus back on the chip; stopped there, so the page does not also hear it.",
+    },
+    {
+      key: "Tab",
+      value:
+        "Search, column, effort; from the last, on to the stop after the chip, the panel closed, or back to the chip when none follows.",
     },
     {
       key: "Disabled",
-      value: "A model out of use is passed by the keys and the pointer.",
+      value:
+        "A model out of use is passed by the keys and the pointer, and says why under its name.",
     },
   ]}
 />
@@ -98,15 +162,37 @@ Two menus under a message field: the model, searched, and how hard it thinks, a 
   title="Accessibility"
   rows={[
     {
-      key: "Trigger",
+      key: "Chip",
       value:
-        "A `button` named by the selector's word and the model it shows (Model: …), with `aria-expanded`",
+        "A `button` named by the selector's word and the model (Model: …, with its level), with `aria-expanded`",
     },
     {
       key: "Search",
-      value: "A `combobox` named Search models, over a `listbox`",
+      value: "A `combobox` named Search models, over a `listbox` of the models",
     },
-    { key: "Chosen", value: "`aria-current` on the chosen model's option" },
+    {
+      key: "Column",
+      value: "A `listbox` named Makers, its options named by each maker",
+    },
+    {
+      key: "Rows",
+      value:
+        "Each `option` named by the model and described by its line; `aria-current` on the chosen one",
+    },
+    {
+      key: "Star",
+      value:
+        "A `button` named Add … to favourites or Remove … from favourites; the change is announced",
+    },
+    {
+      key: "Effort",
+      value: "A `group` named Thinking of pressed `button`s, one tab stop",
+    },
+    {
+      key: "Forced colours",
+      value:
+        "The chosen maker on the system's highlight, the chosen row outlined, hairlines in CanvasText",
+    },
   ]}
 />
 
@@ -140,6 +226,18 @@ Two menus under a message field: the model, searched, and how hard it thinks, a 
 
 <Props
   source="src/components/model-selector.tsx"
+  type="ModelSelectorMakersProps"
+  label="ModelSelectorMakers props"
+/>
+
+<Props
+  source="src/components/model-selector.tsx"
+  type="ModelSelectorMakerProps"
+  label="ModelSelectorMaker props"
+/>
+
+<Props
+  source="src/components/model-selector.tsx"
   type="ModelSelectorListProps"
   label="ModelSelectorList props"
 />
@@ -164,14 +262,20 @@ Two menus under a message field: the model, searched, and how hard it thinks, a 
 
 <Props
   source="src/components/model-selector.tsx"
-  type="ModelSelectorLogoProps"
-  label="ModelSelectorLogo props"
+  type="ModelSelectorFavoriteProps"
+  label="ModelSelectorFavorite props"
 />
 
 <Props
   source="src/components/model-selector.tsx"
-  type="ModelSelectorLogoGroupProps"
-  label="ModelSelectorLogoGroup props"
+  type="ModelSelectorEffortProps"
+  label="ModelSelectorEffort props"
+/>
+
+<Props
+  source="src/components/model-selector.tsx"
+  type="ModelSelectorLogoProps"
+  label="ModelSelectorLogo props"
 />
 
 <Props
@@ -179,7 +283,5 @@ Two menus under a message field: the model, searched, and how hard it thinks, a 
   type="ModelSelectorNameProps"
   label="ModelSelectorName props"
 />
-
-`ModelSelectorShortcut` and `ModelSelectorSeparator` are Command's `CommandShortcut` and `CommandSeparator`, and take their props.
 
 </Reference>

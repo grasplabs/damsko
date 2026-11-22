@@ -1,16 +1,21 @@
 "use client";
 
-import { Button } from "@grasp-os/ui/components/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@grasp-os/ui/components/dropdown-menu";
+  ModelSelector,
+  ModelSelectorContent,
+  ModelSelectorEffort,
+  ModelSelectorEmpty,
+  ModelSelectorFavorite,
+  ModelSelectorGroup,
+  ModelSelectorInput,
+  ModelSelectorItem,
+  ModelSelectorList,
+  ModelSelectorLogo,
+  ModelSelectorMaker,
+  ModelSelectorMakers,
+  ModelSelectorName,
+  ModelSelectorTrigger,
+} from "@grasp-os/ui/components/model-selector";
 import {
   PromptInput,
   PromptInputActionAddAttachments,
@@ -25,61 +30,43 @@ import {
   PromptInputTextarea,
   PromptInputTools,
 } from "@grasp-os/ui/components/prompt-input";
-import { ChevronDownIcon, Icon } from "@grasp-os/ui/lib/icons";
-import { colors } from "@grasp-os/ui/lib/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
-import { Fragment, useState } from "react";
+import { useState } from "react";
 
+import {
+  effortFor,
+  logoOf,
+  makers,
+  modelOf,
+  models,
+} from "../model-selector/models";
 import { layout } from "./layout";
 
-const providers = [
-  {
-    name: "Anthropic",
-    models: [
-      { id: "opus", name: "Claude Opus 5.5" },
-      { id: "sonnet", name: "Claude Sonnet 5.5" },
-    ],
-  },
-  {
-    name: "Google",
-    models: [
-      { id: "gemini-pro", name: "Gemini 3 Pro" },
-      { id: "gemini-flash", name: "Gemini 3 Flash" },
-    ],
-  },
-];
-
-const models = providers.flatMap((provider) => provider.models);
-
-const efforts = [
-  { value: "low", label: "Low" },
-  { value: "medium", label: "Medium" },
-  { value: "high", label: "High" },
-];
-
 const styles = stylex.create({
-  // The tools take the row beside Submit, so the menus after the plus stand at its end; on a narrow
-  // card they wrap inside it, and Submit stays at the foot's end.
+  // The tools take the row beside Submit; Submit stays at the foot's end.
   tools: { flexGrow: 1, flexBasis: 0, minWidth: 0 },
-  menus: { marginInlineStart: "auto" },
   submit: { alignSelf: "end" },
-  quiet: { color: colors.mutedForeground },
 });
 
-// The plus, then a model and an effort menu beside Submit, both DropdownMenus with
-// radio items. The prompt input holds none of it; the page keeps the choices and sends them along.
+// The model and how hard it thinks, as one chip among the tools: the Model selector, opening
+// upwards. The prompt input holds neither choice; the page keeps them and sends them along.
 export default function PromptInputModel() {
   const [model, setModel] = useState("opus");
   const [effort, setEffort] = useState("medium");
+  const [favorites, setFavorites] = useState(["opus", "gemini-pro"]);
   const [sent, setSent] = useState("");
-  const modelName = models.find((each) => each.id === model)?.name ?? "";
-  const effortName = efforts.find((each) => each.value === effort)?.label;
+  const current = modelOf(model);
+  const logo = current === undefined ? undefined : logoOf(current.maker);
+  const levels = current?.levels ?? [];
+  const level = levels.find((each) => each.value === effort)?.label;
+  const name = current?.name ?? "";
+  const said = level === undefined ? name : `${name}, ${level}`;
   return (
     <div {...stylex.props(layout.column)}>
       <PromptInput
         aria-label="Message the assistant"
         onSubmit={({ text }) => {
-          setSent(`${modelName}, ${effortName} effort: ${text}`);
+          setSent(`${said}: ${text}`);
         }}
       >
         <PromptInputHeader>
@@ -99,77 +86,64 @@ export default function PromptInputModel() {
                 <PromptInputActionAddAttachments />
               </PromptInputActionMenuContent>
             </PromptInputActionMenu>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  aria-label={`Model: ${modelName}`}
-                  style={styles.menus}
-                >
-                  {modelName}
-                  <Icon icon={ChevronDownIcon} />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start">
-                <DropdownMenuRadioGroup
-                  value={model}
-                  onValueChange={(next: string) => {
-                    setModel(next);
-                  }}
-                >
-                  {providers.map((provider, index) => (
-                    <Fragment key={provider.name}>
-                      {index > 0 && <DropdownMenuSeparator />}
-                      <DropdownMenuGroup>
-                        <DropdownMenuLabel>{provider.name}</DropdownMenuLabel>
-                        {provider.models.map((each) => (
-                          <DropdownMenuRadioItem
+            <ModelSelector
+              value={model}
+              onValueChange={(next) => {
+                setModel(next);
+                setEffort(effortFor(next, effort));
+              }}
+              favorites={favorites}
+              onFavoritesChange={setFavorites}
+              effort={effort}
+              onEffortChange={setEffort}
+            >
+              <ModelSelectorTrigger
+                tooltip={level === undefined ? undefined : said}
+              >
+                {logo === undefined ? null : <ModelSelectorLogo logo={logo} />}
+                <ModelSelectorName>{level ?? name}</ModelSelectorName>
+              </ModelSelectorTrigger>
+              <ModelSelectorContent side="top">
+                <ModelSelectorInput />
+                <ModelSelectorMakers>
+                  {makers.map((maker) => (
+                    <ModelSelectorMaker
+                      key={maker.id}
+                      value={maker.id}
+                      label={maker.name}
+                      logo={maker.logo}
+                    />
+                  ))}
+                </ModelSelectorMakers>
+                <ModelSelectorList>
+                  <ModelSelectorEmpty />
+                  {makers.map((maker) => (
+                    <ModelSelectorGroup
+                      key={maker.id}
+                      value={maker.id}
+                      heading={maker.name}
+                    >
+                      {models
+                        .filter((each) => each.maker === maker.id)
+                        .map((each) => (
+                          <ModelSelectorItem
                             key={each.id}
                             value={each.id}
-                            closeOnSelect
+                            keywords={[maker.name]}
+                            description={each.description}
+                            disabled={each.unavailable}
                           >
-                            {each.name}
-                          </DropdownMenuRadioItem>
+                            <ModelSelectorLogo logo={maker.logo} />
+                            <ModelSelectorName>{each.name}</ModelSelectorName>
+                            <ModelSelectorFavorite />
+                          </ModelSelectorItem>
                         ))}
-                      </DropdownMenuGroup>
-                    </Fragment>
+                    </ModelSelectorGroup>
                   ))}
-                </DropdownMenuRadioGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  aria-label={`Effort: ${effortName}`}
-                >
-                  <span {...stylex.props(styles.quiet)}>Effort</span>
-                  {effortName}
-                  <Icon icon={ChevronDownIcon} />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start">
-                <DropdownMenuRadioGroup
-                  value={effort}
-                  onValueChange={(next: string) => {
-                    setEffort(next);
-                  }}
-                >
-                  <DropdownMenuLabel>Effort</DropdownMenuLabel>
-                  {efforts.map((each) => (
-                    <DropdownMenuRadioItem
-                      key={each.value}
-                      value={each.value}
-                      closeOnSelect
-                    >
-                      {each.label}
-                    </DropdownMenuRadioItem>
-                  ))}
-                </DropdownMenuRadioGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                </ModelSelectorList>
+                <ModelSelectorEffort levels={levels} />
+              </ModelSelectorContent>
+            </ModelSelector>
           </PromptInputTools>
           <PromptInputSubmit style={styles.submit} />
         </PromptInputFooter>
