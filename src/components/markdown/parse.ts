@@ -16,16 +16,201 @@ import { gfm } from "micromark-extension-gfm";
 /** A Markdown syntax tree (mdast). */
 export type MarkdownRoot = ReturnType<typeof fromMarkdown>;
 
+// The parser's work on one paragraph (or heading, or table cell) grows faster than its length: it
+// weighs every mark of emphasis against the marks before it, looks back from every `]` for the `[`
+// it closes, and joins the words again around every escape, reference, code span or tag, each time
+// moving the rest of the paragraph (micromark's resolveAllText). Measured on a laptop, the costliest
+// marks (stars, `a* `, `](`) take about 0.1 s in a paragraph of 8,000 characters and 0.4 to 0.6 s
+// in one of 16,000; a paragraph of 100 KB of escapes took seconds. A real answer's paragraphs are
+// far shorter than MAX_INLINE (some 1,300 words), so a longer one is not read for marks at all: it
+// is its own characters, as plain text, in its place (in its list item, quote or cell). Many
+// paragraphs just under it would still add up, so one read reads the marks of MAX_MARKED characters
+// at most (at worst about a second), and the blocks after are plain text too.
+//
+// To find them, the source is read first for its blocks alone, with nothing inline, which takes time
+// in step with its length. Then it is read whole with each plain block's characters stood in for by
+// one that starts no mark (every mark of the quotes, lists and tables round it kept, so its blocks
+// are the same), and they are given back.
+
+/** The longest paragraph, heading or table cell read for its marks. */
+const MAX_INLINE = 8000;
+/** The most characters read for their marks in one read; past them, blocks are plain text. */
+const MAX_MARKED = 64_000;
+
+/** Every construct the parser reads inside a paragraph, by name: off while the blocks are found. */
+const INLINE = [
+  "attention",
+  "autolink",
+  "characterEscape",
+  "characterReference",
+  "codeText",
+  "emailAutolink",
+  "gfmFootnoteCall",
+  "gfmPotentialFootnoteCall",
+  "hardBreakEscape",
+  "htmlText",
+  "labelEnd",
+  "labelStartImage",
+  "labelStartLink",
+  "protocolAutolink",
+  "strikethrough",
+  "tasklistCheck",
+  "wwwAutolink",
+];
+
+// With nothing inline, bare web addresses are left as words too: they are found in the words after
+// the parse (mdast-util-gfm's transform), which would take the words' places away.
+const parsed = (source: string, inline = true): MarkdownRoot =>
+  inline
+    ? fromMarkdown(source, {
+        extensions: [gfm()],
+        mdastExtensions: [gfmFromMarkdown()],
+      })
+    : fromMarkdown(source, {
+        extensions: [gfm(), { disable: { null: INLINE } }],
+        mdastExtensions: gfmFromMarkdown().map((extension) => ({
+          ...extension,
+          transforms: [],
+        })),
+      });
+
+/** A node of the tree, as far as the bound reads it. */
+interface Node {
+  type: string;
+  value?: string;
+  children?: Node[];
+  position?: { start: { offset?: number }; end: { offset?: number } };
+}
+
+const each = (node: Node, visit: (node: Node) => void) => {
+  visit(node);
+  for (const child of node.children ?? []) {
+    each(child, visit);
+  }
+};
+
+const isBlank = (char: string | undefined) =>
+  char === undefined || char === " " || char === "\t";
+
 /**
- * The tree of `source`. Each node keeps its offsets in the source. Should the parser fail all the
+ * Where the characters of `text`, a text node read with nothing inline, are in `source`: each of its
+ * lines is the end of its line there, before the line's trailing spaces (the marks of the quotes and
+ * lists round it come before). Null if a line is not found so.
+ */
+const placesOf = (source: string, text: Node): [number, number][] | null => {
+  let at = text.position?.start.offset ?? 0;
+  const end = text.position?.end.offset ?? at;
+  const places: [number, number][] = [];
+  for (const line of (text.value ?? "").split(/\r\n|\r|\n/u)) {
+    let stop = at;
+    while (stop < end && source[stop] !== "\n" && source[stop] !== "\r") {
+      stop += 1;
+    }
+    let last = stop;
+    while (last > at && isBlank(source[last - 1])) {
+      last -= 1;
+    }
+    const from = last - line.length;
+    if (from < at || source.slice(from, last) !== line) {
+      return null;
+    }
+    places.push([from, last]);
+    at = stop + (source.startsWith("\r\n", stop) ? 2 : 1);
+  }
+  return places;
+};
+
+/** Whether some lines with no blank line between them, as a paragraph's are, run over MAX_INLINE. */
+const mayBeLong = (source: string): boolean => {
+  let run = 0;
+  for (const line of source.split("\n")) {
+    run = line.trim() === "" ? 0 : run + line.length + 1;
+    if (run > MAX_INLINE) {
+      return true;
+    }
+  }
+  return false;
+};
+
+/**
+ * Where the characters of each paragraph, heading or table cell over MAX_INLINE are, and of every
+ * one after MAX_MARKED characters were read for their marks, or null.
+ */
+const longInline = (source: string): Uint8Array | null => {
+  if (source.length <= MAX_MARKED && !mayBeLong(source)) {
+    return null;
+  }
+  const long = new Uint8Array(source.length);
+  let any = false;
+  let marked = 0;
+  each(parsed(source, false), (node) => {
+    const texts = (node.children ?? []).filter(({ type }) => type === "text");
+    const length = texts.reduce(
+      (sum, text) => sum + (text.value?.length ?? 0),
+      0
+    );
+    if (texts.length === 0) {
+      return;
+    }
+    if (length <= MAX_INLINE) {
+      if (marked + length <= MAX_MARKED) {
+        marked += length;
+        return;
+      }
+      marked = Number.POSITIVE_INFINITY;
+    }
+    const places = texts.map((text) => placesOf(source, text));
+    if (places.every((place) => place !== null)) {
+      any = true;
+      for (const [from, to] of places.flat()) {
+        long.fill(1, from, to);
+      }
+    }
+  });
+  return any ? long : null;
+};
+
+/** What stands in for each character of a long block: no mark starts with it. */
+const STAND_IN = "\u00A7";
+
+/** `tree`, read from `source` with its long characters stood in for, with them given back. */
+const givenBack = (tree: MarkdownRoot, source: string, long: Uint8Array) => {
+  each(tree, (node) => {
+    const from = node.position?.start.offset ?? -1;
+    const to = node.position?.end.offset ?? -1;
+    if (node.type !== "text" || long[from] !== 1) {
+      return;
+    }
+    const originals: string[] = [];
+    for (let at = from; at < to; at += 1) {
+      if (long[at] === 1) {
+        originals.push(source[at] ?? "");
+      }
+    }
+    let index = 0;
+    node.value = (node.value ?? "").replaceAll(STAND_IN, () => {
+      index += 1;
+      return originals[index - 1] ?? "";
+    });
+  });
+  return tree;
+};
+
+/**
+ * The tree of `source`. Each node keeps its offsets in the source. A paragraph, heading or table
+ * cell longer than MAX_INLINE, or past MAX_MARKED, is its own characters, as plain text. Should the parser fail all the
  * same, the source is one paragraph of its own words: an answer is always drawn.
  */
 export const parseMarkdown = (source: string): MarkdownRoot => {
   try {
-    return fromMarkdown(source, {
-      extensions: [gfm()],
-      mdastExtensions: [gfmFromMarkdown()],
-    });
+    const long = longInline(source);
+    if (long === null) {
+      return parsed(source);
+    }
+    const stood = Array.from(long, (on, at) =>
+      on === 1 ? STAND_IN : (source[at] ?? "")
+    ).join("");
+    return givenBack(parsed(stood), source, long);
   } catch {
     return {
       type: "root",
@@ -577,65 +762,27 @@ export const tidy = (source: string): string => {
 
 // ---- Bounds: what no answer needs, taken out before the parse ------------------------------------
 //
-// The parser recurses into every quote and list it opens, weighs every mark of emphasis in a
-// paragraph against the marks before it, looks back from every `]` for the `[` it closes and from
-// every word for a `[` still open, and its work on one paragraph grows faster than the paragraph.
-// So a hostile answer, or a model's runaway, could exhaust the stack with a few thousand `- ` or `>`
-// on a line, or take seconds over a paragraph of stars or brackets. None of that is in a real
-// answer, so past bounds far beyond one the marks are escaped: they show as the characters they
-// are. A quote or a list deeper than MAX_DEPTH on a line is words from there. In one stretch (the
-// lines a paragraph may run over: up to a blank line, a list item, a heading, a table's row), stars,
-// underscores and tildes past MAX_EMPHASIS are words, a `[` while MAX_OPEN are open is, a `]` that
-// closes nothing past MAX_STRAY of them is, and a stretch that went past those bounds is drawn as
-// paragraphs of at most MAX_PARAGRAPH characters. A `[` nothing closes within MAX_LABEL characters,
-// with more than that after it, is words anyway: it is escaped, which changes nothing that shows.
-// So is a `<!--`, `<?` or `<!` (a declaration) whose end nothing brings within MAX_LABEL: the
-// parser looks for that end from each one to the end of the paragraph. Code in a fence is left as
-// it is.
+// The parser recurses into every quote and list it opens, so a hostile answer, or a model's runaway,
+// could exhaust the stack with a few thousand `- ` or `>` on a line. None of that is in a real
+// answer, so a quote or a list deeper than MAX_DEPTH on a line is words from there: a backslash
+// undoes the first mark past it, and it shows as the character it is. Code in a fence is left as it
+// is. (A long paragraph's cost is bounded in the parse: see MAX_INLINE.)
 
 /** The deepest quote or list a line opens. */
 const MAX_DEPTH = 32;
-/** The most stars, underscores and tildes in one stretch. */
-const MAX_EMPHASIS = 500;
-/** The most brackets open at once. */
-const MAX_OPEN = 16;
-/** The most brackets in one stretch that close nothing. */
-const MAX_STRAY = 32;
-/** The most characters between a bracket and the one that closes it: a link's words, at most. */
-const MAX_LABEL = 1000;
-/** The longest paragraph a stretch past the bounds is drawn in. */
-const MAX_PARAGRAPH = 2000;
 
-const HEADING = /^#{1,6}(?:[ \t]|$)/u;
 const FOOTNOTE_START = /^\[\^[^\]\s]+\]:/u;
 const ORDERED = /^\d{1,9}[.)](?:[ \t]|$)/u;
 
-/** What ends the raw HTML a `<` opens at `at`, where the parser looks for it to the paragraph's end. */
-const htmlEndAt = (text: string, at: number): string | null => {
-  if (text.startsWith("<!--", at)) {
-    return "-->";
-  }
-  if (text[at + 1] === "?") {
-    return "?>";
-  }
-  return text[at + 1] === "!" && /[a-z]/iu.test(text[at + 2] ?? "")
-    ? ">"
-    : null;
-};
-
-const isBlank = (char: string | undefined) =>
-  char === undefined || char === " " || char === "\t";
-
 /**
- * The container marks that open a line (quotes, list items, footnotes): where they end, whether a
- * list item is among them, and where a backslash undoes the first past MAX_DEPTH (or -1).
- * Indentation counts as a level for every two columns, as a nested list needs at least that.
+ * Where a backslash undoes the first container mark past MAX_DEPTH that opens `line` (quotes, list
+ * items, footnotes), or -1. Indentation counts as a level for every two columns, as a nested list
+ * needs at least that.
  */
-const containersOf = (line: string) => {
+const depthOver = (line: string): number => {
   let at = 0;
   let depth = 0;
   let columns = 0;
-  let item = false;
   for (;;) {
     while (line[at] === " " || line[at] === "\t") {
       columns += line[at] === "\t" ? 4 : 1;
@@ -646,261 +793,42 @@ const containersOf = (line: string) => {
     let width = 0;
     // Where a backslash undoes the mark: before it, or before an ordered item's dot.
     let undo = at;
-    if (line[at] === ">") {
+    if (
+      line[at] === ">" ||
+      ("-*+".includes(line[at] ?? "x") && isBlank(line[at + 1]))
+    ) {
       width = 1;
-    } else if ("-*+".includes(line[at] ?? "x") && isBlank(line[at + 1])) {
-      width = 1;
-      item = true;
     } else if (ordered === undefined) {
       width = FOOTNOTE_START.exec(rest)?.[0].length ?? 0;
     } else {
       width = ordered.length;
       undo = at + width - 1;
-      item = true;
     }
     if (width === 0) {
-      return { end: at, item, over: -1 };
+      return -1;
     }
     if (depth + Math.floor(columns / 2) >= MAX_DEPTH) {
-      return { end: at, item, over: undo };
+      return undo;
     }
     depth += 1;
     at += width;
   }
 };
 
-/** Where code in a sentence is in `text`: each place inside a pair of equal runs of backticks. */
-const codeIn = (text: string): Uint8Array => {
-  const inside = new Uint8Array(text.length);
-  const runs: { at: number; length: number }[] = [];
-  let at = 0;
-  while (at < text.length) {
-    if (text[at] === "\\") {
-      at += 2;
-    } else if (text[at] === "`") {
-      const length = runAt(text, at);
-      runs.push({ at, length });
-      at += length;
-    } else {
-      at += 1;
-    }
-  }
-  // Each run's next run of the same length: where the code it opens closes.
-  const next: number[] = [];
-  const seen = new Map<number, number>();
-  for (let index = runs.length - 1; index >= 0; index -= 1) {
-    const { length } = runs[index] ?? { length: 0 };
-    next[index] = seen.get(length) ?? -1;
-    seen.set(length, index);
-  }
-  let index = 0;
-  while (index < runs.length) {
-    const close = next[index] ?? -1;
-    const open = runs[index];
-    const end = runs[close];
-    if (open === undefined || end === undefined) {
-      index += 1;
-    } else {
-      inside.fill(1, open.at, end.at + end.length);
-      index = close + 1;
-    }
-  }
-  return inside;
-};
-
-/**
- * Where in a stretch's words a backslash goes (before each mark past the bounds, and before a
- * bracket that nothing closes within MAX_LABEL, which is words all the same), and whether it went
- * past the bounds.
- */
-const escapesIn = (text: string): { escapes: Set<number>; over: boolean } => {
-  const code = codeIn(text);
-  const escapes = new Set<number>();
-  const open: number[] = [];
-  let emphasis = 0;
-  let stray = 0;
-  let over = false;
-  // Where each end of raw HTML next stands, as the openings move on: one search for each, at most.
-  const ends = new Map<string, number>();
-  const endsNear = (end: string, from: number) => {
-    let next = ends.get(end);
-    if (next === undefined || (next !== -1 && next < from)) {
-      next = text.indexOf(end, from);
-      ends.set(end, next);
-    }
-    return next !== -1 && next - from <= MAX_LABEL;
-  };
-  const strayAt = (at: number) => {
-    stray += 1;
-    if (stray > MAX_STRAY) {
-      escapes.add(at);
-      over = true;
-    }
-  };
-  let at = 0;
-  while (at < text.length) {
-    const char = text[at];
-    if (char === "\\") {
-      at += 2;
-      continue;
-    }
-    if (code[at] === 1) {
-      at += 1;
-      continue;
-    }
-    if (char === "*" || char === "_" || char === "~") {
-      emphasis += 1;
-      if (emphasis > MAX_EMPHASIS) {
-        escapes.add(at);
-        over = true;
-      }
-    } else if (char === "[") {
-      if (open.length >= MAX_OPEN) {
-        escapes.add(at);
-        over = true;
-      } else {
-        open.push(at);
-      }
-    } else if (char === "<") {
-      const end = htmlEndAt(text, at);
-      if (end !== null && !endsNear(end, at + 2)) {
-        escapes.add(at);
-      }
-    } else if (char === "]") {
-      const from = open.pop();
-      if (from === undefined) {
-        strayAt(at);
-      } else if (at - from > MAX_LABEL) {
-        escapes.add(from);
-        strayAt(at);
-      }
-    }
-    at += 1;
-  }
-  // A bracket nothing closes costs only when much follows it.
-  for (const from of open) {
-    if (text.length - from > MAX_LABEL) {
-      escapes.add(from);
-    }
-  }
-  return { escapes, over };
-};
-
-/**
- * Text past the bounds in paragraphs of at most MAX_PARAGRAPH characters, cut at a space where
- * there is one: the parser's work on a paragraph grows faster than its length.
- */
-const inParagraphs = (text: string): string => {
-  const parts: string[] = [];
-  let at = 0;
-  while (text.length - at > MAX_PARAGRAPH) {
-    let cut = text.lastIndexOf(" ", at + MAX_PARAGRAPH);
-    if (cut <= at) {
-      cut = at + MAX_PARAGRAPH;
-      // Never between a backslash and what it escapes, nor inside a character of two units.
-      while (
-        text[cut - 1] === "\\" ||
-        /[\uD800-\uDBFF]/u.test(text[cut - 1] ?? "")
-      ) {
-        cut -= 1;
-      }
-    }
-    parts.push(text.slice(at, cut));
-    at = cut;
-  }
-  parts.push(text.slice(at));
-  return parts.join("\n\n");
-};
-
-/** A stretch: its lines one after another, each with where its words start (after its marks). */
-type Stretch = { line: number; from: number }[];
-
-/** The stretches of `lines`, each line's marks past MAX_DEPTH escaped in `lines` as they are read. */
-const stretchesOf = (lines: string[]): Stretch[] => {
-  const stretches: Stretch[] = [];
-  let stretch: Stretch = [];
-  const end = () => {
-    if (stretch.length > 0) {
-      stretches.push(stretch);
-    }
-    stretch = [];
-  };
-  let fenced = false;
-  let inTable = false;
-  for (const [index, line] of lines.entries()) {
-    if (isFence(line)) {
-      fenced = !fenced;
-      end();
-    } else if (fenced || line.trim() === "" || RULE.test(line)) {
-      end();
-      inTable = false;
-    } else {
-      const { end: from, item, over } = containersOf(line);
-      inTable =
-        ROW.test(line) &&
-        (inTable || (ROW.test(lines[index - 1] ?? "") && isDelimiter(line)));
-      // A heading or a table's row is a stretch of its own; a list item starts one.
-      const single = inTable || HEADING.test(line.slice(from));
-      if (item || single) {
-        end();
-      }
-      if (over === -1) {
-        stretch.push({ line: index, from });
-      } else {
-        lines[index] = `${line.slice(0, over)}\\${line.slice(over)}`;
-        stretch.push({ line: index, from: over + 2 });
-      }
-      if (single) {
-        end();
-      }
-    }
-  }
-  end();
-  return stretches;
-};
-
-/** Puts a backslash in `lines` before each place in the stretch's words that `escapes` names. */
-const escapeStretch = (
-  lines: string[],
-  stretch: Stretch,
-  escapes: Set<number>
-) => {
-  let offset = 0;
-  for (const { line, from } of stretch) {
-    const whole = lines[line] ?? "";
-    const words = whole.slice(from);
-    const parts = [whole.slice(0, from)];
-    for (let at = 0; at < words.length; at += 1) {
-      parts.push(escapes.has(offset + at) ? "\\" : "", words[at] ?? "");
-    }
-    lines[line] = parts.join("");
-    offset += words.length + 1;
-  }
-};
-
-/** `source` within the bounds above: the same answer, its pathological marks escaped. */
+/** `source` within the bounds above: the same answer, its quotes and lists past MAX_DEPTH words. */
 export const bounded = (source: string): string => {
-  const lines = source.split("\n");
-  // The lines of a stretch cut into paragraphs, after its first: they are in the first now.
-  const merged = new Set<number>();
-  for (const stretch of stretchesOf(lines)) {
-    const text = stretch
-      .map(({ line, from }) => (lines[line] ?? "").slice(from))
-      .join("\n");
-    const { escapes, over } = escapesIn(text);
-    if (escapes.size > 0) {
-      escapeStretch(lines, stretch, escapes);
-    }
-    const first = stretch[0]?.line ?? 0;
-    const last = stretch.at(-1)?.line ?? first;
-    if (over && text.length > MAX_PARAGRAPH) {
-      lines[first] = inParagraphs(lines.slice(first, last + 1).join("\n"));
-      for (let line = first + 1; line <= last; line += 1) {
-        merged.add(line);
+  let fenced = false;
+  return source
+    .split("\n")
+    .map((line) => {
+      if (isFence(line)) {
+        fenced = !fenced;
+        return line;
       }
-    }
-  }
-  return lines.filter((_, line) => !merged.has(line)).join("\n");
+      const over = fenced ? -1 : depthOver(line);
+      return over === -1 ? line : `${line.slice(0, over)}\\${line.slice(over)}`;
+    })
+    .join("\n");
 };
 
 // ---- Blocks: a long answer read a block at a time ---------------------------------------------------
