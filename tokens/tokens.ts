@@ -858,6 +858,12 @@ export const groups: TokenGroup[] = [
             use: "The weight of every rule and line in the system: a separator, a row's divider, the docs frame.",
           },
           {
+            name: "line-strong",
+            category: "size",
+            value: "1.5px",
+            use: "A line one step heavier than the hairline, for a mark that must be found: today's underline in a calendar, the active cell's edge in a grid, where a dragged column will land, and the system's focus line in forced colours (doubled for the keyboard).",
+          },
+          {
             name: "ring-width",
             category: "size",
             value: "2px",

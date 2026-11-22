@@ -67,10 +67,11 @@ const REDUCED = media.reducedMotion;
 
 const line = `${size.ringWidth} solid ${colors.ring}`;
 // In forced colours a control already has a line of its own at rest (its edge), and a ring as fine
-// as that edge would look like rest: the ring is twice as thick, in the system's Highlight, and
-// stands off the edge, so a focused control is told from one at rest.
-const forcedLine = `calc(2 * ${size.ringWidth}) solid Highlight`;
-const forcedThin = `${size.ringWidth} solid`;
+// as that edge would look like rest: the ring is twice line-strong, in the system's Highlight, and
+// stands off the edge, so a focused control is told from one at rest. Its measure is its own, so
+// the ring's width in normal colours never changes it.
+const forcedLine = `calc(2 * ${size.lineStrong}) solid Highlight`;
+const forcedThin = `${size.lineStrong} solid`;
 
 // Focus the keyboard brought: on the field itself, or on the input inside a field's box.
 const KEY = ":focus-visible:not([data-focus-pointer])";
@@ -287,7 +288,7 @@ export const focusField = stylex.create({
     },
     outlineOffset: {
       default: `calc(-1 * ${size.ringWidth})`,
-      [FORCED]: `calc(-2 * ${size.ringWidth})`,
+      [FORCED]: `calc(-2 * ${size.lineStrong})`,
     },
   },
   // A control made of parts, one rounded box (a filter's segments): the ring round the whole box

@@ -233,7 +233,7 @@ const FORCED = media.forcedColors;
 // closer under its title.
 const ROW = space["4"];
 const RING_LINE = `${size.ringWidth} solid ${colors.ring}`;
-const RING_FORCED = `calc(2 * ${size.ringWidth}) solid Highlight`;
+const RING_FORCED = `calc(2 * ${size.lineStrong}) solid Highlight`;
 // Where it stands while it opens and as it closes: a little smaller and clear, growing from
 // `--transform-origin`, the point on the trigger UI SDK placed it against.
 const moving = ":is([data-starting-style], [data-ending-style])";

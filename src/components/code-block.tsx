@@ -345,13 +345,13 @@ const styles = stylex.create({
     pointerEvents: "none",
     outlineWidth: {
       default: size.ringWidth,
-      [FORCED]: `calc(2 * ${size.ringWidth})`,
+      [FORCED]: `calc(2 * ${size.lineStrong})`,
     },
     outlineColor: { default: colors.ring, [FORCED]: "Highlight" },
     outlineStyle: { default: "none", ":is(:focus-visible + *)": "solid" },
     outlineOffset: {
       default: `calc(-1 * ${size.ringWidth})`,
-      [FORCED]: `calc(-2 * ${size.ringWidth})`,
+      [FORCED]: `calc(-2 * ${size.lineStrong})`,
     },
   },
   code: {

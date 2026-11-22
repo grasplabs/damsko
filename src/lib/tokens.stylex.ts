@@ -460,6 +460,7 @@ export const size = stylex.defineConsts({
   controlLg: "var(--damsko-control-lg)",
   chip: "var(--damsko-chip)",
   hairline: "var(--damsko-hairline)",
+  lineStrong: "var(--damsko-line-strong)",
   ringWidth: "var(--damsko-ring-width)",
   ringOffset: "var(--damsko-ring-offset)",
   ringOffsetMark: "var(--damsko-ring-offset-mark)",

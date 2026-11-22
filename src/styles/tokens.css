@@ -207,6 +207,8 @@
   --damsko-chip: 24px;
   /* The weight of every rule and line in the system: a separator, a row's divider, the docs frame. */
   --damsko-hairline: 1px;
+  /* A line one step heavier than the hairline, for a mark that must be found: today's underline in a calendar, the active cell's edge in a grid, where a dragged column will land, and the system's focus line in forced colours (doubled for the keyboard). */
+  --damsko-line-strong: 1.5px;
   /* The width of the focus ring: as thick as WCAG 2.4.13 asks, so focus is found at a glance. */
   --damsko-ring-width: 2px;
   /* How far the focus ring stands off a control's edge, the ground showing between them, so it reads as a ring round the control and never as its border. It follows the control's shape. */

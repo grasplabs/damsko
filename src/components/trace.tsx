@@ -82,7 +82,7 @@ import {
 } from "../lib/tokens.stylex";
 import { announce } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
-import { iconVars, traceCardMarker } from "../lib/vars.stylex";
+import { iconVars, ringInsetMarker, traceCardMarker } from "../lib/vars.stylex";
 import { Shimmer } from "./shimmer";
 
 /** Where the work a line reports stands: `running` under way, `error` failed, `pending` not begun. Without one it is done. */
@@ -357,16 +357,6 @@ const styles = stylex.create({
       [OFF]: { default: colors.subtleForeground, [FORCED]: "GrayText" },
     },
   },
-  // In a card the ring lies on the card's own edge, inside the trigger's box, so it reads as the
-  // card's edge turning to the ring rather than a second line beside it.
-  ringInCard: {
-    outlineOffset: {
-      default: size.ringOffset,
-      [stylex.when.ancestor(":is(*)", traceCardMarker)]:
-        `calc(-1 * ${size.ringWidth})`,
-      [FORCED]: size.ringOffsetMark,
-    },
-  },
   // Points down while closed and turns up as it opens.
   chevron: {
     color: colors.mutedForeground,
@@ -576,6 +566,9 @@ export const TraceCollapsible = ({
       {...stylex.props(
         styles.collapsible,
         step && styles.collapsibleStep,
+        // Its rows stand edge to edge and its panel clips: every ring inside is drawn inside its
+        // control, the trigger's on the card's own edge when it is one.
+        ringInsetMarker,
         style
       )}
     >
@@ -610,7 +603,6 @@ export const TraceCollapsibleTrigger = ({
         disclosureStyles.ghost,
         styles.trigger,
         focusRing,
-        styles.ringInCard,
         style
       )}
     >
