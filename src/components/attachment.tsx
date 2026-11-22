@@ -50,15 +50,7 @@ import type {
 
 import { placeNear } from "../hooks/use-return-focus";
 import { useScrollEdges } from "../hooks/use-scroll-edges";
-import {
-  AudioWaveformIcon,
-  FileIcon,
-  FilePdfIcon,
-  Icon,
-  ImageIcon,
-  VideoIcon,
-} from "../lib/icons";
-import type { IconData } from "../lib/icons";
+import { Icon, fileMark } from "../lib/icons";
 import {
   edgeFade,
   focusRingInset,
@@ -459,23 +451,6 @@ const splitName = (name: string): [string, string] => {
     : [name.slice(0, name.length - keep), name.slice(name.length - keep)];
 };
 
-/** The mark a file wears for its media type, when it has no picture. */
-const markOf = (type: string | undefined): IconData => {
-  if (type === undefined) {
-    return FileIcon;
-  }
-  if (type.startsWith("image/")) {
-    return ImageIcon;
-  }
-  if (type.startsWith("video/")) {
-    return VideoIcon;
-  }
-  if (type.startsWith("audio/")) {
-    return AudioWaveformIcon;
-  }
-  return type === "application/pdf" ? FilePdfIcon : FileIcon;
-};
-
 /** The files that go with a message, as a list that scrolls sideways. */
 export const AttachmentGroup = ({
   children,
@@ -573,7 +548,7 @@ export const AttachmentMedia = ({
         style
       )}
     >
-      {picture === null && (children ?? <Icon icon={markOf(type)} />)}
+      {picture === null && (children ?? <Icon icon={fileMark(type)} />)}
       {picture !== null && video && (
         <video
           src={picture}

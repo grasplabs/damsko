@@ -33,7 +33,7 @@ import { createPortal } from "react-dom";
 
 import { useI18n, useLocale } from "../lib/i18n";
 import type { I18nCatalog } from "../lib/i18n";
-import { FileIcon, Icon, UploadIcon, XIcon } from "../lib/icons";
+import { FileIcon, Icon, UploadIcon, XIcon, fileMark } from "../lib/icons";
 import type { IconData } from "../lib/icons";
 import { fadeIn, focusRing, visuallyHidden } from "../lib/styles";
 import {
@@ -470,7 +470,7 @@ const Row = ({
   return (
     <>
       <span aria-hidden="true" {...stylex.props(styles.fileIcon)}>
-        <Icon icon={FileIcon} />
+        <Icon icon={fileMark(file.type === "" ? undefined : file.type)} />
       </span>
       <span {...stylex.props(styles.words)}>
         <span id={nameId} {...stylex.props(styles.name)} title={file.name}>
