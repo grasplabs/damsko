@@ -75,7 +75,7 @@ export default function SidebarNoShortcut() {
                       >
                         <a href={`#${place.name.toLowerCase()}`}>
                           <Icon icon={place.icon} />
-                          {place.name}
+                          <span>{place.name}</span>
                         </a>
                       </SidebarMenuButton>
                     </SidebarMenuItem>

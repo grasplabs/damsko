@@ -46,7 +46,6 @@ import { useShortcut, useShortcutHint } from "@ui-sdk/react/shortcuts";
 import {
   createContext,
   createElement,
-  Fragment,
   use,
   useEffect,
   useId,
@@ -54,12 +53,7 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
-import type {
-  ComponentProps,
-  MouseEvent,
-  PointerEvent,
-  ReactNode,
-} from "react";
+import type { ComponentProps, MouseEvent, ReactNode } from "react";
 
 import { useI18n } from "../lib/i18n";
 import { Icon, PanelLeftIcon } from "../lib/icons";
@@ -75,7 +69,7 @@ import {
   space,
 } from "../lib/tokens.stylex";
 import { px } from "../lib/tokens.values";
-import { listOf, slotProps, slotWords } from "../lib/utils";
+import { slotProps } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { iconVars, motionVars } from "../lib/vars.stylex";
 import { Button } from "./button";
@@ -534,14 +528,6 @@ const styles = stylex.create({
       "color, background-color, width, height, padding, margin",
     transitionDuration: duration.hover,
   },
-  // A row's name: it takes the room the row has left and gives way before anything beside it;
-  // longer than that, it ends in an ellipsis.
-  name: {
-    flexShrink: 1,
-    minWidth: 0,
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-  },
   sm: {
     height: {
       default: size.controlXs,
@@ -596,9 +582,7 @@ const styles = stylex.create({
   active: {
     color: colors.sidebarText,
     backgroundColor: colors.sidebarAccent,
-    // Its edge is drawn inside its box: a row often ends where its holder clips (a group or a
-    // list under a row that folds), which would cut an edge drawn outside it.
-    boxShadow: `inset 0 0 0 ${size.hairline} ${colors.sidebarRule}`,
+    boxShadow: `0 0 0 ${size.hairline} ${colors.sidebarRule}`,
     borderColor: { default: "transparent", [FORCED]: "Highlight" },
   },
 
@@ -1350,52 +1334,6 @@ const drawn = (
   );
 };
 
-/** A cut name shows whole under the pointer, as the browser's own tip; one that fits shows none. */
-const tellWhenCut = (event: PointerEvent<HTMLSpanElement>) => {
-  const name = event.currentTarget;
-  if (name.scrollWidth > name.clientWidth) {
-    name.title = name.textContent;
-  } else {
-    name.removeAttribute("title");
-  }
-};
-
-/** A row's child as the row draws it: plain words in the name's span, an element as given. */
-const rowChild = (child: ReactNode): ReactNode =>
-  typeof child === "string" || typeof child === "number" ? (
-    <span onPointerEnter={tellWhenCut} {...stylex.props(styles.name)}>
-      {child}
-    </span>
-  ) : (
-    child
-  );
-
-/**
- * As `drawn`, for a row of the menu. The words written straight into the row are its name: the
- * row draws them in a span of its own, which ends in an ellipsis where the row does. Every element
- * the caller gives (an icon, a mark, a span of its own) stays as given.
- */
-const drawnRow = (
-  tag: string,
-  asChild: boolean | undefined,
-  children: ReactNode,
-  rest: Record<string, unknown>,
-  own: Record<string, unknown>
-) => {
-  const slot = slotWords(asChild, children);
-  // Given as the fragment's own children, not as a list: nothing of the caller's needs a key.
-  const named = createElement(
-    Fragment,
-    null,
-    ...listOf(slot.children).map(rowChild)
-  );
-  return renderElement(
-    tag,
-    mergeProps(rest, own, { children: named }),
-    slot.render
-  );
-};
-
 /** Every prop a SidebarGroup takes. */
 export interface SidebarGroupProps extends PartProps, Own<"div"> {
   /** Its SidebarGroupLabel, SidebarGroupAction and SidebarGroupContent. */
@@ -1483,9 +1421,8 @@ export const SidebarMenuItem = (props: SidebarMenuItemProps) =>
 /** Every prop a SidebarMenuButton takes: these, and the rest of a <button>. */
 export interface SidebarMenuButtonProps extends SlotPartProps, Own<"button"> {
   /**
-   * An `<Icon />` and its name as plain words; with `asChild`, the link that holds them
-   * (`<a href>`, a router's link). A name longer than the row ends in an ellipsis. A product's
-   * mark (a working indicator) goes in here too, with `flexShrink: 0` to keep its size.
+   * An `<Icon />` and the words in a `<span>`; with `asChild`, the link that holds them
+   * (`<a href>`, a router's link). A product's mark (a working indicator) goes in here too.
    */
   children: ReactNode;
   /**
@@ -1524,7 +1461,7 @@ export const SidebarMenuButton = ({
 }: SidebarMenuButtonProps) => {
   const { state, isMobile } = useSidebarState("SidebarMenuButton");
   const side = use(SideContext);
-  const button = drawnRow(
+  const button = drawn(
     "button",
     asChild,
     children,
@@ -1709,7 +1646,7 @@ export const SidebarMenuSubButton = ({
   style,
   ...rest
 }: SidebarMenuSubButtonProps) =>
-  drawnRow("a", asChild, children, rest, {
+  drawn("a", asChild, children, rest, {
     "data-slot": "sidebar-menu-sub-button",
     "data-sidebar": "menu-sub-button",
     "data-size": sized,

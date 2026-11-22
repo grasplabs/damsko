@@ -112,8 +112,6 @@ import {
 } from "./chat-page-data";
 
 const layout = stylex.create({
-  // A chat's working mark keeps its size: a long title gives way to it.
-  rowMark: { flexShrink: 0 },
   stage: { display: "grid", rowGap: space["3"], width: "100%" },
   switch: { width: "14rem" },
   // The app's window: the whole screen on its own page, a tall stage in the docs.
@@ -557,7 +555,7 @@ const ChatSidebar = ({ current }: { current: string }) => (
             <SidebarMenuButton asChild>
               <a href="#home">
                 <Icon icon={HouseIcon} />
-                Home
+                <span>Home</span>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -565,7 +563,7 @@ const ChatSidebar = ({ current }: { current: string }) => (
             <SidebarMenuButton asChild>
               <a href="#inbox">
                 <Icon icon={InboxIcon} />
-                Inbox
+                <span>Inbox</span>
               </a>
             </SidebarMenuButton>
             <SidebarMenuBadge>2</SidebarMenuBadge>
@@ -574,7 +572,7 @@ const ChatSidebar = ({ current }: { current: string }) => (
             <SidebarMenuButton asChild>
               <a href="#projects">
                 <Icon icon={FolderKanbanIcon} />
-                Projects
+                <span>Projects</span>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -590,17 +588,17 @@ const ChatSidebar = ({ current }: { current: string }) => (
               <SidebarMenuButton asChild isActive={chat.id === current}>
                 <a href={`#chat-${chat.id}`}>
                   <Icon icon={MessageSquareIcon} />
-                  {chat.title}
-                  {chat.working === true && (
-                    <AgentIndicator style={layout.rowMark} />
-                  )}
+                  <span>{chat.title}</span>
+                  {chat.working === true && <AgentIndicator />}
                 </a>
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
-              <a href="#chats">All chats</a>
+              <a href="#chats">
+                <span>All chats</span>
+              </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

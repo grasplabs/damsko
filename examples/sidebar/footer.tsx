@@ -97,7 +97,7 @@ export default function SidebarFooterExample() {
                       >
                         <a href={`#${place.name.toLowerCase()}`}>
                           <Icon icon={place.icon} />
-                          {place.name}
+                          <span>{place.name}</span>
                         </a>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -118,7 +118,7 @@ export default function SidebarFooterExample() {
                         <AvatarFallback />
                       </Avatar>
                       <span {...stylex.props(layout.person)}>
-                        Anna de Vries
+                        <span>Anna de Vries</span>
                         <span {...stylex.props(layout.note)}>Northwind</span>
                       </span>
                       <span aria-hidden="true" {...stylex.props(layout.end)}>
