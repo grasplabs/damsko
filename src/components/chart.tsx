@@ -1,4 +1,4 @@
-// Chart: numbers drawn, after shadcn's Chart (ChartContainer and its parts on Recharts 3), in
+// Chart: numbers drawn, ChartContainer and its parts on Recharts 3, in
 // StyleX. Bars, an area and lines on a shared drawing, plus four figures of their own: bars across
 // (ChartBarList), parts of a whole (ChartPie), flows between stages (ChartSankey) and a trend beside
 // its number (ChartSparkline).

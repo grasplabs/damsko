@@ -71,7 +71,7 @@ const layout = stylex.create({
   },
 });
 
-// The thread, as shadcn's Chat composes it: a header, the turns in a MessageScroller that follows
+// The thread: a header, the turns in a MessageScroller that follows
 // the reply while you stay at the end, the empty state before the first turn, and the PromptInput
 // under it. Each question you send settles near the top and the answer streams in under it.
 export default function ChatDemo() {

@@ -1,5 +1,5 @@
-// Command: a search field over a list of actions, from shadcn's (registry/bases/base/ui/command.tsx,
-// on cmdk), converted from Tailwind to StyleX and built on UI SDK's Command instead of cmdk: the
+// Command: a search field over a list of actions,
+// in StyleX, built on UI SDK's Command: the
 // popup's raised surface with the one corner, a search icon before the field, a hairline under it,
 // and the list Select and Combobox share (lib/styles listStyles). The list is always shown; typing
 // ranks it. CommandDialog puts it in a dialog's panel over the page, opened by its trigger or

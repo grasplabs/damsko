@@ -42,7 +42,7 @@ const layout = stylex.create({
   stack: { display: "grid", width: "100%", maxWidth: 520 },
 });
 
-// Two menus under a message field, as shadcn's pattern has them: the model, and how hard it thinks.
+// Two menus under a message field: the model, and how hard it thinks.
 // The model is searched; the effort is a short menu of three.
 export default function ModelSelectorEffort() {
   const [value, setValue] = useState("sonnet");

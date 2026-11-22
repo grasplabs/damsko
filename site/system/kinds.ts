@@ -31,7 +31,6 @@ export const kinds: Kind[] = [
       "link",
       "toggle",
       "theme-toggle",
-      "kbd",
       "snippet",
     ],
   },
@@ -82,6 +81,7 @@ export const kinds: Kind[] = [
       "dropdown-menu",
       "context-menu",
       "command",
+      "share-dialog-01",
     ],
   },
   {
@@ -119,15 +119,7 @@ export const kinds: Kind[] = [
   {
     id: "tables-and-lists",
     label: "Tables and lists",
-    members: [
-      "table",
-      "data-table",
-      "data-grid",
-      "item",
-      "key-value",
-      "chart",
-      "share-dialog-01",
-    ],
+    members: ["table", "data-table", "data-grid", "item", "key-value"],
   },
   {
     id: "surfaces",
@@ -155,12 +147,14 @@ export const kinds: Kind[] = [
       "heading",
       "avatar",
       "tag",
+      "kbd",
       "icon-tile",
       "brand-icon",
       "code-block",
       "markdown",
       "diff-viewer",
       "stat",
+      "chart",
     ],
   },
   {

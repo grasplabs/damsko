@@ -17,7 +17,7 @@ const layout = stylex.create({
   box: { width: "100%", maxWidth: 480 },
 });
 
-// The variants by role, as shadcn/ui sets them. Invite people stands on its own in the section's
+// The variants by role. Invite people stands on its own in the section's
 // head, an ordinary action: `outline`. At the foot, Save changes is the main step, `default`, and
 // Cancel is the lesser button beside it: `outline` too. Each press says what it would do.
 export default function ButtonBeside() {

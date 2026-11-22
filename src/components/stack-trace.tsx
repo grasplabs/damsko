@@ -1,8 +1,7 @@
-// StackTrace: an error and its stack frames, after shadcn's Stack Trace pattern
-// (apps/v4/content/docs/ai-elements/base/stack-trace.mdx and its examples), built as it builds it:
+// StackTrace: an error and its stack frames:
 // a Trace with one TraceCollapsible, its line the error in red, the frames under it in a muted
-// monospace block, the product's own frames in ink and the dependencies' muted. The parts are the
-// ones shadcn's pattern has: StackTraceHeader the row's trigger, its TraceLine failed,
+// monospace block, the product's own frames in ink and the dependencies' muted. The parts:
+// StackTraceHeader the row's trigger, its TraceLine failed,
 // StackTraceError its TraceTitle, and StackTraceActions beside the trigger, not in it.
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //

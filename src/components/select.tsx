@@ -1,5 +1,5 @@
-// Select: choose one value from a list that opens below its control, from shadcn's
-// (registry/bases/base/ui/select.tsx), converted from Tailwind to StyleX and rebuilt on UI SDK's
+// Select: choose one value from a list that opens below its control,
+// in StyleX, built on UI SDK's
 // Select: closed, it is an Input (the same fill, hairline, heights and corner), so a select and a
 // field stand level in one form; open, it is a popup on the raised ground.
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.

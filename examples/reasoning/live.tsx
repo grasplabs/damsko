@@ -54,7 +54,7 @@ export default function ReasoningLive() {
         </Reasoning>
       )}
       <Button
-        variant="secondary"
+        variant="outline"
         size="sm"
         style={layout.think}
         disabled={isStreaming}

@@ -1,5 +1,5 @@
-// Context: how much of the model's context window a conversation has used, after shadcn's AI
-// Elements pattern (content/docs/ai-elements/base/context.md), built on HoverCard, Button and
+// Context: how much of the model's context window a conversation has used,
+// built on HoverCard, Button and
 // Progress. The trigger is an outline Button with a ring of how full the
 // window is and its share ("8% context"); resting on it, or tabbing to it, opens a card with the
 // tokens used of the most, a bar of the same, and a row per kind of token, with what each cost when

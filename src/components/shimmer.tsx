@@ -12,8 +12,8 @@
 // longer, so short and long lines sweep at the same apparent speed. It rests while off screen.
 // Reduced motion: no sweep, the words muted. Forced colours: plain words. Right to left: the band
 // runs the other way. A screen reader reads the words once: the light's copy is hidden from it.
-// shadcn ships the same effect as a CSS class (`shimmer`); StyleX has no utility classes, and the
-// light needs the words' copy, so here it is this one component, which TraceLine uses too.
+// StyleX has no utility classes, and the
+// light needs the words' copy, so it is this one component, which TraceLine uses too.
 "use client";
 
 import * as stylex from "@stylexjs/stylex";

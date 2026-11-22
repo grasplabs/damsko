@@ -1,5 +1,4 @@
-// InputGroup: an input with words, an icon or a button inside its edge, from shadcn's
-// (registry/bases/base/ui/input-group.tsx, on Base UI), converted from Tailwind to StyleX and built
+// InputGroup: an input with words, an icon or a button inside its edge, in StyleX, built
 // on UI SDK's InputGroup. The group draws an input's look (lib/styles' field box) round all its
 // parts, so "https://", the words typed and a Copy button read as one field. A press on an addon's
 // words or icon puts the caret in the input.

@@ -13,7 +13,7 @@ description: A column of an app's main places down one side, which folds away or
 
 ## Basic usage
 
-shadcn's parts: a SidebarProvider holds whether it is open and the row it stands in, the Sidebar beside a SidebarInset, the page. In the sidebar a SidebarHeader, a SidebarContent of SidebarGroups and a SidebarFooter. A group holds a SidebarGroupLabel over a SidebarMenu of SidebarMenuItems, each a SidebarMenuButton, a link through `asChild`, with a SidebarMenuBadge or a SidebarMenuSub beside it. `isActive` raises the page you are on. With `collapsible="icon"` the trigger, the rail or Cmd+B (Ctrl+B elsewhere) folds it to its icons, and each button's `tooltip` names it there.
+The parts: a SidebarProvider holds whether it is open and the row it stands in, the Sidebar beside a SidebarInset, the page. In the sidebar a SidebarHeader, a SidebarContent of SidebarGroups and a SidebarFooter. A group holds a SidebarGroupLabel over a SidebarMenu of SidebarMenuItems, each a SidebarMenuButton, a link through `asChild`, with a SidebarMenuBadge or a SidebarMenuSub beside it. `isActive` raises the page you are on. The sidebar stands in the page's flow, never fixed to the window, and stays in view while the page scrolls. With `collapsible="icon"` the trigger, the rail or Cmd+B (Ctrl+B elsewhere) folds it to its icons, and each button's `tooltip` names it there.
 
 <Stage path="sidebar/basic" label="Basic usage" />
 
@@ -147,7 +147,7 @@ SidebarMenuSkeleton draws quiet bars in the rows' own boxes, the same shapes eve
       group: "Folding",
       key: "In a field",
       value:
-        "Cmd+B (Ctrl+B) folds the sidebar from inside an input or a textarea too, as shadcn's does: a page whose fields want those keys sets `keyboardShortcut` to others, or `false`.",
+        "Cmd+B (Ctrl+B) folds the sidebar from inside an input or a textarea too: a page whose fields want those keys sets `keyboardShortcut` to others, or `false`.",
     },
     {
       group: "Folding",
@@ -189,34 +189,6 @@ SidebarMenuSkeleton draws quiet bars in the rows' own boxes, the same shapes eve
     {
       key: "Folded to icons",
       value: "Each button keeps its name; its tooltip shows it",
-    },
-  ]}
-/>
-<Rows
-  title="From shadcn"
-  rows={[
-    {
-      group: "Parts",
-      key: "Every part",
-      value: "Kept, with its props",
-    },
-    {
-      group: "Props",
-      key: "`side`",
-      value: '`"start"` or `"end"`',
-      note: "logical, as Sheet's",
-    },
-    {
-      group: "Props",
-      key: "Cookie",
-      value: "`storageKey` and `sidebarStateScript`",
-      note: "localStorage, only when given; or `open` from the server",
-    },
-    {
-      group: "Layout",
-      key: "Fixed to the window",
-      value: "In the page's flow",
-      note: "so it lives in any frame; held in view while the page scrolls",
     },
   ]}
 />

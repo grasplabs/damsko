@@ -22,7 +22,7 @@ The models are yours: group them by maker with `ModelSelectorGroup`, each with i
 
 ## Model and effort
 
-Two menus under a message field, as shadcn's pattern has them: the model, searched, and how hard it thinks, a Dropdown menu of three beside it.
+Two menus under a message field: the model, searched, and how hard it thinks, a Dropdown menu of three beside it.
 
 <Stage path="model-selector/effort" label="Model and effort" />
 
@@ -107,42 +107,6 @@ Two menus under a message field, as shadcn's pattern has them: the model, search
       value: "A `combobox` named Search models, over a `listbox`",
     },
     { key: "Chosen", value: "`aria-current` on the chosen model's option" },
-  ]}
-/>
-
-<Rows
-  title="From shadcn"
-  rows={[
-    {
-      group: "Base",
-      key: "Dropdown Menu",
-      value: "Popover and Command",
-      note: "shadcn keeps the search parts on Command when the list is searched; this one is",
-    },
-    {
-      group: "List",
-      key: "A radio group holding the chosen model",
-      value: "`value` and `onValueChange` on ModelSelectorList",
-      note: "the chosen one marked current and ticked",
-    },
-    {
-      group: "Trigger",
-      key: "An outline InputGroupButton",
-      value: "A small ghost Button",
-      note: "Damsko's look, kept",
-    },
-    {
-      group: "Parts",
-      key: "ModelSelectorDialog",
-      value: "None",
-      note: "the panel opens beside its trigger; a list in a dialog is Command's own",
-    },
-    {
-      group: "Panel",
-      key: "No footer",
-      value: "`footer` on ModelSelectorContent",
-      note: "the product's own row under the list",
-    },
   ]}
 />
 

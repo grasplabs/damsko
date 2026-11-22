@@ -1,5 +1,5 @@
-// Switch: turns a setting on or off at once, from shadcn's (registry/bases/base/ui/switch.tsx, on
-// Base UI), converted from Tailwind to StyleX and built on UI SDK's Switch, which draws a button with
+// Switch: turns a setting on or off at once,
+// in StyleX, built on UI SDK's Switch, which draws a button with
 // the switch role beside a hidden native input, so a form sends it and an agent can turn it on by
 // name. It draws itself only; its words are Field's parts, on a row at least 44px tall that a press
 // on the switch, its label or the space around them turns:

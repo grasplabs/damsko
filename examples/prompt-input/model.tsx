@@ -66,7 +66,7 @@ const styles = stylex.create({
   quiet: { color: colors.mutedForeground },
 });
 
-// shadcn's demo: the plus, then a model and an effort menu beside Submit, both DropdownMenus with
+// The plus, then a model and an effort menu beside Submit, both DropdownMenus with
 // radio items. The prompt input holds none of it; the page keeps the choices and sends them along.
 export default function PromptInputModel() {
   const [model, setModel] = useState("opus");

@@ -8,7 +8,7 @@ const REDUCED = "@media (prefers-reduced-motion: reduce)";
 
 /**
  * The two values an icon reads from whoever holds it. StyleX does not let a parent style its
- * children (shadcn's `[&_svg]:size-4`), so a component that holds an icon sets these on itself and
+ * children, so a component that holds an icon sets these on itself and
  * every Icon inside follows: `{ [iconVars.size]: size.iconSm }`. Never size an icon from outside.
  */
 export const iconVars = stylex.defineVars({
