@@ -198,7 +198,7 @@ export const About = () => (
 );
 
 export const AboutPickup = () => (
-  <CopyButton value={graspWords.aboutText} variant="secondary" size="sm">
+  <CopyButton value={graspWords.aboutText} variant="outline" size="sm">
     {graspWords.copy}
   </CopyButton>
 );

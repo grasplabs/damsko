@@ -20,13 +20,13 @@ export default function ToastDuration() {
   return (
     <div {...stylex.props(layout.row)}>
       <Button
-        variant="secondary"
+        variant="outline"
         onClick={() => toast("Copied", { duration: 1000 })}
       >
         Quick (1s)
       </Button>
       <Button
-        variant="secondary"
+        variant="outline"
         onClick={() =>
           toast("Report shared", {
             description: "Everyone on the team can read it now.",
@@ -36,7 +36,7 @@ export default function ToastDuration() {
         Normal
       </Button>
       <Button
-        variant="secondary"
+        variant="outline"
         onClick={() =>
           toast("Export ready", {
             description: "It stays for ten seconds.",

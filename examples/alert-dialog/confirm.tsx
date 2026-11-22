@@ -41,7 +41,7 @@ export default function AlertDialogConfirm() {
       }}
     >
       <AlertDialogTrigger asChild>
-        <Button variant="secondary">Send release notes</Button>
+        <Button variant="outline">Send release notes</Button>
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>

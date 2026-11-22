@@ -51,7 +51,7 @@ export default function AlertDialogRemoves() {
             {row}
             <Button
               size="sm"
-              variant="secondary"
+              variant="outline"
               onClick={() => {
                 setAsking(row);
               }}

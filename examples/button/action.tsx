@@ -19,7 +19,7 @@ export default function ButtonAction() {
         Save changes
       </Button>
       <Button
-        variant="secondary"
+        variant="outline"
         onClick={sendInvite}
         loadingLabel="Sending"
         successLabel="Sent"

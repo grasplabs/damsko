@@ -39,7 +39,7 @@ export default function DataTableColumnsLater() {
   return (
     <>
       <Button
-        variant="secondary"
+        variant="outline"
         onClick={() => {
           setColumns([...first, ...later]);
         }}

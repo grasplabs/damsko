@@ -31,7 +31,7 @@ export default function DrawerCheckFailed() {
   return (
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>
-        <Button variant="secondary">Test the connection</Button>
+        <Button variant="outline">Test the connection</Button>
       </DrawerTrigger>
       <DrawerContent>
         <DrawerHeader>

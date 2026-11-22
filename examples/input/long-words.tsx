@@ -44,7 +44,7 @@ export default function InputLongWords() {
         </Card>
       </div>
       <div data-case="button" {...stylex.props(layout.narrow)}>
-        <Button variant="secondary">Already sent</Button>
+        <Button variant="outline">Already sent</Button>
       </div>
       <div data-case="badge" {...stylex.props(layout.narrow)}>
         <Badge variant="warning">Already waiting</Badge>

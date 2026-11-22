@@ -17,6 +17,15 @@ const live = async (page: Page, inside: Locator): Promise<void> => {
   ).toHaveCount(1);
 };
 
+/** A control's fill and edge, as drawn. */
+const look = async (
+  element: Locator
+): Promise<{ fill: string; edge: string }> =>
+  await element.evaluate((node) => {
+    const style = getComputedStyle(node);
+    return { fill: style.backgroundColor, edge: style.boxShadow };
+  });
+
 test("the page names the library and has no docs sidebar or header", async ({
   page,
 }) => {
@@ -65,6 +74,23 @@ test("the invite form at the end takes an email and a role, and sends", async ({
   );
   await send.click();
   await expect(page.getByRole("button", { name: "Sent" })).toBeVisible();
+});
+
+test("the still dialog's Cancel stands as a field does, beside Archive's fill", async ({
+  page,
+}) => {
+  await open(page);
+  // The dialog is a picture, hidden from the accessibility tree: found by role all the same.
+  const button = (name: string): Locator =>
+    page.getByRole("button", { name, exact: true, includeHidden: true });
+  const cancel = await look(button("Cancel"));
+  // The ordinary button wears a field's fill, edge and lift, so it reads as the same height.
+  expect(cancel).toEqual(
+    await look(page.getByRole("textbox", { name: "Email" }))
+  );
+  const archive = await look(button("Archive"));
+  expect(archive.fill).not.toBe(cancel.fill);
+  expect(archive.fill).not.toBe("rgba(0, 0, 0, 0)");
 });
 
 test("with reduced motion nothing drifts and the ground stands still", async ({

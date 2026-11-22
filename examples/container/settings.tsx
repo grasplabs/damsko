@@ -92,7 +92,7 @@ export default function ContainerSettings() {
                     You lose access at once; an owner can invite you again.
                   </FieldDescription>
                 </FieldContent>
-                <Button size="sm" variant="secondary">
+                <Button size="sm" variant="outline">
                   Leave
                 </Button>
               </Field>

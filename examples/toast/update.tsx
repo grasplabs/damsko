@@ -33,11 +33,11 @@ export default function ToastUpdate() {
   };
   return (
     <div {...stylex.props(layout.row)}>
-      <Button variant="secondary" onClick={exportReport}>
+      <Button variant="outline" onClick={exportReport}>
         Export report
       </Button>
       <Button
-        variant="secondary"
+        variant="outline"
         onClick={() =>
           toast("Reminder set", {
             description: "Tomorrow at 9:00.",

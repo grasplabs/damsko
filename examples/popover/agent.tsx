@@ -40,7 +40,7 @@ const Share = () => {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="secondary">Share</Button>
+        <Button variant="outline">Share</Button>
       </PopoverTrigger>
       <PopoverContent>
         <PopoverHeader>
@@ -51,9 +51,12 @@ const Share = () => {
         </PopoverHeader>
         <PopoverFooter>
           <PopoverClose asChild>
-            <Button variant="outline">Cancel</Button>
+            <Button size="sm" variant="outline">
+              Cancel
+            </Button>
           </PopoverClose>
           <Button
+            size="sm"
             variant="default"
             onClick={send}
             loadingLabel="Sending"
@@ -75,7 +78,7 @@ const Publish = () => {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="secondary">Publish</Button>
+        <Button variant="outline">Publish</Button>
       </PopoverTrigger>
       <PopoverContent>
         <PopoverHeader>
@@ -86,9 +89,12 @@ const Publish = () => {
         </PopoverHeader>
         <PopoverFooter>
           <PopoverClose asChild>
-            <Button variant="outline">Not yet</Button>
+            <Button size="sm" variant="outline">
+              Not yet
+            </Button>
           </PopoverClose>
           <Button
+            size="sm"
             variant="default"
             onClick={publish}
             loadingLabel="Publishing"

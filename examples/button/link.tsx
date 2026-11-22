@@ -6,7 +6,7 @@ import { ArrowRightIcon, Icon } from "@grasp-os/ui/lib/icons";
 export default function ButtonLink() {
   return (
     <>
-      <Button variant="secondary" asChild>
+      <Button variant="outline" asChild>
         <a href="/components/button#every-state">
           See every state
           <Icon icon={ArrowRightIcon} />

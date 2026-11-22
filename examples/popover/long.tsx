@@ -29,7 +29,7 @@ export default function PopoverLong() {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="secondary">What is new</Button>
+        <Button variant="outline">What is new</Button>
       </PopoverTrigger>
       <PopoverContent>
         <PopoverHeader>

@@ -1857,27 +1857,6 @@
       ]
     },
     {
-      "name": "plan",
-      "type": "registry:ui",
-      "title": "Plan",
-      "description": "What the assistant proposes to do, every step shown before it starts, with an action to go ahead and how far it has got.",
-      "dependencies": [
-        "@stylexjs/stylex"
-      ],
-      "registryDependencies": [
-        "@damsko/lib",
-        "@damsko/trace"
-      ],
-      "docs": "https://damsko.joingrasp.com/components/plan",
-      "files": [
-        {
-          "path": "src/components/plan.tsx",
-          "type": "registry:file",
-          "target": "~/src/components/plan.tsx"
-        }
-      ]
-    },
-    {
       "name": "popover",
       "type": "registry:ui",
       "title": "Popover",
@@ -2691,27 +2670,6 @@
           "path": "src/components/tags-input.tsx",
           "type": "registry:file",
           "target": "~/src/components/tags-input.tsx"
-        }
-      ]
-    },
-    {
-      "name": "task",
-      "type": "registry:ui",
-      "title": "Task",
-      "description": "One piece of work being done, behind a line that opens on the steps it took and the files it touched.",
-      "dependencies": [
-        "@stylexjs/stylex"
-      ],
-      "registryDependencies": [
-        "@damsko/lib",
-        "@damsko/trace"
-      ],
-      "docs": "https://damsko.joingrasp.com/components/task",
-      "files": [
-        {
-          "path": "src/components/task.tsx",
-          "type": "registry:file",
-          "target": "~/src/components/task.tsx"
         }
       ]
     },

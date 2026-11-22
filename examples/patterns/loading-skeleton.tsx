@@ -49,7 +49,7 @@ export default function LoadingSkeleton() {
     <div aria-busy={loading} {...stylex.props(layout.stack)}>
       <div {...stylex.props(layout.actions)}>
         <Button
-          variant="secondary"
+          variant="outline"
           size="sm"
           focusableWhenDisabled
           disabled={loading}
