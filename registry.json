@@ -1071,32 +1071,6 @@
       ]
     },
     {
-      "name": "file-tree",
-      "type": "registry:ui",
-      "title": "File tree",
-      "description": "The files an assistant changed or made, as folders that open, one file chosen.",
-      "dependencies": [
-        "@stylexjs/stylex"
-      ],
-      "registryDependencies": [
-        "@damsko/lib",
-        "@damsko/tree-view"
-      ],
-      "docs": "https://damsko.joingrasp.com/components/file-tree",
-      "files": [
-        {
-          "path": "src/components/file-tree-icon.ts",
-          "type": "registry:file",
-          "target": "~/src/components/file-tree-icon.ts"
-        },
-        {
-          "path": "src/components/file-tree.tsx",
-          "type": "registry:file",
-          "target": "~/src/components/file-tree.tsx"
-        }
-      ]
-    },
-    {
       "name": "file-upload",
       "type": "registry:ui",
       "title": "File upload",

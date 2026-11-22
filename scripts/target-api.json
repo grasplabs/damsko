@@ -1055,16 +1055,6 @@
     ],
     "src/components/diff-viewer-diff.ts": null
   },
-  "file-tree": {
-    "src/components/file-tree.tsx": [
-      "FileTree",
-      "FileTreeActions",
-      "FileTreeProps",
-      "FileTreeActionsProps",
-      "FileTreeNode"
-    ],
-    "src/components/file-tree-icon.ts": ["fileTreeIcon"]
-  },
   "file-upload": {
     "src/components/file-upload.tsx": [
       "FileUpload",
