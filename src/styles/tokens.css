@@ -354,6 +354,8 @@
   --damsko-result-mark-from: 0.6;
   /* How far a result's words slide in beside their mark. Dropped with reduced motion. */
   --damsko-result-shift: 4px;
+  /* How far a failed button shakes, once. None with reduced motion. */
+  --damsko-result-shake: 4px;
   /* How long a result's words wait after their mark appears, so the mark comes first. */
   --damsko-result-follow: 80ms;
   /* How long a demo of working lasts before it says how it went. */
@@ -974,6 +976,8 @@
   --damsko-form-width: 40rem;
   /* The narrowest a tile in an ItemGrid stands before its row takes one fewer: as many per row as fit. */
   --damsko-item-grid-tile: 15rem;
+  /* The narrowest a provider's tile stands in the connect block before its row takes one fewer: four in a row in a settings column. */
+  --damsko-connect-tile: 11rem;
   /* A setting row's control column: one width for every row of a page, so the controls share one end edge. */
   --damsko-field-control-column: 20rem;
   /* A setting row's least height, a 32px control with room above and below; with a line of help it is 56px. */
