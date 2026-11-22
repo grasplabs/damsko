@@ -682,12 +682,6 @@ export interface I18nCatalog {
     /** The button that sends the answers. */
     submit: string;
   };
-  queue: {
-    /** Said to a screen reader before a to-do that is done. */
-    completed: string;
-    /** A section's line: its count, then what it holds ("3 to do"). */
-    section: (count: number, label: string) => string;
-  };
   reasoning: {
     /** What the thinking line settles to when how long it took is not known. */
     done: string;
@@ -753,12 +747,6 @@ export interface I18nCatalog {
       active: string;
       pending: string;
     };
-  };
-  subagent: {
-    /** The label over the task the subagent was given. */
-    instructions: string;
-    /** The name of the code that holds the shape of what it returns. */
-    output: string;
   };
   suggestion: {
     /** The row's name, for a screen reader, when the caller gives none (`aria-label`). */
@@ -1365,10 +1353,6 @@ const english: I18nCatalog = {
     skip: "Skip",
     submit: "Send answer",
   },
-  queue: {
-    completed: "Done",
-    section: (count: number, label: string) => `${count} ${label}`,
-  },
   reasoning: {
     done: "Thought",
     thinking: "Thinking",
@@ -1417,10 +1401,6 @@ const english: I18nCatalog = {
       pending: "not started",
       error: "failed",
     },
-  },
-  subagent: {
-    instructions: "Instructions",
-    output: "Output schema",
   },
   suggestion: {
     name: "Suggestions",
