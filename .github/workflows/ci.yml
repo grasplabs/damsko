@@ -95,6 +95,9 @@ jobs:
           cache: true
           run-install: false
       - run: vp install --frozen-lockfile
+      # The check installs into a fresh project with pnpm itself, as a product does: Corepack
+      # provides the version package.json pins.
+      - run: corepack enable
       - run: node scripts/check-install.ts
 
   # The browser specs (tests/*.spec.ts) against the built site, in four

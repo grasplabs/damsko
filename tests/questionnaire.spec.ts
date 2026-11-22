@@ -201,7 +201,8 @@ test("inside a prompt input it is a group of its own: Enter on a choice and Send
   await question.getByRole("radio", { name: "Supplier review" }).click();
   await page.keyboard.press("Enter");
   await expect(page.getByRole("status")).toContainText("Supplier review");
-  await page.reload();
+  // Opened afresh, and waited on as the first time: a press before the page is live is lost.
+  await openExample(page, "questionnaire", "in-prompt-input");
   await question.getByRole("radio", { name: "Quarterly summary" }).click();
   await page.getByRole("button", { name: "Send answer" }).click();
   await expect(page.getByRole("status")).toContainText("Quarterly summary");
