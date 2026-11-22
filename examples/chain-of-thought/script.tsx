@@ -10,7 +10,15 @@ import {
   ChainOfThoughtStep,
 } from "@grasp-os/ui/components/chain-of-thought";
 import type { ChainOfThoughtStepData } from "@grasp-os/ui/components/chain-of-thought";
+import { size } from "@grasp-os/ui/lib/tokens.stylex";
+import * as stylex from "@stylexjs/stylex";
 import { useEffect, useState } from "react";
+
+// As wide as an answer, as the other examples are: on its own the run would be only as wide as
+// its line, and the line would wrap.
+const layout = stylex.create({
+  column: { width: "100%", maxWidth: `calc(${size.popupWidth} * 1.6)` },
+});
 
 interface Step extends ChainOfThoughtStepData {
   id: string;
@@ -35,7 +43,7 @@ export default function ChainOfThoughtScript() {
     };
   }, []);
   return (
-    <ChainOfThought defaultOpen>
+    <ChainOfThought defaultOpen style={layout.column}>
       <ChainOfThoughtHeader>Planned, searched and read</ChainOfThoughtHeader>
       <ChainOfThoughtContent>
         {steps.map(({ id, ...step }) => (

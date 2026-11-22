@@ -292,7 +292,7 @@ export const ChainOfThoughtHeader = ({
         key={working ? "working" : "done"}
         status={working ? "running" : undefined}
       >
-        <TraceIcon />
+        {/* No mark: the original's activity line is its words alone, on the column's edge. */}
         <TraceTitle>{working ? current.label : children}</TraceTitle>
       </TraceLine>
     </TraceCollapsibleTrigger>

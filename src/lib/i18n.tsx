@@ -562,12 +562,34 @@ export interface I18nCatalog {
     user: string;
   };
   modelSelector: {
+    /** When no model matches the search. */
     empty: string;
+    /** The search field's name and placeholder. */
     search: string;
     /** The selector's name. */
     trigger: string;
     /** The selector's name with the model it shows ("Model: Fast"). */
     triggerWith: (trigger: string, model: string) => string;
+    /** The column of makers' logos, for a screen reader. */
+    makers: string;
+    /** The column's star, and the list's heading under it. */
+    favorites: string;
+    /** Under the star while no model is a favourite. */
+    noFavorites: string;
+    /** The effort's heading at the panel's foot, and its group's name. */
+    effort: string;
+    /** A row's star while the model is not a favourite. */
+    addFavorite: (model: string) => string;
+    /** A row's star while the model is a favourite. */
+    removeFavorite: (model: string) => string;
+    /** Said when a model becomes a favourite. */
+    added: (model: string) => string;
+    /** Said when a model stops being a favourite. */
+    removed: (model: string) => string;
+    /** Said when a model is chosen and the panel stays open for its effort. */
+    chosen: (model: string) => string;
+    /** How the keys star the highlighted model, said with the search field. */
+    favoriteKeys: string;
   };
   numberField: {
     /** The button that takes a step down. */
@@ -825,10 +847,14 @@ export interface I18nCatalog {
     error: string;
     input: string;
     output: string;
-    /** Where the call stands, after its title, for the AI SDK's tool states its line's status cannot say. */
+    /** Where the call stands, in its Badge after the title, by the AI SDK's tool state. */
     states: {
+      "input-streaming": string;
+      "input-available": string;
       "approval-requested": string;
       "approval-responded": string;
+      "output-available": string;
+      "output-error": string;
       "output-denied": string;
     };
   };
@@ -1259,10 +1285,21 @@ const english: I18nCatalog = {
     user: "You",
   },
   modelSelector: {
-    empty: "No models",
+    empty: "No models found",
     search: "Search models",
     trigger: "Model",
     triggerWith: (trigger: string, model: string) => `${trigger}: ${model}`,
+    makers: "Makers",
+    favorites: "Favourites",
+    noFavorites: "No favourites yet",
+    effort: "Thinking",
+    addFavorite: (model: string) => `Add ${model} to favourites`,
+    removeFavorite: (model: string) => `Remove ${model} from favourites`,
+    added: (model: string) => `${model} added to favourites`,
+    removed: (model: string) => `${model} removed from favourites`,
+    chosen: (model: string) => `${model} chosen`,
+    favoriteKeys:
+      "At the end of the search, the arrow toward the line's end stars or unstars the highlighted model",
   },
   numberField: {
     decrement: "Decrease",
@@ -1467,8 +1504,12 @@ const english: I18nCatalog = {
     input: "Input",
     output: "Output",
     states: {
+      "input-streaming": "Pending",
+      "input-available": "Running",
       "approval-requested": "Awaiting approval",
       "approval-responded": "Responded",
+      "output-available": "Completed",
+      "output-error": "Error",
       "output-denied": "Denied",
     },
   },

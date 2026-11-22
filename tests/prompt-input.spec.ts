@@ -297,25 +297,6 @@ test("the action menu opens from the plus, and Escape closes only the menu", asy
   );
 });
 
-test("a model and an effort picked from the menus beside Send go with the message", async ({
-  page,
-}) => {
-  await openExample(page, "prompt-input", "model");
-  await page.getByRole("button", { name: "Model: Claude Opus 5.5" }).click();
-  await page.getByRole("menuitemradio", { name: "Gemini 3 Pro" }).click();
-  await expect(
-    page.getByRole("button", { name: "Model: Gemini 3 Pro" })
-  ).toBeFocused();
-  await page.getByRole("button", { name: "Effort: Medium" }).click();
-  await page.getByRole("menuitemradio", { name: "High" }).click();
-  await page.getByRole("textbox", { name: "Message" }).click();
-  await page.keyboard.type("Rename the helper");
-  await page.keyboard.press("Enter");
-  await expect(
-    page.getByText("Sent with Gemini 3 Pro, High effort: Rename the helper")
-  ).toBeVisible();
-});
-
 test("a tool's tooltip describes it", async ({ page }) => {
   await openExample(page, "prompt-input", "takeover");
   const tool = page.getByRole("button", { name: "Ask me first" });

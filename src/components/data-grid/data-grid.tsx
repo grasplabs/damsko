@@ -103,8 +103,8 @@ import type {
   Sort,
 } from "./model";
 
-/** How the active cell is drawn: a soft halo (the default), lifted off the sheet, or an underline. */
-export type DataGridActiveAppearance = "halo" | "lifted" | "underline";
+/** How the active cell is drawn: a soft halo (the default) or an underline. */
+export type DataGridActiveAppearance = "halo" | "underline";
 /** How a chosen range is drawn: a wash with a pine edge (the default), a firmer mint edge, or dither. */
 export type DataGridRangeAppearance = "wash" | "outline" | "dither";
 /** How the head is drawn: quiet on a soft ground (the default), lifted, or with type chips. */
@@ -547,20 +547,6 @@ const styles = stylex.create({
       ":focus": `inset 0 0 0 ${size.hairline} ${colors.dataGridActiveBorder}, 0 0 10px 1px ${colors.dataGridActiveHalo}, 0 2px 6px ${colors.dataGridActiveHalo}`,
     },
   },
-  // The cell lifts off the sheet: one pine ring 2px wide drawn as an outline over its own lines,
-  // and the low lift under focus.
-  activeLifted: {
-    borderRadius: radius.mark,
-    borderColor: "transparent",
-    outlineStyle: "solid",
-    outlineWidth: `calc(2 * ${size.hairline})`,
-    outlineColor: {
-      default: colors.dataGridActiveBorder,
-      [media.forcedColors]: "Highlight",
-    },
-    outlineOffset: `calc(-1 * ${size.hairline})`,
-    boxShadow: { default: "none", ":focus": shadow.sm },
-  },
   // Alone, the active cell stands on the raised ground. In a range it keeps the range's wash.
   activeAlone: { backgroundColor: colors.card, backgroundImage: "none" },
   // Calmest: a mint wash and a pine line under the words; reached by the keyboard, a line all round
@@ -642,9 +628,9 @@ const linesAt = (drawn: Drawn, row: number, col: number): Lines => {
     col
   );
   if (!drawn.ranged) {
-    // Lifted, the cell draws its own edge; with no focus in the grid it draws none: a grid nobody
-    // is in is calm. Underlined, the line below it alone; with the halo, the four round it.
-    if (active === "lifted" || !focused) {
+    // With no focus in the grid the cell draws no edge: a grid nobody is in is calm. Underlined,
+    // the line below it alone; with the halo, the four round it.
+    if (!focused) {
       return { end: false, below: false };
     }
     return active === "underline"
@@ -1653,7 +1639,6 @@ const HeadRow = <Row,>({ grid, resizable }: PartProps<Row>) => {
 
 const activeStyle = {
   halo: "activeHalo",
-  lifted: "activeLifted",
   underline: "activeUnderline",
 } as const;
 
