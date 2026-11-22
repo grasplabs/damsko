@@ -25,7 +25,9 @@ const log = async (page: Page, line: string) =>
   );
 
 const centre = async (page: Page, name = NAME) => {
-  const box = await page.getByRole("button", { name }).boundingBox();
+  const box = await page
+    .getByRole("button", { name, exact: true })
+    .boundingBox();
   if (box === null) {
     throw new Error(`${name} has no box`);
   }
@@ -72,9 +74,23 @@ test("let go early, nothing runs and nothing asks", async ({ page }) => {
   await expect(confirmation(page)).toHaveCount(0);
 });
 
-test("a tap asks with the button's words and Cancel", async ({ page }) => {
+test("a short click runs nothing and opens nothing", async ({ page }) => {
   await open(page);
   await press(page, TAP);
+  expect(await log(page, "deleted")).toBe(0);
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await page.clock.resume();
+  await page.getByRole("button", { name: NAME }).click();
+  expect(await log(page, "deleted")).toBe(0);
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+});
+
+test("a tap of a key asks with the button's words and Cancel", async ({
+  page,
+}) => {
+  await open(page);
+  await page.getByRole("button", { name: NAME }).focus();
+  await page.keyboard.press("Space");
   const ask = confirmation(page);
   await expect(ask).toBeVisible();
   await expect(ask.getByRole("button", { name: "Cancel" })).toBeVisible();
@@ -135,11 +151,25 @@ test("moving off the button cancels the hold", async ({ page }) => {
   await expect(confirmation(page)).toHaveCount(0);
 });
 
+test("Escape gives up a hold", async ({ page }) => {
+  await open(page);
+  const { x, y } = await centre(page);
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.clock.runFor(HALF);
+  await page.keyboard.press("Escape");
+  await page.clock.runFor(FULL);
+  await page.mouse.up();
+  await page.clock.runFor(FULL);
+  expect(await log(page, "deleted")).toBe(0);
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+});
+
 test("a hold while it asks closes the question and runs once", async ({
   page,
 }) => {
   await open(page);
-  await press(page, TAP);
+  await page.getByRole("button", { name: NAME }).dispatchEvent("click");
   await expect(confirmation(page)).toBeVisible();
   await press(page, FULL);
   await expect(confirmation(page)).toHaveCount(0);
@@ -151,7 +181,7 @@ test("a form's submit button sends it only once held or confirmed", async ({
 }) => {
   await open(page);
   const send = "Hold to send report";
-  await press(page, TAP, send);
+  await page.getByRole("button", { name: send }).dispatchEvent("click");
   const ask = confirmation(page, "Send report?");
   await expect(ask).toBeVisible();
   expect(await log(page, "submitted")).toBe(0);
@@ -172,6 +202,133 @@ test("its box keeps its size while held", async ({ page }) => {
   expect(await button.boundingBox()).toEqual(rest);
   await page.mouse.up();
 });
+
+// What is drawn at a point of the page, as one pixel's picture: the same bytes, the same colour.
+// Only ever compared with the same point at another moment: a gradient is dithered from point to
+// point.
+const drawnAt = async (page: Page, point: { x: number; y: number }) => {
+  const picture = await page.screenshot({
+    clip: { ...point, width: 1, height: 1 },
+  });
+  return picture.toString("base64");
+};
+
+/**
+ * Points of the button: just inside its end edge, its top and its foot (where the fill arrives
+ * late), at its start, and its four corners, which lie outside its rounded shape.
+ */
+const pointsOf = async (page: Page, name: string) => {
+  const box = await page
+    .getByRole("button", { name, exact: true })
+    .boundingBox();
+  if (box === null) {
+    throw new Error(`${name} has no box`);
+  }
+  const left = Math.floor(box.x);
+  const top = Math.floor(box.y);
+  const right = Math.ceil(box.x + box.width) - 1;
+  const bottom = Math.ceil(box.y + box.height) - 1;
+  const middle = Math.round(box.y + box.height / 2);
+  const late = Math.round(box.x + box.width * 0.75);
+  return {
+    start: { x: left + 4, y: middle },
+    edges: [
+      { x: right - 4, y: middle },
+      { x: late, y: top + 3 },
+      { x: late, y: bottom - 3 },
+    ],
+    corners: [
+      { x: left, y: top },
+      { x: right, y: top },
+      { x: left, y: bottom },
+      { x: right, y: bottom },
+    ],
+  };
+};
+
+/** Waits until nothing in the button moves: the fill has arrived, or has run back. */
+const still = async (page: Page, name: string) => {
+  await page
+    .getByRole("button", { name, exact: true })
+    .evaluate(async (button) => {
+      await Promise.all(
+        button
+          .getAnimations({ subtree: true })
+          .map(async (animation) => await animation.finished)
+      );
+    });
+};
+
+const all = async (page: Page, points: { x: number; y: number }[]) =>
+  await Promise.all(points.map(async (point) => await drawnAt(page, point)));
+
+for (const words of [
+  "delete xs",
+  "delete sm",
+  "delete default",
+  "delete lg",
+  "delete icon-xs",
+  "delete icon-sm",
+  "delete icon",
+  "delete icon-lg",
+  "archive default",
+  "archive outline",
+  "archive secondary",
+  "archive ghost",
+  "archive link",
+]) {
+  test(`${words}: the fill reaches the button's edges and stays inside its corners`, async ({
+    page,
+  }) => {
+    await openExample(page, "hold-button", "sizes", { time: fixedTime });
+    // The page's clock stands still, so the hold never ends: the fill arrives and stays.
+    await page.clock.pauseAt(new Date(fixedTime.getTime() + 1000));
+    const name = `Hold to ${words}`;
+    const { edges, corners } = await pointsOf(page, name);
+    const { x, y } = await centre(page, name);
+    // What lies outside the button's rounded shape: the page, or at rest its shadow on the page.
+    const bare = await drawnAt(page, { x: 1, y: 1 });
+    const around = await all(page, corners);
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    // Held, and the fill not there yet; then it is, at the end edge, the top and the foot.
+    const unfilled = await all(page, edges);
+    await still(page, name);
+    const filled = await all(page, edges);
+    for (const [index, drawn] of filled.entries()) {
+      expect(drawn).not.toBe(unfilled[index]);
+    }
+    // Outside the button's rounded shape nothing is drawn: its corners cut the fill.
+    const held = await all(page, corners);
+    for (const [index, drawn] of held.entries()) {
+      expect([bare, around[index]]).toContain(drawn);
+    }
+    await page.mouse.up();
+  });
+}
+
+for (const motion of ["reduce", "no-preference"] as const) {
+  test(`let go early, the fill is gone again (motion: ${motion})`, async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: motion });
+    await openExample(page, "hold-button", "sizes", { time: fixedTime });
+    await page.clock.pauseAt(new Date(fixedTime.getTime() + 1000));
+    const name = "Hold to delete lg";
+    const { start } = await pointsOf(page, name);
+    const { x, y } = await centre(page, name);
+    await page.mouse.move(x, y);
+    await still(page, name);
+    const rest = await drawnAt(page, start);
+    await page.mouse.down();
+    // It fills with reduced motion too: the fill is the hold's timer.
+    await still(page, name);
+    expect(await drawnAt(page, start)).not.toBe(rest);
+    await page.mouse.up();
+    await expect.poll(async () => await drawnAt(page, start)).toBe(rest);
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+  });
+}
 
 test("an agent's press waits for the person's yes", async ({ page }) => {
   await open(page);

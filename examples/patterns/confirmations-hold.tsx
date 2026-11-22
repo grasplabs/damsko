@@ -18,7 +18,8 @@ const layout = stylex.create({
 const deleteDraft = () => new Promise((resolve) => setTimeout(resolve, 1200));
 
 // What cannot be undone but is small asks with a hold, not a dialog: the press itself is the yes.
-// A click asks in a small popover instead, for anyone who cannot hold.
+// A tap of a key or a screen reader's press asks in a small popover instead, for anyone who cannot
+// hold; a click does nothing.
 export default function ConfirmationsHold() {
   return (
     <div {...stylex.props(layout.row)}>
