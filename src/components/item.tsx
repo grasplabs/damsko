@@ -23,6 +23,11 @@
 // given empty waits as a quiet placeholder of its own size. In a narrow row the actions drop under
 // the words, on the row's end edge, by the row's own width.
 //
+// In a side panel's card (a SidePanelSection's) an `xs` row takes the panel's rhythm: 44px, the
+// panel's smaller words, its bare icon in the accent, its ItemDetail at the row's end, and the
+// room of an action kept on every row, so the details end on one line. The list is flush there, a
+// hairline between two rows.
+//
 // Every value is a token. A caller may set layout only (the `style` prop).
 "use client";
 
@@ -49,7 +54,7 @@ import {
 } from "../lib/tokens.stylex";
 import { isBlank, listOf } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
-import { iconVars } from "../lib/vars.stylex";
+import { iconVars, sidePanelCardMarker } from "../lib/vars.stylex";
 import { itemMarker } from "./item.stylex";
 import { Separator } from "./separator";
 import { Skeleton } from "./skeleton";
@@ -231,11 +236,33 @@ const styles = stylex.create({
     paddingInline: space["4"],
   },
   // The setting rows' rhythm: 8px above and below, a table cell's inset, a field row at least.
+  // In a side panel's card: a finger's 44px, the panel's inset, and at the row's end the room of
+  // an action (a 28px button and its gap) on a row that has none, so every detail ends on one line.
   xs: {
-    gap: space["3"],
-    paddingBlock: space["2"],
-    paddingInline: space.tableCellInline,
-    minHeight: space.fieldRow,
+    gap: {
+      default: space["3"],
+      [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: space["2"],
+    },
+    paddingBlock: {
+      default: space["2"],
+      [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: 0,
+    },
+    paddingInlineStart: {
+      default: space.tableCellInline,
+      [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]:
+        space.sidePanelPadding,
+    },
+    paddingInlineEnd: {
+      default: space.tableCellInline,
+      [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: {
+        default: space.sidePanelPadding,
+        ":not(:has([data-slot=item-actions]))": `calc(${space.sidePanelPadding} + ${sizes.controlXs} + ${space["2"]})`,
+      },
+    },
+    minHeight: {
+      default: space.fieldRow,
+      [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: sizes.tapTarget,
+    },
   },
   plain: { backgroundColor: "transparent" },
   outline: {
@@ -307,6 +334,18 @@ const styles = stylex.create({
       )]: "center",
     },
   },
+  // In a side panel's card the bare icon says what kind of thing the row is, in the one accent.
+  mediaXs: {
+    height: {
+      default: font.textSmLine,
+      [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]:
+        sizes.sidePanelTextLine,
+    },
+    color: {
+      default: colors.mutedForeground,
+      [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: colors.mintDeep,
+    },
+  },
   // A mark (a logo, a tile, a face) in the middle of its row, on all the words, at its own height.
   mediaCentred: { alignSelf: "center", height: "auto" },
   // An icon in its square, at the row's size.
@@ -341,11 +380,67 @@ const styles = stylex.create({
     overflowWrap: "anywhere",
     hyphens: "manual",
   },
+  // In a side panel's card: the panel's smaller words, the name and what follows it in one row.
+  titleXs: {
+    display: {
+      default: null,
+      [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: "flex",
+    },
+    alignItems: {
+      default: null,
+      [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: "center",
+    },
+    gap: {
+      default: null,
+      [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: space["2"],
+    },
+    minWidth: {
+      default: null,
+      [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: 0,
+    },
+    fontSize: {
+      default: font.textSm,
+      [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]:
+        sizes.sidePanelText,
+    },
+    lineHeight: {
+      default: font.textSmLine,
+      [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]:
+        sizes.sidePanelTextLine,
+    },
+  },
   // On the title's line, after a space and a little more room: quieter, not bolder.
   detail: {
     marginInlineStart: space["1"],
     fontWeight: font.weightNormal,
     color: colors.mutedForeground,
+  },
+  // In a side panel's card: at the row's end, on one line, cut with an ellipsis past 45% of it.
+  detailXs: {
+    marginInlineStart: {
+      default: space["1"],
+      [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: "auto",
+    },
+    flexShrink: {
+      default: null,
+      [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: 0,
+    },
+    maxWidth: {
+      default: null,
+      [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: "45%",
+    },
+    overflow: {
+      default: null,
+      [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: "hidden",
+    },
+    textOverflow: {
+      default: null,
+      [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: "ellipsis",
+    },
+    whiteSpace: {
+      default: null,
+      [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: "nowrap",
+    },
   },
   description: {
     fontSize: font.textSm,
@@ -423,9 +518,13 @@ const styles = stylex.create({
     margin: 0,
     padding: 0,
     listStyle: "none",
+    // In a side panel's card the list is flush: the rows meet at the hairline.
     rowGap: {
       default: space["2"],
-      ":has(> [data-slot=item-separator])": space["1"],
+      ":has(> [data-slot=item-separator])": {
+        default: space["1"],
+        [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: 0,
+      },
     },
     columnGap: {
       default: space["2"],
@@ -435,11 +534,24 @@ const styles = stylex.create({
     // card's edge or head line as from a hairline.
     paddingBlock: {
       default: 0,
-      ":has(> [data-slot=item-separator])": space["1"],
+      ":has(> [data-slot=item-separator])": {
+        default: space["1"],
+        [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: 0,
+      },
     },
   },
   row: { display: "grid", minWidth: 0 },
-  separator: { display: "grid", margin: 0, padding: 0 },
+  // In a side panel's card the hairline is the top of the row after it, and takes no height.
+  separator: {
+    display: "grid",
+    margin: 0,
+    padding: 0,
+    marginBlockEnd: {
+      default: 0,
+      [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]:
+        `calc(-1 * ${sizes.hairline})`,
+    },
+  },
   grid: {
     display: "grid",
     // As many as fit, never under the tile's least width, and one whole column on a narrow page.
@@ -565,6 +677,7 @@ export const ItemMedia = ({
       {...stylex.props(
         styles.media,
         align === "center" && styles.mediaCentred,
+        variant === "default" && sized === "xs" && styles.mediaXs,
         variant === "icon" && styles.mediaIcon,
         variant === "image" && styles.mediaImage,
         variant !== "default" && small && styles.mediaSm,
@@ -639,7 +752,14 @@ const TitleWords = ({ children }: { children: ReactNode }): ReactNode => {
 
 /** Its name, in a few words ("Spring launch"). */
 export const ItemTitle = ({ children, style }: ItemTitleProps) => (
-  <span data-slot="item-title" {...stylex.props(styles.title, style)}>
+  <span
+    data-slot="item-title"
+    {...stylex.props(
+      styles.title,
+      use(RowSize) === "xs" && styles.titleXs,
+      style
+    )}
+  >
     {use(RowLoading) && isBlank(children) ? (
       <span {...stylex.props(waits.title)}>
         <Skeleton />
@@ -653,17 +773,22 @@ export const ItemTitle = ({ children, style }: ItemTitleProps) => (
 /**
  * A quieter word or two on the title's line, after the name: a role, "you", a count ("Admin"). In
  * the muted ink at the regular weight; it wraps with the title, never cut off. Put it in the
- * ItemTitle.
+ * ItemTitle. On an `xs` row in a side panel's card it stands at the row's end instead, on one line.
  */
-export const ItemDetail = ({ children, style }: ItemDetailProps) =>
-  isBlank(children) ? null : (
+export const ItemDetail = ({ children, style }: ItemDetailProps) => {
+  const dense = use(RowSize) === "xs";
+  return isBlank(children) ? null : (
     <>
       {" "}
-      <span data-slot="item-detail" {...stylex.props(styles.detail, style)}>
+      <span
+        data-slot="item-detail"
+        {...stylex.props(styles.detail, dense && styles.detailXs, style)}
+      >
         {children}
       </span>
     </>
   );
+};
 
 /** One line about it: a date, a state, a count ("Updated 2 hours ago"). It wraps; never cut off. */
 export const ItemDescription = ({ children, style }: ItemDescriptionProps) => {
