@@ -161,6 +161,7 @@ export const colors = stylex.defineConsts({
   sidebarText: "var(--damsko-sidebar-text)",
   sidebarTextSecondary: "var(--damsko-sidebar-text-secondary)",
   sidebarTextTertiary: "var(--damsko-sidebar-text-tertiary)",
+  sidebarCardBorder: "var(--damsko-sidebar-card-border)",
   // Carousel: carousel.
   carouselDotBg: "var(--damsko-carousel-dot-bg)",
   carouselDotBgActive: "var(--damsko-carousel-dot-bg-active)",
@@ -305,6 +306,7 @@ export const radius = stylex.defineConsts({
   circle: "var(--damsko-radius-circle)",
   // Sidebar: sidebar sizes.
   sidebarRadius: "var(--damsko-sidebar-radius)",
+  sidebarRadiusLg: "var(--damsko-sidebar-radius-lg)",
   sidebarCardRadius: "var(--damsko-sidebar-card-radius)",
   // Tree: tree.
   treeViewRowRadius: "var(--damsko-tree-view-row-radius)",
@@ -341,8 +343,6 @@ export const shadow = stylex.defineConsts({
   menuShadow: "var(--damsko-menu-shadow)",
   // Switch: switch.
   switchThumbShadow: "var(--damsko-switch-thumb-shadow)",
-  // Sidebar: sidebar colours.
-  sidebarCardShadow: "var(--damsko-sidebar-card-shadow)",
 });
 
 export const font = stylex.defineConsts({
@@ -381,6 +381,9 @@ export const font = stylex.defineConsts({
   shimmerSoft: "var(--damsko-shimmer-soft)",
   shimmerClear: "var(--damsko-shimmer-clear)",
   shimmerBright: "var(--damsko-shimmer-bright)",
+  // Sidebar: sidebar sizes.
+  sidebarNameLine: "var(--damsko-sidebar-name-line)",
+  sidebarNoteLine: "var(--damsko-sidebar-note-line)",
   // Tree: tree.
   treeViewWeight: "var(--damsko-tree-view-weight)",
   treeViewWeightActive: "var(--damsko-tree-view-weight-active)",
@@ -654,13 +657,14 @@ export const size = stylex.defineConsts({
   sidebarWidth: "var(--damsko-sidebar-width)",
   sidebarRailWidth: "var(--damsko-sidebar-rail-width)",
   sidebarMenuButtonHeight: "var(--damsko-sidebar-menu-button-height)",
+  sidebarMenuButtonHeightLg: "var(--damsko-sidebar-menu-button-height-lg)",
   // Sidebar: sidebar sizes.
   sidebarRowGap: "var(--damsko-sidebar-row-gap)",
   sidebarRowInline: "var(--damsko-sidebar-row-inline)",
   sidebarIconGap: "var(--damsko-sidebar-icon-gap)",
   sidebarIcon: "var(--damsko-sidebar-icon)",
-  sidebarGuide: "var(--damsko-sidebar-guide)",
   sidebarIconButton: "var(--damsko-sidebar-icon-button)",
+  sidebarCardGap: "var(--damsko-sidebar-card-gap)",
   sidebarTracking: "var(--damsko-sidebar-tracking)",
   sidebarCountInline: "var(--damsko-sidebar-count-inline)",
   // App shell: app shell.

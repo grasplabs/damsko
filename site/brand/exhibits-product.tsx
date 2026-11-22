@@ -320,7 +320,7 @@ export const Screen = () => (
                     <SidebarMenuButton asChild isActive={index === 0}>
                       <a href={`#${label.toLowerCase()}`}>
                         <Icon icon={rowIcons[index] ?? MessageSquareIcon} />
-                        <span>{label}</span>
+                        {label}
                       </a>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

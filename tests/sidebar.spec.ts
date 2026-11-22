@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 
-import { openExample } from "./example.ts";
+import { hasFocusRing, openExample } from "./example.ts";
 
 const TOGGLE = "Show or hide the sidebar";
 
@@ -90,11 +90,13 @@ test("folded off the canvas by the keys while focus is inside, focus goes to the
 test("folded to its icons, every place keeps its name and shows it in a tooltip", async ({
   page,
 }) => {
-  await openExample(page, "sidebar", "basic");
+  await openExample(page, "sidebar", "icon");
   const sidebar = sidebarOf(page);
   const dashboard = sidebar.getByRole("link", { name: "Dashboard" });
-  // Open, the words show: no tooltip.
+  // Open, the words show whole: no tooltip, however long the pointer rests.
+  await page.clock.install();
   await dashboard.hover();
+  await page.clock.runFor(2000);
   await expect(page.getByRole("tooltip")).toBeHidden();
   await triggerOf(page).click();
   await expect(triggerOf(page)).toHaveAttribute("aria-expanded", "false");
@@ -117,7 +119,7 @@ test("folded to its icons, every place keeps its name and shows it in a tooltip"
 test("the rail folds and opens it, and says whether it is open", async ({
   page,
 }) => {
-  await openExample(page, "sidebar", "basic");
+  await openExample(page, "sidebar", "icon");
   const rail = sidebarOf(page).getByRole("button", { name: TOGGLE });
   await expect(rail).toHaveAttribute("aria-expanded", "true");
   await rail.click();
@@ -127,10 +129,10 @@ test("the rail folds and opens it, and says whether it is open", async ({
   await expect(triggerOf(page)).toHaveAttribute("aria-expanded", "true");
 });
 
-test("Tab goes down the places, a place's own rows after it, the rail no stop, then the page", async ({
+test("Tab goes down the places, a place's own rows after it, the rail and a disabled place no stop, then the page", async ({
   page,
 }) => {
-  await openExample(page, "sidebar", "basic");
+  await openExample(page, "sidebar", "icon");
   await sidebarOf(page).getByRole("link", { name: "Northwind" }).focus();
   const order = ["Northwind"];
   for (let step = 0; step < 8; step += 1) {
@@ -163,7 +165,7 @@ test("on a phone it is a sheet: Tab stays inside, and Escape gives focus back to
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 800 });
-  await openExample(page, "sidebar", "basic");
+  await openExample(page, "sidebar", "icon");
   await expect(sidebarOf(page)).toBeHidden();
   const trigger = page.getByRole("button", { name: TOGGLE });
   await expect(trigger).toHaveAttribute("aria-expanded", "false");
@@ -330,4 +332,482 @@ test("the page's own control folds it with an updater, and two in one moment bui
     button.click();
   });
   await expect(trigger).toHaveAttribute("aria-expanded", "true");
+});
+
+// ---- The look: the original design's, part by part (examples/sidebar/basic.tsx) ------------------
+
+// The tokens' values as the browser reports them. In light the ground is rgb(241, 241, 241) and the
+// rows' grey rgb(105, 105, 105); in dark rgb(18, 18, 18) and rgb(164, 164, 164).
+const LOOK = {
+  light: {
+    ground: "oklch(0.957 0 0)",
+    current: "oklch(0 0 0 / 0.05)",
+    hover: "oklch(0 0 0 / 0.035)",
+    rule: "oklch(0 0 0 / 0.08)",
+    text: "oklch(0.269 0 0)",
+    secondary: "oklch(0.52 0 0)",
+    tertiary: "oklch(0.64 0 0)",
+    count: "oklch(1 0 0)",
+  },
+  dark: {
+    ground: "oklch(0.18 0 0)",
+    current: "oklch(1 0 0 / 0.07)",
+    hover: "oklch(1 0 0 / 0.05)",
+    rule: "oklch(1 0 0 / 0.1)",
+    text: "oklch(0.96 0 0)",
+    secondary: "oklch(0.72 0 0)",
+    tertiary: "oklch(0.6 0 0)",
+    count: "oklch(0.215 0 0)",
+  },
+} as const;
+
+/** The ground an element stands on: the first fill behind it. */
+const groundOf = async (element: Locator): Promise<string> =>
+  await element.evaluate((node) => {
+    let at: Element | null = node;
+    while (
+      at !== null &&
+      getComputedStyle(at).backgroundColor === "rgba(0, 0, 0, 0)"
+    ) {
+      at = at.parentElement;
+    }
+    return at === null ? "none" : getComputedStyle(at).backgroundColor;
+  });
+
+/** An element's box, which the test needs to exist. */
+const boxOf = async (element: Locator) => {
+  const box = await element.boundingBox();
+  if (box === null) {
+    throw new Error("The element has no box.");
+  }
+  return box;
+};
+
+/** Where an element's own words are drawn. */
+const wordsOf = async (element: Locator) =>
+  await element.evaluate((node) => {
+    const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT);
+    const range = document.createRange();
+    let text = walker.nextNode();
+    while (text !== null && (text.textContent ?? "").trim() === "") {
+      text = walker.nextNode();
+    }
+    if (text === null) {
+      throw new Error("The element has no words.");
+    }
+    range.selectNodeContents(text);
+    const { left, right, top, bottom } = range.getBoundingClientRect();
+    return { bottom, left, right, top };
+  });
+
+/**
+ * Whether a press lands on the row all along its end edge and at both ends' corners, just inside
+ * their curve: a container that cut the row's fill, corners or ring would take the press instead.
+ */
+const wholeAtItsEnds = async (row: Locator): Promise<boolean> =>
+  await row.evaluate((node) => {
+    const { left, right, top, bottom } = node.getBoundingClientRect();
+    const corner = Number(
+      getComputedStyle(node).borderTopLeftRadius.replace("px", "")
+    );
+    const points = [left + 0.5, right - 0.5].flatMap((x) => [
+      [x, top + corner + 0.5],
+      [x, (top + bottom) / 2],
+      [x, bottom - corner - 0.5],
+    ]);
+    const inward = [left + corner + 0.5, right - corner - 0.5].flatMap((x) => [
+      [x, top + 0.5],
+      [x, bottom - 0.5],
+    ]);
+    return [...points, ...inward].every(([x = 0, y = 0]) => {
+      const hit = document.elementFromPoint(x, y);
+      return hit !== null && node.contains(hit);
+    });
+  });
+
+for (const theme of ["light", "dark"] as const) {
+  const look = LOOK[theme];
+
+  test(`${theme}: its ground is the neutral grey with no line at its end, and the current row a flat fill`, async ({
+    page,
+  }) => {
+    await openExample(page, "sidebar", "basic", { theme });
+    const sidebar = sidebarOf(page);
+    const nav = sidebar.getByRole("navigation", { name: "Main" });
+    expect(await groundOf(nav)).toBe(look.ground);
+    // No edge: the ground runs the sidebar's whole width.
+    const whole = await boxOf(sidebar);
+    const inside = await boxOf(nav);
+    expect(inside.width).toBe(whole.width);
+    const current = sidebar.getByRole("link", { name: "Chat" });
+    await expect(current).toHaveCSS("background-color", look.current);
+    await expect(current).toHaveCSS("box-shadow", "none");
+    await expect(current).toHaveCSS("color", look.text);
+  });
+
+  test(`${theme}: rows, their icons, counts and the group's label are in the sidebar's greys`, async ({
+    page,
+  }) => {
+    await openExample(page, "sidebar", "basic", { theme });
+    const sidebar = sidebarOf(page);
+    const row = sidebar.getByRole("link", { name: "Brain" });
+    await expect(row).toHaveCSS("color", look.secondary);
+    await expect(row).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+    await expect(sidebar.getByText("From your Apps")).toHaveCSS(
+      "color",
+      look.secondary
+    );
+    const count = sidebar.getByText("3", { exact: true });
+    await expect(count).toHaveCSS("background-color", look.count);
+    await expect(count).toHaveCSS("border-top-color", look.rule);
+    await expect(count).toHaveCSS("color", look.secondary);
+    // Under the pointer a row takes the hover fill and the ink read first; pressed, it stays so.
+    await row.hover();
+    await expect(row).toHaveCSS("background-color", look.hover);
+    await expect(row).toHaveCSS("color", look.text);
+    await page.mouse.down();
+    await expect(row).toHaveCSS("background-color", look.hover);
+    await expect(row).toHaveCSS("scale", "none");
+    await page.mouse.up();
+    // The current row keeps its fill under the pointer.
+    const current = sidebar.getByRole("link", { name: "Chat" });
+    await current.hover();
+    await expect(current).toHaveCSS("background-color", look.current);
+  });
+
+  test(`${theme}: the head's buttons are round and grey, and the foot a person's row under a hairline`, async ({
+    page,
+  }) => {
+    await openExample(page, "sidebar", "basic", { theme });
+    const sidebar = sidebarOf(page);
+    for (const name of ["Search", TOGGLE]) {
+      const button = sidebar.getByRole("button", { name });
+      // oxlint-disable-next-line no-await-in-loop -- one button after the other
+      const box = await boxOf(button);
+      expect([box.width, box.height]).toEqual([28, 28]);
+      // oxlint-disable-next-line no-await-in-loop -- see above
+      await expect(button).toHaveCSS("color", look.secondary);
+      // oxlint-disable-next-line no-await-in-loop -- see above
+      await button.hover();
+      // oxlint-disable-next-line no-await-in-loop -- see above
+      await expect(button).toHaveCSS("background-color", look.hover);
+      // oxlint-disable-next-line no-await-in-loop -- see above
+      await expect(button).toHaveCSS("color", look.text);
+    }
+    const person = sidebar.getByRole("button", { name: /Anna de Vries/u });
+    const row = await boxOf(person);
+    expect(row.height).toBe(46);
+    await expect(person).toHaveCSS("color", look.text);
+    await expect(person.getByText("Northwind Finance")).toHaveCSS(
+      "color",
+      look.secondary
+    );
+    // The hairline: over the foot's 8px of room, as far in as the rows, in the sidebar's rule.
+    const rule = await page.evaluate(
+      ([x, y]) => {
+        const hit = document.elementFromPoint(x ?? 0, y ?? 0);
+        if (hit === null) {
+          return null;
+        }
+        const { width, height } = hit.getBoundingClientRect();
+        return {
+          colour: getComputedStyle(hit).backgroundColor,
+          height,
+          width,
+        };
+      },
+      [row.x + row.width / 2, row.y - 9]
+    );
+    expect(rule).toEqual({ colour: look.rule, height: 1, width: row.width });
+  });
+}
+
+test("rows are 32px, 8px in and 2px apart, their icons 16px; groups stand 8px apart", async ({
+  page,
+}) => {
+  await openExample(page, "sidebar", "basic");
+  const sidebar = sidebarOf(page);
+  const whole = await boxOf(sidebar);
+  const chat = await boxOf(sidebar.getByRole("link", { name: "Chat" }));
+  const dashboard = await boxOf(
+    sidebar.getByRole("link", { name: "Dashboard" })
+  );
+  expect(chat.height).toBe(32);
+  expect(chat.x - whole.x).toBe(8);
+  expect(whole.x + whole.width - (chat.x + chat.width)).toBe(8);
+  expect(dashboard.y - (chat.y + chat.height)).toBe(2);
+  // The first row stands 56px down: the head's room, its 28px buttons and the list's own room.
+  expect(chat.y - whole.y).toBe(56);
+  const icon = await sidebar
+    .getByRole("link", { name: "Chat" })
+    .evaluate((node) => {
+      const box = node.querySelector("svg")?.getBoundingClientRect();
+      return [box?.width, box?.height];
+    });
+  expect(icon).toEqual([16, 16]);
+  const last = await boxOf(sidebar.getByRole("link", { name: "Integrations" }));
+  const label = await wordsOf(sidebar.getByText("From your Apps"));
+  const first = await boxOf(sidebar.getByRole("link", { name: "Expenses" }));
+  // The label's own row starts 8px under the group above, its words low in it, 2px over its rows.
+  expect(first.y - (last.y + last.height)).toBe(8 + 32 + 2);
+  expect(first.y - label.bottom).toBeLessThanOrEqual(8);
+  // A count: 22px high, 8px in from the row's end, in the middle of its row.
+  const count = await boxOf(sidebar.getByText("3", { exact: true }));
+  expect(count.height).toBe(22);
+  expect(dashboard.x + dashboard.width - (count.x + count.width)).toBe(8);
+  expect(count.y - dashboard.y).toBe(5);
+});
+
+test("a nested row is a row's height and weight, its words in line with its parent's, with no guide line", async ({
+  page,
+}) => {
+  await openExample(page, "sidebar", "basic");
+  const sidebar = sidebarOf(page);
+  const parent = sidebar.getByRole("link", { name: "Expenses" });
+  const nested = sidebar.getByRole("link", { name: "Claims" });
+  const box = await boxOf(nested);
+  const above = await boxOf(parent);
+  expect(box.height).toBe(32);
+  expect(box.x).toBe(above.x);
+  expect(box.width).toBe(above.width);
+  expect(box.y - (above.y + above.height)).toBe(2);
+  await expect(nested).toHaveCSS("font-weight", "500");
+  const nestedWords = await wordsOf(nested);
+  const parentWords = await wordsOf(parent);
+  expect(nestedWords.left).toBe(parentWords.left);
+  const list = sidebar
+    .getByRole("list")
+    .filter({ has: page.getByRole("link", { name: "Claims" }) })
+    .filter({ hasNot: page.getByRole("link", { name: "Expenses" }) });
+  await expect(list).toHaveCSS("border-left-width", "0px");
+  await expect(list).toHaveCSS("border-right-width", "0px");
+});
+
+test("it folds away whole by default, and the trigger in the page brings it back", async ({
+  page,
+}) => {
+  await openExample(page, "sidebar", "basic");
+  const sidebar = sidebarOf(page);
+  await sidebar.getByRole("button", { name: TOGGLE }).click();
+  await expect(page.getByRole("link", { name: "Chat" })).toBeHidden();
+  // Nothing of it stays: no rail of icons, and the page starts where it stood.
+  const back = triggerOf(page);
+  await expect(back).toBeFocused();
+  const main = await boxOf(page.getByRole("main"));
+  const whole = await boxOf(page.getByRole("main").locator(".."));
+  expect(main.x).toBe(whole.x);
+  await back.click();
+  await expect(sidebar.getByRole("link", { name: "Chat" })).toBeVisible();
+});
+
+test("the keyboard's ring shows on a row, a nested row and the head's buttons, whole", async ({
+  page,
+}) => {
+  await openExample(page, "sidebar", "basic");
+  const sidebar = sidebarOf(page);
+  await sidebar.getByRole("button", { name: "Search" }).focus();
+  await page.keyboard.press("Tab");
+  const trigger = sidebar.getByRole("button", { name: TOGGLE });
+  await expect(trigger).toBeFocused();
+  expect(await hasFocusRing(trigger)).toBe(true);
+  await page.keyboard.press("Tab");
+  const row = sidebar.getByRole("link", { name: "Chat" });
+  await expect(row).toBeFocused();
+  expect(await hasFocusRing(row)).toBe(true);
+  expect(await wholeAtItsEnds(row)).toBe(true);
+  const nested = sidebar.getByRole("link", { name: "Approvals" });
+  await nested.focus();
+  await page.keyboard.press("Shift+Tab");
+  await page.keyboard.press("Tab");
+  expect(await hasFocusRing(nested)).toBe(true);
+  expect(await wholeAtItsEnds(nested)).toBe(true);
+});
+
+test("a disabled place is drawn at half strength and takes no press", async ({
+  page,
+}) => {
+  await openExample(page, "sidebar", "icon");
+  const archive = sidebarOf(page).getByRole("button", { name: "Archive" });
+  await expect(archive).toBeDisabled();
+  await expect(archive).toHaveCSS("opacity", "0.5");
+  await expect(archive).toHaveCSS("pointer-events", "none");
+});
+
+test("on a phone the sheet is the sidebar's ground from edge to edge, its rows the sheet's width", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openExample(page, "sidebar", "basic");
+  await page.getByRole("button", { name: TOGGLE }).click();
+  const sheet = page.getByRole("dialog", { name: "Sidebar" });
+  const nav = sheet.getByRole("navigation", { name: "Main" });
+  await expect(nav).toBeVisible();
+  expect(await groundOf(nav)).toBe(LOOK.light.ground);
+  const whole = await boxOf(sheet);
+  const row = await boxOf(sheet.getByRole("link", { name: "Chat" }));
+  expect(row.x - whole.x).toBe(8);
+  expect(whole.x + whole.width - (row.x + row.width)).toBe(8);
+  expect(row.height).toBe(32);
+  await expect(sheet.getByRole("link", { name: "Chat" })).toHaveCSS(
+    "background-color",
+    LOOK.light.current
+  );
+});
+
+test("right to left, a row's icon, its words, its count and its nested rows mirror", async ({
+  page,
+}) => {
+  await openExample(page, "sidebar", "basic");
+  await page.evaluate(() => {
+    document.documentElement.dir = "rtl";
+  });
+  const sidebar = sidebarOf(page);
+  const row = sidebar.getByRole("link", { name: "Dashboard" });
+  // The icon 8px in from the row's right end, the words 10px to its left; once the row has settled.
+  await expect(async () => {
+    const box = await boxOf(row);
+    const words = await wordsOf(row);
+    const icon = await row.evaluate(
+      (node) => node.querySelector("svg")?.getBoundingClientRect().right ?? 0
+    );
+    expect(box.x + box.width - icon).toBe(8);
+    expect(icon - 16 - words.right).toBe(10);
+    const count = await boxOf(sidebar.getByText("3", { exact: true }));
+    expect(count.x - box.x).toBe(8);
+  }).toPass();
+  const parent = await wordsOf(sidebar.getByRole("link", { name: "Expenses" }));
+  const nested = await wordsOf(sidebar.getByRole("link", { name: "Claims" }));
+  expect(nested.right).toBe(parent.right);
+});
+
+// ---- Long names ----------------------------------------------------------------------------------
+
+test("a name longer than its row ends in an ellipsis inside the row, and its tooltip shows it whole", async ({
+  page,
+}) => {
+  await openExample(page, "sidebar", "long-names");
+  const sidebar = sidebarOf(page);
+  const name = "Every supplier contract and the day each one is up for renewal";
+  const row = sidebar.getByRole("link", { name });
+  const words = row.getByText(name);
+  await expect(words).toHaveCSS("text-overflow", "ellipsis");
+  const box = await boxOf(row);
+  const cut = await boxOf(words);
+  expect(cut.x + cut.width).toBeLessThanOrEqual(box.x + box.width - 8);
+  expect(
+    await words.evaluate((node) => node.scrollWidth > node.clientWidth)
+  ).toBe(true);
+  await row.hover();
+  await expect(page.getByRole("tooltip")).toHaveText(name);
+  // The tooltip repeats the row's own name: it is no description of it.
+  await expect(row).not.toHaveAttribute("aria-describedby", /.+/u);
+  // The keyboard reaches it too.
+  await page.mouse.move(900, 300);
+  await expect(page.getByRole("tooltip")).toBeHidden();
+  await sidebar.getByRole("link", { name: "Hiring" }).focus();
+  await page.keyboard.press("Shift+Tab");
+  await expect(page.getByRole("tooltip")).toHaveText(
+    "What happens in the first week, day by day"
+  );
+});
+
+test("a name that fits shows no tooltip", async ({ page }) => {
+  await openExample(page, "sidebar", "long-names");
+  await page.clock.install();
+  await sidebarOf(page).getByRole("link", { name: "Hiring" }).hover();
+  await page.clock.runFor(2000);
+  await expect(page.getByRole("tooltip")).toBeHidden();
+});
+
+test("a cut name stops before the row's count and before a mark the row holds, which keep their size", async ({
+  page,
+}) => {
+  await openExample(page, "sidebar", "long-names");
+  const sidebar = sidebarOf(page);
+  const counted = sidebar.getByRole("link", { name: /Supplier invoices/u });
+  const count = await boxOf(sidebar.getByText("12", { exact: true }));
+  const words = await boxOf(
+    counted.getByText("Supplier invoices waiting on a second approval")
+  );
+  expect(words.x + words.width).toBeLessThanOrEqual(count.x);
+  expect(count.width).toBeGreaterThanOrEqual(20);
+  const marked = sidebar.getByRole("link", { name: /The handbook/u });
+  const mark = marked.getByText("Draft");
+  const name = marked.getByText(
+    "The handbook for everyone who joins this quarter"
+  );
+  await expect(name).toHaveCSS("text-overflow", "ellipsis");
+  // The mark is whole: as wide as its words need, inside the row.
+  expect(
+    await mark.evaluate((node) => node.scrollWidth <= node.clientWidth)
+  ).toBe(true);
+  const row = await boxOf(marked);
+  const badge = await boxOf(mark);
+  const cut = await boxOf(name);
+  expect(cut.x + cut.width).toBeLessThanOrEqual(badge.x);
+  expect(badge.x + badge.width).toBeLessThanOrEqual(row.x + row.width - 8);
+});
+
+test("no row's fill or corners are cut at either end, in a group that folds too", async ({
+  page,
+}) => {
+  await openExample(page, "sidebar", "basic");
+  for (const name of ["Chat", "Claims"]) {
+    const row = sidebarOf(page).getByRole("link", { name });
+    // oxlint-disable-next-line no-await-in-loop -- one row after the other
+    expect(await wholeAtItsEnds(row)).toBe(true);
+  }
+  await openExample(page, "sidebar", "groups");
+  expect(
+    await wholeAtItsEnds(page.getByRole("link", { name: "Spring launch" }))
+  ).toBe(true);
+});
+
+// ---- The docs site's own sidebar -----------------------------------------------------------------
+
+test("the docs site's sidebar: the theme's ground, runs as labels, and the current page a flat row cut nowhere", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.emulateMedia({ colorScheme: "light" });
+  await page.goto(
+    new URL("/components/breadcrumb?mode=light", process.env.BASE_URL).href
+  );
+  const sidebar = sidebarOf(page);
+  const nav = sidebar.getByRole("navigation", { name: "Pages" });
+  // Evergreen's paper, a step darker: rgb(238, 243, 240).
+  expect(await groundOf(nav)).toBe("oklch(0.962 0.006 165.08)");
+  const current = nav.getByRole("link", { name: "Breadcrumb", exact: true });
+  await expect(current).toHaveAttribute("aria-current", "page");
+  await expect(current).toHaveCSS("background-color", LOOK.light.current);
+  await expect(current).toHaveCSS("box-shadow", "none");
+  await expect(current).toHaveCSS("font-weight", "500");
+  const row = await boxOf(current);
+  const whole = await boxOf(sidebar);
+  expect(row.height).toBe(32);
+  // A run's pages stand 12px in from its label; they end where every row ends, 8px in.
+  expect(row.x - whole.x).toBe(20);
+  expect(whole.x + whole.width - (row.x + row.width)).toBe(8);
+  expect(await wholeAtItsEnds(current)).toBe(true);
+  await current.focus();
+  await page.keyboard.press("Shift+Tab");
+  await page.keyboard.press("Tab");
+  expect(await hasFocusRing(current)).toBe(true);
+  expect(await wholeAtItsEnds(current)).toBe(true);
+  // A run's label: the group label's small grey words, its count and chevron at its end.
+  const run = nav.getByRole("button", { name: /^Navigation/u });
+  await expect(run).toHaveAttribute("aria-expanded", "true");
+  await expect(run).toHaveCSS("color", LOOK.light.secondary);
+  await expect(run).toHaveCSS("font-size", "13px");
+  const label = await boxOf(run);
+  expect(label.height).toBe(32);
+  expect(label.x - whole.x).toBe(8);
+  // The page's card: the paper, 6px from the sidebar and from the window's edges.
+  const main = await boxOf(page.getByRole("main"));
+  expect(main.x - (whole.x + whole.width)).toBe(6);
+  expect(main.y).toBe(6);
+  await expect(page.getByRole("main")).toHaveCSS(
+    "background-color",
+    "oklch(0.992 0.002 165.08)"
+  );
 });

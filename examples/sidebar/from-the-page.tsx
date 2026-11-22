@@ -94,7 +94,7 @@ export default function SidebarFromThePage() {
                       >
                         <a href={`#${place.name.toLowerCase()}`}>
                           <Icon icon={place.icon} />
-                          <span>{place.name}</span>
+                          {place.name}
                         </a>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
