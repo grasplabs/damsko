@@ -114,12 +114,11 @@
 
   /* ---- The sidebar's runs ------------------------------------------------------------------------ */
   /* A run's chevron (site/chrome/DocsShell.tsx) points at its pages while they are folded, and turns
-     down as they open. The library's Collapsible turns its own chevron; the run's trigger is the
-     sidebar's row, so the run draws its own. */
+     down as they open, in its label's ink. The library's Collapsible turns its own chevron; the
+     run's trigger is the sidebar's group label, so the run draws its own. */
   .site-run-chevron {
     display: inline-flex;
     flex: none;
-    color: var(--damsko-subtle-foreground);
     transition: rotate var(--damsko-duration-ui) var(--damsko-ease);
   }
   [aria-expanded="true"] > .site-run-chevron {
@@ -128,11 +127,6 @@
   :root[dir="rtl"] .site-run-chevron {
     scale: -1 1;
   }
-  /* A part's name (Docs, Components) is a heading's weight over its runs. */
-  .site-part {
-    font-weight: var(--damsko-font-weight-medium);
-  }
-
   /* ---- The column -------------------------------------------------------------------------------- */
   /* Full bleed (the start page, Docs.astro `bleed`): the window's whole width under the top bar, at
    least its whole height; the page lays out what it puts here. */

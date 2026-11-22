@@ -1,6 +1,6 @@
 // Agent indicator: a small moving mark that shows work in progress, in an icon's room. The dither
-// glyph by default: nine dots, three by three, and the light passing through them in a wave, its
-// core in the accent. A tick is drawn in where it stood once the work succeeds.
+// glyph by default: nine square pixels, three by three, and the light passing through them in a
+// wave, its core in the accent. A tick is drawn in where it stood once the work succeeds.
 //
 //   <AgentIndicator />                                beside words that say what is working
 //   <AgentIndicator aria-label="Searching the web" /> alone: a status that says its name
@@ -66,7 +66,7 @@ const play = `var(${PLAY}, running)`;
 const loop = `var(${LOOP})`;
 const step = `var(${STEP})`;
 
-// A dot of the dither glyph as the light passes: it comes up, a little larger, and falls back.
+// A pixel of the dither glyph as the light passes: it comes up, a little larger, and falls back.
 const glint = stylex.keyframes({
   "0%": { opacity: 0, transform: "scale(0.6)" },
   "20%": { opacity: 1, transform: "scale(1.2)" },
@@ -103,7 +103,7 @@ const drawBack = stylex.keyframes({
 const lit = { default: colors.agentIndicatorLit, [FORCED]: "CanvasText" };
 const accent = { default: colors.agentIndicatorAccent, [FORCED]: "CanvasText" };
 const rest = { default: colors.agentIndicatorRest, [FORCED]: "GrayText" };
-// Two dots and a gap, as the glyph's third: the room an orbit or a breath fills.
+// Two pixels and a gap, as the glyph's third: the room an orbit or a breath fills.
 const body = `calc(${size.agentIndicatorDot} * 3 + ${size.agentIndicatorGap} * 2)`;
 
 const styles = stylex.create({
@@ -123,7 +123,7 @@ const styles = stylex.create({
   },
   paused: { [PLAY]: "paused" },
 
-  // The dither glyph.
+  // The dither glyph: pixels, so its cells are square, never dots.
   grid: {
     display: "grid",
     gridTemplateColumns: `repeat(3, ${size.agentIndicatorDot})`,
@@ -133,13 +133,11 @@ const styles = stylex.create({
     position: "relative",
     width: size.agentIndicatorDot,
     height: size.agentIndicatorDot,
-    borderRadius: radius.circle,
     backgroundColor: rest,
   },
   lit: {
     position: "absolute",
     inset: 0,
-    borderRadius: radius.circle,
     backgroundColor: lit,
     opacity: 0,
     animationName: { default: glint, [REDUCED]: "none" },
@@ -255,7 +253,7 @@ const styles = stylex.create({
   },
 });
 
-// The order the light reaches each of the nine dots, per path (-1: a dot it never reaches), and
+// The order the light reaches each of the nine pixels, per path (-1: one it never reaches), and
 // which step of it stays lit with reduced motion.
 const paths = {
   wave: { order: [0, 1, 2, 1, 2, 3, 2, 3, 4], still: 2, style: styles.wave },

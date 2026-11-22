@@ -2218,17 +2218,15 @@
       "name": "sidebar",
       "type": "registry:ui",
       "title": "Sidebar",
-      "description": "A column of an app's main places down one side, which folds away or down to its icons.",
+      "description": "A column of an app's main places down one side, which folds away, or down to its icons.",
       "dependencies": [
         "@stylexjs/stylex",
         "@ui-sdk/core",
         "@ui-sdk/react"
       ],
       "registryDependencies": [
-        "@damsko/button",
         "@damsko/input",
         "@damsko/lib",
-        "@damsko/separator",
         "@damsko/sheet",
         "@damsko/skeleton",
         "@damsko/tooltip"
@@ -2304,6 +2302,7 @@
         "@stylexjs/stylex"
       ],
       "registryDependencies": [
+        "@damsko/button",
         "@damsko/copy-button",
         "@damsko/hooks",
         "@damsko/lib"

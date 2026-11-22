@@ -77,7 +77,7 @@ export default function SidebarActions() {
                       <SidebarMenuButton asChild isActive={index === 0}>
                         <a href={`#thread-${index + 1}`}>
                           <Icon icon={MessageSquareIcon} />
-                          <span>{thread.name}</span>
+                          {thread.name}
                           {thread.working && (
                             <AgentIndicator aria-label="Working" />
                           )}

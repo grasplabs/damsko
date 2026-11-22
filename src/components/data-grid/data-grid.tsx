@@ -66,7 +66,7 @@ import {
 } from "../../lib/tokens.stylex";
 import { ownValue } from "../../lib/utils";
 import type { LayoutStyle } from "../../lib/utils";
-import { iconVars, motionVars } from "../../lib/vars.stylex";
+import { iconVars, motionVars, pixel, pixelVars } from "../../lib/vars.stylex";
 import {
   all,
   at,
@@ -481,9 +481,13 @@ const styles = stylex.create({
     },
     borderColor: colors.dataGridRangeLine,
   },
+  // The dither over the wash: lib's one pixel, a 2px square in every space-1.
   inRangeDither: {
-    backgroundImage: `radial-gradient(circle, ${colors.dataGridRangeDot} 0.75px, transparent 1.25px)`,
+    [pixelVars.color]: colors.dataGridRangeDot,
+    backgroundImage: pixel.fill,
     backgroundSize: `${space[1]} ${space[1]}`,
+    // In the middle of its tile, as the dot it is drawn for.
+    backgroundPosition: "1px 1px",
   },
   edgeEndPine: {
     borderInlineEndColor: {

@@ -5,15 +5,15 @@
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
 //   <SidebarProvider>
-//     <Sidebar collapsible="icon">
+//     <Sidebar>
 //       <SidebarHeader>…</SidebarHeader>
 //       <SidebarContent>
 //         <SidebarGroup>
 //           <SidebarGroupLabel>Workspace</SidebarGroupLabel>
 //           <SidebarMenu>
 //             <SidebarMenuItem>
-//               <SidebarMenuButton asChild isActive tooltip="Inbox">
-//                 <a href="/inbox"><Icon icon={InboxIcon} /><span>Inbox</span></a>
+//               <SidebarMenuButton asChild isActive>
+//                 <a href="/inbox"><Icon icon={InboxIcon} />Inbox</a>
 //               </SidebarMenuButton>
 //               <SidebarMenuBadge>3</SidebarMenuBadge>
 //             </SidebarMenuItem>
@@ -31,8 +31,9 @@
 //
 // It stands in the page's flow, never fixed to the window, so it lives in any frame: an aside
 // named by the I18nProvider's `sidebar.name`, its content a navigation named `sidebar.main`.
-// `collapsible` folds it off the canvas or down to its icons, where each SidebarMenuButton's
-// `tooltip` names it. Under the lg breakpoint it is a Sheet from its side, which holds Tab inside
+// It folds away whole, off the canvas; `collapsible="icon"` folds it down to its icons instead,
+// where each row's words show in a tooltip. A row's words longer than the row end in an ellipsis,
+// and its tooltip shows them whole. Under the lg breakpoint it is a Sheet from its side, which holds Tab inside
 // and gives focus back to the trigger. Cmd+B on a Mac, Ctrl+B elsewhere, folds and opens it from
 // anywhere on the page (`keyboardShortcut`); where a page holds several, the one holding focus
 // answers, else the first. `storageKey` keeps the person's choice in localStorage, and
@@ -46,6 +47,7 @@ import { useShortcut, useShortcutHint } from "@ui-sdk/react/shortcuts";
 import {
   createContext,
   createElement,
+  Fragment,
   use,
   useEffect,
   useId,
@@ -53,7 +55,12 @@ import {
   useState,
   useSyncExternalStore,
 } from "react";
-import type { ComponentProps, MouseEvent, ReactNode } from "react";
+import type {
+  ComponentProps,
+  MouseEvent,
+  ReactElement,
+  ReactNode,
+} from "react";
 
 import { useI18n } from "../lib/i18n";
 import { Icon, PanelLeftIcon } from "../lib/icons";
@@ -69,17 +76,16 @@ import {
   space,
 } from "../lib/tokens.stylex";
 import { px } from "../lib/tokens.values";
-import { slotProps } from "../lib/utils";
+import { listOf, slotProps, slotWords } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { iconVars, motionVars } from "../lib/vars.stylex";
-import { Button } from "./button";
 import { Input } from "./input";
 import type { InputProps } from "./input";
-import { Separator } from "./separator";
 import { Sheet, SheetContent } from "./sheet";
 import { sidebarMarker, sidebarMenuItemMarker } from "./sidebar.stylex";
 import { Skeleton } from "./skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip";
+import type { TooltipProps } from "./tooltip";
 
 /** The keys that fold the sidebar and open it again: Cmd+B on a Mac, Ctrl+B elsewhere. */
 export const SIDEBAR_KEYBOARD_SHORTCUT = "mod+b";
@@ -96,6 +102,8 @@ const BELOW = media.maxLg;
 const ROW = size.sidebarMenuButtonHeight;
 const ICON = size.sidebarIcon;
 const ACTION = size.sidebarIconButton;
+// A count's box: a line of the small words, and its edge above and below.
+const BADGE = `calc(${font.textXsLine} + 2 * ${size.hairline})`;
 // Folded to its icons, a row is a square the row's height, in the middle of the rail.
 const SQUARE_MARGIN = `calc((${size.sidebarRailWidth} - 2 * ${space["2"]} - ${ROW}) / 2)`;
 const SQUARE_PADDING = `calc((${ROW} - ${ICON}) / 2)`;
@@ -130,8 +138,8 @@ const styles = stylex.create({
     transitionDuration: motionVars.ui,
     transitionTimingFunction: duration.ease,
   },
-  // Floating or inset, the panel stands in by space-2: the rail grows by as much on each side.
-  asideRoomy: {
+  // Floating, the panel stands in by space-2: the rail grows by as much on each side.
+  asideFloating: {
     width: {
       default: size.sidebarWidth,
       ':is([data-state="collapsed"][data-collapsible="offcanvas"])': 0,
@@ -144,10 +152,12 @@ const styles = stylex.create({
     width: size.sidebarWidth,
   },
 
-  // The panel: as tall as the window at most, held in view while the page scrolls past.
+  // The panel: as tall as the window at most, held in view while the page scrolls past. A layer
+  // above the page, so its rail takes the pointer on both sides of its edge.
   container: {
     position: "sticky",
     insetBlockStart: 0,
+    zIndex: 1,
     display: "flex",
     boxSizing: "border-box",
     width: "100%",
@@ -178,15 +188,17 @@ const styles = stylex.create({
     },
   },
   // At the end the aside shrinks towards the end and the panel goes with it.
+  // Its ground parts it from the page, with no line; in forced colours, where grounds are dropped,
+  // a line does.
   edgeStart: {
-    borderInlineEndWidth: size.hairline,
+    borderInlineEndWidth: { default: 0, [FORCED]: size.hairline },
     borderInlineEndStyle: "solid",
-    borderInlineEndColor: { default: colors.border, [FORCED]: "CanvasText" },
+    borderInlineEndColor: "CanvasText",
   },
   edgeEnd: {
-    borderInlineStartWidth: size.hairline,
+    borderInlineStartWidth: { default: 0, [FORCED]: size.hairline },
     borderInlineStartStyle: "solid",
-    borderInlineStartColor: { default: colors.border, [FORCED]: "CanvasText" },
+    borderInlineStartColor: "CanvasText",
   },
   roomy: { padding: space["2"] },
 
@@ -212,7 +224,7 @@ const styles = stylex.create({
     borderColor: { default: colors.border, [FORCED]: "CanvasText" },
     boxShadow: shadow.sm,
   },
-  // In a sheet, on a narrow window: it fills the sheet.
+  // In a sheet, on a narrow window: it fills the sheet, on its own ground from edge to edge.
   sheet: {
     [iconVars.size]: ICON,
     [iconVars.stroke]: size.iconStroke,
@@ -220,6 +232,8 @@ const styles = stylex.create({
     flexDirection: "column",
     flexGrow: 1,
     minHeight: 0,
+    borderRadius: "inherit",
+    backgroundColor: colors.sidebar,
     color: colors.sidebarForeground,
     fontFamily: font.sans,
     fontSize: font.textSm,
@@ -254,28 +268,21 @@ const styles = stylex.create({
     flexDirection: "column",
     flexGrow: 1,
     minWidth: 0,
-    backgroundColor: colors.background,
-    // Beside an inset sidebar it is a card on the sidebar's ground, from the lg breakpoint.
+    // Beside an inset sidebar it is a card on the sidebar's ground, from the lg breakpoint: the
+    // same room on every side, folded or open, and a line inside its edge, with no lift.
+    backgroundColor: {
+      default: colors.background,
+      [stylex.when.anySibling('[data-variant="inset"]', sidebarMarker)]: {
+        default: colors.background,
+        [media.lg]: colors.sidebarCard,
+      },
+    },
     margin: {
       default: null,
       [stylex.when.anySibling('[data-variant="inset"]', sidebarMarker)]: {
         default: null,
-        [media.lg]: space["2"],
+        [media.lg]: size.sidebarCardGap,
       },
-    },
-    marginInlineStart: {
-      default: null,
-      [stylex.when.siblingBefore(
-        '[data-variant="inset"][data-state="expanded"]',
-        sidebarMarker
-      )]: { default: null, [media.lg]: 0 },
-    },
-    marginInlineEnd: {
-      default: null,
-      [stylex.when.siblingAfter(
-        '[data-variant="inset"][data-state="expanded"]',
-        sidebarMarker
-      )]: { default: null, [media.lg]: 0 },
     },
     borderRadius: {
       default: null,
@@ -284,19 +291,36 @@ const styles = stylex.create({
         [media.lg]: radius.sidebarCardRadius,
       },
     },
-    boxShadow: {
-      default: null,
-      [stylex.when.anySibling('[data-variant="inset"]', sidebarMarker)]: {
+    // The line is a layer over what the card holds, so no bar's ground inside covers it.
+    "::after": {
+      content: {
         default: null,
-        [media.lg]: shadow.sidebarCardShadow,
+        [stylex.when.anySibling('[data-variant="inset"]', sidebarMarker)]: {
+          default: null,
+          [media.lg]: '""',
+        },
       },
+      position: "absolute",
+      inset: 0,
+      borderRadius: "inherit",
+      boxShadow: {
+        default: `inset 0 0 0 ${size.hairline} ${colors.sidebarCardBorder}`,
+        [FORCED]: `inset 0 0 0 ${size.hairline} CanvasText`,
+      },
+      pointerEvents: "none",
     },
-    transitionProperty: "margin",
-    transitionDuration: motionVars.ui,
-    transitionTimingFunction: duration.ease,
   },
 
+  // The head: the room above the first row, then what it holds, a hair above the rows.
   header: {
+    display: "flex",
+    flexDirection: "column",
+    gap: space["2"],
+    paddingBlockStart: space["4"],
+    paddingBlockEnd: space["1"],
+    paddingInline: space["2"],
+  },
+  footer: {
     display: "flex",
     flexDirection: "column",
     gap: space["2"],
@@ -309,6 +333,7 @@ const styles = stylex.create({
     flexGrow: 1,
     gap: space["2"],
     minHeight: 0,
+    paddingBlock: space["2"],
     overflow: {
       default: "auto",
       [stylex.when.ancestor(
@@ -318,10 +343,12 @@ const styles = stylex.create({
     },
     overscrollBehavior: "contain",
   },
+  // A rule that parts the sidebar, as far in as the rows.
   separator: {
-    display: "flex",
-    flexDirection: "column",
+    flexShrink: 0,
+    height: size.hairline,
     marginInline: space["2"],
+    backgroundColor: { default: colors.sidebarBorder, [FORCED]: "CanvasText" },
   },
   input: { display: "flex", flexDirection: "column" },
 
@@ -329,26 +356,38 @@ const styles = stylex.create({
     position: "relative",
     display: "flex",
     flexDirection: "column",
+    gap: size.sidebarRowGap,
     boxSizing: "border-box",
     width: "100%",
     minWidth: 0,
-    padding: space["2"],
+    paddingInline: space["2"],
   },
-  // The small label over a group's menu; folded to its icons, it gives its room up.
+  // The small label over a group's menu, its words low in its row, nearer the rows they name;
+  // folded to its icons, it gives its room up.
   groupLabel: {
     display: "flex",
     flexShrink: 0,
     alignItems: "center",
-    gap: space["2"],
+    gap: space["1"],
     boxSizing: "border-box",
     width: "100%",
     height: ROW,
     margin: 0,
+    paddingBlockStart: space["2"],
+    paddingBlockEnd: space["1"],
     paddingInline: size.sidebarRowInline,
     borderWidth: 0,
     borderRadius: radius.sidebarRadius,
     backgroundColor: "transparent",
-    color: colors.sidebarTertiaryForeground,
+    // Drawn as a button or a link (`asChild`), it answers the pointer as a row's words do.
+    color: {
+      default: colors.sidebarSecondaryForeground,
+      [HOVER]: {
+        default: null,
+        ":is(button, a):hover": colors.sidebarForeground,
+      },
+    },
+    cursor: { default: null, ":is(button, a)": "pointer" },
     fontFamily: font.sans,
     fontSize: font.textXs,
     lineHeight: font.textXsLine,
@@ -411,7 +450,7 @@ const styles = stylex.create({
     transitionDuration: duration.hover,
   },
   groupAction: {
-    insetBlockStart: `calc(${space["2"]} + (${ROW} - ${ACTION}) / 2)`,
+    insetBlockStart: `calc((${ROW} - ${ACTION}) / 2)`,
     insetInlineEnd: `calc(${space["2"]} + (${ROW} - ${ACTION}) / 2)`,
   },
   menuAction: {
@@ -522,11 +561,29 @@ const styles = stylex.create({
     textAlign: "start",
     textDecoration: "none",
     whiteSpace: "nowrap",
-    cursor: "pointer",
-    outlineOffset: `calc(-1 * ${size.ringWidth})`,
+    cursor: {
+      default: "pointer",
+      ':is(:disabled, [aria-disabled="true"])': "default",
+    },
+    opacity: {
+      default: null,
+      ':is(:disabled, [aria-disabled="true"])': size.opacityDisabled,
+    },
+    pointerEvents: {
+      default: null,
+      ':is(:disabled, [aria-disabled="true"])': "none",
+    },
     transitionProperty:
       "color, background-color, width, height, padding, margin",
     transitionDuration: duration.hover,
+  },
+  // A row's own words: longer than the row, they end in an ellipsis before its end, its action or
+  // its count.
+  label: {
+    flexGrow: 1,
+    minWidth: 0,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
   },
   sm: {
     height: {
@@ -539,10 +596,12 @@ const styles = stylex.create({
     },
     fontSize: font.textXs,
   },
-  // A large row (a person, a workspace) folds to its picture alone.
+  // A large row (a person, a workspace), in the words read first; it folds to its picture alone.
   lg: {
+    borderRadius: radius.sidebarRadiusLg,
+    color: colors.sidebarForeground,
     height: {
-      default: size.controlLg,
+      default: size.sidebarMenuButtonHeightLg,
       [stylex.when.ancestor(
         '[data-state="collapsed"][data-collapsible="icon"]',
         sidebarMarker
@@ -578,11 +637,23 @@ const styles = stylex.create({
     },
     boxShadow: `inset 0 0 0 ${size.hairline} ${colors.border}`,
   },
-  // The page you are on: raised, in the words' own ink. In forced colours a border marks it.
+  // A button that is only its icon (a search in the head, the trigger): round, the icon button's
+  // size, a finger's on a touch screen.
+  icon: {
+    flexShrink: 0,
+    justifyContent: "center",
+    width: { default: ACTION, [COARSE]: size.tapTarget },
+    height: { default: ACTION, [COARSE]: size.tapTarget },
+    marginInline: 0,
+    paddingInlineStart: 0,
+    paddingInlineEnd: 0,
+    borderRadius: radius.full,
+  },
+  // The page you are on: ink laid flat over the ground, the words in the ink read first. In forced
+  // colours a border marks it.
   active: {
     color: colors.sidebarForeground,
     backgroundColor: colors.sidebarAccent,
-    boxShadow: `0 0 0 ${size.hairline} ${colors.sidebarBorder}`,
     borderColor: { default: "transparent", [FORCED]: "Highlight" },
   },
 
@@ -590,8 +661,8 @@ const styles = stylex.create({
   badge: {
     position: "absolute",
     insetBlockStart: {
-      default: `calc((${ROW} - ${font.textXsLine}) / 2)`,
-      [COARSE]: `calc((${size.tapTarget} - ${font.textXsLine}) / 2)`,
+      default: `calc((${ROW} - ${BADGE}) / 2)`,
+      [COARSE]: `calc((${size.tapTarget} - ${BADGE}) / 2)`,
     },
     insetInlineEnd: space["2"],
     display: {
@@ -605,7 +676,7 @@ const styles = stylex.create({
     justifyContent: "center",
     boxSizing: "border-box",
     minWidth: font.textXsLine,
-    height: font.textXsLine,
+    height: BADGE,
     paddingInline: size.sidebarCountInline,
     borderWidth: size.hairline,
     borderStyle: "solid",
@@ -640,7 +711,7 @@ const styles = stylex.create({
     borderRadius: radius.mark,
   },
 
-  // The rows under a row, on a stem from it; folded to its icons, they go.
+  // The rows under a row, their words in line with its words; folded to its icons, they go.
   sub: {
     display: {
       default: "flex",
@@ -652,24 +723,15 @@ const styles = stylex.create({
     flexDirection: "column",
     gap: size.sidebarRowGap,
     minWidth: 0,
-    marginBlock: 0,
-    marginInlineStart: `calc(${size.sidebarRowInline} + ${ICON} / 2)`,
-    marginInlineEnd: 0,
-    paddingBlock: size.sidebarRowGap,
-    paddingInlineStart: `calc(${size.sidebarIconGap} + ${ICON} / 2 - ${size.hairline})`,
-    paddingInlineEnd: 0,
-    borderInlineStartWidth: size.hairline,
-    borderInlineStartStyle: "solid",
-    borderInlineStartColor: {
-      default: colors.sidebarBorder,
-      [FORCED]: "CanvasText",
-    },
+    marginBlockStart: size.sidebarRowGap,
+    marginBlockEnd: 0,
+    marginInline: 0,
+    padding: 0,
     listStyle: "none",
   },
   subItem: { position: "relative" },
   subButton: {
-    height: { default: size.controlXs, [COARSE]: size.tapTarget },
-    fontWeight: font.weightNormal,
+    paddingInlineStart: `calc(${size.sidebarRowInline} + ${ICON} + ${size.sidebarIconGap})`,
   },
   subSm: { fontSize: font.textXs },
 });
@@ -845,8 +907,27 @@ export const SidebarProvider = ({
   // The state set in this event and not drawn yet, so an updater builds on the call before it
   // (two in one event apply twice, as React's setState); cleared once the change is drawn.
   const unseen = useRef<boolean | null>(null);
+  // Folded off the canvas while focus was inside it: once the fold is drawn, focus goes to the
+  // trigger that is still in reach (the page's, which may only show while the sidebar is away).
+  const stranded = useRef(false);
   useEffect(() => {
     unseen.current = null;
+    if (stranded.current) {
+      stranded.current = false;
+      const wrapper = element.current;
+      const triggers =
+        wrapper?.querySelectorAll<HTMLElement>(
+          '[data-slot="sidebar-trigger"]'
+        ) ?? [];
+      [...triggers]
+        .find(
+          (trigger) =>
+            trigger.closest(
+              '[data-slot="sidebar"][data-collapsible="offcanvas"]'
+            ) === null
+        )
+        ?.focus();
+    }
   });
   const setOpen = (value: boolean | ((now: boolean) => boolean)) => {
     const now = applied(value, unseen.current ?? open);
@@ -861,18 +942,12 @@ export const SidebarProvider = ({
       setOpenMobile((now) => !now);
       return;
     }
-    // Folded off the canvas, what holds focus inside goes out of reach: focus goes to the trigger.
-    const wrapper = element.current;
-    const away = wrapper?.querySelector(
+    // Folded off the canvas, what holds focus inside goes out of reach.
+    const away = element.current?.querySelector(
       '[data-slot="sidebar"][data-collapsible="offcanvas"]'
     );
-    const strands = open && away?.contains(document.activeElement) === true;
+    stranded.current = open && away?.contains(document.activeElement) === true;
     setOpen(!open);
-    if (strands) {
-      wrapper
-        ?.querySelector<HTMLElement>('[data-slot="sidebar-trigger"]')
-        ?.focus();
-    }
   };
 
   const shortcut = keyboardShortcut === false ? "" : keyboardShortcut;
@@ -964,14 +1039,14 @@ export interface SidebarProps {
    */
   side?: Side;
   /**
-   * `sidebar` stands on its own ground with a hairline at its edge; `floating` is a raised panel a
-   * little in from the window's edges; `inset` leaves the page as a card on the sidebar's ground.
+   * `sidebar` stands on its own ground beside the page; `floating` is a raised panel a little in
+   * from the window's edges; `inset` leaves the page as a card on the sidebar's ground.
    * @default "sidebar"
    */
   variant?: "sidebar" | "floating" | "inset";
   /**
-   * How it folds: `offcanvas` slides it off the side, `icon` folds it to its icons (each row's
-   * `tooltip` names it), `none` never folds, on a phone too.
+   * How it folds: `offcanvas` slides it off the side, whole; `icon` folds it to a rail of its
+   * icons (each row's words show in a tooltip); `none` never folds, on a phone too.
    * @default "offcanvas"
    */
   collapsible?: "offcanvas" | "icon" | "none";
@@ -997,7 +1072,7 @@ export const Sidebar = ({
   const { state, openMobile, setOpenMobile, isMobile, id } =
     useSidebarState("Sidebar");
   const label = named ?? name;
-  const roomy = variant !== "sidebar";
+  const floating = variant === "floating";
 
   if (collapsible === "none") {
     return (
@@ -1064,7 +1139,7 @@ export const Sidebar = ({
         {...stylex.props(
           sidebarMarker,
           styles.aside,
-          roomy && styles.asideRoomy,
+          floating && styles.asideFloating,
           style
         )}
       >
@@ -1077,17 +1152,14 @@ export const Sidebar = ({
             collapsible === "offcanvas" &&
               side === "start" &&
               styles.offcanvasStart,
-            roomy && styles.roomy,
+            floating && styles.roomy,
             variant === "sidebar" &&
               (side === "start" ? styles.edgeStart : styles.edgeEnd)
           )}
         >
           <div
             data-sidebar="sidebar"
-            {...stylex.props(
-              styles.inner,
-              variant === "floating" && styles.floating
-            )}
+            {...stylex.props(styles.inner, floating && styles.floating)}
           >
             {children}
           </div>
@@ -1111,8 +1183,9 @@ export interface SidebarTriggerProps {
 }
 
 /**
- * The button that folds and opens the sidebar, or opens its sheet on a narrow window. It says
- * whether the sidebar is open and its keys. Put it in the page's bar, beside the sidebar.
+ * The button that folds and opens the sidebar, or opens its sheet on a narrow window: a round icon
+ * button in the rows' colours. It says whether the sidebar is open and its keys. Put it in the
+ * sidebar's head, and in the page's bar for while the sidebar is away.
  */
 export const SidebarTrigger = ({
   onClick,
@@ -1124,10 +1197,10 @@ export const SidebarTrigger = ({
     useSidebarState("SidebarTrigger");
   const label = named ?? toggle;
   return (
-    <Button
+    <button
+      type="button"
       data-slot="sidebar-trigger"
-      variant="ghost"
-      size="icon-sm"
+      data-sidebar="trigger"
       aria-label={label}
       aria-expanded={isMobile ? openMobile : open}
       aria-controls={isMobile ? undefined : id}
@@ -1137,10 +1210,10 @@ export const SidebarTrigger = ({
         onClick?.(event);
         toggleSidebar();
       }}
-      style={style}
+      {...stylex.props(styles.button, styles.icon, focusRingInset, style)}
     >
       <Icon icon={PanelLeftIcon} />
-    </Button>
+    </button>
   );
 };
 
@@ -1247,7 +1320,7 @@ export interface SidebarFooterProps extends PartProps, Own<"div"> {
 
 /** The foot of the sidebar, which stays while the content scrolls. */
 export const SidebarFooter = (props: SidebarFooterProps) =>
-  part("div", "footer", styles.header, props);
+  part("div", "footer", styles.footer, props);
 
 /** Every prop a SidebarContent takes. */
 export interface SidebarContentProps extends PartProps, Own<"nav"> {
@@ -1287,15 +1360,14 @@ export interface SidebarSeparatorProps {
   style?: LayoutStyle;
 }
 
-/** A hairline between the sidebar's parts. */
+/** A hairline between the sidebar's parts, as far in as the rows: over the footer, between groups. */
 export const SidebarSeparator = ({ style }: SidebarSeparatorProps) => (
   <div
+    role="none"
     data-slot="sidebar-separator"
     data-sidebar="separator"
     {...stylex.props(styles.separator, style)}
-  >
-    <Separator />
-  </div>
+  />
 );
 
 /** Every prop a SidebarInput takes: those of Input. Name it, by `aria-label`. */
@@ -1334,6 +1406,140 @@ const drawn = (
   );
 };
 
+/**
+ * A row's children with its own words (bare text) in one element that ends in an ellipsis where the
+ * row does, and those words as one string. An icon, a mark and any element the caller wrote stay as
+ * given: StyleX gives a part no selector for its children.
+ */
+const withLabel = (children: ReactNode) => {
+  const parts: ReactNode[] = [];
+  let words = "";
+  let run = "";
+  const flush = () => {
+    if (run === "") {
+      return;
+    }
+    parts.push(
+      <span
+        key={parts.length}
+        data-slot="sidebar-menu-label"
+        {...stylex.props(styles.label)}
+      >
+        {run}
+      </span>
+    );
+    words += run;
+    run = "";
+  };
+  for (const child of listOf(children)) {
+    if (typeof child === "string" || typeof child === "number") {
+      run += String(child);
+    } else {
+      flush();
+      parts.push(<Fragment key={parts.length}>{child}</Fragment>);
+    }
+  }
+  flush();
+  return { parts, words };
+};
+
+/** Whether a row's own words run past their box. */
+const isCut = (row: HTMLElement | null) => {
+  const label = row?.querySelector<HTMLElement>(
+    ':scope > [data-slot="sidebar-menu-label"]'
+  );
+  return (
+    label !== null &&
+    label !== undefined &&
+    label.scrollWidth > label.clientWidth
+  );
+};
+
+interface RowElementProps {
+  tag: "a" | "button";
+  /** The caller's element, with `asChild`. */
+  render: ReactElement<Record<string, unknown>> | undefined;
+  /** The row's own props and the caller's, merged. */
+  base: Record<string, unknown>;
+  /** The tooltip repeats the row's own words: it describes nothing new. */
+  repeats: boolean;
+  children: ReactNode;
+}
+
+/** A row's element as its tooltip's trigger: the trigger's props arrive here, merged onto the row. */
+const RowElement = ({
+  tag,
+  render,
+  base,
+  repeats,
+  children,
+  ...trigger
+}: RowElementProps & Record<string, unknown>) => {
+  const { "aria-describedby": description, ...plain } = trigger;
+  return renderElement(
+    tag,
+    mergeProps(
+      base,
+      repeats ? plain : { ...plain, "aria-describedby": description },
+      { children }
+    ),
+    render
+  );
+};
+
+interface RowProps {
+  tag: "a" | "button";
+  asChild: boolean | undefined;
+  children: ReactNode;
+  /** The row's own props and the caller's, merged. */
+  base: Record<string, unknown>;
+  /** The caller's name for it, shown while the sidebar is folded to its icons. */
+  tooltip?: ReactNode;
+}
+
+/**
+ * A row of the menu (SidebarMenuButton, SidebarMenuSubButton): its words cut where the row ends,
+ * and a tooltip at the row's far side that shows them whole while they are cut, or, folded to its
+ * icons, the caller's `tooltip`. Not on a narrow window, where nothing hovers.
+ */
+const Row = ({ tag, asChild, children, base, tooltip }: RowProps) => {
+  const { state, isMobile } = useSidebarState("SidebarMenuButton");
+  const side = use(SideContext);
+  const element = useRef<HTMLElement | null>(null);
+  const slot = slotWords(asChild, children);
+  const { parts, words } = withLabel(slot.children);
+  const named = state === "collapsed" && tooltip !== undefined;
+  if (!named && words === "") {
+    return renderElement(
+      tag,
+      mergeProps(base, { children: parts }),
+      slot.render
+    );
+  }
+  const onlyWhileCut: TooltipProps["onOpenChange"] = (open, details) => {
+    if (open && !named && !isCut(element.current)) {
+      details.cancel();
+    }
+  };
+  return (
+    <Tooltip disabled={isMobile} onOpenChange={onlyWhileCut}>
+      <TooltipTrigger
+        asChild
+        ref={(node: HTMLElement | null) => {
+          element.current = node;
+        }}
+      >
+        <RowElement tag={tag} render={slot.render} base={base} repeats={!named}>
+          {parts}
+        </RowElement>
+      </TooltipTrigger>
+      <TooltipContent side={side === "start" ? "end" : "start"}>
+        {named ? tooltip : words}
+      </TooltipContent>
+    </Tooltip>
+  );
+};
+
 /** Every prop a SidebarGroup takes. */
 export interface SidebarGroupProps extends PartProps, Own<"div"> {
   /** Its SidebarGroupLabel, SidebarGroupAction and SidebarGroupContent. */
@@ -1350,7 +1556,7 @@ export interface SidebarGroupLabelProps extends SlotPartProps, Own<"div"> {
   children: ReactNode;
 }
 
-/** The small label over a group's menu. Folded to its icons, it gives its room up. */
+/** The small label over a group's menu, in the rows' ink. Folded to its icons, it gives its room up. */
 export const SidebarGroupLabel = ({
   asChild,
   children,
@@ -1421,26 +1627,30 @@ export const SidebarMenuItem = (props: SidebarMenuItemProps) =>
 /** Every prop a SidebarMenuButton takes: these, and the rest of a <button>. */
 export interface SidebarMenuButtonProps extends SlotPartProps, Own<"button"> {
   /**
-   * An `<Icon />` and the words in a `<span>`; with `asChild`, the link that holds them
-   * (`<a href>`, a router's link). A product's mark (a working indicator) goes in here too.
+   * An `<Icon />` and the words, as bare text; with `asChild`, the link that holds them
+   * (`<a href>`, a router's link). The words end in an ellipsis where the row does, and a tooltip
+   * shows them whole while they are cut. An element you write (a `<span>` of two lines, a count, a
+   * product's working mark) is drawn as given.
    */
   children: ReactNode;
   /**
-   * The page you are on: raised, and said as the current page (`aria-current`).
+   * The page you are on: filled, and said as the current page (`aria-current`).
    * @default false
    */
   isActive?: boolean;
   /**
-   * Its name, shown beside it while the sidebar is folded to its icons. Not shown otherwise, nor
-   * on a narrow window.
+   * What its tooltip says while the sidebar is folded to its icons, when not its own words (a
+   * row with a picture and no bare text). Not shown on a narrow window.
+   * @default its own words
    */
   tooltip?: ReactNode;
   /**
-   * `sm` 28px, `default` 32px, `lg` 44px for a row with a picture and two lines (a workspace, a
-   * person). On a touch screen `sm` and `default` are 44px.
+   * `sm` 28px, `default` 32px, `lg` 46px for a row with a picture and two lines (a workspace, a
+   * person), `icon` a round 28px button that is only its icon, named by `aria-label` (a search in
+   * the header). On a touch screen all but `lg` are 44px.
    * @default "default"
    */
-  size?: "default" | "sm" | "lg";
+  size?: "default" | "sm" | "lg" | "icon";
   /**
    * `default` lies on the sidebar's ground; `outline` stands on the page's ground with a hairline.
    * @default "default"
@@ -1459,40 +1669,35 @@ export const SidebarMenuButton = ({
   style,
   ...rest
 }: SidebarMenuButtonProps) => {
-  const { state, isMobile } = useSidebarState("SidebarMenuButton");
-  const side = use(SideContext);
-  const button = drawn(
-    "button",
-    asChild,
-    children,
-    asChild === true ? rest : { type: "button", ...rest },
-    {
-      "data-slot": "sidebar-menu-button",
-      "data-sidebar": "menu-button",
-      "data-size": sized,
-      "data-active": isActive ? "true" : undefined,
-      "aria-current": isActive ? "page" : undefined,
-      ...stylex.props(
-        styles.button,
-        sized === "sm" && styles.sm,
-        sized === "lg" && styles.lg,
-        variant === "outline" && styles.outline,
-        isActive && styles.active,
-        focusRingInset,
-        style
-      ),
-    }
-  );
-  if (tooltip === undefined) {
-    return button;
-  }
+  const own = {
+    "data-slot": "sidebar-menu-button",
+    "data-sidebar": "menu-button",
+    "data-size": sized,
+    "data-active": isActive ? "true" : undefined,
+    "aria-current": isActive ? "page" : undefined,
+    ...stylex.props(
+      styles.button,
+      sized === "sm" && styles.sm,
+      sized === "lg" && styles.lg,
+      sized === "icon" && styles.icon,
+      variant === "outline" && styles.outline,
+      isActive && styles.active,
+      focusRingInset,
+      style
+    ),
+  };
   return (
-    <Tooltip disabled={state !== "collapsed" || isMobile}>
-      <TooltipTrigger asChild>{button}</TooltipTrigger>
-      <TooltipContent side={side === "start" ? "end" : "start"}>
-        {tooltip}
-      </TooltipContent>
-    </Tooltip>
+    <Row
+      tag="button"
+      asChild={asChild}
+      base={mergeProps(
+        asChild === true ? rest : { type: "button", ...rest },
+        own
+      )}
+      tooltip={tooltip}
+    >
+      {children}
+    </Row>
   );
 };
 
@@ -1607,7 +1812,7 @@ export interface SidebarMenuSubProps extends PartProps, Own<"ul"> {
   children: ReactNode;
 }
 
-/** The places within a place, under its row on a stem. Folded to its icons, they go. */
+/** The places within a place, under its row, their words in line with its words. Folded to its icons, they go. */
 export const SidebarMenuSub = (props: SidebarMenuSubProps) =>
   part("ul", "menu-sub", styles.sub, props);
 
@@ -1623,10 +1828,13 @@ export const SidebarMenuSubItem = (props: SidebarMenuSubItemProps) =>
 
 /** Every prop a SidebarMenuSubButton takes: these, and the rest of an <a>. */
 export interface SidebarMenuSubButtonProps extends SlotPartProps, Own<"a"> {
-  /** Its words; with `asChild`, the link that holds them (a router's link). */
+  /**
+   * Its words, as bare text; with `asChild`, the link that holds them (a router's link). They end
+   * in an ellipsis where the row does, and a tooltip shows them whole while they are cut.
+   */
   children: ReactNode;
   /**
-   * The page you are on: raised, and said as the current page (`aria-current`).
+   * The page you are on: filled, and said as the current page (`aria-current`).
    * @default false
    */
   isActive?: boolean;
@@ -1645,19 +1853,26 @@ export const SidebarMenuSubButton = ({
   size: sized = "default",
   style,
   ...rest
-}: SidebarMenuSubButtonProps) =>
-  drawn("a", asChild, children, rest, {
-    "data-slot": "sidebar-menu-sub-button",
-    "data-sidebar": "menu-sub-button",
-    "data-size": sized,
-    "data-active": isActive ? "true" : undefined,
-    "aria-current": isActive ? "page" : undefined,
-    ...stylex.props(
-      styles.button,
-      styles.subButton,
-      sized === "sm" && styles.subSm,
-      isActive && styles.active,
-      focusRingInset,
-      style
-    ),
-  });
+}: SidebarMenuSubButtonProps) => (
+  <Row
+    tag="a"
+    asChild={asChild}
+    base={mergeProps(rest, {
+      "data-slot": "sidebar-menu-sub-button",
+      "data-sidebar": "menu-sub-button",
+      "data-size": sized,
+      "data-active": isActive ? "true" : undefined,
+      "aria-current": isActive ? "page" : undefined,
+      ...stylex.props(
+        styles.button,
+        styles.subButton,
+        sized === "sm" && styles.subSm,
+        isActive && styles.active,
+        focusRingInset,
+        style
+      ),
+    })}
+  >
+    {children}
+  </Row>
+);

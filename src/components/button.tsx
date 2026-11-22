@@ -47,7 +47,7 @@ import {
 import { isIconSize, isInvalid, isThenable, textOf } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { iconVars, layerFooterMarker, motionVars } from "../lib/vars.stylex";
-import { buttonMarker } from "./button.stylex";
+import { buttonMarker, ghostVars } from "./button.stylex";
 import { Spinner } from "./spinner";
 
 export type ButtonVariant =
@@ -305,6 +305,14 @@ const styles = stylex.create({
       [FORCED]: { default: null, ":focus-visible": "Highlight" },
     },
   },
+  // A ghost's ring in the colour the part that holds it gives (ghostVars), the system's in forced
+  // colours. In place of forcedFocus, which sets the same property.
+  ghostFocus: {
+    outlineColor: {
+      default: ghostVars.ring,
+      [FORCED]: { default: null, ":focus-visible": "Highlight" },
+    },
+  },
   // The light over a filled button: white at the top, fading to nothing; brighter under a pointer.
   sheen: {
     position: "absolute",
@@ -472,12 +480,13 @@ const variantStyles = stylex.create({
     backgroundColor: colors.control,
     boxShadow: shadow.bevelMuted,
   },
+  // Its ink, its fills and its ring's colour are ghostVars, which the part that holds it may set.
   ghost: {
-    color: colors.foreground,
+    color: ghostVars.ink,
     // Held on (aria-pressed: a group's chosen view, a format toggle): the press's fill stays.
     backgroundColor: {
       default: "transparent",
-      ":is([aria-pressed=true])": colors.accentActive,
+      ":is([aria-pressed=true])": ghostVars.active,
     },
     boxShadow: "none",
   },
@@ -561,13 +570,13 @@ const liveStyles = stylex.create({
   ghost: {
     backgroundColor: {
       default: "transparent",
-      ":is([aria-pressed=true])": colors.accentActive,
+      ":is([aria-pressed=true])": ghostVars.active,
       ":hover": {
         default: null,
-        [HOVER]: colors.accent,
-        ":is([aria-pressed=true])": colors.accentActive,
+        [HOVER]: ghostVars.hover,
+        ":is([aria-pressed=true])": ghostVars.active,
       },
-      ":active": { default: colors.accentActive, [HOVER]: colors.accentActive },
+      ":active": { default: ghostVars.active, [HOVER]: ghostVars.active },
     },
   },
   link: {
@@ -596,7 +605,7 @@ const lookOf = (
   variantStyles[variant],
   pressable ? liveStyles[variant] : styles.still,
   focusRing,
-  styles.forcedFocus,
+  variant === "ghost" ? styles.ghostFocus : styles.forcedFocus,
 ];
 
 /** A button's look, for an element that must look like one without being a Button. */

@@ -13,10 +13,10 @@
 // theme.ts); the header's ThemeToggle reads and changes it.
 //
 // The sidebar: the mark (the link home) and the fold in its head; then the Start run as plain rows,
-// and the two parts (Docs, Components), each name the link to its overview, their runs folding
-// under them with a count. The run holding this page is open; what a person opens or folds is kept
-// across pages (site/chrome/nav-folds.ts). The start page (`bleed`) keeps the header and folds the
-// sidebar away.
+// and the two parts (Docs, Components), each under a rule, its name the link to its overview, its
+// runs groups that fold from their label, which carries a count. The run holding this page is open;
+// what a person opens or folds is kept across pages (site/chrome/nav-folds.ts). The start page
+// (`bleed`) keeps the header and folds the sidebar away.
 "use client";
 
 import {
@@ -37,17 +37,14 @@ import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarInset,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
   SidebarProvider,
-  SidebarRail,
-  SidebarSeparator,
   SidebarTrigger,
   useSidebar,
 } from "@grasp-os/ui/components/sidebar";
@@ -59,7 +56,16 @@ import {
   TooltipTrigger,
 } from "@grasp-os/ui/components/tooltip";
 import { ChevronRightIcon, Icon, SearchIcon } from "@grasp-os/ui/lib/icons";
-import { colors, media, size, space } from "@grasp-os/ui/lib/tokens.stylex";
+import { focusRingInset } from "@grasp-os/ui/lib/styles";
+import {
+  colors,
+  duration,
+  font,
+  media,
+  radius,
+  size,
+  space,
+} from "@grasp-os/ui/lib/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import type { ReactNode } from "react";
@@ -167,31 +173,84 @@ const styles = stylex.create({
   },
   // Full bleed: the page's room and its padding go, so the start page reaches the card's edges.
   pageBleed: { padding: 0 },
-  // The sidebar's head: the mark at the start, the fold at the end.
+  // The sidebar's head: the mark where the rows' words start, the fold's icon where they end.
   head: {
     display: "flex",
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    minHeight: size.sidebarIconButton,
+    paddingInlineStart: space["2"],
+    paddingInlineEnd: `calc(${size.sidebarRowInline} - (${size.sidebarIconButton} - ${size.sidebarIcon}) / 2)`,
   },
   brand: {
     display: "inline-flex",
     alignItems: "center",
-    minHeight: size.controlSm,
-    paddingInline: space["2"],
     color: colors.foreground,
-    borderRadius: space["1"],
+    borderRadius: radius.sidebarRadius,
   },
   mark: {
     display: "block",
     width: size.appShellMark,
     height: size.appShellMark,
   },
-  // A run's count and chevron, at the row's end.
-  count: {
-    marginInlineStart: "auto",
-    color: colors.mutedForeground,
-    fontVariantNumeric: "tabular-nums",
+  // A part (Docs, Components): its name and its runs, a row's gap apart.
+  part: {
+    display: "flex",
+    flexDirection: "column",
+    gap: size.sidebarRowGap,
+  },
+  // A part's head: a rule over its name, with room above and below it.
+  partHead: {
+    marginBlockStart: space["2"],
+    paddingBlockStart: space["3"],
+    boxShadow: {
+      default: `inset 0 ${size.hairline} 0 ${colors.border}`,
+      [media.forcedColors]: `inset 0 ${size.hairline} 0 CanvasText`,
+    },
+  },
+  // A part's name, the link to its overview: a row in the ink read first, a heading over its runs.
+  partName: {
+    display: "flex",
+    alignItems: "center",
+    boxSizing: "border-box",
+    height: {
+      default: size.sidebarMenuButtonHeight,
+      [media.pointerCoarse]: size.tapTarget,
+    },
+    paddingInline: size.sidebarRowInline,
+    borderRadius: radius.sidebarRadius,
+    color: colors.sidebarForeground,
+    backgroundColor: {
+      default: "transparent",
+      [media.hover]: { default: null, ":hover": colors.sidebarHover },
+    },
+    fontFamily: font.sans,
+    fontSize: font.textSm,
+    lineHeight: font.textSmLine,
+    fontWeight: font.weightMedium,
+    textDecoration: "none",
+    transitionProperty: "background-color",
+    transitionDuration: duration.hover,
+  },
+  partNameActive: { backgroundColor: colors.sidebarAccent },
+  // A run's label: its name takes the room, its count and chevron stand at the end.
+  runName: {
+    flexGrow: 1,
+    minWidth: 0,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+  },
+  count: { flexShrink: 0, fontVariantNumeric: "tabular-nums" },
+  // A run's pages stand a step in from its label, and a row's gap under it: Collapsible's panel
+  // keeps a step of room above and below what it holds, which a list of rows takes back, and the
+  // group's own gap goes with the panel, so a folded run is its label alone.
+  runPanel: { marginBlockStart: `calc(-1 * ${size.sidebarRowGap})` },
+  runPages: {
+    width: "auto",
+    marginBlockStart: `calc(${size.sidebarRowGap} - ${space["2"]})`,
+    marginBlockEnd: `calc(-1 * ${space["2"]})`,
+    marginInlineStart: space["3"],
   },
 });
 
@@ -222,35 +281,32 @@ interface RunProps {
   onOpenChange: (open: boolean) => void;
 }
 
-/** A run that folds: its label and count, and its pages on a stem under it. */
+/** A run that folds: a group whose label, with its count, is the trigger, its pages under it. */
 const Run = ({ group, route, link, open, onOpenChange }: RunProps) => (
-  <SidebarMenuItem>
-    <Collapsible open={open} onOpenChange={onOpenChange}>
+  <Collapsible open={open} onOpenChange={onOpenChange}>
+    <SidebarGroup>
       <CollapsibleTrigger asChild>
-        <SidebarMenuButton>
-          <span>{group.label}</span>
-          <span {...stylex.props(styles.count)}>{group.pages.length}</span>
-          <span className="site-run-chevron" aria-hidden="true">
-            <Icon icon={ChevronRightIcon} />
-          </span>
-        </SidebarMenuButton>
+        <SidebarGroupLabel asChild>
+          <button type="button">
+            <span {...stylex.props(styles.runName)}>{group.label}</span>
+            <span {...stylex.props(styles.count)}>{group.pages.length}</span>
+            <span className="site-run-chevron" aria-hidden="true">
+              <Icon icon={ChevronRightIcon} />
+            </span>
+          </button>
+        </SidebarGroupLabel>
       </CollapsibleTrigger>
-      <CollapsibleContent>
-        <SidebarMenuSub>
-          {group.pages.map((page) => (
-            <SidebarMenuSubItem key={page.route}>
-              <SidebarMenuSubButton
-                href={link(page.route)}
-                isActive={page.route === route}
-              >
-                {page.label}
-              </SidebarMenuSubButton>
-            </SidebarMenuSubItem>
-          ))}
-        </SidebarMenuSub>
+      <CollapsibleContent style={styles.runPanel}>
+        <SidebarGroupContent>
+          <SidebarMenu style={styles.runPages}>
+            {group.pages.map((page) => (
+              <Page key={page.route} page={page} route={route} link={link} />
+            ))}
+          </SidebarMenu>
+        </SidebarGroupContent>
       </CollapsibleContent>
-    </Collapsible>
-  </SidebarMenuItem>
+    </SidebarGroup>
+  </Collapsible>
 );
 
 const Page = ({
@@ -264,9 +320,7 @@ const Page = ({
 }) => (
   <SidebarMenuItem>
     <SidebarMenuButton asChild isActive={page.route === route}>
-      <a href={link(page.route)}>
-        <span>{page.label}</span>
-      </a>
+      <a href={link(page.route)}>{page.label}</a>
     </SidebarMenuButton>
   </SidebarMenuItem>
 );
@@ -356,52 +410,52 @@ export default function DocsShell({
           )}
           {parts.map(({ part, runs }) =>
             runs.length === 0 ? null : (
-              <div key={part}>
-                <SidebarSeparator />
+              <div key={part} {...stylex.props(styles.part)}>
                 <SidebarGroup>
-                  <SidebarMenu>
-                    <SidebarMenuItem>
-                      <SidebarMenuButton
-                        asChild
-                        isActive={route === partRoutes[part]}
-                      >
-                        <a href={link(partRoutes[part])} className="site-part">
-                          <span>{partNames[part]}</span>
-                        </a>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                    {runs.map((group) =>
-                      group.pages.length === 1 && group.pages[0] ? (
-                        <Page
-                          key={group.id}
-                          page={group.pages[0]}
-                          route={route}
-                          link={link}
-                        />
-                      ) : (
-                        <Run
-                          key={group.id}
-                          group={group}
-                          route={route}
-                          link={link}
-                          open={
-                            folds[group.id] === undefined
-                              ? group.id === here
-                              : !folds[group.id]
-                          }
-                          onOpenChange={(open) => {
-                            setFold(group.id, !open);
-                          }}
-                        />
-                      )
-                    )}
-                  </SidebarMenu>
+                  <div {...stylex.props(styles.partHead)}>
+                    <a
+                      href={link(partRoutes[part])}
+                      aria-current={
+                        route === partRoutes[part] ? "page" : undefined
+                      }
+                      {...stylex.props(
+                        styles.partName,
+                        route === partRoutes[part] && styles.partNameActive,
+                        focusRingInset
+                      )}
+                    >
+                      {partNames[part]}
+                    </a>
+                  </div>
                 </SidebarGroup>
+                {runs.map((group) =>
+                  group.pages.length === 1 && group.pages[0] ? (
+                    <SidebarGroup key={group.id}>
+                      <SidebarMenu>
+                        <Page page={group.pages[0]} route={route} link={link} />
+                      </SidebarMenu>
+                    </SidebarGroup>
+                  ) : (
+                    <Run
+                      key={group.id}
+                      group={group}
+                      route={route}
+                      link={link}
+                      open={
+                        folds[group.id] === undefined
+                          ? group.id === here
+                          : !folds[group.id]
+                      }
+                      onOpenChange={(open) => {
+                        setFold(group.id, !open);
+                      }}
+                    />
+                  )
+                )}
               </div>
             )
           )}
         </SidebarContent>
-        <SidebarRail />
       </Sidebar>
       <SidebarInset>
         <div {...stylex.props(styles.frame)}>

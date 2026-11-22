@@ -138,7 +138,7 @@ const sidebar = (current: Place) => (
                 <SidebarMenuButton asChild isActive={place.id === current}>
                   <a href={`#${place.id}`}>
                     <Icon icon={place.icon} />
-                    <span>{place.name}</span>
+                    {place.name}
                   </a>
                 </SidebarMenuButton>
                 {place.count !== undefined && (
