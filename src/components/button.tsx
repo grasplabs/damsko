@@ -481,13 +481,11 @@ const variantStyles = stylex.create({
     },
     boxShadow: "none",
   },
-  // Words that act, drawn as a Link is: a soft underline at rest that takes the words' colour under
-  // a pointer, with no fill or edge.
+  // Words that act: underlined under a pointer, with no fill or edge.
   link: {
     color: colors.foreground,
     backgroundColor: "transparent",
     boxShadow: "none",
-    textDecorationLine: "underline",
     textDecorationThickness: sizes.linkUnderlineWidth,
     textUnderlineOffset: sizes.linkUnderlineOffset,
     textDecorationColor: colors.linkUnderline,
@@ -573,9 +571,9 @@ const liveStyles = stylex.create({
     },
   },
   link: {
-    textDecorationColor: {
-      default: colors.linkUnderline,
-      ":hover": { default: null, [HOVER]: "currentColor" },
+    textDecorationLine: {
+      default: "none",
+      ":hover": { default: null, [HOVER]: "underline" },
     },
   },
 });

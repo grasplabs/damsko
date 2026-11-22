@@ -24,29 +24,42 @@ for (const theme of ["light", "dark"] as const) {
 }
 
 for (const theme of ["light", "dark"] as const) {
-  test(`no two variants look the same at rest, ${theme}`, async ({ page }) => {
+  test(`no two variants look the same, at rest and under a pointer, ${theme}`, async ({
+    page,
+  }) => {
     await openExample(page, "button", "variants", { theme });
-    // One button of each variant, read by its words: its fill, edge and lift, and its underline.
-    const looks = await Promise.all(
-      [
-        "Save changes",
-        "Invite people",
-        "Duplicate",
-        "Edit",
-        "Delete workspace",
-        "Read the guide",
-      ].map(
-        async (name) =>
-          await page.getByRole("button", { name }).evaluate((node) => {
-            const style = getComputedStyle(node);
-            return [
-              style.backgroundColor,
-              style.boxShadow,
-              style.textDecorationLine,
-            ].join(" | ");
-          })
-      )
-    );
+    const looks: string[] = [];
+    // One button of each variant, read by its words: its fill, edge, lift, underline and box, at
+    // rest and under the pointer. Ghost and link part under the pointer: a fill, or an underline.
+    for (const name of [
+      "Save changes",
+      "Invite people",
+      "Duplicate",
+      "Edit",
+      "Delete workspace",
+      "Read the guide",
+    ]) {
+      const button = page.getByRole("button", { name });
+      const read = async (): Promise<string> =>
+        await button.evaluate((node) => {
+          const style = getComputedStyle(node);
+          return [
+            style.backgroundColor,
+            style.boxShadow,
+            style.textDecorationLine,
+            style.padding,
+            style.height,
+          ].join(" | ");
+        });
+      // oxlint-disable-next-line no-await-in-loop -- one pointer, one button at a time
+      const rest = await read();
+      // oxlint-disable-next-line no-await-in-loop -- one pointer, one button at a time
+      await button.hover();
+      // oxlint-disable-next-line no-await-in-loop -- one pointer, one button at a time
+      await expect.poll(read).not.toBe(rest);
+      // oxlint-disable-next-line no-await-in-loop -- one pointer, one button at a time
+      looks.push(`${rest} / ${await read()}`);
+    }
     expect(new Set(looks).size).toBe(looks.length);
   });
 }
