@@ -3631,6 +3631,12 @@ export const groups: TokenGroup[] = [
             use: "The narrowest a tile in an ItemGrid stands before its row takes one fewer: as many per row as fit.",
           },
           {
+            name: "connect-tile",
+            category: "size",
+            value: "11rem",
+            use: "The narrowest a provider's tile stands in the connect block before its row takes one fewer: four in a row in a settings column.",
+          },
+          {
             name: "field-control-column",
             category: "size",
             value: "20rem",

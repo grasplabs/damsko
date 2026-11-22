@@ -703,7 +703,8 @@
         "@damsko/hooks",
         "@damsko/input",
         "@damsko/item",
-        "@damsko/lib"
+        "@damsko/lib",
+        "@damsko/text"
       ],
       "docs": "https://damsko.joingrasp.com/components/connect-api-key-01",
       "files": [
@@ -1815,8 +1816,7 @@
         "@damsko/button",
         "@damsko/dropdown-menu",
         "@damsko/lib",
-        "@damsko/skeleton",
-        "@damsko/spinner"
+        "@damsko/skeleton"
       ],
       "docs": "https://damsko.joingrasp.com/components/page-header",
       "files": [

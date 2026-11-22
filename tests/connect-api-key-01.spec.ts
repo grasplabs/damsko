@@ -17,6 +17,28 @@ test("the providers are tiles, each one button named by its name", async ({
   );
 });
 
+test("in a settings column the four providers stand in one row, and an endpoint of your own is a line under them", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await openExample(page, "connect-api-key-01", "basic");
+  const tiles = page
+    .getByRole("list", { name: "AI provider" })
+    .getByRole("listitem");
+  await expect(tiles).toHaveCount(4);
+  const boxes = await tiles.evaluateAll((items) =>
+    items.map((item) => {
+      const box = item.getBoundingClientRect();
+      return { top: box.top, bottom: box.bottom };
+    })
+  );
+  expect(new Set(boxes.map((box) => box.top)).size).toBe(1);
+  const own = await page
+    .getByRole("button", { name: "Use an endpoint of your own" })
+    .boundingBox();
+  expect(own?.y ?? 0).toBeGreaterThan(boxes[0]?.bottom ?? 0);
+});
+
 test("choosing a provider gives its key field the focus, a secret kept from password managers", async ({
   page,
 }) => {
@@ -89,7 +111,7 @@ test("Change goes back to the tiles, the focus on the tile it came from", async 
 test("an endpoint of your own asks for its address first", async ({ page }) => {
   await openExample(page, "connect-api-key-01", "basic");
   await page
-    .getByRole("button", { name: "Your own endpoint", exact: true })
+    .getByRole("button", { name: "Use an endpoint of your own" })
     .click();
   await expect(page.getByLabel("Address")).toBeFocused();
 });

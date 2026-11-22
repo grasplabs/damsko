@@ -681,6 +681,7 @@ export const size = stylex.defineConsts({
   formColumn: "var(--damsko-form-column)",
   formWidth: "var(--damsko-form-width)",
   itemGridTile: "var(--damsko-item-grid-tile)",
+  connectTile: "var(--damsko-connect-tile)",
   fieldControlColumn: "var(--damsko-field-control-column)",
   // Confirmation: confirmation.
   confirmationWidth: "var(--damsko-confirmation-width)",
