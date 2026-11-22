@@ -73,6 +73,9 @@ catalog:
   "@stylexjs/unplugin": 0.19.2
   babel-plugin-react-compiler: 1.0.0
   "@playwright/test": 1.65.0
+  # The app scripts/check-install.ts builds from an installed registry, as Get started's Vite
+  # template has it; the version @astrojs/react brings here.
+  "@vitejs/plugin-react": 6.3.0
   shadcn: 4.23.0
 
 # Vite+ replaces Vite and pins Vitest for every package.

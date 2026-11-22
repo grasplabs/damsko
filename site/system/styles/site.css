@@ -880,16 +880,6 @@
     }
   }
 
-  /* ---- Fallback faces sized to Geist, so the text does not move when the font arrives ------------- */
-  @font-face {
-    font-family: "Geist Fallback";
-    src: local("Arial");
-    ascent-override: 95.94%;
-    descent-override: 28.16%;
-    line-gap-override: 0%;
-    size-adjust: 104.76%;
-  }
-
   /* ---- Reduced motion: the chrome arrives at once; a component keeps its own reduced form -------- */
   @media (prefers-reduced-motion: no-preference) {
     html {

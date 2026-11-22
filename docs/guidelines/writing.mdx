@@ -134,7 +134,45 @@ The product gives every part its words once per root, in its language, through `
 
 Each such prop wins over the catalogue for that instance only. Words it leaves out come from the catalogue, else English. Only words that differ from the catalogue need giving. A word the catalogue gives as a function (`count: (count) => …`) is given as a function, so each language pluralises.
 
-The catalogue is a `Partial<I18nCatalog>`: a part it leaves out keeps its English. Build it once, as a module constant, never during render. Providers do not merge: an inner one replaces the outer one's words for what it wraps, so give one per root.
+The catalogue is a `Partial<I18nCatalog>`, partial by part: a part it leaves out keeps its English, and a part it gives, it gives whole. A word added to a part in Damsko then fails the product's type check at its next update, until it is translated. Providers do not merge: an inner one replaces the outer one's words for what it wraps, so give one per root.
+
+## Words from a translation library
+
+A product whose words come from a translation library (Lingui, i18next, FormatJS) has no constant to give: the words exist once a language is active, and change with it. Build the catalogue where the library's words are read, while rendering, in one component around the routes. The provider keeps the words it has until `locale` or one of the strings changes, so nothing that reads them is drawn again because the object is a new one; a word that is a function is read again at the same moment.
+
+```tsx
+export const UiWords = ({ children }: { children: ReactNode }) => {
+  const { t, i18n } = useLingui();
+  return (
+    <I18nProvider
+      locale={i18n.locale}
+      catalog={{
+        copyButton: {
+          copied: t`Copied`,
+          copy: t`Copy`,
+          copyError: t`Not copied`,
+        },
+        action: {
+          agentAsks: t`Does something that needs your yes`,
+          agentPresses: (words) => t`Presses "${words}"`,
+          error: t`Could not finish`,
+          loading: t`Working`,
+          success: t`Done`,
+        },
+      }}
+    >
+      {children}
+    </I18nProvider>
+  );
+};
+```
+
+<Stage
+  path="guidelines/writing-runtime-words"
+  label="Words from a translation library"
+/>
+
+No part's name starts with `use`, so `const { agentPresses } = useI18n().action` compiles under the React Compiler, which reads a member named `use…` as a hook.
 
 ## Words we use
 

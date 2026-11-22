@@ -453,7 +453,7 @@ export const ConfirmationAction = ({
   agentConfirm,
   style,
 }: ConfirmationActionProps) => {
-  const { agentAsks, agentPresses } = useI18n().useAction;
+  const { agentAsks, agentPresses } = useI18n().action;
   const words = useI18n().confirmation;
   const context = use(ConfirmationContext);
   const failed = errorLabel ?? words.failed;

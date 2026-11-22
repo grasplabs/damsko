@@ -7,7 +7,7 @@ import { CodeBlock } from "../blocks/code";
 import TopStep from "../chrome/TopStep.astro";
 import Docs from "../layouts/Docs.astro";
 import InstallPill from "../start/InstallPill";
-import { description, headings, install, next, route, sections, siteAddress, steps, title } from "../start/get-started";
+import { description, headings, install, licence, next, nextSection, route, sections, siteAddress, title } from "../start/get-started";
 import { neighbours } from "../system/content";
 import { highlight } from "../system/highlight";
 import "../start/get-started.css";
@@ -18,18 +18,24 @@ const around = neighbours(route);
 // The registry's address in components.json is this site's own: the page writes its origin in place
 // of the placeholder, in the code itself, so the copy button copies a working file.
 const fill = `(() => {
-  const list = document.currentScript.previousElementSibling;
-  const walk = document.createTreeWalker(list, NodeFilter.SHOW_TEXT);
-  for (let node = walk.nextNode(); node; node = walk.nextNode()) {
-    if (node.data.includes(${JSON.stringify(siteAddress)})) node.data = node.data.replace(${JSON.stringify(siteAddress)}, location.origin);
+  for (const list of document.querySelectorAll(".gs-steps")) {
+    const walk = document.createTreeWalker(list, NodeFilter.SHOW_TEXT);
+    for (let node = walk.nextNode(); node; node = walk.nextNode()) {
+      if (node.data.includes(${JSON.stringify(siteAddress)})) node.data = node.data.replaceAll(${JSON.stringify(siteAddress)}, location.origin);
+    }
   }
 })();`;
 
 const drawn = await Promise.all(
-  steps.map(async (step) => ({
-    ...step,
-    html: await highlight(step.code, step.lang),
-    thenHtml: step.then ? await highlight(step.then.code, step.then.lang) : null,
+  sections.map(async (section) => ({
+    ...section,
+    steps: await Promise.all(
+      section.steps.map(async (step) => ({
+        ...step,
+        html: await highlight(step.code, step.lang),
+        thenHtml: step.then ? await highlight(step.then.code, step.then.lang) : null,
+      })),
+    ),
   })),
 );
 ---
@@ -48,23 +54,30 @@ const drawn = await Promise.all(
   <Head lead={description} />
   <InstallPill command={install} />
 
-  <h2 id={sections.install.slug}>{sections.install.title}</h2>
-  <p>{sections.install.lead}</p>
-  <ol class="gs-steps not-prose">
-    {
-      drawn.map((step) => (
-        <li>
-          <h3 id={step.slug}>{step.name}</h3>
-          <p class="gs-note">{step.note}</p>
-          <CodeBlock html={step.html} language={step.lang} />
-          {step.thenHtml && <CodeBlock html={step.thenHtml} language={step.then?.lang} />}
-        </li>
-      ))
-    }
-  </ol>
+  {
+    drawn.map((section) => (
+      <>
+        <h2 id={section.slug}>{section.title}</h2>
+        <p>{section.lead}</p>
+        <ol class="gs-steps not-prose">
+          {section.steps.map((step) => (
+            <li>
+              <h3 id={step.slug}>{step.name}</h3>
+              <p class="gs-note">{step.note}</p>
+              <CodeBlock html={step.html} language={step.lang} />
+              {step.thenHtml && <CodeBlock html={step.thenHtml} language={step.then?.lang} />}
+            </li>
+          ))}
+        </ol>
+      </>
+    ))
+  }
   <script is:inline data-astro-rerun set:html={fill} />
 
-  <h2 id={sections.next.slug}>{sections.next.title}</h2>
+  <h2 id={licence.slug}>{licence.title}</h2>
+  <p>{licence.text}</p>
+
+  <h2 id={nextSection.slug}>{nextSection.title}</h2>
   <div class="not-prose">
     <Ways items={next} />
   </div>

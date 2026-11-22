@@ -1069,7 +1069,7 @@ const Pressable = ({
   children,
   ...rest
 }: ButtonProps) => {
-  const { agentAsks, agentPresses } = useI18n().useAction;
+  const { agentAsks, agentPresses } = useI18n().action;
   const { status, press } = usePress(onClick, held, {
     loading: loadingLabel,
     success: successLabel,
