@@ -47,8 +47,6 @@ import {
   MenuShortcutPart,
   MenuSubContentPart,
   MenuSubTriggerPart,
-  className,
-  slotted,
 } from "../lib/menu";
 import type { MenuKind } from "../lib/menu";
 import { focusRing, menuStyles, scrollbarHidden } from "../lib/styles";
@@ -62,7 +60,7 @@ import {
   space,
 } from "../lib/tokens.stylex";
 import { popup } from "../lib/tokens.values";
-import { slotProps } from "../lib/utils";
+import { className, slotProps, slotted } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { menuMarker } from "../lib/vars.stylex";
 

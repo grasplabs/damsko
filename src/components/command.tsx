@@ -104,7 +104,7 @@ import {
   space,
 } from "../lib/tokens.stylex";
 import { popup } from "../lib/tokens.values";
-import { announce, isThenable } from "../lib/utils";
+import { announce, className, isThenable } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { iconVars, menuMarker, motionVars } from "../lib/vars.stylex";
 import { Button } from "./button";
@@ -514,10 +514,6 @@ const styles = stylex.create({
     },
   },
 });
-
-const className = (
-  ...parts: (stylex.StyleXStyles | LayoutStyle | false | undefined)[]
-) => stylex.props(...parts).className;
 
 /** Waits for an action's work: `done` with what it gave, or `fail` with why it was refused. */
 const settle = async (
