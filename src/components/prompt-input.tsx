@@ -657,7 +657,15 @@ const styles = stylex.create({
           '"header header" "field field" "start end"',
       },
     },
-    alignItems: "end",
+    // In one row the tools and Submit stand at the foot of the growing text; folded, a row of
+    // their own, its items on one centre line (a note's one line level with Submit).
+    alignItems: {
+      default: "center",
+      [ROW]: {
+        default: "end",
+        ":has([data-slot=prompt-input-note])": "center",
+      },
+    },
     columnGap: space["1"],
   },
   // Files dragged over the card: tinted, its words say what a drop does.
