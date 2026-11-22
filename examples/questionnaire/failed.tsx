@@ -6,6 +6,7 @@ import {
   QuestionnaireChoice,
   QuestionnaireChoices,
   QuestionnaireItem,
+  QuestionnaireProgress,
   QuestionnaireSubmit,
   QuestionnaireTitle,
 } from "@grasp-os/ui/components/questionnaire";
@@ -24,6 +25,7 @@ const offline = () =>
 export default function QuestionnaireFailed() {
   return (
     <Questionnaire onSubmit={offline} style={layout.column}>
+      <QuestionnaireProgress>Question</QuestionnaireProgress>
       <QuestionnaireItem name="format" required>
         <QuestionnaireTitle>How should I write it up?</QuestionnaireTitle>
         <QuestionnaireChoices>

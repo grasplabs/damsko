@@ -11,6 +11,9 @@
 //     </TooltipTrigger>
 //     <TooltipContent>Download as PDF <Kbd>⌘D</Kbd></TooltipContent>
 //   </Tooltip>
+//
+// ControlTooltip is what a Button, Toggle and ToggleGroupItem draw themselves in for their
+// `tooltip` prop: an icon-only one shows its name by default, so no caller wraps it by hand.
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
@@ -23,8 +26,8 @@ import type {
   TooltipController,
   TooltipOpenChangeReason,
 } from "@ui-sdk/react/tooltip";
-import { createContext, use, useRef } from "react";
-import type { ComponentProps, ReactNode } from "react";
+import { createContext, use, useEffect, useRef, useState } from "react";
+import type { ComponentProps, ReactElement, ReactNode, Ref } from "react";
 
 import {
   colors,
@@ -130,6 +133,9 @@ const layerOpen = (element: HTMLElement | null) => {
   );
 };
 
+/** Whether this stands inside a Tooltip: a control there shows that Tooltip, never one of its own. */
+const InTooltip = createContext(false);
+
 /** The root: holds the trigger and the content, and renders nothing of its own. */
 export const Tooltip = ({
   children,
@@ -161,7 +167,7 @@ export const Tooltip = ({
         type="description"
         onOpenChange={change}
       >
-        {children}
+        <InTooltip value>{children}</InTooltip>
       </TooltipPrimitive>
     </TriggerContext.Provider>
   );
@@ -213,6 +219,8 @@ export const TooltipTrigger = ({
   };
   return (
     <TriggerPrimitive
+      // Says a Tooltip has this control: an icon-only Button then adds no tooltip of its own.
+      data-tooltip-trigger=""
       {...rest}
       ref={both}
       controller={handle}
@@ -353,3 +361,126 @@ export const TooltipContent = ({
     <span {...stylex.props(styles.words)}>{children}</span>
   </ContentPrimitive>
 );
+
+// ---- A control's own tooltip -----------------------------------------------------------------------
+
+type Control = ReactElement<
+  Record<string, unknown> & { ref?: Ref<HTMLElement> }
+>;
+
+const isHandler = (value: unknown): value is (...args: unknown[]) => unknown =>
+  typeof value === "function";
+
+/**
+ * The control with the trigger's props on it. Its own props win, and of the trigger's it never
+ * takes the slot, nor the description when the tooltip only repeats its name, which a screen
+ * reader has already said. Where both handle an event the trigger's runs first and the control's
+ * answer comes back: a press's Promise, which a Button follows.
+ */
+const TooltipControl = ({
+  control,
+  named,
+  ref,
+  ...trigger
+}: {
+  control: Control;
+  named: boolean;
+  ref?: Ref<HTMLElement>;
+} & Record<string, unknown>) => {
+  const { type: Element, props: own } = control;
+  const merged: Record<string, unknown> = {
+    ...trigger,
+    "aria-describedby": named
+      ? own["aria-describedby"]
+      : (own["aria-describedby"] ?? trigger["aria-describedby"]),
+    "data-slot": own["data-slot"],
+  };
+  for (const [key, value] of Object.entries(own)) {
+    const theirs = trigger[key];
+    if (isHandler(value) && isHandler(theirs)) {
+      merged[key] = (...args: unknown[]) => {
+        theirs(...args);
+        return value(...args);
+      };
+    } else if (value !== undefined) {
+      merged[key] = value;
+    }
+  }
+  const both = (element: HTMLElement | null) => {
+    assignRef(ref, element);
+    assignRef(own.ref, element);
+  };
+  return <Element {...merged} ref={both} />;
+};
+
+/** Whether a `tooltip` prop gives words of its own. */
+const given = (tooltip: ReactNode) =>
+  tooltip !== undefined &&
+  tooltip !== null &&
+  tooltip !== true &&
+  tooltip !== false &&
+  tooltip !== "";
+
+/**
+ * The tooltip a Button, Toggle or ToggleGroupItem draws itself in, for its `tooltip` prop, as
+ * SidebarMenuButton's. Left out, a control that is an icon alone shows its name (`aria-label`),
+ * marked `data-tooltip-trigger="name"`, and a control with words shows none; `false` shows none;
+ * words or a node show those, and describe the control. Inside a Tooltip of the caller's it shows
+ * nothing of its own: that one speaks. At rest it draws the control alone: the tooltip's element is
+ * there only while it shows, and a moment after for its fade.
+ */
+export const ControlTooltip = ({
+  tooltip,
+  iconOnly,
+  children,
+}: {
+  /** The control's own `tooltip` prop. */
+  tooltip: ReactNode;
+  /** Whether the control shows only an icon, so its name is not on it. */
+  iconOnly: boolean;
+  /** The one control. */
+  children: Control;
+}) => {
+  const inside = use(InTooltip);
+  const [shown, setShown] = useState(false);
+  const leaving = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (leaving.current !== null) {
+        clearTimeout(leaving.current);
+      }
+    },
+    []
+  );
+  const label = children.props["aria-label"];
+  const named =
+    tooltip === undefined && iconOnly && typeof label === "string" ? label : "";
+  if (inside || (!given(tooltip) && named === "")) {
+    return children;
+  }
+  const change = (open: boolean) => {
+    if (leaving.current !== null) {
+      clearTimeout(leaving.current);
+      leaving.current = null;
+    }
+    if (open) {
+      setShown(true);
+      return;
+    }
+    leaving.current = setTimeout(() => {
+      setShown(false);
+    }, durations.tooltipLeave);
+  };
+  return (
+    <Tooltip onOpenChange={change}>
+      <TooltipTrigger asChild data-tooltip-trigger={named === "" ? "" : "name"}>
+        <TooltipControl control={children} named={named !== ""} />
+      </TooltipTrigger>
+      {shown && (
+        <TooltipContent data-agent-hidden={named === "" ? undefined : ""}>
+          {named === "" ? tooltip : named}
+        </TooltipContent>
+      )}
+    </Tooltip>
+  );
+};

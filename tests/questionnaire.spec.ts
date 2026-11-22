@@ -131,17 +131,17 @@ test("steps: progress says where, Next waits for an answer, Mod+Enter goes on, t
   page,
 }) => {
   await openExample(page, "questionnaire", "steps");
-  await expect(page.getByRole("progressbar", { name: "Progress" })).toHaveText(
-    "Question 1 of 3"
-  );
+  // The head says what the run is at its start and the place at its end; a screen reader hears
+  // the place as a whole sentence.
+  const progress = page.getByRole("progressbar", { name: "Progress" });
+  await expect(progress).toHaveText("Questions1 of 3");
+  await expect(progress).toHaveAttribute("aria-valuetext", "Question 1 of 3");
   const next = page.getByRole("button", { name: "Next" });
   await expect(next).toBeDisabled();
   await page.getByRole("radio", { name: /Supplier review/u }).click();
   await expect(next).toBeEnabled();
   await page.keyboard.press("ControlOrMeta+Enter");
-  await expect(page.getByRole("progressbar", { name: "Progress" })).toHaveText(
-    "Question 2 of 3"
-  );
+  await expect(progress).toHaveText("Questions2 of 3");
   const people = page.getByRole("checkbox", { name: "People" });
   await expect(people).toBeVisible();
   await expect(
@@ -159,8 +159,6 @@ test("steps: an optional question is skipped, and the last one sends every answe
   page,
 }) => {
   await openExample(page, "questionnaire", "steps");
-  // The first is required: no Skip.
-  await expect(page.getByRole("button", { name: "Skip" })).toHaveCount(0);
   await page.getByRole("radio", { name: /Quarterly summary/u }).click();
   await page.getByRole("button", { name: "Next" }).click();
   await page.getByRole("checkbox", { name: "Operations" }).click();
@@ -310,4 +308,79 @@ test("held by the page: a choice is chosen as its checked says, and the page hea
   await expect(page.getByText("; other: Slack")).toBeVisible();
   await page.getByRole("button", { name: "Send answer" }).click();
   await expect(page.getByText("Email, Meeting notes, Slack")).toBeVisible();
+});
+
+for (const theme of ["light", "dark"] as const) {
+  test(`a choice shows its key boxed at its start; chosen, the box takes the main fill and a tick shows at its end, ${theme}`, async ({
+    page,
+  }) => {
+    await openExample(page, "questionnaire", "steps", { theme });
+    const card = page.locator("label").filter({ hasText: "Supplier review" });
+    const read = async () =>
+      await card.evaluate((label) => {
+        const radio = label.querySelector("[role=radio]");
+        const box = radio?.parentElement?.parentElement;
+        const tick = label.lastElementChild;
+        if (box === null || box === undefined || tick === null) {
+          return null;
+        }
+        const probe = document.createElement("span");
+        label.append(probe);
+        const tokens = ["secondary", "primary"].map((name) => {
+          probe.style.backgroundColor = `var(--damsko-${name})`;
+          return getComputedStyle(probe).backgroundColor;
+        });
+        probe.remove();
+        const look = getComputedStyle(box);
+        return {
+          size: [box.clientWidth, box.clientHeight],
+          atStart:
+            box.getBoundingClientRect().left <
+            (label.querySelector("span[id]")?.getBoundingClientRect().left ??
+              0),
+          fill: tokens.indexOf(look.backgroundColor),
+          tick: getComputedStyle(tick).visibility,
+        };
+      });
+    expect(await read()).toEqual({
+      size: [20, 20],
+      atStart: true,
+      fill: 0,
+      tick: "hidden",
+    });
+    await page.getByRole("radio", { name: /Supplier review/u }).click();
+    expect(await read()).toMatchObject({ fill: 1, tick: "visible" });
+  });
+}
+
+test("words of one's own are one more card under the choices, reached by the key after the last choice", async ({
+  page,
+}) => {
+  await openExample(page, "questionnaire", "steps");
+  const other = page.getByRole("textbox", { name: "Other" });
+  const last = page.locator("label").filter({ hasText: "Supplier review" });
+  const [card, choice] = await Promise.all([
+    other.locator("xpath=ancestor::label").boundingBox(),
+    last.boundingBox(),
+  ]);
+  // The same card, as tall as the choices, their gap under the last one.
+  expect(card?.x).toBe(choice?.x);
+  expect(card?.width).toBe(choice?.width);
+  expect(card?.height).toBe(choice?.height);
+  expect((card?.y ?? 0) - ((choice?.y ?? 0) + (choice?.height ?? 0))).toBe(8);
+  await page.getByRole("radio", { name: /Supplier review/u }).focus();
+  await page.keyboard.press("3");
+  await expect(other).toBeFocused();
+  await page.keyboard.type("The hiring plan");
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("checkbox", { name: "People" })).toBeVisible();
+});
+
+test("Skip is a ghost button and the steps are small", async ({ page }) => {
+  await openExample(page, "questionnaire", "steps");
+  const skip = page.getByRole("button", { name: "Skip" });
+  await expect(skip).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await expect(skip).toHaveCSS("box-shadow", "none");
+  const box = await skip.boundingBox();
+  expect(box?.height).toBe(32);
 });

@@ -6,7 +6,9 @@ import {
   QuestionnaireActions,
   QuestionnaireChoice,
   QuestionnaireChoices,
+  QuestionnaireInput,
   QuestionnaireItem,
+  QuestionnaireProgress,
   QuestionnaireSkip,
   QuestionnaireSubmit,
   QuestionnaireTitle,
@@ -41,6 +43,7 @@ export default function QuestionnaireMulti() {
   }
   return (
     <Questionnaire key={round} onSubmit={() => undefined} style={layout.column}>
+      <QuestionnaireProgress>Question</QuestionnaireProgress>
       <QuestionnaireItem name="sources" multiple>
         <QuestionnaireTitle>
           Where should I look for the decisions?
@@ -50,6 +53,7 @@ export default function QuestionnaireMulti() {
           <QuestionnaireChoice value="calendar">Calendar</QuestionnaireChoice>
           <QuestionnaireChoice value="notes">Meeting notes</QuestionnaireChoice>
         </QuestionnaireChoices>
+        <QuestionnaireInput />
       </QuestionnaireItem>
       <QuestionnaireActions>
         <QuestionnaireSkip

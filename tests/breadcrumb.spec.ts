@@ -29,6 +29,28 @@ test("a file's path has no links and no current page", async ({ page }) => {
   await expect(nav.locator("[aria-current]")).toHaveCount(0);
 });
 
+test("a file's path ends in the ink at the medium weight, its other steps quiet", async ({
+  page,
+}) => {
+  await openExample(page, "breadcrumb", "path");
+  const end = page.getByText("march-northwind.pdf").first();
+  const step = page.getByText("Invoices 2026").first();
+  await expect(end).toHaveCSS("font-weight", "500");
+  await expect(step).toHaveCSS("font-weight", "400");
+  const [ink, quiet] = await end.evaluate((element) => {
+    const probe = document.createElement("span");
+    element.after(probe);
+    probe.style.color = "var(--damsko-foreground)";
+    const foreground = getComputedStyle(probe).color;
+    probe.style.color = "var(--damsko-muted-foreground)";
+    const muted = getComputedStyle(probe).color;
+    probe.remove();
+    return [foreground, muted];
+  });
+  await expect(end).toHaveCSS("color", ink);
+  await expect(step).toHaveCSS("color", quiet);
+});
+
 test("the levels between open from the “…” button as links, in the path's order", async ({
   page,
 }) => {
