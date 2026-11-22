@@ -177,7 +177,6 @@ export const kinds: Kind[] = [
       "bubble",
       "marker",
       "sources",
-      "file-tree",
       "inline-citation",
       "confirmation",
       "questionnaire",
