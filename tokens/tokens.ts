@@ -728,7 +728,7 @@ export const groups: TokenGroup[] = [
             name: "radius-full",
             category: "radius",
             value: "999px",
-            use: "A pill: a chip, a tag, a toggle track.",
+            use: "A pill: a chip, a tag, the track of a switch or a slider. Never a control that holds buttons.",
           },
           {
             name: "radius-circle",
@@ -4335,7 +4335,7 @@ export const groups: TokenGroup[] = [
             name: "side-panel-width",
             category: "size",
             value: "420px",
-            use: "The width of an inspector panel beside a page, as the reference's 421px.",
+            use: "The width of an inspector panel beside a page.",
           },
           {
             name: "side-panel-bar",
@@ -4383,7 +4383,7 @@ export const groups: TokenGroup[] = [
             name: "side-panel-text",
             category: "size",
             value: "0.8125rem",
-            use: "A row's name, a label and a view: a step under text-sm, as the reference's.",
+            use: "A row's name, a label and a view: a step under text-sm.",
           },
           {
             name: "side-panel-text-line",

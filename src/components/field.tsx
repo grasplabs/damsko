@@ -1,5 +1,5 @@
-// Field: a control with its label, its description and the error it shows, from shadcn's
-// (registry/bases/base/ui/field.tsx), converted from Tailwind to StyleX and built on UI SDK's Field,
+// Field: a control with its label, its description and the error it shows,
+// in StyleX, built on UI SDK's Field,
 // which wires the label's `for`, `aria-labelledby`, `aria-describedby` and `aria-invalid` itself:
 // a control of ours inside a Field needs no ids and no spread.
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
@@ -179,8 +179,8 @@ export interface FieldProps extends Omit<
    */
   disabled?: boolean;
   /**
-   * Shows the field as wrong now, for an error your code decides (the server said no), as shadcn's
-   * Field: its control says `aria-invalid` with it. Leave it out and the field shows the browser's
+   * Shows the field as wrong now, for an error your code decides (the server said no):
+   * its control says `aria-invalid` with it. Leave it out and the field shows the browser's
    * own check after a submit.
    */
   "data-invalid"?: boolean;

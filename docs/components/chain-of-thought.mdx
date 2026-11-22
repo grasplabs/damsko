@@ -10,7 +10,7 @@ description: The steps of one answer as they happen, each with what it found, be
 
 ## When it is done
 
-Built as shadcn's Chain of Thought pattern is, on [Trace](/components/trace): `ChainOfThought` is a Trace with one row that opens, `ChainOfThoughtContent` a Trace of steps inside it, each `ChainOfThoughtStep` a line. `ChainOfThoughtHeader` holds the run's one line, which you write: what it did and how long it took. A press opens `ChainOfThoughtContent` and its steps.
+Built on [Trace](/components/trace): `ChainOfThought` is a Trace with one row that opens, `ChainOfThoughtContent` a Trace of steps inside it, each `ChainOfThoughtStep` a line. `ChainOfThoughtHeader` holds the run's one line, which you write: what it did and how long it took. A press opens `ChainOfThoughtContent` and its steps.
 
 <Stage path="chain-of-thought/basic" label="When it is done" />
 
@@ -65,7 +65,7 @@ A step that made or found a picture holds it under its line: `ChainOfThoughtImag
       group: "Line",
       key: "Trigger",
       value:
-        "Trace's row: the status mark, as wide as its words, {font-weight-normal} on {text-sm-line}, muted until hovered or open, {control-sm} tall, the chevron muted",
+        "The original's activity line: its words alone on the column's edge, as wide as they are, {font-weight-normal} on {text-sm-line}, muted until hovered or open, {control-sm} tall, the chevron muted; the ghost fill under the pointer reaches past the words",
     },
     {
       group: "Steps",

@@ -1,5 +1,4 @@
-// Drawer: a task in a panel that rises from the bottom of the window, from shadcn's
-// (registry/bases/base/ui/drawer.tsx, on Vaul), converted from Tailwind to StyleX and built on UI
+// Drawer: a task in a panel that rises from the bottom of the window, in StyleX, built on UI
 // SDK's Drawer: a raised panel with the one corner on its top, a handle to drag it by, a body that
 // scrolls between the title and actions that stay put. A drag down, Escape or a press on the shade
 // closes it; with `snapPoints` it rests at more than one height, and the handle steps through them.
@@ -235,7 +234,7 @@ const styles = stylex.create({
     display: "block",
     width: sizes.drawerHandleWidth,
     height: sizes.drawerHandleHeight,
-    borderRadius: sizes.drawerHandleHeight,
+    borderRadius: radius.full,
     backgroundColor: {
       default: colors.drawerHandleBg,
       [FORCED]: "CanvasText",
@@ -495,7 +494,7 @@ export interface DrawerCloseProps
     WrapperProps {
   /**
    * The look of the Button it draws, without `asChild`: `outline` for Cancel beside the main
-   * action, as shadcn draws it; `default` when closing is the step the drawer is for.
+   * action; `default` when closing is the step the drawer is for.
    * @default "outline"
    */
   variant?: ButtonVariant;

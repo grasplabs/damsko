@@ -1,10 +1,17 @@
 import { expect, test } from "@playwright/test";
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 
 import { hasFocusRing, openExample } from "./example.ts";
 
 const clipboard = async (page: Page) =>
   await page.evaluate(async () => await navigator.clipboard.readText());
+
+// A part's corner: its radius and its shape.
+const corner = async (part: Locator) =>
+  await part.evaluate((node) => {
+    const style = getComputedStyle(node);
+    return [style.borderRadius, style.getPropertyValue("corner-shape")];
+  });
 
 test("the facts are a description list: each name, then its value, in order", async ({
   page,
@@ -88,12 +95,64 @@ test("horizontal, a fact with a detail opens in place, one at a time", async ({
   await model.click();
   await expect(model).toHaveAttribute("aria-expanded", "true");
   await expect(page.getByText("Claude Sonnet, faster")).toBeVisible();
-  expect(await gap()).toBe(before);
+  // Once the panel has opened: the page centres the example, so both move while it does.
+  await expect.poll(gap).toBe(before);
   await runs.click();
   await expect(runs).toHaveAttribute("aria-expanded", "true");
   await expect(model).toHaveAttribute("aria-expanded", "false");
-  await expect(page.getByText("Claude Sonnet, faster")).toHaveCount(0);
+  await expect(page.getByText("Claude Sonnet, faster")).toBeHidden();
   await expect(page.getByText(/never runs on its own/u)).toBeVisible();
+});
+
+test("a fact's button controls the panel that holds its detail, a definition", async ({
+  page,
+}) => {
+  await openExample(page, "key-value", "rail");
+  const runs = page.getByRole("button", { name: "Runs" });
+  const words = page.getByText(/never runs on its own/u);
+  // A closed detail stays in the page, hidden until found, as a Collapsible's panel does.
+  await expect(words).toBeAttached();
+  await expect(words).toBeHidden();
+  expect(
+    await words.evaluate((node) =>
+      node.closest("[hidden]")?.getAttribute("hidden")
+    )
+  ).toBe("until-found");
+  const detail = page
+    .getByRole("definition")
+    .filter({ hasText: /never runs on its own/u });
+  await runs.click();
+  await expect(detail).toBeVisible();
+  const controls = await runs.getAttribute("aria-controls");
+  expect(
+    await detail.evaluate(
+      (node, id) => node.closest(`[id="${id}"]`) !== null,
+      controls
+    )
+  ).toBe(true);
+});
+
+test("a press on the row opens it and leaves no ring; the keyboard's ring follows the row's corner", async ({
+  page,
+}) => {
+  await openExample(page, "key-value", "rail");
+  const model = page.getByRole("button", { name: "Model" });
+  await model.click();
+  await expect(model).toHaveAttribute("aria-expanded", "true");
+  await expect(model).toBeFocused();
+  expect(await hasFocusRing(model)).toBe(false);
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Shift+Tab");
+  expect(await hasFocusRing(model)).toBe(true);
+  // The corner sibling rows take: the system's radius, capped at half the row, in the system's
+  // shape, which the detail under it has too.
+  const [radius, shape] = await corner(model);
+  expect(radius).toBe("18px");
+  expect(await corner(page.getByRole("definition").nth(2))).toEqual([
+    "20px",
+    shape,
+  ]);
+  expect(shape).not.toBe("round");
 });
 
 test("the keys open and close a fact", async ({ page }) => {

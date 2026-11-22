@@ -1,9 +1,10 @@
 // Sources: what an answer drew on, folded under it, after shadcn's Sources pattern (apps/v4/content/
 // docs/ai-elements/base/sources.mdx), built as shadcn builds it: a Trace with a TraceCollapsible, its
-// trigger a TraceLine, and under it a Trace of sources, each a TraceLine in a link. Folded, the
-// trigger's title is a pile, the first sources' marks overlapping in a row, then the count ("3
-// sources"). Pressed, the list opens under it: one line per source, its mark, its title, and where
-// it lives.
+// trigger a TraceLine, and under it the sources, each a TraceLine in a link. In Damsko's look:
+// folded, the trigger is a pile as tall as a finger needs, the first sources' marks overlapping in a
+// row, then the count ("3 sources"). Pressed, the list opens under it: one row per source, at least
+// a large control tall, its mark on a tile, its title, and where it lives in a quiet line under
+// the title; the whole row takes the press. A source is not a step: no seat and no dots.
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
 //   <Sources>
@@ -38,19 +39,25 @@ import { createContext, use } from "react";
 import type { ReactNode } from "react";
 
 import { useI18n } from "../lib/i18n";
-import { Icon, LockIcon } from "../lib/icons";
+import { ChevronDownIcon, Icon, LockIcon } from "../lib/icons";
 import { focusRing, tileEdge, visuallyHidden } from "../lib/styles";
-import { colors, duration, media, radius, size } from "../lib/tokens.stylex";
+import {
+  colors,
+  duration,
+  font,
+  media,
+  radius,
+  size,
+  space,
+} from "../lib/tokens.stylex";
 import { citedSource, safeHref } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
-import { iconVars } from "../lib/vars.stylex";
+import { iconVars, motionVars } from "../lib/vars.stylex";
 import {
   Trace,
   TraceCollapsible,
   TraceCollapsibleContent,
   TraceCollapsibleTrigger,
-  TraceDescription,
-  TraceIcon,
   TraceLine,
   TraceTitle,
 } from "./trace";
@@ -146,53 +153,153 @@ export interface SourceIconProps {
 }
 
 const HOVER = media.hover;
+const COARSE = media.pointerCoarse;
+const FORCED = media.forcedColors;
 
 const styles = stylex.create({
+  // The pile: its own width, not the column's. The room before the first mark hangs outside the
+  // column, so at rest the first mark shares the column's start edge with the words above and below
+  // it; only the hover fill reaches past it. As tall as a finger needs.
+  pile: {
+    [iconVars.size]: size.iconSm,
+    [iconVars.stroke]: size.iconStroke,
+    position: "relative",
+    display: "inline-flex",
+    justifySelf: "start",
+    alignItems: "center",
+    gap: space["3"],
+    boxSizing: "border-box",
+    maxWidth: "100%",
+    minHeight: size.tapTarget,
+    margin: 0,
+    marginInlineStart: `calc(-1 * ${space["3"]})`,
+    paddingBlock: space["1"],
+    paddingInline: space["3"],
+    borderWidth: { default: 0, [FORCED]: 1 },
+    borderStyle: "solid",
+    borderColor: "CanvasText",
+    borderRadius: radius.base,
+    cornerShape: radius.shape,
+    fontFamily: "inherit",
+    fontSize: font.textSm,
+    lineHeight: font.textSmLine,
+    color: colors.bodyForeground,
+    textAlign: "start",
+    backgroundColor: {
+      default: "transparent",
+      ":hover": { default: null, [HOVER]: colors.accent },
+      ":active": colors.accentActive,
+    },
+    cursor: "pointer",
+    transitionProperty: "background-color",
+    transitionDuration: duration.hover,
+    transitionTimingFunction: duration.ease,
+    touchAction: "manipulation",
+    WebkitTapHighlightColor: "transparent",
+  },
   // The pile in the trigger's title: the first mark at the line's start, each next one over the
-  // one before.
+  // one before, the count a space-3 after them.
   marks: {
     display: "inline-flex",
     alignItems: "center",
     verticalAlign: "middle",
     paddingInlineStart: size.sourcesPileOverlap,
-    marginInlineEnd: size.sourcesPileOverlap,
+    marginInlineEnd: space["3"],
   },
   // "6 sources" is one label: it never breaks between the number and the word.
-  count: { whiteSpace: "nowrap" },
-  list: { display: "grid", minWidth: 0 },
-  // A source that opens: the link or button round its line, as wide as its line, its words in ink
-  // under the pointer.
-  press: {
-    display: "flex",
-    justifySelf: "start",
-    maxWidth: "100%",
-    minWidth: 0,
-    margin: 0,
-    padding: 0,
-    borderWidth: 0,
-    borderRadius: radius.mark,
-    backgroundColor: "transparent",
-    color: {
-      default: "inherit",
-      ":hover": { default: null, [HOVER]: colors.foreground },
+  count: {
+    whiteSpace: "nowrap",
+    fontWeight: font.weightMedium,
+    color: colors.foreground,
+  },
+  // Points down while folded and turns up as the list opens.
+  chevron: {
+    display: "inline-flex",
+    flexShrink: 0,
+    marginInlineStart: `calc(-1 * ${space["2"]})`,
+    color: colors.mutedForeground,
+    transform: {
+      default: "none",
+      ":is([aria-expanded=true] > *)": "rotate(0.5turn)",
     },
+    transitionProperty: "transform",
+    transitionDuration: motionVars.ui,
+    transitionTimingFunction: duration.ease,
+  },
+  list: {
+    display: "grid",
+    rowGap: space["1"],
+    minWidth: 0,
+  },
+  // One row for every source: its line, the mark, then its title and where it lives under it. The
+  // row's room hangs out past the column, so its mark starts at the paragraph's edge and the hover
+  // fill still has room round it.
+  row: {
+    display: "flex",
+    alignItems: "flex-start",
+    gap: space["3"],
+    minWidth: 0,
+    minHeight: { default: size.controlLg, [COARSE]: size.tapTarget },
+    boxSizing: "border-box",
+    margin: 0,
+    marginInline: `calc(-1 * ${space["2"]})`,
+    padding: space["2"],
+    borderWidth: 0,
+    borderRadius: `min(${radius.base}, ${space["3"]})`,
+    cornerShape: radius.shape,
+    backgroundColor: "transparent",
+    color: "inherit",
     fontFamily: "inherit",
     fontSize: "inherit",
     lineHeight: "inherit",
     letterSpacing: "inherit",
     textAlign: "start",
     textDecoration: "none",
+  },
+  // A row that opens: the whole row takes the press, filled under the pointer.
+  rowLive: {
     cursor: "pointer",
-    transitionProperty: "color",
+    backgroundColor: {
+      default: "transparent",
+      ":hover": { default: null, [HOVER]: colors.accentHighlight },
+    },
+    transitionProperty: "background-color",
     transitionDuration: duration.hover,
     transitionTimingFunction: duration.ease,
   },
-  // Locked: a picture only after the title; the words after it say the person cannot open it.
+  // The words beside the tile: the source's line, as wide as the room left.
+  words: {
+    display: "grid",
+    flexGrow: 1,
+    minWidth: 0,
+  },
+  // The title's row: where it lives takes the next one.
+  titleRow: { display: "block" },
+  title: {
+    // Its own run of words: a lock after it keeps the line's direction, so in a right-to-left
+    // page it stands at the title's left.
+    unicodeBidi: "isolate",
+    color: colors.foreground,
+    fontWeight: font.weightMedium,
+    overflowWrap: "anywhere",
+  },
+  titleQuiet: { color: colors.mutedForeground },
+  // Locked: a picture only after the title; the words under it say the person cannot open it.
   lock: {
     [iconVars.size]: size.sourcesMarkInline,
     display: "inline-flex",
+    marginInlineStart: space["2"],
     verticalAlign: "-2px",
-    marginInlineStart: `calc(${size.sourcesPileOverlap} / 2)`,
+    color: colors.mutedForeground,
+  },
+  // Where it lives, a hair under the title.
+  where: {
+    display: "block",
+    marginBlockStart: `calc(${space["1"]} / 2 - ${space["1"]})`,
+    fontSize: font.textXs,
+    lineHeight: font.textXsLine,
+    color: colors.mutedForeground,
+    overflowWrap: "anywhere",
   },
   gone: { color: colors.destructive },
   tile: {
@@ -204,13 +311,15 @@ const styles = stylex.create({
     overflow: "hidden",
     cornerShape: radius.shape,
     color: colors.bodyForeground,
+    backgroundColor: colors.card,
   },
-  // In a line: the mark alone, in the line's mark seat.
-  tileLine: {
-    width: size.iconSm,
-    height: size.iconSm,
-    borderRadius: radius.mark,
-    color: "inherit",
+  // In a row: the mark on its tile.
+  tileRow: {
+    [iconVars.size]: size.iconSm,
+    [iconVars.stroke]: size.iconStroke,
+    width: size.controlSm,
+    height: size.controlSm,
+    borderRadius: `min(${radius.base}, calc(${size.controlSm} / 3))`,
   },
   tilePile: {
     [iconVars.size]: size.sourcesMarkInline,
@@ -219,13 +328,12 @@ const styles = stylex.create({
     height: size.sourcesPileMark,
     marginInlineStart: `calc(-1 * ${size.sourcesPileOverlap})`,
     borderRadius: radius.mark,
-    backgroundColor: colors.card,
   },
   // Locked or gone: the mark stays, quieter.
   tileQuiet: { color: colors.subtleForeground, opacity: 0.72 },
 });
 
-// A SourceIcon in the trigger's pile, not a line: larger, on a tile, overlapping the one before.
+// A SourceIcon in the trigger's pile, not a row: smaller, overlapping the one before.
 const PileContext = createContext(false);
 // The access of the Source a SourceIcon is in: a locked or gone source's mark is quieter.
 const AccessContext = createContext<SourceAccess>("open");
@@ -265,17 +373,22 @@ export const SourcesTrigger = ({
     );
   }
   return (
-    <TraceCollapsibleTrigger style={style}>
-      <TraceLine>
-        <TraceTitle>
-          {children !== undefined && (
-            <span aria-hidden="true" {...stylex.props(styles.marks)}>
-              <PileContext value>{children}</PileContext>
-            </span>
-          )}
-          <span {...stylex.props(styles.count)}>{words.count(count)}</span>
-        </TraceTitle>
-      </TraceLine>
+    <TraceCollapsibleTrigger asChild>
+      <button type="button" {...stylex.props(styles.pile, focusRing, style)}>
+        <TraceLine>
+          <TraceTitle>
+            {children !== undefined && (
+              <span aria-hidden="true" {...stylex.props(styles.marks)}>
+                <PileContext value>{children}</PileContext>
+              </span>
+            )}
+            <span {...stylex.props(styles.count)}>{words.count(count)}</span>
+          </TraceTitle>
+        </TraceLine>
+        <span aria-hidden="true" {...stylex.props(styles.chevron)}>
+          <Icon icon={ChevronDownIcon} />
+        </span>
+      </button>
     </TraceCollapsibleTrigger>
   );
 };
@@ -291,7 +404,7 @@ export const SourcesContent = ({ children, style }: SourcesContentProps) => {
         data-slot="sources-content"
         {...stylex.props(styles.list)}
       >
-        <Trace>{children}</Trace>
+        {children}
       </div>
     </TraceCollapsibleContent>
   );
@@ -316,34 +429,54 @@ export const Source = ({
   const live = access === "open" && (safe !== null || onOpen !== undefined);
   let note: ReactNode = where;
   if (access === "gone") {
-    note = (
-      <span {...stylex.props(styles.gone)}>
-        {where === undefined ? words.gone : `${where}. ${words.gone}`}
-      </span>
-    );
+    note = where === undefined ? words.gone : `${where}. ${words.gone}`;
   } else if (access === "locked") {
     note = where === undefined ? words.locked : `${where} · ${words.locked}`;
   }
+  // The mark's tile beside the line: a tile is wider than a line's mark seat.
   const line = (
-    <TraceLine style={style}>
-      <TraceIcon>
-        <AccessContext value={access}>{children}</AccessContext>
-      </TraceIcon>
-      <TraceTitle>
-        <span data-slot="source-title">{title}</span>
-        {access === "locked" && (
-          <span aria-hidden="true" {...stylex.props(styles.lock)}>
-            <Icon icon={LockIcon} />
-          </span>
-        )}
-      </TraceTitle>
-      {note !== undefined && <TraceDescription>{note}</TraceDescription>}
-      {safe !== null && live && (
-        <span {...stylex.props(visuallyHidden)}> {words.newTab}</span>
-      )}
-    </TraceLine>
+    <>
+      <AccessContext value={access}>{children}</AccessContext>
+      <span {...stylex.props(styles.words)}>
+        <TraceLine>
+          <TraceTitle>
+            <span {...stylex.props(styles.titleRow)}>
+              <span
+                data-slot="source-title"
+                {...stylex.props(styles.title, !live && styles.titleQuiet)}
+              >
+                {title}
+              </span>
+              {access === "locked" && (
+                <span aria-hidden="true" {...stylex.props(styles.lock)}>
+                  <Icon icon={LockIcon} />
+                </span>
+              )}
+            </span>
+            {note !== undefined && (
+              <>
+                {/* A comma a screen reader says between title and note; the eye has the line. */}
+                <span {...stylex.props(visuallyHidden)}>, </span>
+                <span
+                  data-slot="source-where"
+                  {...stylex.props(
+                    styles.where,
+                    access === "gone" && styles.gone
+                  )}
+                >
+                  {note}
+                </span>
+              </>
+            )}
+          </TraceTitle>
+          {safe !== null && live && (
+            <span {...stylex.props(visuallyHidden)}> {words.newTab}</span>
+          )}
+        </TraceLine>
+      </span>
+    </>
   );
-  let press: ReactNode = line;
+  let press: ReactNode = <div {...stylex.props(styles.row, style)}>{line}</div>;
   if (live && safe !== null) {
     press = (
       <a
@@ -352,7 +485,7 @@ export const Source = ({
         rel="noreferrer"
         data-slot="source-link"
         onClick={onOpen}
-        {...stylex.props(styles.press, focusRing)}
+        {...stylex.props(styles.row, styles.rowLive, focusRing, style)}
       >
         {line}
       </a>
@@ -363,20 +496,20 @@ export const Source = ({
         type="button"
         data-slot="source-link"
         onClick={onOpen}
-        {...stylex.props(styles.press, focusRing)}
+        {...stylex.props(styles.row, styles.rowLive, focusRing, style)}
       >
         {line}
       </button>
     );
   }
   return (
-    <div role="listitem" data-slot="source" {...stylex.props(styles.list)}>
+    <div role="listitem" data-slot="source">
       {press}
     </div>
   );
 };
 
-/** A source's mark: in a line, the mark alone; in the trigger's pile, on a tile, overlapping. */
+/** A source's mark on its tile: in a row, or smaller and overlapping in the trigger's pile. */
 export const SourceIcon = ({ children, style }: SourceIconProps) => {
   const inPile = use(PileContext);
   const access = use(AccessContext);
@@ -386,7 +519,8 @@ export const SourceIcon = ({ children, style }: SourceIconProps) => {
       data-slot="source-icon"
       {...stylex.props(
         styles.tile,
-        inPile ? [tileEdge, styles.tilePile] : styles.tileLine,
+        tileEdge,
+        inPile ? styles.tilePile : styles.tileRow,
         access !== "open" && styles.tileQuiet,
         style
       )}

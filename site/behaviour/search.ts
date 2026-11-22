@@ -10,8 +10,8 @@
 // The input is a combobox: arrow keys choose a result (shown with a fill and a mint line, and
 // scrolled into view), Enter follows it, hovering chooses too.
 //
-// Results come in groups, each under a small heading that is not a stop: Components and Docs (the
-// pages, each with its one-sentence description), Sections (a page's headings, "Dialog · Long
+// Results come in groups, each under a small heading that is not a stop: Components, Blocks and Docs
+// (the pages, each with its one-sentence description), Sections (a page's headings, "Dialog · Long
 // body", with a sentence of its prose) and API (a part, by name). The arrow keys go in the order
 // they are drawn. A page whose title is the query, or starts with it, comes first.
 import { durations } from "@grasp-os/ui/lib/tokens.values";
@@ -26,6 +26,7 @@ interface Section {
   heading: string;
   slug: string;
   text: string;
+  block?: true;
 }
 
 let index: Section[] | null = null;
@@ -101,10 +102,11 @@ const excerpt = (text: string, words: string[]) => {
 };
 
 type Hit = Section & { excerpt: string; group: Group };
-type Group = "Components" | "Docs" | "Sections" | "API";
+type Group = "Components" | "Blocks" | "Docs" | "Sections" | "API";
 /** How many of each a search shows at most. */
 const room: Record<Group, number> = {
   Components: 5,
+  Blocks: 4,
   Docs: 4,
   Sections: 6,
   API: 4,
@@ -115,10 +117,12 @@ const groupOf = (section: Section): Group =>
     ? "API"
     : section.kind === "section"
       ? "Sections"
-      : section.route === "/components" ||
-          section.route.startsWith("/components/")
-        ? "Components"
-        : "Docs";
+      : section.block
+        ? "Blocks"
+        : section.route === "/components" ||
+            section.route.startsWith("/components/")
+          ? "Components"
+          : "Docs";
 
 /** Foundations and guidelines: the pages a single word is most often looking for. */
 const isGuide = (section: Section) =>
@@ -205,6 +209,7 @@ const rank = (sections: Section[], query: string): Hit[] => {
     ...(best("Docs") > best("Components")
       ? (["Docs", "Components"] as const)
       : (["Components", "Docs"] as const)),
+    "Blocks",
     "Sections",
     "API",
   ];

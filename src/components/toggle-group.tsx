@@ -62,6 +62,14 @@ interface ToggleGroupOwnProps {
    * @default false
    */
   disabled?: boolean;
+  /**
+   * The track takes the whole width of the box it stands in, and its items share that width: each
+   * grows from its words' width by the same amount, and where the width is short each gives some
+   * up, its words ending in an ellipsis; nothing runs past the track. Across a panel or a settings
+   * row. Side by side only: an upright group keeps its items' own widths.
+   * @default false
+   */
+  fullWidth?: boolean;
   /** Where it sits: margins and alignment. The look belongs to the group. */
   style?: LayoutStyle;
 }
@@ -125,6 +133,18 @@ const styles = stylex.create({
   vertical: {
     flexDirection: "column",
     alignItems: "stretch",
+  },
+  // Across its box (fullWidth). Its items share the width, each growing from its own words' width,
+  // so every word shows while they fit (equal parts would cut "Extra high" beside "Low"), and each
+  // giving up room, down to an ellipsis, where they do not.
+  fullWidth: { display: "flex", width: "100%" },
+  shared: { flexGrow: 1, flexShrink: 1, flexBasis: "auto", minWidth: 0 },
+  // An item's words in its share: one line, an ellipsis where they do not fit.
+  words: {
+    minWidth: 0,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
   },
   // A step shorter than the size, inside a track that leaves the same room on every side, so the
   // track itself stands at the size's height.
@@ -204,27 +224,36 @@ const sizeStyle = (size: ToggleSize) => {
 
 // The group's size, which every item in it takes.
 const GroupSize = createContext<ToggleSize>("xs");
+// Whether the items share the group's full width (fullWidth, side by side).
+const GroupShared = createContext(false);
 
 export const ToggleGroup = ({
   children,
   size = "xs",
+  fullWidth = false,
   style,
   ...rest
-}: ToggleGroupProps) => (
-  <GroupSize value={size}>
-    <ToggleGroupPrimitive
-      {...rest}
-      data-slot="toggle-group"
-      {...stylex.props(
-        styles.group,
-        rest.orientation === "vertical" && styles.vertical,
-        style
-      )}
-    >
-      {children}
-    </ToggleGroupPrimitive>
-  </GroupSize>
-);
+}: ToggleGroupProps) => {
+  const upright = rest.orientation === "vertical";
+  return (
+    <GroupSize value={size}>
+      <GroupShared value={fullWidth && !upright}>
+        <ToggleGroupPrimitive
+          {...rest}
+          data-slot="toggle-group"
+          {...stylex.props(
+            styles.group,
+            fullWidth && styles.fullWidth,
+            upright && styles.vertical,
+            style
+          )}
+        >
+          {children}
+        </ToggleGroupPrimitive>
+      </GroupShared>
+    </GroupSize>
+  );
+};
 
 /** One toggle in a ToggleGroup: pressed when the group's value lists it. */
 export const ToggleGroupItem = ({
@@ -233,6 +262,8 @@ export const ToggleGroupItem = ({
   ...rest
 }: ToggleGroupItemProps) => {
   const size = useContext(GroupSize);
+  const shared = useContext(GroupShared);
+  const icon = iconOnly(children);
   return (
     <TogglePrimitive
       {...rest}
@@ -242,7 +273,8 @@ export const ToggleGroupItem = ({
           toggleVariants({ size }),
           sizeStyle(size),
           styles.item,
-          iconOnly(children) && styles.square,
+          icon && styles.square,
+          shared && styles.shared,
           !state.disabled && !state.pressed && styles.live,
           state.pressed && styles.raised,
           state.disabled && styles.disabled,
@@ -252,7 +284,11 @@ export const ToggleGroupItem = ({
       }
     >
       <span aria-hidden="true" {...stylex.props(styles.target)} />
-      {children}
+      {shared && !icon ? (
+        <span {...stylex.props(styles.words)}>{children}</span>
+      ) : (
+        children
+      )}
     </TogglePrimitive>
   );
 };

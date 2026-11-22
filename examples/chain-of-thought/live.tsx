@@ -110,7 +110,7 @@ export default function ChainOfThoughtLive() {
         </ChainOfThoughtContent>
       </ChainOfThought>
       <Button
-        variant="secondary"
+        variant="outline"
         size="sm"
         style={layout.play}
         onClick={() => {
