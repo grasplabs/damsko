@@ -1,12 +1,6 @@
 "use client";
 
 import {
-  AttachmentContent,
-  AttachmentDescription,
-  AttachmentMedia,
-  AttachmentTitle,
-} from "@grasp-os/ui/components/attachment";
-import {
   PromptInput,
   PromptInputActionAddAttachments,
   PromptInputActionMenu,
@@ -46,25 +40,31 @@ const Uploading = ({ file }: { file: PromptInputFile }) => {
       clearTimeout(timer);
     };
   }, [progress, refused, there]);
-  if (!refused && there) {
-    return <PromptInputAttachment data={file} />;
+  if (refused) {
+    return (
+      <PromptInputAttachment
+        data={file}
+        state="error"
+        description={`Larger than ${LIMIT} bytes`}
+      />
+    );
   }
-  return (
-    <PromptInputAttachment data={file} state={refused ? "error" : "uploading"}>
-      <AttachmentMedia src={file.preview} type={file.type} />
-      <AttachmentContent>
-        <AttachmentTitle>{file.name}</AttachmentTitle>
-        <AttachmentDescription>
-          {refused ? `Larger than ${LIMIT} bytes` : `Uploading ${progress}%`}
-        </AttachmentDescription>
-      </AttachmentContent>
-    </PromptInputAttachment>
+  return there ? (
+    <PromptInputAttachment data={file} />
+  ) : (
+    <PromptInputAttachment
+      data={file}
+      state="uploading"
+      description={`Uploading ${progress}%`}
+    />
   );
 };
 
 // A product that uploads each file as it is attached shows where it is with Attachment's own
 // states: on its way (quiet, busy, how far in its line) and refused (in the destructive colour,
-// with the reason). Add a file: one under 64 bytes uploads, a larger one is refused.
+// with the reason, which is said once). Until every file is there Send stays off; a refused one
+// is taken off with its remove action. Add a file: one under 64 bytes uploads, a larger one is
+// refused.
 export default function PromptInputUploads() {
   return (
     <PromptInput onSubmit={() => undefined}>

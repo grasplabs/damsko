@@ -90,19 +90,32 @@ const componentFolder = (id: string) => {
   return match ? `component-${match[1]}` : null;
 };
 
+// Examples that draw with components nothing else on their page uses, far down it: each a chunk
+// of its own, so those components load as the example nears the viewport, not with the page's
+// first example. The Model selector's stack (Command, Popover, Toggle group, the makers' marks) and
+// the working line's (Agent indicator, Shimmer) were eight requests and 32KB of a first visit to
+// the prompt input's page.
+const examplesApart = new Set(["prompt-input/model", "prompt-input/working"]);
+
 /**
  * "examples/button/states.tsx" → "examples-button": one chunk per example folder, with what lies in
  * its subfolders (the streaming replay's `streams/*.json`). Left out, such a file went into the
  * chunk of the example that imports it, which imports the folder's chunk back: the two chunks
  * loaded in a circle and the data was still undefined when the folder's chunk read it.
+ *
+ * An example in `examplesApart` is a chunk of its own, "examples-prompt-input-model".
  */
 const exampleFolder = (id: string) => {
-  const match = /[\\/]examples[\\/]([a-z0-9-]+)[\\/].+$/u.exec(
+  const match = /[\\/]examples[\\/]([a-z0-9-]+)[\\/](.+)$/u.exec(
     id.split("?")[0] ?? ""
   );
-  return match && id.startsWith(`${root}examples/`)
-    ? `examples-${match[1]}`
-    : null;
+  if (!(match && id.startsWith(`${root}examples/`))) {
+    return null;
+  }
+  const example = `${match[1]}/${(match[2] ?? "").replace(/\.tsx$/u, "")}`;
+  return examplesApart.has(example)
+    ? `examples-${example.replace("/", "-")}`
+    : `examples-${match[1]}`;
 };
 
 /**

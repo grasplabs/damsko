@@ -96,6 +96,7 @@ import {
   useId,
   useLayoutEffect,
   useRef,
+  useReducer,
   useState,
 } from "react";
 import type {
@@ -116,6 +117,7 @@ import {
   ArrowUpIcon,
   AudioWaveformIcon,
   CheckIcon,
+  ChevronRightIcon,
   Icon,
   LoaderIcon,
   MicIcon,
@@ -142,12 +144,14 @@ import {
   announce,
   assignRef,
   isBlank,
+  isDevelopment,
   isThenable,
   listOf,
   nothing,
 } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
-import { iconVars, menuMarker } from "../lib/vars.stylex";
+import { iconVars, menuMarker, ringInsetMarker } from "../lib/vars.stylex";
+import { Alert, AlertAction, AlertTitle } from "./alert";
 import {
   Attachment,
   AttachmentAction,
@@ -159,7 +163,6 @@ import {
   AttachmentTitle,
 } from "./attachment";
 import type { AttachmentState } from "./attachment";
-import { attachmentVars } from "./attachment.stylex";
 import { Button } from "./button";
 import {
   Collapsible,
@@ -475,13 +478,21 @@ export interface PromptInputAttachmentProps {
   data: PromptInputFile;
   /**
    * Where the file is on its way, when the product uploads it as it is attached: Attachment's
-   * `state`. Say how far, or why it was refused, in an AttachmentDescription of your own.
+   * `state`. While it is `uploading`, `processing` or `error` the message cannot be sent: the
+   * file is not there yet, or never will be, and its remove action takes it off.
    * @default "done"
    */
   state?: AttachmentState;
   /**
-   * Its parts: AttachmentMedia, AttachmentContent and AttachmentActions, in place of its own.
-   * @default its picture or mark, its name and size, and a remove action
+   * The line under its name, in place of its size: how far it is ("Uploading 40%"), or why it was
+   * refused ("Larger than 20 MB"), which is said once as `state` comes to `error`.
+   * @default its size
+   */
+  description?: string;
+  /**
+   * Its parts: AttachmentMedia, AttachmentContent and AttachmentActions, in place of its own;
+   * keep a remove action among them in every state.
+   * @default its picture or mark, its name and the line under it, and a remove action
    */
   children?: ReactNode;
   /** Layout only. */
@@ -492,16 +503,23 @@ export interface PromptInputAttachmentProps {
 export interface PromptInputBannerProps {
   /** The notice, in one short line ("You have used this month's questions"). */
   children: ReactNode;
-  /** A mark before the words. */
-  icon?: IconData;
   /**
-   * The mark's colour: `default` for a plain note, `warning` or `destructive` when it stops work.
+   * The mark before the words, or `false` for none.
+   * @default the variant's
+   */
+  icon?: IconData | false;
+  /**
+   * What it means, as an Alert's: `default` a plain note, read where it stands; `warning` or
+   * `destructive` when it stops work, said at once as it appears.
    * @default "default"
    */
   variant?: "default" | "warning" | "destructive";
   /** One action at the end, such as a small Button ("See usage"). On a narrow card it stands under the words. */
   action?: ReactNode;
-  /** Shows a close button at the end, named by the I18nProvider (`alert.close`). The product takes the banner away. */
+  /**
+   * Shows a close button at the end, named by the I18nProvider (`alert.close`), and runs as it
+   * is pressed: the banner goes, and focus goes to the text.
+   */
   onClose?: () => void;
   /** Layout only. */
   style?: LayoutStyle;
@@ -595,16 +613,23 @@ export interface PromptInputMentionTrigger {
   /**
    * The items, or a loader given what was typed after the character and an AbortSignal; a newer
    * query aborts the older load. Items given as a list are filtered as the person types; loaded
-   * ones are the loader's to filter.
+   * ones are the loader's to filter. With `kinds`, the loader is also told the kind the person
+   * went into (`context.kind`, its `value`), to load only that.
    */
   items:
     | readonly PromptInputMentionData[]
     | ((
         query: string,
-        context: { signal: AbortSignal }
+        context: { signal: AbortSignal; kind?: string }
       ) =>
         | Promise<readonly PromptInputMentionData[]>
         | readonly PromptInputMentionData[]);
+  /**
+   * The kinds of thing it suggests ("People", "Files"), as a first level: while nothing is typed
+   * the menu lists these, each with its name, a quiet line and a mark, and picking one lists the
+   * items whose `group` is its `label`. Typing at the first level searches every kind at once.
+   */
+  kinds?: readonly PromptInputMentionData[];
   /**
    * Makes the token a picked item becomes.
    * @default the item's value and label, of the trigger's type
@@ -702,6 +727,11 @@ export interface PromptInputSpeechButtonProps {
    * @default 0
    */
   level?: number;
+  /**
+   * The words heard but not yet final, shown lighter after the text until the product writes
+   * them through the `controller`. Not part of the message.
+   */
+  interim?: string;
   /** Its name, in place of `promptInput.speechButton.label` ("Dictate"). */
   "aria-label"?: string;
   /**
@@ -722,8 +752,6 @@ const COARSE = media.pointerCoarse;
 // A footer too narrow to keep the count beside Submit: under 30rem. A container query cannot read
 // a variable, so the width is written here.
 const NARROW = "@container prompt-input (width < 30rem)";
-// A banner too narrow to keep its action beside its words: under 24rem.
-const SLIM = "@container (width < 24rem)";
 // Which way the working light travels: with the reading direction.
 const WAY = "--prompt-input-light-way";
 
@@ -732,6 +760,12 @@ const spin = stylex.keyframes({ to: { transform: "rotate(360deg)" } });
 const glow = stylex.keyframes({
   "0%": { opacity: 0 },
   "20%": { opacity: 1 },
+  "100%": { opacity: 0 },
+});
+// With reduced motion the halo stands still for its moment and is gone: a mark, no movement.
+const stay = stylex.keyframes({
+  "0%": { opacity: 1 },
+  "99%": { opacity: 1 },
   "100%": { opacity: 0 },
 });
 // A beam's strip slides by half its width, where its light starts over: a loop with no seam.
@@ -807,7 +841,9 @@ const styles = stylex.create({
     position: "absolute",
     top: space["1"],
     overflow: "hidden",
-    borderRadius: radius.circle,
+    // A pill, not an ellipse: the light is as strong at the card's ends as at its middle, and its
+    // glow reaches past them.
+    borderRadius: radius.full,
     transform: "translateY(-50%)",
   },
   beamWide: {
@@ -855,7 +891,8 @@ const styles = stylex.create({
     animationDelay: `calc(-1 * ${duration.promptInputBeamSlow} / 2)`,
   },
   // Success: one soft halo round the card, in the accent, gathering and fading once. With reduced
-  // motion and in forced colours there is none: the words say it is done.
+  // motion it stands still for that moment; in forced colours there is none: the words say it is
+  // done.
   halo: {
     position: "absolute",
     inset: 0,
@@ -866,9 +903,12 @@ const styles = stylex.create({
     boxShadow: shadow.promptInputHalo,
     opacity: 0,
     pointerEvents: "none",
-    animationName: { default: glow, [REDUCED]: "none" },
+    animationName: { default: glow, [REDUCED]: stay },
     animationDuration: duration.promptInputHaloTime,
-    animationTimingFunction: duration.easeInOut,
+    animationTimingFunction: {
+      default: duration.easeInOut,
+      [REDUCED]: "linear",
+    },
     animationFillMode: "forwards",
   },
   mint: { color: colors.mint },
@@ -908,7 +948,7 @@ const styles = stylex.create({
       default: "none",
       [FORCED]: {
         default: "none",
-        ":has([contenteditable=true]:focus)": `${size.ringWidth} solid Highlight`,
+        ":has([contenteditable=true]:focus)": `${size.lineStrong} solid Highlight`,
       },
     },
     transitionProperty: "box-shadow, background-color",
@@ -942,11 +982,11 @@ const styles = stylex.create({
   // drop does. Over the card itself the tint and the edge go a step stronger.
   dragging: {
     backgroundColor: `color-mix(in oklch, ${colors.mint} 8%, ${colors.card})`,
-    boxShadow: `inset 0 0 0 ${size.ringWidth} color-mix(in oklch, ${colors.mint} 60%, transparent), ${shadow.sm}`,
+    boxShadow: `inset 0 0 0 ${size.lineStrong} color-mix(in oklch, ${colors.mint} 60%, transparent), ${shadow.sm}`,
   },
   over: {
     backgroundColor: `color-mix(in oklch, ${colors.mint} 16%, ${colors.card})`,
-    boxShadow: `inset 0 0 0 ${size.ringWidth} ${colors.mint}, ${shadow.md}`,
+    boxShadow: `inset 0 0 0 ${size.lineStrong} ${colors.mint}, ${shadow.md}`,
   },
   // The card's own tint over the text and the footer, so the words stand alone; the files stay in
   // sight above it.
@@ -979,19 +1019,18 @@ const styles = stylex.create({
     marginBlockStart: `calc(-1 * ${space["3"]})`,
     marginBlockEnd: space["1"],
   },
-  // The files take the card's whole width, their row scrolling to its edges, their cards 16px from
-  // the card's top and side (the row keeps 4px of its own above and below them for a focus ring),
-  // and the text stands 12px under them: the text's own top room is for a card with no files, so
-  // the row takes it back. Above the drop words, and above the text's top room its foot lies over,
-  // so a press there is the file's.
+  // The files take the header's whole line, their cards 16px from the card's top and side (the
+  // row keeps 4px of its own round them for a focus ring), so a row with more files than room
+  // fades out 16px in from the card's edge; and the text stands 12px under them: the text's own
+  // top room is for a card with no files, so the row takes it back. Above the drop words, and
+  // above the text's top room its foot lies over, so a press there is the file's.
   attachments: {
-    [attachmentVars.inset]: space["4"],
     position: "relative",
     zIndex: 2,
-    flexBasis: `calc(100% + 2 * ${space["4"]})`,
+    flexBasis: `calc(100% + 2 * ${space["1"]})`,
     flexShrink: 0,
     minWidth: 0,
-    marginInline: `calc(-1 * ${space["4"]})`,
+    marginInline: `calc(-1 * ${space["1"]})`,
     marginBlockStart: `calc(-1 * ${space["1"]})`,
     marginBlockEnd: `calc(${space["3"]} - ${space["1"]} - ${space["4"]})`,
   },
@@ -1050,6 +1089,14 @@ const styles = stylex.create({
       content: "attr(aria-placeholder)",
       color: colors.mutedForeground,
       pointerEvents: "none",
+    },
+  },
+  // What a dictation has heard but not yet settled on: lighter, after the words, never part of
+  // them.
+  interim: {
+    "::after": {
+      content: "' ' attr(data-interim)",
+      color: colors.mutedForeground,
     },
   },
   // The resting row is one line at every width: a placeholder too long for it ends in an ellipsis.
@@ -1157,6 +1204,8 @@ const styles = stylex.create({
     cornerShape: radius.shape,
     backgroundColor: colors.muted,
     boxShadow: size.borderStrong,
+    // Forced colours drop the fill and the shadow: a real line draws the band.
+    outline: { default: "none", [FORCED]: `${size.hairline} solid CanvasText` },
   },
   note: {
     [iconVars.size]: size.iconSm,
@@ -1173,62 +1222,27 @@ const styles = stylex.create({
     overflowWrap: "anywhere",
   },
   noteFailed: { color: colors.destructive },
-  // A banner above the card: a notice that belongs to the prompt input, with one action at its
-  // end. In from the card's sides, so its side lies inside the card's rounded corner; its words
-  // still start where the card's do.
+  // A banner above the card: an Alert in from the card's sides, so its side lies inside the
+  // card's rounded corner, its foot behind the card's top so the two read as one piece.
   banner: {
-    [iconVars.size]: size.iconSm,
-    [iconVars.stroke]: size.iconStroke,
+    position: "relative",
+    zIndex: 1,
+    marginInline: space["2"],
+    marginBlockEnd: `calc(-1 * ${radius.base})`,
+  },
+  // The action, level with the words' first line beside them, as under them.
+  bannerAction: {
     display: "flex",
     flexWrap: "wrap",
     alignItems: "center",
+    alignSelf: "flex-start",
     gap: space["2"],
-    minWidth: 0,
-    marginInline: space["2"],
-    marginBlockEnd: `calc(-1 * ${radius.base})`,
-    paddingInline: `calc(${space["4"]} - ${space["2"]})`,
-    paddingBlockStart: space["3"],
-    // Room for the card's corner to sit over its foot.
-    paddingBlockEnd: `calc(${space["3"]} + ${radius.base})`,
-    borderStartStartRadius: radius.base,
-    borderStartEndRadius: radius.base,
-    cornerShape: radius.shape,
-    backgroundColor: colors.muted,
-    boxShadow: size.borderStrong,
-    color: colors.foreground,
-    containerType: "inline-size",
-    fontSize: font.textSm,
-    lineHeight: font.textSmLine,
-    fontWeight: font.weightMedium,
   },
-  // On the words' first line when they run to two.
-  bannerMark: {
-    display: "flex",
-    alignSelf: { default: "center", [SLIM]: "flex-start" },
-    marginBlockStart: {
-      default: 0,
-      [SLIM]: `calc((${font.textSmLine} - ${size.iconSm}) / 2)`,
-    },
-    color: colors.mutedForeground,
-  },
-  bannerWords: {
-    flexGrow: 1,
-    flexBasis: 0,
-    minWidth: 0,
-    overflowWrap: "anywhere",
-  },
-  // The action at the end, or on a line of its own under the words on a narrow banner.
-  bannerAction: {
-    display: "flex",
-    alignItems: "center",
-    gap: space["1"],
-    flexBasis: { default: "auto", [SLIM]: "100%" },
-    order: { default: 0, [SLIM]: 1 },
-  },
-  bannerClose: {
-    display: "flex",
-    alignSelf: { default: "center", [SLIM]: "flex-start" },
-    marginInlineEnd: `calc(-1 * ${space["1"]})`,
+  // Room at the end of the words for the part of the Alert the card lies over (less the gap the
+  // Alert keeps between its rows).
+  bannerFoot: {
+    gridColumn: "1",
+    height: `calc(${radius.base} - ${space["1"]})`,
   },
   // The queue's panel above the card: raised as the card is, its rows starting where the card's
   // words do, their actions ending where Submit ends, its foot behind the card.
@@ -1243,6 +1257,8 @@ const styles = stylex.create({
     cornerShape: radius.shape,
     backgroundColor: colors.card,
     boxShadow: shadow.sm,
+    // Forced colours drop the fill and the shadow: a real line draws the panel.
+    outline: { default: "none", [FORCED]: `${size.hairline} solid CanvasText` },
   },
   queueList: {
     display: "grid",
@@ -1374,6 +1390,13 @@ const styles = stylex.create({
     lineHeight: font.textXsLine,
     fontWeight: font.weightNormal,
   },
+  // The chevron at a kind's end, which the reading direction turns.
+  mentionInto: {
+    display: "flex",
+    marginInlineStart: "auto",
+    color: colors.mutedForeground,
+    transform: { default: null, ":dir(rtl)": "scaleX(-1)" },
+  },
   mentionEmpty: {
     paddingBlock: space["2"],
     paddingInline: space.menuItemPadding,
@@ -1396,6 +1419,18 @@ interface PromptInputContextValue {
   loading: boolean;
   /** In one row, the text has the card's whole width and the tools stand under it. */
   tall: boolean;
+  /** A send of the form's own is out: its Promise has not settled. */
+  sending: boolean;
+  /** A file is on its way or was refused: nothing is sent until it is there or taken off. */
+  held: boolean;
+  /** Holds the send for one such file (`1`), and lets it go again (`-1`). */
+  changeHolds: (by: number) => void;
+  /** What a dictation has heard but not settled on, shown lighter after the text. */
+  interim: string;
+  setInterim: (interim: string) => void;
+  /** Counts an outside part as written in the card, or as drawn by the form (development only). */
+  changeWritten: (by: number) => void;
+  changeDrawn: (by: number) => void;
   /** The id of the band under the card, which describes the text while it says a send failed. */
   noteId: string;
   /** The footer's element, where a dictation's bar is drawn, and what says it is there. */
@@ -1403,6 +1438,8 @@ interface PromptInputContextValue {
   setFooter: (footer: HTMLElement | null) => void;
   dictating: boolean;
   setDictating: (dictating: boolean) => void;
+  /** Sets what cancels the dictation that listens now: Escape anywhere in the form runs it. */
+  setCancelDictation: (cancel: (() => void) | null) => void;
   /** The text's length now, a token as its label, and the most it may be. */
   length: number;
   maxLength: number | undefined;
@@ -1421,11 +1458,35 @@ const usePromptInput = () => use(PromptInputContext);
 
 // A part that stands outside the card (a banner or the queue above it, the note under it) is
 // written among the card's parts and drawn by the form where it belongs: in the card it draws
-// nothing, and the form draws it again above or under, where this says it may.
+// nothing, and the form draws it again above or under, where this says it may. The form finds
+// these parts among its own children (through a Fragment or a list, not inside another
+// component: a portal would not draw on the server, and the parts are few), as CardHeader finds
+// its action.
 const OutsideContext = createContext(false);
 
 const isPart = (child: ReactNode, part: unknown) =>
   isValidElement(child) && child.type === part;
+
+/**
+ * Whether an outside part is drawn where it belongs (true) or only written in the card (false),
+ * and, in development, the count of each kept for the form: one written but never drawn stands
+ * inside a component of the caller's, where the form cannot find it.
+ */
+const useOutside = () => {
+  const outside = use(OutsideContext);
+  const form = use(PromptInputContext);
+  const change = outside ? form?.changeDrawn : form?.changeWritten;
+  useEffect(() => {
+    if (!isDevelopment || change === undefined) {
+      return nothing;
+    }
+    change(1);
+    return () => {
+      change(-1);
+    };
+  }, [change]);
+  return outside;
+};
 
 /** The files attached to the message, and what changes them: AI Elements' attachments. */
 interface PromptInputAttachmentsValue {
@@ -1482,6 +1543,22 @@ const settle = async (
     await send();
   } finally {
     running.current = null;
+  }
+};
+
+/** Adds `by` to a count: the reducer of a count its parts change (`change(1)`, then `change(-1)`). */
+const countBy = (now: number, by: number) => now + by;
+
+/** Says `on(true)` while `send` runs, and `on(false)` once it is done, however it ends. */
+const during = async (
+  on: (running: boolean) => void,
+  send: () => Promise<void>
+) => {
+  on(true);
+  try {
+    await send();
+  } finally {
+    on(false);
   }
 };
 
@@ -2100,12 +2177,12 @@ const ROOM = new Set([
 /**
  * The band under the card, tucked under its foot: what the assistant is doing, in the caller's
  * words, and that the last send failed, in the catalogue's (said once by the form, and taken away
- * as the person types). With neither, no band.
+ * as the person types). With neither, no band. Written straight in the PromptInput.
  */
 export const PromptInputNote = ({ children, style }: PromptInputNoteProps) => {
   const words = useI18n().promptInput;
   const failed = usePromptInput()?.failed === true;
-  if (!use(OutsideContext)) {
+  if (!useOutside()) {
     return null;
   }
   return (
@@ -2130,7 +2207,8 @@ export const PromptInputNote = ({ children, style }: PromptInputNoteProps) => {
 
 /**
  * A notice above the card that belongs to the prompt input (a limit reached, something to
- * connect first), tucked under the card's top: a mark, one short line, one action at its end.
+ * connect first), tucked under the card's top: an Alert as a banner, with one short line and one
+ * action, so it is said as an Alert is. Written straight in the PromptInput.
  */
 export const PromptInputBanner = ({
   children,
@@ -2140,50 +2218,53 @@ export const PromptInputBanner = ({
   onClose,
   style,
 }: PromptInputBannerProps) => {
-  const words = useI18n().alert;
-  if (!use(OutsideContext)) {
+  const form = usePromptInput();
+  // Whether the banner held the focus as its close button was pressed: the text takes it then.
+  const held = useRef(false);
+  const [closed, setClosed] = useState(false);
+  if (!useOutside() || closed) {
     return null;
   }
   return (
     <div
       data-slot="prompt-input-banner"
-      data-variant={variant}
-      {...stylex.props(styles.above, styles.banner, style)}
+      onClickCapture={(event) => {
+        held.current = event.currentTarget.contains(document.activeElement);
+      }}
+      {...stylex.props(styles.banner, style)}
     >
-      {icon !== undefined && (
-        <span
-          {...stylex.props(
-            styles.bannerMark,
-            variant === "warning" && styles.warning,
-            variant === "destructive" && styles.destructive
-          )}
-        >
-          <Icon icon={icon} />
-        </span>
-      )}
-      <span {...stylex.props(styles.bannerWords)}>{children}</span>
-      {!isBlank(action) && (
-        <span {...stylex.props(styles.bannerAction)}>{action}</span>
-      )}
-      {onClose !== undefined && (
-        <span {...stylex.props(styles.bannerClose)}>
-          <Button
-            variant="ghost"
-            size="icon-xs"
-            aria-label={words.close}
-            onClick={onClose}
-          >
-            <Icon icon={XIcon} />
-          </Button>
-        </span>
-      )}
+      <Alert
+        appearance="banner"
+        variant={variant}
+        icon={icon}
+        onClose={
+          onClose === undefined
+            ? undefined
+            : () => {
+                setClosed(true);
+                onClose();
+                if (held.current) {
+                  form?.controller.focus({ at: "end" });
+                }
+              }
+        }
+      >
+        <AlertTitle>{children}</AlertTitle>
+        {!isBlank(action) && (
+          <AlertAction>
+            <span {...stylex.props(styles.bannerAction)}>{action}</span>
+          </AlertAction>
+        )}
+        <span aria-hidden="true" {...stylex.props(styles.bannerFoot)} />
+      </Alert>
     </div>
   );
 };
 
 /**
  * The messages written while an answer was still coming, waiting their turn above the card: a
- * panel that folds open and shut, its foot behind the card. The product keeps the queue.
+ * panel that folds open and shut, its foot behind the card. The product keeps the queue. Written
+ * straight in the PromptInput.
  */
 export const PromptInputQueue = ({
   children,
@@ -2191,7 +2272,7 @@ export const PromptInputQueue = ({
   defaultOpen = true,
   style,
 }: PromptInputQueueProps) => {
-  if (!use(OutsideContext)) {
+  if (!useOutside()) {
     return null;
   }
   return (
@@ -2209,33 +2290,69 @@ export const PromptInputQueue = ({
   );
 };
 
-/** One waiting message: its words, and its actions at the row's end. */
+/**
+ * One waiting message: its words, and its actions at the row's end. When an action takes the
+ * row off from the keyboard, focus goes on to the next row's first action, or the one before, and
+ * after the last to the text: never to the page.
+ */
 export const PromptInputQueueItem = ({
   children,
   actions,
   style,
-}: PromptInputQueueItemProps) => (
-  <li
-    data-slot="prompt-input-queue-item"
-    {...stylex.props(styles.queueItem, style)}
-  >
-    <span {...stylex.props(styles.queueText)}>{children}</span>
-    {!isBlank(actions) && (
-      <span {...stylex.props(styles.queueActions)}>{actions}</span>
-    )}
-  </li>
-);
+}: PromptInputQueueItemProps) => {
+  const controller = usePromptInput()?.controller;
+  return (
+    // oxlint-disable-next-line jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/click-events-have-key-events -- the row hears its own actions' presses, to place the focus if one takes the row off
+    <li
+      data-slot="prompt-input-queue-item"
+      onClick={(event) => {
+        const row = event.currentTarget;
+        if (!row.contains(document.activeElement)) {
+          return;
+        }
+        const near = [row.nextElementSibling, row.previousElementSibling]
+          .map((other) => other?.querySelector<HTMLElement>("button"))
+          .find((button) => button !== null && button !== undefined);
+        // Once the press has drawn: only if it took the row off and the focus fell to the page.
+        requestAnimationFrame(() => {
+          if (row.isConnected || document.activeElement !== document.body) {
+            return;
+          }
+          if (near?.isConnected === true) {
+            near.focus();
+          } else {
+            controller?.focus({ at: "end" });
+          }
+        });
+      }}
+      {...stylex.props(styles.queueItem, style)}
+    >
+      <span {...stylex.props(styles.queueText)}>{children}</span>
+      {!isBlank(actions) && (
+        <span {...stylex.props(styles.queueActions)}>{actions}</span>
+      )}
+    </li>
+  );
+};
 
 const inOrder = (part: ReactNode, at: number) => (
   <Fragment key={at}>{part}</Fragment>
 );
+
+/** Children as one flat list, through lists and Fragments at any depth. */
+const partsOf = (children: ReactNode): ReactNode[] =>
+  listOf(children).flatMap((child) =>
+    isValidElement<{ children?: ReactNode }>(child) && child.type === Fragment
+      ? partsOf(child.props.children)
+      : [child]
+  );
 
 /**
  * The parts that stand outside the card, in the order they are written: the banners and the
  * queue above it, the notes under it.
  */
 const outsideOf = (children: ReactNode) => {
-  const parts = listOf(children);
+  const parts = partsOf(children);
   return {
     above: parts
       .filter(
@@ -2281,6 +2398,19 @@ export const PromptInput = ({
   const [editorShown, setEditorShown] = useState(true);
   const [footer, setFooter] = useState<HTMLElement | null>(null);
   const [dictating, setDictating] = useState(false);
+  const [interim, setInterim] = useState("");
+  const [going, setGoing] = useState(false);
+  // How many attached files are on their way or refused: none of them is sent.
+  const [holds, changeHolds] = useReducer(countBy, 0);
+  // What Escape does while a dictation listens: the speech button's cancel.
+  const cancelDictation = useRef<(() => void) | null>(null);
+  const setCancelDictation = (cancel: (() => void) | null) => {
+    cancelDictation.current = cancel;
+  };
+  // In development: the outside parts written in the card, and those the form found and drew.
+  const [written, changeWritten] = useReducer(countBy, 0);
+  const [drawn, changeDrawn] = useReducer(countBy, 0);
+  const warned = useRef(false);
   const failure = useFailure(status);
   const noteId = useId();
   const form = useRef<HTMLFormElement | null>(null);
@@ -2398,11 +2528,15 @@ export const PromptInput = ({
       return;
     }
     const message = controller.getValue();
-    if (still || busy || emptyOf(message)) {
+    // Nothing goes while a dictation's bar stands where Submit was, nor while a file is on its
+    // way or refused: Submit is hidden or off then, and Enter does no more than it would.
+    if (still || busy || dictating || holds > 0 || emptyOf(message)) {
       return;
     }
     await oneAtATime(running, async () => {
-      await send(message, files);
+      await during(setGoing, async () => {
+        await send(message, files);
+      });
     });
   };
 
@@ -2414,6 +2548,13 @@ export const PromptInput = ({
     // and no listener of the page's hears it and closes more.
     if (event.key === "Escape" && event.defaultPrevented) {
       event.stopPropagation();
+      return;
+    }
+    // Escape cancels a dictation, from the text as from its bar.
+    if (event.key === "Escape" && cancelDictation.current !== null) {
+      event.preventDefault();
+      event.stopPropagation();
+      cancelDictation.current();
       return;
     }
     // Cmd or Ctrl and / opens the file picker.
@@ -2441,6 +2582,14 @@ export const PromptInput = ({
   };
 
   const outside = outsideOf(children);
+  useEffect(() => {
+    if (isDevelopment && written > drawn && !warned.current) {
+      warned.current = true;
+      console.error(
+        "PromptInput: a PromptInputBanner, PromptInputQueue or PromptInputNote inside another component is not drawn. Write it straight in the PromptInput (a Fragment or a list is fine)."
+      );
+    }
+  }, [written, drawn]);
 
   return (
     // oxlint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- the form hears what happens in its controls: focus, Escape, the file keys, files pasted and dropped
@@ -2470,11 +2619,19 @@ export const PromptInput = ({
           failed: failure.shown,
           loading,
           tall,
+          sending: going,
+          held: holds > 0,
+          changeHolds,
+          interim,
+          setInterim,
+          changeWritten,
+          changeDrawn,
           noteId,
           footer,
           setFooter,
           dictating,
           setDictating,
+          setCancelDictation,
           length,
           maxLength,
           submit,
@@ -2526,6 +2683,8 @@ export const PromptInput = ({
                   aria-hidden={loading || undefined}
                   onPointerDown={onPointerDown}
                   {...stylex.props(
+                    // The rings of the controls in the card are drawn inside them.
+                    ringInsetMarker,
                     cardLook({
                       glass: variant === "glass",
                       compact,
@@ -2583,31 +2742,55 @@ export const PromptInput = ({
   );
 };
 
-/** One attached file: an Attachment whose remove action takes it off the message. */
+/**
+ * One attached file: an Attachment whose remove action takes it off the message. While the
+ * product says it is on its way or refused (`state`), the form sends nothing; a refusal is said
+ * once, with its reason.
+ */
 export const PromptInputAttachment = ({
   data,
-  state,
+  state = "done",
+  description,
   children,
   style,
 }: PromptInputAttachmentProps) => {
   const words = useI18n().attachment;
   const locale = useLocale();
   const remove = use(AttachmentsContext)?.remove;
+  const changeHolds = usePromptInput()?.changeHolds;
+  const held =
+    state === "uploading" || state === "processing" || state === "error";
+  const refused = state === "error";
+  useEffect(() => {
+    if (!held || changeHolds === undefined) {
+      return nothing;
+    }
+    changeHolds(1);
+    return () => {
+      changeHolds(-1);
+    };
+  }, [held, changeHolds]);
+  const { name } = data;
+  useEffect(() => {
+    if (refused) {
+      announce(description === undefined ? name : `${name}: ${description}`);
+    }
+  }, [refused, name, description]);
   return (
     <Attachment state={state} style={style}>
       {children ?? (
         <>
           <AttachmentMedia src={data.preview} type={data.type} />
           <AttachmentContent>
-            <AttachmentTitle>{data.name}</AttachmentTitle>
+            <AttachmentTitle>{name}</AttachmentTitle>
             <AttachmentDescription>
-              {formatFileSize(data.size, locale)}
+              {description ?? formatFileSize(data.size, locale)}
             </AttachmentDescription>
           </AttachmentContent>
           {remove !== undefined && (
             <AttachmentActions>
               <AttachmentAction
-                aria-label={words.remove(data.name)}
+                aria-label={words.remove(name)}
                 onClick={() => {
                   remove(data.id);
                 }}
@@ -2704,6 +2887,7 @@ export const PromptInputTextarea = ({
   const setShown = form?.setEditorShown;
   const controller = form?.controller;
   const compact = form?.compact === true;
+  const interim = form?.interim ?? "";
   // Here, the text stands in the body; gone, a takeover does.
   useEffect(() => {
     setShown?.(true);
@@ -2732,11 +2916,13 @@ export const PromptInputTextarea = ({
           {...props}
           data-slot="prompt-input-textarea"
           data-empty={state.empty ? "" : undefined}
+          data-interim={interim === "" ? undefined : interim}
           {...stylex.props(
             styles.editor,
             compact && styles.compactEditor,
-            state.empty && styles.placeholder,
+            state.empty && interim === "" && styles.placeholder,
             state.empty && compact && styles.compactPlaceholder,
+            interim !== "" && styles.interim,
             scrollbarHidden,
             style
           )}
@@ -2946,7 +3132,7 @@ const submitState = (
 ) => {
   const status = given ?? form?.status ?? "ready";
   const working = status === "submitted" || status === "streaming";
-  const none = form?.empty ?? true;
+  const none = (form?.empty ?? true) || (form?.held ?? false);
   return {
     status,
     working,
@@ -3001,7 +3187,10 @@ export const PromptInputSubmit = ({
         aria-label={ariaLabel ?? (stoppable ? words.stop : words.submit)}
         disabled={off}
         focusableWhenDisabled={working}
-        aria-busy={status === "submitted" ? true : undefined}
+        // Busy while the message goes, whether a press or Enter sent it.
+        aria-busy={
+          status === "submitted" || form?.sending === true ? true : undefined
+        }
         // The prompt input holds where its message is and draws it itself: the Button follows none.
         status="idle"
         onClick={press}
@@ -3106,6 +3295,7 @@ const clock = (seconds: number) =>
  * A dictation's bar, in the footer's place while it listens: Cancel, the time it has run, the
  * voice's level along a dotted line, the microphone (off for a moment, and on again), and Done
  * where Submit stood. A pointer's press leaves the focus in the text; the keyboard's goes to Done.
+ * Escape cancels it, from the bar as from the text (the form hears it).
  */
 const Dictation = ({
   compact,
@@ -3145,18 +3335,10 @@ const Dictation = ({
     }
   }, [autoFocus, done]);
   return (
-    // oxlint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- the bar hears Escape from its own buttons
     <div
       role="group"
       aria-label={words.listening}
       data-slot="prompt-input-dictation"
-      onKeyDown={(event) => {
-        if (event.key === "Escape") {
-          event.preventDefault();
-          event.stopPropagation();
-          onCancel();
-        }
-      }}
       {...stylex.props(styles.dictation, compact && styles.compactDictation)}
     >
       {toolButton({
@@ -3212,6 +3394,7 @@ export const PromptInputSpeechButton = ({
   muted,
   onMutedChange,
   level = 0,
+  interim = "",
   "aria-label": ariaLabel,
   disabled,
   style,
@@ -3228,12 +3411,20 @@ export const PromptInputSpeechButton = ({
   const footer = form?.footer ?? null;
   const setDictating = form?.setDictating;
   const dictating = form?.dictating === true;
+  const setInterim = form?.setInterim;
+  const setCancel = form?.setCancelDictation;
   useEffect(() => {
     setDictating?.(on);
     return () => {
       setDictating?.(false);
     };
   }, [on, setDictating]);
+  useEffect(() => {
+    setInterim?.(on ? interim : "");
+    return () => {
+      setInterim?.("");
+    };
+  }, [on, interim, setInterim]);
   useEffect(() => {
     // Only when the bar took the focus with it: never from where the person has gone since.
     if (!dictating && keyed && document.activeElement === document.body) {
@@ -3249,6 +3440,20 @@ export const PromptInputSpeechButton = ({
     setOwnMuted(false);
     onListeningChange?.(next);
   };
+  const cancel = () => {
+    onCancel?.();
+    listen(false);
+  };
+  // The newest cancel, while it listens in a form: what the form's Escape runs.
+  useEffect(() => {
+    if (!on || setCancel === undefined) {
+      return nothing;
+    }
+    setCancel(cancel);
+    return () => {
+      setCancel(null);
+    };
+  });
   const button = toolButton({
     "aria-label": ariaLabel ?? words.label,
     pressed: on,
@@ -3276,10 +3481,7 @@ export const PromptInputSpeechButton = ({
               setOwnMuted(next);
               onMutedChange?.(next);
             }}
-            onCancel={() => {
-              onCancel?.();
-              listen(false);
-            }}
+            onCancel={cancel}
             onDone={() => {
               listen(false);
             }}
@@ -3336,37 +3538,107 @@ const itemOf = (entry: {
     ? entry
     : { value: String(entry.value), label: entry.label };
 
-/** One trigger as UI SDK's Trigger Menu takes it: the items as its data, the token a pick inserts. */
-const definitionOf = (trigger: PromptInputMentionTrigger) => {
+/** A kind as a row of the menu: picked, the menu stays and lists the things of that kind. */
+type KindRow = PromptInputMentionData & { after: "continue"; kind: true };
+
+const isKind = (entry: unknown): entry is KindRow =>
+  isMentionData(entry) && "kind" in entry && entry.kind === true;
+
+/** Whether typing finds the item: in its name, its quiet line or its other words. */
+const found = (item: PromptInputMentionData, query: string) =>
+  [item.label, item.description ?? "", ...(item.keywords ?? [])].some((words) =>
+    words.toLowerCase().includes(query.toLowerCase())
+  );
+
+/**
+ * The items of a trigger with kinds, for what was typed: the kinds while nothing is typed at the
+ * first level; inside a kind, its things, without their heading; else every kind's, as given.
+ */
+const kindItems = async (
+  trigger: PromptInputMentionTrigger,
+  kinds: readonly PromptInputMentionData[],
+  kind: PromptInputMentionData | null,
+  query: string,
+  signal: AbortSignal
+): Promise<TriggerMenuData> => {
+  if (kind === null && query === "") {
+    return kinds.map((each): KindRow => ({
+      ...each,
+      after: "continue",
+      kind: true,
+    }));
+  }
   const { items } = trigger;
+  const all =
+    typeof items === "function"
+      ? await items(query, { signal, kind: kind?.value })
+      : items.filter((item) => found(item, query));
+  return toMenuData(
+    kind === null
+      ? all
+      : all
+          .filter((item) => item.group === kind.label)
+          .map((item) => ({ ...item, group: undefined }))
+  );
+};
+
+/** The trigger's items as the menu takes them: its data, a loader, or the levels of its kinds. */
+const itemsOf = (
+  trigger: PromptInputMentionTrigger,
+  kindNow: () => PromptInputMentionData | null
+) => {
+  const { items, kinds } = trigger;
+  if (kinds !== undefined) {
+    return async (query: string, context: { signal: AbortSignal }) =>
+      await kindItems(trigger, kinds, kindNow(), query, context.signal);
+  }
+  return typeof items === "function"
+    ? async (query: string, context: { signal: AbortSignal }) =>
+        toMenuData(await items(query, context))
+    : toMenuData(items);
+};
+
+/** The kind the person went into in an open menu, kept beside the menu: none at its first level. */
+const createLevel = () => {
+  let kind: PromptInputMentionData | null = null;
   return {
-    char: trigger.char,
-    boundary: trigger.boundary,
-    type: trigger.type,
-    items:
-      typeof items === "function"
-        ? async (query: string, context: { signal: AbortSignal }) =>
-            toMenuData(await items(query, context))
-        : toMenuData(items),
-    insert: (entry: { value: unknown; label: string }) => {
-      const item = itemOf(entry);
-      const made: MentionToken = trigger.toToken?.(item) ?? {
-        value: item.value,
-        label: item.label,
-      };
-      return {
-        type: made.type ?? trigger.type,
-        value: made.value,
-        label: made.label,
-        // What it says after its label, in the caller's words; never written into the text.
-        data: {
-          ...made.data,
-          description: trigger.description ?? trigger.type,
-        },
-      };
+    read: () => kind,
+    enter: (next: PromptInputMentionData | null) => {
+      kind = next;
     },
   };
 };
+
+/**
+ * One trigger as UI SDK's Trigger Menu takes it: the items as its data, the token a pick inserts.
+ * `kindNow` reads the kind the person went into, as the items are asked for.
+ */
+const definitionOf = (
+  trigger: PromptInputMentionTrigger,
+  kindNow: () => PromptInputMentionData | null
+) => ({
+  char: trigger.char,
+  boundary: trigger.boundary,
+  type: trigger.type,
+  items: itemsOf(trigger, kindNow),
+  insert: (entry: { value: unknown; label: string }) => {
+    const item = itemOf(entry);
+    const made: MentionToken = trigger.toToken?.(item) ?? {
+      value: item.value,
+      label: item.label,
+    };
+    return {
+      type: made.type ?? trigger.type,
+      value: made.value,
+      label: made.label,
+      // What it says after its label, in the caller's words; never written into the text.
+      data: {
+        ...made.data,
+        description: trigger.description ?? trigger.type,
+      },
+    };
+  },
+});
 
 /** How an item shows in the menu, when the caller draws it. */
 const RenderItemContext = createContext<
@@ -3418,6 +3690,29 @@ export const PromptInputMentionItem = ({
 /** One row of the menu as data gives it: the caller's drawing, else a mark, its name and a quiet line. */
 const DataItem = ({ item }: { item: PromptInputMentionData }) => {
   const renderItem = use(RenderItemContext);
+  if (isKind(item)) {
+    // A kind goes one level in: a chevron at its end says so.
+    return (
+      <PromptInputMentionItem
+        value={item.value}
+        label={item.label}
+        icon={item.icon}
+        disabled={item.disabled}
+      >
+        <span {...stylex.props(menuStyles.text, styles.mentionText)}>
+          {item.label}
+          {item.description !== undefined && (
+            <span {...stylex.props(styles.mentionDescription)}>
+              {item.description}
+            </span>
+          )}
+        </span>
+        <span aria-hidden="true" {...stylex.props(styles.mentionInto)}>
+          <Icon icon={ChevronRightIcon} />
+        </span>
+      </PromptInputMentionItem>
+    );
+  }
   return (
     <PromptInputMentionItem
       value={item.value}
@@ -3530,9 +3825,13 @@ export const PromptInputMention = ({
 }: PromptInputMentionProps) => {
   const words = useI18n().promptInput;
   const said = { error: words.mentionsError, loading: words.mentionsLoading };
+  // The kind the person went into, read as the menu asks for its items: it asks at once as a
+  // kind is picked, before a render would tell it.
+  // oxlint-disable-next-line react/hook-use-state -- made once, never set
+  const [level] = useState(createLevel);
   return (
     <TriggerMenu
-      triggers={triggers.map(definitionOf)}
+      triggers={triggers.map((trigger) => definitionOf(trigger, level.read))}
       // Silent: the status below says that items load, in the page's language.
       pendingAnnouncement=""
       // One Escape does one thing: it closes the menu, and no listener of the page's on the
@@ -3541,6 +3840,9 @@ export const PromptInputMention = ({
         open: boolean,
         details: { reason: string; event?: Event }
       ) => {
+        if (!open) {
+          level.enter(null);
+        }
         if (!open && details.reason === "escape-key") {
           details.event?.preventDefault();
           details.event?.stopImmediatePropagation();
@@ -3548,10 +3850,20 @@ export const PromptInputMention = ({
       }}
       onSelect={(
         _value: string,
-        details: { trigger: string; item: { value: unknown; label: string } }
-      ): void | Promise<void> =>
-        onSelect?.(itemOf(details.item), details.trigger)
-      }
+        details: {
+          trigger: string;
+          item: { value: unknown; label: string };
+          insert: (content: string) => void;
+        }
+      ): void | Promise<void> => {
+        // A kind is no mention: the character goes, and the menu stays with that kind's things.
+        if (isKind(details.item)) {
+          level.enter(details.item);
+          details.insert("");
+          return undefined;
+        }
+        return onSelect?.(itemOf(details.item), details.trigger);
+      }}
     >
       <TriggerMenuStatus {...stylex.props(visuallyHidden)}>
         {(state: TriggerMenuStatusState) =>

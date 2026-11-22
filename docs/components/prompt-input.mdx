@@ -34,7 +34,7 @@ While `status` is `submitted` or `streaming` a soft light travels along the card
 
 ## Success
 
-`status="success"` is a moment the product marks: one halo round the card, in the accent, said once ("Done"), and Submit as at `ready`. Set it again to play it again. With reduced motion and in forced colours there is no halo, only the words.
+`status="success"` is a moment the product marks: one halo round the card, in the accent, said once ("Done"), and Submit as at `ready`. Set it again to play it again. With reduced motion the halo stands still for that moment, with no movement; in forced colours there is none, only the words.
 
 <Stage path="prompt-input/success" label="Success" />
 
@@ -43,6 +43,8 @@ While `status` is `submitted` or `streaming` a soft light travels along the card
 `PromptInputMention` takes the characters that open a menu, each with its items or a loader and the token a pick becomes. A pick is a token in the text: it moves, deletes and copies as one piece, and is said with its kind. A loader that fails says so in the menu; an answer that comes after a newer query is set aside.
 
 The mention part is generic: it takes `triggers`, a list of characters with what each one's menu holds, so `@` for people, `/` for commands and `#` for channels are one part with one API, and it knows none of them.
+
+A trigger with `kinds` opens on a first level: the kinds of thing it suggests, each with a line of help and a chevron. Picking a kind keeps the menu open on the things of that kind (those whose `group` is the kind's `label`); typing at the first level searches every kind at once.
 
 <Stage path="prompt-input/mentions" label="Mentions and commands" />
 
@@ -54,7 +56,7 @@ The prompt input keeps the files: picked with Add files (or Cmd or Ctrl and /), 
 
 ### Files that upload as they are attached
 
-A product that uploads each file as it is attached draws it with `PromptInputAttachment` and Attachment's own `state`: `uploading` (quiet and busy, how far in its line) or `error` (in the destructive colour, with the reason).
+A product that uploads each file as it is attached draws it with `PromptInputAttachment` and Attachment's own `state`, with a `description` in place of its size: `uploading` (quiet and busy, how far in its line) or `error` (in the destructive colour, with the reason, which is said once). While a file is on its way or refused nothing is sent: Submit is off, and Enter sends nothing, until every file is there or taken off with its remove action, which each file keeps in every state.
 
 <Stage
   path="prompt-input/uploads"
@@ -99,13 +101,15 @@ Return a Promise from `onSubmit` that settles when the message is taken, and the
 
 ## A banner above the card
 
-`PromptInputBanner` is a notice that belongs to the prompt input, tucked under the card's top: a mark, one short line, one `action` at its end (under the words on a narrow card) and, with `onClose`, a close button. Use it for what stops or limits writing here: a limit reached, something to connect first, a microphone that is blocked.
+`PromptInputBanner` is a notice that belongs to the prompt input, tucked under the card's top: an [Alert](/components/alert) as a banner, with a mark, one short line, one `action` at its end (under the words on a narrow card) and, with `onClose`, a close button, which gives the focus to the text. It is said as an Alert is: a `warning` or `destructive` one at once as it appears, a `default` one where it stands. Use it for what stops or limits writing here: a limit reached, something to connect first, a microphone that is blocked.
+
+The banner, the queue and the note stand outside the card, so the PromptInput looks for them among its own children: write them straight in it (a Fragment or a list is fine), not inside a component of your own, where they are not drawn and a development build says so on the console.
 
 <Stage path="prompt-input/banner" label="A banner above the card" />
 
 ## Queued messages
 
-`PromptInputQueue` is the panel above the card, its foot behind the card, for the messages written while an answer was still coming: its `label` on a fold ("2 queued"), and a `PromptInputQueueItem` for each, with its `actions` at the row's end. The product keeps the queue and what each action does.
+`PromptInputQueue` is the panel above the card, its foot behind the card, for the messages written while an answer was still coming: its `label` on a fold ("2 queued"), and a `PromptInputQueueItem` for each, with its `actions` at the row's end. The product keeps the queue and what each action does. When an action takes its row off from the keyboard, focus goes on to the next row's first action, or the one before, and after the last row to the text.
 
 <Stage path="prompt-input/queue" label="Queued messages" />
 
@@ -117,7 +121,7 @@ With `loading` the prompt input stands still in the box it will have: the plus, 
 
 ## Dictation
 
-`PromptInputSpeechButton` starts a dictation, and while it listens the footer gives way to its bar: Cancel, the time it has run, the voice's `level` along a dotted line, the microphone (off for a moment with `muted`, when the time waits) and Done where Submit stood. Escape in the bar cancels. Started from the keyboard, focus goes to Done and comes back to the button as the bar goes; a pointer's press leaves it in the text. The product listens, with the recogniser it chooses (the browser's own, a service), writes what it hears through the PromptInput's `controller`, and takes it out again in `onCancel`; the button holds no recognition of its own.
+`PromptInputSpeechButton` starts a dictation, and while it listens the footer gives way to its bar: Cancel, the time it has run, the voice's `level` along a dotted line, the microphone (off for a moment with `muted`, when the time waits) and Done where Submit stood. Escape cancels, from the bar as from the text, and Enter sends nothing while the bar stands where Submit was. Words heard but not yet final go in `interim`: they show lighter after the text, and are no part of the message until the product writes them. Started from the keyboard, focus goes to Done and comes back to the button as the bar goes; a pointer's press leaves it in the text. The product listens, with the recogniser it chooses (the browser's own, a service), writes what it hears through the PromptInput's `controller`, and takes it out again in `onCancel`; the button holds no recognition of its own.
 
 <Stage path="prompt-input/dictation" label="Dictation" />
 
@@ -278,7 +282,8 @@ const answer: Record<ChatStatus, MessageStatus> = {
     {
       group: "Keys",
       key: "Escape",
-      value: "Closes the menu, and nothing else on the page hears it.",
+      value:
+        "Closes the menu, and nothing else on the page hears it; while a dictation listens, cancels it.",
     },
     {
       group: "Keys",
@@ -327,13 +332,33 @@ const answer: Record<ChatStatus, MessageStatus> = {
         "Said once; its line under the card describes the text until the person types",
     },
     {
+      key: "Banner",
+      value:
+        "An Alert: `alert` when it warns or stops work, `status` otherwise; closed, focus goes to the text",
+    },
+    {
+      key: "Queue",
+      value:
+        "A row taken off from the keyboard hands focus to the next row, the one before, or the text",
+    },
+    {
+      key: "Files",
+      value:
+        "A refused file's reason is said once; Submit is off while a file is on its way or refused",
+    },
+    {
+      key: "Forced colours",
+      value:
+        "The card, the band, the banner and the queue's panel each keep a real edge",
+    },
+    {
       key: "Loading",
       value: "The card is inert and hidden from a screen reader",
     },
     {
       key: "Light",
       value:
-        "Decoration only: still with reduced motion, absent in forced colours; Stop says the answer comes",
+        "Decoration only: still with reduced motion (the success halo a still mark), absent in forced colours; Stop says the answer comes",
     },
     {
       key: "Limit",

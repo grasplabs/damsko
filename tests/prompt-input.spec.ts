@@ -1,7 +1,12 @@
 import { expect, test } from "@playwright/test";
 import type { Locator, Page } from "@playwright/test";
 
-import { fixedTime, openExample, pickerFrom } from "./example.ts";
+import {
+  fixedTime,
+  listenToLiveRegions,
+  openExample,
+  pickerFrom,
+} from "./example.ts";
 
 /** One prompt input of the Send example, by its name. */
 const form = (page: Page, name: string) =>
@@ -556,6 +561,50 @@ test("started from the keyboard, focus goes to Done, and back to Dictate as the 
   await expect(speech).toBeFocused();
 });
 
+test("while it listens Enter in the text sends nothing, and Escape there cancels the dictation", async ({
+  page,
+}) => {
+  await openExample(page, "prompt-input", "dictation", { time: fixedTime });
+  const text = page.getByRole("textbox", { name: "Message" });
+  await page.getByRole("button", { name: "Dictate" }).click();
+  const bar = page.getByRole("group", { name: "Listening" });
+  await page.clock.runFor(1100);
+  await expect(text).toContainText("Before Monday: send");
+  await text.focus();
+  await page.keyboard.press("Enter");
+  // Nothing went: the words are still there, and so is the bar.
+  await expect(text).toContainText("Before Monday: send");
+  await expect(bar).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(bar).toHaveCount(0);
+  await expect(text).toHaveText("Before Monday:");
+  await expect(text).toBeFocused();
+});
+
+test("a word heard but not yet final shows lighter after the text, and is no part of it", async ({
+  page,
+}) => {
+  await openExample(page, "prompt-input", "dictation", { time: fixedTime });
+  const text = page.getByRole("textbox", { name: "Message" });
+  await page.getByRole("button", { name: "Dictate" }).click();
+  await expect(page.getByRole("group", { name: "Listening" })).toBeVisible();
+  const look = async () =>
+    await text.evaluate((element) => {
+      const after = getComputedStyle(element, "::after");
+      return {
+        words: after.content,
+        lighter: after.color !== getComputedStyle(element).color,
+      };
+    });
+  await expect
+    .poll(look)
+    .toEqual({ words: '" " attr(data-interim)', lighter: true });
+  await expect(text).toHaveAttribute("data-interim", "send");
+  await expect(text).toHaveText("Before Monday:");
+  await page.getByRole("button", { name: "Done" }).click();
+  await expect(text).not.toHaveAttribute("data-interim");
+});
+
 test("out of use, nothing can be typed or pressed", async ({ page }) => {
   await openExample(page, "prompt-input", "disabled");
   const text = page.getByRole("textbox", { name: "Message" });
@@ -860,6 +909,40 @@ test("a banner stands above the card with its action, and its close button takes
   ).toHaveCount(0);
 });
 
+test("a banner that stops work is an alert, and closed from the keyboard it hands focus to the text", async ({
+  page,
+}) => {
+  await openExample(page, "prompt-input", "banner");
+  const second = page.getByRole("form", { name: "Message, no microphone" });
+  await expect(
+    second.getByRole("alert").filter({ hasText: "The microphone is blocked" })
+  ).toBeVisible();
+  await second.getByRole("button", { name: "Dismiss" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(second.getByRole("alert")).toHaveCount(0);
+  await expect(
+    second.getByRole("textbox", { name: "Message, no microphone" })
+  ).toBeFocused();
+});
+
+test("a queued message taken off from the keyboard hands focus to the next row, and the last to the text", async ({
+  page,
+}) => {
+  await openExample(page, "prompt-input", "queue");
+  const first = "Also compare it with last year's numbers";
+  const second = "And say which region moved most";
+  await page.getByRole("button", { name: `Remove: ${first}` }).focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByText("1 queued")).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: `Edit: ${second}` })
+  ).toBeFocused();
+  await page.getByRole("button", { name: `Remove: ${second}` }).focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByText(/queued/u)).toHaveCount(0);
+  await expect(page.getByRole("textbox", { name: "Message" })).toBeFocused();
+});
+
 test("queued messages wait above the card: one is put back to edit, one taken off", async ({
   page,
 }) => {
@@ -909,15 +992,18 @@ test("while the page loads the card stands still in the same box, and nothing in
   expect(await boxes()).toEqual(still);
 });
 
-test("a file the product uploads says how far it is, and a refused one says why", async ({
+test("a file the product uploads says how far it is; a refused one says why, is said, holds Send and can be taken off", async ({
   page,
 }) => {
+  const said = await listenToLiveRegions(page);
   await openExample(page, "prompt-input", "uploads", { time: fixedTime });
   const files = page.getByRole("list", { name: "Files to send" });
+  const text = page.getByRole("textbox", { name: "Message" });
+  const send = page.getByRole("button", { name: "Send" });
   await page.getByRole("button", { name: "Add to message" }).click();
-  const chooser = page.waitForEvent("filechooser");
-  await page.getByRole("menuitem", { name: "Add files" }).click();
-  const picker = await chooser;
+  const picker = await pickerFrom(page, async () => {
+    await page.getByRole("menuitem", { name: "Add files" }).click();
+  });
   await picker.setFiles([
     {
       name: "brief.pdf",
@@ -932,9 +1018,65 @@ test("a file the product uploads says how far it is, and a refused one says why"
   ]);
   await expect(files.getByText("Uploading 0%")).toBeVisible();
   await expect(files.getByText("Larger than 64 bytes")).toBeVisible();
+  await expect.poll(said).toContain("archive.zip: Larger than 64 bytes");
+  // Both can be taken off, whatever their state; with words written, nothing is sent yet.
+  await expect(
+    files.getByRole("button", { name: "Remove brief.pdf" })
+  ).toBeAttached();
+  await text.click();
+  await page.keyboard.type("Read these");
+  await expect(send).toBeDisabled();
   await page.clock.runFor(3000);
   await expect(files.getByText(/Uploading/u)).toHaveCount(0);
   await expect(files.getByText("brief.pdf")).toBeVisible();
+  // The refused file still holds the message, until it is taken off.
+  await expect(send).toBeDisabled();
+  await page.keyboard.press("Enter");
+  await expect(text).toHaveText("Read these");
+  await files.getByRole("button", { name: "Remove archive.zip" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(files.getByText("archive.zip")).toHaveCount(0);
+  await expect(send).toBeEnabled();
+});
+
+test("Send is busy while the message goes, sent with Enter as with a press", async ({
+  page,
+}) => {
+  await openExample(page, "prompt-input", "failed");
+  const text = page.getByRole("textbox", { name: "Message" });
+  const send = page.getByRole("button", { name: "Send" });
+  await text.click();
+  await page.keyboard.press("Enter");
+  await expect(send).toHaveAttribute("aria-busy", "true");
+  await expect(send).not.toHaveAttribute("aria-busy");
+});
+
+test("@ opens on the kinds; a kind keeps the menu open on its things, and typing searches every kind", async ({
+  page,
+}) => {
+  await openExample(page, "prompt-input", "mentions");
+  const text = page.getByRole("textbox", { name: "Message" });
+  await text.click();
+  await page.keyboard.type("@");
+  await expect(page.getByRole("option")).toHaveText([/People/u, /Files/u]);
+  await page.keyboard.press("Enter");
+  // Inside People: its three, no file, and no mention in the text yet.
+  await expect(page.getByRole("option")).toHaveText([
+    /Amara Okafor/u,
+    /Tomas Varga/u,
+    /Lin Hayashi/u,
+  ]);
+  await page.keyboard.type("li");
+  await expect(page.getByRole("option")).toHaveText([/Lin Hayashi/u]);
+  await page.keyboard.press("Enter");
+  await expect(text).toContainText("Lin Hayashi");
+  await expect(page.getByRole("option")).toHaveCount(0);
+  // Typed at the first level, the words search people and files at once.
+  await page.keyboard.type("@b");
+  await expect(page.getByRole("option", { name: /brief\.pdf/u })).toBeVisible();
+  await expect(
+    page.getByRole("option", { name: /budget-2027\.xlsx/u })
+  ).toBeVisible();
 });
 
 test("at the limit the count is ink, not the destructive colour, and on a narrow card it stands above Send", async ({

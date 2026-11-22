@@ -21,8 +21,8 @@ const heard = ["send", "the", "numbers", "to", "the", "board"];
 
 // Dictation: the product listens and writes what it hears through the controller; the prompt
 // input shows the bar while it does: Cancel, the time, the voice's level, the microphone and
-// Done. The words here are pretend, one a second, and so is the level. Cancel takes out what was
-// heard; Done keeps it.
+// Done. The words here are pretend, one a second, and so is the level; the word being heard shows
+// lighter after the text until it is written. Cancel takes out what was heard; Done keeps it.
 export default function PromptInputDictation() {
   const [controller] = useState(createTokenInputController);
   const [listening, setListening] = useState(false);
@@ -78,6 +78,7 @@ export default function PromptInputDictation() {
             muted={muted}
             onMutedChange={setMuted}
             level={hearing ? 0.4 + 0.2 * (words % 3) : 0}
+            interim={hearing ? heard[words] : undefined}
           />
         </PromptInputTools>
         <PromptInputSubmit />

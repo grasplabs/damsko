@@ -79,7 +79,6 @@ import {
 import { safeMediaSrc } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { iconVars, ringInsetMarker } from "../lib/vars.stylex";
-import { attachmentVars } from "./attachment.stylex";
 
 /** Where the file is on its way: `done` once it is there. */
 export type AttachmentState =
@@ -232,6 +231,7 @@ export interface AttachmentTriggerProps extends Omit<
 }
 
 const HOVER = media.hover;
+const FORCED = media.forcedColors;
 
 const styles = stylex.create({
   group: {
@@ -239,10 +239,8 @@ const styles = stylex.create({
     gap: space["2"],
     minWidth: 0,
     margin: 0,
-    // Room for a card's edge and focus ring inside the sideways scroll; more at the sides where
-    // the part round it says so (attachment.stylex.ts).
-    paddingBlock: space["1"],
-    paddingInline: attachmentVars.inset,
+    // Room for a card's edge and focus ring inside the sideways scroll.
+    padding: space["1"],
     listStyle: "none",
     overflowX: "auto",
     overflowY: "hidden",
@@ -429,7 +427,11 @@ const styles = stylex.create({
     height: sizes.badgeHeight,
     margin: 0,
     padding: 0,
-    borderWidth: 0,
+    // No edge: the fill under a pointer is its bound. Forced colours drop fills, so a real edge
+    // draws it there, as a Button's does.
+    borderWidth: { default: 0, [FORCED]: sizes.hairline },
+    borderStyle: "solid",
+    borderColor: "ButtonText",
     borderRadius: radius.circle,
     backgroundColor: {
       default: "transparent",

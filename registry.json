@@ -156,11 +156,6 @@
       "docs": "https://damsko.joingrasp.com/components/attachment",
       "files": [
         {
-          "path": "src/components/attachment.stylex.ts",
-          "type": "registry:file",
-          "target": "~/src/components/attachment.stylex.ts"
-        },
-        {
           "path": "src/components/attachment.tsx",
           "type": "registry:file",
           "target": "~/src/components/attachment.tsx"
@@ -1906,6 +1901,7 @@
         "@ui-sdk/react"
       ],
       "registryDependencies": [
+        "@damsko/alert",
         "@damsko/attachment",
         "@damsko/button",
         "@damsko/collapsible",

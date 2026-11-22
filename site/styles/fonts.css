@@ -1,6 +1,10 @@
 /* Geist, Geist Serif and Geist Mono, self-hosted from public/fonts (copied from the website, geist 1.9.1).
    Each family is split as the website splits it: a small file with the common characters, the
-   full file for the rest, chosen by unicode-range so a page loads only what it shows. */
+   full file for the rest, chosen by unicode-range so a page loads only what it shows. The rest
+   leaves out what draws nothing: the control characters, the soft hyphen, the zero-width space
+   and joiners, the direction marks and isolates, the byte order mark. A text editor puts a
+   zero-width space beside a token and a shortcut's keys stand in a direction isolate, and each
+   made the page fetch the whole file (29KB) for a character with no shape. */
 @font-face {
   font-family: "Geist";
   font-style: normal;
@@ -18,10 +22,10 @@
   font-display: swap;
   src: url("/fonts/geist-latin.woff2") format("woff2");
   unicode-range:
-    U+0-1f, U+7f-9f, U+a1-a6, U+a8, U+aa-b6, U+b8-ff, U+131, U+152-153,
-    U+2bb-2bc, U+2c6, U+2da, U+2dc, U+304, U+308, U+329, U+2000-2012,
-    U+2015-2017, U+201a-201b, U+201e-2021, U+2023-2025, U+2027-206f, U+2122,
-    U+2215, U+feff, U+fffd;
+    U+a1-a6, U+a8, U+aa-ac, U+ae-b6, U+b8-ff, U+131, U+152-153, U+2bb-2bc,
+    U+2c6, U+2da, U+2dc, U+304, U+308, U+329, U+2000-200a, U+2010-2012,
+    U+2015-2017, U+201a-201b, U+201e-2021, U+2023-2025, U+2027, U+202f-205f,
+    U+2122, U+2215, U+fffd;
 }
 @font-face {
   font-family: "Geist Serif";
@@ -40,10 +44,10 @@
   font-display: swap;
   src: url("/fonts/geist-serif.woff2") format("woff2");
   unicode-range:
-    U+0-1f, U+7f-9f, U+a1-a6, U+a8, U+aa-b6, U+b8-ff, U+131, U+152-153,
-    U+2bb-2bc, U+2c6, U+2da, U+2dc, U+304, U+308, U+329, U+2000-2012,
-    U+2015-2017, U+201a-201b, U+201e-2021, U+2023-2025, U+2027-206f, U+2122,
-    U+2215, U+feff, U+fffd;
+    U+a1-a6, U+a8, U+aa-ac, U+ae-b6, U+b8-ff, U+131, U+152-153, U+2bb-2bc,
+    U+2c6, U+2da, U+2dc, U+304, U+308, U+329, U+2000-200a, U+2010-2012,
+    U+2015-2017, U+201a-201b, U+201e-2021, U+2023-2025, U+2027, U+202f-205f,
+    U+2122, U+2215, U+fffd;
 }
 /* Geist Mono, from the same Geist release, cut down to weights 400 to 500 and split the same way:
    the common characters, then the rest of Latin. */

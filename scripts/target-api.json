@@ -554,8 +554,7 @@
       "AttachmentActionsProps",
       "AttachmentActionProps",
       "AttachmentTriggerProps"
-    ],
-    "src/components/attachment.stylex.ts": null
+    ]
   },
   "audio-player": {
     "src/components/audio-player.tsx": [
