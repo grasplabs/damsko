@@ -2302,6 +2302,7 @@
         "@stylexjs/stylex"
       ],
       "registryDependencies": [
+        "@damsko/button",
         "@damsko/copy-button",
         "@damsko/hooks",
         "@damsko/lib"
