@@ -48,7 +48,7 @@ export default function AudioPlayerMoment() {
       <div {...stylex.props(styles.row)}>
         <Button
           size="sm"
-          variant="secondary"
+          variant="outline"
           onClick={() => {
             player.current?.seek(10);
           }}
@@ -57,7 +57,7 @@ export default function AudioPlayerMoment() {
         </Button>
         <Button
           size="sm"
-          variant="secondary"
+          variant="outline"
           onClick={() => {
             player.current?.pause();
           }}

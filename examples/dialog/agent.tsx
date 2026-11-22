@@ -69,7 +69,7 @@ const Task = ({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="secondary">{trigger}</Button>
+        <Button variant="outline">{trigger}</Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

@@ -34,7 +34,7 @@ export default function ShimmerSettled() {
       </Shimmer>
       <Button
         size="sm"
-        variant="secondary"
+        variant="outline"
         onClick={() => {
           setAt((now) => (now + 1) % (steps.length + 1));
         }}

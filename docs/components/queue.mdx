@@ -22,7 +22,7 @@ A short note is a `QueueItemDescription` after the words. A longer one opens und
 
 ## Messages sent ahead
 
-`QueueItemActions` stand at the end of the item's line; each `QueueItemAction` is a small quiet button named by its `aria-label`. The product keeps the queue: here Send now and Remove take a message out of it. `QueueItemAttachment` holds the files a message carries, in a row under its words: `QueueItemImage` as a small preview, `QueueItemFile` by its name. An image's address comes from a model or a person, so it loads only from http, https, a path on this site, a picture written into the address (`data:image/png;base64,…`) or one the page made (`blob:`); any other is not drawn.
+`QueueItemActions` stand at the end of the item's line; each `QueueItemAction` is a small ghost button named by its `aria-label`. The product keeps the queue: here Send now and Remove take a message out of it. `QueueItemAttachment` holds the files a message carries, in a row under its words: `QueueItemImage` as a small preview, `QueueItemFile` by its name. An image's address comes from a model or a person, so it loads only from http, https, a path on this site, a picture written into the address (`data:image/png;base64,…`) or one the page made (`blob:`); any other is not drawn.
 
 <Stage path="queue/messages" label="Messages sent ahead" />
 

@@ -233,16 +233,22 @@
   --damsko-primary-disabled: light-dark(oklch(0.3231 0.0584 168.334 / 0.5), oklch(0.96 0.02 150 / 0.1));
   /* Words and icons on action-fill-disabled: half strength on paper, muted at night (still 3:1 on the ground). */
   --damsko-primary-foreground-disabled: light-dark(oklch(0.99 0.004 160 / 0.5), var(--damsko-muted-foreground));
-  /* The second action's fill: white on a light ground, a veil of white on a dark one. */
+  /* The quiet fill of an outline Button and a field: white on a light ground, a veil of white on a dark one. */
   --damsko-secondary: light-dark(oklch(1 0 none), oklch(0.96 0.02 150 / 0.08));
-  /* quiet-fill under a pointer: one step down to soft. */
+  /* The quiet fill under a pointer: one step down to soft. */
   --damsko-secondary-hover: light-dark(var(--damsko-muted), oklch(0.96 0.02 150 / 0.12));
-  /* quiet-fill while pressed: one step past hover. */
+  /* The quiet fill while pressed: one step past hover. */
   --damsko-secondary-active: light-dark(oklch(0.95 0.007 160), oklch(0.96 0.02 150 / 0.16));
   /* The fill a ghost control gains under a pointer. */
   --damsko-accent: light-dark(oklch(0.29 0.05 162 / 0.06), oklch(0.96 0.02 150 / 0.08));
   /* A ghost control's fill while pressed. */
   --damsko-accent-active: light-dark(oklch(0.29 0.05 162 / 0.1), oklch(0.96 0.02 150 / 0.14));
+  /* A secondary Button's flat fill: a veil of ink with no edge and no lift, so it reads on the page, a card and a soft band alike, a step quieter than an outline Button and a step firmer than a ghost one. */
+  --damsko-button-secondary: var(--damsko-accent-active);
+  /* button-secondary under a pointer: the veil one step deeper. */
+  --damsko-button-secondary-hover: var(--damsko-toggle-bg-pressed);
+  /* button-secondary while pressed: one step past hover. */
+  --damsko-button-secondary-active: var(--damsko-toggle-bg-pressed-hover);
   /* The fill of an action that deletes or cannot be undone, on any ground. */
   --damsko-destructive-fill: oklch(0.52 0.175 28);
   /* Words and icons on danger-fill. */

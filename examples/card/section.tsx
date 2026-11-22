@@ -45,7 +45,7 @@ export default function CardSection() {
             <CardAction>
               <Button
                 size="sm"
-                variant="secondary"
+                variant="outline"
                 onClick={exporting}
                 successLabel="Exported"
                 errorLabel="Not exported"

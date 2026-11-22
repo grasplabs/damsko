@@ -40,7 +40,7 @@ export default function DrawerBasic() {
       }}
     >
       <DrawerTrigger asChild>
-        <Button variant="secondary">Remind me tomorrow</Button>
+        <Button variant="outline">Remind me tomorrow</Button>
       </DrawerTrigger>
       <DrawerContent>
         <DrawerHeader>

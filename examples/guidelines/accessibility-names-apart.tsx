@@ -24,11 +24,11 @@ export default function AccessibilityNamesApart() {
       <Pair>
         <Write why="each says which">
           <div {...stylex.props(styles.row)}>
-            <Button variant="secondary" size="sm">
+            <Button variant="outline" size="sm">
               <Icon icon={TrashIcon} />
               Delete Q3 report
             </Button>
-            <Button variant="secondary" size="sm">
+            <Button variant="outline" size="sm">
               <Icon icon={TrashIcon} />
               Delete Q4 report
             </Button>
@@ -36,11 +36,11 @@ export default function AccessibilityNamesApart() {
         </Write>
         <Not why="two of one name">
           <div {...stylex.props(styles.row)}>
-            <Button variant="secondary" size="sm">
+            <Button variant="outline" size="sm">
               <Icon icon={TrashIcon} />
               Delete
             </Button>
-            <Button variant="secondary" size="sm">
+            <Button variant="outline" size="sm">
               <Icon icon={TrashIcon} />
               Delete
             </Button>

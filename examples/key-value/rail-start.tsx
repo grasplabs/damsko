@@ -83,7 +83,7 @@ export default function KeyValueRailStart() {
       />
       <Button
         size="sm"
-        variant="secondary"
+        variant="outline"
         style={layout.again}
         onClick={() => {
           setPending(true);

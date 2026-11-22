@@ -68,7 +68,7 @@ export default function QueueLive() {
         </QueueSection>
       </Queue>
       <Button
-        variant="secondary"
+        variant="outline"
         size="sm"
         onClick={() => {
           setCurrent((was) => (was >= todos.length ? 0 : was + 1));

@@ -377,7 +377,7 @@ export const Screen = () => (
 );
 
 export const ComponentsPickup = () => (
-  <Button variant="secondary" size="sm" asChild>
+  <Button variant="outline" size="sm" asChild>
     <a href={productWords.componentsHref}>
       {productWords.components}
       <Icon icon={ArrowRightIcon} />

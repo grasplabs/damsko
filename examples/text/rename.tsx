@@ -34,7 +34,7 @@ export default function TextRename() {
       </div>
       <Button
         size="sm"
-        variant="secondary"
+        variant="outline"
         onClick={() => {
           setName("Quarterly planning for the third quarter");
         }}

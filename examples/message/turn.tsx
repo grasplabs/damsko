@@ -123,7 +123,7 @@ export default function MessageTurn() {
         </MessageScrollerProvider>
       </div>
       <Button
-        variant="secondary"
+        variant="outline"
         size="sm"
         disabled={asked}
         onClick={() => {

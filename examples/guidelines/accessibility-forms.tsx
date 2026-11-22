@@ -83,7 +83,7 @@ export default function AccessibilityForms() {
             Enter an email address, such as finance@northwind.example.
           </FieldError>
         </Field>
-        <Button type="submit" variant="secondary">
+        <Button type="submit" variant="outline">
           Save email
         </Button>
       </form>

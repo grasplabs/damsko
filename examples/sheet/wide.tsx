@@ -57,7 +57,7 @@ export default function SheetWide() {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="secondary">Open the summary</Button>
+        <Button variant="outline">Open the summary</Button>
       </SheetTrigger>
       <SheetContent size="lg">
         <SheetHeader>

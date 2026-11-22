@@ -28,15 +28,15 @@ export default function PageHeaderActionsKinds() {
             <Icon icon={TrashIcon} />
             Delete
           </Button>
-          <Button variant="secondary" disabled focusableWhenDisabled>
+          <Button variant="outline" disabled focusableWhenDisabled>
             <Spinner />
             Export
           </Button>
-          <Button variant="secondary" disabled>
+          <Button variant="outline" disabled>
             <Icon icon={ArchiveIcon} />
             Archive
           </Button>
-          <Button variant="secondary" asChild>
+          <Button variant="outline" asChild>
             <a href="#report">
               <Icon icon={LinkIcon} />
               Open report

@@ -652,7 +652,7 @@ const NewChat = () => (
       </EmptyDescription>
     </EmptyHeader>
     <EmptyContent>
-      <Button variant="secondary" size="sm" asChild>
+      <Button variant="outline" size="sm" asChild>
         <a href="#new-chat">Start a new chat</a>
       </Button>
     </EmptyContent>

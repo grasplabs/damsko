@@ -28,7 +28,7 @@ export default function TextWrap() {
           <Text size="sm" wrap={wrap} truncate={truncate} style={layout.words}>
             {address}
           </Text>
-          <Button size="sm" variant="secondary">
+          <Button size="sm" variant="outline">
             Remove
           </Button>
         </div>

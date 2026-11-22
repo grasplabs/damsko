@@ -52,7 +52,7 @@ export default function AttachmentBasic() {
   if (files.length === 0) {
     return (
       <Button
-        variant="secondary"
+        variant="outline"
         size="sm"
         onClick={() => {
           setFiles(waiting);

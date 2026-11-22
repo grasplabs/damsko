@@ -34,7 +34,7 @@ export default function WritingProgress() {
             Save changes
           </Button>
           <Button
-            variant="secondary"
+            variant="outline"
             onClick={invite}
             loadingLabel="Sending"
             successLabel="Sent"
@@ -57,7 +57,7 @@ export default function WritingProgress() {
             Save changes
           </Button>
           <Button
-            variant="secondary"
+            variant="outline"
             onClick={blank}
             loadingLabel="Please wait"
             successLabel="Success"

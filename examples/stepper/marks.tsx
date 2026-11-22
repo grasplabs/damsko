@@ -69,7 +69,7 @@ export default function StepperMarks() {
           <Button
             size="sm"
             focusableWhenDisabled
-            variant="secondary"
+            variant="outline"
             disabled={at === 0}
             onClick={() => {
               go(Math.max(0, at - 1));
@@ -80,7 +80,7 @@ export default function StepperMarks() {
           <Button
             size="sm"
             focusableWhenDisabled
-            variant="secondary"
+            variant="outline"
             disabled={at >= steps.length}
             onClick={() => {
               go(Math.min(steps.length, at + 1));

@@ -26,7 +26,7 @@ export default function SheetLongBody() {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="secondary">History</Button>
+        <Button variant="outline">History</Button>
       </SheetTrigger>
       <SheetContent>
         <SheetHeader>

@@ -14,7 +14,7 @@ export default function SectionHeaderActions() {
       title="Usage across every workspace this month"
       description="Seats and storage, counted each night."
       actions={
-        <Button size="sm" variant="secondary">
+        <Button size="sm" variant="outline">
           Export
         </Button>
       }

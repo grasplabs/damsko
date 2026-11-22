@@ -484,7 +484,7 @@ const useOneRegion = (queue: object, where: string) => {
 };
 
 /**
- * A toast's action, as UI SDK's ToastAction hands it: a small secondary Button that shows its work
+ * A toast's action, as UI SDK's ToastAction hands it: a small outline Button that shows its work
  * while the action's Promise runs, and says `errorLabel` once it failed, once to a screen reader
  * through the page's live region. The toast stays then.
  */
@@ -508,7 +508,7 @@ const ActionButton = ({
     said.current = failed;
   }, [failed, errorLabel]);
   return (
-    <Button {...props} variant="secondary" size="sm">
+    <Button {...props} variant="outline" size="sm">
       {state.pending && <Spinner />}
       {failed && !state.pending ? errorLabel : label}
     </Button>
