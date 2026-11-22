@@ -109,3 +109,19 @@ test("when the sources shrink under the open card, it stands on the last one lef
   await expect(carousel.getByText("2/2")).toBeVisible();
   await expect(page.getByText("A weekly rhythm")).toBeInViewport();
 });
+
+test("a line that holds a chip stands as far from its neighbours as any other", async ({
+  page,
+}) => {
+  await openExample(page, "inline-citation", "basic");
+  const paragraph = page.getByText("Wrap a slow part of the page", {
+    exact: false,
+  });
+  // Lines that a chip made taller would leave the paragraph off a whole number of lines.
+  const { height, line } = await paragraph.evaluate((element) => ({
+    height: element.getBoundingClientRect().height,
+    line: Number(getComputedStyle(element).lineHeight.replace("px", "")),
+  }));
+  expect(height).toBeGreaterThan(line);
+  expect(Math.abs(height - Math.round(height / line) * line)).toBeLessThan(1);
+});

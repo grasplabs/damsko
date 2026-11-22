@@ -218,6 +218,12 @@ const RING = `calc(${size.ringOffsetText} - 1px + ${size.ringWidth})`;
 
 const styles = stylex.create({
   citation: { display: "inline" },
+  // The chip stands in a line of words: it gives back what it is taller than its own words' line,
+  // so a line that holds one stands as far from its neighbours as any other.
+  chip: {
+    display: "inline-flex",
+    marginBlock: `calc((1lh - ${size.controlXs}) / 2)`,
+  },
   // Lit while the pointer is on the citation, or focus is on its chip.
   text: {
     borderRadius: size.hairline,
@@ -323,14 +329,16 @@ export const InlineCitationCardTrigger = ({
   const words = useI18n().inlineCitation;
   const first = citedSource(sources[0]);
   return (
-    <HoverCardTrigger variant="default" asChild>
-      <Button variant="secondary" size="xs" style={style}>
-        {words.trigger(
-          first?.host ?? words.unknown,
-          Math.max(0, sources.length - 1)
-        )}
-      </Button>
-    </HoverCardTrigger>
+    <span {...stylex.props(styles.chip, style)}>
+      <HoverCardTrigger variant="default" asChild>
+        <Button variant="secondary" size="xs">
+          {words.trigger(
+            first?.host ?? words.unknown,
+            Math.max(0, sources.length - 1)
+          )}
+        </Button>
+      </HoverCardTrigger>
+    </span>
   );
 };
 

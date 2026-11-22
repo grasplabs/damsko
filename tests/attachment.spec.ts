@@ -218,3 +218,25 @@ test("when the last file goes and the list with it, focus goes to what stands in
     page.getByRole("button", { name: "Put the files back" })
   ).toBeFocused();
 });
+
+test("a row with more files than it shows fades at its end, never in forced colours, and one file alone neither fades nor scrolls", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await openExample(page, "attachment", "basic");
+  const files = page.getByRole("list", { name: "Files to send" });
+  const mask = async () =>
+    await files.evaluate((element) => getComputedStyle(element).maskImage);
+  await expect.poll(mask).toContain("linear-gradient");
+  await page.emulateMedia({ forcedColors: "active" });
+  await expect.poll(mask).toBe("none");
+  await page.emulateMedia({ forcedColors: "none" });
+  await files.getByRole("button").last().click();
+  await expect(files.getByRole("listitem")).toHaveCount(1);
+  await expect.poll(mask).toBe("none");
+  expect(
+    await files.evaluate(
+      (element) => element.scrollWidth <= element.clientWidth
+    )
+  ).toBe(true);
+});

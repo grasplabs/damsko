@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { hasFocusRing, openExample } from "./example.ts";
+import { drawnEdges, hasFocusRing, openExample, panelOf } from "./example.ts";
 
 test("its line names the run and opens on the tool calls and what it found", async ({
   page,
@@ -64,4 +64,19 @@ test("details: the model and the time in its name, the task, a tool call's outpu
   await expect(call).toHaveAttribute("aria-expanded", "false");
   await call.click();
   await expect(page.getByText("1240", { exact: true })).toBeVisible();
+});
+
+test("what opens under the line starts on the line's own start edge, its mark's", async ({
+  page,
+}) => {
+  await openExample(page, "subagent", "basic");
+  const line = page.getByRole("button", { name: "Ran the research agent" });
+  if ((await line.getAttribute("aria-expanded")) === "false") {
+    await line.press("Enter");
+  }
+  const panel = await panelOf(line);
+  await expect(panel).toBeVisible();
+  const header = await drawnEdges(line);
+  const body = await drawnEdges(panel);
+  expect(Math.abs(body.start - header.start)).toBeLessThanOrEqual(1);
 });

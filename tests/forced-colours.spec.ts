@@ -134,3 +134,84 @@ for (const theme of ["light"] as const) {
     });
   }
 }
+
+// A highlighted item is filled with the system's Highlight and its words drawn in HighlightText.
+// Left to the browser, each run of words also gets a backplate in the page's colour, which is
+// HighlightText's own in most themes: a blank box where the words were. So a highlighted item
+// opts out of the browser's adjustment and draws the system's colours itself.
+const lists: {
+  example: string;
+  open: (page: Page) => Promise<void>;
+}[] = [
+  {
+    example: "combobox/groups",
+    open: async (page) => {
+      await page.getByRole("combobox").first().focus();
+    },
+  },
+  {
+    example: "select/groups",
+    open: async (page) => {
+      await page.getByRole("combobox").first().focus();
+    },
+  },
+  {
+    example: "tags-input/suggestions",
+    open: async (page) => {
+      await page.getByRole("combobox").first().pressSequentially("e");
+    },
+  },
+  {
+    example: "command/basic",
+    open: async (page) => {
+      await page.getByRole("combobox").first().focus();
+    },
+  },
+  {
+    example: "dropdown-menu/basic",
+    open: async (page) => {
+      await page.getByRole("button").first().focus();
+      await page.keyboard.press("Enter");
+    },
+  },
+];
+
+for (const { example, open } of lists) {
+  test(`${example}: a highlighted item's words are drawn on the system's highlight, with no backplate over them`, async ({
+    page,
+  }) => {
+    const [component = "", name = ""] = example.split("/");
+    await openExample(page, component, name);
+    await page.emulateMedia({ forcedColors: "active" });
+    await open(page);
+    await page.keyboard.press("ArrowDown");
+    // The highlighted item: the one the focused control points at, or the focused item itself.
+    const item = page.locator(
+      ":is([role=option], [role=menuitem]):is(:focus, [data-highlighted])"
+    );
+    await expect(item).toHaveCount(1);
+    await expect(item).toHaveCSS("forced-color-adjust", "none");
+    const colours = await item.evaluate((row) => {
+      const probe = document.createElement("div");
+      probe.style.backgroundColor = "Highlight";
+      probe.style.color = "HighlightText";
+      row.append(probe);
+      const system = getComputedStyle(probe);
+      const wanted = { fill: system.backgroundColor, words: system.color };
+      probe.remove();
+      const drawn = getComputedStyle(row);
+      return {
+        wanted,
+        drawn: { fill: drawn.backgroundColor, words: drawn.color },
+        // Every element inside draws in the row's own colour, so nothing is lost on the fill.
+        inside: [...row.querySelectorAll("*")].map(
+          (part) => getComputedStyle(part).color
+        ),
+      };
+    });
+    expect(colours.drawn).toStrictEqual(colours.wanted);
+    expect(new Set(colours.inside)).toStrictEqual(
+      new Set(colours.inside.length === 0 ? [] : [colours.wanted.words])
+    );
+  });
+}

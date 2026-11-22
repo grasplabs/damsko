@@ -200,13 +200,17 @@ const styles = stylex.create({
     minWidth: 0,
   },
   label: { color: colors.mutedForeground },
+  // The count and its cost as two items a gap apart: as runs of digits in one line, right to left
+  // would join them and put the gap on the far side.
   tokens: {
+    display: "inline-flex",
+    alignItems: "baseline",
+    gap: space["2"],
     color: colors.foreground,
     fontVariantNumeric: "tabular-nums",
     whiteSpace: "nowrap",
   },
   cost: {
-    marginInlineStart: space["2"],
     color: colors.mutedForeground,
   },
   // The total under a hairline, the card's last line.

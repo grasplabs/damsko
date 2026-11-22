@@ -176,3 +176,67 @@ export const settled = async (page: Page): Promise<void> => {
     });
   });
 };
+
+/**
+ * Where what an element draws starts and ends across the page: its words, its marks and any box
+ * inside it with a fill, an edge or a shadow, not the element's own box (a trigger's fill under the
+ * pointer, a tap target, words hidden for a screen reader).
+ */
+export const drawnEdges = async (
+  element: Locator
+): Promise<{ start: number; end: number }> =>
+  await element.evaluate((drawing) => {
+    let start = Number.POSITIVE_INFINITY;
+    let end = Number.NEGATIVE_INFINITY;
+    const take = (rect: DOMRect) => {
+      if (rect.width > 1 && rect.height > 1) {
+        start = Math.min(start, rect.left);
+        end = Math.max(end, rect.right);
+      }
+    };
+    const walk = (node: Node) => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        if ((node.textContent ?? "").trim() !== "") {
+          const range = document.createRange();
+          range.selectNodeContents(node);
+          for (const rect of range.getClientRects()) {
+            take(rect);
+          }
+        }
+        return;
+      }
+      if (!(node instanceof Element)) {
+        return;
+      }
+      const box = node.getBoundingClientRect();
+      const style = getComputedStyle(node);
+      // Hidden, or words kept for a screen reader in a box a pixel wide; a box drawn as its
+      // children alone (`display: contents`) has none of its own.
+      if (
+        style.display !== "contents" &&
+        (!node.checkVisibility() || box.width <= 1 || box.height <= 1)
+      ) {
+        return;
+      }
+      const filled =
+        style.backgroundColor !== "rgba(0, 0, 0, 0)" ||
+        !/^(?:none|rgba\(0, 0, 0, 0\) 0px 0px 0px 0px)$/u.test(
+          style.boxShadow
+        ) ||
+        Number(style.borderTopWidth.replace("px", "")) > 0;
+      if (node !== drawing && (node instanceof SVGSVGElement || filled)) {
+        take(box);
+      }
+      for (const child of node.childNodes) {
+        walk(child);
+      }
+    };
+    walk(drawing);
+    return { start: Math.round(start), end: Math.round(end) };
+  });
+
+/** What a trigger opens, by its `aria-controls`. */
+export const panelOf = async (trigger: Locator): Promise<Locator> => {
+  const id = await trigger.getAttribute("aria-controls");
+  return trigger.page().locator(`[id="${id ?? ""}"]`);
+};

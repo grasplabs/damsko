@@ -1735,7 +1735,7 @@
       "name": "model-selector",
       "type": "registry:ui",
       "title": "Model selector",
-      "description": "The model an assistant answers with, picked from a searchable list beside its trigger.",
+      "description": "The model an assistant answers with, and how hard it thinks, chosen from one chip that opens one panel.",
       "dependencies": [
         "@stylexjs/stylex",
         "@ui-sdk/core",
@@ -1744,9 +1744,10 @@
       "registryDependencies": [
         "@damsko/brand-icon",
         "@damsko/button",
-        "@damsko/command",
         "@damsko/lib",
-        "@damsko/popover"
+        "@damsko/popover",
+        "@damsko/toggle-group",
+        "@damsko/tooltip"
       ],
       "docs": "https://damsko.joingrasp.com/components/model-selector",
       "files": [
@@ -2159,13 +2160,13 @@
       "registryDependencies": [
         "@damsko/avatar",
         "@damsko/button",
+        "@damsko/combobox",
         "@damsko/dialog",
         "@damsko/hooks",
         "@damsko/item",
         "@damsko/lib",
         "@damsko/select",
-        "@damsko/snippet",
-        "@damsko/user-picker"
+        "@damsko/snippet"
       ],
       "docs": "https://damsko.joingrasp.com/components/share-dialog-01",
       "files": [
@@ -2884,6 +2885,7 @@
         "@stylexjs/stylex"
       ],
       "registryDependencies": [
+        "@damsko/badge",
         "@damsko/code-block",
         "@damsko/lib",
         "@damsko/trace"
@@ -2968,30 +2970,6 @@
           "path": "src/components/tree-view.tsx",
           "type": "registry:file",
           "target": "~/src/components/tree-view.tsx"
-        }
-      ]
-    },
-    {
-      "name": "user-picker",
-      "type": "registry:ui",
-      "title": "User picker",
-      "description": "A field for choosing a person, found by typing their name or role.",
-      "dependencies": [
-        "@stylexjs/stylex",
-        "@ui-sdk/core",
-        "@ui-sdk/react"
-      ],
-      "registryDependencies": [
-        "@damsko/avatar",
-        "@damsko/input-group",
-        "@damsko/lib"
-      ],
-      "docs": "https://damsko.joingrasp.com/components/user-picker",
-      "files": [
-        {
-          "path": "src/components/user-picker.tsx",
-          "type": "registry:file",
-          "target": "~/src/components/user-picker.tsx"
         }
       ]
     }

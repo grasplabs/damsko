@@ -164,6 +164,7 @@
       "Combobox",
       "ComboboxEmpty",
       "ComboboxProps",
+      "ComboboxItem",
       "ComboboxItems",
       "ComboboxSize",
       "ComboboxEmptyProps"
@@ -1237,13 +1238,6 @@
   "tree-view": {
     "src/components/tree-view.tsx": ["TreeView", "TreeViewProps", "TreeNode"]
   },
-  "user-picker": {
-    "src/components/user-picker.tsx": [
-      "UserPicker",
-      "UserPickerProps",
-      "UserPickerUser"
-    ]
-  },
   "connect-api-key-01": {
     "src/blocks/connect-api-key-01/connect-api-key-01.tsx": [
       "ConnectApiKey",
@@ -1342,27 +1336,29 @@
       "ModelSelectorTrigger",
       "ModelSelectorContent",
       "ModelSelectorInput",
+      "ModelSelectorMakers",
+      "ModelSelectorMaker",
       "ModelSelectorList",
       "ModelSelectorEmpty",
       "ModelSelectorGroup",
       "ModelSelectorItem",
-      "ModelSelectorShortcut",
-      "ModelSelectorSeparator",
+      "ModelSelectorFavorite",
+      "ModelSelectorEffort",
       "ModelSelectorLogo",
-      "ModelSelectorLogoGroup",
       "ModelSelectorName",
       "ModelSelectorProps",
       "ModelSelectorTriggerProps",
       "ModelSelectorContentProps",
       "ModelSelectorInputProps",
+      "ModelSelectorMakersProps",
+      "ModelSelectorMakerProps",
       "ModelSelectorListProps",
       "ModelSelectorEmptyProps",
       "ModelSelectorGroupProps",
       "ModelSelectorItemProps",
-      "ModelSelectorShortcutProps",
-      "ModelSelectorSeparatorProps",
+      "ModelSelectorFavoriteProps",
+      "ModelSelectorEffortProps",
       "ModelSelectorLogoProps",
-      "ModelSelectorLogoGroupProps",
       "ModelSelectorNameProps"
     ]
   },
@@ -1405,6 +1401,7 @@
       "ShareDialog",
       "ShareDialogProps",
       "ShareMember",
+      "SharePerson",
       "ShareLevel",
       "ShareDialogLabels"
     ]

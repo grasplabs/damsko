@@ -253,7 +253,10 @@ const styles = stylex.create({
     color: colors.mutedForeground,
   },
   // Code in a sentence: the docs' own chip.
+  // Left to right in any language, set apart from the sentence's own direction.
   inlineCode: {
+    direction: "ltr",
+    unicodeBidi: "isolate",
     paddingInline: space["1"],
     borderRadius: radius.mark,
     cornerShape: radius.shape,
@@ -345,6 +348,8 @@ const styles = stylex.create({
   },
   // Raw HTML in the source, shown as the text it is.
   raw: {
+    direction: "ltr",
+    unicodeBidi: "isolate",
     fontFamily: font.mono,
     fontSize: font.textSm,
     color: colors.mutedForeground,

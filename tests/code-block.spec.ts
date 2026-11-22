@@ -209,3 +209,27 @@ test("when writing starts again, the code shown is the new code, never the code 
     10
   );
 });
+
+test("in a right-to-left page code still reads left to right from the left edge", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await openExample(page, "code-block", "basic");
+  await page.evaluate(() => {
+    document.documentElement.dir = "rtl";
+  });
+  // The block, then its code that scrolls at this width.
+  const code = page.getByRole("region", { name: "TSX" }).last();
+  const line = page.getByText("export function ReportStatus", { exact: false });
+  await expect(code).toHaveCSS("direction", "ltr");
+  const [box, words] = await Promise.all([
+    code.boundingBox(),
+    line.boundingBox(),
+  ]);
+  expect(box).not.toBeNull();
+  expect(words).not.toBeNull();
+  if (box !== null && words !== null) {
+    expect(words.x).toBeGreaterThanOrEqual(box.x);
+    expect(words.x).toBeLessThan(box.x + box.width / 3);
+  }
+});
