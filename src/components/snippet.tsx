@@ -194,9 +194,12 @@ export const Snippet = ({
       >
         {value}
       </span>
+      {/* Button's `link` look: no fill of its own under a pointer or a press, so the field keeps
+          its one fill, which answers the pointer for both. */}
       <CopyButton
         value={value}
         onCopy={onCopy}
+        variant="link"
         size={sized === "sm" ? "icon-xs" : "icon-sm"}
         aria-label={label}
       />

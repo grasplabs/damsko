@@ -58,6 +58,10 @@ const threads = [
   { name: "Spring launch plan", working: true },
   { name: "Supplier invoices", working: false },
   { name: "Weekly numbers", working: false },
+  {
+    name: "Every supplier contract and the day each one is up for renewal",
+    working: false,
+  },
 ];
 
 // Each row has its own menu at its end, shown while the pointer or focus is on the row, and always

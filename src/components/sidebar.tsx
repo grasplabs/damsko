@@ -46,6 +46,8 @@ import { useShortcut, useShortcutHint } from "@ui-sdk/react/shortcuts";
 import {
   createContext,
   createElement,
+  Fragment,
+  isValidElement,
   use,
   useEffect,
   useId,
@@ -69,7 +71,7 @@ import {
   space,
 } from "../lib/tokens.stylex";
 import { px } from "../lib/tokens.values";
-import { slotProps } from "../lib/utils";
+import { listOf, slotProps, slotWords } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { iconVars, motionVars } from "../lib/vars.stylex";
 import { Button } from "./button";
@@ -527,6 +529,12 @@ const styles = stylex.create({
     transitionProperty:
       "color, background-color, width, height, padding, margin",
     transitionDuration: duration.hover,
+  },
+  // A row's words: longer than the row, they end in an ellipsis before its end, or its action.
+  words: {
+    minWidth: 0,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
   },
   sm: {
     height: {
@@ -1334,6 +1342,47 @@ const drawn = (
   );
 };
 
+/**
+ * A row's children, its words ending in an ellipsis where the row does: StyleX gives a part no
+ * selector for its children (shadcn's `[&>span:last-child]:truncate`), so a `<span>` of words alone
+ * is drawn with that look. An icon, a mark and a span the caller laid out stay as given.
+ */
+const cutWords = (children: ReactNode): ReactNode =>
+  listOf(children).map((child, index) => {
+    const key = isValidElement(child) && child.key !== null ? child.key : index;
+    if (
+      isValidElement<{ children?: ReactNode; className?: string }>(child) &&
+      child.type === "span" &&
+      (typeof child.props.children === "string" ||
+        typeof child.props.children === "number")
+    ) {
+      const look = stylex.props(styles.words).className ?? "";
+      const own = child.props.className ?? "";
+      return createElement("span", {
+        ...child.props,
+        key,
+        className: own === "" ? look : `${look} ${own}`,
+      });
+    }
+    return <Fragment key={key}>{child}</Fragment>;
+  });
+
+/** As `drawn`, for a row of the menu: its words are cut where the row ends (`cutWords`). */
+const drawnRow = (
+  tag: string,
+  asChild: boolean | undefined,
+  children: ReactNode,
+  rest: Record<string, unknown>,
+  own: Record<string, unknown>
+) => {
+  const slot = slotWords(asChild, children);
+  return renderElement(
+    tag,
+    mergeProps(rest, own, { children: cutWords(slot.children) }),
+    slot.render
+  );
+};
+
 /** Every prop a SidebarGroup takes. */
 export interface SidebarGroupProps extends PartProps, Own<"div"> {
   /** Its SidebarGroupLabel, SidebarGroupAction and SidebarGroupContent. */
@@ -1461,7 +1510,7 @@ export const SidebarMenuButton = ({
 }: SidebarMenuButtonProps) => {
   const { state, isMobile } = useSidebarState("SidebarMenuButton");
   const side = use(SideContext);
-  const button = drawn(
+  const button = drawnRow(
     "button",
     asChild,
     children,
@@ -1646,7 +1695,7 @@ export const SidebarMenuSubButton = ({
   style,
   ...rest
 }: SidebarMenuSubButtonProps) =>
-  drawn("a", asChild, children, rest, {
+  drawnRow("a", asChild, children, rest, {
     "data-slot": "sidebar-menu-sub-button",
     "data-sidebar": "menu-sub-button",
     "data-size": sized,

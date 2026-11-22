@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { openExample } from "./example.ts";
+import { hasFocusRing, openExample } from "./example.ts";
 
 test("it is a region named by its label, with Previous, Next and a mark per page", async ({
   page,
@@ -160,4 +160,36 @@ test("running down, the up and down arrows page it", async ({ page }) => {
     "aria-selected",
     "true"
   );
+});
+
+test("a link in a slide keeps its whole focus ring inside the slides' window", async ({
+  page,
+}) => {
+  await openExample(page, "carousel", "links");
+  const link = page.getByRole("link", { name: "Studio A" });
+  await page.keyboard.press("Tab");
+  await expect(link).toBeFocused();
+  expect(await hasFocusRing(link)).toBe(true);
+  // How far the ring stands past the nearest box that clips it, on its worst side: none.
+  const cut = await link.evaluate((node) => {
+    const style = getComputedStyle(node);
+    const reach =
+      Number(style.outlineWidth.replace(/px$/u, "")) +
+      Number(style.outlineOffset.replace(/px$/u, ""));
+    const box = node.getBoundingClientRect();
+    let clip = node.parentElement;
+    while (clip !== null && getComputedStyle(clip).overflowX === "visible") {
+      clip = clip.parentElement;
+    }
+    if (clip === null) {
+      return 0;
+    }
+    const edge = clip.getBoundingClientRect();
+    return Math.max(
+      edge.left + clip.clientLeft - (box.left - reach),
+      edge.top + clip.clientTop - (box.top - reach),
+      box.bottom + reach - (edge.top + clip.clientTop + clip.clientHeight)
+    );
+  });
+  expect(cut).toBeLessThanOrEqual(0);
 });

@@ -87,3 +87,26 @@ test("a long value that scrolls is still one tab stop", async ({ page }) => {
     page.getByRole("button", { name: "Copy the workspace ID" })
   ).toBeFocused();
 });
+
+test("under the pointer and pressed, the button draws no fill of its own inside the field", async ({
+  page,
+}) => {
+  await openExample(page, "snippet", "basic");
+  const button = page.getByRole("button", {
+    name: "Copy the install command",
+  });
+  const eased = async () => {
+    await button.evaluate(async (node) => {
+      await Promise.all(
+        node.getAnimations().map(async (ease) => await ease.finished)
+      );
+    });
+  };
+  await button.hover();
+  await eased();
+  await expect(button).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await page.mouse.down();
+  await eased();
+  await expect(button).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await page.mouse.up();
+});

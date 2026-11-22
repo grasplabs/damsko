@@ -331,3 +331,28 @@ test("the page's own control folds it with an updater, and two in one moment bui
   });
   await expect(trigger).toHaveAttribute("aria-expanded", "true");
 });
+
+test("a name longer than its row ends in an ellipsis, inside the row", async ({
+  page,
+}) => {
+  await openExample(page, "sidebar", "actions");
+  const row = page.getByRole("link", {
+    name: "Every supplier contract and the day each one is up for renewal",
+  });
+  const words = row.getByText("Every supplier contract");
+  await expect(words).toHaveCSS("text-overflow", "ellipsis");
+  const [inside, cut] = await words.evaluate((node) => {
+    const link = node.closest("a");
+    const edge =
+      link === null
+        ? 0
+        : link.getBoundingClientRect().right -
+          Number(getComputedStyle(link).paddingInlineEnd.replace(/px$/u, ""));
+    return [
+      node.getBoundingClientRect().right <= edge,
+      node.scrollWidth > node.clientWidth,
+    ];
+  });
+  expect(inside).toBe(true);
+  expect(cut).toBe(true);
+});
