@@ -75,7 +75,7 @@ export default function PlanLive() {
         </PlanContent>
       </Plan>
       <Button
-        variant="secondary"
+        variant="outline"
         size="sm"
         onClick={() => {
           setCurrent((was) => (was >= steps.length ? 0 : was + 1));

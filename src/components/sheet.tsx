@@ -6,7 +6,7 @@
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
 //   <Sheet>
-//     <SheetTrigger asChild><Button variant="secondary">Edit profile</Button></SheetTrigger>
+//     <SheetTrigger asChild><Button variant="outline">Edit profile</Button></SheetTrigger>
 //     <SheetContent side="end">
 //       <SheetHeader>
 //         <SheetTitle>Edit profile</SheetTitle>

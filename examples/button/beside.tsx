@@ -18,8 +18,8 @@ const layout = stylex.create({
 });
 
 // The variants by role, as shadcn/ui sets them. Invite people stands on its own in the section's
-// head, an ordinary action: `secondary`. At the foot, Save changes is the main step, `default`, and
-// Cancel is the lesser button beside it: `outline`. Each press says what it would do.
+// head, an ordinary action: `outline`. At the foot, Save changes is the main step, `default`, and
+// Cancel is the lesser button beside it: `outline` too. Each press says what it would do.
 export default function ButtonBeside() {
   const [toast] = useState(() => createToaster());
   return (
@@ -32,7 +32,7 @@ export default function ButtonBeside() {
             <CardAction>
               <Button
                 size="sm"
-                variant="secondary"
+                variant="outline"
                 onClick={() => toast("The invite would open here")}
               >
                 Invite people

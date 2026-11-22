@@ -23,7 +23,7 @@ export default function CardParts() {
         <CardTitle>Storage</CardTitle>
         <CardDescription>12 of 50 GB used this month.</CardDescription>
         <CardAction>
-          <Button size="sm" variant="secondary">
+          <Button size="sm" variant="outline">
             Manage
           </Button>
         </CardAction>

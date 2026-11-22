@@ -27,7 +27,7 @@ export default function ButtonAgent() {
         Save changes
       </Button>
       <Button
-        variant="secondary"
+        variant="outline"
         onClick={async () => {
           await wait(300);
           throw new Error("The invite was not sent.");

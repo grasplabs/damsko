@@ -61,7 +61,7 @@ export default function ShareDialogBasic() {
       title="Share the spring launch plan"
       description="People you add can read it and leave comments."
       trigger={
-        <Button variant="secondary">
+        <Button variant="outline">
           <Icon icon={ShareIcon} />
           Share
         </Button>

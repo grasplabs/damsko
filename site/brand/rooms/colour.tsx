@@ -20,7 +20,7 @@ export default function ColourRoom() {
         rule={colourWords.light}
         detail={colourWords.logoInk}
         beside={
-          <Button variant="secondary" size="sm" asChild>
+          <Button variant="outline" size="sm" asChild>
             <a href={colourWords.cssHref} download>
               <Icon icon={DownloadIcon} />
               {colourWords.css}

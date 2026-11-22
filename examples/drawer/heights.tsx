@@ -24,7 +24,7 @@ export default function DrawerHeights() {
   return (
     <Drawer snapPoints={[0.4, 0.85]}>
       <DrawerTrigger asChild>
-        <Button variant="secondary">Show the stops</Button>
+        <Button variant="outline">Show the stops</Button>
       </DrawerTrigger>
       <DrawerContent>
         <DrawerHeader>

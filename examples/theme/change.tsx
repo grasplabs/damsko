@@ -125,7 +125,7 @@ export default function ThemeChangeWays() {
           <Button
             key={entry.id}
             size="sm"
-            variant={entry.id === way ? "default" : "secondary"}
+            variant={entry.id === way ? "default" : "outline"}
             aria-pressed={entry.id === way}
             onClick={() => {
               setWay(entry.id);
@@ -135,7 +135,7 @@ export default function ThemeChangeWays() {
           </Button>
         ))}
       </div>
-      <Button variant="secondary" onClick={flip}>
+      <Button variant="outline" onClick={flip}>
         {look === 0 ? "Switch to Pine, dark" : "Switch to Evergreen, light"}
       </Button>
       <div {...stylex.props(styles.board)}>

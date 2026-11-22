@@ -46,7 +46,7 @@ export default function LoadingProgress() {
       )}
       {/* The button keeps focus while it is off, so a keyboard user stays on it. */}
       <Button
-        variant="secondary"
+        variant="outline"
         focusableWhenDisabled
         disabled={running}
         onClick={() => {

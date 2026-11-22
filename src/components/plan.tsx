@@ -9,7 +9,7 @@
 //       <PlanTitle>Plan: move the dialogs to the new primitives</PlanTitle>
 //       <PlanDescription>2 of 4 done</PlanDescription>
 //     </PlanHeader>
-//     <PlanAction><Button size="xs" variant="secondary">Edit</Button></PlanAction>
+//     <PlanAction><Button size="xs" variant="ghost">Edit</Button></PlanAction>
 //     <PlanContent>
 //       <TraceLine><TraceIcon /><TraceTitle>Replace the imports</TraceTitle></TraceLine>
 //       <TraceLine status="pending"><TraceIcon /><TraceTitle>Run the type checker</TraceTitle></TraceLine>

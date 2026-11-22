@@ -20,7 +20,7 @@ export default function ToastTypes() {
   return (
     <div {...stylex.props(layout.row)}>
       <Button
-        variant="secondary"
+        variant="outline"
         onClick={() =>
           toast.success("Report saved", {
             description: "Your changes are in the latest version.",
@@ -30,7 +30,7 @@ export default function ToastTypes() {
         Success
       </Button>
       <Button
-        variant="secondary"
+        variant="outline"
         onClick={() =>
           toast.warning("Storage almost full", {
             description: "Archive old reports to make room.",
@@ -40,7 +40,7 @@ export default function ToastTypes() {
         Warning
       </Button>
       <Button
-        variant="secondary"
+        variant="outline"
         onClick={() =>
           toast.error("Could not save", {
             description: "Check your connection and try again.",
@@ -50,7 +50,7 @@ export default function ToastTypes() {
         Error
       </Button>
       <Button
-        variant="secondary"
+        variant="outline"
         onClick={() =>
           toast.info("New version", {
             description: "Reload to see what changed.",
@@ -60,7 +60,7 @@ export default function ToastTypes() {
         Info
       </Button>
       <Button
-        variant="secondary"
+        variant="outline"
         onClick={() =>
           toast("Reminder set", { description: "Tomorrow at 9:00." })
         }

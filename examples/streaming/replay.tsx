@@ -203,7 +203,7 @@ export default function StreamingCompare() {
           <Button
             key={name}
             size="sm"
-            variant={name === stream ? "default" : "secondary"}
+            variant={name === stream ? "default" : "outline"}
             aria-pressed={name === stream}
             onClick={() => {
               setStream(name);

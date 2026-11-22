@@ -12,10 +12,10 @@ for (const theme of ["light", "dark"] as const) {
       [
         "Save changes",
         "Invite people",
+        "Filter",
         "Edit",
         "Delete workspace",
         "Read the guide",
-        "Change cover",
       ].map(async (name) => {
         await expect(page.getByRole("button", { name })).toBeVisible();
       })

@@ -100,7 +100,7 @@ export default function AccessibilityAnnouncements() {
   return (
     <div {...stylex.props(styles.grid)}>
       <div {...stylex.props(styles.talk)}>
-        <Button variant="secondary" onClick={start}>
+        <Button variant="outline" onClick={start}>
           Write the answer
         </Button>
         <Message status={done ? "done" : "streaming"}>

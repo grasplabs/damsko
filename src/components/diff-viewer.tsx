@@ -1033,7 +1033,7 @@ const HeadRow = ({
             </Button>
             <Button
               size="sm"
-              variant="secondary"
+              variant="outline"
               data-diff-answer="accept"
               aria-describedby={described}
               onClick={(event) => {

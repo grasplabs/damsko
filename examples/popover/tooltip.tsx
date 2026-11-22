@@ -41,10 +41,14 @@ export default function PopoverTooltip() {
         </PopoverHeader>
         <PopoverFooter>
           <PopoverClose asChild>
-            <Button variant="outline">Cancel</Button>
+            <Button size="sm" variant="outline">
+              Cancel
+            </Button>
           </PopoverClose>
           <PopoverClose asChild>
-            <Button variant="default">Copy link</Button>
+            <Button size="sm" variant="default">
+              Copy link
+            </Button>
           </PopoverClose>
         </PopoverFooter>
       </PopoverContent>

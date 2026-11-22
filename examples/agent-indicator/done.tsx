@@ -29,7 +29,7 @@ const AgentIndicatorDone = () => {
         {done ? "Filled the column" : "Filling the column"}
       </p>
       <Button
-        variant="secondary"
+        variant="outline"
         size="sm"
         onClick={() => {
           setDone(!done);

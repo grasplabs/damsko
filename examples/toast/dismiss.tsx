@@ -20,7 +20,7 @@ export default function ToastDismiss() {
   return (
     <div {...stylex.props(layout.row)}>
       <Button
-        variant="secondary"
+        variant="outline"
         onClick={() =>
           toast("Report shared", {
             description: "Swipe it away, press Escape in it, or let it go.",
@@ -30,7 +30,7 @@ export default function ToastDismiss() {
         Show a toast
       </Button>
       <Button
-        variant="secondary"
+        variant="outline"
         onClick={() =>
           toast.promise(new Promise((resolve) => setTimeout(resolve, 3000)), {
             loading: {

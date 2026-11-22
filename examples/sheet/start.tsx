@@ -17,7 +17,7 @@ export default function SheetStart() {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="secondary">Folders</Button>
+        <Button variant="outline">Folders</Button>
       </SheetTrigger>
       <SheetContent side="start">
         <SheetHeader>

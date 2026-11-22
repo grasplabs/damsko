@@ -50,7 +50,7 @@ export default function DrawerRemoves() {
             {row}
             <Button
               size="sm"
-              variant="secondary"
+              variant="outline"
               onClick={() => {
                 setAsking(row);
               }}

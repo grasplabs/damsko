@@ -31,7 +31,7 @@ export default function DialogCheckFailed() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="secondary">Test the connection</Button>
+        <Button variant="outline">Test the connection</Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

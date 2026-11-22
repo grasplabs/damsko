@@ -20,7 +20,7 @@ export default function ToastBasic() {
   return (
     <div {...stylex.props(layout.row)}>
       <Button
-        variant="secondary"
+        variant="outline"
         onClick={() =>
           toast("Report shared", {
             description: "Everyone on the team can read it now.",

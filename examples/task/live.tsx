@@ -95,7 +95,7 @@ export default function TaskLive() {
           ))}
       </div>
       <Button
-        variant="secondary"
+        variant="outline"
         size="sm"
         onClick={() => {
           setDone((was) => (was >= total ? 0 : was + 1));

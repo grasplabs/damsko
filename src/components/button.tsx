@@ -4,7 +4,7 @@
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
 //   <Button>Save changes</Button>
-//   <Button variant="secondary"><Icon icon={PlusIcon} />Invite people</Button>
+//   <Button variant="outline"><Icon icon={PlusIcon} />Invite people</Button>
 //   <Button variant="ghost" size="icon-sm" aria-label="More actions"><Icon icon={DotsIcon} /></Button>
 //   <Button asChild><a href="/settings">Settings</a></Button>
 //   <Button onClick={saveChanges}>Save changes</Button>          saveChanges returns a Promise
@@ -77,9 +77,11 @@ interface ButtonBase extends Omit<
   "className" | "style" | "render" | "children" | "onClick"
 > {
   /**
-   * The weight of the action: `default` for the one step you want taken, `secondary` for the
-   * others, `outline` beside them on a busy surface, `ghost` for toolbars and rows, `destructive`
-   * for what deletes, `link` for an action that reads as words.
+   * The weight of the action: `default` for the one main step of a view, `outline` for the
+   * ordinary button (the lesser one beside it, a standalone action or trigger), `secondary` for a
+   * flat, quieter one in a dense place (a row of filters, an action in a card), `ghost` for
+   * toolbars, rows and icon buttons, `destructive` for what cannot be undone, `link` for an action
+   * that reads as words.
    * @default "default"
    */
   variant?: ButtonVariant;
@@ -447,21 +449,24 @@ const variantStyles = stylex.create({
     backgroundColor: colors.primary,
     boxShadow: shadow.bevelInk,
   },
+  // A flat veil of ink, no edge and no lift: quieter than outline, firmer than ghost, for a dense
+  // place where several outlined buttons would be too many edges.
   secondary: {
     color: colors.foreground,
-    backgroundColor: colors.secondary,
-    boxShadow: shadow.bevelMuted,
+    backgroundColor: colors.buttonSecondary,
+    boxShadow: "none",
   },
   destructive: {
     color: colors.destructiveFillForeground,
     backgroundColor: colors.destructiveFill,
     boxShadow: shadow.bevelDestructive,
   },
-  // A hairline edge and no fill, for a surface where a filled button would be too loud.
+  // The ordinary button: the quiet fill, a field's edge and its lift, so it stands as tall as an
+  // input beside it.
   outline: {
     color: colors.foreground,
-    backgroundColor: "transparent",
-    boxShadow: `inset 0 0 0 ${sizes.hairline} ${colors.borderStrongColor}`,
+    backgroundColor: colors.secondary,
+    boxShadow: shadow.bevelMuted,
   },
   ghost: {
     color: colors.foreground,
@@ -502,9 +507,9 @@ const liveStyles = stylex.create({
   },
   secondary: {
     backgroundColor: {
-      default: colors.secondary,
-      ":hover": { default: null, [HOVER]: colors.secondaryHover },
-      ":active": colors.secondaryActive,
+      default: colors.buttonSecondary,
+      ":hover": { default: null, [HOVER]: colors.buttonSecondaryHover },
+      ":active": colors.buttonSecondaryActive,
     },
   },
   destructive: {
@@ -524,9 +529,9 @@ const liveStyles = stylex.create({
   },
   outline: {
     backgroundColor: {
-      default: "transparent",
-      ":hover": { default: null, [HOVER]: colors.accent },
-      ":active": colors.accentActive,
+      default: colors.secondary,
+      ":hover": { default: null, [HOVER]: colors.secondaryHover },
+      ":active": colors.secondaryActive,
     },
   },
   ghost: {
