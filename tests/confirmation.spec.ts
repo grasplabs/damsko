@@ -88,7 +88,7 @@ test("a held answer that fails says so on its own button, and the request still 
   page,
 }) => {
   await openExample(page, "confirmation", "held-failed");
-  await page.getByRole("button", { name: "Hold to refund £86" }).click();
+  await page.getByRole("button", { name: "Hold to refund £86" }).press("Enter");
   await page
     .getByRole("dialog", { name: "Refund £86?" })
     .getByRole("button", { name: "Refund £86" })
@@ -127,11 +127,11 @@ test("each state draws its own: the answers while it waits, the decision once an
   await expect(page.getByText("Book the large meeting room")).toHaveCount(0);
 });
 
-test("a grave yes is held, and a tap asks once more first", async ({
+test("a grave yes is held, and a key's tap asks once more first", async ({
   page,
 }) => {
   await openExample(page, "confirmation", "grave");
-  await page.getByRole("button", { name: "Hold to pay £1,240" }).click();
+  await page.getByRole("button", { name: "Hold to pay £1,240" }).press("Space");
   const ask = page.getByRole("dialog", { name: "Pay £1,240?" });
   await expect(ask).toBeVisible();
   await expect(page.getByText(/^Paid/u)).toHaveCount(0);

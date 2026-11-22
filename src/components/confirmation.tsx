@@ -139,8 +139,8 @@ export interface ConfirmationActionProps {
    */
   onClick?: () => unknown;
   /**
-   * Matters enough to hold: the answer goes only once the press is held, or once a tap's own
-   * confirmation is pressed (HoldButton).
+   * Matters enough to hold: the answer goes only once the press is held, or once the confirmation
+   * a tap of Enter or Space opens is pressed (HoldButton).
    * @default false
    */
   hold?: boolean;
