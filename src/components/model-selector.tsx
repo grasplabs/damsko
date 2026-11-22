@@ -95,6 +95,7 @@ import type { LayoutStyle } from "../lib/utils";
 import { motionVars } from "../lib/vars.stylex";
 import { BrandIcon } from "./brand-icon";
 import { Button } from "./button";
+import { buttonMarker } from "./button.stylex";
 import { Popover, PopoverTrigger } from "./popover";
 import { ToggleGroup, ToggleGroupItem } from "./toggle-group";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip";
@@ -334,6 +335,7 @@ const HOVER = media.hover;
 const styles = stylex.create({
   root: { display: "contents" },
   // The chip's mark and words, a step apart and a size down from the Button's, the chevron after.
+  // The words quiet at rest, in ink under the pointer, through the Button's own marker.
   chip: {
     display: "inline-flex",
     alignItems: "center",
@@ -341,12 +343,30 @@ const styles = stylex.create({
     minWidth: 0,
     fontSize: font.textXs,
     lineHeight: font.textXsLine,
+    color: {
+      default: colors.mutedForeground,
+      [stylex.when.ancestor(":hover", buttonMarker)]: {
+        default: null,
+        [HOVER]: colors.foreground,
+      },
+      [FORCED]: "inherit",
+    },
   },
-  chevron: {
-    display: "inline-flex",
-    flexShrink: 0,
-    marginInlineStart: `calc(${space["1"]} - ${space["2"]})`,
-    color: colors.mutedForeground,
+  chevron: { display: "inline-flex", flexShrink: 0 },
+  // While the panel is open the chip keeps the press's fill, under its words, in the chip's corner.
+  held: {
+    position: "absolute",
+    zIndex: -1,
+    inset: 0,
+    borderRadius: STEP_CORNER,
+    cornerShape: radius.shape,
+    backgroundColor: {
+      default: "transparent",
+      [stylex.when.ancestor("[aria-expanded=true]", buttonMarker)]:
+        colors.accentActive,
+      [FORCED]: "transparent",
+    },
+    pointerEvents: "none",
   },
   // The panel: the popup's surface, the popover's width, never wider than the window less the
   // gutter. It never scrolls itself: each column scrolls its own.
@@ -522,10 +542,8 @@ const styles = stylex.create({
   },
   foldOpen: { gridTemplateRows: "1fr", visibility: "visible" },
   foldInner: { minHeight: 0, overflow: "hidden" },
-  // The segments as wide as their words, from the start, as the heading over them.
   effort: {
     display: "grid",
-    justifyItems: "start",
     rowGap: space["2"],
     paddingBlock: space["2"],
     paddingInline: space["3"],
@@ -691,9 +709,12 @@ export const ModelSelectorTrigger = ({
     children
   ) : (
     <Button variant="ghost" size="xs" style={style}>
-      <span {...stylex.props(styles.chip)}>{children}</span>
-      <span aria-hidden="true" {...stylex.props(styles.chevron)}>
-        <Icon icon={ChevronDownIcon} />
+      <span aria-hidden="true" {...stylex.props(styles.held)} />
+      <span {...stylex.props(styles.chip)}>
+        {children}
+        <span aria-hidden="true" {...stylex.props(styles.chevron)}>
+          <Icon icon={ChevronDownIcon} />
+        </span>
       </span>
     </Button>
   );
@@ -1271,6 +1292,7 @@ export const ModelSelectorEffort = ({
             <ToggleGroup
               aria-label={named}
               size="default"
+              fullWidth
               value={chosen === undefined ? [] : [chosen]}
               deselectable={false}
               onValueChange={(next: string[]) => {

@@ -62,6 +62,12 @@ interface ToggleGroupOwnProps {
    * @default false
    */
   disabled?: boolean;
+  /**
+   * The track takes the width it stands in, and its items share it equally: a segmented control
+   * across a panel.
+   * @default false
+   */
+  fullWidth?: boolean;
   /** Where it sits: margins and alignment. The look belongs to the group. */
   style?: LayoutStyle;
 }
@@ -126,6 +132,9 @@ const styles = stylex.create({
     flexDirection: "column",
     alignItems: "stretch",
   },
+  fullWidth: { display: "flex", width: "100%" },
+  // In a full-width track: the items share its width, each from its words' own.
+  shared: { flexGrow: 1 },
   // A step shorter than the size, inside a track that leaves the same room on every side, so the
   // track itself stands at the size's height.
   xs: {
@@ -204,25 +213,31 @@ const sizeStyle = (size: ToggleSize) => {
 
 // The group's size, which every item in it takes.
 const GroupSize = createContext<ToggleSize>("xs");
+// Whether the group spans its width, which its items then share.
+const GroupFull = createContext(false);
 
 export const ToggleGroup = ({
   children,
   size = "xs",
+  fullWidth = false,
   style,
   ...rest
 }: ToggleGroupProps) => (
   <GroupSize value={size}>
-    <ToggleGroupPrimitive
-      {...rest}
-      data-slot="toggle-group"
-      {...stylex.props(
-        styles.group,
-        rest.orientation === "vertical" && styles.vertical,
-        style
-      )}
-    >
-      {children}
-    </ToggleGroupPrimitive>
+    <GroupFull value={fullWidth}>
+      <ToggleGroupPrimitive
+        {...rest}
+        data-slot="toggle-group"
+        {...stylex.props(
+          styles.group,
+          fullWidth && styles.fullWidth,
+          rest.orientation === "vertical" && styles.vertical,
+          style
+        )}
+      >
+        {children}
+      </ToggleGroupPrimitive>
+    </GroupFull>
   </GroupSize>
 );
 
@@ -233,6 +248,7 @@ export const ToggleGroupItem = ({
   ...rest
 }: ToggleGroupItemProps) => {
   const size = useContext(GroupSize);
+  const shared = useContext(GroupFull);
   return (
     <TogglePrimitive
       {...rest}
@@ -243,6 +259,7 @@ export const ToggleGroupItem = ({
           sizeStyle(size),
           styles.item,
           iconOnly(children) && styles.square,
+          shared && styles.shared,
           !state.disabled && !state.pressed && styles.live,
           state.pressed && styles.raised,
           state.disabled && styles.disabled,
