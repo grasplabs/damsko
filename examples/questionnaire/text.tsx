@@ -6,6 +6,7 @@ import {
   QuestionnaireActions,
   QuestionnaireInput,
   QuestionnaireItem,
+  QuestionnaireProgress,
   QuestionnaireSkip,
   QuestionnaireSubmit,
   QuestionnaireTitle,
@@ -41,6 +42,7 @@ export default function QuestionnaireText() {
   }
   return (
     <Questionnaire key={round} onSubmit={() => undefined} style={layout.column}>
+      <QuestionnaireProgress>Question</QuestionnaireProgress>
       <QuestionnaireItem name="focus">
         <QuestionnaireTitle>
           What should the summary focus on?

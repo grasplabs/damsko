@@ -33,7 +33,9 @@ const layout = stylex.create({
   },
   // Its words start where the rows' do.
   head: { paddingInline: space.tableCellInline },
+  // A value takes the control's column whole, so a fact starts where a field does.
   control: { width: "100%" },
+  value: { display: "flex", width: "100%" },
 });
 
 // A billing page's groups: each title on the page above its card of rows, its words where the
@@ -64,13 +66,17 @@ export default function CardGrouped() {
                     Billed yearly, renews on 1 March.
                   </FieldDescription>
                 </FieldContent>
-                <Badge variant="info">Business</Badge>
+                <div {...stylex.props(layout.value)}>
+                  <Badge variant="info">Business</Badge>
+                </div>
               </Field>
               <Field orientation="responsive">
                 <FieldContent>
                   <FieldTitle>Seats</FieldTitle>
                 </FieldContent>
-                <Text size="sm">12 of 15 in use</Text>
+                <Text size="sm" style={layout.control}>
+                  12 of 15 in use
+                </Text>
               </Field>
             </FieldGroup>
           </CardContent>

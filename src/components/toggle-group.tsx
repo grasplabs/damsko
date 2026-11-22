@@ -30,6 +30,7 @@ import type { LayoutStyle } from "../lib/utils";
 import { ringInsetMarker } from "../lib/vars.stylex";
 import { iconOnly, toggleVariants } from "./toggle";
 import type { ToggleSize } from "./toggle";
+import { ControlTooltip } from "./tooltip";
 
 type ToggleGroupPrimitiveProps = ComponentProps<
   typeof ToggleGroupPrimitive<string>
@@ -90,6 +91,12 @@ interface ToggleGroupItemOwnProps {
   children?: ReactNode;
   /** Its name when it shows only an icon ("Bold"). */
   "aria-label"?: string;
+  /**
+   * Its tooltip, under a resting pointer and on keyboard focus. Left out, one that is only an icon
+   * shows its `aria-label`; `false` shows none; words or a node show those in its place. Inside a
+   * Tooltip of your own it shows none.
+   */
+  tooltip?: ReactNode;
   /**
    * Out of use: no press, half strength.
    * @default false
@@ -236,8 +243,9 @@ export const ToggleGroup = ({
 };
 
 /** One toggle in a ToggleGroup: pressed when the group's value lists it. */
-export const ToggleGroupItem = ({
+const Item = ({
   children,
+  tooltip: _tooltip,
   style,
   ...rest
 }: ToggleGroupItemProps) => {
@@ -272,3 +280,9 @@ export const ToggleGroupItem = ({
     </TogglePrimitive>
   );
 };
+
+export const ToggleGroupItem = (props: ToggleGroupItemProps) => (
+  <ControlTooltip tooltip={props.tooltip} iconOnly={iconOnly(props.children)}>
+    <Item {...props} />
+  </ControlTooltip>
+);

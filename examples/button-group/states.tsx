@@ -3,7 +3,7 @@ import {
   ButtonGroup,
   ButtonGroupSeparator,
 } from "@grasp-os/ui/components/button-group";
-import { Spinner } from "@grasp-os/ui/components/spinner";
+import type { ActionStatus } from "@grasp-os/ui/hooks/use-action";
 import { ChevronDownIcon, Icon } from "@grasp-os/ui/lib/icons";
 import * as stylex from "@stylexjs/stylex";
 
@@ -16,11 +16,11 @@ const look = stylex.create({
 // pressed are forced from the buttons' own CSS onto Send only, as a pointer or the keyboard would
 // have them: one button at a time, never both. In a product a Button whose press returns a Promise shows it by itself.
 export default function ButtonGroupState({
-  loading = false,
+  status = "idle",
   disabled = false,
   forced,
 }: {
-  loading?: boolean;
+  status?: ActionStatus;
   disabled?: boolean;
   forced?: "hover" | "focus-visible" | "active";
 }) {
@@ -29,11 +29,11 @@ export default function ButtonGroupState({
       <span data-force={forced} {...stylex.props(look.only)}>
         <Button
           variant="ghost"
-          disabled={disabled || loading}
-          focusableWhenDisabled={loading}
-          aria-busy={loading || undefined}
+          status={status}
+          successLabel="Sent"
+          errorLabel="Not sent"
+          disabled={disabled}
         >
-          {loading && <Spinner />}
           Send
         </Button>
       </span>

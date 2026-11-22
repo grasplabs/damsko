@@ -1349,6 +1349,12 @@ export const groups: TokenGroup[] = [
             use: "How far a result's words slide in beside their mark. Dropped with reduced motion.",
           },
           {
+            name: "result-shake",
+            category: "size",
+            value: "4px",
+            use: "How far a failed button shakes, once. None with reduced motion.",
+          },
+          {
             name: "result-follow",
             category: "duration",
             value: "80ms",
@@ -3663,6 +3669,12 @@ export const groups: TokenGroup[] = [
             category: "size",
             value: "15rem",
             use: "The narrowest a tile in an ItemGrid stands before its row takes one fewer: as many per row as fit.",
+          },
+          {
+            name: "connect-tile",
+            category: "size",
+            value: "11rem",
+            use: "The narrowest a provider's tile stands in the connect block before its row takes one fewer: four in a row in a settings column.",
           },
           {
             name: "field-control-column",
