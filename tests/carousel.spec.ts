@@ -179,3 +179,23 @@ test("a slide that is a link keeps its whole focus ring inside the slides' windo
   expect(await hasFocusRing(last)).toBe(true);
   expect(await ringCut(last)).toBeLessThanOrEqual(0);
 });
+
+test("a page mark's ring is drawn inside its own target, so it never lies on the mark beside it", async ({
+  page,
+}) => {
+  await openExample(page, "carousel", "basic");
+  const mark = page.getByRole("tab", { name: "Page 1" });
+  await mark.focus();
+  await page.keyboard.press("ArrowRight");
+  await page.keyboard.press("ArrowLeft");
+  await expect(mark).toBeFocused();
+  expect(await hasFocusRing(mark)).toBe(true);
+  const reach = await mark.evaluate((node) => {
+    const style = getComputedStyle(node);
+    return (
+      Number(style.outlineWidth.replace(/px$/u, "")) +
+      Number(style.outlineOffset.replace(/px$/u, ""))
+    );
+  });
+  expect(reach).toBeLessThanOrEqual(0);
+});
