@@ -15,7 +15,7 @@ const layout = stylex.create({
   end: { marginInlineStart: "auto" },
 });
 
-// shadcn's parts: a header with its action at the end, what the card holds, and a footer.
+// The parts: a header with its action at the end, what the card holds, and a footer.
 export default function CardParts() {
   return (
     <Card padding="lg" style={layout.card}>

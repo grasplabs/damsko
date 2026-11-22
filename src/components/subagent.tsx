@@ -1,5 +1,5 @@
-// Subagent: work an assistant handed to another agent, shown as that run, as shadcn's Subagent
-// pattern (apps/v4/content/docs/ai-elements/base/subagent.mdx) builds it: a Trace with one
+// Subagent: work an assistant handed to another agent, shown as that run:
+// a Trace with one
 // TraceCollapsible, its line the run ("Ran the research agent"), under it the task it was given, the
 // tool calls it made as a nested Trace, its output and what it found. Every look and announcement is
 // Trace's; the model is a Badge, the output's shape a CodeBlock. It knows nothing of any agent: it

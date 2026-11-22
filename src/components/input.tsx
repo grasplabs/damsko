@@ -1,5 +1,5 @@
-// Input: one line of text, from shadcn's (registry/bases/base/ui/input.tsx, on Base UI), converted
-// from Tailwind to StyleX and built on UI SDK's Input, with the field box every text field shares
+// Input: one line of text,
+// in StyleX, built on UI SDK's Input, with the field box every text field shares
 // (lib/styles' inputStyles, as Textarea and InputGroup draw it): a white fill, a hairline that can
 // be found on every ground, one corner, and the heights of Button, so a field and a button stand
 // level in one row. With it, PasswordInput, a password with a show button, and SecretInput, a key

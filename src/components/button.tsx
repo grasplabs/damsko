@@ -1,4 +1,4 @@
-// Button: shadcn's (registry/bases/base/ui/button.tsx), converted from Tailwind to StyleX, in the
+// Button: one action to press, in StyleX, in the
 // brand's Bevel finish with the one corner. Its behaviour is UI SDK's Button, so an agent on the page
 // finds it by its name and presses it; a destructive one waits for the person's yes first.
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.

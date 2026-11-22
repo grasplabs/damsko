@@ -1,5 +1,5 @@
-// Sheet: a task or details in a panel along a side of the window, from shadcn's
-// (registry/bases/base/ui/sheet.tsx), converted from Tailwind to StyleX and built on UI SDK's
+// Sheet: a task or details in a panel along a side of the window,
+// in StyleX, built on UI SDK's
 // Drawer: a raised panel the window's height, floating a little off its edges, a head with its
 // title and a close button, a body that scrolls, and actions at its foot. Escape, a press on the
 // shade or a drag towards its side closes it.
@@ -70,7 +70,7 @@ type ClosePrimitiveProps = ComponentProps<typeof ClosePrimitive>;
 /** The side a sheet stands along. Both follow the reading direction. */
 type Side = "start" | "end";
 
-// The side lives on UI SDK's root, which moves the panel; SheetContent names it, as shadcn's does,
+// The side lives on UI SDK's root, which moves the panel; SheetContent names it,
 // and hands it up.
 const SideContext = createContext<(side: Side) => void>(() => {
   // Outside a Sheet there is no root to tell.
@@ -476,7 +476,7 @@ export interface SheetCloseProps
     WrapperProps {
   /**
    * The look of the Button it draws, without `asChild`: `outline` for Cancel beside the main
-   * action, as shadcn draws it; `default` when closing is the step the sheet is for.
+   * action; `default` when closing is the step the sheet is for.
    * @default "outline"
    */
   variant?: ButtonVariant;

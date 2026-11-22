@@ -209,37 +209,6 @@ With `asChild` the trigger is a router's own link, or any element the host draws
     { key: "Shortcut", value: "`aria-keyshortcuts` on the trigger" },
   ]}
 />
-<Rows
-  title="From shadcn"
-  rows={[
-    {
-      group: "Parts",
-      key: "`TooltipProvider`",
-      value: "Kept",
-      note: "a shared delay; the next tooltip opens at once without one",
-    },
-    {
-      group: "Parts",
-      key: "`TooltipTrigger`",
-      value: "A plain wrapper",
-      note: "`asChild` onto the Button or link inside",
-    },
-    { group: "Props", key: "New", value: "`shortcut`, `handle`" },
-    {
-      group: "Look",
-      key: "`bg-foreground`",
-      value: "{tooltip}",
-      note: "dark in both themes",
-    },
-    { group: "Look", key: "Arrow", value: "Dropped" },
-    {
-      group: "Behaviour",
-      key: "Base UI's Tooltip",
-      value: "UI SDK's Tooltip",
-      note: "so an agent reads it on the trigger",
-    },
-  ]}
-/>
 
 <Reference>
 

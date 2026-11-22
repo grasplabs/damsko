@@ -1,5 +1,4 @@
-// AspectRatio: a box that keeps its width to its height, from shadcn's
-// (registry/bases/base/ui/aspect-ratio.tsx), converted from Tailwind to StyleX. It holds the room of
+// AspectRatio: a box that keeps its width to its height, in StyleX. It holds the room of
 // an image, a video or a map before it loads, so nothing below it moves when it does.
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //

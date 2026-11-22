@@ -1,6 +1,6 @@
 // Queue: what waits while an answer is written, the messages a person sent ahead and the to-dos an
-// assistant keeps, as shadcn's Queue pattern (apps/v4/content/docs/ai-elements/base/queue.mdx) builds
-// it: a Trace with a TraceCollapsible for each section, its line the section's count and label, the
+// assistant keeps:
+// a Trace with a TraceCollapsible for each section, its line the section's count and label, the
 // items a Trace of TraceLines under it. Every look and announcement is Trace's; an item's actions
 // and the files a message carries stand in its line.
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.

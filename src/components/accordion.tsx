@@ -1,6 +1,5 @@
-// Accordion: a set of sections, each opened from its heading, from shadcn's
-// (registry/bases/base/ui/accordion.tsx, on Base UI), converted from Tailwind to StyleX and rebuilt
-// on UI SDK's Accordion, with the reference's look: a quiet full-width trigger for each heading, 8px
+// Accordion: a set of sections, each opened from its heading, in StyleX, built
+// on UI SDK's Accordion: a quiet full-width trigger for each heading, 8px
 // apart, its chevron at the end.
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //

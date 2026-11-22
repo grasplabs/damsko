@@ -109,6 +109,9 @@ const FORCED = media.forcedColors;
 const HOVER = media.hover;
 const COARSE = media.pointerCoarse;
 
+// A segment's corner nests inside the track's: the one corner less the track's padding.
+const SEGMENT_CORNER = `calc(${radius.base} - ${space[1]})`;
+
 const styles = stylex.create({
   root: {
     display: "grid",
@@ -130,7 +133,7 @@ const styles = stylex.create({
     borderWidth: { default: 0, [FORCED]: 1 },
     borderStyle: "solid",
     borderColor: "transparent",
-    borderRadius: radius.full,
+    cornerShape: radius.shape,
     color: colors.foreground,
     backgroundColor: {
       default: "transparent",
@@ -143,8 +146,17 @@ const styles = stylex.create({
     transitionTimingFunction: duration.ease,
     WebkitTapHighlightColor: "transparent",
   },
-  iconSm: { width: size.controlXs, height: size.controlXs },
-  iconDefault: { width: size.controlSm, height: size.controlSm },
+  // Button's corner at each size: the one corner, capped at half the height.
+  iconSm: {
+    width: size.controlXs,
+    height: size.controlXs,
+    borderRadius: `min(${radius.base}, calc(${size.controlXs} / 2))`,
+  },
+  iconDefault: {
+    width: size.controlSm,
+    height: size.controlSm,
+    borderRadius: `min(${radius.base}, calc(${size.controlSm} / 2))`,
+  },
   // A finger's 44px, unseen, on a touch screen, from the button's own size.
   target: {
     position: "absolute",
@@ -166,6 +178,8 @@ const styles = stylex.create({
   swapIn: { opacity: 1, filter: "none", transform: "none" },
 
   // ---- The segmented control: three equal segments, the pill moves by a whole segment ----
+  // The track takes the one corner in the system's squircle, as Toggle group's and Tabs' do; the
+  // pill and each segment nest inside it, the track's corner less its padding.
   segments: {
     [iconVars.size]: size.iconSm,
     [iconVars.stroke]: size.iconStroke,
@@ -174,7 +188,8 @@ const styles = stylex.create({
     gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
     padding: space[1],
     backgroundColor: colors.accent,
-    borderRadius: radius.full,
+    borderRadius: radius.base,
+    cornerShape: radius.shape,
     borderWidth: { default: 0, [FORCED]: 1 },
     borderStyle: "solid",
     borderColor: "CanvasText",
@@ -185,7 +200,8 @@ const styles = stylex.create({
     insetInlineStart: space[1],
     width: `calc((100% - 2 * ${space[1]}) / 3)`,
     backgroundColor: colors.card,
-    borderRadius: radius.full,
+    borderRadius: SEGMENT_CORNER,
+    cornerShape: radius.shape,
     boxShadow: shadow.sm,
     // In forced colours the fill is dropped: the chosen segment is ringed in the system's highlight.
     borderWidth: { default: 0, [FORCED]: 2 },
@@ -220,7 +236,8 @@ const styles = stylex.create({
     paddingInline: space[3],
     borderWidth: 0,
     backgroundColor: "transparent",
-    borderRadius: radius.full,
+    borderRadius: SEGMENT_CORNER,
+    cornerShape: radius.shape,
     fontFamily: font.sans,
     fontSize: font.textSm,
     lineHeight: font.textSmLine,
@@ -282,6 +299,7 @@ const styles = stylex.create({
     borderWidth: 0,
     backgroundColor: "transparent",
     borderRadius: radius.base,
+    cornerShape: radius.shape,
     textAlign: "start",
     fontFamily: font.sans,
     color: colors.foreground,
