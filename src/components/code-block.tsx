@@ -1,4 +1,4 @@
-// CodeBlock: code in an answer or a page, after shadcn's (code-block.tsx), in StyleX on our
+// CodeBlock: code in an answer or a page, in StyleX on our
 // CopyButton. Highlighted with Prism (each language loaded the first time it is shown,
 // code-block-prism.ts), its title and the language's name in a header over it, a copy button that
 // copies the code exactly, line numbers and wrapping as options, highlighted, added and removed
@@ -299,9 +299,12 @@ const styles = stylex.create({
   },
 
   // The code. Lines too wide scroll sideways in here, never the page; it takes keyboard focus for
-  // that when they do.
+  // that when they do. Code reads left to right in every language: in a right-to-left page it
+  // still starts at the left edge, its punctuation where it was written.
   content: {
     position: "relative",
+    direction: "ltr",
+    textAlign: "left",
     minWidth: 0,
     overflowX: "auto",
     overflowY: "hidden",
@@ -320,10 +323,7 @@ const styles = stylex.create({
       default: "0px",
       ":is([data-under-end])": space["6"],
     },
-    maskImage: {
-      default: `linear-gradient(to right, transparent, black ${codeBlockVars.start}, black calc(100% - ${codeBlockVars.end}), transparent), linear-gradient(to bottom, black calc(100% - ${codeBlockVars.foot}), transparent)`,
-      ":is([dir=rtl] *)": `linear-gradient(to left, transparent, black ${codeBlockVars.start}, black calc(100% - ${codeBlockVars.end}), transparent), linear-gradient(to bottom, black calc(100% - ${codeBlockVars.foot}), transparent)`,
-    },
+    maskImage: `linear-gradient(to right, transparent, black ${codeBlockVars.start}, black calc(100% - ${codeBlockVars.end}), transparent), linear-gradient(to bottom, black calc(100% - ${codeBlockVars.foot}), transparent)`,
     maskComposite: "intersect",
   },
   // Cut at `maxLines`, with a fade, until Show more.
@@ -364,8 +364,7 @@ const styles = stylex.create({
   wrapped: {
     width: "auto",
   },
-  // Every line has room for the bar at its start, so a highlighted one does not move; it follows
-  // the reading direction.
+  // Every line has room for the bar at its start, so a highlighted one does not move.
   line: {
     display: "flex",
     borderInlineStartWidth: size.codeBlockBarWidth,

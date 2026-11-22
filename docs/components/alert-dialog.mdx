@@ -13,7 +13,7 @@ description: A window that asks one question before a step that cannot be undone
 
 ## Basic usage
 
-The title names the thing, the description says what is lost, and focus starts on the safe answer. The trigger is a plain wrapper: `asChild` hands its behaviour to a Button. `AlertDialogCancel` is the safe answer, an outline Button, as shadcn draws it; `AlertDialogAction` is the one action, and closes it with its `value`.
+The title names the thing, the description says what is lost, and focus starts on the safe answer. The trigger is a plain wrapper: `asChild` hands its behaviour to a Button. `AlertDialogCancel` is the safe answer, an outline Button; `AlertDialogAction` is the one action, and closes it with its `value`.
 
 <Stage path="alert-dialog/basic" live label="Basic usage" />
 
@@ -147,34 +147,6 @@ Under 640px it is a sheet along the bottom, and its answers share the line under
     {
       key: "Cancel",
       value: "Says the I18nProvider's `alertDialog.cancel` when given no words",
-    },
-  ]}
-/>
-<Rows
-  title="From shadcn"
-  rows={[
-    {
-      group: "Parts",
-      key: "Every part",
-      value: "Kept",
-      note: "AlertDialogContent brings its shade, in the top layer",
-    },
-    {
-      group: "Parts",
-      key: "`AlertDialogMedia`, `size`",
-      value: "Not yet",
-    },
-    {
-      group: "Look",
-      key: "The panel",
-      value: "Dialog's",
-      note: "dialogStyles",
-    },
-    {
-      group: "Behaviour",
-      key: "Base UI's AlertDialog",
-      value: "UI SDK's AlertDialog",
-      note: "so an agent can open it and press its answers",
     },
   ]}
 />

@@ -45,48 +45,14 @@ Press Next step: new words come in place. With `active` off, the line is plain w
   ]}
 />
 
-## shadcn's `shimmer` utility
+## One shimmer
 
-shadcn ships the shimmer as a CSS class, `shimmer`, put on any text element, and its Trace line shimmers its title while it runs. StyleX has no utility classes, and this light needs a second copy of the words to travel under, so in Damsko it is this component: wrap the words in `<Shimmer>` where shadcn adds `className="shimmer"`. TraceLine's `status="running"` does it for its title, as shadcn's does. There is one implementation: no part keeps a shimmer of its own.
+The light needs a second copy of the words to travel under, so it is a component, not a class: wrap the words in `<Shimmer>`. TraceLine's `status="running"` does it for its title. There is one implementation: no part keeps a shimmer of its own.
 
 ## Reduced motion and forced colours
 
 - With reduced motion there is no sweep: the words say it. In forced colours it is plain words.
 - A screen reader reads the words once: the light's copy of them is hidden from it.
-
-<Rows
-  title="From shadcn"
-  rows={[
-    {
-      group: "Form",
-      key: "The `shimmer` class",
-      value: "The Shimmer component",
-      note: "StyleX has no utility classes; the light travels on a copy of the words",
-    },
-    {
-      group: "Strength",
-      key: "`shimmer-color-*`, `shimmer-spread-*`",
-      value: "`variant`: `soft`, `default`, `bright`",
-      note: "tokens only: a colour and band per strength",
-    },
-    {
-      group: "Speed",
-      key: "`shimmer-duration-*`",
-      value: "Set by the line's length",
-      note: "short and long lines sweep at the same apparent speed",
-    },
-    {
-      group: "Off",
-      key: "`shimmer-none`",
-      value: "`active={false}`",
-    },
-    {
-      group: "Direction",
-      key: "`shimmer-reverse`, RTL",
-      value: "Follows the reading direction",
-    },
-  ]}
-/>
 
 <Reference>
 

@@ -1,7 +1,6 @@
-// Terminal: a command an assistant runs and what it prints, after shadcn's Terminal pattern
-// (apps/v4/content/docs/ai-elements/base/terminal.mdx and its examples), built as it builds it: a
+// Terminal: a command an assistant runs and what it prints: a
 // Trace with one TraceCollapsible, its line the command ("Ran pnpm build"), the output under it on
-// the code surface. The parts carry shadcn's names.
+// the code surface.
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
 //   <Terminal output={log} isStreaming={running} onClear={() => setLog("")} />
@@ -202,6 +201,9 @@ const styles = stylex.create({
     marginInlineStart: "auto",
     alignItems: "center",
     gap: space["1"],
+    // The last icon ends on the output's end edge, as the line's mark starts on its start edge; the
+    // button's fill under the pointer reaches past it by the button's own padding.
+    marginInlineEnd: `calc((${size.iconSm} - ${size.controlSm}) / 2)`,
     flexShrink: 0,
   },
   // The output, on the code surface as a small CodeBlock draws it: the wash, the strong edge, the

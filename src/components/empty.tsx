@@ -1,5 +1,5 @@
 // Empty: what a list, a card or a page says when there is nothing in it, or when it could not
-// load, after shadcn's: centred, quiet, a short title over one sentence, in one of three sizes.
+// load: centred, quiet, a short title over one sentence, in one of three sizes.
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
 //   <Empty>

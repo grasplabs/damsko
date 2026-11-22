@@ -55,8 +55,10 @@ const layout = stylex.create({
     alignItems: "center",
     justifyContent: "space-between",
     gap: space["4"],
-    paddingBlock: space["3"],
-    paddingInline: space["4"],
+    // The ghost button's own padding stands in for the edge's: its words line up with the field's.
+    paddingBlock: space["2"],
+    paddingInlineStart: space["4"],
+    paddingInlineEnd: space["2"],
   },
   heading: {
     margin: 0,
@@ -71,7 +73,7 @@ const layout = stylex.create({
   },
 });
 
-// The thread, as shadcn's Chat composes it: a header, the turns in a MessageScroller that follows
+// The thread: a header, the turns in a MessageScroller that follows
 // the reply while you stay at the end, the empty state before the first turn, and the PromptInput
 // under it. Each question you send settles near the top and the answer streams in under it.
 export default function ChatDemo() {

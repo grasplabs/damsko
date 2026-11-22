@@ -1,5 +1,5 @@
-// Text: running words from the type scale. shadcn has none (it styles p, lead, large, small and
-// muted on its typography page). One component with a size, a weight and a colour, so a product
+// Text: running words from the type scale.
+// One component with a size, a weight and a colour, so a product
 // never sets a font size, a line height or a grey by hand.
 //
 //   <Text>Reports appear here once a review is closed.</Text>          15px body, secondary

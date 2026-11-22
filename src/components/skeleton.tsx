@@ -1,5 +1,4 @@
-// Skeleton: a placeholder in the shape of content that is still loading, from shadcn's
-// (registry/bases/base/ui/skeleton.tsx), converted from Tailwind to StyleX. It takes the shape of
+// Skeleton: a placeholder in the shape of content that is still loading, in StyleX. It takes the shape of
 // what it stands for: a line of text, a rectangle, or a circle.
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //

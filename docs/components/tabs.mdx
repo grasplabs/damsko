@@ -10,7 +10,7 @@ description: A row of tabs that switch between views of one thing, one at a time
 
 ## Basic usage
 
-Views of one thing, one panel shown at a time. `variant="line"` on the list: a line under the chosen tab.
+Views of one thing, one panel shown at a time. The list is always a row. `variant="line"` on the list: a line under the chosen tab.
 
 <Stage path="tabs/basic" live label="Basic usage" />
 
@@ -236,40 +236,6 @@ Hover and keyboard focus are forced from its own CSS; the rest are props.
       value: "Words 4.5:1 at rest and chosen, the line 3:1, light and dark",
       note: "checked by `node tokens/generate.ts --check`",
     },
-  ]}
-/>
-<Rows
-  title="From shadcn"
-  rows={[
-    {
-      group: "Parts",
-      key: "`TabsTrigger`, `TabsContent`",
-      value: "The same",
-    },
-    {
-      group: "Parts",
-      key: "`TabsNav`, `TabsLink`",
-      value: "Added",
-      note: "views with their own address, folding to a menu",
-    },
-    {
-      group: "Look",
-      key: "`variant` on `TabsList`, `default` and `line`",
-      value: "The same",
-      note: "the line glides between tabs",
-    },
-    {
-      group: "Look",
-      key: '`orientation="vertical"`',
-      value: "Dropped, for now",
-    },
-    {
-      group: "Elsewhere",
-      key: "`className`",
-      value: "`style`",
-      note: "layout and width only",
-    },
-    { group: "Elsewhere", key: "Base UI", value: "UI SDK" },
   ]}
 />
 

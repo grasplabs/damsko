@@ -1,5 +1,5 @@
-// Marker: a line in a conversation that marks something that happened, after shadcn/ui's Marker,
-// in Damsko's look: a status as the assistant works, a note, a row with a rule under it, or a word
+// Marker: a line in a conversation that marks something that happened:
+// a status as the assistant works, a note, a row with a rule under it, or a word
 // in the middle of a hairline (a date, "New messages", a checkpoint).
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
@@ -153,9 +153,11 @@ const styles = stylex.create({
     minWidth: 0,
     overflowWrap: "break-word",
   },
+  // Its words wrap before they reach the edge: the hairlines on each side go to nothing, the gaps
+  // beside them stay, so the row never runs past its box.
   contentSeparator: {
     flexShrink: 0,
-    maxWidth: "100%",
+    maxWidth: `calc(100% - 2 * ${space["3"]})`,
     textAlign: "center",
   },
 });

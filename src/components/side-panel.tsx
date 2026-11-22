@@ -1,5 +1,5 @@
-// Side panel: the details of one thing beside a page, in sections, after the right-hand panel of
-// the reference's agent page: on the high lift, the system's corner, one start edge for everything in
+// Side panel: the details of one thing beside a page, in sections:
+// on the high lift, the system's corner, one start edge for everything in
 // it. It scrolls on its own, a landmark (`<aside>`) named by its `aria-label`. Its header folds as
 // it scrolls: the bar stays and gains its hairline, and the views slide into the bar as icons. Its
 // content is one SidePanelContent per view, or one alone when it has none.
@@ -1338,7 +1338,7 @@ const SectionTitle = ({
 };
 
 /**
- * One section of a side panel, after the reference's agent panel. Always the same three things: a
+ * One section of a side panel. Always the same three things: a
  * quiet title (with a dashed underline when it explains itself in a tooltip), one quiet action at
  * the end of the title's row, and one card under it. Empty, the card is one row that adds the
  * first. The title's words stand on the same line as the words in the card's rows.

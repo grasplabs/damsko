@@ -1,5 +1,5 @@
-// Context: how much of the model's context window a conversation has used, after shadcn's AI
-// Elements pattern (content/docs/ai-elements/base/context.md), built on HoverCard, Button and
+// Context: how much of the model's context window a conversation has used,
+// built on HoverCard, Button and
 // Progress. The trigger is an outline Button with a ring of how full the
 // window is and its share ("8% context"); resting on it, or tabbing to it, opens a card with the
 // tokens used of the most, a bar of the same, and a row per kind of token, with what each cost when
@@ -200,13 +200,17 @@ const styles = stylex.create({
     minWidth: 0,
   },
   label: { color: colors.mutedForeground },
+  // The count and its cost as two items a gap apart: as runs of digits in one line, right to left
+  // would join them and put the gap on the far side.
   tokens: {
+    display: "inline-flex",
+    alignItems: "baseline",
+    gap: space["2"],
     color: colors.foreground,
     fontVariantNumeric: "tabular-nums",
     whiteSpace: "nowrap",
   },
   cost: {
-    marginInlineStart: space["2"],
     color: colors.mutedForeground,
   },
   // The total under a hairline, the card's last line.

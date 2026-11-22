@@ -1,5 +1,5 @@
-// InlineCitation: a source in the sentence it supports, after shadcn's AI Elements pattern
-// (content/docs/ai-elements/base/inline-citation.md), built on HoverCard, Button, Carousel and Link.
+// InlineCitation: a source in the sentence it supports,
+// built on HoverCard, Button, Carousel and Link.
 // The chip is a small secondary Button naming where the source lives ("example.com +2"); resting
 // on it, or tabbing to it, opens a card with the source's title, a line about it and a link to it,
 // and pages through several sources when there are more.
@@ -215,6 +215,12 @@ const HOVER = media.hover;
 
 const styles = stylex.create({
   citation: { display: "inline" },
+  // The chip stands in a line of words: it gives back what it is taller than its own words' line,
+  // so a line that holds one stands as far from its neighbours as any other.
+  chip: {
+    display: "inline-flex",
+    marginBlock: `calc((1lh - ${size.controlXs}) / 2)`,
+  },
   // Lit while the pointer is on the citation, or focus is on its chip.
   text: {
     borderRadius: size.hairline,
@@ -313,14 +319,16 @@ export const InlineCitationCardTrigger = ({
   const words = useI18n().inlineCitation;
   const first = citedSource(sources[0]);
   return (
-    <HoverCardTrigger variant="default" asChild>
-      <Button variant="secondary" size="xs" style={style}>
-        {words.trigger(
-          first?.host ?? words.unknown,
-          Math.max(0, sources.length - 1)
-        )}
-      </Button>
-    </HoverCardTrigger>
+    <span {...stylex.props(styles.chip, style)}>
+      <HoverCardTrigger variant="default" asChild>
+        <Button variant="secondary" size="xs">
+          {words.trigger(
+            first?.host ?? words.unknown,
+            Math.max(0, sources.length - 1)
+          )}
+        </Button>
+      </HoverCardTrigger>
+    </span>
   );
 };
 

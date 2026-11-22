@@ -25,12 +25,18 @@
 //     </TraceCollapsible>
 //   </Trace>
 //
-// A line straight inside a Trace is a step: a step apart from the next, the dots running down from
-// its mark to the next step's mark. In every line, a first TraceIcon sits in a seat at the line's
-// start, so the titles of steps and of trigger lines start at one edge and words that wrap stay
-// clear of the mark. A TraceIcon with nothing in it is the status mark: a dot, the alert when the
-// step failed. A running title shimmers (Shimmer). Each status is said in words after the line, not
-// only by its mark and colour.
+// A line straight inside a Trace is a step: a step apart from the next, its first TraceIcon in a
+// seat at its start (the mark's width and space-3), so words that wrap stay clear of it, and the
+// dots running down from its mark to the next step's mark. A line inside a TraceCollapsibleTrigger
+// is the trigger's words, the original's activity line: its mark beside its title, a space-2 apart,
+// at the text's own weight and line, muted until the pointer is on it or it is open, as tall as a
+// small control. The trigger's words stand on the column's edge, where the panel's lines and
+// surfaces start; its fill under the pointer reaches past them by its own padding. In a card that
+// carries traceCardMarker (Tool's) the trigger runs the card's width and takes no fill: its words
+// turn to ink, as a step that opens did in the original. A TraceIcon with nothing in it is the
+// status mark: a dot, the alert when the step failed. A running title shimmers (Shimmer) in ink, a
+// failed one stands in the body's ink beside its red mark. Each status is said in words after the
+// line, not only by its mark and colour.
 //
 // What is said aloud, through the page's live region: a line is said once, when its status changes
 // after it was drawn, to done (no status) from running or pending, or to error from anything else.
@@ -76,7 +82,7 @@ import {
 } from "../lib/tokens.stylex";
 import { announce } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
-import { iconVars } from "../lib/vars.stylex";
+import { iconVars, traceCardMarker } from "../lib/vars.stylex";
 import { Shimmer } from "./shimmer";
 
 /** Where the work a line reports stands: `running` under way, `error` failed, `pending` not begun. Without one it is done. */
@@ -174,8 +180,11 @@ const HOVER = media.hover;
 const OPEN = ":is([aria-expanded=true])";
 const OFF = ":is([data-disabled])";
 
-// The seat a line's first mark sits in, and the room after it before the words.
+// The seat a line's first mark sits in, and the room after it before the words: one for steps and
+// trigger lines alike, so every title in a column starts at one edge.
 const SEAT = `calc(${size.iconSm} + ${space["3"]})`;
+// How far a small control's height stands past a line of words, on each side.
+const ROOM = `(${size.controlSm} - ${font.textSmLine}) / 2`;
 // Half the line's leading: how far a mark's drawing stands inside its one-line-high seat.
 const LEADING = `(1lh - ${size.iconSm}) / 2`;
 
@@ -195,7 +204,7 @@ const styles = stylex.create({
     color: colors.mutedForeground,
   },
   // A line: its mark in its seat, its words and whatever stands beside them, wrapping where there
-  // is no room.
+  // is no room; a long title wraps beside its mark rather than under it.
   line: {
     position: "relative",
     display: "flex",
@@ -282,7 +291,8 @@ const styles = stylex.create({
     overflowWrap: "anywhere",
   },
   titleRunning: { color: colors.foreground },
-  titleError: { color: colors.destructive },
+  // Failed: the body's ink, the red is its mark's.
+  titleError: { color: colors.bodyForeground },
   description: {
     color: colors.mutedForeground,
     overflowWrap: "anywhere",
@@ -292,14 +302,51 @@ const styles = stylex.create({
     width: "100%",
     minWidth: 0,
   },
-  // The trigger: a line among words, only as wide as its line and chevron, at the text's own weight
-  // and line, muted until the pointer is on it or it is open, as tall as a small control.
+  // A row that opens among steps: as tall as a step, its mark where a step's stands, so the dots
+  // from the step before reach it.
+  collapsibleStep: {
+    paddingBlock: {
+      default: 0,
+      ":not(:only-child)": `calc(${space["2"]} - ${ROOM})`,
+    },
+  },
+  // The trigger: the original's activity line, only as wide as its line and chevron (a card's width
+  // in a card), at the text's own weight and line, muted until the pointer is on it or it is open,
+  // as tall as a small control. Its fill under the pointer reaches past its words by its padding;
+  // in a card it takes none.
   trigger: {
-    justifySelf: "start",
-    maxWidth: "100%",
-    minHeight: size.controlSm,
+    justifySelf: {
+      default: "start",
+      [stylex.when.ancestor(":is(*)", traceCardMarker)]: "stretch",
+    },
+    maxWidth: {
+      default: "100%",
+      [stylex.when.ancestor(":is(*)", traceCardMarker)]: "none",
+    },
+    // In a card: the whole row, over the card's edge on three sides when closed, with its corner, a
+    // step of room above and below its line, so its ring lies on the card's edge.
+    marginInline: {
+      default: `calc(-1 * ${size.collapsiblePadding})`,
+      [stylex.when.ancestor(":is(*)", traceCardMarker)]:
+        `calc(-1 * (${size.collapsiblePadding} + ${size.hairline}))`,
+    },
+    marginBlock: {
+      default: 0,
+      [stylex.when.ancestor(":is(*)", traceCardMarker)]:
+        `calc(-1 * ${size.hairline})`,
+    },
+    minHeight: {
+      default: size.controlSm,
+      [stylex.when.ancestor(":is(*)", traceCardMarker)]:
+        `calc(${space["2"]} * 2 + ${font.textSmLine} + 2 * ${size.hairline})`,
+    },
+    // A title that wraps keeps a little room above and below; one line stays a small control tall.
+    paddingBlock: `calc(${ROOM})`,
     columnGap: space["2"],
-    borderRadius: `min(${radius.base}, calc(${size.controlSm} / 2))`,
+    borderRadius: {
+      default: `min(${radius.base}, calc(${size.controlSm} / 2))`,
+      [stylex.when.ancestor(":is(*)", traceCardMarker)]: radius.base,
+    },
     lineHeight: font.textSmLine,
     fontWeight: font.weightNormal,
     color: {
@@ -307,6 +354,16 @@ const styles = stylex.create({
       ":hover": { default: null, [HOVER]: colors.foreground },
       [OPEN]: colors.foreground,
       [OFF]: { default: colors.subtleForeground, [FORCED]: "GrayText" },
+    },
+  },
+  // In a card the ring lies on the card's own edge, inside the trigger's box, so it reads as the
+  // card's edge turning to the ring rather than a second line beside it.
+  ringInCard: {
+    outlineOffset: {
+      default: size.ringOffset,
+      [stylex.when.ancestor(":is(*)", traceCardMarker)]:
+        `calc(-1 * ${size.ringWidth})`,
+      [FORCED]: size.ringOffsetMark,
     },
   },
   // Points down while closed and turns up as it opens.
@@ -505,19 +562,26 @@ export const TraceCollapsible = ({
   onOpenChange,
   disabled,
   style,
-}: TraceCollapsibleProps) => (
-  // The slot is set on the element drawn: UI SDK keeps a part's own data-slot over a prop.
-  <CollapsiblePrimitive
-    render={<div data-slot="trace-collapsible" />}
-    open={open}
-    defaultOpen={defaultOpen}
-    onOpenChange={onOpenChange}
-    disabled={disabled}
-    {...stylex.props(styles.collapsible, style)}
-  >
-    <StepContext value={false}>{children}</StepContext>
-  </CollapsiblePrimitive>
-);
+}: TraceCollapsibleProps) => {
+  const step = use(StepContext);
+  return (
+    // The slot is set on the element drawn: UI SDK keeps a part's own data-slot over a prop.
+    <CollapsiblePrimitive
+      render={<div data-slot="trace-collapsible" />}
+      open={open}
+      defaultOpen={defaultOpen}
+      onOpenChange={onOpenChange}
+      disabled={disabled}
+      {...stylex.props(
+        styles.collapsible,
+        step && styles.collapsibleStep,
+        style
+      )}
+    >
+      <StepContext value={false}>{children}</StepContext>
+    </CollapsiblePrimitive>
+  );
+};
 
 /** The button that opens and closes the row: its TraceLine, and the chevron that turns. */
 export const TraceCollapsibleTrigger = ({
@@ -545,6 +609,7 @@ export const TraceCollapsibleTrigger = ({
         disclosureStyles.ghost,
         styles.trigger,
         focusRing,
+        styles.ringInCard,
         style
       )}
     >

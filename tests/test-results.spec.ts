@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { hasFocusRing, openExample } from "./example.ts";
+import { drawnEdges, hasFocusRing, openExample, panelOf } from "./example.ts";
 
 test("a failed run says its counts and Failed in words, and is open on its tests", async ({
   page,
@@ -70,4 +70,19 @@ test("the keyboard reaches the run with a ring; Enter opens it on a bar named by
     page.getByRole("progressbar", { name: "4 of 4 tests passed" })
   ).toBeVisible();
   await expect(page.getByText("1.52s")).toBeVisible();
+});
+
+test("what opens under the line starts on the line's own start edge, its mark's", async ({
+  page,
+}) => {
+  await openExample(page, "test-results", "basic");
+  const line = page.getByRole("button", { name: /^Ran 5 tests, 1 failed/u });
+  if ((await line.getAttribute("aria-expanded")) === "false") {
+    await line.press("Enter");
+  }
+  const panel = await panelOf(line);
+  await expect(panel).toBeVisible();
+  const header = await drawnEdges(line);
+  const body = await drawnEdges(panel);
+  expect(Math.abs(body.start - header.start)).toBeLessThanOrEqual(1);
 });

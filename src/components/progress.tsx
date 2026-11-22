@@ -1,6 +1,6 @@
 // Progress: how far a task has come, as a bar (Progress) or a ring (ProgressCircle), or that it is
-// under way when how far is unknown, from shadcn's (registry/bases/base/ui/progress.tsx, on Base
-// UI), converted from Tailwind to StyleX and rebuilt on UI SDK's Progress: a round track in three
+// under way when how far is unknown, in StyleX,
+// built on UI SDK's Progress: a round track in three
 // heights, the primary colour for what is done, and a ring in three sizes.
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //

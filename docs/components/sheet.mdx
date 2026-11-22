@@ -19,7 +19,7 @@ Along the end, the right in English: details and side tasks beside the page. The
 
 ## From the start
 
-`side="start"` on the content, for places to go. Both sides follow the reading direction.
+`side="start"` on the content, for places to go. Both sides follow the reading direction. A sheet opens along the start or the end only: a panel that rises from the bottom is a Drawer.
 
 <Stage path="sheet/start" label="From the start" />
 
@@ -199,47 +199,6 @@ When the body holds more than the window, only the body scrolls.
       key: "Contrast",
       value: "Words 4.5:1 on the panel, light and dark",
       note: "checked by `node tokens/generate.ts --check`",
-    },
-  ]}
-/>
-<Rows
-  title="From shadcn"
-  rows={[
-    {
-      group: "Base",
-      key: "Base UI's Dialog",
-      value: "UI SDK's Drawer",
-      note: "so it can be dragged away",
-    },
-    {
-      group: "Parts",
-      key: "`SheetContent`",
-      value: "Kept",
-      note: "with the shade and, by `showCloseButton`, the close button",
-    },
-    {
-      group: "Parts",
-      key: "`SheetTrigger`, `SheetClose`",
-      value: "Plain wrappers",
-      note: "`asChild` onto the element inside; SheetClose alone draws an outline Button, as shadcn's does",
-    },
-    {
-      group: "Parts",
-      key: "New",
-      value: "`SheetBody`",
-      note: "the one part that scrolls",
-    },
-    {
-      group: "Props",
-      key: "`side`",
-      value: '`"start"` or `"end"`',
-      note: "logical; top and bottom are a Drawer",
-    },
-    {
-      group: "Props",
-      key: "Width classes",
-      value: '`size="default"`, `size="lg"`, `size="full"`',
-      note: "three widths; no `xl`",
     },
   ]}
 />

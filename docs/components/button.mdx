@@ -10,7 +10,7 @@ description: A button you press to do one thing now, like Save or Send.
 
 ## Variants
 
-Each variant has its own job and its own look; shadcn/ui gives the names and where each is used. `default` is the one main step of a view, Save changes; never two in one view. `outline`, the quiet fill with a field's edge and lift, is the ordinary button: the lesser action beside a main one, Cancel beside Save, Previous beside Next; and a standalone action or trigger, Invite people, Export, the button that opens a dialog or a menu. `outline` stands anywhere, on a card too. `secondary`, a flat veil with no edge, is for a repeated or dense action, where a row of edged, lifted buttons would be too heavy: the same action on every row of a list, a toolbar of several equal actions. A filter, or anything that is on or off, is a Toggle, not a `secondary` Button: at rest `secondary` wears a pressed toggle's fill. `ghost` is for toolbars, rows and icon buttons, Edit. `destructive` is for what cannot be undone, Delete workspace. `link` is an action that reads as words, Read the guide.
+Each variant has its own job and its own look. `default` is the one main step of a view, Save changes; never two in one view. `outline`, the quiet fill with a field's edge and lift, is the ordinary button: the lesser action beside a main one, Cancel beside Save, Previous beside Next; and a standalone action or trigger, Invite people, Export, the button that opens a dialog or a menu. `outline` stands anywhere, on a card too. `secondary`, a flat veil with no edge, is for a repeated or dense action, where a row of edged, lifted buttons would be too heavy: the same action on every row of a list, a toolbar of several equal actions. A filter, or anything that is on or off, is a Toggle, not a `secondary` Button: at rest `secondary` wears a pressed toggle's fill. `ghost` is for toolbars, rows and icon buttons, Edit. `destructive` is for what cannot be undone, Delete workspace. `link` is an action that reads as words, Read the guide.
 
 <Stage path="button/variants" live label="Variants" />
 
@@ -28,7 +28,7 @@ Where the same action repeats down a list, a column of outlined buttons would be
 
 ## Sizes and icons
 
-`default` by default; `sm` in dense tables, `lg` for a main call on touch. An icon is a child, `<Icon />`, before or after the words. An icon-only button takes an `icon` size and its name from `aria-label`.
+`default` by default; `sm` in dense tables, `lg` for a main call on touch. `xs`, 28px, is the smallest: a compact button in a card's footer or a prompt input. An icon is a child, `<Icon />`, before or after the words. An icon-only button takes an `icon` size and its name from `aria-label`.
 
 <Stage path="button/sizes" label="Sizes and icons" />
 
@@ -326,46 +326,6 @@ Loading shows a Spinner before the words and keeps focus on the button.
       value: "`disabled`, or `focusableWhenDisabled` to keep focus",
     },
     { key: "Focus ring", value: "3:1 or more against every ground beside it" },
-  ]}
-/>
-<Rows
-  title="From shadcn"
-  rows={[
-    {
-      group: "variant",
-      key: "All six",
-      value: "Kept, each for the job shadcn gives it",
-      note: "`default`, `secondary`, `destructive`, `outline`, `ghost`, `link`",
-    },
-    {
-      group: "size",
-      key: "All of them",
-      value: "Kept",
-      note: "`xs` is 28px: 24px is too small to aim at",
-    },
-    {
-      group: "Elsewhere",
-      key: "`className`",
-      value: "`style`",
-      note: "layout only, never a width",
-    },
-    {
-      group: "Elsewhere",
-      key: "`[&_svg]:size-4`",
-      value: "The icon reads the size from the button",
-      note: "a parent cannot style its children",
-    },
-    {
-      group: "Elsewhere",
-      key: "`translate-y-px`",
-      value: "Scale {button-press-scale}",
-    },
-    {
-      group: "Elsewhere",
-      key: "`asChild`",
-      value: "Kept",
-      note: "onto UI SDK's `render`",
-    },
   ]}
 />
 

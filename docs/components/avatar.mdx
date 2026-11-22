@@ -19,7 +19,7 @@ description: A small round picture of a person or team, showing initials when th
 
 ## Picture or initials
 
-The picture once it loads; the initials until then, without one, and when it fails.
+The picture once it loads; the initials until then, without one, and when it fails. An empty `AvatarFallback` shows the initials of the Avatar's `name`.
 
 <Stage path="avatar/image" label="Picture or initials" />
 
@@ -162,31 +162,6 @@ A picture, initials from a name of one or more words, and a picture that cannot 
       value: "Initials 4.5:1 on the soft fill, light and dark",
       note: "checked by `node tokens/generate.ts --check`",
     },
-  ]}
-/>
-<Rows
-  title="From shadcn"
-  rows={[
-    {
-      group: "Parts",
-      key: "`AvatarImage`, `AvatarFallback`, `AvatarBadge`",
-      value: "The same parts",
-      note: "an empty AvatarFallback shows the initials of the Avatar's `name`",
-    },
-    {
-      group: "Parts",
-      key: "`AvatarGroup`, `AvatarGroupCount`",
-      value: "A group from `items`",
-      note: "the faces stack and cut back; one name for the whole group",
-    },
-    { group: "Look", key: "`size-8 rounded-full`", value: "`size`: six sizes" },
-    {
-      group: "Look",
-      key: "`bg-muted`",
-      value: "{muted}, with the system's edge",
-    },
-    { group: "New", key: "`decorative`", value: "Beside its own name" },
-    { group: "Elsewhere", key: "Base UI", value: "UI SDK" },
   ]}
 />
 

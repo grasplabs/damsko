@@ -8,41 +8,39 @@ description: The building block for a line of an assistant's work, with a mark, 
   install="pnpm dlx shadcn@4.23.0 add @damsko/trace"
 />
 
+## Start with a pattern
+
+Most of the time you want a pattern built on Trace: [Reasoning](/components/reasoning), [Tool](/components/tool), [Chain of thought](/components/chain-of-thought), [Sources](/components/sources), [Terminal](/components/terminal), [Stack trace](/components/stack-trace), [Test results](/components/test-results). Use Trace itself when none of them fits.
+
 ## Steps
 
-`Trace` is a list of lines. A `TraceLine` straight inside it is a step: a quiet line of square pixels down from its mark to the next step's, its `TraceTitle` and a `TraceDescription`. In every line a first `TraceIcon` sits in a seat at its start, so titles start at one edge. A `TraceIcon` with nothing in it is the status mark.
+`Trace` is a list of lines. A `TraceLine` straight inside it is a step: its first `TraceIcon` in a seat at its start, so the titles start at one edge, a quiet line of square pixels down from its mark to the next step's, its `TraceTitle` and a `TraceDescription`. A `TraceIcon` with nothing in it is the status mark.
 
 <Stage path="trace/steps" label="Steps" />
 
 ## A row that opens
 
-Put the `TraceLine` in a `TraceCollapsibleTrigger` and the detail in `TraceCollapsibleContent`: a quiet row, as wide as its line, its words muted until the pointer is on it or it is open, its chevron turning as it opens. More lines in a `Trace` inside it make a chain of thought.
+Put the `TraceLine` in a `TraceCollapsibleTrigger` and the detail in `TraceCollapsibleContent`: a quiet row, as wide as its line, its mark beside its title, its words muted until the pointer is on it or it is open, its chevron turning as it opens. The row's words stand on the column's edge, where the lines under it start; its fill under the pointer reaches past them. Rows open inside rows: here a commit opens on a line for each file it changed, and each file on its diff.
 
-<Stage path="trace/chain-of-thought" label="A row that opens" />
-
-## A tool call
-
-A line in a trigger can hold more than its title: here a Badge says the call's state. The chevron stands straight after the line.
-
-<Stage path="trace/tool" label="A tool call" />
-
-## Thinking
-
-The thoughts open under a row that says how long the thinking took.
-
-<Stage path="trace/reasoning" label="Thinking" />
-
-## A commit
-
-A row with a line for each file the commit changed: what changed in the title, the lines in the description, the diff under each.
-
-<Stage path="trace/commit" label="A commit" />
+<Stage path="trace/commit" label="A row that opens" />
 
 ## A plan
 
 When every step is known before the work starts, show them all from the start: the ones not begun are `pending`. The row's line holds the goal as its title and the progress as its description, and is `running` while the plan is worked through.
 
 <Stage path="trace/plan" label="A plan" />
+
+## A queue
+
+What waits is a list of lines too: a row for each group, its line the count and what it holds, the list under it. A line still waiting is `pending`; one that is done says so in words before its title, for a screen reader, not by its tick alone.
+
+<Stage path="trace/queue" label="A queue" />
+
+## A subagent
+
+Work handed to another agent is a run inside the run: one row, its line the run in the tense of its status, the model as its description. It opens on that agent's own tool calls as a `Trace`, what it returned as a Code block and what it found.
+
+<Stage path="trace/subagent" label="A subagent" />
 
 ## While it works
 
@@ -62,7 +60,7 @@ A line is said once, when its status changes after it was drawn: when it finishe
     "A line in a trigger to make it open, or in a link or a dialog's trigger to make it go somewhere.",
   ]}
   never={[
-    "A step a part built on Trace already names: use Tool for a call, Reasoning for thinking, Chain of thought for an answer's steps, Queue or Subagent.",
+    "A step a part built on Trace already names: use Tool for a call, Reasoning for thinking, Chain of thought for an answer's steps.",
     "The assistant's reply: use Message.",
     "A question for the person, such as approving a tool: use Confirmation, outside the Trace.",
   ]}
@@ -83,14 +81,14 @@ A line is said once, when its status changes after it was drawn: when it finishe
       group: "Line",
       key: "Mark",
       value:
-        "{icon-sm} seat, {space-3} to the words, level with the first line, in a step and in a trigger alike; a dot, the alert when failed, or an icon",
+        "In a step, an {icon-sm} seat, {space-3} to the words, level with the first line; in a trigger, beside the title, {space-2} to it; a dot, the alert when failed, or an icon",
       tokens: ["muted-foreground"],
     },
     {
       group: "Step",
       key: "Line between",
       value:
-        "Fine square pixels from mark to mark, {space-1} clear of each; muted once done, faint ahead of the work",
+        "Fine dots from mark to mark, {space-1} clear of each; muted once done, faint ahead of the work",
       tokens: ["muted-foreground", "agent-indicator-rest"],
     },
     {
@@ -109,8 +107,9 @@ A line is said once, when its status changes after it was drawn: when it finishe
     {
       group: "Status",
       key: "Error",
-      value: "Title and mark in red, the alert as the status mark",
-      tokens: ["destructive"],
+      value:
+        "The alert as the status mark, in red; the title in the body's ink",
+      tokens: ["destructive", "body-foreground"],
     },
     {
       group: "Status",
@@ -122,8 +121,15 @@ A line is said once, when its status changes after it was drawn: when it finishe
       group: "Row that opens",
       key: "Trigger",
       value:
-        "As wide as its line, {control-sm} tall, {font-weight-normal} on {text-sm-line}, muted until hovered or open, the ghost fill under the pointer, the chevron muted {space-2} after the line",
-      tokens: ["muted-foreground", "foreground", "control-sm"],
+        "As wide as its line, its words on the column's edge, {control-sm} tall, {font-weight-normal} on {text-sm-line}, muted until hovered or open, the ghost fill under the pointer reaching {collapsible-padding} past the words, the chevron muted {space-2} after the line",
+      tokens: ["muted-foreground", "foreground", "accent", "control-sm"],
+    },
+    {
+      group: "Row that opens",
+      key: "In a card",
+      value:
+        "As wide as the card, no fill under the pointer: its words turn to ink (Tool)",
+      tokens: ["foreground"],
     },
   ]}
 />

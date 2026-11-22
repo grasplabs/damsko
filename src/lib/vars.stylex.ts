@@ -10,7 +10,7 @@ const DENSE = "@media (min-resolution: 2dppx)";
 
 /**
  * The two values an icon reads from whoever holds it. StyleX does not let a parent style its
- * children (shadcn's `[&_svg]:size-4`), so a component that holds an icon sets these on itself and
+ * children, so a component that holds an icon sets these on itself and
  * every Icon inside follows: `{ [iconVars.size]: size.iconSm }`. Never size an icon from outside.
  */
 export const iconVars = stylex.defineVars({
@@ -136,3 +136,10 @@ export const pixel = stylex.defineConsts({
   /** A fine square (`pixelVars.fine`) as a background: a faint field at rest. */
   fineFill: square(pixelVars.fine, pixelVars.color),
 });
+
+/**
+ * The marker of a card that holds a Trace row (Tool's): the row's trigger runs the card's width and
+ * takes no fill under the pointer, only its words turn to ink, as a row that opens in a list does
+ * (trace.tsx). A fill only as wide as the words would stand as a block of its own inside the card.
+ */
+export const traceCardMarker = stylex.defineMarker();

@@ -1,5 +1,5 @@
-// Toast: a small message that says something happened, from shadcn's Sonner
-// (registry/bases/base/ui/sonner.tsx), with Sonner's `toast()` and `<Toaster />`, built on UI SDK's
+// Toast: a small message that says something happened,
+// with Sonner's `toast()` and `<Toaster />`, built on UI SDK's
 // ToastRegion: a raised card with the popup's lift and the one corner, an icon in the toast's
 // colour, a title over a muted sentence, and an action at the bottom end. A toast goes when its time
 // is up, when it is swiped, on Escape, or when its action is pressed, and it always fades as it goes.
@@ -544,7 +544,7 @@ export const Toaster = ({
       maxVisible={visibleToasts}
       expanded={expand}
       aria-label={words.name}
-      // It keeps UI SDK's slot, toast-region, not shadcn's toaster: UI SDK's own styles place the
+      // It keeps UI SDK's slot, toast-region: UI SDK's own styles place the
       // region, raise it and reset its popover box by that name.
       {...stylex.props(
         toastRegionMarker,

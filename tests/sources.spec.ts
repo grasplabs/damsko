@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { hasFocusRing, openExample } from "./example.ts";
+import { drawnEdges, hasFocusRing, openExample, panelOf } from "./example.ts";
 
 test("folded, the pile says only its count; pressing it shows each source as a link by its title", async ({
   page,
@@ -148,4 +148,19 @@ test("a source on another site shows the host its address names, not words of it
       name: /^How onboarding shapes the first year\s*, research\.example\.com \(opens in a new tab\)$/u,
     })
   ).toHaveAttribute("href", "https://research.example.com/onboarding");
+});
+
+test("what opens under the line starts on the line's own start edge, its mark's", async ({
+  page,
+}) => {
+  await openExample(page, "sources", "basic");
+  const line = page.getByRole("button", { name: "5 sources" });
+  if ((await line.getAttribute("aria-expanded")) === "false") {
+    await line.press("Enter");
+  }
+  const panel = await panelOf(line);
+  await expect(panel).toBeVisible();
+  const header = await drawnEdges(line);
+  const body = await drawnEdges(panel);
+  expect(Math.abs(body.start - header.start)).toBeLessThanOrEqual(1);
 });

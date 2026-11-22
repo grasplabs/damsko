@@ -1,6 +1,5 @@
-// NavigationMenu: a site's main links, grouped into panels that open from a row of triggers, from
-// shadcn's (registry/bases/base/ui/navigation-menu.tsx), converted from Tailwind to StyleX and
-// rebuilt on UI SDK's NavigationMenu: triggers drawn as a list's items with a chevron that turns
+// NavigationMenu: a site's main links, grouped into panels that open from a row of triggers,
+// in StyleX, built on UI SDK's NavigationMenu: triggers drawn as a list's items with a chevron that turns
 // over, and each panel the list popup Select and Command share, its links a title with a quiet line
 // under it.
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.

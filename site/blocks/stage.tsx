@@ -52,7 +52,10 @@ export const segmentStyles = stylex.create({
     padding: 2,
     gap: 0,
     backgroundColor: colors.accent,
-    borderRadius: radius.full,
+    // The one corner in the system's squircle, as the library's segmented controls; a segment
+    // nests inside it, the track's corner less its 2px of padding.
+    borderRadius: radius.base,
+    cornerShape: radius.shape,
   },
   segment: {
     position: "relative",
@@ -94,7 +97,8 @@ export const segmentStyles = stylex.create({
         [media.forcedColors]: "Highlight",
       },
     },
-    borderRadius: radius.full,
+    borderRadius: `calc(${radius.base} - 2px)`,
+    cornerShape: radius.shape,
     cursor: "pointer",
     transform: { default: null, ":active": `scale(${size.buttonPressScale})` },
     transitionProperty: "color, background-color, box-shadow, transform",

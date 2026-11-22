@@ -186,48 +186,6 @@ When the body holds more than the drawer, only the body scrolls.
     },
   ]}
 />
-<Rows
-  title="From shadcn"
-  rows={[
-    { group: "Base", key: "Vaul", value: "UI SDK's Drawer" },
-    {
-      group: "Parts",
-      key: "`DrawerContent`",
-      value: "Kept",
-      note: "with the shade and the handle",
-    },
-    {
-      group: "Parts",
-      key: "`DrawerOverlay`, `DrawerPortal`",
-      value: "Inside `DrawerContent`",
-      note: "the content brings its shade, in the top layer",
-    },
-    {
-      group: "Parts",
-      key: "`DrawerTrigger`, `DrawerClose`",
-      value: "Plain wrappers",
-      note: "`asChild` onto the element inside; DrawerClose alone draws an outline Button, as shadcn's does",
-    },
-    {
-      group: "Parts",
-      key: "New",
-      value: "`DrawerBody`",
-      note: "the one part that scrolls",
-    },
-    {
-      group: "Props",
-      key: "`direction`",
-      value: "Dropped",
-      note: "a side panel is a Sheet",
-    },
-    {
-      group: "Elsewhere",
-      key: "`className`",
-      value: "Dropped",
-      note: "the look belongs to the drawer; `style` takes layout only",
-    },
-  ]}
-/>
 
 <Reference>
 
