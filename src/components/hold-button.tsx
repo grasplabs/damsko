@@ -5,16 +5,14 @@
 //
 //   <HoldButton variant="destructive" onConfirm={deleteDraft}>Delete draft</HoldButton>
 //
-// A click or a tap is a hold let go early: it runs nothing and opens nothing. Someone who cannot
-// hold (a screen reader, a switch, a key that is only tapped) gets a Popover instead, with the
-// button's own words and Cancel: the button is that popover's trigger. An agent presses the
-// popover's action, which waits for the person's yes (UI SDK's agent bridge).
+// Someone who cannot hold (a screen reader, a switch, voice control, a quick tap) gets a Popover
+// instead, with the button's own words and Cancel: the button is that popover's trigger. An agent
+// presses the popover's action, which waits for the person's yes (UI SDK's agent bridge).
 //
 //   pointer    down starts it; up before the end, leaving the button, Escape and a touch that turns
-//              into a scroll cancel it, and the click that follows does nothing
+//              into a scroll cancel it
 //   keyboard   Enter or Space held down starts it, and key repeat never starts it again
-//   a key tap  let go within a quarter of the hold: opens the confirmation and runs nothing
-//   a click    with no press behind it (assistive technology): opens the confirmation
+//   a tap      released within a quarter of the hold: opens the confirmation and runs nothing
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
@@ -123,9 +121,8 @@ export interface HoldButtonProps extends Omit<
 
 // ---- The hold ------------------------------------------------------------------------------------
 
-// A key let go within this share of the hold is a tap, from someone who may not be able to hold a
-// key down (no action may need a keystroke of a certain length): it asks. A longer one let go early
-// was a hold that was given up: it does nothing. A pointer let go early never asks.
+// A press let go within this share of the hold is a tap, from someone who may not be able to hold:
+// it asks. A longer press let go early was a hold that was given up: it does nothing.
 const TAP_SHARE = 0.25;
 
 // Kept outside the hook: the React Compiler does not compile a `try` inside one.
@@ -177,9 +174,9 @@ const useHold = ({ time, pressable, act, onStart }: HoldOptions) => {
   const started = useRef(0);
   // How the current press began, so only its own end finishes it.
   const by = useRef<"pointer" | "key" | null>(null);
-  // The click that follows a pointer's press or a key's hold (fired or given up) is swallowed. Set
-  // at the release and cleared by that click, by the next press, or after a moment (a touch's click
-  // comes a task later), so a click with no press behind it always asks.
+  // The click that follows a hold (fired or given up) is swallowed. Set at the release and cleared
+  // by that click, by the next press, or after a moment (a touch's click comes a task later), so a
+  // click with no press behind it always asks.
   const swallow = useRef(false);
   const swallowTimer = useRef(0);
   const touch = useRef(false);
@@ -237,16 +234,19 @@ const useHold = ({ time, pressable, act, onStart }: HoldOptions) => {
   };
 
   /**
-   * The press ended; the click that follows it, if one does (`clicks`: a pointer's up, Space's
-   * keyup; not Enter's), is swallowed, unless it is a key's tap, which asks. Returns whether it asks.
+   * The press ended. Returns whether it was a tap, which asks. A finished hold and a hold given up
+   * both swallow the click that follows. `clicks`: whether a click follows this release (a
+   * pointer's up, Space's keyup); Enter's does not.
    */
   const release = (clicks: boolean) => {
+    const wasHolding = by.current !== null;
+    const finished = wasHolding && timer.current === 0;
     const tap =
-      by.current === "key" &&
-      timer.current !== 0 &&
+      wasHolding &&
+      !finished &&
       performance.now() - started.current < time * TAP_SHARE;
     stop();
-    if (!tap) {
+    if (wasHolding && !tap) {
       arm(clicks);
     }
     return tap;
@@ -435,7 +435,7 @@ const useHold = ({ time, pressable, act, onStart }: HoldOptions) => {
           event.preventDefault();
           return;
         }
-        // A key's tap, or a click with no press behind it: ask. A submit button submits only on the yes.
+        // A tap, or a click with no press behind it: ask. A submit button submits only on the yes.
         call("onClick", event, details);
         event.preventDefault();
       },

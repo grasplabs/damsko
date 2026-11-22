@@ -16,8 +16,8 @@ import { useState } from "react";
 
 type State = ConfirmationProps["state"];
 
-// Money that leaves cannot come back: the yes is held, or confirmed once more after a key's tap,
-// and its words say what it does.
+// Money that leaves cannot come back: the yes is held, or confirmed once more after a tap, and its
+// words say what it does.
 export default function ConfirmationGrave() {
   const [state, setState] = useState<State>("approval-requested");
   const [approved, setApproved] = useState<boolean | undefined>();

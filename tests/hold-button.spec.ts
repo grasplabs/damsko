@@ -74,23 +74,11 @@ test("let go early, nothing runs and nothing asks", async ({ page }) => {
   await expect(confirmation(page)).toHaveCount(0);
 });
 
-test("a short click runs nothing and opens nothing", async ({ page }) => {
-  await open(page);
-  await press(page, TAP);
-  expect(await log(page, "deleted")).toBe(0);
-  await expect(page.getByRole("dialog")).toHaveCount(0);
-  await page.clock.resume();
-  await page.getByRole("button", { name: NAME }).click();
-  expect(await log(page, "deleted")).toBe(0);
-  await expect(page.getByRole("dialog")).toHaveCount(0);
-});
-
-test("a tap of a key asks with the button's words and Cancel", async ({
+test("a short click asks with the button's words and Cancel, and runs nothing", async ({
   page,
 }) => {
   await open(page);
-  await page.getByRole("button", { name: NAME }).focus();
-  await page.keyboard.press("Space");
+  await press(page, TAP);
   const ask = confirmation(page);
   await expect(ask).toBeVisible();
   await expect(ask.getByRole("button", { name: "Cancel" })).toBeVisible();
@@ -98,6 +86,14 @@ test("a tap of a key asks with the button's words and Cancel", async ({
   await ask.getByRole("button", { name: "Delete draft" }).click();
   await expect(ask).toBeHidden();
   expect(await log(page, "deleted")).toBe(1);
+});
+
+test("a tap of a key asks too", async ({ page }) => {
+  await open(page);
+  await page.getByRole("button", { name: NAME }).focus();
+  await page.keyboard.press("Space");
+  await expect(confirmation(page)).toBeVisible();
+  expect(await log(page, "deleted")).toBe(0);
 });
 
 test("Cancel runs nothing and gives focus back to the button", async ({
@@ -169,7 +165,7 @@ test("a hold while it asks closes the question and runs once", async ({
   page,
 }) => {
   await open(page);
-  await page.getByRole("button", { name: NAME }).dispatchEvent("click");
+  await press(page, TAP);
   await expect(confirmation(page)).toBeVisible();
   await press(page, FULL);
   await expect(confirmation(page)).toHaveCount(0);
@@ -181,7 +177,7 @@ test("a form's submit button sends it only once held or confirmed", async ({
 }) => {
   await open(page);
   const send = "Hold to send report";
-  await page.getByRole("button", { name: send }).dispatchEvent("click");
+  await press(page, TAP, send);
   const ask = confirmation(page, "Send report?");
   await expect(ask).toBeVisible();
   expect(await log(page, "submitted")).toBe(0);
@@ -324,6 +320,8 @@ for (const motion of ["reduce", "no-preference"] as const) {
     // It fills with reduced motion too: the fill is the hold's timer.
     await still(page, name);
     expect(await drawnAt(page, start)).not.toBe(rest);
+    // Past a tap, short of the hold: given up.
+    await page.clock.runFor(HALF);
     await page.mouse.up();
     await expect.poll(async () => await drawnAt(page, start)).toBe(rest);
     await expect(page.getByRole("dialog")).toHaveCount(0);
