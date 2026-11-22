@@ -95,7 +95,8 @@ test("horizontal, a fact with a detail opens in place, one at a time", async ({
   await model.click();
   await expect(model).toHaveAttribute("aria-expanded", "true");
   await expect(page.getByText("Claude Sonnet, faster")).toBeVisible();
-  expect(await gap()).toBe(before);
+  // Once the panel has opened: the page centres the example, so both move while it does.
+  await expect.poll(gap).toBe(before);
   await runs.click();
   await expect(runs).toHaveAttribute("aria-expanded", "true");
   await expect(model).toHaveAttribute("aria-expanded", "false");
