@@ -178,7 +178,6 @@ export const kinds: Kind[] = [
       "marker",
       "checkpoint",
       "sources",
-      "file-tree",
       "inline-citation",
       "confirmation",
       "questionnaire",
