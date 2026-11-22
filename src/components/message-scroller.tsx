@@ -185,7 +185,7 @@ export interface MessageScrollerButtonProps {
   behavior?: ScrollBehavior;
   /**
    * Button's variant.
-   * @default "secondary"
+   * @default "outline"
    */
   variant?: ButtonVariant;
   /**
@@ -1044,7 +1044,7 @@ export const MessageScrollerItem = ({
 const Jump = ({
   direction = "end",
   behavior = "smooth",
-  variant = "secondary",
+  variant = "outline",
   size: buttonSize = "sm",
   children,
   asChild = false,

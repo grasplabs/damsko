@@ -101,7 +101,7 @@ export default function MessageScrollerLoading() {
         </MessageScrollerProvider>
       </div>
       <Button
-        variant="secondary"
+        variant="outline"
         size="sm"
         disabled={loading}
         onClick={() => {

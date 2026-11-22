@@ -34,7 +34,7 @@ export default function Offline() {
         </EmptyHeader>
         <EmptyContent>
           <Button
-            variant="secondary"
+            variant="outline"
             size="sm"
             onClick={check}
             loadingLabel="Checking"

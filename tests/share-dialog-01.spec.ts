@@ -107,3 +107,13 @@ test("Done closes the dialog", async ({ page }) => {
   await dialog.getByRole("button", { name: "Done" }).click();
   await expect(dialog).toBeHidden();
 });
+
+test("a search that finds no one says so in the dialog's own words", async ({
+  page,
+}) => {
+  const dialog = await open(page);
+  await dialog
+    .getByRole("combobox", { name: "Add people or groups" })
+    .fill("zzz");
+  await expect(page.getByText("No one has that name")).toBeVisible();
+});

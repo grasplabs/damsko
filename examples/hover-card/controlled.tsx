@@ -34,7 +34,7 @@ export default function HoverCardControlled() {
   return (
     <div {...stylex.props(layout.holder)}>
       <Button
-        variant="secondary"
+        variant="outline"
         size="sm"
         onClick={() => {
           setOpen(true);

@@ -1,7 +1,9 @@
 // Combobox: type to find one value in a list, from shadcn's (registry/bases/base/ui/combobox.tsx),
 // converted from Tailwind to StyleX and rebuilt on UI SDK's Combobox: closed, it is an Input (the
 // same fill, hairline, heights and corner) with a chevron at the end; open, it is the list popup
-// Select shares, and the letters that matched are drawn in the text colour.
+// Select shares, and the letters that matched are drawn in the text colour. An item can carry
+// `media` (an avatar, a logo) and a `description` line under its words, as a person does; the
+// chosen item's media stands at the field's start, and the field's own `media` while there is none.
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
 //   <Field>
@@ -11,6 +13,10 @@
 //   <Combobox items={[{ type: "group", label: "Europe", items }]}>
 //     <ComboboxEmpty>No city has that name</ComboboxEmpty>
 //   </Combobox>
+//   <Combobox
+//     media={<Icon icon={UsersIcon} />}
+//     items={[{ value: "amara", label: "Amara Okafor", description: "Operations", media: <Avatar … /> }]}
+//   />
 //
 // The items are data, so filtering, the keyboard and an agent know every one, and the chosen
 // label is known on the server. The value is always an item's; the text is only a search.
@@ -25,23 +31,27 @@ import {
   ComboboxGroup,
   ComboboxGroupLabel,
   ComboboxInput,
-  ComboboxItem,
+  ComboboxItem as ItemPrimitive,
+  ComboboxItemIcon,
   ComboboxItemIndicator,
   ComboboxItemText,
   ComboboxList,
   ComboboxSeparator,
   ComboboxTrigger,
+  ComboboxValue,
 } from "@ui-sdk/react/combobox";
 import type {
   ComboboxInputState,
   ComboboxItemState,
   ComboboxItemTextState,
+  ComboboxQueryChangeReason,
   ComboboxTriggerState,
   ComboboxValueChangeReason,
+  ComboboxValueState,
   ListData,
   ListItem,
 } from "@ui-sdk/react/combobox";
-import { useEffect, useRef } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
 import { useI18n } from "../lib/i18n";
@@ -72,11 +82,33 @@ import { iconVars, listMarker, motionVars } from "../lib/vars.stylex";
 /** The control's height: Input's and Button's. */
 export type ComboboxSize = "sm" | "default" | "lg";
 
+/** One item that can be chosen. */
+export interface ComboboxItem {
+  /** What the form sends and `onValueChange` hears: unique and lasting ("nl", a person's id). */
+  value: string;
+  /** Its words, in the list and in the field once chosen. Typing finds them. */
+  label: string;
+  /** Other words that find it ("Holland"). */
+  keywords?: string[];
+  /** Cannot be chosen: the keyboard skips it. */
+  disabled?: boolean;
+  /**
+   * What stands before its words: an Avatar (`size="xs"`, `decorative`), a logo, an icon. A screen
+   * reader skips it, as the words beside it say what it is.
+   */
+  media?: ReactNode;
+  /**
+   * A quieter line under its words: a person's role or email. Typing finds it too, and a screen
+   * reader hears it after the words, not run into them.
+   */
+  description?: string;
+}
+
 /**
- * The items: plain strings, `{ value, label, keywords, disabled }`, groups
- * `{ type: "group", label, items }` and separators `{ type: "separator" }`.
+ * The items: plain strings, ComboboxItems, groups `{ type: "group", label, items }` and separators
+ * `{ type: "separator" }`.
  */
-export type ComboboxItems = ListData;
+export type ComboboxItems = ListData<string, ComboboxItem>;
 
 // Every prop is documented once, here; the props on the docs page are read from ComboboxProps.
 
@@ -84,9 +116,17 @@ export type ComboboxItems = ListData;
 export interface ComboboxProps {
   /**
    * What can be chosen: strings (each is its own value and label), `{ value, label, keywords,
-   * disabled }`, groups and separators. `keywords` are other words that find an item ("Holland").
+   * disabled, media, description }`, groups and separators. `keywords` are other words that find an
+   * item ("Holland").
    */
   items: ComboboxItems;
+  /**
+   * What stands at the field's start while nothing is chosen, or the chosen item has no `media`: a
+   * quiet icon. A chosen item's own `media` always stands there, with or without this, and steps
+   * aside while the words typed are a search. Give it when the items have media, so the words keep
+   * their place as a choice is made and cleared.
+   */
+  media?: ReactNode;
   /** A ComboboxEmpty, for the words the list says when nothing matches. Without one, the catalogue's. */
   children?: ReactNode;
   /** The value chosen at first. A form reset returns here. Leave it out to start with nothing. */
@@ -282,6 +322,45 @@ const styles = stylex.create({
   option: {
     fontWeight: font.weightNormal,
   },
+  // With media at its start (the element before it), the words begin after it.
+  inputStart: {
+    paddingInlineStart: {
+      default: space[3],
+      [stylex.when.siblingBefore(":not(:empty)")]:
+        `calc(${space[3]} + ${size.avatarXs} + ${space[2]})`,
+    },
+  },
+  // The field's media: the chosen item's, or the quiet icon, as wide as an xs Avatar. A press on it
+  // lands on the field under it; out of use, it is at half strength with the field.
+  start: {
+    [iconVars.size]: size.iconSm,
+    [iconVars.stroke]: size.iconStroke,
+    position: "absolute",
+    zIndex: 1,
+    insetBlock: 0,
+    insetInlineStart: space[3],
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    width: size.avatarXs,
+    color: colors.mutedForeground,
+    opacity: {
+      default: 1,
+      [stylex.when.siblingAfter(":disabled")]: size.opacityDisabled,
+    },
+    pointerEvents: "none",
+  },
+  // An item with a description: the list's own row, its words over the quieter line.
+  described: { paddingBlock: space[1] },
+  media: { display: "flex", flexShrink: 0 },
+  words: { display: "grid", minWidth: 0, flexGrow: 1 },
+  description: {
+    fontSize: font.textXs,
+    lineHeight: font.textXsLine,
+    // In forced colours it takes the highlighted row's own colour.
+    color: { default: colors.mutedForeground, [FORCED]: "inherit" },
+    overflowWrap: "anywhere",
+  },
   // The words stop before the chevron. A field is one line already; a value too long for it ends
   // in an ellipsis at rest (a browser shows the ellipsis only while the field is not being typed
   // in), not clipped mid-letter.
@@ -368,25 +447,52 @@ const targetStyles = {
 const className = (...parts: stylex.StyleXStyles[]) =>
   stylex.props(...parts).className;
 
-const asItem = (entry: ListItem | string): ListItem =>
+const asItem = (entry: ComboboxItem | string): ComboboxItem =>
   typeof entry === "string" ? { value: entry, label: entry } : entry;
 
-/** Every value in the items, groups included. */
-const valuesOf = (items: ComboboxItems): Set<string> => {
-  const values = new Set<string>();
+/** Every item by its value, groups included. */
+const byValueOf = (items: ComboboxItems): Map<string, ComboboxItem> => {
+  const found = new Map<string, ComboboxItem>();
   for (const entry of items) {
-    if (typeof entry === "string") {
-      values.add(entry);
-    } else if ("type" in entry && entry.type === "group") {
-      for (const inner of entry.items) {
-        values.add(asItem(inner).value);
+    if (typeof entry !== "string" && "type" in entry) {
+      for (const inner of entry.type === "group" ? entry.items : []) {
+        found.set(asItem(inner).value, asItem(inner));
       }
-    } else if (!("type" in entry && entry.type === "separator")) {
-      values.add(entry.value);
+    } else {
+      found.set(asItem(entry).value, asItem(entry));
     }
   }
-  return values;
+  return found;
 };
+
+const isDescribed = (
+  item: ComboboxItem
+): item is ComboboxItem & { description: string } =>
+  item.description !== undefined && item.description !== "";
+
+/** An item as the list searches it: its description is found too. What it shows stays with the combobox. */
+const searched = (entry: ComboboxItem | string): ListItem | string =>
+  typeof entry === "string"
+    ? entry
+    : {
+        value: entry.value,
+        label: entry.label,
+        keywords: isDescribed(entry)
+          ? [...(entry.keywords ?? []), entry.description]
+          : entry.keywords,
+        disabled: entry.disabled,
+      };
+
+/** The items as the list searches them. */
+const searchedItems = (items: ComboboxItems): ListData =>
+  items.map((entry) => {
+    if (typeof entry !== "string" && "type" in entry) {
+      return entry.type === "group"
+        ? { ...entry, items: entry.items.map(searched) }
+        : entry;
+    }
+    return searched(entry);
+  });
 
 /** An item's words, with the letters the typed words matched in the text colour. */
 const Words = () => (
@@ -406,40 +512,78 @@ const Words = () => (
   </ComboboxItemText>
 );
 
-const Option = ({ item }: { item: ListItem }) => (
-  <ComboboxItem
-    value={item.value}
-    label={item.label}
-    keywords={item.keywords}
-    disabled={item.disabled}
-    className={(state: ComboboxItemState) =>
-      className(
-        listStyles.item,
-        listStyles.menuItem,
-        styles.option,
-        listStyles.cut,
-        state.highlighted && listStyles.itemHighlighted,
-        state.disabled && listStyles.itemDisabled
-      )
-    }
-  >
-    <Words />
-    <ComboboxItemIndicator {...stylex.props(listStyles.check)}>
-      <Icon icon={CheckIcon} />
-    </ComboboxItemIndicator>
-  </ComboboxItem>
-);
+/** One item: its media, its words (over its description), the tick when chosen. */
+const Option = ({ item, shown }: { item: ListItem; shown: ComboboxItem }) => {
+  const lineId = useId();
+  const described = isDescribed(shown);
+  return (
+    <ItemPrimitive
+      value={item.value}
+      label={item.label}
+      keywords={item.keywords}
+      disabled={item.disabled}
+      // Named by its words; its description is read after them, not run into them.
+      aria-label={described ? item.label : undefined}
+      aria-describedby={described ? lineId : undefined}
+      className={(state: ComboboxItemState) =>
+        className(
+          listStyles.item,
+          !described && listStyles.menuItem,
+          // An option reads as Select's does; one with a description keeps the list's own row.
+          described ? styles.described : styles.option,
+          listStyles.cut,
+          state.highlighted && listStyles.itemHighlighted,
+          state.disabled && listStyles.itemDisabled
+        )
+      }
+    >
+      {shown.media !== undefined && (
+        <ComboboxItemIcon {...stylex.props(styles.media)}>
+          {shown.media}
+        </ComboboxItemIcon>
+      )}
+      {described ? (
+        <span {...stylex.props(styles.words)}>
+          <Words />
+          <span id={lineId} {...stylex.props(styles.description)}>
+            {shown.description}
+          </span>
+        </span>
+      ) : (
+        <Words />
+      )}
+      <ComboboxItemIndicator {...stylex.props(listStyles.check)}>
+        <Icon icon={CheckIcon} />
+      </ComboboxItemIndicator>
+    </ItemPrimitive>
+  );
+};
 
 /** The items that match, as parts: items, groups with their names, separators. */
-const Options = ({ items }: { items: ListData<unknown> }) =>
-  // SAFETY: the list hands back the items the combobox was given, which are ComboboxItems.
+const Options = ({
+  items,
+  byValue,
+}: {
+  items: ListData<unknown>;
+  byValue: Map<string, ComboboxItem>;
+}) => {
+  const option = (entry: ListItem | string) => {
+    const item = asItem(entry);
+    return (
+      <Option
+        key={item.value}
+        item={item}
+        shown={byValue.get(item.value) ?? item}
+      />
+    );
+  };
+  // SAFETY: the list hands back the items the combobox gave it, which are ListData of strings.
   // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- see SAFETY
-  (items as ComboboxItems).map((entry, index) => {
-    if (
-      typeof entry !== "string" &&
-      "type" in entry &&
-      entry.type === "separator"
-    ) {
+  return (items as ListData).map((entry, index) => {
+    if (typeof entry === "string" || !("type" in entry)) {
+      return option(entry);
+    }
+    if (entry.type === "separator") {
       // A separator has no value; its place in the list is its key.
       return (
         <ComboboxSeparator
@@ -448,30 +592,20 @@ const Options = ({ items }: { items: ListData<unknown> }) =>
         />
       );
     }
-    if (
-      typeof entry !== "string" &&
-      "type" in entry &&
-      entry.type === "group"
-    ) {
-      return (
-        <ComboboxGroup key={`group-${entry.label ?? index}`}>
-          {entry.label !== undefined && entry.label !== "" && (
-            <ComboboxGroupLabel
-              {...stylex.props(listStyles.groupLabel, listStyles.cut)}
-            >
-              {entry.label}
-            </ComboboxGroupLabel>
-          )}
-          {entry.items.map((inner) => {
-            const item = asItem(inner);
-            return <Option key={item.value} item={item} />;
-          })}
-        </ComboboxGroup>
-      );
-    }
-    const item = asItem(entry);
-    return <Option key={item.value} item={item} />;
+    return (
+      <ComboboxGroup key={`group-${entry.label ?? index}`}>
+        {entry.label !== undefined && entry.label !== "" && (
+          <ComboboxGroupLabel
+            {...stylex.props(listStyles.groupLabel, listStyles.cut)}
+          >
+            {entry.label}
+          </ComboboxGroupLabel>
+        )}
+        {entry.items.map(option)}
+      </ComboboxGroup>
+    );
   });
+};
 
 /** What the list says when nothing matches the words typed. */
 export const ComboboxEmpty = ({ children }: ComboboxEmptyProps) => {
@@ -486,6 +620,7 @@ export const ComboboxEmpty = ({ children }: ComboboxEmptyProps) => {
 /** Type to find one value in a list. */
 export const Combobox = ({
   items,
+  media: resting,
   children,
   size: scale = "default",
   placeholder,
@@ -506,12 +641,15 @@ export const Combobox = ({
   );
   // The value is always an item's: a value from outside the list (an agent's, or code's) is refused,
   // so whoever set it hears that it failed.
-  const known = valuesOf(items);
+  const byValue = byValueOf(items);
+  // What was typed, while it is typed: with words that are a search, not the chosen item's own, its
+  // media steps aside for the quiet one, so a picture never claims the words are its item's.
+  const [typed, setTyped] = useState("");
   const change = (
     next: string | null,
     details: ChangeDetails<ComboboxValueChangeReason>
   ) => {
-    if (next !== null && !known.has(next)) {
+    if (next !== null && !byValue.has(next)) {
       details.cancel();
       // An agent hears why, in words.
       if (details.source === "agent") {
@@ -528,12 +666,12 @@ export const Combobox = ({
   }, []);
 
   // A starting value from outside the list is a mistake in the code: say so in development.
-  // Keyed on the items, not on `known`: that is a new Set at every render.
+  // Keyed on the items, not on `byValue`: that is a new Map at every render.
   useEffect(() => {
     if (!isDevelopment) {
       return;
     }
-    const listed = valuesOf(items);
+    const listed = byValueOf(items);
     for (const start of [options.value, options.defaultValue]) {
       if (start !== null && start !== undefined && !listed.has(start)) {
         console.error(`Combobox: ${start} is not one of its items.`);
@@ -543,10 +681,16 @@ export const Combobox = ({
 
   return (
     <ComboboxPrimitive
-      items={items}
+      items={searchedItems(items)}
       autoHighlight="always"
       {...options}
       onValueChange={change}
+      onQueryChange={(
+        query: string,
+        details: ChangeDetails<ComboboxQueryChangeReason>
+      ) => {
+        setTyped(details.reason === "input-change" ? query : "");
+      }}
     >
       {/* The box that holds the field, its touch target and the chevron. */}
       <div data-slot="combobox" {...stylex.props(styles.box, style)}>
@@ -554,6 +698,27 @@ export const Combobox = ({
           aria-hidden="true"
           {...stylex.props(inputStyles.target, targetStyles[scale])}
         />
+        {/* Before the input, so the input's words begin after it while it is there. */}
+        <ComboboxValue>
+          {(state: ComboboxValueState): ReactNode => {
+            const chosen =
+              typeof state.value === "string"
+                ? byValue.get(state.value)?.media
+                : undefined;
+            const shown =
+              typed !== "" && typed !== state.label
+                ? resting
+                : (chosen ?? resting);
+            return shown === undefined ? null : (
+              <span
+                aria-hidden="true"
+                {...stylex.props(stylex.defaultMarker(), styles.start)}
+              >
+                {shown}
+              </span>
+            );
+          }}
+        </ComboboxValue>
         <ComboboxInput
           ref={input}
           id={id}
@@ -567,8 +732,10 @@ export const Combobox = ({
             <input
               {...props}
               {...stylex.props(
+                stylex.defaultMarker(),
                 styles.input,
                 sizeStyles[scale],
+                styles.inputStart,
                 styles.inputEnd,
                 !(state.disabled || state.readOnly) && inputStyles.enabled,
                 state.readOnly && styles.readOnly,
@@ -626,7 +793,7 @@ export const Combobox = ({
         {children ?? <ComboboxEmpty />}
         <ComboboxList>
           {(state: { items: ListData<unknown> }) => (
-            <Options items={state.items} />
+            <Options items={state.items} byValue={byValue} />
           )}
         </ComboboxList>
         <span aria-hidden="true" {...stylex.props(listStyles.more)} />

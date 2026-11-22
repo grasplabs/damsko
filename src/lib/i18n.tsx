@@ -440,10 +440,6 @@ export interface I18nCatalog {
     /** Said once it saved. */
     statusSuccess: string;
   };
-  fileTree: {
-    /** The tree's name, when it is given none. */
-    name: string;
-  };
   fileUpload: {
     /** Said once files join the list, from how many. */
     added: (count: number) => string;
@@ -877,16 +873,6 @@ export interface I18nCatalog {
     loading: string;
     success: string;
   };
-  userPicker: {
-    /** Said in the list when no one matches. */
-    empty: string;
-    /** Why an agent's choice is refused: the value is no one in the list. */
-    notInList: (value: string) => string;
-    /** What the field says while no one is chosen. */
-    placeholder: string;
-    /** The name of the button that opens the list of people. */
-    trigger: string;
-  };
 }
 
 const english: I18nCatalog = {
@@ -1176,9 +1162,6 @@ const english: I18nCatalog = {
     statusLoading: "Saving",
     statusRetry: "Try again",
     statusSuccess: "Saved",
-  },
-  fileTree: {
-    name: "Files",
   },
   fileUpload: {
     added: (count) => (count === 1 ? "1 file added" : `${count} files added`),
@@ -1522,12 +1505,6 @@ const english: I18nCatalog = {
     error: "Could not finish",
     loading: "Working",
     success: "Done",
-  },
-  userPicker: {
-    empty: "No one has that name",
-    notInList: (value: string) => `${value} is not one of the people listed`,
-    placeholder: "Choose a person",
-    trigger: "Show the people",
   },
 };
 

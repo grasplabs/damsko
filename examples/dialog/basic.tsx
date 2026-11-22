@@ -40,7 +40,7 @@ export default function DialogBasic() {
       }}
     >
       <DialogTrigger asChild>
-        <Button variant="secondary">Publish report</Button>
+        <Button variant="outline">Publish report</Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

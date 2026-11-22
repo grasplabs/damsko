@@ -20,7 +20,7 @@ export default function ToastCenter() {
   return (
     <div {...stylex.props(layout.row)}>
       <Button
-        variant="secondary"
+        variant="outline"
         onClick={() =>
           toast("You are offline", {
             description:

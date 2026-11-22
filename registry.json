@@ -1071,32 +1071,6 @@
       ]
     },
     {
-      "name": "file-tree",
-      "type": "registry:ui",
-      "title": "File tree",
-      "description": "The files an assistant changed or made, as folders that open, one file chosen.",
-      "dependencies": [
-        "@stylexjs/stylex"
-      ],
-      "registryDependencies": [
-        "@damsko/lib",
-        "@damsko/tree-view"
-      ],
-      "docs": "https://damsko.joingrasp.com/components/file-tree",
-      "files": [
-        {
-          "path": "src/components/file-tree-icon.ts",
-          "type": "registry:file",
-          "target": "~/src/components/file-tree-icon.ts"
-        },
-        {
-          "path": "src/components/file-tree.tsx",
-          "type": "registry:file",
-          "target": "~/src/components/file-tree.tsx"
-        }
-      ]
-    },
-    {
       "name": "file-upload",
       "type": "registry:ui",
       "title": "File upload",
@@ -2186,13 +2160,13 @@
       "registryDependencies": [
         "@damsko/avatar",
         "@damsko/button",
+        "@damsko/combobox",
         "@damsko/dialog",
         "@damsko/hooks",
         "@damsko/item",
         "@damsko/lib",
         "@damsko/select",
-        "@damsko/snippet",
-        "@damsko/user-picker"
+        "@damsko/snippet"
       ],
       "docs": "https://damsko.joingrasp.com/components/share-dialog-01",
       "files": [
@@ -2994,30 +2968,6 @@
           "path": "src/components/tree-view.tsx",
           "type": "registry:file",
           "target": "~/src/components/tree-view.tsx"
-        }
-      ]
-    },
-    {
-      "name": "user-picker",
-      "type": "registry:ui",
-      "title": "User picker",
-      "description": "A field for choosing a person, found by typing their name or role.",
-      "dependencies": [
-        "@stylexjs/stylex",
-        "@ui-sdk/core",
-        "@ui-sdk/react"
-      ],
-      "registryDependencies": [
-        "@damsko/avatar",
-        "@damsko/input-group",
-        "@damsko/lib"
-      ],
-      "docs": "https://damsko.joingrasp.com/components/user-picker",
-      "files": [
-        {
-          "path": "src/components/user-picker.tsx",
-          "type": "registry:file",
-          "target": "~/src/components/user-picker.tsx"
         }
       ]
     }

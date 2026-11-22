@@ -270,7 +270,7 @@ export default function MotionCurve() {
         </span>
         <Button
           size="sm"
-          variant="secondary"
+          variant="outline"
           onClick={() => {
             setRun("start");
           }}

@@ -66,7 +66,7 @@ export default function QuestionnaireControlled() {
         {other === "" ? "" : `; other: ${other}`}
       </p>
       <Button
-        variant="secondary"
+        variant="outline"
         size="sm"
         onClick={() => {
           setChosen(["email", "notes"]);

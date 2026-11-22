@@ -182,7 +182,7 @@ export const InspectorShare = ({
 }) => (
   <Popover>
     <PopoverTrigger asChild>
-      <Button size="sm" variant="secondary">
+      <Button size="sm" variant="outline">
         <Icon icon={ShareIcon} />
         Share
       </Button>

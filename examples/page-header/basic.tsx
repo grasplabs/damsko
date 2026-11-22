@@ -22,7 +22,7 @@ export default function PageHeaderBasic() {
         actions={
           <>
             <Button
-              variant="secondary"
+              variant="outline"
               onClick={() => {
                 toast("Link copied", {
                   description: "Anyone in the workspace can open it.",

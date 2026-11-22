@@ -417,7 +417,8 @@ const styles = stylex.create({
   // A command's words and its second line, stacked; the second line quiet and a size down.
   stack: { display: "grid", flexGrow: 1, minWidth: 0 },
   description: {
-    color: colors.mutedForeground,
+    // In forced colours it takes its row's colour, the highlighted row's too.
+    color: { default: colors.mutedForeground, [FORCED]: "inherit" },
     fontSize: font.textXs,
     lineHeight: font.textXsLine,
     overflow: "hidden",
@@ -1446,7 +1447,7 @@ export const CommandDialog = ({
     >
       {triggerless ? null : (
         <DialogTrigger asChild shortcut={shortcut ?? undefined}>
-          <Button variant="secondary">
+          <Button variant="outline">
             <Icon icon={SearchIcon} />
             {trigger ?? words.dialogTrigger}
           </Button>

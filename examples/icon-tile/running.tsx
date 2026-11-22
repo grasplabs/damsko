@@ -30,7 +30,7 @@ export default function IconTileRunning() {
       <IconTile icon={WandSparklesIcon} variant="gradient" loading={loading} />
       <Button
         size="sm"
-        variant="secondary"
+        variant="outline"
         onClick={() => {
           setLoading((was) => !was);
         }}

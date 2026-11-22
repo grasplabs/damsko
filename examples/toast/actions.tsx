@@ -20,7 +20,7 @@ export default function ToastActions() {
   return (
     <div {...stylex.props(layout.row)}>
       <Button
-        variant="secondary"
+        variant="outline"
         onClick={() =>
           toast("Report archived", {
             description: "It left the list of reports.",
@@ -34,7 +34,7 @@ export default function ToastActions() {
         Archive report
       </Button>
       <Button
-        variant="secondary"
+        variant="outline"
         onClick={() =>
           toast.warning("Unsaved changes", {
             description: "Your edits to the summary are not saved yet.",

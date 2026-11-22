@@ -54,7 +54,7 @@ export default function WritingNames() {
       <Write why="names that stand alone">
         <div {...stylex.props(writing.column)}>
           <div {...stylex.props(writing.named)}>
-            <Button variant="secondary" size="icon" aria-label="Copy">
+            <Button variant="outline" size="icon" aria-label="Copy">
               <Icon icon={CopyIcon} />
             </Button>
             <p {...stylex.props(writing.heard)}>Heard: “Copy, button”</p>
@@ -81,7 +81,7 @@ export default function WritingNames() {
       <Not why="names that need their place">
         <div {...stylex.props(writing.column)}>
           <div {...stylex.props(writing.named)}>
-            <Button variant="secondary" size="icon" aria-label="Icon">
+            <Button variant="outline" size="icon" aria-label="Icon">
               <Icon icon={CopyIcon} />
             </Button>
             <p {...stylex.props(writing.heard)}>Heard: “Icon, button”</p>

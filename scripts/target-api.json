@@ -164,6 +164,7 @@
       "Combobox",
       "ComboboxEmpty",
       "ComboboxProps",
+      "ComboboxItem",
       "ComboboxItems",
       "ComboboxSize",
       "ComboboxEmptyProps"
@@ -1055,16 +1056,6 @@
     ],
     "src/components/diff-viewer-diff.ts": null
   },
-  "file-tree": {
-    "src/components/file-tree.tsx": [
-      "FileTree",
-      "FileTreeActions",
-      "FileTreeProps",
-      "FileTreeActionsProps",
-      "FileTreeNode"
-    ],
-    "src/components/file-tree-icon.ts": ["fileTreeIcon"]
-  },
   "file-upload": {
     "src/components/file-upload.tsx": [
       "FileUpload",
@@ -1247,13 +1238,6 @@
   "tree-view": {
     "src/components/tree-view.tsx": ["TreeView", "TreeViewProps", "TreeNode"]
   },
-  "user-picker": {
-    "src/components/user-picker.tsx": [
-      "UserPicker",
-      "UserPickerProps",
-      "UserPickerUser"
-    ]
-  },
   "connect-api-key-01": {
     "src/blocks/connect-api-key-01/connect-api-key-01.tsx": [
       "ConnectApiKey",
@@ -1417,6 +1401,7 @@
       "ShareDialog",
       "ShareDialogProps",
       "ShareMember",
+      "SharePerson",
       "ShareLevel",
       "ShareDialogLabels"
     ]

@@ -22,7 +22,7 @@ export default function WritingConfirmations() {
     <Pair>
       <Write why="what was done, and a way back">
         <Button
-          variant="secondary"
+          variant="outline"
           onClick={() => {
             right("Project archived", {
               description: "Quarterly review left the list of projects.",
@@ -40,7 +40,7 @@ export default function WritingConfirmations() {
       </Write>
       <Not why="cheers, and no way back">
         <Button
-          variant="secondary"
+          variant="outline"
           onClick={() => {
             wrong.success("Success!", {
               description: "Your action was completed successfully.",

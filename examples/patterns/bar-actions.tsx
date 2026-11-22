@@ -57,7 +57,7 @@ const styles = stylex.create({
 // as an icon alone, then close. One size, one gap, close last, and no line between.
 const Actions = () => (
   <>
-    <Button size="sm" variant="secondary">
+    <Button size="sm" variant="outline">
       <Icon icon={ShareIcon} />
       Share
     </Button>

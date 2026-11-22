@@ -63,7 +63,7 @@ export default function EmptyTop() {
         <EmptyContent>
           <Button
             size="sm"
-            variant="secondary"
+            variant="outline"
             onClick={() => {
               setMade(true);
             }}

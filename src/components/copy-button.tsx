@@ -4,7 +4,7 @@
 // that says so; with words as its children it shows them beside the icon.
 //
 //   <CopyButton value={code} aria-label="Copy code" />
-//   <CopyButton value={() => link.href} variant="secondary" size="sm">Copy link</CopyButton>
+//   <CopyButton value={() => link.href} variant="outline" size="sm">Copy link</CopyButton>
 "use client";
 
 import type { ReactNode } from "react";
