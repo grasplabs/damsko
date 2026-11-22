@@ -1,6 +1,5 @@
 import { Button } from "@grasp-os/ui/components/button";
 import type { ButtonVariant } from "@grasp-os/ui/components/button";
-import { Spinner } from "@grasp-os/ui/components/spinner";
 import { media, space } from "@grasp-os/ui/lib/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
 
@@ -20,10 +19,30 @@ const layout = stylex.create({
   },
 });
 
-const buttons: { variant: ButtonVariant; words: string }[] = [
-  { variant: "default", words: "Save changes" },
-  { variant: "secondary", words: "Approve" },
-  { variant: "destructive", words: "Delete" },
+const buttons: {
+  variant: ButtonVariant;
+  words: string;
+  done: string;
+  failed: string;
+}[] = [
+  {
+    variant: "default",
+    words: "Save changes",
+    done: "Saved",
+    failed: "Not saved",
+  },
+  {
+    variant: "secondary",
+    words: "Approve",
+    done: "Approved",
+    failed: "Failed",
+  },
+  {
+    variant: "destructive",
+    words: "Delete",
+    done: "Deleted",
+    failed: "Not deleted",
+  },
 ];
 
 // A working spinner on each fill it meets in a button: the default, the secondary and the
@@ -31,15 +50,14 @@ const buttons: { variant: ButtonVariant; words: string }[] = [
 export default function SpinnerOnFills() {
   return (
     <div {...stylex.props(layout.row)}>
-      {buttons.map(({ variant, words }) => (
+      {buttons.map(({ variant, words, done, failed }) => (
         <Button
           key={variant}
           variant={variant}
-          disabled
-          focusableWhenDisabled
-          aria-busy
+          status="loading"
+          successLabel={done}
+          errorLabel={failed}
         >
-          <Spinner size="sm" />
           {words}
         </Button>
       ))}

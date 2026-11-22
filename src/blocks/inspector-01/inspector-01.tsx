@@ -155,6 +155,8 @@ const styles = stylex.create({
   // The facts at the inset of the rows' words.
   facts: { paddingInline: space.sidePanelPadding },
   none: { color: colors.mutedForeground },
+  // The lock after a name: quiet, beside the words.
+  mark: { display: "inline-flex", color: colors.subtleForeground },
 });
 
 /** A missing value: null, undefined, false or empty words. */
@@ -192,7 +194,7 @@ const Facts = ({
   </div>
 );
 
-/** One row: its kind's icon, its name, a lock where it cannot change, else its bin. */
+/** One row: its kind's icon, its name, a lock after it where it cannot change, else its bin. */
 const Row = ({ row, words }: { row: InspectorRow; words: InspectorLabels }) => {
   // A locked row cannot be changed or taken away: it neither opens nor has a bin.
   const locked = row.locked !== undefined;
@@ -208,24 +210,26 @@ const Row = ({ row, words }: { row: InspectorRow; words: InspectorLabels }) => {
       <ItemContent>
         <ItemTitle>
           {row.name}
+          {row.locked !== undefined && (
+            <span {...stylex.props(styles.mark)}>
+              <Icon icon={LockIcon} label={row.locked} />
+            </span>
+          )}
           <ItemDetail>{row.detail}</ItemDetail>
         </ItemTitle>
       </ItemContent>
-      <ItemActions>
-        {row.locked !== undefined && (
-          <Icon icon={LockIcon} label={row.locked} />
-        )}
-        {handleRemove !== undefined && (
+      {handleRemove !== undefined && (
+        <ItemActions showOnHover>
           <Button
             variant="ghost"
-            size="icon-sm"
+            size="icon-xs"
             aria-label={words.remove(row.name)}
             onClick={handleRemove}
           >
             <Icon icon={TrashIcon} />
           </Button>
-        )}
-      </ItemActions>
+        </ItemActions>
+      )}
     </Item>
   );
 };

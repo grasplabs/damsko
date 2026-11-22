@@ -36,7 +36,9 @@ export default function ItemInlineIcon() {
             </ItemDescription>
           </ItemContent>
           <ItemActions>
-            <Button size="sm">Test</Button>
+            <Button variant="outline" size="sm">
+              Test
+            </Button>
           </ItemActions>
         </Item>
         <ItemSeparator />
@@ -51,7 +53,9 @@ export default function ItemInlineIcon() {
             </ItemDescription>
           </ItemContent>
           <ItemActions>
-            <Button size="sm">Test</Button>
+            <Button variant="outline" size="sm">
+              Test
+            </Button>
           </ItemActions>
         </Item>
       </ItemGroup>

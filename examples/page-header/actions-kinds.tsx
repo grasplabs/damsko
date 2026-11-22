@@ -1,8 +1,8 @@
 import { Button } from "@grasp-os/ui/components/button";
 import { PageHeader } from "@grasp-os/ui/components/page-header";
-import { Spinner } from "@grasp-os/ui/components/spinner";
 import {
   ArchiveIcon,
+  DownloadIcon,
   Icon,
   LinkIcon,
   PlusIcon,
@@ -15,7 +15,7 @@ const layout = stylex.create({
 });
 
 // Every kind of action a page header folds on a phone: Delete, destructive, stands last in More
-// and apart; Export, at work, is out of use there with the spinner's mark; Archive, disabled, stays
+// and apart; Export, at work, is busy there; Archive, disabled, stays
 // disabled; Open report, a link, is a link item. The main action, New task, stays on the row.
 export default function PageHeaderActionsKinds() {
   return (
@@ -28,8 +28,13 @@ export default function PageHeaderActionsKinds() {
             <Icon icon={TrashIcon} />
             Delete
           </Button>
-          <Button variant="outline" disabled focusableWhenDisabled>
-            <Spinner size="sm" />
+          <Button
+            variant="outline"
+            status="loading"
+            successLabel="Exported"
+            errorLabel="Could not export"
+          >
+            <Icon icon={DownloadIcon} />
             Export
           </Button>
           <Button variant="outline" disabled>

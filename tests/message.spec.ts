@@ -342,3 +342,25 @@ test("the header names the writer above the bubble, the footer says it was read 
     page.getByRole("article", { name: "You" }).getByText("Read yesterday")
   ).toBeAttached();
 });
+
+for (const theme of ["light", "dark"] as const) {
+  test(`Try again is the quiet outline button, ${theme}`, async ({ page }) => {
+    await openExample(page, "message", "failed", { theme });
+    const retry = page.getByRole("button", { name: "Try again" });
+    await expect(retry).toBeVisible();
+    const same = await retry.evaluate((button) => {
+      const probe = document.createElement("span");
+      probe.style.backgroundColor = "var(--damsko-secondary)";
+      probe.style.boxShadow = "var(--damsko-bevel-muted)";
+      button.after(probe);
+      const want = getComputedStyle(probe);
+      const got = getComputedStyle(button);
+      const matches =
+        got.backgroundColor === want.backgroundColor &&
+        got.boxShadow === want.boxShadow;
+      probe.remove();
+      return matches;
+    });
+    expect(same).toBe(true);
+  });
+}

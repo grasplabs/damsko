@@ -1,6 +1,6 @@
 // Pagination: the way through a long list, page by page, and where in it you are,
 // in StyleX, built on UI SDK's
-// Pagination: two small ghost steps, with the range shown ("Showing 21 – 30 of 100 items"), the
+// Pagination: two small outlined steps, with the range shown ("Showing 21 – 30 of 100 items"), the
 // page ("2 / 10"), numbered page links, or nothing beside them.
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
@@ -58,6 +58,7 @@ import {
   font,
   media,
   radius,
+  shadow,
   size,
   space,
 } from "../lib/tokens.stylex";
@@ -266,16 +267,18 @@ const styles = stylex.create({
       [OFF]: colors.subtleForeground,
       [FORCED]: { default: "ButtonText", [OFF]: "GrayText" },
     },
-    // Drawn as a ghost Button: no fill until the pointer rests on it. A
-    // step at its end does not answer the pointer: it stays bare.
+    // Drawn as the quiet button is: its fill and a low lift. A step at its end does not answer the
+    // pointer: it lies flat on the soft ground, without the lift.
     backgroundColor: {
-      default: "transparent",
+      default: colors.control,
       ":hover": {
         default: null,
-        [HOVER]: { default: colors.accent, [OFF]: "transparent" },
+        [HOVER]: { default: colors.controlHover, [OFF]: colors.muted },
       },
-      ":active": { default: colors.accentActive, [OFF]: "transparent" },
+      ":active": { default: colors.controlActive, [OFF]: colors.muted },
+      [OFF]: colors.muted,
     },
+    boxShadow: { default: shadow.sm, [OFF]: "none" },
     transform: {
       default: null,
       ":active": { default: `scale(${size.buttonPressScale})`, [OFF]: "none" },

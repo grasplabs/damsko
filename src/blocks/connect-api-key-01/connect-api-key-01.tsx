@@ -1,5 +1,6 @@
-// Connect API key: connect a service by its key, in one card. Nothing chosen: the providers as
-// tiles. Chosen: its row with Change, an address first when it asks for one, then its key (a
+// Connect API key: connect a service by its key, in one card. Nothing chosen: one line that opens
+// the card, in the serif, the providers as tiles, as many in a row as fit, and under them a quiet
+// line for one that runs at an address of your own. Chosen: its row with Change, an address first when it asks for one, then its key (a
 // SecretInput, read from the form as it is sent and never held in state) and Connect. The product
 // tests the key in `onConnect`: a refusal stands under the key in the service's own words and the
 // key is cleared, as a secret's should be. Connected: its
@@ -34,7 +35,6 @@ import { Button } from "../../components/button";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "../../components/card";
@@ -52,13 +52,14 @@ import {
   ItemActions,
   ItemContent,
   ItemDescription,
-  ItemGrid,
   ItemMedia,
   ItemTitle,
 } from "../../components/item";
+import { Text } from "../../components/text";
 import { useAction } from "../../hooks/use-action";
+import { Icon, PlusIcon } from "../../lib/icons";
 import type { IconData } from "../../lib/icons";
-import { space } from "../../lib/tokens.stylex";
+import { font, size, space } from "../../lib/tokens.stylex";
 import type { LayoutStyle } from "../../lib/utils";
 
 /** The words a ConnectApiKey says itself: English here; pass the product's as `labels`. */
@@ -141,19 +142,25 @@ export interface ConnectApiKeyProvider {
   name: string;
   /** Its mark, from the product's logos; without one, its first letter in the tile. */
   logo?: IconData;
-  /** Where it runs: an icon (a flag) and the region's name ("European Union"). */
+  /** Where it runs: a mark (a flag) and the region's name ("European Union"). */
   region?: { icon: ReactNode; label: string };
   /** How its key starts, as the field's placeholder ("sk-…"). */
   placeholder?: string;
-  /** It runs at an address of your own: the form asks for the address first. @default false */
+  /**
+   * It runs at an address of your own: a quiet line under the tiles, and the form asks for the
+   * address first.
+   * @default false
+   */
   address?: boolean;
+  /** The words of that line, when they are not its name ("Use an endpoint of your own"). */
+  addressLabel?: string;
 }
 
 /** Every prop a ConnectApiKey takes. */
 export interface ConnectApiKeyProps {
   /** The card's title ("AI provider"). */
   title: string;
-  /** One line under the title. */
+  /** One line that opens the card, over the tiles, in the serif. */
   description?: ReactNode;
   /** The providers, as tiles, in order. */
   providers: readonly ConnectApiKeyProvider[];
@@ -180,18 +187,41 @@ export interface ConnectApiKeyProps {
 
 const styles = stylex.create({
   form: { display: "grid", rowGap: space["5"] },
-  region: { display: "inline-flex", alignItems: "center", gap: space["1"] },
+  lead: { marginBlockEnd: space["4"] },
+  // The tiles: equal, as many in a row as fit at their least width, one a row on a phone; every
+  // tile in a row as tall as the tallest, a long name wrapping inside.
+  tiles: {
+    display: "grid",
+    gridTemplateColumns: `repeat(auto-fit, minmax(min(${size.connectTile}, 100%), 1fr))`,
+    gap: space["3"],
+    margin: 0,
+    padding: 0,
+    listStyle: "none",
+  },
+  tile: { display: "grid", minWidth: 0 },
+  // Where it runs: one quiet line, its mark and its name, cut with an ellipsis before it wraps.
+  region: {
+    display: "flex",
+    alignItems: "center",
+    gap: space["1"],
+    minWidth: 0,
+    fontSize: font.textXs,
+    lineHeight: font.textXsLine,
+  },
+  regionName: {
+    minWidth: 0,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+  },
+  // The quiet line under the tiles: a ghost button, its plus and its words.
+  own: { display: "grid", justifyItems: "start", marginBlockStart: space["3"] },
 });
 
 /** A provider's mark: its logo, or its first letter. */
 const Logo = ({ provider }: { provider: ConnectApiKeyProvider }) => (
   <ItemMedia align="center">
-    <BrandIcon
-      logo={provider.logo}
-      label={provider.name}
-      size="sm"
-      decorative
-    />
+    <BrandIcon logo={provider.logo} label={provider.name} decorative />
   </ItemMedia>
 );
 
@@ -455,10 +485,14 @@ export const ConnectApiKey = ({
     }
   }, [view]);
   // Change: back to the tile it came from; while a key is replaced, back to Replace key.
+  // The tiles first, then the lines of those that run at an address of your own: the order the
+  // buttons stand in.
+  const tiles = providers.filter((provider) => provider.address !== true);
+  const lines = providers.filter((provider) => provider.address === true);
+  const placeOf = (id: string | null) =>
+    [...tiles, ...lines].findIndex((provider) => provider.id === id);
   const change = () => {
-    focusNext.current = replacing
-      ? "replace"
-      : providers.findIndex((provider) => provider.id === chosen);
+    focusNext.current = replacing ? "replace" : placeOf(chosen);
     setReplacing(false);
     setChosen(null);
   };
@@ -466,9 +500,6 @@ export const ConnectApiKey = ({
     <Card style={style}>
       <CardHeader>
         <CardTitle level={2}>{title}</CardTitle>
-        {description !== undefined && (
-          <CardDescription>{description}</CardDescription>
-        )}
       </CardHeader>
       <CardContent>
         <div ref={body} data-slot="connect-api-key">
@@ -487,9 +518,7 @@ export const ConnectApiKey = ({
                     ? undefined
                     : async () => {
                         // Once it is gone, the focus goes to its tile.
-                        focusNext.current = providers.findIndex(
-                          (provider) => provider.id === connected.provider
-                        );
+                        focusNext.current = placeOf(connected.provider);
                         try {
                           await onDisconnect();
                         } catch (error) {
@@ -522,31 +551,65 @@ export const ConnectApiKey = ({
             />
           )}
           {live === undefined && form === undefined && (
-            <ItemGrid aria-label={title}>
-              {providers.map((provider) => (
-                <Item
-                  key={provider.id}
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setChosen(provider.id);
-                  }}
-                >
-                  <Logo provider={provider} />
-                  <ItemContent>
-                    <ItemTitle>{provider.name}</ItemTitle>
-                    {provider.region !== undefined && (
-                      <ItemDescription>
-                        <span {...stylex.props(styles.region)}>
-                          {provider.region.icon}
-                          {provider.region.label}
-                        </span>
-                      </ItemDescription>
-                    )}
-                  </ItemContent>
-                </Item>
-              ))}
-            </ItemGrid>
+            <>
+              {description !== undefined && (
+                <div {...stylex.props(styles.lead)}>
+                  <Text variant="display" size="lg">
+                    {description}
+                  </Text>
+                </div>
+              )}
+              <ul
+                // oxlint-disable-next-line jsx-a11y/no-redundant-roles -- Safari drops a list's role once its markers are hidden
+                role="list"
+                aria-label={title}
+                {...stylex.props(styles.tiles)}
+              >
+                {tiles.map((provider) => (
+                  <li key={provider.id} {...stylex.props(styles.tile)}>
+                    <Item
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setChosen(provider.id);
+                      }}
+                    >
+                      <Logo provider={provider} />
+                      <ItemContent>
+                        <ItemTitle>{provider.name}</ItemTitle>
+                        {provider.region !== undefined && (
+                          <ItemDescription>
+                            <span {...stylex.props(styles.region)}>
+                              {provider.region.icon}
+                              <span {...stylex.props(styles.regionName)}>
+                                {provider.region.label}
+                              </span>
+                            </span>
+                          </ItemDescription>
+                        )}
+                      </ItemContent>
+                    </Item>
+                  </li>
+                ))}
+              </ul>
+              {lines.length > 0 && (
+                <div {...stylex.props(styles.own)}>
+                  {lines.map((provider) => (
+                    <Button
+                      key={provider.id}
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setChosen(provider.id);
+                      }}
+                    >
+                      <Icon icon={PlusIcon} />
+                      {provider.addressLabel ?? provider.name}
+                    </Button>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </div>
       </CardContent>
