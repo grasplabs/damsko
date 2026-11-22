@@ -1234,4 +1234,54 @@ test("a line started with Shift+Enter in a full text is brought into view at onc
         )
     )
     .toBeLessThanOrEqual(1);
+
+test("a spoken conversation stands in the card: its turns are said, and Close gives the text back with the focus", async ({
+  page,
+}) => {
+  const said = await listenToLiveRegions(page);
+  await openExample(page, "prompt-input", "voice", { time: fixedTime });
+  const voice = page.getByRole("group", { name: "Voice conversation" });
+  await expect(voice).toBeVisible();
+  // No text to type in and nothing to send while it runs; the card keeps its height.
+  await expect(page.getByRole("textbox")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Send" })).toHaveCount(0);
+  expect(await heightOf(page.getByRole("group").first())).toBe(102);
+  // The other voice's turn: its mark stands where the time will, and its words come.
+  await expect(voice.getByRole("timer")).toHaveCount(0);
+  await page.clock.runFor(3100);
+  await expect(voice).toContainText("What slows the");
+  // The person's turn: the time is back, and the turn is said.
+  await page.clock.runFor(6000);
+  await expect(voice.getByRole("timer")).toBeVisible();
+  await expect(voice).toContainText("Waiting");
+  await expect.poll(said).toEqual(["Speaking", "Listening"]);
+
+  // Off for a moment: the time waits.
+  const mute = voice.getByRole("button", { name: "Mute" });
+  await mute.click();
+  await expect(mute).toHaveAttribute("aria-pressed", "true");
+  const held = await voice.getByRole("timer").textContent();
+  await page.clock.runFor(3000);
+  await expect(voice.getByRole("timer")).toHaveText(held ?? "");
+
+  // Close gives the text back, and the focus with it.
+  await voice.getByRole("button", { name: "Close voice" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(voice).toHaveCount(0);
+  await expect(page.getByRole("textbox", { name: "Answer" })).toBeFocused();
+});
+
+test("a spoken conversation takes the focus as it starts from the keyboard, and Escape ends it", async ({
+  page,
+}) => {
+  await openExample(page, "prompt-input", "voice");
+  const voice = page.getByRole("group", { name: "Voice conversation" });
+  await voice.getByRole("button", { name: "Close voice" }).click();
+  const talk = page.getByRole("button", { name: "Talk instead" });
+  await talk.focus();
+  await page.keyboard.press("Enter");
+  await expect(voice.getByRole("button", { name: "Mute" })).toBeFocused();
+  await page.keyboard.press("Escape");
+  await expect(voice).toHaveCount(0);
+  await expect(page.getByRole("textbox", { name: "Answer" })).toBeFocused();
 });

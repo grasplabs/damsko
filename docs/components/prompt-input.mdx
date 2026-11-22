@@ -142,6 +142,12 @@ useDictation({ listening, onPhrase: (phrase) => controller.insert(phrase) });
 </PromptInput>;
 ```
 
+## A spoken conversation
+
+`PromptInputVoice` stands in the card while a spoken conversation runs, written in place of the body and the footer: the words of the turn where the text stood (those not yet final lighter, in `interim`), and under them the time, the voice's `level` as the same field of pixels a dictation draws, the microphone and a close button. The turns pass by themselves between the person (`status="listening"`) and the other voice (`speaking`: its mark, `speaker`, in the time's place and its field in the quiet colour, so the turn reads without colour), and each is said once as it starts. There is no Done and no Cancel: the close button, or Escape, runs `onClose`, the product draws the text again and the text takes the focus. The product listens and speaks, with what it chooses; the part holds neither a microphone nor a voice.
+
+<Stage path="prompt-input/voice" label="A spoken conversation" />
+
 ## With a message
 
 One chat state drives both. PromptInput's `status` takes the AI SDK's own (`ready`, `submitted`, `streaming`, `error`), and Message's describes one answer (`thinking`, `streaming`, `done`, `stopped`, `error`), so the latest answer's is read from it: `submitted` is `thinking`, `streaming` is `streaming`, `ready` is `done` (or `stopped` once the person stopped it), `error` is `error`. Every earlier answer is `done`. AI Elements has a status on PromptInput's Submit only.
@@ -325,6 +331,11 @@ const answer: Record<ChatStatus, MessageStatus> = {
       key: "Speech",
       value:
         "A toggle button; while it listens, a group named Listening with Cancel, a timer, Mute (pressed while off) and Done",
+    },
+    {
+      key: "Voice",
+      value:
+        "A group named Voice conversation: a timer, Mute (pressed while off) and Close voice; Listening and Speaking are said once a turn; Escape closes",
     },
     {
       key: "Failure",
@@ -513,6 +524,14 @@ const answer: Record<ChatStatus, MessageStatus> = {
   source="src/components/prompt-input.tsx"
   type="PromptInputNoteProps"
   label="PromptInputNote"
+/>
+
+### PromptInputVoice
+
+<Props
+  source="src/components/prompt-input.tsx"
+  type="PromptInputVoiceProps"
+  label="PromptInputVoice"
 />
 
 ### PromptInputBanner

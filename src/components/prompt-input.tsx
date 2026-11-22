@@ -29,6 +29,9 @@
 //     <PromptInputMention triggers={[{ char: "@", type: "person", items: loadPeople }]} />
 //   </PromptInput>
 //
+// A spoken conversation stands in the card's parts' place: PromptInputVoice, the words of the turn
+// over the voice's level, the microphone and a close button, where the body and the footer were.
+//
 // While the answer comes a soft light travels along the card's top edge. PromptInputNote is the
 // band tucked under the card's foot: it says what the assistant is doing, in the caller's words,
 // and that a send failed, in the catalogue's, until the person types again.
@@ -752,6 +755,44 @@ export interface PromptInputSpeechButtonProps {
   style?: LayoutStyle;
 }
 
+/** Every prop a PromptInputVoice takes. */
+export interface PromptInputVoiceProps {
+  /**
+   * Whose turn it is: `listening` while the person speaks, `speaking` while the other voice does.
+   * Each turn is said once as it starts.
+   * @default "listening"
+   */
+  status?: "listening" | "speaking";
+  /** The words of this turn so far, as the product hears or says them. */
+  children?: ReactNode;
+  /** The words heard but not yet final, shown lighter after them. */
+  interim?: string;
+  /**
+   * How loud the voice of this turn is now, from 0 to 1: the field of pixels stands taller with
+   * it, a stop quieter while the other voice speaks.
+   * @default 0
+   */
+  level?: number;
+  /**
+   * The other voice's mark (an `<AgentIndicator />`, a picture), which stands in the time's place
+   * while it speaks, so the turn reads without colour.
+   */
+  speaker?: ReactNode;
+  /** The microphone is off for a moment. Pass it with `onMutedChange` to keep it in state. */
+  muted?: boolean;
+  /** Runs as the microphone button turns it off or on again. */
+  onMutedChange?: (muted: boolean) => void;
+  /**
+   * Runs as the close button is pressed, or Escape in the form: the product ends the voice and
+   * draws the text again, which takes the focus.
+   */
+  onClose: () => void;
+  /** Its name, in place of `promptInput.voice.label` ("Voice conversation"). */
+  "aria-label"?: string;
+  /** Layout only. */
+  style?: LayoutStyle;
+}
+
 // ---- The look ------------------------------------------------------------------------------------
 
 const FORCED = media.forcedColors;
@@ -1427,6 +1468,39 @@ const styles = stylex.create({
       "linear-gradient(90deg, transparent 12%, #000 38%, #000 62%, transparent 88%)",
   },
   voiceMuted: { opacity: size.opacityDisabled },
+  // The other voice's field: the same body, a stop quieter, in the words' quiet colour.
+  voiceOther: {
+    color: { default: colors.mutedForeground, [FORCED]: "GrayText" },
+  },
+  // A spoken conversation, in the body's and the footer's place: its two rows are the card's own.
+  conversation: { display: "contents" },
+  // The words of the turn, where the text's words stand, in the text's size and line.
+  spoken: {
+    boxSizing: "border-box",
+    minWidth: 0,
+    maxHeight: size.promptInputHeight,
+    overflowY: "auto",
+    margin: 0,
+    paddingInline: space["4"],
+    paddingBlockStart: space["4"],
+    color: colors.foreground,
+    fontSize: { default: size.messageText, [TYPING]: size.inputTextTouch },
+    lineHeight: size.messageTextLine,
+    minHeight: `calc(${size.messageTextLine} + ${space["4"]})`,
+    overflowWrap: "anywhere",
+  },
+  spokenInterim: { color: colors.mutedForeground },
+  // The other voice's mark, in the time's place: as wide as a tool, so the field starts where it
+  // does beside the time.
+  speaker: {
+    display: "inline-grid",
+    placeItems: "center",
+    flexShrink: 0,
+    minWidth: size.controlSm,
+    height: size.controlSm,
+  },
+  // The time starts where the words do: there is no Cancel before it.
+  voiceTime: { paddingInlineStart: space["2"] },
   loud: (height: string) => ({ height }),
   // The mention menu: a menu's panel under the caret, items with a mark, a name and a quiet line
   // under it.
@@ -1854,7 +1928,7 @@ const focusHere = (form: HTMLFormElement | null) =>
 /** Puts focus on what stands in the text's place: a choice already made, else its first control. */
 const focusTakeover = (form: HTMLFormElement | null) => {
   const body = form?.querySelector<HTMLElement>(
-    '[data-slot="prompt-input-body"]'
+    '[data-slot="prompt-input-voice"], [data-slot="prompt-input-body"]'
   );
   (
     body?.querySelector<HTMLElement>("[aria-checked=true]") ??
@@ -2220,13 +2294,16 @@ const useTakeoverFocus = (
   form: { current: HTMLFormElement | null },
   controller: TokenInputController
 ) => {
-  const before = useRef(shown);
+  // Unknown until the form has drawn once: what it starts with is no change, whether the text
+  // or something in its place (a conversation that is already running).
+  const before = useRef<boolean | null>(null);
   const inside = useRef(false);
   useEffect(() => {
-    if (before.current === shown) {
+    const was = before.current;
+    before.current = shown;
+    if (was === null || was === shown) {
       return;
     }
-    before.current = shown;
     if (!inside.current && !focusHere(form.current)) {
       return;
     }
@@ -3442,6 +3519,50 @@ const fieldHeight = (level: number) =>
 const clock = (seconds: number) =>
   `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 
+/** The seconds a voice has run: the time runs while `running`, and waits while it is not. */
+const useSeconds = (running: boolean) => {
+  const [seconds, setSeconds] = useState(0);
+  useEffect(() => {
+    if (!running) {
+      return nothing;
+    }
+    const timer = setInterval(() => {
+      setSeconds((now) => now + 1);
+    }, 1000);
+    return () => {
+      clearInterval(timer);
+    };
+  }, [running]);
+  return seconds;
+};
+
+/**
+ * The voice's field, for a dictation as for a conversation: flat and dim while the microphone is
+ * off, and in the quiet colour for a voice that is not the person's.
+ */
+const Level = ({
+  level,
+  muted,
+  other = false,
+}: {
+  level: number;
+  muted: boolean;
+  other?: boolean;
+}) => (
+  <span
+    aria-hidden="true"
+    {...stylex.props(styles.level, other && styles.voiceOther)}
+  >
+    <span
+      {...stylex.props(
+        styles.voice,
+        muted && styles.voiceMuted,
+        styles.loud(fieldHeight(muted ? 0 : level))
+      )}
+    />
+  </span>
+);
+
 /**
  * A dictation's bar, in the footer's place while it listens: Cancel, the time it has run, the
  * voice's level as a field of pixels, the microphone (off for a moment, and on again), and Done
@@ -3466,20 +3587,8 @@ const Dictation = ({
   onDone: () => void;
 }) => {
   const words = useI18n().promptInput.speechButton;
-  const [seconds, setSeconds] = useState(0);
+  const seconds = useSeconds(!muted);
   const [done, setDone] = useState<HTMLButtonElement | null>(null);
-  // The time runs while it listens, and waits while the microphone is off.
-  useEffect(() => {
-    if (muted) {
-      return nothing;
-    }
-    const timer = setInterval(() => {
-      setSeconds((now) => now + 1);
-    }, 1000);
-    return () => {
-      clearInterval(timer);
-    };
-  }, [muted]);
   useEffect(() => {
     if (autoFocus) {
       done?.focus();
@@ -3502,15 +3611,7 @@ const Dictation = ({
       <span role="timer" {...stylex.props(styles.time)}>
         {clock(seconds)}
       </span>
-      <span aria-hidden="true" {...stylex.props(styles.level)}>
-        <span
-          {...stylex.props(
-            styles.voice,
-            muted && styles.voiceMuted,
-            styles.loud(fieldHeight(muted ? 0 : level))
-          )}
-        />
-      </span>
+      <Level level={level} muted={muted} />
       {toolButton({
         "aria-label": words.mute,
         pressed: muted,
@@ -3641,6 +3742,104 @@ export const PromptInputSpeechButton = ({
           footer
         )}
     </>
+  );
+};
+
+/**
+ * A spoken conversation, written in the PromptInput in place of its body and footer while it
+ * runs: the words of the turn where the text stood, and under them the time (or, while the other
+ * voice speaks, its mark), the voice's level as a field of pixels, the microphone and a close
+ * button. The turns pass by themselves, so there is no Done and no Cancel. The product listens and
+ * speaks; this part draws what it is told, and says each turn once.
+ */
+export const PromptInputVoice = ({
+  status = "listening",
+  children,
+  interim = "",
+  level = 0,
+  speaker,
+  muted,
+  onMutedChange,
+  onClose,
+  "aria-label": ariaLabel,
+  style,
+}: PromptInputVoiceProps) => {
+  const words = useI18n().promptInput;
+  const form = usePromptInput();
+  const [ownMuted, setOwnMuted] = useState(false);
+  const off = muted ?? ownMuted;
+  const speaking = status === "speaking";
+  const seconds = useSeconds(!off);
+  const turn = speaking ? words.voice.speaking : words.voice.listening;
+  useEffect(() => {
+    announce(turn);
+  }, [turn]);
+  // It stands in the text's place: said before the form's first look at what it holds, so a
+  // conversation already running as the page comes takes no focus, and the text takes it back
+  // as this goes.
+  const setEditorShown = form?.setEditorShown;
+  useLayoutEffect(() => {
+    setEditorShown?.(false);
+  }, [setEditorShown]);
+  // Escape anywhere in the form ends the voice, as the close button does.
+  const setCancel = form?.setCancelDictation;
+  useEffect(() => {
+    if (setCancel === undefined) {
+      return nothing;
+    }
+    setCancel(onClose);
+    return () => {
+      setCancel(null);
+    };
+  });
+  return (
+    <div
+      role="group"
+      aria-label={ariaLabel ?? words.voice.label}
+      data-slot="prompt-input-voice"
+      data-status={status}
+      {...stylex.props(styles.conversation)}
+    >
+      <p
+        data-slot="prompt-input-voice-words"
+        {...stylex.props(styles.spoken, scrollbarHidden, style)}
+      >
+        {children}
+        {interim !== "" && (
+          <span {...stylex.props(styles.spokenInterim)}> {interim}</span>
+        )}
+      </p>
+      <div data-slot="prompt-input-footer" {...stylex.props(styles.footer)}>
+        <div {...stylex.props(styles.dictation)}>
+          {speaking && !isBlank(speaker) ? (
+            <span {...stylex.props(styles.speaker)}>{speaker}</span>
+          ) : (
+            <span role="timer" {...stylex.props(styles.time, styles.voiceTime)}>
+              {clock(seconds)}
+            </span>
+          )}
+          <Level level={level} muted={off && !speaking} other={speaking} />
+          {toolButton({
+            "aria-label": words.speechButton.mute,
+            pressed: off,
+            off: false,
+            slot: "prompt-input-voice-mute",
+            onClick: () => {
+              setOwnMuted(!off);
+              onMutedChange?.(!off);
+            },
+            children: <Icon icon={MicIcon} />,
+          })}
+          {toolButton({
+            "aria-label": words.voice.close,
+            off: false,
+            slot: "prompt-input-voice-close",
+            onClick: onClose,
+            children: <Icon icon={XIcon} />,
+          })}
+        </div>
+      </div>
+    </div>
   );
 };
 
