@@ -104,8 +104,10 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip";
 export interface ModelSelectorProps {
   /** Its ModelSelectorTrigger, then its ModelSelectorContent. */
   children: ReactNode;
-  /** The chosen model's value: its row is ticked and said as current. */
+  /** The chosen model's value: its row is ticked and said as current. Pass it with `onValueChange` to hold it yourself. */
   value?: string;
+  /** The model chosen at first, when the selector holds its own. */
+  defaultValue?: string;
   /**
    * Runs with the model picked. The panel closes, unless it holds an effort to set next
    * (`onEffortChange`), when it stays open and says the model chosen.
@@ -116,12 +118,16 @@ export interface ModelSelectorProps {
    * Leave it out for a product without favourites.
    */
   favorites?: readonly string[];
-  /** Runs with the favourites after a row's star adds or removes one. Without it the stars do not show. */
+  /** The favourites at first, when the selector holds its own; given, the star and the rows' stars show. */
+  defaultFavorites?: readonly string[];
+  /** Runs with the favourites after a row's star adds or removes one. Without it, or `defaultFavorites`, the stars do not show. */
   onFavoritesChange?: (favorites: string[]) => void;
   /** The chosen effort level's value, for ModelSelectorEffort. */
   effort?: string;
+  /** The effort level chosen at first, when the selector holds its own. */
+  defaultEffort?: string;
   /**
-   * Runs with the level chosen in ModelSelectorEffort. Given, picking a model keeps the panel
+   * Runs with the level chosen in ModelSelectorEffort. Given (or `effort`, `defaultEffort`), picking a model keeps the panel
    * open, so its effort can be set in the same opening.
    */
   onEffortChange?: (effort: string) => void;
@@ -334,13 +340,21 @@ const HOVER = media.hover;
 
 const styles = stylex.create({
   root: { display: "contents" },
-  // The chip's mark and words, a step apart and a size down from the Button's, the chevron after.
-  // The words quiet at rest, in ink under the pointer, through the Button's own marker.
+  // The chip's mark, words and chevron, a step apart and a size down from the Button's. The words
+  // are quiet at rest and in ink under the pointer, through the Button's own marker. The span lies
+  // over the whole Button (its padding taken back), so while the panel is open it carries the
+  // press's fill in the chip's corner: the original's chip keeps that fill; Button's ghost does not.
   chip: {
     display: "inline-flex",
     alignItems: "center",
     columnGap: space["1"],
     minWidth: 0,
+    marginBlock: `calc((${font.textSmLine} - ${size.controlXs}) / 2)`,
+    marginInline: `calc(-1 * ${space["2"]})`,
+    paddingBlock: `calc((${size.controlXs} - ${font.textSmLine}) / 2)`,
+    paddingInline: space["2"],
+    borderRadius: STEP_CORNER,
+    cornerShape: radius.shape,
     fontSize: font.textXs,
     lineHeight: font.textXsLine,
     color: {
@@ -351,23 +365,15 @@ const styles = stylex.create({
       },
       [FORCED]: "inherit",
     },
-  },
-  chevron: { display: "inline-flex", flexShrink: 0 },
-  // While the panel is open the chip keeps the press's fill, under its words, in the chip's corner.
-  held: {
-    position: "absolute",
-    zIndex: -1,
-    inset: 0,
-    borderRadius: STEP_CORNER,
-    cornerShape: radius.shape,
     backgroundColor: {
       default: "transparent",
-      [stylex.when.ancestor("[aria-expanded=true]", buttonMarker)]:
-        colors.accentActive,
-      [FORCED]: "transparent",
+      [stylex.when.ancestor("[aria-expanded=true]", buttonMarker)]: {
+        default: colors.accentActive,
+        [FORCED]: "transparent",
+      },
     },
-    pointerEvents: "none",
   },
+  chevron: { display: "inline-flex", flexShrink: 0 },
   // The panel: the popup's surface, the popover's width, never wider than the window less the
   // gutter. It never scrolls itself: each column scrolls its own.
   panel: {
@@ -411,6 +417,8 @@ const styles = stylex.create({
       [media.maxSmOrCoarse]: size.inputTextTouch,
     },
     lineHeight: font.textSmLine,
+    // A finger's height on a touch screen; the row grows with it.
+    minHeight: { default: 0, [COARSE]: size.tapTarget },
     outline: "none",
     "::placeholder": { color: colors.mutedForeground, opacity: 1 },
   },
@@ -551,6 +559,14 @@ const styles = stylex.create({
     borderBlockStartStyle: "solid",
     borderBlockStartColor: { default: colors.border, [FORCED]: "CanvasText" },
   },
+  // The segments at their words' width; in a panel too narrow for them (a small phone, long level
+  // names) they scroll across rather than leave the track. Toggle group takes no width or growth
+  // from a part: a style passed to it is refused by the lint gate (shadcn/no-inline-styles).
+  effortScroll: {
+    overflowX: "auto",
+    overscrollBehavior: "contain",
+  },
+  effortTrack: { width: "max-content" },
   effortHeading: {
     margin: 0,
     color: colors.mutedForeground,
@@ -574,7 +590,7 @@ interface Root {
   favorites: readonly string[] | undefined;
   toggleFavorite: ((value: string, label: string) => void) | undefined;
   effort: string | undefined;
-  onEffortChange: ((effort: string) => void) | undefined;
+  onEffortChange: (effort: string) => void;
   close: () => void;
 }
 
@@ -624,11 +640,14 @@ const usePanel = (part: string): Panel => {
 /** The model picker: its chip and its panel, open or closed, and the choices it shows. */
 export const ModelSelector = ({
   children,
-  value,
+  value: valueGiven,
+  defaultValue,
   onValueChange,
-  favorites,
+  favorites: favoritesGiven,
+  defaultFavorites,
   onFavoritesChange,
-  effort,
+  effort: effortGiven,
+  defaultEffort,
   onEffortChange,
   open,
   defaultOpen = false,
@@ -636,17 +655,35 @@ export const ModelSelector = ({
 }: ModelSelectorProps) => {
   const words = useI18n().modelSelector;
   const [openHere, setOpenHere] = useState(defaultOpen);
+  const [valueHere, setValueHere] = useState(defaultValue);
+  const [favoritesHere, setFavoritesHere] = useState(defaultFavorites);
+  const [effortHere, setEffortHere] = useState(defaultEffort);
   const shown = open ?? openHere;
+  const value = valueGiven ?? valueHere;
+  const favorites = favoritesGiven ?? favoritesHere;
+  const effort = effortGiven ?? effortHere;
+  // Said once for each change: a close asked for twice (Escape, then the Popover) is one close.
   const change = (next: boolean) => {
+    if (next === shown) {
+      return;
+    }
     setOpenHere(next);
     onOpenChange?.(next);
   };
   // With an effort to set, picking a model keeps the panel open for it, and says the model chosen,
   // since focus stays in the search.
-  const staysOpen = onEffortChange !== undefined;
+  const staysOpen =
+    onEffortChange !== undefined ||
+    effortGiven !== undefined ||
+    defaultEffort !== undefined;
+  // Starring changes the favourites the page holds (with onFavoritesChange) or its own.
+  const keepsFavorites =
+    onFavoritesChange !== undefined ||
+    (favoritesGiven === undefined && defaultFavorites !== undefined);
   const root: Root = {
     value,
     pick: (picked, label) => {
+      setValueHere(picked);
       onValueChange?.(picked);
       if (!staysOpen) {
         change(false);
@@ -656,19 +693,22 @@ export const ModelSelector = ({
     },
     favorites,
     toggleFavorite:
-      favorites === undefined || onFavoritesChange === undefined
+      favorites === undefined || !keepsFavorites
         ? undefined
         : (model, label) => {
             const starred = favorites.includes(model);
-            onFavoritesChange(
-              starred
-                ? favorites.filter((each) => each !== model)
-                : [...favorites, model]
-            );
+            const next = starred
+              ? favorites.filter((each) => each !== model)
+              : [...favorites, model];
+            setFavoritesHere(next);
+            onFavoritesChange?.(next);
             announce(starred ? words.removed(label) : words.added(label));
           },
     effort,
-    onEffortChange,
+    onEffortChange: (next) => {
+      setEffortHere(next);
+      onEffortChange?.(next);
+    },
     close: () => {
       change(false);
     },
@@ -709,7 +749,6 @@ export const ModelSelectorTrigger = ({
     children
   ) : (
     <Button variant="ghost" size="xs" style={style}>
-      <span aria-hidden="true" {...stylex.props(styles.held)} />
       <span {...stylex.props(styles.chip)}>
         {children}
         <span aria-hidden="true" {...stylex.props(styles.chevron)}>
@@ -718,19 +757,14 @@ export const ModelSelectorTrigger = ({
       </span>
     </Button>
   );
-  if (tooltip === undefined || tooltip === "") {
-    return (
-      <PopoverTrigger asChild aria-label={label} disabled={disabled}>
-        {chip}
-      </PopoverTrigger>
-    );
-  }
+  // One tree whether or not there is a tooltip, so the chip is never drawn anew while it is open.
+  const tip = tooltip !== undefined && tooltip !== "";
   return (
-    <Tooltip>
+    <Tooltip disabled={!tip}>
       <PopoverTrigger asChild aria-label={label} disabled={disabled}>
         <TooltipTrigger asChild>{chip}</TooltipTrigger>
       </PopoverTrigger>
-      <TooltipContent>{tooltip}</TooltipContent>
+      {tip ? <TooltipContent>{tooltip}</TooltipContent> : null}
     </Tooltip>
   );
 };
@@ -816,6 +850,8 @@ export const ModelSelectorContent = ({
   const root = useRoot("ModelSelectorContent");
   const words = useI18n().modelSelector;
   const keys = (event: KeyboardEvent<HTMLElement>) => {
+    // Escape closes the panel and stops here, so the page does not hear it (and the Popover, which
+    // listens on the page, does not close it a second time).
     if (event.key === "Escape") {
       event.stopPropagation();
       root.close();
@@ -994,7 +1030,10 @@ export const ModelSelectorMaker = ({
   );
 };
 
-/** What the list says when no model matches, or no model is a favourite yet. */
+/**
+ * What the list says when no model matches the search, or no model is a favourite yet. A maker
+ * whose models are taken away while the panel is open says nothing: no search has failed.
+ */
 export const ModelSelectorEmpty = ({ children }: ModelSelectorEmptyProps) => {
   const panel = usePanel("ModelSelectorEmpty");
   const words = useI18n().modelSelector;
@@ -1004,7 +1043,9 @@ export const ModelSelectorEmpty = ({ children }: ModelSelectorEmptyProps) => {
       data-slot="model-selector-empty"
       {...stylex.props(styles.empty)}
     >
-      {children ?? (starred ? words.noFavorites : words.empty)}
+      {panel.searching || starred
+        ? (children ?? (starred ? words.noFavorites : words.empty))
+        : null}
     </EmptyPrimitive>
   );
 };
@@ -1289,25 +1330,28 @@ export const ModelSelectorEffort = ({
             <p aria-hidden="true" {...stylex.props(styles.effortHeading)}>
               {named}
             </p>
-            <ToggleGroup
-              aria-label={named}
-              size="default"
-              fullWidth
-              value={chosen === undefined ? [] : [chosen]}
-              deselectable={false}
-              onValueChange={(next: string[]) => {
-                const [first] = next;
-                if (first !== undefined) {
-                  root.onEffortChange?.(first);
-                }
-              }}
-            >
-              {shown.map((level) => (
-                <ToggleGroupItem key={level.value} value={level.value}>
-                  {level.label}
-                </ToggleGroupItem>
-              ))}
-            </ToggleGroup>
+            <div {...stylex.props(styles.effortScroll, scrollbarHidden)}>
+              <div {...stylex.props(styles.effortTrack)}>
+                <ToggleGroup
+                  aria-label={named}
+                  size="default"
+                  value={chosen === undefined ? [] : [chosen]}
+                  deselectable={false}
+                  onValueChange={(next: string[]) => {
+                    const [first] = next;
+                    if (first !== undefined) {
+                      root.onEffortChange(first);
+                    }
+                  }}
+                >
+                  {shown.map((level) => (
+                    <ToggleGroupItem key={level.value} value={level.value}>
+                      {level.label}
+                    </ToggleGroupItem>
+                  ))}
+                </ToggleGroup>
+              </div>
+            </div>
           </div>
         ) : null}
       </div>

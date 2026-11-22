@@ -330,3 +330,61 @@ test("right to left, the column stands at the start, on the right", async ({
     .boundingBox();
   expect(column?.x ?? 0).toBeGreaterThan(models?.x ?? 0);
 });
+
+test("the chip stays the same control while the panel is open: picking a model without levels leaves it open and one press closes it", async ({
+  page,
+}) => {
+  await openExample(page, "model-selector", "effort");
+  await page
+    .getByRole("button", { name: "Model: Claude Opus 5.5, Medium" })
+    .click();
+  await page.getByRole("option", { name: "Claude Haiku 5.5" }).click();
+  const chip = page.getByRole("button", { name: "Model: Claude Haiku 5.5" });
+  await expect(chip).toHaveAttribute("aria-expanded", "true");
+  await page.getByRole("option", { name: "Claude Opus 5.5" }).click();
+  const back = page.getByRole("button", {
+    name: "Model: Claude Opus 5.5, Max",
+  });
+  await expect(back).toHaveAttribute("aria-expanded", "true");
+  await back.click();
+  await expect(
+    page.getByRole("combobox", { name: "Search models" })
+  ).toBeHidden();
+});
+
+test.describe("on a narrow touch phone", () => {
+  test.use({
+    viewport: { width: 320, height: 640 },
+    hasTouch: true,
+    isMobile: true,
+  });
+
+  test("every effort level stands inside the track, and can be pressed", async ({
+    page,
+  }) => {
+    await openExample(page, "prompt-input", "model");
+    await page
+      .getByRole("button", { name: "Model: Claude Opus 5.5, Medium" })
+      .click();
+    const effort = page.getByRole("group", { name: "Thinking" });
+    const max = effort.getByRole("button", { name: "Max" });
+    const panel = await effort.boundingBox();
+    const end = await max.boundingBox();
+    expect((end?.x ?? 0) + (end?.width ?? 0)).toBeLessThanOrEqual(
+      (panel?.x ?? 0) + (panel?.width ?? 0)
+    );
+    await max.click();
+    await expect(
+      page.getByRole("button", { name: "Model: Claude Opus 5.5, Max" })
+    ).toBeVisible();
+  });
+
+  test("the search takes a finger", async ({ page }) => {
+    await openExample(page, "model-selector", "basic");
+    await page.getByRole("button", { name: /^Model:/u }).click();
+    const box = await page
+      .getByRole("combobox", { name: "Search models" })
+      .boundingBox();
+    expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
+  });
+});
