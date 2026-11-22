@@ -30,6 +30,18 @@ When every step is known before the work starts, show them all from the start: t
 
 <Stage path="trace/plan" label="A plan" />
 
+## A queue
+
+What waits is a list of lines too: a row for each group, its line the count and what it holds, the list under it. A line still waiting is `pending`; one that is done says so in words before its title, for a screen reader, not by its tick alone.
+
+<Stage path="trace/queue" label="A queue" />
+
+## A subagent
+
+Work handed to another agent is a run inside the run: one row, its line the run in the tense of its status, the model as a Badge after it. It opens on that agent's own tool calls as a `Trace`, what it returned as a Code block and what it found.
+
+<Stage path="trace/subagent" label="A subagent" />
+
 ## While it works
 
 A line is said once, when its status changes after it was drawn: when it finishes or fails. A line is never said for appearing. Press Next to finish the running step.
@@ -48,7 +60,7 @@ A line is said once, when its status changes after it was drawn: when it finishe
     "A line in a trigger to make it open, or in a link or a dialog's trigger to make it go somewhere.",
   ]}
   never={[
-    "A step a part built on Trace already names: use Tool for a call, Reasoning for thinking, Chain of thought for an answer's steps, Queue or Subagent.",
+    "A step a part built on Trace already names: use Tool for a call, Reasoning for thinking, Chain of thought for an answer's steps.",
     "The assistant's reply: use Message.",
     "A question for the person, such as approving a tool: use Confirmation, outside the Trace.",
   ]}
