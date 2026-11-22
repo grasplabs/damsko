@@ -658,8 +658,10 @@ export interface I18nCatalog {
     other: string;
     /** The button that goes back to the question before. */
     previous: string;
-    /** Where the person is in the run, shown and said ("Question 2 of 3"). */
+    /** Where the person is in the run, said to a screen reader ("Question 2 of 3"). */
     progress: (current: number, total: number) => string;
+    /** Where the person is in the run, shown at the head's end ("2 of 3"). */
+    step: (current: number, total: number) => string;
     /** The progress bar's name. */
     progressLabel: string;
     /** The mark on the recommended choice. */
@@ -1330,6 +1332,7 @@ const english: I18nCatalog = {
     previous: "Previous",
     progress: (current, total) => `Question ${current} of ${total}`,
     progressLabel: "Progress",
+    step: (current, total) => `${current} of ${total}`,
     recommended: "Recommended",
     required: "Answer this question to go on",
     skip: "Skip",

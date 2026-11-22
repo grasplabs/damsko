@@ -12,7 +12,7 @@ It is a group, not a form, so it can stand inside a form of its own, a PromptInp
 
 ## One choice
 
-A `QuestionnaireItem` holds a `QuestionnaireTitle`, a `QuestionnaireDescription` and its `QuestionnaireChoices`: radios. A `QuestionnaireInput` after them takes an answer of the person's own (Other), which takes the chosen choice's place. Send waits for an answer; once sent, the answer stands in one line. On an item that is not `required`, `QuestionnaireSkip` skips it; here its `onClick` lets the product move on.
+A `QuestionnaireItem` holds a `QuestionnaireTitle`, a `QuestionnaireDescription` and its `QuestionnaireChoices`: radios. Each choice is a card with the key that picks it boxed at its start. A `QuestionnaireInput` after them is one more card for an answer of the person's own (Other), which takes the chosen choice's place. Send waits for an answer; once sent, the answer stands in one line. On an item that is not `required`, `QuestionnaireSkip` skips it; here its `onClick` lets the product move on.
 
 <Stage path="questionnaire/single" label="One choice" />
 
@@ -97,20 +97,21 @@ A questionnaire is a group, not a form, so it may stand in a PromptInput's body 
       group: "Choices",
       key: "Card",
       value:
-        "A hairline inside, {tap-target} tall at least; chosen, the quiet fill",
-      tokens: ["border", "accent-highlight"],
+        "Its own surface with a low lift, {tap-target} tall at least, every card as tall as the tallest; chosen, the quiet fill and a tick at its end",
+      tokens: ["card", "shadow-sm", "accent"],
     },
     {
       group: "Choices",
       key: "Key",
       value:
-        "Its number, 1 to 9 (or letter, A to Z), quiet at the end; none on a touch screen",
-      tokens: ["muted"],
+        "Its number, 1 to 9 (or letter, A to Z), boxed at the start, {kbd-height} square, where the control is; chosen, the main fill",
+      tokens: ["secondary", "border-strong", "primary"],
     },
     {
       group: "Progress",
       key: "Words",
-      value: "Question 2 of 3, {text-sm}, figures of one width",
+      value:
+        'What the run is at the start ("Questions"), the place at the end ("2 of 3"), {text-xs}, figures of one width; said as "Question 2 of 3"',
       tokens: ["muted"],
     },
     {
@@ -142,7 +143,7 @@ A questionnaire is a group, not a form, so it may stand in a PromptInput's body 
     {
       key: "Other",
       value:
-        "In a single choice, words of one's own take the chosen choice's place.",
+        "The last of the choices' cards, as tall as they are, a plus at its start, its words in InputGroup's input, reached by the key after the last choice. In a single choice, words of one's own take the chosen choice's place.",
     },
     {
       key: "Answers",

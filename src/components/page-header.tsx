@@ -51,7 +51,6 @@ import {
 } from "./dropdown-menu";
 import { pageBandVars } from "./page-header.stylex";
 import { Skeleton } from "./skeleton";
-import { Spinner } from "./spinner";
 
 /** Every prop a PageHeader takes. */
 export interface PageHeaderProps {
@@ -536,11 +535,8 @@ const iconOf = (props: ButtonProps): IconData | undefined => {
   return mark?.props.icon;
 };
 
-/** Whether a Button is at work: it shows a Spinner. */
-const isWorking = (props: ButtonProps) =>
-  insideOf(props).some(
-    (child) => isValidElement(child) && child.type === Spinner
-  );
+/** Whether a Button is at work: the page gave it `status="loading"`. */
+const isWorking = (props: ButtonProps) => props.status === "loading";
 
 /** The address of a Button drawn as a link (`asChild` with an `<a href>`), if it is one. */
 const hrefOf = (props: ButtonProps): string | undefined => {

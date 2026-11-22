@@ -134,7 +134,7 @@ export default function SidePanelBasic() {
                     <ItemActions showOnHover>
                       <Button
                         variant="ghost"
-                        size="icon-sm"
+                        size="icon-xs"
                         aria-label={`Remove ${source.name}`}
                       >
                         <Icon icon={TrashIcon} />

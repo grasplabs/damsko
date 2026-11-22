@@ -34,6 +34,8 @@ catalog:
   "@astrojs/react": 7.1.8
   acorn: 8.19.0
   astro: 7.4.11
+  # The flags the connect block's example shows for a provider's region.
+  country-flag-icons: 1.6.20
   github-slugger: 2.0.0
   lightningcss: 1.33.0
   # @astrojs/react's optional peer for react({ compiler: true }).
