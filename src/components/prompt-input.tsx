@@ -150,7 +150,12 @@ import {
   nothing,
 } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
-import { iconVars, menuMarker, ringInsetMarker } from "../lib/vars.stylex";
+import {
+  iconVars,
+  menuMarker,
+  pixel,
+  ringInsetMarker,
+} from "../lib/vars.stylex";
 import { Alert, AlertAction, AlertTitle } from "./alert";
 import {
   Attachment,
@@ -1314,7 +1319,7 @@ const styles = stylex.create({
     animationIterationCount: "infinite",
   },
   // A dictation's bar, in the footer's place while it listens: Cancel, the time, the voice's level
-  // along a dotted line, the microphone, and Done where Submit stood.
+  // as a field of pixels, the microphone, and Done where Submit stood.
   dictation: {
     display: "flex",
     alignItems: "center",
@@ -1335,37 +1340,28 @@ const styles = stylex.create({
     fontVariantNumeric: "tabular-nums",
     whiteSpace: "nowrap",
   },
-  // The line the voice shows on: a row of fine dots, on the bar's centre line.
+  // The voice's field, on the bar's centre line: one body of the system's pixels, widest and
+  // densest at its middle, that stands low at rest and grows taller with the voice. Nothing
+  // travels sideways.
   level: {
-    position: "relative",
     display: "grid",
     alignItems: "center",
     flexGrow: 1,
     minWidth: 0,
     height: size.controlSm,
     color: { default: colors.mint, [FORCED]: "CanvasText" },
-    "::before": {
-      content: "''",
-      gridArea: "1 / 1",
-      height: size.hairline,
-      backgroundImage: `linear-gradient(90deg, currentColor ${size.hairline}, transparent ${size.hairline})`,
-      backgroundSize: `calc(3 * ${size.hairline}) ${size.hairline}`,
-    },
   },
-  // The voice: more rows of the same dots round the line's middle, as tall as the voice is loud.
+  // The body: the pixel grid, cut by a soft oval that fades to its ends. Its height steps by two
+  // pixels of the grid, so the grid stays where it is as the body grows from its middle.
   voice: {
-    gridArea: "1 / 1",
-    height: space["3"],
-    backgroundImage: `linear-gradient(90deg, currentColor ${size.hairline}, transparent ${size.hairline}), linear-gradient(transparent ${size.hairline}, ${colors.card} ${size.hairline})`,
-    backgroundSize: `calc(3 * ${size.hairline}) 100%, 100% calc(3 * ${size.hairline})`,
-    backgroundBlendMode: "normal",
-    maskImage:
-      "linear-gradient(90deg, transparent 15%, black 40%, black 60%, transparent 85%)",
-    transitionProperty: "transform",
-    transitionDuration: { default: duration.hover, [REDUCED]: "0s" },
-    transitionTimingFunction: "linear",
+    backgroundColor: "currentColor",
+    maskImage: `${pixel.mask}, radial-gradient(closest-side, #000 25%, transparent)`,
+    maskSize: "3px 3px, 100% 100%",
+    maskRepeat: "repeat, no-repeat",
+    maskComposite: "intersect",
   },
-  loud: (level: number) => ({ transform: `scaleY(${level})` }),
+  voiceMuted: { opacity: size.opacityDisabled },
+  loud: (height: string) => ({ height }),
   // The mention menu: a menu's panel under the caret, items with a mark, a name and a quiet line
   // under it.
   mentionPanel: {
@@ -3287,13 +3283,20 @@ export const PromptInputActionAddAttachments = ({
   );
 };
 
+/**
+ * How tall the voice's field stands for a level from 0 to 1: 6px at rest, 30px at its loudest, in
+ * steps of 6px, two pixels of its grid, so it grows evenly from its middle.
+ */
+const fieldHeight = (level: number) =>
+  `${6 + 6 * Math.round(4 * Math.min(Math.max(level, 0), 1))}px`;
+
 /** The time a dictation has run, as a clock reads it ("0:12"). */
 const clock = (seconds: number) =>
   `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 
 /**
  * A dictation's bar, in the footer's place while it listens: Cancel, the time it has run, the
- * voice's level along a dotted line, the microphone (off for a moment, and on again), and Done
+ * voice's level as a field of pixels, the microphone (off for a moment, and on again), and Done
  * where Submit stood. A pointer's press leaves the focus in the text; the keyboard's goes to Done.
  * Escape cancels it, from the bar as from the text (the form hears it).
  */
@@ -3355,7 +3358,8 @@ const Dictation = ({
         <span
           {...stylex.props(
             styles.voice,
-            styles.loud(muted ? 0 : Math.min(Math.max(level, 0), 1))
+            muted && styles.voiceMuted,
+            styles.loud(fieldHeight(muted ? 0 : level))
           )}
         />
       </span>

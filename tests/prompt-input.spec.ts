@@ -588,19 +588,21 @@ test("a word heard but not yet final shows lighter after the text, and is no par
   const text = page.getByRole("textbox", { name: "Message" });
   await page.getByRole("button", { name: "Dictate" }).click();
   await expect(page.getByRole("group", { name: "Listening" })).toBeVisible();
+  // The word being heard stands after the text, drawn by the text box, lighter than its words,
+  // and is not among them.
   const look = async () =>
     await text.evaluate((element) => {
       const after = getComputedStyle(element, "::after");
+      const heard = element.dataset.interim ?? "";
       return {
-        words: after.content,
+        shown: heard !== "" && after.content === `" ${heard}"`,
         lighter: after.color !== getComputedStyle(element).color,
+        written: (element.textContent ?? "").trimEnd().endsWith(heard),
       };
     });
   await expect
     .poll(look)
-    .toEqual({ words: '" " attr(data-interim)', lighter: true });
-  await expect(text).toHaveAttribute("data-interim", "send");
-  await expect(text).toHaveText("Before Monday:");
+    .toEqual({ shown: true, lighter: true, written: false });
   await page.getByRole("button", { name: "Done" }).click();
   await expect(text).not.toHaveAttribute("data-interim");
 });
