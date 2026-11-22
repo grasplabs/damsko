@@ -39,7 +39,7 @@ export default function TreeLinks() {
     label,
     icon: FileIcon,
     render: <RouterLink to={value} />,
-    actions: readOnly ? (
+    badge: readOnly ? (
       <Icon icon={PencilOffIcon} label="Read only" />
     ) : undefined,
   });
@@ -48,7 +48,7 @@ export default function TreeLinks() {
       value: "notes",
       label: "Notes",
       icon: FolderIcon,
-      actions: "3",
+      badge: "3",
       children: [
         note("notes/pricing", "Pricing for next year"),
         note("notes/suppliers", "Supplier terms", true),
@@ -59,7 +59,7 @@ export default function TreeLinks() {
       value: "sources",
       label: "Sources",
       icon: FolderIcon,
-      actions: "12",
+      badge: "12",
       children: [note("sources/survey", "Team survey results")],
     },
   ];

@@ -177,6 +177,86 @@ test("the filter keeps the items that hold its words with their folders open; Es
   await expect(tree.getByRole("treeitem", { name: "app.tsx" })).toBeVisible();
 });
 
+test("a row's buttons run on a press or a key and leave the row as it was; Tab from the row reaches them", async ({
+  page,
+}) => {
+  await openExample(page, "tree-view", "actions");
+  const tree = page.getByRole("tree", { name: "Files" });
+  const notes = tree.getByRole("treeitem", { name: /^notes\.md/u });
+  const budget = tree.getByRole("treeitem", { name: /^budget\.xlsx/u });
+  const reports = tree.getByRole("treeitem", { name: /^reports/u });
+  await expect(notes).toHaveAttribute("aria-selected", "true");
+
+  // A press on a button is the button's: the row is not chosen, and a folder is not closed.
+  await budget.getByText("budget.xlsx").hover();
+  await page.getByRole("button", { name: "Delete budget.xlsx" }).click();
+  await expect(page.getByText("Deleted budget.xlsx")).toBeVisible();
+  await expect(notes).toHaveAttribute("aria-selected", "true");
+  await reports.getByText("reports", { exact: true }).hover();
+  await page.getByRole("button", { name: "Rename reports" }).click();
+  await expect(page.getByText("Renaming reports")).toBeVisible();
+  await expect(reports).toHaveAttribute("aria-expanded", "true");
+
+  // The keyboard: the focused row shows its buttons, Tab goes to them and then out of the tree,
+  // never through every other row's.
+  const rename = page.getByRole("button", { name: "Rename notes.md" });
+  const remove = page.getByRole("button", { name: "Delete notes.md" });
+  await notes.focus();
+  await expect(remove).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Rename readme.md" })
+  ).toBeHidden();
+  await page.keyboard.press("Tab");
+  await expect(rename).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(page.getByText("Renaming notes.md")).toBeVisible();
+  await expect(rename).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(remove).toBeFocused();
+  await page.keyboard.press("Space");
+  await expect(page.getByText("Deleted notes.md")).toBeVisible();
+  await expect(notes).toHaveAttribute("aria-selected", "true");
+  await page.keyboard.press("Tab");
+  await expect(
+    page.getByRole("button", { name: "After the tree" })
+  ).toBeFocused();
+});
+
+test("a folder that cannot be chosen opens and closes, and the chosen file stays", async ({
+  page,
+}) => {
+  await openExample(page, "tree-view", "actions");
+  const tree = page.getByRole("tree", { name: "Files" });
+  const notes = tree.getByRole("treeitem", { name: /^notes\.md/u });
+  const reports = tree.getByRole("treeitem", { name: /^reports/u });
+  await expect(notes).toHaveAttribute("aria-selected", "true");
+  await expect(reports).not.toHaveAttribute("aria-selected");
+  await reports.getByText("reports", { exact: true }).click();
+  await expect(reports).toHaveAttribute("aria-expanded", "false");
+  await reports.focus();
+  await page.keyboard.press("Space");
+  await page.keyboard.press("Enter");
+  await expect(reports).not.toHaveAttribute("aria-selected");
+  await page.keyboard.press("End");
+  const readme = tree.getByRole("treeitem", { name: /^readme\.md/u });
+  await expect(readme).toBeFocused();
+  await page.keyboard.press("Space");
+  await expect(readme).toHaveAttribute("aria-selected", "true");
+  await expect(tree.getByRole("treeitem", { selected: true })).toHaveCount(1);
+});
+
+test("files wear an icon for their kind, hidden from a screen reader: the tree reads names only", async ({
+  page,
+}) => {
+  await openExample(page, "tree-view", "file-icons");
+  const tree = page.getByRole("tree", { name: "Report" });
+  await expect(tree.getByRole("treeitem")).toHaveCount(7);
+  await expect(tree.getByRole("img")).toHaveCount(0);
+  await expect(
+    tree.getByRole("treeitem", { name: "summary.pdf", exact: true })
+  ).toBeVisible();
+});
+
 test.describe("on a touch screen", () => {
   test.use({
     hasTouch: true,

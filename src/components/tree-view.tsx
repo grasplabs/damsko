@@ -2,7 +2,8 @@
 // on UI SDK's Tree. The rows follow Select's items and Sidebar's rows: the height of
 // a small control, each level a step in, a chevron that turns as a branch opens, an icon per item,
 // the words. One item or several can be chosen, a branch's children can load when it first opens,
-// and Enter runs an item's action.
+// and Enter runs an item's action. A row can end in a badge (a count, a mark) and in its own buttons
+// (`actions`), and a node with `selectable: false` opens without being chosen.
 //
 //   <TreeView aria-label="Files" items={[{ value: "reports", label: "Reports", icon: FolderIcon,
 //     children: [{ value: "reports/summary", label: "Summary", icon: FileIcon }] }]} />
@@ -11,6 +12,8 @@
 // closes it or goes up to its parent (mirrored right to left), Home and End jump, a letter finds the
 // next item that starts with it, Enter runs, Space chooses, `*` opens every branch beside the
 // focused one. A screen reader hears each item's level, whether it is open, and whether it is chosen.
+// A row's buttons take no part in those keys: they show on the row that holds focus or the pointer,
+// one Tab from it, and Tab never walks every row's.
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
@@ -24,7 +27,7 @@ import {
 } from "@ui-sdk/react/tree";
 import type { TreeItemData } from "@ui-sdk/react/tree";
 import { useRef, useState } from "react";
-import type { KeyboardEvent, ReactElement, ReactNode } from "react";
+import type { KeyboardEvent, MouseEvent, ReactElement, ReactNode } from "react";
 
 import { useI18n } from "../lib/i18n";
 import {
@@ -65,7 +68,20 @@ export interface TreeNode {
   children?: TreeNode[];
   /** It cannot be chosen, opened or run; it still takes focus, so a screen reader finds it. */
   disabled?: boolean;
+  /**
+   * Whether it can be chosen. `false` for one that only opens and runs, such as a folder in a tree
+   * where only files are chosen: a press, Space and Enter leave the choice as it was.
+   * @default true
+   */
+  selectable?: boolean;
   /** What stands at the row's end, after its words: a count, a mark such as sensitive or read-only. */
+  badge?: ReactNode;
+  /**
+   * The row's buttons, at its end: small icon Buttons, each with its own name ("Rename notes.md").
+   * They show while the row is pointed at or holds focus (always on a touch screen), keeping their
+   * room so the row never moves; Tab from the row goes to them. A press or a key on one is the
+   * button's: the row is not chosen, opened or moved from.
+   */
   actions?: ReactNode;
   /**
    * Where the row leads: the row is then a link, opened by a press, Enter, a middle click or in a
@@ -306,7 +322,7 @@ const styles = stylex.create({
     outline: "none",
   },
   // At the row's end: a count, a mark. Quiet, never squeezed, after the words.
-  actions: {
+  badge: {
     display: "inline-flex",
     alignItems: "center",
     gap: space["1"],
@@ -320,6 +336,36 @@ const styles = stylex.create({
     letterSpacing: "normal",
     fontVariantNumeric: "tabular-nums",
   },
+  // The row's buttons, after its words and its badge; they keep their room, shown or not. They are
+  // seen while the row is pointed at, its item holds focus, focus is on one of them or one's menu is
+  // open. Only the buttons of the item with the tree's Tab stop are in the Tab order (the others are
+  // hidden, not only clear): Tab from a row goes to its own buttons and then out of the tree. That
+  // cannot hang on focus itself, which is nowhere for a moment as it moves. A touch screen has no
+  // pointer to show them: always there.
+  actions: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: space["1"],
+    flexShrink: 0,
+    visibility: {
+      default: "hidden",
+      ':is([data-slot=tree-view-item][tabindex="0"] > * > *)': "visible",
+      ":is([data-slot=tree-view-item] > :hover > *)": "visible",
+      ":focus-within": "visible",
+      ":has([aria-expanded=true])": "visible",
+      [COARSE]: "visible",
+    },
+    opacity: {
+      default: 0,
+      ":is([data-slot=tree-view-item]:focus > * > *)": 1,
+      ":is([data-slot=tree-view-item] > :hover > *)": 1,
+      ":focus-within": 1,
+      ":has([aria-expanded=true])": 1,
+      [COARSE]: 1,
+    },
+  },
+  // With no badge before them the buttons take the row's end themselves.
+  actionsAtEnd: { marginInlineStart: "auto" },
   // A tree with its filter: the field over the tree, a step apart.
   filtered: {
     display: "grid",
@@ -434,6 +480,30 @@ const withLoaded = (
     return { ...node, children: withLoaded(node.children, loaded) };
   });
 
+/** The values that cannot be chosen (`selectable: false`). */
+const fixedValues = (nodes: TreeNode[]): string[] =>
+  nodes.flatMap((node) => [
+    ...(node.selectable === false ? [node.value] : []),
+    ...fixedValues(node.children ?? []),
+  ]);
+
+type TreeValue = string | string[] | null;
+
+/**
+ * A choice the tree asks for, without what cannot be chosen; undefined when nothing of it is left,
+ * so a press on a folder that only opens leaves the choice as it was.
+ */
+const choosable = (
+  next: TreeValue,
+  fixed: Set<string>
+): TreeValue | undefined => {
+  if (Array.isArray(next)) {
+    const kept = next.filter((value) => !fixed.has(value));
+    return kept.length === 0 && next.length > 0 ? undefined : kept;
+  }
+  return next !== null && fixed.has(next) ? undefined : next;
+};
+
 /** Whether words hold the filter, whatever the case. */
 const holds = (words: string, query: string) =>
   words.toLocaleLowerCase().includes(query);
@@ -496,9 +566,19 @@ const Marked = ({ words, query }: { words: string; query: string }) => {
 const isLinked = (node: TreeNode) =>
   (node.href !== undefined && node.href !== "") || node.render !== undefined;
 
+/** Whether a node's slot holds something to draw. */
+const filled = (slot: ReactNode) =>
+  slot !== undefined && slot !== null && slot !== false;
+
+/** A press or a key on a row's button is the button's: the row is not chosen, opened or moved from. */
+const keep = (event: MouseEvent<HTMLElement> | KeyboardEvent<HTMLElement>) => {
+  event.stopPropagation();
+};
+
 /**
- * The row's icon, words and actions; in a link when the node leads somewhere. The link takes no Tab
- * stop of its own: the tree's item holds focus, and Enter on it follows the link (TreeView, below).
+ * The row's icon, words and badge, in a link when the node leads somewhere, then its buttons, which
+ * a link cannot hold. The link takes no Tab stop of its own: the tree's item holds focus, and Enter
+ * on it follows the link (TreeView, below).
  */
 const RowInside = ({
   node,
@@ -519,27 +599,41 @@ const RowInside = ({
       <span {...stylex.props(styles.words)}>
         <Marked words={node.label} query={query} />
       </span>
-      {node.actions !== undefined &&
-        node.actions !== null &&
-        node.actions !== false && (
-          <span {...stylex.props(styles.actions)}>{node.actions}</span>
-        )}
+      {filled(node.badge) && (
+        <span {...stylex.props(styles.badge)}>{node.badge}</span>
+      )}
     </>
   );
-  if (!isLinked(node)) {
-    return inside;
-  }
-  return renderElement(
-    "a",
-    {
-      href: node.href,
-      tabIndex: -1,
-      "data-tree-view-link": "",
-      "aria-current": current ? "page" : undefined,
-      className: stylex.props(styles.link).className,
-      children: inside,
-    },
-    node.render
+  return (
+    <>
+      {isLinked(node)
+        ? renderElement(
+            "a",
+            {
+              href: node.href,
+              tabIndex: -1,
+              "data-tree-view-link": "",
+              "aria-current": current ? "page" : undefined,
+              className: stylex.props(styles.link).className,
+              children: inside,
+            },
+            node.render
+          )
+        : inside}
+      {filled(node.actions) && (
+        // oxlint-disable-next-line jsx-a11y/no-static-element-interactions -- it only keeps its buttons' presses and keys from the row; the buttons are the controls
+        <span
+          onClick={keep}
+          onKeyDown={keep}
+          {...stylex.props(
+            styles.actions,
+            !filled(node.badge) && styles.actionsAtEnd
+          )}
+        >
+          {node.actions}
+        </span>
+      )}
+    </>
   );
 };
 
@@ -592,6 +686,10 @@ const Chevron = (
 const itemElement = (props: Record<string, unknown>) =>
   renderElement("div", { ...props, "data-slot": "tree-view-item" });
 
+/** An item that cannot be chosen says nothing of being chosen. */
+const fixedItemElement = (props: Record<string, unknown>) =>
+  itemElement({ ...props, "aria-selected": undefined });
+
 interface ItemsProps {
   nodes: TreeNode[];
   current: string | null | undefined;
@@ -613,7 +711,7 @@ const Items = ({ nodes, current, query, guides, nested = false }: ItemsProps) =>
         branch={branch || undefined}
         disabled={node.disabled}
         label={node.label}
-        render={itemElement}
+        render={node.selectable === false ? fixedItemElement : itemElement}
         {...stylex.props(styles.item, guided && styles.guided)}
       >
         {guided ? <Guide last={index === nodes.length - 1} /> : null}
@@ -782,6 +880,21 @@ export const TreeView = ({
   const nodes = withLoaded(items, loaded);
   const shown = query === "" ? nodes : narrowed(nodes, query);
   const data = toData(shown);
+  // The choice is held here, the caller's or the tree's own, so what cannot be chosen never is.
+  const fixed = new Set(fixedValues(nodes));
+  const [own, setOwn] = useState<TreeValue>(
+    defaultValue ?? (selectionMode === "multiple" ? [] : null)
+  );
+  const choose = (next: TreeValue) => {
+    const kept = choosable(next, fixed);
+    if (kept === undefined) {
+      return;
+    }
+    if (value === undefined) {
+      setOwn(kept);
+    }
+    onValueChange?.(kept);
+  };
   const load = async (branch: string, details: { signal: AbortSignal }) => {
     // A branch loads once: one that loaded empty stays empty, and is not asked again.
     if (!loadChildren || branch in loaded) {
@@ -816,15 +929,8 @@ export const TreeView = ({
       aria-label={label}
       items={data}
       mode={selectionMode}
-      value={value}
-      defaultValue={defaultValue}
-      onValueChange={
-        onValueChange
-          ? (next: string | string[] | null) => {
-              onValueChange(next);
-            }
-          : undefined
-      }
+      value={value === undefined ? own : value}
+      onValueChange={choose}
       {...foldProps}
       loadChildren={loadChildren ? load : undefined}
       onAction={
