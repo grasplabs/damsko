@@ -3311,11 +3311,14 @@ export const groups: TokenGroup[] = [
             value: "56px",
             use: "The width of a sidebar folded to its icons.",
           },
+          // Neutral greys, as the sidebar's other colours: with no theme they stand as written; in
+          // a theme the ground is made from the theme's paper (tokens/model.ts).
           {
             name: "sidebar",
             category: "colors",
-            value: "{muted}",
-            use: "The sidebar's ground, a step back from the page.",
+            value: "oklch(0.957 0 0)",
+            dark: "oklch(0.18 0 0)",
+            use: "The sidebar's ground, which the page's card stands on.",
           },
           {
             name: "sidebar-menu-button-height",
@@ -3324,10 +3327,17 @@ export const groups: TokenGroup[] = [
             use: "The height of a row, as Button's small one.",
           },
           {
+            name: "sidebar-menu-button-height-lg",
+            category: "size",
+            value: "46px",
+            use: "The height of a large row: a picture and two lines (a person, a workspace).",
+          },
+          {
             name: "sidebar-accent",
             category: "colors",
-            value: "{card}",
-            use: "The row of the page you are on, raised with the edge.",
+            value: "oklch(0 0 0 / 0.05)",
+            dark: "oklch(1 0 0 / 0.07)",
+            use: "The row of the page you are on: ink laid flat over the ground.",
           },
         ],
       },
@@ -3378,15 +3388,14 @@ export const groups: TokenGroup[] = [
             category: "colors",
             value: "oklch(0.64 0 0)",
             dark: "oklch(0.6 0 0)",
-            use: "Labels over the rows' groups.",
+            use: "A mark quieter than the rows' words: the chevrons at the end of a person's row.",
           },
           {
-            name: "sidebar-card-shadow",
-            category: "shadow",
-            value:
-              "0 4px 4px 0 oklch(0 0 0 / 0.02), 0 4px 80px 8px oklch(0 0 0 / 0.02), 0 0 0 1px oklch(0 0 0 / 0.05)",
-            dark: "0 4px 4px 0 oklch(0 0 0 / 0.02), 0 4px 80px 8px oklch(0 0 0 / 0.02), 0 0 0 1px oklch(1 0 0 / 0.08)",
-            use: "The card lifting off the ground by a hair, with a faint ring round it.",
+            name: "sidebar-card-border",
+            category: "colors",
+            value: "oklch(0 0 0 / 0.1)",
+            dark: "oklch(1 0 0 / 0.1)",
+            use: "The line drawn inside the page card's edge, round every corner; the card has no lift.",
           },
         ],
       },
@@ -3419,12 +3428,6 @@ export const groups: TokenGroup[] = [
             use: "A row's icon.",
           },
           {
-            name: "sidebar-guide",
-            category: "size",
-            value: "{hairline}",
-            use: "The width of the Sidebar's tree guide, the stem and branches of its nested rows, and a Tree's (tree-guide): a hairline, as the product drew it.",
-          },
-          {
             name: "sidebar-icon-button",
             category: "size",
             value: "{control-xs}",
@@ -3437,10 +3440,22 @@ export const groups: TokenGroup[] = [
             use: "A row's corner.",
           },
           {
+            name: "sidebar-radius-lg",
+            category: "radius",
+            value: "10px",
+            use: "A large row's corner.",
+          },
+          {
             name: "sidebar-card-radius",
             category: "radius",
             value: "12px",
             use: "The page card's corner.",
+          },
+          {
+            name: "sidebar-card-gap",
+            category: "size",
+            value: "6px",
+            use: "The room round the page's card, on the sidebar's ground.",
           },
           // A squircle of radius r cuts in r·√2·(1 − 2^(−¼)) at 45°, a round corner r·√2·(1 − 2^(−½)):
           // the same cut takes a squircle 1.84 times the round corner's radius .
@@ -3451,6 +3466,18 @@ export const groups: TokenGroup[] = [
             category: "size",
             value: "-0.01em",
             use: "The rows' letter spacing: a hair tighter than set.",
+          },
+          {
+            name: "sidebar-name-line",
+            category: "font",
+            value: "1.125rem",
+            use: "The line height of a large row's first line: the person's name at the sidebar's foot.",
+          },
+          {
+            name: "sidebar-note-line",
+            category: "font",
+            value: "1rem",
+            use: "The line height of a large row's second line: the organisation under the person's name.",
           },
           {
             name: "sidebar-count-inline",
@@ -3939,8 +3966,8 @@ export const groups: TokenGroup[] = [
           {
             name: "tree-view-guide",
             category: "size",
-            value: "{sidebar-guide}",
-            use: "The width of a tree's guide (`guides`): its stem and elbows, the Sidebar's own.",
+            value: "{hairline}",
+            use: "The width of a tree's guide (`guides`): its stem and elbows, a hairline.",
           },
           {
             name: "tree-view-icon",
@@ -4685,8 +4712,8 @@ export const contrastPairs: ContrastPair[] = [
   })),
   { kind: "text", on: "sidebar-accent", text: "foreground" },
   { kind: "text", on: "sidebar-accent", text: "muted-foreground" },
-  // The sidebar's own words on its ground and on the page card beside it. The group labels
-  // (sidebar-text-tertiary) are left out: they read as incidental text.
+  // The sidebar's own words on its ground and on the page card beside it: the current row's, and
+  // the rows' and the group labels' (sidebar-text-secondary).
   ...["sidebar", "sidebar-card"].map((on): ContrastPair => ({
     kind: "text",
     on,
