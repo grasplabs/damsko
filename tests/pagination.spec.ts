@@ -45,6 +45,35 @@ test("each step is 24px square and keeps the keyboard's focus ring", async ({
   await expect(next).toBeFocused();
 });
 
+for (const theme of ["light", "dark"] as const) {
+  test(`a step is drawn as the quiet button with a low lift, and flat on the soft ground at its end, ${theme}`, async ({
+    page,
+  }) => {
+    await openExample(page, "pagination", "arrows", { theme });
+    const looks = await page
+      .getByRole("button", { name: /page/u })
+      .evaluateAll((steps) =>
+        steps.map((step) => {
+          const probe = document.createElement("span");
+          const off = step.getAttribute("aria-disabled") === "true";
+          probe.style.backgroundColor = off
+            ? "var(--damsko-muted)"
+            : "var(--damsko-secondary)";
+          probe.style.boxShadow = off ? "none" : "var(--damsko-shadow-sm)";
+          step.after(probe);
+          const want = getComputedStyle(probe);
+          const got = getComputedStyle(step);
+          const same =
+            got.backgroundColor === want.backgroundColor &&
+            got.boxShadow === want.boxShadow;
+          probe.remove();
+          return same;
+        })
+      );
+    expect(looks).toEqual([true, true]);
+  });
+}
+
 test("the range calls the items by their unit and moves with the steps", async ({
   page,
 }) => {
