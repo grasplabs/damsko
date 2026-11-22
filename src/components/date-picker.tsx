@@ -1,5 +1,5 @@
-// DatePicker: a field to type a date in, or choose one from a calendar, after shadcn's date picker
-// (a Popover holding its Calendar), built on UI SDK's DatePicker: closed, it is Input's field box
+// DatePicker: a field to type a date in, or choose one from a calendar,
+// built on UI SDK's DatePicker: closed, it is Input's field box
 // (the fill, the hairline, Button's heights and the corner) with a calendar button at its end; open,
 // Calendar's months in a popup. `mode="range"` takes a start and an end, a field for each (two
 // months suit it), and `presets` puts the ranges people choose often in a column beside the months,

@@ -43,7 +43,7 @@ Each card an `li` in a `ul` (`asChild`), its title a heading. A long name wraps 
 
 ## Header, action and footer
 
-shadcn's parts: `CardHeader` holds the `CardTitle` and `CardDescription`, with a `CardAction` at its end beside both; `CardFooter` puts its buttons or a total in a row at the foot (`justify` to stand them at the end or apart). A card made of parts stands them 16px apart.
+The parts: `CardHeader` holds the `CardTitle` and `CardDescription`, with a `CardAction` at its end beside both; `CardFooter` puts its buttons or a total in a row at the foot (`justify` to stand them at the end or apart). A card made of parts stands them 16px apart.
 
 <Stage path="card/parts" label="Header, action and footer" />
 
@@ -257,59 +257,6 @@ Each ground, and without padding, holding one word. Large padding is in Padding 
       key: "Contrast",
       value: "Title and description 4.5:1 on every ground, light and dark",
       note: "checked by `node tokens/generate.ts --check`",
-    },
-  ]}
-/>
-<Rows
-  title="From shadcn"
-  rows={[
-    {
-      group: "Parts",
-      key: "`CardTitle`, `CardDescription`",
-      value: "Kept",
-      note: "a heading and a sentence",
-    },
-    {
-      group: "Parts",
-      key: "`CardHeader`, `CardAction`, `CardFooter`",
-      value: "Kept",
-      note: "the action beside the header's words, the footer a row",
-    },
-    {
-      group: "Parts",
-      key: "`CardContent`",
-      value: "Kept",
-      note: "with it the parts carry the room; `flush` runs edge to edge",
-    },
-    {
-      group: "Look",
-      key: "`rounded-xl border shadow-sm`",
-      value: "{radius}, {shadow-md}",
-      note: "a ring, not a border line",
-    },
-    {
-      group: "Look",
-      key: "`py-6` and `px-6`",
-      value: "`padding`",
-      note: "none, 16px or 24px",
-    },
-    {
-      group: "Look",
-      key: "`size`",
-      value: "default or sm",
-      note: "the dense card",
-    },
-    { group: "New", key: "`variant`", value: "Default or outline" },
-    {
-      group: "New",
-      key: "`fullHeight`",
-      value: "The height of a fixed grid cell",
-    },
-    {
-      group: "Elsewhere",
-      key: "`className`",
-      value: "`style`",
-      note: "layout and width only",
     },
   ]}
 />

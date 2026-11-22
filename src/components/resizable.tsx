@@ -1,6 +1,5 @@
-// Resizable: panels side by side or stacked, with a handle between each two that drags, from
-// shadcn's (registry/bases/base/ui/resizable.tsx, on react-resizable-panels), converted from
-// Tailwind to StyleX and rebuilt on UI SDK's Resizable.
+// Resizable: panels side by side or stacked, with a handle between each two that drags,
+// in StyleX, built on UI SDK's Resizable.
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
 //   <ResizablePanelGroup aria-label="Editor">

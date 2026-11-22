@@ -1,5 +1,5 @@
-// InlineCitation: a source in the sentence it supports, after shadcn's AI Elements pattern
-// (content/docs/ai-elements/base/inline-citation.md), built on HoverCard, Button, Carousel and Link.
+// InlineCitation: a source in the sentence it supports,
+// built on HoverCard, Button, Carousel and Link.
 // The chip is a small secondary Button naming where the source lives ("example.com +2"); resting
 // on it, or tabbing to it, opens a card with the source's title, a line about it and a link to it,
 // and pages through several sources when there are more.

@@ -333,7 +333,7 @@ const textStyles = stylex.create({
   },
 });
 
-/** Hides words from the eye and keeps them for a screen reader (shadcn's `sr-only`). */
+/** Hides words from the eye and keeps them for a screen reader. */
 export const { visuallyHidden } = textStyles;
 /** A scroller with no visible bar. Scroll area is the one part that draws bars of its own. */
 export const { scrollbarHidden } = textStyles;

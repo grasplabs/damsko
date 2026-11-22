@@ -1,5 +1,5 @@
-// Suggestion: prompts a person can send with one press, in a row that scrolls sideways, after
-// shadcn's AI Elements pattern (content/docs/ai-elements/base/suggestion.mdx), built on Button. The
+// Suggestion: prompts a person can send with one press, in a row that scrolls sideways,
+// built on Button. The
 // row never wraps: what does not fit runs past its end and scrolls, by wheel, touch, keys and focus,
 // with no bar, and the side with more beyond it fades out.
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.

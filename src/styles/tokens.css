@@ -1157,7 +1157,7 @@
   /* The soft mint edge round a selected range, one of the looks on trial. */
   --damsko-data-grid-range-ring: var(--damsko-brand-mint);
   /* Side panel: side panel. */
-  /* The width of an inspector panel beside a page, as the reference's 421px. */
+  /* The width of an inspector panel beside a page. */
   --damsko-side-panel-width: 420px;
   /* The height of an inspector's top bar: its actions, and its views once the head has scrolled away. */
   --damsko-side-panel-bar: 48px;
@@ -1173,7 +1173,7 @@
   --damsko-side-panel-label-gap: var(--damsko-space-3);
   /* How far a label and a row's words sit in from the card's edge: one line for both. */
   --damsko-side-panel-padding: var(--damsko-space-3);
-  /* A row's name, a label and a view: a step under text-sm, as the reference's. */
+  /* A row's name, a label and a view: a step under text-sm. */
   --damsko-side-panel-text: 0.8125rem;
   /* The line height of side-panel-text. */
   --damsko-side-panel-text-line: 1.125rem;

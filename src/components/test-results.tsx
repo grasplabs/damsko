@@ -1,8 +1,7 @@
-// TestResults: a test run an assistant made, after shadcn's Test Results pattern
-// (apps/v4/content/docs/ai-elements/base/test-results.mdx and its examples), built as it builds
-// it: a Trace with a TraceCollapsible for the run, whose line counts what passed and failed, and
+// TestResults: a test run an assistant made:
+// a Trace with a TraceCollapsible for the run, whose line counts what passed and failed, and
 // one for each suite, open when it has a failure; each test a TraceLine, a failed one opening on its
-// error on the code surface. The parts carry shadcn's names.
+// error on the code surface.
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
 //   <TestResults summary={{ passed: 12, failed: 1, skipped: 1, total: 14, duration: 1840 }}>

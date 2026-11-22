@@ -1,5 +1,5 @@
-// Popover: a small task beside the control that opened it, from shadcn's (registry/bases/base/ui/
-// popover.tsx), converted from Tailwind to StyleX and built on UI SDK's Popover: a raised panel with
+// Popover: a small task beside the control that opened it,
+// in StyleX, built on UI SDK's Popover: a raised panel with
 // the one corner, placed beside its trigger and kept inside the window, named by its title. It
 // never takes the page: the page still scrolls and can be pressed, and focus is not trapped.
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.

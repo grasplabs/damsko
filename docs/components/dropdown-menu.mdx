@@ -10,7 +10,7 @@ description: A list of actions on one thing, such as Rename or Move, opened from
 
 ## Basic
 
-Its items, a separator, and one item out of use. The trigger is any control, most often a Button given with `asChild`.
+Its items, a separator, and one item out of use. The trigger is any control, most often a Button given with `asChild`. `DropdownMenuMore` is the whole thing for a row's actions: a ghost icon Button with an ellipsis, named by its `aria-label`, and its menu drawn from `items`.
 
 <Stage path="dropdown-menu/basic" live label="Basic" />
 
@@ -313,36 +313,6 @@ The trigger is a Button: hover, keyboard focus and pressed are forced from its o
       value: "Items 4.5:1 on the popup and on the highlight, light and dark",
       note: "checked by `node tokens/generate.ts --check`",
     },
-  ]}
-/>
-<Rows
-  title="From shadcn"
-  rows={[
-    {
-      group: "Items",
-      key: '`variant="destructive"`',
-      value: "The same",
-      note: "an agent asks first",
-    },
-    {
-      group: "Items",
-      key: "New",
-      value: "`icon`, `loadingLabel` and `errorLabel`",
-      note: "work that keeps the menu open until it is done",
-    },
-    {
-      group: "Parts",
-      key: "New",
-      value: "`DropdownMenuMore`",
-      note: "a ghost icon Button with an ellipsis and its menu of actions",
-    },
-    {
-      group: "Look",
-      key: "`bg-popover`, `shadow-md`",
-      value: "{popover}, {menu-shadow}",
-    },
-    { group: "Look", key: "`focus:bg-accent`", value: "{accent-highlight}" },
-    { group: "Elsewhere", key: "Base UI", value: "UI SDK" },
   ]}
 />
 

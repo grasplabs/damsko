@@ -1,4 +1,4 @@
-// CodeBlock: code in an answer or a page, after shadcn's (code-block.tsx), in StyleX on our
+// CodeBlock: code in an answer or a page, in StyleX on our
 // CopyButton. Highlighted with Prism (each language loaded the first time it is shown,
 // code-block-prism.ts), its title and the language's name in a header over it, a copy button that
 // copies the code exactly, line numbers and wrapping as options, highlighted, added and removed

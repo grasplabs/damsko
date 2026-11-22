@@ -1,5 +1,5 @@
-// Pagination: the way through a long list, page by page, and where in it you are, from shadcn's
-// (registry/bases/base/ui/pagination.tsx), converted from Tailwind to StyleX and rebuilt on UI SDK's
+// Pagination: the way through a long list, page by page, and where in it you are,
+// in StyleX, built on UI SDK's
 // Pagination: two small ghost steps, with the range shown ("Showing 21 – 30 of 100 items"), the
 // page ("2 / 10"), numbered page links, or nothing beside them.
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
@@ -266,7 +266,7 @@ const styles = stylex.create({
       [OFF]: colors.subtleForeground,
       [FORCED]: { default: "ButtonText", [OFF]: "GrayText" },
     },
-    // Drawn as a ghost Button, as shadcn draws its steps: no fill until the pointer rests on it. A
+    // Drawn as a ghost Button: no fill until the pointer rests on it. A
     // step at its end does not answer the pointer: it stays bare.
     backgroundColor: {
       default: "transparent",
@@ -333,7 +333,7 @@ const styles = stylex.create({
   },
 });
 
-// UI SDK names its parts after its own primitive; each part here carries shadcn's name. A step or
+// UI SDK names its parts after its own primitive; each part here carries Pagination's own name. A step or
 // a page link is a link when the root has addresses (`getPageUrl`), else a button, as UI SDK draws it.
 const slotted =
   (tag: string, slot: string, render?: RenderProp) =>
@@ -458,7 +458,7 @@ export const PaginationItem = ({ children, style }: PaginationItemProps) => (
 
 /**
  * A link to one page; the current one says so (`aria-current="page"`) and is drawn `outline`
- * among `ghost` pages, as shadcn draws them.
+ * among `ghost` pages.
  */
 export const PaginationLink = ({
   page,

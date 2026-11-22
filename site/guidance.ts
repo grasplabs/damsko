@@ -8,6 +8,7 @@ import { join } from "node:path";
 
 import { findRoot } from "./lib/root.ts";
 import { splitFrontmatter } from "./system/content.ts";
+import { isBlock } from "./system/kinds.ts";
 import { downlevelComponents } from "./system/markdown-twin.ts";
 import type { Value } from "./system/markdown-twin.ts";
 
@@ -133,7 +134,9 @@ export const chooseRows = (
     if (guidance === null) {
       return [];
     }
-    const lines = [guidance.description];
+    const lines = isBlock(name)
+      ? [guidance.description, "A block: installed, then owned and edited."]
+      : [guidance.description];
     return name === current
       ? [{ title: `${guidance.title}, this page`, lines, current: true }]
       : [{ title: `[${guidance.title}](${guidance.href})`, lines }];
@@ -153,7 +156,10 @@ export const chooseMarkdown = (
       name === current
         ? `${guidance.title} (this page)`
         : `[${guidance.title}](${guidance.href})`;
-    return [`| ${cell} | ${guidance.description.replaceAll("|", "\\|")} |`];
+    const says = isBlock(name)
+      ? `${guidance.description} A block: installed, then owned and edited.`
+      : guidance.description;
+    return [`| ${cell} | ${says.replaceAll("|", "\\|")} |`];
   });
   return rows.length === 0
     ? null
