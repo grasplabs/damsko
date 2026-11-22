@@ -34,7 +34,7 @@ The words the list says itself come from the page's `I18nProvider`: the copy but
 
 ## Facts that open
 
-Horizontal, a row with a `detail` opens in place: its name is a button over the whole row, one row is open at a time, and only the rows below it move. A `group` starts after a little room. A `loading` value waits as Skeleton's dot field at its own width, then crossfades in.
+Horizontal, a row with a `detail` opens in place, as a [Collapsible](/components/collapsible) does: its name is a button over the whole row, its detail opens under it over its height, one row is open at a time, and only the rows below it move. A `group` starts after a little room. A `loading` value waits as Skeleton's dot field at its own width, then crossfades in.
 
 <Stage path="key-value/rail" label="Facts that open" />
 
@@ -55,6 +55,12 @@ An `icon` stands before its name in the name's muted ink, on a column of its own
       key: "Row",
       value: "{control-default} at least; {space-2} of room round its words",
       note: "only in a list with a row that opens",
+    },
+    {
+      key: "Corner",
+      value:
+        "{radius}, at most half the row, as the system's squircle; the keyboard's ring follows it",
+      note: "as a menu's and an Item's rows",
     },
     { key: "Between rows", value: "{space-1}; {space-4} before a new group" },
     {
@@ -94,8 +100,10 @@ An `icon` stands before its name in the name's muted ink, on a column of its own
     },
     {
       key: "Detail",
-      value: "{space-4} of room, a {hairline} edge, {radius}",
+      value:
+        "{space-4} of room, a {hairline} edge, {radius}; {space-2} off the row above and below",
       tokens: ["border"],
+      note: "opens over its height in {collapsible-open}; reduced: at once",
     },
     {
       key: "Waiting value",
@@ -111,7 +119,7 @@ An `icon` stands before its name in the name's muted ink, on a column of its own
     {
       key: "Accessibility",
       value:
-        "The name is a button with `aria-expanded`; the detail is a `dd` it controls",
+        "The name is a button with `aria-expanded`, Collapsible's trigger; the detail is a `dd` in the panel it controls, which the browser's find in page opens",
     },
   ]}
 />
