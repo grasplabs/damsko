@@ -401,8 +401,8 @@
   --damsko-input-focus-read: inset 0 0 0 1px var(--damsko-input-border-focus);
   /* A wrong field in focus: its red hairline stays and the faint halo turns red, so it stays wrong while you type. */
   --damsko-input-focus-invalid: inset 0 0 0 1px var(--damsko-input-border-invalid), var(--damsko-input-shadow), 0 0 0 3px var(--damsko-input-focus-halo-invalid);
-  /* The size of the words in every field on a phone or a touch screen (media.typing), a Select's trigger too, so fields side by side stay one size: under 16px, Safari zooms the page in on focus. */
-  --damsko-input-text-touch: 16px;
+  /* The size of the words in every field on a phone or a touch screen (media.typing), a Select's trigger too, so fields side by side stay one size: under 16px, Safari zooms the page in on focus. Never under 16px, and in rem above it, since words follow the reader's text size. */
+  --damsko-input-text-touch: max(16px, 1rem);
   /* The breath of lift under a field, beneath its hairline: lift-low's shadow without its edge. */
   --damsko-input-shadow: 0 1px 2px var(--damsko-shadow-color-faint), 0 2px 4px var(--damsko-shadow-color-faint);
   /* Checkbox: checkbox. */

@@ -1510,8 +1510,8 @@ export const groups: TokenGroup[] = [
           {
             name: "input-text-touch",
             category: "size",
-            value: "16px",
-            use: "The size of the words in every field on a phone or a touch screen (media.typing), a Select's trigger too, so fields side by side stay one size: under 16px, Safari zooms the page in on focus.",
+            value: "max(16px, 1rem)",
+            use: "The size of the words in every field on a phone or a touch screen (media.typing), a Select's trigger too, so fields side by side stay one size: under 16px, Safari zooms the page in on focus. Never under 16px, and in rem above it, since words follow the reader's text size.",
           },
           {
             name: "input-shadow",
