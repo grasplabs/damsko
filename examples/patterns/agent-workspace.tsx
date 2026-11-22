@@ -412,14 +412,14 @@ const AgentWorkspace = () => {
                       }}
                     >
                       <Icon icon={SearchIcon} />
-                      <span>Search chats</span>
+                      Search chats
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild isActive>
                       <a href="#chat">
                         <Icon icon={MessageSquareIcon} />
-                        <span>Chat</span>
+                        Chat
                       </a>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -427,7 +427,7 @@ const AgentWorkspace = () => {
                     <SidebarMenuButton asChild>
                       <a href="#inbox">
                         <Icon icon={InboxIcon} />
-                        <span>Inbox</span>
+                        Inbox
                       </a>
                     </SidebarMenuButton>
                     <SidebarMenuBadge>1</SidebarMenuBadge>
@@ -436,7 +436,7 @@ const AgentWorkspace = () => {
                     <SidebarMenuButton asChild>
                       <a href="#projects">
                         <Icon icon={FolderKanbanIcon} />
-                        <span>Projects</span>
+                        Projects
                       </a>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
@@ -444,7 +444,7 @@ const AgentWorkspace = () => {
                     <SidebarMenuButton asChild>
                       <a href="#settings">
                         <Icon icon={SettingsIcon} />
-                        <span>Settings</span>
+                        Settings
                       </a>
                     </SidebarMenuButton>
                   </SidebarMenuItem>

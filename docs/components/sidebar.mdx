@@ -1,6 +1,6 @@
 ---
 title: Sidebar
-description: A column of an app's main places down one side, which folds away or down to its icons.
+description: A column of an app's main places down one side, which folds away, or down to its icons.
 ---
 
 <Head
@@ -13,15 +13,27 @@ description: A column of an app's main places down one side, which folds away or
 
 ## Basic usage
 
-shadcn's parts: a SidebarProvider holds whether it is open and the row it stands in, the Sidebar beside a SidebarInset, the page. In the sidebar a SidebarHeader, a SidebarContent of SidebarGroups and a SidebarFooter. A group holds a SidebarGroupLabel over a SidebarMenu of SidebarMenuItems, each a SidebarMenuButton, a link through `asChild`, with a SidebarMenuBadge or a SidebarMenuSub beside it. `isActive` raises the page you are on. With `collapsible="icon"` the trigger, the rail or Cmd+B (Ctrl+B elsewhere) folds it to its icons, and each button's `tooltip` names it there.
+shadcn's parts: a SidebarProvider holds whether it is open and the row it stands in, the Sidebar beside a SidebarInset, the page. In the sidebar a SidebarHeader (here the product's mark, a search as a SidebarMenuButton of `size="icon"`, and the SidebarTrigger), a SidebarContent of SidebarGroups, and a SidebarSeparator over the SidebarFooter, where a large SidebarMenuButton is the person's menu. A group holds a SidebarGroupLabel over a SidebarMenu of SidebarMenuItems, each a SidebarMenuButton, a link through `asChild`, with a SidebarMenuBadge or a SidebarMenuSub beside it. `isActive` fills the page you are on. The trigger, or Cmd+B (Ctrl+B elsewhere), folds it away whole.
 
 <Stage path="sidebar/basic" label="Basic usage" />
 
 ## Off the canvas
 
-The default, `collapsible="offcanvas"`: folded, it slides out past its side, the page takes the width and nothing in it is a tab stop. `keyboardShortcut` changes the keys, `false` turns them off.
+The default, `collapsible="offcanvas"`: folded, it slides out past its side, the page takes the width and nothing in it is a tab stop. A SidebarRail along its edge folds and opens it too. `keyboardShortcut` changes the keys, `false` turns them off.
 
 <Stage path="sidebar/collapsible" label="Off the canvas" />
+
+## Folded to its icons
+
+`collapsible="icon"` folds it to a rail of its icons instead, where each row shows its words in a tooltip (`tooltip` says something else there). The rows within a place go while it is folded. A `disabled` button is drawn at half strength.
+
+<Stage path="sidebar/icon" label="Folded to its icons" />
+
+## Long names
+
+A row's words are its bare text: longer than the row, they end in an ellipsis before the row's end, its count or a mark it holds, and the row's tooltip shows them whole. An element you write in a row is drawn as given.
+
+<Stage path="sidebar/long-names" label="Long names" />
 
 ## Floating and inset
 
@@ -51,7 +63,7 @@ A SidebarMenuAction at the end of a row opens its menu, shown while the pointer 
 
 ## The foot
 
-The footer holds what the product composes there: the theme control, then the person signed in, a large SidebarMenuButton as their menu's trigger.
+The footer holds what the product composes there: the theme control, then the person signed in, a large SidebarMenuButton as their menu's trigger. A SidebarSeparator draws the rule over it.
 
 <Stage path="sidebar/footer" label="The foot" />
 
@@ -82,7 +94,7 @@ SidebarMenuSkeleton draws quiet bars in the rows' own boxes, the same shapes eve
   always={[
     "An app's main places, in groups, down one side of the window.",
     "The current place said so: `isActive` on its SidebarMenuButton.",
-    "A `tooltip` on every button of a sidebar that folds to its icons.",
+    "A row's words as bare text, so they end in an ellipsis and show whole in a tooltip.",
     "A SidebarTrigger in the page's bar: on a phone it is the only way in.",
   ]}
   never={[
@@ -107,20 +119,43 @@ SidebarMenuSkeleton draws quiet bars in the rows' own boxes, the same shapes eve
     {
       group: "Size",
       key: "Row",
-      value: "32px; 28px when sm, 44px when lg; 44px on a touch screen",
-      note: "{sidebar-menu-button-height}, {control-xs}, {control-lg}, {tap-target}",
+      value:
+        "32px; 28px when sm, 46px when lg, a round 28px when icon; 44px on a touch screen",
+      note: "{sidebar-menu-button-height}, {control-xs}, {sidebar-menu-button-height-lg}, {sidebar-icon-button}, {tap-target}",
+    },
+    {
+      group: "Size",
+      key: "Rows",
+      value:
+        "8px in from the sidebar's edges, 2px apart, 8px between groups; a nested row's words in line with its parent's",
+      note: "{sidebar-row-inline}, {sidebar-row-gap}",
+    },
+    {
+      group: "Size",
+      key: "Words",
+      value:
+        "One line: a row's own words, longer than the row, end in an ellipsis before its end, its action or its count",
     },
     {
       group: "Surface",
       key: "Ground",
-      value: "A step back from the page",
+      value:
+        "A neutral grey the page's card stands on, with no line at its edge; in a theme, made from the theme's paper",
       tokens: ["sidebar"],
     },
     {
       group: "Surface",
       key: "Current row",
-      value: "Raised, with the edge",
+      value: "Ink laid flat over the ground: no edge, no lift",
       tokens: ["sidebar-accent"],
+    },
+    {
+      group: "Surface",
+      key: "Page card",
+      value:
+        "Beside an inset sidebar: the card's ground, 6px in from the ground's edges, a line inside its edge",
+      tokens: ["sidebar-card", "sidebar-card-border"],
+      note: "{sidebar-card-gap}, {sidebar-card-radius}",
     },
   ]}
 />
@@ -190,6 +225,11 @@ SidebarMenuSkeleton draws quiet bars in the rows' own boxes, the same shapes eve
       key: "Folded to icons",
       value: "Each button keeps its name; its tooltip shows it",
     },
+    {
+      key: "Cut words",
+      value:
+        "The whole name stays the row's own, so a screen reader hears all of it; the tooltip that repeats it describes nothing",
+    },
   ]}
 />
 <Rows
@@ -211,6 +251,18 @@ SidebarMenuSkeleton draws quiet bars in the rows' own boxes, the same shapes eve
       key: "Cookie",
       value: "`storageKey` and `sidebarStateScript`",
       note: "localStorage, only when given; or `open` from the server",
+    },
+    {
+      group: "Props",
+      key: "SidebarMenuButton `size`",
+      value: '`"icon"` added',
+      note: "a round icon button in the rows' colours, for the header (a search)",
+    },
+    {
+      group: "Look",
+      key: "Nested rows",
+      value: "No guide line, the rows' own height and weight",
+      note: "the original design's",
     },
     {
       group: "Layout",
