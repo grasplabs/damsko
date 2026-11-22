@@ -10,7 +10,7 @@ description: The building block for a line of an assistant's work, with a mark, 
 
 ## Start with a pattern
 
-Most of the time you want a pattern built on Trace: [Reasoning](/components/reasoning), [Tool](/components/tool), [Chain of thought](/components/chain-of-thought), [Queue](/components/queue), [Subagent](/components/subagent), [Sources](/components/sources), [Terminal](/components/terminal), [Stack trace](/components/stack-trace), [Test results](/components/test-results). Use Trace itself when none of them fits.
+Most of the time you want a pattern built on Trace: [Reasoning](/components/reasoning), [Tool](/components/tool), [Chain of thought](/components/chain-of-thought), [Sources](/components/sources), [Terminal](/components/terminal), [Stack trace](/components/stack-trace), [Test results](/components/test-results). Use Trace itself when none of them fits.
 
 ## Steps
 
@@ -38,7 +38,7 @@ What waits is a list of lines too: a row for each group, its line the count and 
 
 ## A subagent
 
-Work handed to another agent is a run inside the run: one row, its line the run in the tense of its status, the model as a Badge after it. It opens on that agent's own tool calls as a `Trace`, what it returned as a Code block and what it found.
+Work handed to another agent is a run inside the run: one row, its line the run in the tense of its status, the model as its description. It opens on that agent's own tool calls as a `Trace`, what it returned as a Code block and what it found.
 
 <Stage path="trace/subagent" label="A subagent" />
 

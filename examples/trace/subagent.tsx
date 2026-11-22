@@ -1,4 +1,3 @@
-import { Badge } from "@grasp-os/ui/components/badge";
 import {
   CodeBlock,
   CodeBlockActions,
@@ -12,6 +11,7 @@ import {
   TraceCollapsible,
   TraceCollapsibleContent,
   TraceCollapsibleTrigger,
+  TraceDescription,
   TraceIcon,
   TraceLine,
   TraceTitle,
@@ -58,7 +58,7 @@ export default function TraceSubagent() {
               <Icon icon={CircleCheckIcon} />
             </TraceIcon>
             <TraceTitle>Ran the research agent</TraceTitle>
-            <Badge size="sm">research-model-2</Badge>
+            <TraceDescription>research-model-2</TraceDescription>
           </TraceLine>
         </TraceCollapsibleTrigger>
         <TraceCollapsibleContent>

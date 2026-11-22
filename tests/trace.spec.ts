@@ -267,7 +267,7 @@ test("a subagent's row names the run and its model, and opens on its tool calls,
 }) => {
   await openExample(page, "trace", "subagent");
   const run = page.getByRole("button", {
-    name: "Ran the research agent research-model-2",
+    name: /^Ran the research agent\s*, research-model-2$/u,
   });
   const found = page.getByText("The cache is keyed on the commit SHA.", {
     exact: true,
