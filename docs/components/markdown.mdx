@@ -55,7 +55,7 @@ A section written as GitHub's `<details>` with a `<summary>` line is drawn as a 
 
 ## Untrusted text
 
-Its links may come from a page the agent read. Raw HTML is text, never HTML, and a link of Markdown's own leads only to http, https or mailto; a picture is never loaded. A paragraph, heading or table cell over 8,000 characters, and everything after the first 64,000 characters with marks, is drawn as plain text, so no answer, however hostile, takes long to draw.
+Its links may come from a page the agent read. Raw HTML is text, never HTML, and a link of Markdown's own leads only to http, https or mailto; a picture is never loaded. A paragraph, heading or table cell over 8,000 characters is drawn as plain text, and so is one with more than 128 marks (the characters that start or end a link, emphasis, code or a tag) once such paragraphs have spent the answer's budget of 6,000,000, each its marks squared: an ordinary answer keeps every mark at any length, and no answer, however hostile, takes long to draw. An answer of more than 64 lines is read in pieces that are put together again, so a list, a table or a quote of thousands of lines is still one, and takes time in step with its length.
 
 <Stage path="markdown/safe" label="Untrusted text" />
 
