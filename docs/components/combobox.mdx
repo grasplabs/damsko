@@ -20,6 +20,12 @@ A group hides while none of its items match, and an item out of use is skipped.
 
 <Stage path="combobox/groups" label="Groups" />
 
+## People
+
+An item can carry `media` and a `description`: here each person's avatar and role, and a role finds someone too. With `media` on the combobox, the chosen person's avatar stands at the field's start, and a quiet icon while no one is chosen.
+
+<Stage path="combobox/people" live label="People" />
+
 ## Sizes
 
 Input's heights: 36px, 32 in a dense table, 44 for the one choice that matters on a phone.
@@ -61,10 +67,12 @@ Hover and keyboard focus are forced from the combobox's own CSS. The rest are pr
 <Intent
   of="combobox"
   always={[
+    "A list too long to scan, or one people find by typing: countries, time zones, people.",
     "A placeholder that is a verb and the thing: Search countries.",
     "Keywords for the other names people use: Holland, UK.",
   ]}
   never={[
+    "A handful of choices people can scan, with no typing: use Select.",
     "Colours, heights or corners set from outside: `style` takes layout and width only.",
   ]}
 />
@@ -91,6 +99,12 @@ Hover and keyboard focus are forced from the combobox's own CSS. The rest are pr
       key: "Chevron",
       value: "{icon-sm} at the end, {space-2} in",
       tokens: ["muted"],
+    },
+    {
+      group: "Closed",
+      key: "Media",
+      value: "{avatar-xs} wide at the start, {space-3} in",
+      note: "the chosen item's, or the quiet icon; only with `media`",
     },
     {
       group: "Closed",
@@ -139,6 +153,13 @@ Hover and keyboard focus are forced from the combobox's own CSS. The rest are pr
       key: "Matched letters",
       value: "In ink",
       note: "no fill",
+    },
+    {
+      group: "Items",
+      key: "Description",
+      value: "{text-xs} under the words",
+      note: "the item's words are then {text-xs}, {font-weight-medium}",
+      tokens: ["muted-foreground"],
     },
     { group: "Items", key: "Highlight", tokens: ["accent-highlight"] },
     { group: "Items", key: "Chosen", value: "A tick at the end, {icon-sm}" },
@@ -197,7 +218,8 @@ Hover and keyboard focus are forced from the combobox's own CSS. The rest are pr
     {
       group: "Value",
       key: "Other words",
-      value: "An item's `keywords` find it too: Holland finds Netherlands.",
+      value:
+        "An item's `keywords` and its `description` find it too: Holland finds Netherlands.",
     },
     {
       group: "Form",
@@ -214,6 +236,15 @@ Hover and keyboard focus are forced from the combobox's own CSS. The rest are pr
     { key: "Name", value: "Its FieldLabel, or `aria-label`" },
     { key: "Nothing matches", value: "The empty line is announced" },
     {
+      key: "Media",
+      value:
+        "Skipped by screen readers: the words beside it say what it is, so an Avatar there is `decorative`",
+    },
+    {
+      key: "Description",
+      value: "Read after the item's words, not run into them",
+    },
+    {
       key: "Agents",
       value:
         "Choose by an item's label; a value outside the list fails with words",
@@ -229,6 +260,12 @@ Hover and keyboard focus are forced from the combobox's own CSS. The rest are pr
   source="src/components/combobox.tsx"
   type="ComboboxProps"
   label="Combobox"
+/>
+
+<Props
+  source="src/components/combobox.tsx"
+  type="ComboboxItem"
+  label="ComboboxItem"
 />
 
 <Props

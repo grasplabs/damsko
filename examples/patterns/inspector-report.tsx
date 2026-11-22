@@ -1,11 +1,12 @@
 "use client";
 
 import { Inspector } from "@grasp-os/ui/blocks/inspector-01/inspector-01";
+import { Avatar, AvatarFallback } from "@grasp-os/ui/components/avatar";
 import { Badge } from "@grasp-os/ui/components/badge";
 import { Button } from "@grasp-os/ui/components/button";
+import { Combobox } from "@grasp-os/ui/components/combobox";
 import { Field, FieldLabel } from "@grasp-os/ui/components/field";
 import { KeyValueList } from "@grasp-os/ui/components/key-value";
-import { UserPicker } from "@grasp-os/ui/components/user-picker";
 import {
   ChartColumnIcon,
   CircleCheckIcon,
@@ -149,8 +150,19 @@ const OwnerDialog = ({
     >
       <Field name="owner">
         <FieldLabel>Owner</FieldLabel>
-        <UserPicker
-          users={team}
+        <Combobox
+          items={team.map((person) => ({
+            value: person.id,
+            label: person.name,
+            description: person.detail,
+            media: (
+              <Avatar name={person.name} size="xs" decorative>
+                <AvatarFallback />
+              </Avatar>
+            ),
+          }))}
+          media={<Icon icon={UsersIcon} />}
+          placeholder="Choose a person"
           value={chosen}
           onValueChange={(id) => {
             setChosen(id);

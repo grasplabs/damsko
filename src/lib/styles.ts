@@ -462,7 +462,7 @@ const spin = stylex.keyframes({
 });
 
 /**
- * A list in a popup, for the pickers (combobox, command, user picker, tags input, tree view's
+ * A list in a popup, for the pickers (combobox, command, tags input, tree view's
  * filter). The popup carries listMarker. An item nests its corner inside the popup's.
  */
 export const listStyles = stylex.create({

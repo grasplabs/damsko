@@ -65,7 +65,6 @@ export const kinds: Kind[] = [
       "slider",
       "calendar",
       "date-picker",
-      "user-picker",
     ],
   },
   {

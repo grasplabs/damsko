@@ -185,3 +185,64 @@ test.describe("with JavaScript off", () => {
     );
   });
 });
+
+/** What the form would send. */
+const sent = async (page: Page): Promise<string[]> =>
+  await page.evaluate(() => {
+    const form = document.querySelector("form");
+    return form === null ? [] : [...new FormData(form).values()].map(String);
+  });
+
+test("typing a description finds the item, Enter chooses it and closes the list, and focus stays in the field", async ({
+  page,
+}) => {
+  await openExample(page, "combobox", "people");
+  const field = page.getByRole("combobox");
+  await expect(field).toHaveValue("Amara Okafor");
+  await field.fill("");
+  await field.pressSequentially("design");
+  await expect(options(page)).toHaveCount(1);
+  await expect(options(page).first()).toHaveAccessibleName("Lena Ruiz");
+  await expect(options(page).first()).toHaveAccessibleDescription("Design");
+  await page.keyboard.press("Enter");
+  await expect(field).toHaveValue("Lena Ruiz");
+  await expect(options(page)).toHaveCount(0);
+  await expect(field).toBeFocused();
+  expect(await sent(page)).toContain("lena");
+});
+
+test("an item with media is named by its words alone: the avatar beside them is decorative", async ({
+  page,
+}) => {
+  await openExample(page, "combobox", "people");
+  const field = page.getByRole("combobox");
+  await field.focus();
+  await page.keyboard.press("ArrowDown");
+  await expect(options(page).first()).toBeVisible();
+  await expect(options(page)).toHaveCount(5);
+  await expect(options(page).getByRole("img")).toHaveCount(0);
+  await expect(options(page).nth(1)).toHaveAccessibleName("Jonas Weber");
+});
+
+test("emptying the words clears the choice", async ({ page }) => {
+  await openExample(page, "combobox", "people");
+  const field = page.getByRole("combobox");
+  await field.fill("Mei");
+  await page.keyboard.press("Enter");
+  await expect(field).toHaveValue("Mei Chen");
+  expect(await sent(page)).toContain("mei");
+  await field.fill("");
+  await field.blur();
+  await expect.poll(async () => await sent(page)).not.toContain("mei");
+});
+
+test("an item whose value holds a space is still described by its line", async ({
+  page,
+}) => {
+  await openExample(page, "combobox", "people");
+  await page.getByRole("combobox").focus();
+  await page.keyboard.press("ArrowDown");
+  await expect(
+    options(page).filter({ hasText: "Jonas Weber" })
+  ).toHaveAccessibleDescription("Finance");
+});
