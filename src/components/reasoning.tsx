@@ -1,9 +1,7 @@
 // Reasoning: the assistant's thinking, behind one quiet line that opens, from shadcn's Reasoning
 // pattern (content/docs/ai-elements/base/reasoning.mdx), built as it builds it: a Trace with a
-// TraceCollapsible, its line a TraceLine with a TraceTitle, drawn as the original's thinking line:
-// the words alone, no chevron and no mark (a caller passes either as children), at the text's own
-// weight and line. While it streams the line runs (`status="running"`: Trace shimmers its title)
-// and the thoughts show open; a second after it
+// TraceCollapsible, its line a TraceLine with a TraceIcon and a TraceTitle. While it streams the line
+// runs (`status="running"`: Trace shimmers its title) and the thoughts show open; a second after it
 // ends it settles into how long it thought ("Thought for 6 seconds") and closes, unless the person
 // opened or closed it meanwhile: their choice wins. It measures the time itself when no `duration`
 // is given.
@@ -36,8 +34,8 @@ import {
 import type { ReactNode } from "react";
 
 import { useI18n } from "../lib/i18n";
-import { disclosureStyles, focusRing, tapTarget } from "../lib/styles";
-import { colors, font, media, size, space } from "../lib/tokens.stylex";
+import { BrainIcon, Icon } from "../lib/icons";
+import { colors, font, size, space } from "../lib/tokens.stylex";
 import { announce, lazyPart, NotYetShown, nothing } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import {
@@ -45,6 +43,7 @@ import {
   TraceCollapsible,
   TraceCollapsibleContent,
   TraceCollapsibleTrigger,
+  TraceIcon,
   TraceLine,
   TraceTitle,
 } from "./trace";
@@ -77,10 +76,7 @@ export interface ReasoningProps {
 
 /** Every prop a ReasoningTrigger takes. */
 export interface ReasoningTriggerProps {
-  /**
-   * Words of your own on the line, in place of Thinking and Thought for n seconds. The line draws
-   * no chevron or mark of its own: pass one here (`<Icon icon={ChevronDownIcon} />`) to show one.
-   */
+  /** Words of your own on the line, in place of Thinking and Thought for n seconds. */
   children?: ReactNode;
   /** Layout only: where it sits and how much room it takes. */
   style?: LayoutStyle;
@@ -116,21 +112,6 @@ const LazyMarkdown = lazyPart(
 );
 
 const styles = stylex.create({
-  // The original's thinking line: the words alone, no chevron and no mark, at the text's own weight
-  // and line, muted until the pointer is on it or it is open; the fill under the pointer reaches
-  // past the words by the trigger's padding, the words on the column's edge.
-  trigger: {
-    justifySelf: "start",
-    maxWidth: "100%",
-    columnGap: space["1"],
-    lineHeight: font.textSmLine,
-    fontWeight: font.weightNormal,
-    color: {
-      default: colors.mutedForeground,
-      ":hover": { default: null, [media.hover]: colors.foreground },
-      ":is([aria-expanded=true])": colors.foreground,
-    },
-  },
   // The thoughts: quiet, inset beside a hairline down their start edge, clear of the answer below.
   content: {
     display: "grid",
@@ -281,27 +262,18 @@ export const ReasoningTrigger = ({
     line = words.thought(duration);
   }
   return (
-    <TraceCollapsibleTrigger asChild>
-      <button
-        type="button"
-        {...stylex.props(
-          disclosureStyles.trigger,
-          disclosureStyles.ghost,
-          styles.trigger,
-          focusRing,
-          style
-        )}
+    <TraceCollapsibleTrigger style={style}>
+      {/* A new line once the thinking ends, so Trace does not say its end: Reasoning said it
+          started, and the answer follows. */}
+      <TraceLine
+        key={isStreaming ? "thinking" : "thought"}
+        status={isStreaming ? "running" : undefined}
       >
-        <span aria-hidden="true" {...stylex.props(tapTarget)} />
-        {/* A new line once the thinking ends, so Trace does not say its end: Reasoning said it
-            started, and the answer follows. */}
-        <TraceLine
-          key={isStreaming ? "thinking" : "thought"}
-          status={isStreaming ? "running" : undefined}
-        >
-          <TraceTitle>{children ?? line}</TraceTitle>
-        </TraceLine>
-      </button>
+        <TraceIcon>
+          <Icon icon={BrainIcon} />
+        </TraceIcon>
+        <TraceTitle>{children ?? line}</TraceTitle>
+      </TraceLine>
     </TraceCollapsibleTrigger>
   );
 };

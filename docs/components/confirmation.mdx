@@ -10,7 +10,7 @@ description: A step that waits for the person's yes, with the request and its an
 
 ## Approve or decline
 
-The parts of shadcn's Confirmation pattern, in Damsko's look: the quiet tint of an [Alert](/components/alert) rather than shadcn's outlined Item, the answers under the request at the card's end. The request, what it touches, and the two answers. An answer works in place until its Promise settles, keeping its width (Button follows the Promise); then the title says what was decided, the answers go, and focus that was on one lands on the title.
+Built as shadcn's Confirmation pattern is, on an outlined small [Item](/components/item): the title its ItemTitle, the answers its ItemActions, beside the title while there is room. The request, what it touches, and the two answers. An answer works in place until its Promise settles, keeping its width (Button follows the Promise); then the title says what was decided, the answers go, and focus that was on one lands on the title.
 
 <Stage path="confirmation/basic" label="Approve or decline" />
 
@@ -61,13 +61,14 @@ A held answer that fails says so on its own button too, and the next hold sends 
     {
       group: "Card",
       key: "Ground",
-      value: "Alert's",
-      tokens: ["muted"],
+      value: "Item's `outline` at `sm`: the card's ground in its strong edge",
+      tokens: ["card", "border-strong"],
     },
     {
       group: "Answers",
       key: "Size",
-      value: "Button `sm`, under the request at the end of the card",
+      value:
+        "Button `sm`, at the end of the title's row, or under it when there is no room",
     },
   ]}
 />
