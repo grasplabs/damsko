@@ -559,14 +559,6 @@ const styles = stylex.create({
     borderBlockStartStyle: "solid",
     borderBlockStartColor: { default: colors.border, [FORCED]: "CanvasText" },
   },
-  // The segments at their words' width; in a panel too narrow for them (a small phone, long level
-  // names) they scroll across rather than leave the track. Toggle group takes no width or growth
-  // from a part: a style passed to it is refused by the lint gate (shadcn/no-inline-styles).
-  effortScroll: {
-    overflowX: "auto",
-    overscrollBehavior: "contain",
-  },
-  effortTrack: { width: "max-content" },
   effortHeading: {
     margin: 0,
     color: colors.mutedForeground,
@@ -1330,28 +1322,25 @@ export const ModelSelectorEffort = ({
             <p aria-hidden="true" {...stylex.props(styles.effortHeading)}>
               {named}
             </p>
-            <div {...stylex.props(styles.effortScroll, scrollbarHidden)}>
-              <div {...stylex.props(styles.effortTrack)}>
-                <ToggleGroup
-                  aria-label={named}
-                  size="default"
-                  value={chosen === undefined ? [] : [chosen]}
-                  deselectable={false}
-                  onValueChange={(next: string[]) => {
-                    const [first] = next;
-                    if (first !== undefined) {
-                      root.onEffortChange(first);
-                    }
-                  }}
-                >
-                  {shown.map((level) => (
-                    <ToggleGroupItem key={level.value} value={level.value}>
-                      {level.label}
-                    </ToggleGroupItem>
-                  ))}
-                </ToggleGroup>
-              </div>
-            </div>
+            <ToggleGroup
+              aria-label={named}
+              size="default"
+              fullWidth
+              value={chosen === undefined ? [] : [chosen]}
+              deselectable={false}
+              onValueChange={(next: string[]) => {
+                const [first] = next;
+                if (first !== undefined) {
+                  root.onEffortChange(first);
+                }
+              }}
+            >
+              {shown.map((level) => (
+                <ToggleGroupItem key={level.value} value={level.value}>
+                  {level.label}
+                </ToggleGroupItem>
+              ))}
+            </ToggleGroup>
           </div>
         ) : null}
       </div>
