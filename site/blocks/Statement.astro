@@ -1,0 +1,9 @@
+---
+// <Statement text={frontmatter.description} />: Get started's opening line, in the serif.
+import "../system/styles/blocks.css";
+import { StatementView } from "./head";
+
+const { text } = Astro.props as { text: string };
+---
+
+<StatementView text={text} />

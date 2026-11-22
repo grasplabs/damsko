@@ -1,0 +1,93 @@
+---
+title: Motion
+description: One ease-out for all motion, and a short time for each kind of change.
+---
+
+<Head lead={frontmatter.description} />
+
+<Scene
+  path="foundations/motion-durations"
+  title="Feel each duration"
+  note="Three real parts, each answering in its own time. Slow them down to see the curve."
+/>
+
+<Scene
+  path="foundations/motion-curve"
+  title="One curve"
+  note="The ease starts at speed, so a part answers the moment you act. Ease-in-out is for what is already on screen."
+/>
+
+<Scene
+  path="foundations/motion-leave"
+  title="Leaving is faster"
+  note="The same row opening and closing, its time drawn to scale under it."
+  ground="soft"
+/>
+
+<AllTokens>
+
+<SampleRows
+  set="curves"
+  kind="motion"
+  note="Each dot crosses in its own time; a curve crosses in the arrival's time so its shape shows."
+/>
+
+</AllTokens>
+
+## In code
+
+The times are variables in `lib/vars.stylex.ts`, which comes with every component: `motionVars` become `0s` when the person asks for reduced motion, so a part that would move, grow or fade is then simply there, and simply gone. The curves and the colour times are `duration` in `lib/tokens.stylex.ts`.
+
+```bash
+pnpm dlx shadcn@4.23.0 add @damsko/lib
+```
+
+### motionVars
+
+Use `motionVars` for movement, size and fades: `ui` for something opening, `leave` for it going, `popup` for a menu or a list, `swap` for one state giving way to the next.
+
+```tsx
+import { duration } from "@grasp-os/ui/lib/tokens.stylex";
+import { motionVars } from "@grasp-os/ui/lib/vars.stylex";
+
+const styles = stylex.create({
+  panel: {
+    transitionProperty: "opacity, transform",
+    transitionDuration: {
+      default: motionVars.ui,
+      ":is([data-ending-style])": motionVars.leave,
+    },
+    transitionTimingFunction: duration.ease,
+  },
+});
+```
+
+### duration
+
+`duration.ease` and `duration.easeInOut` are the two curves. A colour easing under the pointer is not motion: it keeps `duration.hover`, and stays under reduced motion. A spinner or a progress bar that must keep a sign of life under reduced motion keeps a slow fade of its own.
+
+```tsx
+const styles = stylex.create({
+  row: {
+    transitionProperty: "background-color",
+    transitionDuration: duration.hover,
+    transitionTimingFunction: duration.ease,
+  },
+});
+```
+
+## Rules
+
+<Rules
+  always={[
+    "Use `ease` for anything that enters, leaves or responds, and `ease-in-out` only for something already on screen that moves.",
+    "Let a part leave faster than it came.",
+    "Drop movement, blur and scale with reduced motion, and keep the change of state.",
+    "Grow from the trigger: anything that opens from a trigger scales from the point on it that it is placed against, in every placement and right to left; a context menu from the pointer; a dialog opened by a press from that press's control, ending centred.",
+  ]}
+  never={[
+    "A duration or a curve of your own.",
+    "An ease-in on something that enters.",
+    "A popup that grows from its own centre when a trigger opened it.",
+  ]}
+/>

@@ -1,0 +1,342 @@
+---
+title: Table
+description: A table of facts in rows and columns, for people to compare at a glance.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/table"
+  use={
+    'import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from "@grasp-os/ui/components/table";'
+  }
+/>
+
+## Basic usage
+
+A head that names the columns, a row header that names each row, and a caption under it.
+
+<Stage path="table/basic" label="Basic usage" />
+
+## Sortable columns
+
+You own the sort: pass `sortDirection` and `onSort`, and the head says the sort to a screen reader.
+
+<Stage path="table/sortable" label="Sortable columns" />
+
+## With a footer
+
+A footer on the soft ground holds a total for the rows above.
+
+<Stage path="table/footer" label="With a footer" />
+
+## Selected rows
+
+A `selected` row keeps a quiet fill, and says so in its words too.
+
+<Stage path="table/chosen" label="Selected rows" />
+
+## Wider than its column
+
+A wide table scrolls sideways in its own box, which then takes keyboard focus.
+
+<Stage path="table/wide" label="Wider than its column" />
+
+## Every state
+
+A row and a sortable column's name; hover and keyboard focus are forced from the table's own CSS.
+
+<States
+  path="table/states"
+  label="Every state of a row"
+  cells={[
+    { label: "Row" },
+    { label: "Row, hover", force: "hover" },
+    { label: "Row, selected", props: { selected: true } },
+  ]}
+/>
+
+<States
+  path="table/states"
+  label="Every state of a column head"
+  cells={[
+    { label: "Column", props: { part: "head" } },
+    { label: "Column, hover", force: "hover", props: { part: "head" } },
+    {
+      label: "Column, keyboard focus",
+      force: "focus-visible",
+      props: { part: "head" },
+    },
+    { label: "Sorted up", props: { part: "head", sortDirection: "ascending" } },
+    {
+      label: "Sorted down",
+      props: { part: "head", sortDirection: "descending" },
+    },
+  ]}
+/>
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="table"
+  always={[
+    "A caption or a heading that says what the rows are.",
+    "Figures at the end of their column, so their units line up.",
+    "The row's name in its first cell, marked `rowHeader`.",
+    "The same order every time the table is shown, and say it when it is sorted.",
+  ]}
+  never={["Colour alone for a selected row: say it in words."]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Size",
+      key: "Head row",
+      value: "48px",
+      note: "{table-head-height}",
+    },
+    {
+      group: "Size",
+      key: "Cell padding",
+      value: "12px above and below, 16px at each side",
+      note: "{table-cell-block}, {table-cell-inline}",
+    },
+    {
+      group: "Type",
+      key: "Cells",
+      value: "13px / 18px, figures tabular",
+      note: "{table-text}, {table-text-line}",
+      tokens: ["body-foreground"],
+    },
+    {
+      group: "Type",
+      key: "Column names",
+      value: "14px, medium",
+      note: "{text-sm}, {font-weight-medium}",
+      tokens: ["muted"],
+    },
+    {
+      group: "Type",
+      key: "Row header",
+      value: "The row's name, in ink",
+      tokens: ["foreground"],
+    },
+    {
+      group: "Type",
+      key: "Caption",
+      value: "14px, under the table",
+      note: "{text-sm}",
+      tokens: ["muted"],
+    },
+    {
+      group: "Surface",
+      key: "Row divider",
+      value: "1px under each row",
+      note: "{hairline}",
+      tokens: ["border"],
+    },
+    {
+      group: "Surface",
+      key: "Row under a pointer",
+      tokens: ["table-row-bg-hover"],
+    },
+    {
+      group: "Surface",
+      key: "Selected row",
+      tokens: ["table-row-bg-selected-mint"],
+    },
+    {
+      group: "Surface",
+      key: "Footer",
+      value: "A hairline above it, words in ink, medium",
+      tokens: ["muted", "foreground"],
+    },
+    {
+      group: "Sort",
+      key: "Icon",
+      value: "16px after the name",
+      note: "{icon-sm}; quieter until sorted",
+    },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    {
+      key: "Row hover",
+      value: "The fill comes in over 250ms",
+      note: "{duration-ui}; pointer only; reduced: at once",
+      tokens: ["ease"],
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Width",
+      key: "Wider than its column",
+      value: "Scrolls sideways in its own box; the page never does.",
+    },
+    {
+      group: "Width",
+      key: "Long words",
+      value: "Wrap inside their cell; column names stay on one line.",
+    },
+    {
+      group: "Sort",
+      key: "Owner",
+      value:
+        "The caller sorts the rows and passes `sortDirection`; the head only says it.",
+    },
+    {
+      group: "Sort",
+      key: "Press",
+      value: "The column's name is a button: a click or Enter calls `onSort`.",
+    },
+    {
+      group: "Rows",
+      key: "Selected",
+      value: "A soft mint wash, said in the row's words too.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Structure",
+      value: "A real `table`, `thead`, `tbody` and `tfoot`",
+      note: 'column heads with `scope="col"`',
+    },
+    {
+      key: "Row names",
+      value: 'A `rowHeader` cell is a row header, `scope="row"`',
+    },
+    {
+      key: "Name",
+      value: "The caption, or `aria-label`",
+      note: "also names the scrolling box",
+    },
+    {
+      key: "Scrolling",
+      value: "A wide table's box is a focusable region, so the keys scroll it",
+    },
+    { key: "Sort", value: "`aria-sort` on the sorted column's head" },
+    {
+      key: "Contrast",
+      value: "Words 4.5:1 on paper, soft and raised, light and dark",
+      note: "checked by `node tokens/generate.ts --check`",
+    },
+  ]}
+/>
+<Rows
+  title="From shadcn"
+  rows={[
+    {
+      group: "Parts",
+      key: "`Table`, `TableHeader`, `TableBody`, `TableFooter`, `TableRow`, `TableHead`, `TableCell`, `TableCaption`",
+      value: "The same parts",
+    },
+    {
+      group: "Parts",
+      key: "`TableCaption` as a child",
+      value: "`caption` on Table",
+      note: "it also names the scroll box",
+    },
+    { group: "Rows", key: '`data-state="selected"`', value: "`selected`" },
+    {
+      group: "Cells",
+      key: "`text-right`",
+      value: '`align="end"`',
+      note: "follows the reading direction",
+    },
+    {
+      group: "Cells",
+      key: "First cell",
+      value: "`rowHeader`",
+      note: "a row header",
+    },
+    {
+      group: "Head",
+      key: "Sorting",
+      value: "`sortDirection`, `onSort`, `sortIndex`",
+      note: "new",
+    },
+    {
+      group: "Elsewhere",
+      key: "`className`",
+      value: "`style`",
+      note: "layout only; the look belongs to the table",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+Parts nest as the basic stage shows. TableHeader, TableBody and TableFooter take only their rows.
+
+### Table
+
+<Props source="src/components/table.tsx" type="TableProps" label="Table" />
+
+### TableRow
+
+<Props
+  source="src/components/table.tsx"
+  type="TableRowProps"
+  label="TableRow"
+/>
+
+### TableHead
+
+<Props
+  source="src/components/table.tsx"
+  type="TableHeadProps"
+  label="TableHead"
+/>
+
+### TableHeader, TableBody, TableFooter
+
+<Props
+  source="src/components/table.tsx"
+  type="TableHeaderProps"
+  label="TableHeader"
+/>
+
+<Props
+  source="src/components/table.tsx"
+  type="TableBodyProps"
+  label="TableBody"
+/>
+
+<Props
+  source="src/components/table.tsx"
+  type="TableFooterProps"
+  label="TableFooter"
+/>
+
+### TableCell
+
+<Props
+  source="src/components/table.tsx"
+  type="TableCellProps"
+  label="TableCell"
+/>
+
+### TableCaption
+
+<Props
+  source="src/components/table.tsx"
+  type="TableCaptionProps"
+  label="TableCaption"
+/>
+
+</Reference>

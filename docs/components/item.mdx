@@ -1,0 +1,393 @@
+---
+title: Item
+description: A list row that names a thing and links to it or acts on it.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/item"
+/>
+
+## Basic usage
+
+A name and a line about it, `outline` or on the `muted` fill.
+
+<Stage path="item/basic" label="Basic usage" />
+
+## With an icon
+
+`ItemMedia variant="icon"` sets an icon in a square, which says what kind of thing it is.
+
+<Stage path="item/icon" label="With an icon" />
+
+## With actions
+
+Its own buttons at the end, for what is done to this one thing.
+
+<Stage path="item/actions" label="With actions" />
+
+## A link or a choice with actions
+
+A row with `href`, `onClick` or `asChild` may still hold `ItemActions`, wherever they stand among its parts: its title is the press, stretched over the whole row, and each action stands above it as its own stop for the keyboard, never inside the link.
+
+<Stage path="item/link-actions" label="A link or a choice with actions" />
+
+## Actions on hover
+
+`ItemActions showOnHover` keeps the actions quiet until the row is pointed at or holds focus, and always shows them on touch and for the keyboard: a card of tools, one dense row each. The row that adds one more is an Item with `onClick`, after the list.
+
+<Stage path="item/tools" label="Actions on hover" />
+
+## A person or a provider
+
+An Avatar or a logo in `ItemMedia align="center"` stands in the middle of its row. In a narrow row the actions drop under the words.
+
+<Stage path="item/members" label="A person or a provider" />
+
+## Among setting rows
+
+`size="xs"` stands a list on the setting rows' height and inset, so a settings page has one rhythm.
+
+<Stage path="item/rhythm" label="Among setting rows" />
+
+## A quieter detail
+
+`ItemDetail` puts a word after the name on its line, in the muted ink: a role, or "You".
+
+<Stage path="item/detail" label="A quieter detail" />
+
+## An icon in line
+
+The default `ItemMedia` stands an icon bare on the title's line, with no square: for a dense row.
+
+<Stage path="item/inline-icon" label="An icon in line" />
+
+## As links
+
+With `href` the row is one link: its title is the link, stretched over the whole row, named by the title and described by the description. An `ItemSeparator` draws a hairline between two rows.
+
+<Stage path="item/links" label="As links" />
+
+## A router's link, the open one
+
+`asChild` makes a router's own link the row's press, drawn round the title and stretched over the row; `active` marks the open one of a list beside its detail.
+
+<Stage path="item/router" live label="A router's link, the open one" />
+
+## As a choice
+
+`onClick` makes the row one button, its title stretched over the whole row, named by the title and described by the description: a provider to choose. No chevron, since it goes nowhere.
+
+<Stage path="item/choice" label="As a choice" />
+
+## Loading
+
+Before the data, `loading` keeps every row's boxes: each part given empty waits as a quiet placeholder of its own size, an ItemMedia with no mark its square or its icon's box, an ItemTitle and an ItemDescription their lines.
+
+<Stage path="item/loading" label="Loading" />
+
+## As tiles
+
+`ItemGrid` lays small outlined Items out as tiles, as many per row as fit (each at least 15rem), the row's tiles one height. It is a list, read row by row, as an app's tiles on an Integrations page.
+
+<Stage path="item/grid" label="As tiles" />
+
+## Sizes
+
+16px of room by default, 12px above and below in a dense list.
+
+<Stage path="item/sizes" label="Sizes" />
+
+## Header and footer
+
+`ItemHeader` and `ItemFooter` are lines of their own above and under the row's parts.
+
+<Stage path="item/header-footer" label="Header and footer" />
+
+## Every state
+
+Only a row with a press (`href`, `onClick`, `asChild`) has states: hover, keyboard focus and pressed, forced from its own CSS.
+
+<States
+  path="item/states"
+  choose={{
+    prop: "variant",
+    label: "Variant",
+    options: [
+      { id: "default", label: "Default" },
+      { id: "outline", label: "Outline" },
+    ],
+    checks: [{ id: "muted", label: "Muted" }],
+  }}
+  cells={[
+    { label: "Rest" },
+    { label: "Hover", force: "hover" },
+    { label: "Keyboard focus", force: "focus-visible" },
+    { label: "Pressed", force: "active" },
+  ]}
+/>
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="item"
+  always={[
+    "A title that names the thing: Spring launch, Billing.",
+    "`href` when the whole row goes somewhere; actions when things are done to it.",
+  ]}
+  never={[
+    "More than two actions on a row: put the rest in a menu.",
+    "Rows of like things to compare in columns: use Table.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Size",
+      key: "Padding",
+      value: "{space-4}",
+      note: "small: {space-3} above and below, {space-4} at the ends; xs: {space-2} above and below, {table-cell-inline} at the ends, {field-row} tall at least",
+    },
+    {
+      group: "Size",
+      key: "Gap",
+      value: "{space-4} between its parts",
+      note: "small: {space-3}",
+    },
+    { group: "Size", key: "Corner", value: "{radius}, {radius-shape}" },
+    {
+      group: "Words",
+      key: "Title",
+      value: "{text-sm} / {text-sm-line}, {font-weight-medium}",
+      tokens: ["foreground"],
+    },
+    {
+      group: "Words",
+      key: "Description",
+      value: "{text-sm} / {text-sm-line}, {space-1} under the title",
+      tokens: ["muted"],
+    },
+    {
+      group: "Parts",
+      key: "Icon square",
+      value: "{control-default}, its icon {icon-sm}, stroke {icon-stroke}",
+      note: "small: {control-sm}",
+      tokens: ["secondary", "border-strong"],
+    },
+    { group: "Parts", key: "Actions", value: "{space-2} apart" },
+    {
+      group: "Parts",
+      key: "Media",
+      value:
+        "An Avatar (`xs`, `sm`) or a Brand icon, in the middle of the row, on all its words",
+      note: '`align="center"`; `start` keeps it on the title\'s line',
+    },
+    {
+      group: "Parts",
+      key: "Icon in line",
+      value: "{icon-sm}, bare, centred on the title's line",
+      tokens: ["muted"],
+    },
+    {
+      group: "Parts",
+      key: "Chevron",
+      value: "{icon-sm}, at the end of a link",
+      tokens: ["muted"],
+    },
+    { group: "Colour", key: "Default", value: "No fill" },
+    { group: "Colour", key: "Outline", tokens: ["card", "border-strong"] },
+    { group: "Colour", key: "Muted", tokens: ["muted"] },
+    {
+      group: "Colour",
+      key: "Link, default or muted",
+      note: "under a pointer, pressed",
+      tokens: ["accent", "accent-active"],
+    },
+    {
+      group: "Colour",
+      key: "Link, outline",
+      note: "under a pointer, pressed",
+      tokens: ["secondary-hover", "secondary-active"],
+    },
+    {
+      group: "Colour",
+      key: "Focus ring",
+      value: "{ring-width}, {ring-offset} out",
+      note: "on a link",
+      tokens: ["ring"],
+    },
+    {
+      group: "Group",
+      key: "Between rows",
+      value: "{space-2}",
+      note: "with ItemSeparator: a hairline, {space-1} clear of each row",
+    },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    {
+      key: "Hover",
+      value: "A link's fill changes, {duration-hover}",
+      note: "pointer only",
+      tokens: ["ease"],
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      key: "Link",
+      value:
+        "With `href` or `asChild` the title is the link, stretched over the whole row, with a chevron at its end; with `onClick` it is a button. ItemActions stand above it, never inside it.",
+    },
+    {
+      key: "Actions",
+      value:
+        "Its own buttons at the end, each pressed on its own; the row itself does nothing.",
+    },
+    {
+      key: "Narrow",
+      value:
+        "The words never go under 10rem: in a narrower row the actions drop under them, ending on the row's edge, so an address stays whole. By the row's own width, not the window's.",
+    },
+    {
+      key: "Long words",
+      value: "Title and description wrap; nothing is cut off.",
+    },
+    {
+      key: "Forced colours",
+      value: "An outlined item keeps a 1px line in the text colour.",
+    },
+    {
+      key: "Layout",
+      value: "`style` takes width, alignment and margins; never its look.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Role",
+      value:
+        "None on a plain row; its title is a link with `href` or `asChild`, a button with `onClick`, named by the title and described by the description",
+      note: "each action is its own stop, after the press",
+    },
+    {
+      key: "Group",
+      value: "A `list` of `listitem`s, so its count is said",
+      note: "`aria-label` when no heading names it",
+    },
+    {
+      key: "Icon and chevron",
+      value: "Hidden from screen readers; the words say it",
+    },
+    {
+      key: "Contrast",
+      value:
+        "Title and description 4.5:1 on paper, soft and raised, light and dark",
+      note: "checked by `node tokens/generate.ts --check`",
+    },
+  ]}
+/>
+<Rows
+  title="From shadcn"
+  rows={[
+    {
+      group: "Parts",
+      key: "`ItemMedia`, `ItemContent`, `ItemTitle`, `ItemDescription`, `ItemActions`",
+      value: "The same parts",
+      note: "and `ItemDetail` in the title",
+    },
+    {
+      group: "Parts",
+      key: "`ItemSeparator`, `ItemHeader`, `ItemFooter`, `ItemGroup`",
+      value: "The same parts",
+      note: "and `ItemGrid` for tiles",
+    },
+    {
+      group: "Look",
+      key: "`asChild` with a link",
+      value: "The same, or `href`",
+      note: "with a chevron at the end",
+    },
+    {
+      group: "Elsewhere",
+      key: "`className`",
+      value: "`style`",
+      note: "layout and width only",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props source="src/components/item.tsx" type="ItemProps" label="Item props" />
+<Props
+  source="src/components/item.tsx"
+  type="ItemGroupProps"
+  label="ItemGroup props"
+/>
+<Props
+  source="src/components/item.tsx"
+  type="ItemSeparatorProps"
+  label="ItemSeparator props"
+/>
+<Props
+  source="src/components/item.tsx"
+  type="ItemMediaProps"
+  label="ItemMedia props"
+/>
+<Props
+  source="src/components/item.tsx"
+  type="ItemContentProps"
+  label="ItemContent props"
+/>
+<Props
+  source="src/components/item.tsx"
+  type="ItemTitleProps"
+  label="ItemTitle props"
+/>
+<Props
+  source="src/components/item.tsx"
+  type="ItemDescriptionProps"
+  label="ItemDescription props"
+/>
+<Props
+  source="src/components/item.tsx"
+  type="ItemDetailProps"
+  label="ItemDetail props"
+/>
+<Props
+  source="src/components/item.tsx"
+  type="ItemActionsProps"
+  label="ItemActions props"
+/>
+<Props
+  source="src/components/item.tsx"
+  type="ItemHeaderProps"
+  label="ItemHeader props"
+/>
+<Props
+  source="src/components/item.tsx"
+  type="ItemFooterProps"
+  label="ItemFooter props"
+/>
+<Props
+  source="src/components/item.tsx"
+  type="ItemGridProps"
+  label="ItemGrid props"
+/>
+
+</Reference>

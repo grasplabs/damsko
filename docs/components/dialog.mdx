@@ -1,0 +1,379 @@
+---
+title: Dialog
+description: A window over the page for one short task, closed by its own buttons.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/dialog"
+  use={
+    'import { Dialog, DialogBody, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@grasp-os/ui/components/dialog";'
+  }
+/>
+
+## With a title and description
+
+A title that names the task, a sentence under it, and the actions that finish it. The trigger is a plain wrapper: `asChild` hands its behaviour to a Button. Cancel is a `DialogClose`, which draws an outline Button beside the action; the action is a `default` Button whose `onClick` returns a Promise and closes the dialog once its work is done. While it works, the dialog holds: its `onOpenChange` cancels the close.
+
+<Stage path="dialog/basic" live label="With a title and description" />
+
+## Long body
+
+When the body holds more than the window, only the body scrolls.
+
+<Stage path="dialog/long-body" label="Long body" />
+
+## Full
+
+`size="full"` on the content opens a chart or a table in full, up to `dialog-width-full` (64rem), never closer than `dialog-gutter` to the window's edges. The body scrolls inside, and fades at its foot while there is more. On a phone it is the same sheet as any dialog.
+
+<Stage path="dialog/full" label="Full" />
+
+## On a phone
+
+Under 640px it is a sheet along the bottom, and each Button in its footer takes an equal share of the line, under the thumb. Nothing to set: the window's width decides.
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="dialog"
+  always={[
+    "A title that says what the dialog does, in sentence case: Publish the report.",
+    "Cancel first, then the one action the dialog is for, last.",
+    "An `errorLabel` on the action's Button that says plainly what did not happen: Could not publish.",
+    "A task that needs the page out of the way, finished by its actions.",
+  ]}
+  never={[
+    "A dialog opened from inside another dialog.",
+    "A footer action that keeps the dialog open: a step inside the task belongs in the body.",
+    "A link in the footer that leaves the page.",
+    "A small task beside the control that opened it, with the page in reach: use Popover.",
+    "Details or a side task that keeps the page in view: use Sheet.",
+    "One question before a grave step that cannot be undone: use Alert dialog.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Size",
+      key: "Width",
+      value: "{dialog-width}, or {dialog-width-full} when full",
+      note: "never closer than {dialog-gutter} to the window's edges",
+    },
+    {
+      group: "Size",
+      key: "Height",
+      value:
+        "Its content, up to the window less {dialog-gutter} above and below",
+    },
+    { group: "Size", key: "Padding", value: "{space-6}" },
+    {
+      group: "Size",
+      key: "Gaps",
+      value:
+        "{space-4} under the title, {space-5} above the body, {space-6} above the footer",
+    },
+    { group: "Size", key: "Between fields", value: "{space-5}" },
+    { group: "Size", key: "Between actions", value: "{space-2}" },
+    {
+      group: "Size",
+      key: "Actions",
+      value: "A small Button, {control-sm}",
+      note: "a sheet's are the width's halves",
+    },
+    {
+      group: "Type",
+      key: "Title",
+      value: "{text-base} / {text-base-line}, {font-weight-medium}",
+      tokens: ["foreground"],
+    },
+    {
+      group: "Type",
+      key: "Description",
+      value: "{text-base} / {text-base-line}",
+      tokens: ["muted"],
+    },
+    {
+      group: "Type",
+      key: "Body",
+      value: "{text-base} / {text-base-line}",
+      tokens: ["body-foreground"],
+    },
+    {
+      group: "Surface",
+      key: "Panel",
+      value: "{radius}, {radius-shape}",
+      note: "only the top corners as a sheet",
+      tokens: ["card", "shadow-lg"],
+    },
+    {
+      group: "Surface",
+      key: "Shade",
+      value: "Over the whole window",
+      note: "no blur",
+      tokens: ["dialog-scrim"],
+    },
+    {
+      group: "Surface",
+      key: "Close button",
+      value: "A ghost Button, {control-sm}",
+      note: "level with the title's first line",
+    },
+    {
+      group: "Surface",
+      key: "Scroll lines",
+      value:
+        "A hairline at the body's top once scrolled, and at its bottom while there is more",
+      tokens: ["border"],
+    },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    {
+      key: "Opening",
+      value:
+        "From {dialog-from-shift} lower at {dialog-from-scale}, faded, in {duration-ui}",
+      tokens: ["ease"],
+    },
+    {
+      key: "Closing",
+      value: "The same way back, in {duration-leave}",
+      note: "faster than it came",
+    },
+    { key: "Shade", value: "Fades in and out with the panel" },
+    { key: "As a sheet", value: "Up from below the window, and back down" },
+    {
+      key: "Reduced motion",
+      value: "There and gone at once",
+      note: "no transition",
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Input",
+      key: "Opening",
+      value:
+        "Its trigger, by pointer, Enter or Space. Focus moves to the first control; a touch press focuses the dialog itself, so no keyboard appears.",
+    },
+    {
+      group: "Input",
+      key: "Closing",
+      value:
+        "An action, the close button, Escape or a press on the shade. Focus returns to the trigger.",
+    },
+    {
+      group: "Input",
+      key: "Tab",
+      value:
+        "Stays inside, wrapping from the last control to the first and back.",
+    },
+    {
+      group: "Input",
+      key: "The page behind",
+      value:
+        "Does not scroll, cannot be pressed and is hidden from screen readers while the dialog is open.",
+    },
+    {
+      group: "Input",
+      key: "Working",
+      value:
+        "An action whose press returns a Promise keeps it open until its work is done; its Button shows a Spinner and keeps focus. Cancel the close in `onOpenChange` while it works, and Escape, the shade and the close button wait.",
+    },
+    {
+      group: "Input",
+      key: "Failed",
+      value:
+        "The Button says its `errorLabel` for {duration-hold}, and the dialog stays open to try again.",
+    },
+    {
+      group: "Input",
+      key: "Agents",
+      value:
+        "Open it by its trigger's name, read its title, press an action by name. A `destructive` Button waits for the person's yes; a failed action answers not ok, with its `errorLabel`.",
+    },
+    {
+      group: "Content",
+      key: "Long words",
+      value:
+        "Break anywhere once wider than the line. Words are never hyphenated, so nothing is cut off.",
+    },
+    {
+      group: "Content",
+      key: "Long title",
+      value: "Wraps, balanced, clear of the close button.",
+    },
+    {
+      group: "Settings",
+      key: "Keyboard on a phone",
+      value: "The sheet stands above it.",
+    },
+    {
+      group: "Settings",
+      key: "Text at 200%",
+      value: "The panel grows up to the window's height.",
+    },
+    {
+      group: "Settings",
+      key: "Right to left",
+      value: "The close button and the actions follow the reading direction.",
+    },
+    {
+      group: "Settings",
+      key: "Forced colours",
+      value: "A 1px border in the text colour replaces the lift.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    { key: "Role", value: "`dialog`, with `aria-modal`" },
+    { key: "Name", value: "Its title, by `aria-labelledby`" },
+    { key: "Description", value: "Its description, by `aria-describedby`" },
+    {
+      key: "A body that scrolls",
+      value:
+        "A `region` named by the title, in the Tab order, so the arrow keys and Page Down scroll it",
+    },
+    {
+      key: "Close button",
+      value: "Named by the I18nProvider's `dialog.close`; Close by default",
+    },
+    { key: "Working", value: "`aria-busy` and `aria-disabled` on the action" },
+  ]}
+/>
+<Rows
+  title="From shadcn"
+  rows={[
+    {
+      group: "Parts",
+      key: "`DialogContent`",
+      value: "Kept",
+      note: "with the shade and, by `showCloseButton`, the close button",
+    },
+    {
+      group: "Parts",
+      key: "`DialogOverlay`, `DialogPortal`",
+      value: "Inside `DialogContent`",
+      note: "the content brings its shade, in the top layer",
+    },
+    {
+      group: "Parts",
+      key: "`DialogTrigger`, `DialogClose`",
+      value: "Plain wrappers",
+      note: "`asChild` onto the element inside; DialogClose alone draws an outline Button, as shadcn's does",
+    },
+    {
+      group: "Parts",
+      key: "New",
+      value: "`DialogBody`",
+      note: "the one part that scrolls",
+    },
+    { group: "Look", key: "`rounded-xl`", value: "{radius}, {radius-shape}" },
+    { group: "Look", key: "`sm:max-w-md`", value: "{dialog-width}" },
+    {
+      group: "Look",
+      key: "`bg-black/10`, `backdrop-blur-xs`",
+      value: "{dialog-scrim}",
+      note: "no blur",
+    },
+    {
+      group: "Look",
+      key: "`zoom-in-95`, `duration-100`",
+      value: "{dialog-from-scale}, {duration-ui} in, {duration-leave} out",
+    },
+    {
+      group: "Behaviour",
+      key: "Base UI's Dialog",
+      value: "UI SDK's Dialog",
+      note: "so an agent can open it and press its actions",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+Parts nest as the basic stage shows. Each also takes the rest of its UI SDK part, such as the panel's `initialFocus` and `finalFocus`.
+
+### Dialog
+
+<Props source="src/components/dialog.tsx" type="DialogProps" label="Dialog" />
+
+### DialogTrigger
+
+<Props
+  source="src/components/dialog.tsx"
+  type="DialogTriggerProps"
+  label="DialogTrigger"
+/>
+
+### DialogContent
+
+<Props
+  source="src/components/dialog.tsx"
+  type="DialogContentProps"
+  label="DialogContent"
+/>
+
+### DialogHeader
+
+<Props
+  source="src/components/dialog.tsx"
+  type="DialogHeaderProps"
+  label="DialogHeader"
+/>
+
+### DialogTitle
+
+<Props
+  source="src/components/dialog.tsx"
+  type="DialogTitleProps"
+  label="DialogTitle"
+/>
+
+### DialogDescription
+
+<Props
+  source="src/components/dialog.tsx"
+  type="DialogDescriptionProps"
+  label="DialogDescription"
+/>
+
+### DialogBody
+
+<Props
+  source="src/components/dialog.tsx"
+  type="DialogBodyProps"
+  label="DialogBody"
+/>
+
+### DialogFooter
+
+<Props
+  source="src/components/dialog.tsx"
+  type="DialogFooterProps"
+  label="DialogFooter"
+/>
+
+### DialogClose
+
+<Props
+  source="src/components/dialog.tsx"
+  type="DialogCloseProps"
+  label="DialogClose"
+/>
+
+</Reference>

@@ -1,0 +1,45 @@
+---
+title: Tables
+description: Rows of like things to compare, with status, a search above and pages below.
+---
+
+<Head lead={frontmatter.description} />
+
+## Status and pages
+
+Status is a badge at the end of its row; the page count sits under the table.
+
+<Stage path="patterns/tables-status" label="Status and pages" />
+
+## Search and no results
+
+Search sits above the table it narrows; with no match, the table says so in its own body.
+
+<Stage path="patterns/tables-search" label="Search and no results" />
+
+## Choosing rows
+
+Each row's checkbox is named for it; while rows are chosen, the bar counts them and acts on them.
+
+<Stage path="patterns/tables-choose" label="Choosing rows" />
+
+## On a phone
+
+The row's name gives way first: it wraps in whole words and keeps 11rem. Every other cell stays on one line. When a row still does not fit, the table scrolls sideways inside its box, faded at the edge with more.
+
+## Rules
+
+<Rules
+  always={[
+    "A caption that says what the rows are, even when it is only read by a screen reader.",
+    "Numbers and status at the end of the row, aligned to the end.",
+    "The first column names the row, so every other cell reads against it.",
+    "Say how many rows there are, and what was chosen, in words.",
+  ]}
+  never={[
+    "A table for a layout: rows of unlike things belong in a list or cards.",
+    "An empty table with no words: say why it is empty and what fills it.",
+    "A row that does its work on a hover alone.",
+    "A destructive action on the chosen rows without a way back or a question first.",
+  ]}
+/>

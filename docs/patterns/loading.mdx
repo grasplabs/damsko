@@ -1,0 +1,41 @@
+---
+title: Loading
+description: Show what is coming in its shape, how far a long task is, and what is loading.
+---
+
+<Head lead={frontmatter.description} />
+
+## Its own shape
+
+When the layout is known, a dot field holds the place of the words, our light passing over it, so nothing moves when they arrive.
+
+<Stage path="patterns/loading-skeleton" label="Its own shape" />
+
+## How far it has got
+
+A long task of known length shows a bar that fills, and says when it is done.
+
+<Stage path="patterns/loading-progress" label="How far it has got" />
+
+## A short wait
+
+When neither the length nor the shape is known, a spinner sits beside words that say what is loading.
+
+<Stage path="patterns/loading-spinner" label="A short wait" />
+
+## Rules
+
+<Rules
+  always={[
+    "Say in words what is loading, once, to a screen reader as well.",
+    "Keep the page's shape while it loads, so nothing jumps when the content arrives.",
+    "A bar with a value when the length is known; a spinner only when it is not.",
+    "An action that works shows it on its own button: a press that returns a Promise does.",
+  ]}
+  never={[
+    "A spinner over the whole page for a part of it.",
+    "A skeleton for something that takes under a moment.",
+    "A bar that runs on its own clock, not the task's.",
+    "Motion while someone asked for less: skeletons and spinners follow reduced motion.",
+  ]}
+/>

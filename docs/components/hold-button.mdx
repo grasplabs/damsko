@@ -1,0 +1,116 @@
+---
+title: Hold button
+description: A button you press and hold to confirm what cannot be undone.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/hold-button"
+  use={'import { HoldButton } from "@grasp-os/ui/components/hold-button";'}
+/>
+
+## Hold to confirm
+
+Undo for what can be undone, a hold for a small loss that cannot be, a dialog for a grave one.
+
+<Stage path="hold-button/basic" label="Hold to confirm" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="hold-button"
+  always={[
+    "A small loss that cannot be undone: delete a draft.",
+    "The button's own words, a verb first: they name it (Hold to delete draft) and title its confirmation.",
+  ]}
+  never={[
+    "What can be undone: act at once and offer Undo.",
+    "A grave loss (a workspace, an account): use Alert dialog.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Hold to confirm"
+  rows={[
+    {
+      group: "Holding",
+      key: "Pointer or finger",
+      value:
+        "Keep it down: a fill crosses the button in {duration-press-and-hold}, then `onConfirm` runs once.",
+    },
+    {
+      group: "Holding",
+      key: "Keyboard",
+      value: "Hold Enter or Space. Key repeat never starts it again.",
+    },
+    {
+      group: "Holding",
+      key: "Let go early",
+      value:
+        "Nothing runs, and the fill runs back. Moving off the button or scrolling does the same.",
+    },
+    {
+      group: "Without holding",
+      key: "A click or a tap",
+      value:
+        "Opens a popover with the button's own words and Cancel. Nothing runs until its action is pressed.",
+    },
+    {
+      group: "Without holding",
+      key: "Screen reader, switch, voice",
+      value: 'Named "Hold to delete draft"; a click opens the same popover.',
+    },
+    {
+      group: "Without holding",
+      key: "Agent",
+      value: "Presses the popover's action, which waits for the person's yes.",
+    },
+    {
+      group: "Without holding",
+      key: "Always asks",
+      value:
+        "There is no `ask` prop to turn the popover off: it is the only way to confirm for someone who cannot hold, by a screen reader, a switch, voice or an agent.",
+    },
+    {
+      group: "Settings",
+      key: "Reduced motion",
+      value: "The fill still shows, at an even pace.",
+    },
+    {
+      group: "Settings",
+      key: "Touch",
+      value: "No text selection or callout while held.",
+    },
+    {
+      group: "Settings",
+      key: "Size",
+      value: "The fill stays inside the button; its size never changes.",
+    },
+    {
+      group: "Settings",
+      key: "Forced colours",
+      value: "The fill is a line at the foot, in the highlight colour.",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/hold-button.tsx"
+  type="HoldButtonProps"
+  label="HoldButton props"
+/>
+<Props
+  source="src/components/hold-button.tsx"
+  type="HoldButtonLabels"
+  label="HoldButtonLabels"
+/>
+
+</Reference>

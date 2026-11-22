@@ -1,0 +1,312 @@
+---
+title: Date picker
+description: A field for a date, typed in or chosen from a calendar it opens, or a range.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/date-picker"
+  use={'import { DatePicker } from "@grasp-os/ui/components/date-picker";'}
+/>
+
+## Basic usage
+
+Type a date in the page's language, or open the calendar with the button at the field's end; a day chosen closes it. A typed date is read when you press Enter or leave the field, then written out; text that is no date stays, marked wrong. The form gets an ISO date under `name`.
+
+<Stage path="date-picker/basic" label="Basic usage" />
+
+## Range
+
+`mode="range"` gives a field for the start and one for the end; two months suit it (`numberOfMonths={2}`). The calendar closes once both ends are chosen, and an end typed before the start is wrong.
+
+<Stage path="date-picker/range" label="Range" />
+
+## Presets
+
+`presets` puts the ranges people choose most beside the calendar: Today, Last 7 days, Last 30 days and This month, counted from today. A preset sets the range and closes the calendar.
+
+<Stage path="date-picker/presets" label="Presets" />
+
+## With a range
+
+`defaultValue` is `[start, end]` as ISO dates; the matching preset shows as chosen.
+
+<Stage path="date-picker/presets-chosen" label="With a range" />
+
+## Your own presets
+
+`presets` also takes the ranges your product reports on, by name.
+
+<Stage path="date-picker/presets-custom" label="Your own presets" />
+
+## A range's limits
+
+`min`, `minDays` and `maxDays` bound the range; `startName` and `endName` send its ends under names of their own.
+
+<Stage path="date-picker/range-limits" label="A range's limits" />
+
+## In another language
+
+`locale` (or the I18nProvider's) sets how the dates are written; the I18nProvider's `datePicker` and `calendar` words translate what it says.
+
+<Stage path="date-picker/range-locale" label="In another language" />
+
+## In a form
+
+In a Field, the FieldLabel names the date and the FieldDescription and FieldError describe it. `required` keeps the form from being sent without a date, as text that is no date does; a form reset brings back `defaultValue`.
+
+<Stage path="date-picker/form" label="In a form" />
+
+## Sizes
+
+32, 36 or 44px tall, the same as Input and Button.
+
+<Stage path="date-picker/sizes" label="Sizes" />
+
+## Limits
+
+`min`, `max` and `unavailable` keep days from being chosen.
+
+<Stage path="date-picker/limits" label="Limits" />
+
+## Every state
+
+Hover and keyboard focus are forced from its own CSS; the rest are props.
+
+<States
+  path="date-picker/states"
+  code="date-picker/basic"
+  cells={[
+    { label: "Empty" },
+    { label: "Hover", force: "hover" },
+    { label: "Keyboard focus", force: "focus-visible" },
+    { label: "Filled", props: { value: "2026-11-20" } },
+    { label: "Invalid", props: { value: "2026-11-20", invalid: true } },
+    { label: "Read only", props: { value: "2026-11-20", readOnly: true } },
+    { label: "Disabled", props: { value: "2026-11-20", disabled: true } },
+  ]}
+/>
+
+## Every state of a range
+
+The same states, for a range with presets.
+
+<States
+  path="date-picker/range-states"
+  code="date-picker/presets"
+  cells={[
+    { label: "Empty" },
+    { label: "Hover", force: "hover" },
+    { label: "Keyboard focus", force: "focus-visible" },
+    { label: "Filled", props: { value: ["2026-11-07", "2026-11-13"] } },
+    {
+      label: "Invalid",
+      props: { value: ["2026-11-07", "2026-11-13"], invalid: true },
+    },
+    {
+      label: "Disabled",
+      props: { value: ["2026-11-07", "2026-11-13"], disabled: true },
+    },
+  ]}
+/>
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="date-picker"
+  always={[
+    "One date in a form, typed in or chosen on a calendar.",
+    "A range as one picker in range mode, never two pickers.",
+    "A range of what has happened, with presets and `max` of today so it cannot run into the future.",
+    "A label that says which date: Due date, Start of the trip, Period.",
+    "`min`, `max` and `unavailable` for days that cannot be chosen.",
+  ]}
+  never={["A month always in view on the page: a Calendar."]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Field",
+      key: "Look",
+      value:
+        "Input's field box, the date's words at the start and a ghost calendar button a size smaller at the end",
+      note: "{control-sm}, {control-default}, {control-lg}",
+    },
+    {
+      group: "Field",
+      key: "Width",
+      value:
+        "Up to {popup-width}; a range with presets up to {date-picker-range-width}",
+    },
+    {
+      group: "Popup",
+      key: "Surface",
+      value: "Popover's, as wide as its months",
+    },
+    {
+      group: "Popup",
+      key: "Calendar",
+      value: "Calendar's days, colours and sizes",
+    },
+    {
+      group: "Popup",
+      key: "Presets",
+      value:
+        "A column of {date-picker-range-presets} at the calendar's start, {space-4} from the months; two columns over the month on a phone",
+    },
+    {
+      group: "Popup",
+      key: "Chosen preset",
+      value: "The chosen fill, with a tick at its end",
+      tokens: ["tree-view-bg-selected"],
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Calendar",
+      key: "Opening",
+      value:
+        "The calendar button opens it on the chosen day; the keys move as in Calendar.",
+    },
+    {
+      group: "Typing",
+      key: "Reading",
+      value:
+        "On Enter or leaving the field, in the locale's order with any separator, month names or digits alone; then written out in the page's language.",
+    },
+    {
+      group: "Typing",
+      key: "Wrong",
+      value:
+        "Text that is no date, or a date that cannot be chosen, stays, marked wrong; the value before it is kept and the form is not sent.",
+    },
+    {
+      group: "Calendar",
+      key: "Closing",
+      value:
+        "Choosing a day closes it; Escape closes it too; focus goes back to the calendar button.",
+    },
+    {
+      group: "Range",
+      key: "Two presses",
+      value:
+        "The first is the start, the second the end; Escape drops an unfinished range.",
+    },
+    {
+      group: "Presets",
+      key: "Months",
+      value:
+        "With presets, months side by side are always six weeks each, so the popup keeps one height as it pages.",
+    },
+    {
+      group: "Presets",
+      key: "Pressing",
+      value:
+        "Sets its range and closes the calendar; the one matching the range shows as chosen. One outside `min`, `max`, `minDays` or `maxDays` cannot be pressed.",
+    },
+    {
+      group: "Phone",
+      key: "Months",
+      value: "One month: two do not fit side by side.",
+    },
+    {
+      group: "Form",
+      key: "Sent",
+      value:
+        "An ISO date under `name`, or the Field's; a range's ends under `name`, or `startName` and `endName`.",
+    },
+    {
+      group: "Form",
+      key: "Required, reset",
+      value:
+        "`required` blocks an empty date; a reset returns to `defaultValue`.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Name",
+      value:
+        "The field by its FieldLabel or `aria-label`; a range's fields add start and end (`datePicker.rangeStart`, `rangeEnd`)",
+    },
+    {
+      key: "Calendar button",
+      value:
+        "Choose date with the chosen date after it (`datePicker.select`); `triggerLabel` replaces the whole name",
+    },
+    {
+      key: "Description",
+      value:
+        "The format to type (from the locale), then FieldDescription and a shown FieldError",
+    },
+    {
+      key: "Presets",
+      value: "A group named Presets; the chosen one `aria-pressed`",
+    },
+    {
+      key: "Popup",
+      value: "A `dialog` holding Calendar's grid",
+      note: "focus goes in and comes back",
+    },
+    {
+      key: "Wrong",
+      value: "`aria-invalid` when given, or while the text is no date",
+    },
+  ]}
+/>
+<Rows
+  title="From shadcn"
+  rows={[
+    {
+      group: "Parts",
+      key: "Popover, a Button trigger, Calendar",
+      value:
+        "One `DatePicker`: a field to type in, its calendar button and the popup",
+    },
+    { group: "Values", key: "Date objects", value: "ISO strings" },
+    {
+      group: "Values",
+      key: '`mode="range"` in Calendar',
+      value: '`mode="range"`',
+    },
+    {
+      group: "Presets",
+      key: "A Select of presets",
+      value: "`presets`, a column beside the calendar",
+    },
+    {
+      group: "Elsewhere",
+      key: "`className`",
+      value: "Dropped",
+      note: "`style` takes layout only",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/date-picker.tsx"
+  type="DatePickerProps"
+  label="DatePicker"
+/>
+<Props
+  source="src/components/date-picker.tsx"
+  type="DatePickerPreset"
+  label="DatePickerPreset"
+/>
+
+</Reference>

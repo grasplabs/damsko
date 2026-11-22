@@ -1,0 +1,14 @@
+---
+// <Tokens set="inks" label="Inks" note="Text needs 4.5:1." />: a group of colour tokens as compact
+// rows (site/blocks/tokens.tsx), with each colour's lowest measured contrast. `set` may name more
+// than one set, separated by spaces, to show them as one group. Markdown form: the label as a
+// heading, the note, and a table (site/markdown.ts).
+import "../system/styles/blocks.css";
+import { TokenRowsView } from "./tokens";
+import { contrastPairs, tokenSet } from "./token-data";
+
+const { set, label, note } = Astro.props as { set: string; label?: string; note?: string };
+const ids = set.split(/\s+/u).filter(Boolean);
+---
+
+<TokenRowsView id={ids[0]} label={label} note={note} tokens={ids.flatMap((id) => tokenSet(id))} pairs={contrastPairs} />

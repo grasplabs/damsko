@@ -1,0 +1,15 @@
+---
+// What a broken page shows in place of its body: which file, which line, what went wrong. The rest
+// of the page (the frame, the sidebar) still works, and so does every other page.
+// Looks: site/system/styles/site.css (.site-problem).
+import type { Problem } from "./broken";
+
+type Props = Problem;
+const { file, message, line } = Astro.props;
+---
+
+<section class="site-problem" role="alert" aria-labelledby="site-problem-title">
+  <p class="site-tag" id="site-problem-title">This page could not be drawn</p>
+  <p class="site-problem-file"><code>{file}{line ? `:${line}` : ""}</code></p>
+  <pre class="site-problem-message">{message}</pre>
+</section>

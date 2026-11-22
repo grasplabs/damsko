@@ -1,0 +1,210 @@
+---
+title: Sources
+description: What an answer drew on, folded under it as a count that opens to the list.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/sources"
+/>
+
+## Under an answer
+
+Built as shadcn's Sources pattern is, on [Trace](/components/trace): the trigger is a TraceLine whose title is a pile, the first sources' marks overlapping, then the count, `count` on `SourcesTrigger`; each source is a TraceLine in a link. A source on another site shows the host its address names, read from the checked address, never words of the caller's: `origin` says where a source lives only when its address names no host. Press it to open the list, and again to fold it. From an AI SDK message, the sources are its `source-url` parts, each address once: the agent may cite a page twice.
+
+<Stage path="sources/basic" label="Under an answer" />
+
+## Opened by the page
+
+`onOpen` tells the page a source was opened. A source with an `href` stays a link and goes there too; one without is a button that only runs `onOpen`. An address comes from a model or a tool, so it is checked as a link in Markdown is: http, https, mailto or a path on this site leads there, and any other (`javascript:`, `data:`, `//elsewhere`) leaves the title as words.
+
+<Stage path="sources/open" label="Opened by the page" />
+
+## Locked and gone
+
+`access="locked"` says the source is there but not for this person; `access="gone"` that it could not be opened. Neither is a link, and the mark goes quieter.
+
+<Stage path="sources/access" label="Locked and gone" />
+
+## Your marks
+
+SourceIcon holds whatever you map a source to: an icon for a file, a site's own small icon, a person's portrait. In the trigger it is smaller and overlaps the one before.
+
+<Stage path="sources/marks" label="Your marks" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="sources"
+  always={[
+    "The sources one answer drew on, under that answer.",
+    "The source's own title as its link's words.",
+    "The same mark for the same kind of source everywhere.",
+  ]}
+  never={[
+    "One source beside the claim it supports, in the answer's text: use Inline citation.",
+    "A source that could not be opened shown as a working link.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Pile",
+      key: "Marks",
+      value: "{sources-pile-mark}, overlapping by {sources-pile-overlap}",
+      note: "the first lines up with the words above",
+    },
+    {
+      group: "Pile",
+      key: "Count",
+      value:
+        "Trace's row: {text-sm} / {text-sm-line}, muted until hovered or open",
+      tokens: ["muted-foreground", "foreground"],
+    },
+    {
+      group: "List",
+      key: "Line",
+      value:
+        "A Trace step: {space-2} above and below; the whole line opens the source",
+    },
+    {
+      group: "List",
+      key: "Mark",
+      value: "In the line's {icon-sm} seat",
+    },
+    {
+      group: "List",
+      key: "Where",
+      value: "Trace's description after the title: the host, or `origin`",
+      note: "in danger when it could not be opened",
+      tokens: ["muted-foreground", "destructive"],
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Pile",
+      key: "Press",
+      value:
+        "Opens the list under it, or folds it; Enter and Space do the same, and focus stays on it.",
+    },
+    {
+      group: "Pile",
+      key: "Opening",
+      value: "The list grows to its height and the chevron turns",
+      note: "reduced motion: at once",
+    },
+    {
+      group: "List",
+      key: "Press",
+      value:
+        "Opens the source in a new tab, or runs `onOpen` for one with nowhere to go.",
+    },
+    {
+      group: "List",
+      key: "Find in page",
+      value:
+        "A folded list's words are still found, and finding them opens it.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Pile",
+      value: "A button named by its count, with `aria-expanded`",
+    },
+    { key: "List", value: "A list named Sources, a line per source" },
+    {
+      key: "Source",
+      value:
+        "A link, or a button, named by its title; a link says it opens in a new tab",
+    },
+    {
+      key: "Locked or gone",
+      value: "Plain words, never a link; the words after the title say why",
+    },
+    { key: "Marks", value: "Hidden from a screen reader: the title says it" },
+  ]}
+/>
+
+<Rows
+  title="From shadcn"
+  rows={[
+    {
+      group: "Base",
+      key: "Trace and TraceCollapsible",
+      value: "Trace and TraceCollapsible",
+      note: "the trigger and the list open and close on them",
+    },
+    {
+      group: "Trigger",
+      key: 'A TraceLine: "Used 3 sources"',
+      value: 'A TraceLine: the pile of marks and the count, "3 sources"',
+      note: "the pile is the title's content",
+    },
+    {
+      group: "Source",
+      key: "A link round a TraceLine",
+      value: "A link round a TraceLine: its mark, title and host",
+      note: "with `access`, `onOpen` and `origin`",
+    },
+    {
+      group: "Parts",
+      key: "No mark part",
+      value: "SourceIcon",
+      note: "the product's mark for a source, in the pile and the row",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+### Sources
+
+<Props
+  source="src/components/sources.tsx"
+  type="SourcesProps"
+  label="Sources"
+/>
+
+### SourcesTrigger
+
+<Props
+  source="src/components/sources.tsx"
+  type="SourcesTriggerProps"
+  label="SourcesTrigger"
+/>
+
+### SourcesContent
+
+<Props
+  source="src/components/sources.tsx"
+  type="SourcesContentProps"
+  label="SourcesContent"
+/>
+
+### Source
+
+<Props source="src/components/sources.tsx" type="SourceProps" label="Source" />
+
+### SourceIcon
+
+<Props
+  source="src/components/sources.tsx"
+  type="SourceIconProps"
+  label="SourceIcon"
+/>
+
+</Reference>

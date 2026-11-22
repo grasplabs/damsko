@@ -1,0 +1,346 @@
+---
+title: Popover
+description: A small panel beside the control that opened it, for a quick task.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/popover"
+  use={
+    'import { Popover, PopoverClose, PopoverContent, PopoverDescription, PopoverFooter, PopoverHeader, PopoverTitle, PopoverTrigger } from "@grasp-os/ui/components/popover";'
+  }
+/>
+
+## With a title and description
+
+A title that names it, a sentence under it, and the action that finishes it. The trigger and Cancel are plain wrappers: `asChild` hands their behaviour to a Button. The action is a Button whose `onClick` returns a Promise and closes the popover once its work is done.
+
+<Stage path="popover/basic" live label="With a title and description" />
+
+## Only words
+
+A popover that only explains holds no control, so focus stays on its trigger as it opens: no ring frames the panel, and Escape or a press outside closes it. With a control in it, the first takes focus. `initialFocus` changes either.
+
+<Stage path="popover/explains" live label="Only words" />
+
+## Long content
+
+When it holds more than it shows, its body scrolls.
+
+<Stage path="popover/long" label="Long content" />
+
+## Placement and alignment
+
+`side` picks where it opens, and `align` lines it up with the trigger.
+
+<Stage path="popover/placement" label="Placement and alignment" />
+
+## With a tooltip
+
+An icon-only trigger can say what its popover is for with a Tooltip round it. The tooltip never shows while the popover is open.
+
+<Stage path="popover/tooltip" label="With a tooltip" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="popover"
+  always={[
+    "A title that says what the popover is for, in sentence case: Publish this report.",
+    "Cancel first, then the one action the popover is for, last.",
+    "An `errorLabel` on the action's Button that says plainly what did not happen: Could not publish.",
+  ]}
+  never={["A popover opened from inside another popover."]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Size",
+      key: "Width",
+      value: "{popover-width}",
+      note: "never wider than the window less {popup-gutter} on each side",
+    },
+    {
+      group: "Size",
+      key: "Height",
+      value: "Its content, up to {popup-height}",
+      note: "less when the window has less room beside the trigger",
+    },
+    { group: "Size", key: "Padding", value: "{popover-padding}" },
+    {
+      group: "Size",
+      key: "Gaps",
+      value: "{space-4} between rows, {space-2} under the title",
+    },
+    { group: "Size", key: "Gap to the trigger", value: "{popover-gap}" },
+    { group: "Size", key: "Between actions", value: "{space-2}" },
+    { group: "Size", key: "Actions", value: "A small Button, {control-sm}" },
+    {
+      group: "Type",
+      key: "Title",
+      value: "{text-base} / {text-base-line}, {font-weight-medium}",
+      tokens: ["foreground"],
+    },
+    {
+      group: "Type",
+      key: "Description",
+      value: "{text-xs} / {text-xs-line}",
+      tokens: ["muted"],
+    },
+    {
+      group: "Type",
+      key: "Text",
+      value: "{text-sm} / {text-sm-line}",
+      tokens: ["body-foreground"],
+    },
+    {
+      group: "Surface",
+      key: "Panel",
+      value: "{radius}, {radius-shape}",
+      tokens: ["popover", "popup-shadow"],
+    },
+    {
+      group: "Surface",
+      key: "Arrow",
+      value: "None",
+      note: "the gap and the motion from the trigger's side say where it came from",
+    },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    {
+      key: "Opening",
+      value: "From {popup-from-scale}, faded, in {duration-ui}",
+      note: "growing from the side of the trigger it landed on",
+      tokens: ["ease"],
+    },
+    {
+      key: "Closing",
+      value: "The same way back, in {duration-leave}",
+      note: "faster than it came",
+    },
+    {
+      key: "Reduced motion",
+      value: "There and gone at once",
+      note: "no transition",
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Input",
+      key: "Opening",
+      value:
+        "Its trigger, by pointer, Enter or Space. Focus moves to the first control, or to the panel when it holds none; a tap focuses the panel, so no keyboard appears.",
+    },
+    {
+      group: "Input",
+      key: "Closing",
+      value:
+        "An action, the trigger, Escape, a press outside, or Tab out of it.",
+    },
+    {
+      group: "Input",
+      key: "Focus after",
+      value:
+        "Back on the trigger after Escape or an action. Tab moves on to what follows the trigger.",
+    },
+    {
+      group: "Input",
+      key: "Tooltip",
+      value:
+        "With `tooltip`, after {tooltip-delay} on the trigger, or at once on focus. A press that opens the popover closes it, and it does not open while the popover is open.",
+    },
+    {
+      group: "Input",
+      key: "The page",
+      value:
+        "Stays in reach: it scrolls, it can be pressed, and Tab is not held inside.",
+    },
+    {
+      group: "Input",
+      key: "Placement",
+      value:
+        "It flips when there is no room, and shifts to stay {popup-gutter} inside the window.",
+    },
+    {
+      group: "Input",
+      key: "Working",
+      value:
+        "An action whose press returns a Promise keeps it open until its work is done; its Button shows a Spinner and keeps focus.",
+    },
+    {
+      group: "Input",
+      key: "Failed",
+      value:
+        "The Button says its `errorLabel` for {duration-hold}, and the popover stays open to try again.",
+    },
+    {
+      group: "Input",
+      key: "Agents",
+      value:
+        "Open it by its trigger's name, read its title, press an action by name. A failed action answers not ok, with its `errorLabel`.",
+    },
+    {
+      group: "Content",
+      key: "Long words",
+      value:
+        "Break anywhere once wider than the line. Words are never hyphenated.",
+    },
+    {
+      group: "Settings",
+      key: "Right to left",
+      value:
+        "`start` and `end` follow the reading direction, and so do the actions.",
+    },
+    {
+      group: "Settings",
+      key: "Forced colours",
+      value: "A 1px border in the text colour replaces the lift.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    { key: "Role", value: "`dialog`, not modal" },
+    { key: "Name", value: "Its title, by `aria-labelledby`" },
+    { key: "Description", value: "Its description, by `aria-describedby`" },
+    {
+      key: "Trigger",
+      value: "`aria-expanded` while open, and `aria-controls` naming the panel",
+    },
+    {
+      key: "A body that scrolls",
+      value:
+        "A `region` named by the title, in the Tab order, so the arrow keys and Page Down scroll it",
+    },
+    { key: "Working", value: "`aria-busy` and `aria-disabled` on the action" },
+  ]}
+/>
+<Rows
+  title="From shadcn"
+  rows={[
+    {
+      group: "Parts",
+      key: "`PopoverContent`",
+      value: "Kept",
+      note: "placed beside its trigger and kept inside the window",
+    },
+    {
+      group: "Parts",
+      key: "`PopoverTrigger`, `PopoverAnchor`",
+      value: "Plain wrappers",
+      note: "`asChild` onto the element inside",
+    },
+    {
+      group: "Parts",
+      key: "New",
+      value: "`PopoverFooter` and `PopoverClose`",
+      note: "the actions' row, and a wrapper that closes",
+    },
+    { group: "Look", key: "`w-72`", value: "{popover-width}" },
+    {
+      group: "Look",
+      key: "`origin-(--transform-origin)`",
+      value: "Kept",
+      note: "it grows from the trigger",
+    },
+    {
+      group: "Behaviour",
+      key: "Base UI's Popover",
+      value: "UI SDK's Popover",
+      note: "so an agent can open it and press its actions",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+Parts nest as the basic stage shows, and each takes the rest of its UI SDK part.
+
+### Popover
+
+<Props
+  source="src/components/popover.tsx"
+  type="PopoverProps"
+  label="Popover"
+/>
+
+### PopoverTrigger
+
+<Props
+  source="src/components/popover.tsx"
+  type="PopoverTriggerProps"
+  label="PopoverTrigger"
+/>
+
+### PopoverAnchor
+
+<Props
+  source="src/components/popover.tsx"
+  type="PopoverAnchorProps"
+  label="PopoverAnchor"
+/>
+
+### PopoverContent
+
+<Props
+  source="src/components/popover.tsx"
+  type="PopoverContentProps"
+  label="PopoverContent"
+/>
+
+### PopoverHeader
+
+<Props
+  source="src/components/popover.tsx"
+  type="PopoverHeaderProps"
+  label="PopoverHeader"
+/>
+
+### PopoverTitle
+
+<Props
+  source="src/components/popover.tsx"
+  type="PopoverTitleProps"
+  label="PopoverTitle"
+/>
+
+### PopoverDescription
+
+<Props
+  source="src/components/popover.tsx"
+  type="PopoverDescriptionProps"
+  label="PopoverDescription"
+/>
+
+### PopoverFooter
+
+<Props
+  source="src/components/popover.tsx"
+  type="PopoverFooterProps"
+  label="PopoverFooter"
+/>
+
+### PopoverClose
+
+<Props
+  source="src/components/popover.tsx"
+  type="PopoverCloseProps"
+  label="PopoverClose"
+/>
+
+</Reference>

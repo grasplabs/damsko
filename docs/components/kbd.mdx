@@ -1,0 +1,138 @@
+---
+title: Kbd
+description: A key or shortcut to press, shown as it is printed on the keyboard.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/kbd"
+  use={'import { Kbd, KbdGroup } from "@grasp-os/ui/components/kbd";'}
+/>
+
+## Keys
+
+A symbol carries its spoken name in `aria-label`.
+
+<Stage path="kbd/keys" label="Keys" />
+
+## A shortcut
+
+A `KbdGroup` holds one key each, side by side, inside the sentence that says what it does.
+
+<Stage path="kbd/shortcut" label="A shortcut" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="kbd"
+  always={[
+    "A key or a shortcut to press, in the sentence that says what it does.",
+    "The key as it is printed on the keyboard: Esc, Shift, ⌘.",
+    "A spoken name for a symbol: Command for ⌘.",
+  ]}
+  never={[
+    "A plus between the keys of a shortcut: set them side by side.",
+    "A mouse action or a menu path.",
+    "A list of commands to find and run, each with its shortcut: use Command.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Size",
+      key: "Height",
+      value: "{kbd-height}",
+      note: "as wide at least, so one letter is square",
+    },
+    { group: "Size", key: "Padding", value: "{kbd-padding} at each end" },
+    {
+      group: "Type and shape",
+      key: "Sign",
+      value: "{text-xs}, {font-weight-medium}",
+      note: "on one line",
+    },
+    {
+      group: "Type and shape",
+      key: "Corner",
+      value: "{radius-mark}, {radius-shape}",
+    },
+    {
+      group: "Colour",
+      key: "Key",
+      note: "fill, edge",
+      tokens: ["muted", "border-strong"],
+    },
+    { group: "Colour", key: "Sign", tokens: ["muted"] },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    { key: "Press", value: "None: it shows a key, it does not act." },
+    {
+      key: "Selecting",
+      value: "A drag over the sentence leaves the sign out.",
+    },
+    { key: "Long signs", value: "Stay on one line; the key widens." },
+    {
+      key: "Forced colours",
+      value: "A 1px outline in the text colour draws the key.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    { key: "Element", value: "A `kbd`, read with the sentence around it" },
+    {
+      key: "Symbol",
+      value: "`aria-label` is said in its place: Command for ⌘",
+      note: "as hidden text, since a `kbd` has no role",
+    },
+    {
+      key: "Contrast",
+      value: "Sign 4.5:1 on its fill, light and dark",
+      note: "checked by `node tokens/generate.ts --check`",
+    },
+  ]}
+/>
+<Rows
+  title="From shadcn"
+  rows={[
+    {
+      key: "`KbdGroup`",
+      value: "Kept",
+      note: "one key each, side by side, on the sentence's baseline",
+    },
+    {
+      key: "`aria-label`",
+      value: "Hidden text",
+      note: "said by a screen reader",
+    },
+    {
+      key: "Other `kbd` props",
+      value: "Dropped",
+      note: "`children`, `aria-label` and `style` only",
+    },
+    { key: "`className`", value: "`style`", note: "layout only" },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props source="src/components/kbd.tsx" type="KbdProps" label="Kbd props" />
+<Props
+  source="src/components/kbd.tsx"
+  type="KbdGroupProps"
+  label="KbdGroup props"
+/>
+
+</Reference>

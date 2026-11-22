@@ -1,0 +1,1834 @@
+{
+  "accordion": {
+    "src/components/accordion.tsx": [
+      "Accordion",
+      "AccordionItem",
+      "AccordionTrigger",
+      "AccordionContent",
+      "AccordionProps",
+      "AccordionItemProps",
+      "AccordionTriggerProps",
+      "AccordionContentProps"
+    ]
+  },
+  "agent-indicator": {
+    "src/components/agent-indicator.tsx": [
+      "AgentIndicator",
+      "AgentIndicatorProps",
+      "AgentIndicatorVariant",
+      "AgentIndicatorPath"
+    ]
+  },
+  "aspect-ratio": {
+    "src/components/aspect-ratio.tsx": ["AspectRatio", "AspectRatioProps"]
+  },
+  "avatar": {
+    "src/components/avatar.tsx": [
+      "Avatar",
+      "AvatarImage",
+      "AvatarFallback",
+      "AvatarBadge",
+      "AvatarGroup",
+      "AvatarGroupCount",
+      "AvatarProps",
+      "AvatarSize",
+      "AvatarImageProps",
+      "AvatarFallbackProps",
+      "AvatarGroupProps",
+      "AvatarGroupItem",
+      "AvatarBadgeProps",
+      "AvatarGroupCountProps"
+    ]
+  },
+  "button": {
+    "src/components/button.tsx": [
+      "Button",
+      "buttonVariants",
+      "ButtonProps",
+      "ButtonVariant",
+      "ButtonSize"
+    ],
+    "src/components/button.stylex.ts": null
+  },
+  "card": {
+    "src/components/card.tsx": [
+      "Card",
+      "CardHeader",
+      "CardTitle",
+      "CardDescription",
+      "CardAction",
+      "CardContent",
+      "CardFooter",
+      "CardMedia",
+      "CardLink",
+      "CardProps",
+      "CardHeaderProps",
+      "CardTitleProps",
+      "CardDescriptionProps",
+      "CardActionProps",
+      "CardContentProps",
+      "CardFooterProps",
+      "CardMediaProps",
+      "CardLinkProps"
+    ],
+    "src/components/card.stylex.ts": null
+  },
+  "chart": {
+    "src/components/chart.tsx": [
+      "ChartContainer",
+      "ChartBar",
+      "ChartArea",
+      "ChartLine",
+      "ChartXAxis",
+      "ChartYAxis",
+      "ChartGrid",
+      "ChartTooltip",
+      "ChartLegend",
+      "ChartBarList",
+      "ChartLabels",
+      "ChartPie",
+      "ChartSankey",
+      "ChartSparkline",
+      "ChartConfig",
+      "ChartSeries",
+      "ChartPattern",
+      "ChartLineVariant",
+      "ChartSankeyFlow",
+      "ChartSankeyLink",
+      "ChartSankeyNode",
+      "ChartContainerProps",
+      "ChartBarProps",
+      "ChartAreaProps",
+      "ChartLineProps",
+      "ChartXAxisProps",
+      "ChartYAxisProps",
+      "ChartGridProps",
+      "ChartTooltipProps",
+      "ChartLegendProps",
+      "ChartBarListProps",
+      "ChartLabelsProps",
+      "ChartPieProps",
+      "ChartSankeyProps",
+      "ChartSparklineProps"
+    ],
+    "src/components/chart-math.ts": [
+      "ditherEdges",
+      "spread",
+      "tooltipTop",
+      "barTooltipLeft",
+      "valueOf",
+      "orderRows",
+      "extentOf",
+      "Span",
+      "spanOf",
+      "barPath",
+      "Arc",
+      "arcsOf",
+      "restOf",
+      "pointAt",
+      "arcPath",
+      "SPAN",
+      "SparkPoint",
+      "SparkShape",
+      "sparkShape",
+      "linePath",
+      "areaPath",
+      "markOf",
+      "nearestOf",
+      "ChartSankeyNode",
+      "ChartSankeyLink",
+      "PlacedNode",
+      "PlacedLink",
+      "SankeyLayout",
+      "SankeyBox",
+      "columnsOf",
+      "valuesOf",
+      "crossings",
+      "layoutSankey",
+      "ribbonPath",
+      "pathThrough"
+    ]
+  },
+  "collapsible": {
+    "src/components/collapsible.tsx": [
+      "Collapsible",
+      "CollapsibleTrigger",
+      "CollapsibleContent",
+      "CollapsibleProps",
+      "CollapsibleTriggerProps",
+      "CollapsibleContentProps"
+    ]
+  },
+  "combobox": {
+    "src/components/combobox.tsx": [
+      "Combobox",
+      "ComboboxEmpty",
+      "ComboboxProps",
+      "ComboboxItems",
+      "ComboboxSize",
+      "ComboboxEmptyProps"
+    ]
+  },
+  "container": {
+    "src/components/container.tsx": [
+      "Container",
+      "ContainerBleed",
+      "ContainerProps",
+      "ContainerBleedProps"
+    ],
+    "src/components/container.stylex.ts": null
+  },
+  "context-menu": {
+    "src/components/context-menu.tsx": [
+      "ContextMenu",
+      "ContextMenuTrigger",
+      "ContextMenuContent",
+      "ContextMenuItem",
+      "ContextMenuCheckboxItem",
+      "ContextMenuRadioGroup",
+      "ContextMenuRadioItem",
+      "ContextMenuGroup",
+      "ContextMenuLabel",
+      "ContextMenuSeparator",
+      "ContextMenuShortcut",
+      "ContextMenuSub",
+      "ContextMenuSubTrigger",
+      "ContextMenuSubContent",
+      "ContextMenuProps",
+      "ContextMenuTriggerProps",
+      "ContextMenuContentProps",
+      "ContextMenuItemProps",
+      "ContextMenuCheckboxItemProps",
+      "ContextMenuRadioGroupProps",
+      "ContextMenuRadioItemProps",
+      "ContextMenuGroupProps",
+      "ContextMenuLabelProps",
+      "ContextMenuSeparatorProps",
+      "ContextMenuShortcutProps",
+      "ContextMenuSubProps",
+      "ContextMenuSubTriggerProps",
+      "ContextMenuSubContentProps"
+    ]
+  },
+  "empty": {
+    "src/components/empty.tsx": [
+      "Empty",
+      "EmptyHeader",
+      "EmptyMedia",
+      "EmptyTitle",
+      "EmptyDescription",
+      "EmptyContent",
+      "EmptyIllustration",
+      "EmptyProps",
+      "EmptyHeaderProps",
+      "EmptyMediaProps",
+      "EmptyTitleProps",
+      "EmptyDescriptionProps",
+      "EmptyContentProps"
+    ]
+  },
+  "form": {
+    "src/components/form.tsx": [
+      "Form",
+      "FormSection",
+      "FormRow",
+      "FormFooter",
+      "FormProps",
+      "FormSectionProps",
+      "FormRowProps",
+      "FormFooterProps"
+    ]
+  },
+  "heading": {
+    "src/components/heading.tsx": ["Heading", "HeadingProps", "HeadingSize"]
+  },
+  "hover-card": {
+    "src/components/hover-card.tsx": [
+      "HoverCard",
+      "HoverCardTrigger",
+      "HoverCardContent",
+      "HoverCardTitle",
+      "HoverCardDescription",
+      "HoverCardProps",
+      "HoverCardTriggerProps",
+      "HoverCardContentProps",
+      "HoverCardTitleProps",
+      "HoverCardDescriptionProps"
+    ]
+  },
+  "icon-tile": {
+    "src/components/icon-tile.tsx": [
+      "IconTile",
+      "IconTileProps",
+      "IconTileVariant"
+    ]
+  },
+  "input-otp": {
+    "src/components/input-otp.tsx": [
+      "InputOTP",
+      "InputOTPGroup",
+      "InputOTPSlot",
+      "InputOTPSeparator",
+      "InputOTPSize",
+      "InputOTPProps",
+      "InputOTPGroupProps",
+      "InputOTPSlotProps",
+      "InputOTPSeparatorProps"
+    ],
+    "src/components/input-otp.stylex.ts": null
+  },
+  "kbd": {
+    "src/components/kbd.tsx": ["Kbd", "KbdGroup", "KbdProps", "KbdGroupProps"]
+  },
+  "label": {
+    "src/components/label.tsx": ["Label", "LabelProps"]
+  },
+  "link": {
+    "src/components/link.tsx": ["Link", "LinkProps", "LinkVariant"]
+  },
+  "menubar": {
+    "src/components/menubar.tsx": [
+      "Menubar",
+      "MenubarMenu",
+      "MenubarTrigger",
+      "MenubarContent",
+      "MenubarItem",
+      "MenubarGroup",
+      "MenubarLabel",
+      "MenubarSeparator",
+      "MenubarShortcut",
+      "MenubarCheckboxItem",
+      "MenubarRadioGroup",
+      "MenubarRadioItem",
+      "MenubarSub",
+      "MenubarSubTrigger",
+      "MenubarSubContent",
+      "MenubarProps",
+      "MenubarMenuProps",
+      "MenubarTriggerProps",
+      "MenubarContentProps",
+      "MenubarItemProps",
+      "MenubarGroupProps",
+      "MenubarLabelProps",
+      "MenubarSeparatorProps",
+      "MenubarShortcutProps",
+      "MenubarCheckboxItemProps",
+      "MenubarRadioGroupProps",
+      "MenubarRadioItemProps",
+      "MenubarSubProps",
+      "MenubarSubTriggerProps",
+      "MenubarSubContentProps"
+    ]
+  },
+  "navigation-menu": {
+    "src/components/navigation-menu.tsx": [
+      "NavigationMenu",
+      "NavigationMenuList",
+      "NavigationMenuItem",
+      "NavigationMenuTrigger",
+      "NavigationMenuContent",
+      "NavigationMenuLink",
+      "NavigationMenuIndicator",
+      "NavigationMenuViewport",
+      "NavigationMenuProps",
+      "NavigationMenuListProps",
+      "NavigationMenuItemProps",
+      "NavigationMenuTriggerProps",
+      "NavigationMenuContentProps",
+      "NavigationMenuLinkProps",
+      "NavigationMenuIndicatorProps",
+      "NavigationMenuViewportProps"
+    ]
+  },
+  "popover": {
+    "src/components/popover.tsx": [
+      "Popover",
+      "PopoverTrigger",
+      "PopoverAnchor",
+      "PopoverContent",
+      "PopoverHeader",
+      "PopoverTitle",
+      "PopoverDescription",
+      "PopoverFooter",
+      "PopoverClose",
+      "createPopoverHandle",
+      "PopoverHandle",
+      "PopoverProps",
+      "PopoverTriggerProps",
+      "PopoverAnchorProps",
+      "PopoverContentProps",
+      "PopoverHeaderProps",
+      "PopoverTitleProps",
+      "PopoverDescriptionProps",
+      "PopoverFooterProps",
+      "PopoverCloseProps"
+    ],
+    "src/components/popover.stylex.ts": null
+  },
+  "progress": {
+    "src/components/progress.tsx": [
+      "Progress",
+      "ProgressCircle",
+      "ProgressProps",
+      "ProgressCircleProps",
+      "ProgressVariant",
+      "ProgressSize"
+    ],
+    "src/components/progress.stylex.ts": null
+  },
+  "resizable": {
+    "src/components/resizable.tsx": [
+      "ResizablePanelGroup",
+      "ResizablePanel",
+      "ResizableHandle",
+      "ResizablePanelGroupProps",
+      "ResizablePanelProps",
+      "ResizableHandleProps"
+    ]
+  },
+  "scroll-area": {
+    "src/components/scroll-area.tsx": ["ScrollArea", "ScrollAreaProps"]
+  },
+  "select": {
+    "src/components/select.tsx": [
+      "Select",
+      "SelectTrigger",
+      "SelectValue",
+      "SelectContent",
+      "SelectItem",
+      "SelectGroup",
+      "SelectLabel",
+      "SelectSeparator",
+      "SelectItems",
+      "SelectSize",
+      "SelectVariant",
+      "SelectProps",
+      "SelectTriggerProps",
+      "SelectValueProps",
+      "SelectContentProps",
+      "SelectItemProps",
+      "SelectGroupProps",
+      "SelectLabelProps",
+      "SelectSeparatorProps"
+    ],
+    "src/components/select.stylex.ts": null
+  },
+  "separator": {
+    "src/components/separator.tsx": [
+      "Separator",
+      "SeparatorProps",
+      "SeparatorOrientation"
+    ]
+  },
+  "shimmer": {
+    "src/components/shimmer.tsx": ["Shimmer", "ShimmerProps", "ShimmerVariant"],
+    "src/components/shimmer.stylex.ts": null
+  },
+  "skeleton": {
+    "src/components/skeleton.tsx": [
+      "Skeleton",
+      "SkeletonProps",
+      "SkeletonVariant",
+      "SkeletonSize"
+    ]
+  },
+  "spinner": {
+    "src/components/spinner.tsx": ["Spinner", "SpinnerProps", "SpinnerSize"],
+    "src/components/spinner.stylex.ts": ["spinnerVars"]
+  },
+  "table": {
+    "src/components/table.tsx": [
+      "Table",
+      "TableHeader",
+      "TableBody",
+      "TableFooter",
+      "TableRow",
+      "TableHead",
+      "TableCell",
+      "TableCaption",
+      "TableDensity",
+      "TableSortDirection",
+      "TablePin",
+      "TableProps",
+      "TableHeaderProps",
+      "TableBodyProps",
+      "TableFooterProps",
+      "TableRowProps",
+      "TableHeadProps",
+      "TableCellProps",
+      "TableCaptionProps"
+    ],
+    "src/components/table.stylex.ts": ["tableVars"]
+  },
+  "table-of-contents": {
+    "src/components/table-of-contents.tsx": [
+      "TableOfContents",
+      "TableOfContentsProps",
+      "TableOfContentsItem"
+    ]
+  },
+  "tag": {
+    "src/components/tag.tsx": ["Tag", "TagProps"]
+  },
+  "textarea": {
+    "src/components/textarea.tsx": ["Textarea", "TextareaProps"]
+  },
+  "theme-toggle": {
+    "src/components/theme-toggle.tsx": [
+      "ThemeToggle",
+      "ThemeToggleProps",
+      "ThemeMode",
+      "ThemeId",
+      "Theme",
+      "themeIds",
+      "themeModes",
+      "isThemeId",
+      "isThemeMode"
+    ]
+  },
+  "toggle": {
+    "src/components/toggle.tsx": [
+      "Toggle",
+      "toggleVariants",
+      "iconOnly",
+      "ToggleProps",
+      "ToggleSize",
+      "ToggleVariant"
+    ],
+    "src/components/toggle-group.tsx": [
+      "ToggleGroup",
+      "ToggleGroupItem",
+      "ToggleGroupProps",
+      "ToggleGroupItemProps"
+    ]
+  },
+  "tooltip": {
+    "src/components/tooltip.tsx": [
+      "Tooltip",
+      "TooltipTrigger",
+      "TooltipContent",
+      "TooltipProvider",
+      "createTooltipHandle",
+      "TooltipHandle",
+      "TooltipProps",
+      "TooltipTriggerProps",
+      "TooltipContentProps",
+      "TooltipProviderProps"
+    ]
+  },
+  "alert": {
+    "src/components/alert.tsx": [
+      "Alert",
+      "AlertTitle",
+      "AlertDescription",
+      "AlertAction",
+      "AlertProps",
+      "AlertTitleProps",
+      "AlertDescriptionProps",
+      "AlertActionProps",
+      "AlertVariant",
+      "AlertAppearance"
+    ]
+  },
+  "attachment": {
+    "src/components/attachment.tsx": [
+      "AttachmentGroup",
+      "Attachment",
+      "AttachmentMedia",
+      "AttachmentContent",
+      "AttachmentTitle",
+      "AttachmentDescription",
+      "AttachmentActions",
+      "AttachmentAction",
+      "AttachmentTrigger",
+      "AttachmentState",
+      "AttachmentSize",
+      "AttachmentOrientation",
+      "AttachmentGroupProps",
+      "AttachmentProps",
+      "AttachmentMediaProps",
+      "AttachmentContentProps",
+      "AttachmentTitleProps",
+      "AttachmentDescriptionProps",
+      "AttachmentActionsProps",
+      "AttachmentActionProps",
+      "AttachmentTriggerProps"
+    ]
+  },
+  "audio-player": {
+    "src/components/audio-player.tsx": [
+      "AudioPlayer",
+      "AudioPlayerProps",
+      "AudioPlayerHandle"
+    ],
+    "src/components/audio-player.stylex.ts": null
+  },
+  "badge": {
+    "src/components/badge.tsx": [
+      "Badge",
+      "BadgeProps",
+      "BadgeVariant",
+      "BadgeSize"
+    ]
+  },
+  "brand-icon": {
+    "src/components/brand-icon.tsx": [
+      "BrandIcon",
+      "BrandIconGroup",
+      "BrandIconProps",
+      "BrandIconSize",
+      "BrandIconVariant",
+      "BrandIconGroupProps",
+      "BrandIconGroupItem"
+    ]
+  },
+  "button-group": {
+    "src/components/button-group.tsx": [
+      "ButtonGroup",
+      "ButtonGroupSeparator",
+      "ButtonGroupText",
+      "ButtonGroupProps",
+      "ButtonGroupSeparatorProps",
+      "ButtonGroupTextProps"
+    ]
+  },
+  "calendar": {
+    "src/components/calendar.tsx": [
+      "Calendar",
+      "CalendarProps",
+      "CalendarMonths",
+      "CalendarMonthsProps"
+    ]
+  },
+  "carousel": {
+    "src/components/carousel.tsx": [
+      "Carousel",
+      "CarouselContent",
+      "CarouselItem",
+      "CarouselPrevious",
+      "CarouselNext",
+      "CarouselProps",
+      "CarouselContentProps",
+      "CarouselItemProps",
+      "CarouselPreviousProps",
+      "CarouselNextProps"
+    ]
+  },
+  "chain-of-thought": {
+    "src/components/chain-of-thought.tsx": [
+      "ChainOfThought",
+      "ChainOfThoughtHeader",
+      "ChainOfThoughtStep",
+      "ChainOfThoughtContent",
+      "ChainOfThoughtSearchResults",
+      "ChainOfThoughtSearchResult",
+      "ChainOfThoughtImage",
+      "ChainOfThoughtStepStatus",
+      "ChainOfThoughtStepData",
+      "ChainOfThoughtProps",
+      "ChainOfThoughtHeaderProps",
+      "ChainOfThoughtStepProps",
+      "ChainOfThoughtContentProps",
+      "ChainOfThoughtSearchResultsProps",
+      "ChainOfThoughtSearchResultProps",
+      "ChainOfThoughtImageProps"
+    ]
+  },
+  "chat": {
+    "src/components/chat.tsx": [
+      "Chat",
+      "ChatMessages",
+      "ChatMessage",
+      "ChatEmptyState",
+      "ChatProps",
+      "ChatMessagesProps",
+      "ChatMessageProps",
+      "ChatEmptyStateProps"
+    ]
+  },
+  "message-scroller": {
+    "src/components/message-scroller.tsx": [
+      "MessageScrollerProvider",
+      "MessageScroller",
+      "MessageScrollerViewport",
+      "MessageScrollerContent",
+      "MessageScrollerItem",
+      "MessageScrollerButton",
+      "useMessageScroller",
+      "useMessageScrollerScrollable",
+      "useMessageScrollerVisibility",
+      "MessageScrollerPosition",
+      "MessageScrollerProviderProps",
+      "MessageScrollerProps",
+      "MessageScrollerViewportProps",
+      "MessageScrollerContentProps",
+      "MessageScrollerItemProps",
+      "MessageScrollerButtonProps",
+      "MessageScrollerScrollOptions",
+      "MessageScrollerCommands",
+      "MessageScrollerScrollable",
+      "MessageScrollerVisibility"
+    ]
+  },
+  "copy-button": {
+    "src/components/copy-button.tsx": ["CopyButton", "CopyButtonProps"]
+  },
+  "dialog": {
+    "src/components/dialog.tsx": [
+      "Dialog",
+      "DialogTrigger",
+      "DialogContent",
+      "DialogHeader",
+      "DialogTitle",
+      "DialogDescription",
+      "DialogBody",
+      "DialogFooter",
+      "DialogClose",
+      "dialogStyles",
+      "DialogProps",
+      "DialogTriggerProps",
+      "DialogContentProps",
+      "DialogHeaderProps",
+      "DialogTitleProps",
+      "DialogDescriptionProps",
+      "DialogBodyProps",
+      "DialogFooterProps",
+      "DialogCloseProps"
+    ],
+    "src/components/dialog.stylex.ts": null
+  },
+  "drawer": {
+    "src/components/drawer.tsx": [
+      "Drawer",
+      "DrawerTrigger",
+      "DrawerContent",
+      "DrawerHeader",
+      "DrawerTitle",
+      "DrawerDescription",
+      "DrawerBody",
+      "DrawerFooter",
+      "DrawerClose",
+      "DrawerProps",
+      "DrawerTriggerProps",
+      "DrawerContentProps",
+      "DrawerHeaderProps",
+      "DrawerTitleProps",
+      "DrawerDescriptionProps",
+      "DrawerBodyProps",
+      "DrawerFooterProps",
+      "DrawerCloseProps"
+    ],
+    "src/components/drawer.stylex.ts": null
+  },
+  "dropdown-menu": {
+    "src/components/dropdown-menu.tsx": [
+      "DropdownMenu",
+      "DropdownMenuTrigger",
+      "DropdownMenuContent",
+      "DropdownMenuItem",
+      "DropdownMenuCheckboxItem",
+      "DropdownMenuRadioGroup",
+      "DropdownMenuRadioItem",
+      "DropdownMenuGroup",
+      "DropdownMenuLabel",
+      "DropdownMenuSeparator",
+      "DropdownMenuShortcut",
+      "DropdownMenuSub",
+      "DropdownMenuSubTrigger",
+      "DropdownMenuSubContent",
+      "DropdownMenuMore",
+      "DropdownMenuMoreItem",
+      "DropdownMenuProps",
+      "DropdownMenuTriggerProps",
+      "DropdownMenuContentProps",
+      "DropdownMenuItemProps",
+      "DropdownMenuCheckboxItemProps",
+      "DropdownMenuRadioGroupProps",
+      "DropdownMenuRadioItemProps",
+      "DropdownMenuGroupProps",
+      "DropdownMenuLabelProps",
+      "DropdownMenuSeparatorProps",
+      "DropdownMenuShortcutProps",
+      "DropdownMenuSubProps",
+      "DropdownMenuSubTriggerProps",
+      "DropdownMenuSubContentProps",
+      "DropdownMenuMoreProps"
+    ]
+  },
+  "field": {
+    "src/components/field.tsx": [
+      "Field",
+      "FieldSet",
+      "FieldLegend",
+      "FieldGroup",
+      "FieldSeparator",
+      "FieldContent",
+      "FieldLabel",
+      "FieldTitle",
+      "FieldDescription",
+      "FieldError",
+      "FieldStatus",
+      "useFieldControl",
+      "FieldOrientation",
+      "FieldStatusValue",
+      "FieldControlProps",
+      "FieldProps",
+      "FieldSetProps",
+      "FieldLegendProps",
+      "FieldGroupProps",
+      "FieldSeparatorProps",
+      "FieldContentProps",
+      "FieldLabelProps",
+      "FieldTitleProps",
+      "FieldDescriptionProps",
+      "FieldErrorProps",
+      "FieldStatusProps"
+    ],
+    "src/components/field.stylex.ts": ["fieldVars"]
+  },
+  "hold-button": {
+    "src/components/hold-button.tsx": [
+      "HoldButton",
+      "HoldButtonProps",
+      "HoldButtonLabels"
+    ]
+  },
+  "input-group": {
+    "src/components/input-group.tsx": [
+      "InputGroup",
+      "InputGroupAddon",
+      "InputGroupInput",
+      "InputGroupTextarea",
+      "InputGroupText",
+      "InputGroupButton",
+      "InputGroupClear",
+      "InputGroupSize",
+      "InputGroupProps",
+      "InputGroupAddonProps",
+      "InputGroupInputProps",
+      "InputGroupTextareaProps",
+      "InputGroupTextProps",
+      "InputGroupButtonProps",
+      "InputGroupClearProps"
+    ]
+  },
+  "item": {
+    "src/components/item.tsx": [
+      "Item",
+      "ItemGroup",
+      "ItemSeparator",
+      "ItemMedia",
+      "ItemContent",
+      "ItemTitle",
+      "ItemDescription",
+      "ItemActions",
+      "ItemHeader",
+      "ItemFooter",
+      "ItemDetail",
+      "ItemGrid",
+      "ItemVariant",
+      "ItemSize",
+      "ItemProps",
+      "ItemGroupProps",
+      "ItemSeparatorProps",
+      "ItemMediaProps",
+      "ItemContentProps",
+      "ItemTitleProps",
+      "ItemDescriptionProps",
+      "ItemActionsProps",
+      "ItemHeaderProps",
+      "ItemFooterProps",
+      "ItemDetailProps",
+      "ItemGridProps"
+    ],
+    "src/components/item.stylex.ts": null
+  },
+  "pagination": {
+    "src/components/pagination.tsx": [
+      "Pagination",
+      "PaginationContent",
+      "PaginationItem",
+      "PaginationLink",
+      "PaginationPrevious",
+      "PaginationNext",
+      "PaginationEllipsis",
+      "PaginationRange",
+      "PaginationPage",
+      "PaginationProps",
+      "PaginationContentProps",
+      "PaginationItemProps",
+      "PaginationLinkProps",
+      "PaginationPreviousProps",
+      "PaginationNextProps",
+      "PaginationEllipsisProps",
+      "PaginationRangeProps",
+      "PaginationPageProps"
+    ]
+  },
+  "sources": {
+    "src/components/sources.tsx": [
+      "Sources",
+      "SourcesTrigger",
+      "SourcesContent",
+      "Source",
+      "SourceIcon",
+      "SourcesProps",
+      "SourcesTriggerProps",
+      "SourcesContentProps",
+      "SourceProps",
+      "SourceIconProps",
+      "SourceAccess"
+    ]
+  },
+  "stat": {
+    "src/components/stat.tsx": [
+      "Stat",
+      "StatGroup",
+      "StatProps",
+      "StatGroupProps",
+      "StatVariant"
+    ]
+  },
+  "stepper": {
+    "src/components/stepper.tsx": [
+      "Stepper",
+      "StepperNav",
+      "StepperProps",
+      "StepperStep",
+      "StepperStatus",
+      "StepperNavProps"
+    ],
+    "src/components/stepper.stylex.ts": null
+  },
+  "text": {
+    "src/components/text.tsx": ["Text", "TextProps", "TextColor", "TextSize"]
+  },
+  "toast": {
+    "src/components/toast.tsx": [
+      "Toaster",
+      "toast",
+      "createToaster",
+      "ToasterProps",
+      "ToastData",
+      "ToastOptions",
+      "ToastType",
+      "ToastIconData"
+    ]
+  },
+  "alert-dialog": {
+    "src/components/alert-dialog.tsx": [
+      "AlertDialog",
+      "AlertDialogTrigger",
+      "AlertDialogContent",
+      "AlertDialogHeader",
+      "AlertDialogTitle",
+      "AlertDialogDescription",
+      "AlertDialogFooter",
+      "AlertDialogAction",
+      "AlertDialogCancel",
+      "AlertDialogProps",
+      "AlertDialogTriggerProps",
+      "AlertDialogContentProps",
+      "AlertDialogHeaderProps",
+      "AlertDialogTitleProps",
+      "AlertDialogDescriptionProps",
+      "AlertDialogFooterProps",
+      "AlertDialogActionProps",
+      "AlertDialogCancelProps"
+    ]
+  },
+  "breadcrumb": {
+    "src/components/breadcrumb.tsx": [
+      "Breadcrumb",
+      "BreadcrumbList",
+      "BreadcrumbItem",
+      "BreadcrumbLink",
+      "BreadcrumbPage",
+      "BreadcrumbSeparator",
+      "BreadcrumbEllipsis",
+      "BreadcrumbProps",
+      "BreadcrumbListProps",
+      "BreadcrumbItemProps",
+      "BreadcrumbLinkProps",
+      "BreadcrumbPageProps",
+      "BreadcrumbSeparatorProps",
+      "BreadcrumbEllipsisProps"
+    ]
+  },
+  "checkbox": {
+    "src/components/checkbox.tsx": [
+      "Checkbox",
+      "CheckboxGroup",
+      "CheckboxProps",
+      "CheckedState",
+      "CheckboxGroupProps"
+    ]
+  },
+  "code-block": {
+    "src/components/code-block.tsx": [
+      "CodeBlock",
+      "CodeBlockHeader",
+      "CodeBlockTitle",
+      "CodeBlockActions",
+      "CodeBlockCopyButton",
+      "CodeBlockContent",
+      "CodeBlockLine",
+      "CodeBlockFooter",
+      "useHighlightedCode",
+      "CodeBlockProps",
+      "CodeBlockHeaderProps",
+      "CodeBlockTitleProps",
+      "CodeBlockActionsProps",
+      "CodeBlockCopyButtonProps",
+      "CodeBlockContentProps",
+      "CodeBlockLineProps",
+      "CodeBlockFooterProps"
+    ],
+    "src/components/code-block.stylex.ts": null,
+    "src/components/code-block-prism.ts": null,
+    "src/components/code-block-grammars.d.ts": null
+  },
+  "command": {
+    "src/components/command.tsx": [
+      "Command",
+      "CommandInput",
+      "CommandList",
+      "CommandEmpty",
+      "CommandGroup",
+      "CommandItem",
+      "CommandSeparator",
+      "CommandShortcut",
+      "CommandHighlight",
+      "CommandDialog",
+      "CommandItems",
+      "CommandItemData",
+      "CommandGroupData",
+      "CommandItemAction",
+      "CommandProps",
+      "CommandInputProps",
+      "CommandListProps",
+      "CommandEmptyProps",
+      "CommandGroupProps",
+      "CommandItemProps",
+      "CommandSeparatorProps",
+      "CommandShortcutProps",
+      "CommandHighlightProps",
+      "CommandDialogProps"
+    ],
+    "src/components/command.stylex.ts": null
+  },
+  "confirmation": {
+    "src/components/confirmation.tsx": [
+      "Confirmation",
+      "ConfirmationTitle",
+      "ConfirmationRequest",
+      "ConfirmationDetails",
+      "ConfirmationAccepted",
+      "ConfirmationRejected",
+      "ConfirmationActions",
+      "ConfirmationAction",
+      "ConfirmationProps",
+      "ConfirmationTitleProps",
+      "ConfirmationRequestProps",
+      "ConfirmationDetailsProps",
+      "ConfirmationAcceptedProps",
+      "ConfirmationRejectedProps",
+      "ConfirmationActionsProps",
+      "ConfirmationActionProps"
+    ]
+  },
+  "date-picker": {
+    "src/components/date-picker.tsx": [
+      "DatePicker",
+      "DatePickerProps",
+      "DatePickerPreset"
+    ]
+  },
+  "diff-viewer": {
+    "src/components/diff-viewer.tsx": [
+      "DiffViewer",
+      "DiffViewerFiles",
+      "DiffViewerProps",
+      "DiffViewerDecision",
+      "DiffViewerFilesProps",
+      "DiffViewerFile"
+    ],
+    "src/components/diff-viewer-diff.ts": null
+  },
+  "file-tree": {
+    "src/components/file-tree.tsx": [
+      "FileTree",
+      "FileTreeActions",
+      "FileTreeProps",
+      "FileTreeActionsProps",
+      "FileTreeNode"
+    ],
+    "src/components/file-tree-icon.ts": ["fileTreeIcon"]
+  },
+  "file-upload": {
+    "src/components/file-upload.tsx": [
+      "FileUpload",
+      "FileUploadProps",
+      "FileUploadStatus",
+      "FileUploadAction"
+    ],
+    "src/components/file-upload.stylex.ts": null,
+    "src/components/image-upload.tsx": ["ImageUpload", "ImageUploadProps"]
+  },
+  "input": {
+    "src/components/input.tsx": [
+      "Input",
+      "PasswordInput",
+      "SecretInput",
+      "InputProps",
+      "InputSize",
+      "PasswordInputProps",
+      "SecretInputProps"
+    ]
+  },
+  "key-value": {
+    "src/components/key-value.tsx": [
+      "KeyValueList",
+      "KeyValueListProps",
+      "KeyValueItem",
+      "KeyValueLabels"
+    ]
+  },
+  "number-field": {
+    "src/components/number-field.tsx": ["NumberField", "NumberFieldProps"]
+  },
+  "page-header": {
+    "src/components/page-header.tsx": [
+      "PageHeader",
+      "PageHeaderToolbar",
+      "PageHeaderProps",
+      "PageHeaderToolbarProps"
+    ],
+    "src/components/page-header.stylex.ts": null
+  },
+  "prompt-input": {
+    "src/components/prompt-input.tsx": [
+      "PromptInput",
+      "PromptInputHeader",
+      "PromptInputBody",
+      "PromptInputTextarea",
+      "PromptInputFooter",
+      "PromptInputTools",
+      "PromptInputButton",
+      "PromptInputSubmit",
+      "PromptInputActionMenu",
+      "PromptInputActionMenuTrigger",
+      "PromptInputActionMenuContent",
+      "PromptInputActionMenuItem",
+      "PromptInputActionAddAttachments",
+      "PromptInputAttachments",
+      "PromptInputAttachment",
+      "usePromptInputAttachments",
+      "PromptInputNote",
+      "PromptInputMention",
+      "PromptInputMentionContent",
+      "PromptInputMentionItem",
+      "PromptInputSpeechButton",
+      "PromptInputMessage",
+      "PromptInputFile",
+      "PromptInputMentionTrigger",
+      "PromptInputMentionData",
+      "PromptInputProps",
+      "PromptInputHeaderProps",
+      "PromptInputBodyProps",
+      "PromptInputTextareaProps",
+      "PromptInputFooterProps",
+      "PromptInputToolsProps",
+      "PromptInputButtonProps",
+      "PromptInputSubmitProps",
+      "PromptInputActionMenuProps",
+      "PromptInputActionMenuTriggerProps",
+      "PromptInputActionMenuContentProps",
+      "PromptInputActionMenuItemProps",
+      "PromptInputActionAddAttachmentsProps",
+      "PromptInputAttachmentsProps",
+      "PromptInputAttachmentProps",
+      "PromptInputNoteProps",
+      "PromptInputMentionProps",
+      "PromptInputMentionContentProps",
+      "PromptInputMentionItemProps",
+      "PromptInputSpeechButtonProps"
+    ],
+    "src/components/prompt-input-limit.ts": null
+  },
+  "radio-group": {
+    "src/components/radio-group.tsx": [
+      "RadioGroup",
+      "RadioGroupItem",
+      "RadioGroupProps",
+      "RadioGroupItemProps"
+    ]
+  },
+  "section-header": {
+    "src/components/section-header.tsx": [
+      "SectionHeader",
+      "Section",
+      "SectionHeaderProps",
+      "SectionProps"
+    ],
+    "src/components/section-header.stylex.ts": null
+  },
+  "sheet": {
+    "src/components/sheet.tsx": [
+      "Sheet",
+      "SheetTrigger",
+      "SheetContent",
+      "SheetHeader",
+      "SheetTitle",
+      "SheetDescription",
+      "SheetBody",
+      "SheetFooter",
+      "SheetClose",
+      "SheetProps",
+      "SheetTriggerProps",
+      "SheetContentProps",
+      "SheetHeaderProps",
+      "SheetTitleProps",
+      "SheetDescriptionProps",
+      "SheetBodyProps",
+      "SheetFooterProps",
+      "SheetCloseProps"
+    ]
+  },
+  "side-panel": {
+    "src/components/side-panel.tsx": [
+      "SidePanel",
+      "SidePanelHeader",
+      "SidePanelContent",
+      "SidePanelText",
+      "SidePanelSection",
+      "SidePanelPlacementProvider",
+      "SidePanelProps",
+      "SidePanelHeaderProps",
+      "SidePanelView",
+      "SidePanelContentProps",
+      "SidePanelTextProps",
+      "SidePanelSectionProps",
+      "SidePanelPlacement"
+    ]
+  },
+  "slider": {
+    "src/components/slider.tsx": [
+      "Slider",
+      "SliderProps",
+      "SliderValue",
+      "SliderLevel"
+    ],
+    "src/components/slider.stylex.ts": null
+  },
+  "snippet": {
+    "src/components/snippet.tsx": ["Snippet", "SnippetProps"]
+  },
+  "switch": {
+    "src/components/switch.tsx": ["Switch", "SwitchProps"]
+  },
+  "tabs": {
+    "src/components/tabs.tsx": [
+      "Tabs",
+      "TabsList",
+      "TabsTrigger",
+      "TabsContent",
+      "TabsNav",
+      "TabsLink",
+      "TabsProps",
+      "TabsListProps",
+      "TabsTriggerProps",
+      "TabsContentProps",
+      "TabsNavProps",
+      "TabsLinkProps"
+    ],
+    "src/components/tabs.stylex.ts": null
+  },
+  "tree-view": {
+    "src/components/tree-view.tsx": ["TreeView", "TreeViewProps", "TreeNode"]
+  },
+  "user-picker": {
+    "src/components/user-picker.tsx": [
+      "UserPicker",
+      "UserPickerProps",
+      "UserPickerUser"
+    ]
+  },
+  "connect-api-key-01": {
+    "src/blocks/connect-api-key-01/connect-api-key-01.tsx": [
+      "ConnectApiKey",
+      "ConnectApiKeyProps",
+      "ConnectApiKeyProvider",
+      "ConnectApiKeyLabels"
+    ]
+  },
+  "data-grid": {
+    "src/components/data-grid/index.ts": [
+      "DataGrid",
+      "applyDataGridPatch",
+      "DataGridProps",
+      "DataGridColumn",
+      "DataGridColumnType",
+      "DataGridAppearance",
+      "DataGridActiveAppearance",
+      "DataGridRangeAppearance",
+      "DataGridHeaderAppearance",
+      "DataGridCell",
+      "DataGridCellValue",
+      "DataGridChange",
+      "DataGridPatch",
+      "DataGridSelection"
+    ],
+    "src/components/data-grid/data-grid.tsx": null,
+    "src/components/data-grid/model.ts": null
+  },
+  "data-table": {
+    "src/components/data-table/index.ts": [
+      "DataTable",
+      "DataTableDateCell",
+      "dateColumn",
+      "DataTableFilters",
+      "columnVisibilityFeature",
+      "columnResizingFeature",
+      "columnOrderingFeature",
+      "columnPinningFeature",
+      "rowExpandingFeature",
+      "groupingFeature",
+      "searchParamsLocation",
+      "DataTableProps",
+      "DataTableColumn",
+      "DataTableAction",
+      "DataTableRowAction",
+      "DataTableSort",
+      "DataTableUnit",
+      "DataTableFeature",
+      "DataTableSearchState",
+      "DataTableConfirm",
+      "DataTableEmptyState",
+      "DataTableLocation",
+      "DataTableView",
+      "DataTableDate",
+      "DataTableDateColumn",
+      "DataTableFiltersProps",
+      "DataTableFilterCondition",
+      "DataTableFilterField",
+      "DataTableFilterOperator",
+      "DataTableFilterOption",
+      "DataTableFilterValue"
+    ],
+    "src/components/data-table/data-table.tsx": null,
+    "src/components/data-table/filters.tsx": null,
+    "src/components/data-table/features.ts": null
+  },
+  "inline-edit": {
+    "src/components/inline-edit.tsx": ["InlineEdit", "InlineEditProps"]
+  },
+  "inspector-01": {
+    "src/blocks/inspector-01/inspector-01.tsx": [
+      "Inspector",
+      "InspectorProps",
+      "InspectorSection",
+      "InspectorRow",
+      "InspectorLabels"
+    ]
+  },
+  "markdown": {
+    "src/components/markdown/index.ts": [
+      "Markdown",
+      "MarkdownLinkProvider",
+      "parseMarkdown",
+      "MarkdownProps",
+      "MarkdownLink",
+      "MarkdownLinkRenderer",
+      "MarkdownSoftBreaks",
+      "MarkdownRoot"
+    ],
+    "src/components/markdown/markdown.tsx": null,
+    "src/components/markdown/parse.ts": null
+  },
+  "model-selector": {
+    "src/components/model-selector.tsx": [
+      "ModelSelector",
+      "ModelSelectorTrigger",
+      "ModelSelectorContent",
+      "ModelSelectorInput",
+      "ModelSelectorList",
+      "ModelSelectorEmpty",
+      "ModelSelectorGroup",
+      "ModelSelectorItem",
+      "ModelSelectorShortcut",
+      "ModelSelectorSeparator",
+      "ModelSelectorLogo",
+      "ModelSelectorLogoGroup",
+      "ModelSelectorName",
+      "ModelSelectorProps",
+      "ModelSelectorTriggerProps",
+      "ModelSelectorContentProps",
+      "ModelSelectorInputProps",
+      "ModelSelectorListProps",
+      "ModelSelectorEmptyProps",
+      "ModelSelectorGroupProps",
+      "ModelSelectorItemProps",
+      "ModelSelectorShortcutProps",
+      "ModelSelectorSeparatorProps",
+      "ModelSelectorLogoProps",
+      "ModelSelectorLogoGroupProps",
+      "ModelSelectorNameProps"
+    ]
+  },
+  "questionnaire": {
+    "src/components/questionnaire.tsx": [
+      "Questionnaire",
+      "QuestionnaireProgress",
+      "QuestionnaireItem",
+      "QuestionnaireTitle",
+      "QuestionnaireDescription",
+      "QuestionnaireChoices",
+      "QuestionnaireChoice",
+      "QuestionnaireChoiceDescription",
+      "QuestionnaireInput",
+      "QuestionnaireError",
+      "QuestionnaireActions",
+      "QuestionnairePrevious",
+      "QuestionnaireSkip",
+      "QuestionnaireNext",
+      "QuestionnaireSubmit",
+      "QuestionnaireItemStatus",
+      "QuestionnaireAnswer",
+      "QuestionnaireItemDefinition",
+      "QuestionnaireProps",
+      "QuestionnaireProgressProps",
+      "QuestionnaireItemProps",
+      "QuestionnaireTitleProps",
+      "QuestionnaireDescriptionProps",
+      "QuestionnaireChoicesProps",
+      "QuestionnaireChoiceProps",
+      "QuestionnaireChoiceDescriptionProps",
+      "QuestionnaireInputProps",
+      "QuestionnaireErrorProps",
+      "QuestionnaireActionsProps",
+      "QuestionnaireNavigationProps"
+    ]
+  },
+  "share-dialog-01": {
+    "src/blocks/share-dialog-01/share-dialog-01.tsx": [
+      "ShareDialog",
+      "ShareDialogProps",
+      "ShareMember",
+      "ShareLevel",
+      "ShareDialogLabels"
+    ]
+  },
+  "sidebar": {
+    "src/components/sidebar.tsx": [
+      "SidebarProvider",
+      "useSidebar",
+      "SIDEBAR_KEYBOARD_SHORTCUT",
+      "sidebarStateScript",
+      "Sidebar",
+      "SidebarTrigger",
+      "SidebarRail",
+      "SidebarInset",
+      "SidebarHeader",
+      "SidebarContent",
+      "SidebarFooter",
+      "SidebarSeparator",
+      "SidebarInput",
+      "SidebarGroup",
+      "SidebarGroupLabel",
+      "SidebarGroupAction",
+      "SidebarGroupContent",
+      "SidebarMenu",
+      "SidebarMenuItem",
+      "SidebarMenuButton",
+      "SidebarMenuAction",
+      "SidebarMenuBadge",
+      "SidebarMenuSkeleton",
+      "SidebarMenuSub",
+      "SidebarMenuSubItem",
+      "SidebarMenuSubButton",
+      "SidebarProviderProps",
+      "SidebarProps",
+      "SidebarTriggerProps",
+      "SidebarRailProps",
+      "SidebarInsetProps",
+      "SidebarHeaderProps",
+      "SidebarContentProps",
+      "SidebarFooterProps",
+      "SidebarSeparatorProps",
+      "SidebarInputProps",
+      "SidebarGroupProps",
+      "SidebarGroupLabelProps",
+      "SidebarGroupActionProps",
+      "SidebarGroupContentProps",
+      "SidebarMenuProps",
+      "SidebarMenuItemProps",
+      "SidebarMenuButtonProps",
+      "SidebarMenuActionProps",
+      "SidebarMenuBadgeProps",
+      "SidebarMenuSkeletonProps",
+      "SidebarMenuSubProps",
+      "SidebarMenuSubItemProps",
+      "SidebarMenuSubButtonProps"
+    ],
+    "src/components/sidebar.stylex.ts": null
+  },
+  "tags-input": {
+    "src/components/tags-input.tsx": [
+      "TagsInput",
+      "TagsInputProps",
+      "TagsInputTranslations"
+    ]
+  },
+  "tool": {
+    "src/components/tool.tsx": [
+      "Tool",
+      "ToolHeader",
+      "ToolContent",
+      "ToolInput",
+      "ToolOutput",
+      "ToolState",
+      "ToolProps",
+      "ToolHeaderProps",
+      "ToolContentProps",
+      "ToolInputProps",
+      "ToolOutputProps"
+    ],
+    "src/components/tool-code.ts": null
+  },
+  "trace": {
+    "src/components/trace.tsx": [
+      "Trace",
+      "TraceLine",
+      "TraceIcon",
+      "TraceTitle",
+      "TraceDescription",
+      "TraceCollapsible",
+      "TraceCollapsibleTrigger",
+      "TraceCollapsibleContent",
+      "TraceLineStatus",
+      "TraceProps",
+      "TraceLineProps",
+      "TraceIconProps",
+      "TraceTitleProps",
+      "TraceDescriptionProps",
+      "TraceCollapsibleProps",
+      "TraceCollapsibleTriggerProps",
+      "TraceCollapsibleContentProps"
+    ]
+  },
+  "task": {
+    "src/components/task.tsx": [
+      "Task",
+      "TaskTrigger",
+      "TaskContent",
+      "TaskItem",
+      "TaskItemFile",
+      "TaskProps",
+      "TaskTriggerProps",
+      "TaskContentProps",
+      "TaskItemProps",
+      "TaskItemFileProps"
+    ]
+  },
+  "queue": {
+    "src/components/queue.tsx": [
+      "Queue",
+      "QueueSection",
+      "QueueSectionTrigger",
+      "QueueSectionLabel",
+      "QueueSectionContent",
+      "QueueList",
+      "QueueItem",
+      "QueueItemIndicator",
+      "QueueItemContent",
+      "QueueItemDescription",
+      "QueueItemActions",
+      "QueueItemAction",
+      "QueueItemAttachment",
+      "QueueItemImage",
+      "QueueItemFile",
+      "QueueProps",
+      "QueueSectionProps",
+      "QueueSectionTriggerProps",
+      "QueueSectionLabelProps",
+      "QueueSectionContentProps",
+      "QueueListProps",
+      "QueueItemProps",
+      "QueueItemIndicatorProps",
+      "QueueItemContentProps",
+      "QueueItemDescriptionProps",
+      "QueueItemActionsProps",
+      "QueueItemActionProps",
+      "QueueItemAttachmentProps",
+      "QueueItemImageProps",
+      "QueueItemFileProps"
+    ]
+  },
+  "subagent": {
+    "src/components/subagent.tsx": [
+      "Subagent",
+      "SubagentHeader",
+      "SubagentContent",
+      "SubagentInstructions",
+      "SubagentTools",
+      "SubagentTool",
+      "SubagentOutput",
+      "SubagentProps",
+      "SubagentHeaderProps",
+      "SubagentContentProps",
+      "SubagentInstructionsProps",
+      "SubagentToolsProps",
+      "SubagentToolProps",
+      "SubagentOutputProps"
+    ]
+  },
+  "plan": {
+    "src/components/plan.tsx": [
+      "Plan",
+      "PlanHeader",
+      "PlanTitle",
+      "PlanDescription",
+      "PlanAction",
+      "PlanContent",
+      "PlanFooter",
+      "PlanProps",
+      "PlanHeaderProps",
+      "PlanTitleProps",
+      "PlanDescriptionProps",
+      "PlanActionProps",
+      "PlanContentProps",
+      "PlanFooterProps"
+    ]
+  },
+  "app-shell-01": {
+    "src/blocks/app-shell-01/app-shell-01.tsx": [
+      "AppShell",
+      "AppShellProps",
+      "AppShellLabels"
+    ]
+  },
+  "message": {
+    "src/components/message.tsx": [
+      "MessageGroup",
+      "Message",
+      "MessageAvatar",
+      "MessageContent",
+      "MessageHeader",
+      "MessageFooter",
+      "MessageResponse",
+      "MessageActions",
+      "MessageAction",
+      "MessageError",
+      "MessageSkeleton",
+      "MessageStatus",
+      "MessageGroupProps",
+      "MessageProps",
+      "MessageAvatarProps",
+      "MessageContentProps",
+      "MessageHeaderProps",
+      "MessageFooterProps",
+      "MessageResponseProps",
+      "MessageActionsProps",
+      "MessageActionProps",
+      "MessageErrorProps",
+      "MessageSkeletonProps"
+    ],
+    "src/components/message.stylex.ts": null
+  },
+  "bubble": {
+    "src/components/bubble.tsx": [
+      "BubbleGroup",
+      "Bubble",
+      "BubbleContent",
+      "BubbleReactions",
+      "BubbleVariant",
+      "BubbleGroupProps",
+      "BubbleProps",
+      "BubbleContentProps",
+      "BubbleReactionsProps"
+    ]
+  },
+  "marker": {
+    "src/components/marker.tsx": [
+      "Marker",
+      "MarkerIcon",
+      "MarkerContent",
+      "MarkerVariant",
+      "MarkerProps",
+      "MarkerIconProps",
+      "MarkerContentProps"
+    ]
+  },
+  "checkpoint": {
+    "src/components/checkpoint.tsx": [
+      "Checkpoint",
+      "CheckpointIcon",
+      "CheckpointTrigger",
+      "CheckpointProps",
+      "CheckpointIconProps",
+      "CheckpointTriggerProps"
+    ]
+  },
+  "reasoning": {
+    "src/components/reasoning.tsx": [
+      "Reasoning",
+      "ReasoningTrigger",
+      "ReasoningContent",
+      "useReasoning",
+      "ReasoningProps",
+      "ReasoningTriggerProps",
+      "ReasoningContentProps"
+    ]
+  },
+  "suggestion": {
+    "src/components/suggestion.tsx": [
+      "Suggestions",
+      "Suggestion",
+      "SuggestionsProps",
+      "SuggestionProps"
+    ]
+  },
+  "context": {
+    "src/components/context.tsx": [
+      "Context",
+      "ContextTrigger",
+      "ContextContent",
+      "ContextContentHeader",
+      "ContextContentBody",
+      "ContextContentFooter",
+      "ContextInputUsage",
+      "ContextOutputUsage",
+      "ContextReasoningUsage",
+      "ContextCacheUsage",
+      "ContextUsage",
+      "ContextCost",
+      "ContextProps",
+      "ContextTriggerProps",
+      "ContextContentProps",
+      "ContextContentHeaderProps",
+      "ContextContentBodyProps",
+      "ContextContentFooterProps",
+      "ContextInputUsageProps",
+      "ContextOutputUsageProps",
+      "ContextReasoningUsageProps",
+      "ContextCacheUsageProps"
+    ]
+  },
+  "inline-citation": {
+    "src/components/inline-citation.tsx": [
+      "InlineCitation",
+      "InlineCitationText",
+      "InlineCitationCard",
+      "InlineCitationCardTrigger",
+      "InlineCitationCardBody",
+      "InlineCitationCarousel",
+      "InlineCitationCarouselContent",
+      "InlineCitationCarouselItem",
+      "InlineCitationCarouselHeader",
+      "InlineCitationCarouselIndex",
+      "InlineCitationCarouselPrev",
+      "InlineCitationCarouselNext",
+      "InlineCitationSource",
+      "InlineCitationQuote",
+      "InlineCitationProps",
+      "InlineCitationTextProps",
+      "InlineCitationCardProps",
+      "InlineCitationCardTriggerProps",
+      "InlineCitationCardBodyProps",
+      "InlineCitationCarouselProps",
+      "InlineCitationCarouselContentProps",
+      "InlineCitationCarouselItemProps",
+      "InlineCitationCarouselHeaderProps",
+      "InlineCitationCarouselIndexProps",
+      "InlineCitationCarouselPrevProps",
+      "InlineCitationCarouselNextProps",
+      "InlineCitationSourceProps",
+      "InlineCitationQuoteProps"
+    ]
+  },
+  "terminal": {
+    "src/components/terminal.tsx": [
+      "Terminal",
+      "TerminalHeader",
+      "TerminalTitle",
+      "TerminalStatus",
+      "TerminalActions",
+      "TerminalCopyButton",
+      "TerminalClearButton",
+      "TerminalContent",
+      "TerminalProps",
+      "TerminalHeaderProps",
+      "TerminalTitleProps",
+      "TerminalStatusProps",
+      "TerminalActionsProps",
+      "TerminalCopyButtonProps",
+      "TerminalClearButtonProps",
+      "TerminalContentProps"
+    ],
+    "src/components/terminal-ansi.ts": null
+  },
+  "stack-trace": {
+    "src/components/stack-trace.tsx": [
+      "StackTrace",
+      "StackTraceHeader",
+      "StackTraceError",
+      "StackTraceErrorType",
+      "StackTraceErrorMessage",
+      "StackTraceActions",
+      "StackTraceCopyButton",
+      "StackTraceContent",
+      "StackTraceFrames",
+      "StackTraceProps",
+      "StackTraceHeaderProps",
+      "StackTraceErrorProps",
+      "StackTraceErrorTypeProps",
+      "StackTraceErrorMessageProps",
+      "StackTraceActionsProps",
+      "StackTraceCopyButtonProps",
+      "StackTraceContentProps",
+      "StackTraceFramesProps"
+    ],
+    "src/components/stack-trace-parse.ts": null
+  },
+  "test-results": {
+    "src/components/test-results.tsx": [
+      "TestResults",
+      "TestResultsHeader",
+      "TestResultsSummary",
+      "TestResultsDuration",
+      "TestResultsProgress",
+      "TestResultsContent",
+      "TestSuite",
+      "TestSuiteName",
+      "TestSuiteStats",
+      "TestSuiteContent",
+      "Test",
+      "TestStatus",
+      "TestName",
+      "TestDuration",
+      "TestError",
+      "TestErrorMessage",
+      "TestErrorStack",
+      "TestResultStatus",
+      "TestResultsCounts",
+      "TestResultsProps",
+      "TestResultsHeaderProps",
+      "TestResultsSummaryProps",
+      "TestResultsDurationProps",
+      "TestResultsProgressProps",
+      "TestResultsContentProps",
+      "TestSuiteProps",
+      "TestSuiteNameProps",
+      "TestSuiteStatsProps",
+      "TestSuiteContentProps",
+      "TestProps",
+      "TestStatusProps",
+      "TestNameProps",
+      "TestDurationProps",
+      "TestErrorProps",
+      "TestErrorMessageProps",
+      "TestErrorStackProps"
+    ]
+  }
+}

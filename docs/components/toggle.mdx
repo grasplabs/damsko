@@ -1,0 +1,325 @@
+---
+title: Toggle
+description: A button that stays pressed to keep a choice on, like a view or text style.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/toggle"
+  use={
+    'import { Toggle } from "@grasp-os/ui/components/toggle";\nimport { ToggleGroup, ToggleGroupItem } from "@grasp-os/ui/components/toggle-group";'
+  }
+/>
+
+## Alone
+
+Its icon is a child, `<Icon icon={BoldIcon} />`; an icon alone carries its name in `aria-label`. For a name shown on hover, wrap it in a Tooltip.
+
+<Stage path="toggle/alone" label="Alone" />
+
+## With words
+
+The words say what it turns on.
+
+<Stage path="toggle/words" label="With words" />
+
+## Outline
+
+`variant="outline"` draws a field's hairline round it, for a toggle that must read as one before it is pressed.
+
+<Stage path="toggle/outline" label="Outline" />
+
+## A group
+
+ToggleGroupItems on one track, one pressed at a time, raised out of it.
+
+<Stage path="toggle/group" label="A group" />
+
+## Several at once
+
+`multiple` lets each item in the group be pressed on its own.
+
+<Stage path="toggle/multiple" label="Several at once" />
+
+## Sizes
+
+Button's ladder: `xs` 28px alone or in a toolbar, and the default; `sm` 32, `default` 36 and `lg` 44 beside a field of that size.
+
+<Stage path="toggle/sizes" label="Sizes" />
+
+## Disabled
+
+Half strength; a group stays reachable by the keyboard.
+
+<Stage path="toggle/disabled" label="Disabled" />
+
+## Every state
+
+Hover and keyboard focus are forced from the toggle's own CSS; the rest are its props.
+
+<States
+  path="toggle/states"
+  choose={{
+    prop: "place",
+    label: "Place",
+    options: [
+      { id: "alone", label: "Alone" },
+      { id: "group", label: "In a group" },
+    ],
+  }}
+  cells={[
+    { label: "Off" },
+    { label: "Hover", force: "hover" },
+    { label: "Keyboard focus", force: "focus-visible" },
+    { label: "On", props: { pressed: true } },
+    { label: "Disabled", props: { disabled: true } },
+    { label: "Disabled, on", props: { disabled: true, pressed: true } },
+  ]}
+/>
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="toggle"
+  always={[
+    "A choice that stays on, such as a view or a text style.",
+    "Words that say what it turns on, the same whether it is on or off.",
+    "An `aria-label` on a toggle that shows only an icon.",
+    "A group name that says what its toggles set: View, Text style.",
+  ]}
+  never={[
+    "An action that happens once: use a Button.",
+    "In a form, where it sends nothing: use a Checkbox.",
+    "A setting named by a label beside it: use a Switch.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Size",
+      key: "Height",
+      value: "{toggle-height}, {control-sm}, {control-default}, {control-lg}",
+      note: "xs (the default), sm, default, lg",
+    },
+    {
+      group: "Size",
+      key: "Padding",
+      value: "{toggle-padding} at each end",
+      note: "none for an icon alone, which is square",
+    },
+    {
+      group: "Size",
+      key: "Icon",
+      value: "{icon-sm}, stroke {icon-stroke}, {space-1} before the words",
+    },
+    {
+      group: "Size",
+      key: "Touch target",
+      value: "{tap-target}",
+      note: "on a touch screen, at every size",
+    },
+    {
+      group: "Type and shape",
+      key: "Words",
+      value: "{text-sm} / {text-sm-line}, {font-weight-medium}",
+      note: "on one line",
+    },
+    {
+      group: "Type and shape",
+      key: "Corner",
+      value: "{radius}, {radius-shape}",
+    },
+    {
+      group: "Group",
+      key: "Track",
+      value: "{toggle-gap} round and between the toggles",
+      note: "the group is as tall as a toggle alone",
+      tokens: ["muted"],
+    },
+    {
+      group: "Group",
+      key: "Toggle in it",
+      value: "Shorter by {toggle-gap} above and below",
+      note: "its corner nests inside the track's",
+    },
+    { group: "Colour", key: "Off", note: "words", tokens: ["muted"] },
+    {
+      group: "Colour",
+      key: "Under a pointer",
+      note: "fill, words",
+      tokens: ["accent", "foreground"],
+    },
+    {
+      group: "Colour",
+      key: "On, alone",
+      note: "fill; words ink",
+      tokens: ["muted"],
+    },
+    {
+      group: "Colour",
+      key: "On, in a group",
+      note: "raised out of the track; words ink",
+      tokens: ["tab-bg-selected", "shadow-sm"],
+    },
+    {
+      group: "Focus and disabled",
+      key: "Focus ring",
+      value: "{ring-width}, {ring-offset} out",
+      tokens: ["ring"],
+    },
+    {
+      group: "Focus and disabled",
+      key: "Disabled",
+      value: "{opacity-disabled} opacity",
+      note: "on or off",
+    },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    {
+      key: "Change",
+      value: "Words, fill and lift, {duration-mark}",
+      note: "reduced: at once",
+      tokens: ["ease"],
+    },
+    {
+      key: "Pressing",
+      value: "Scales to {button-press-scale} while held",
+      note: "not when disabled",
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Keyboard",
+      key: "Alone",
+      value: "Tab reaches it; Enter or Space turns it on or off.",
+    },
+    {
+      group: "Keyboard",
+      key: "In a group",
+      value:
+        "One tab stop; the arrows move between toggles and wrap, Home and End jump.",
+    },
+    {
+      group: "Group",
+      key: "One at a time",
+      value:
+        "Pressing one lifts the others; `deselectable={false}` keeps one always on.",
+    },
+    {
+      group: "Group",
+      key: "`multiple`",
+      value: "Each toggle turns on or off by itself.",
+    },
+    {
+      group: "Settings",
+      key: "Disabled",
+      value:
+        "Alone, it leaves the tab order; in a group, the arrows still reach it.",
+    },
+    {
+      group: "Settings",
+      key: "Forms",
+      value: "Sends nothing: a form takes a checkbox or a radio group.",
+    },
+    {
+      group: "Settings",
+      key: "Forced colours",
+      value: "On takes the highlight colour; the track is a 1px line.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Role",
+      value: "A `button` with `aria-pressed`",
+      note: "WAI-ARIA's toggle button",
+    },
+    {
+      key: "Group",
+      value: "`group`, with a toolbar's arrow keys",
+      note: "named by its `aria-label`",
+    },
+    {
+      key: "Name",
+      value: "Its words, or `aria-label` for an icon alone",
+      note: "the same on and off",
+    },
+    {
+      key: "Agents",
+      value: "`setPressed` on a toggle; `setValue` and `toggle` on a group",
+    },
+    {
+      key: "Contrast",
+      value: "Words 4.5:1 on paper, soft and raised, light and dark",
+      note: "checked by `node tokens/generate.ts --check`",
+    },
+  ]}
+/>
+<Rows
+  title="From shadcn"
+  rows={[
+    {
+      group: "Parts",
+      key: "`ToggleGroupItem`",
+      value: "`ToggleGroupItem`",
+      note: "raised out of the group's track when on",
+    },
+    {
+      group: "Look",
+      key: "`variant`: `default`, `outline`",
+      value: "The same, on Toggle",
+      note: "a group's items sit on its track",
+    },
+    {
+      group: "Look",
+      key: "`size`: `default`, `sm`, `lg`",
+      value: "`size`: `xs`, `sm`, `default`, `lg`",
+      note: "Button's ladder; `xs` is the default",
+    },
+    {
+      group: "Look",
+      key: "`spacing`",
+      value: "Dropped",
+      note: "the toggles sit on one track",
+    },
+    {
+      group: "Elsewhere",
+      key: "`[&_svg]`",
+      value: "`<Icon />` as a child",
+      note: "sized by the toggle through its icon variables",
+    },
+    {
+      group: "Elsewhere",
+      key: "`className`",
+      value: "`style`",
+      note: "layout only",
+    },
+    { group: "Elsewhere", key: "Base UI", value: "UI SDK" },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props source="src/components/toggle.tsx" type="ToggleProps" />
+
+<Props source="src/components/toggle-group.tsx" type="ToggleGroupProps" />
+
+<Props source="src/components/toggle-group.tsx" type="ToggleGroupItemProps" />
+
+</Reference>

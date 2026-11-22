@@ -1,0 +1,266 @@
+---
+title: Badge
+description: A small label of a word or two that shows the status of something.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/badge"
+  use={'import { Badge } from "@grasp-os/ui/components/badge";'}
+/>
+
+## Variants
+
+Each variant is a status, and the words say it too: `default`, `success`, `warning`, `destructive` and `info`.
+
+<Stage path="badge/tones" label="Variants" />
+
+## Sizes
+
+22px beside a title or in a list; 18px in a dense table or a row of small text.
+
+<Stage path="badge/sizes" label="Sizes" />
+
+## With an icon
+
+An icon before the words makes a status quicker to find in a long list.
+
+<Stage path="badge/icon" label="With an icon" />
+
+## In a row
+
+A badge stands at the end of the row it describes, after the thing's name.
+
+<Stage path="badge/in-a-row" label="In a row" />
+
+## With its meaning on focus
+
+`tooltip` says what a status means, for whoever wonders: the badge becomes a stop for the keyboard and shows the words in a tooltip on hover and on focus, said as its description. It still looks like a badge, and nothing happens when it is pressed.
+
+<Stage path="badge/explained" label="With its meaning on focus" />
+
+## Working on it
+
+`loading` turns a mark in the icon's place while something happens: an invitation sending.
+
+<Stage path="badge/pending" label="Working on it" />
+
+## How serious, as a dot
+
+`dot` is how serious something is, as a small dot in the variant's colour beside words in the text's colour, for a page full of them, such as captured logs. Alone, the dot is named by its variant (`badge.dot`).
+
+<Stage path="badge/dot" label="How serious, as a dot" />
+
+## As a link
+
+`asChild` draws a link as the badge: it stays a link, named by its words, with the keyboard's ring. Its words are its own, so `icon` and `loading` are not drawn: put an `<Icon />` in the link before its words.
+
+<Stage path="badge/link" label="As a link" />
+
+## Every state
+
+Each variant, then the small size and an icon.
+
+<States
+  path="badge/states"
+  cells={[
+    { label: "Default" },
+    { label: "Success", props: { variant: "success" } },
+    { label: "Warning", props: { variant: "warning" } },
+    { label: "Destructive", props: { variant: "destructive" } },
+    { label: "Info", props: { variant: "info" } },
+    { label: "Small", props: { size: "sm" } },
+    { label: "With an icon", props: { variant: "success", icon: true } },
+    {
+      label: "Small, with an icon",
+      props: { variant: "success", size: "sm", icon: true },
+    },
+  ]}
+/>
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="badge"
+  always={[
+    "How something stands, in a word or two, beside what it describes.",
+    "A status in a word or two, in sentence case: Needs review, not NEEDS REVIEW.",
+    "The same variant for the same status everywhere in the product.",
+  ]}
+  never={[
+    "A label that sorts or names something: use Tag.",
+    "Something to press: use Button; a link to follow goes in `asChild`.",
+    "Mint for a badge: mint is for approving.",
+    "Colour as the only difference between two statuses.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Size",
+      key: "Height",
+      value: "{badge-height}, {badge-height-sm}",
+      note: "default, small",
+    },
+    { group: "Size", key: "Padding", value: "{badge-padding} at each end" },
+    {
+      group: "Size",
+      key: "Icon",
+      value: "{badge-icon}, {space-1} before the words",
+    },
+    {
+      group: "Type and shape",
+      key: "Words",
+      value: "{text-xs}, {font-weight-medium}",
+    },
+    {
+      group: "Type and shape",
+      key: "Corner",
+      value: "Half {badge-height}",
+      note: "round ends; rounded corners when it wraps",
+    },
+    {
+      group: "Colour",
+      key: "Default",
+      note: "fill, words",
+      tokens: ["secondary", "foreground"],
+    },
+    {
+      group: "Colour",
+      key: "Success",
+      note: "fill, words",
+      tokens: ["success-subtle", "success"],
+    },
+    {
+      group: "Colour",
+      key: "Warning",
+      note: "fill, words",
+      tokens: ["warning-subtle", "warning"],
+    },
+    {
+      group: "Colour",
+      key: "Destructive",
+      note: "fill, words",
+      tokens: ["destructive-subtle", "destructive"],
+    },
+    {
+      group: "Colour",
+      key: "Info",
+      note: "fill, words",
+      tokens: ["info-subtle", "info"],
+    },
+    {
+      group: "Colour",
+      key: "Edge",
+      note: "the system's, on every variant",
+      tokens: ["border-strong"],
+    },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    { key: "A new status", value: "None: the words and tone change in place" },
+    { key: "Reduced motion", value: "The same; nothing moves" },
+    {
+      key: "Loading",
+      value:
+        "The mark turns once each {duration-spin}; with reduced motion it stands still",
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      key: "Press",
+      value:
+        "None: a badge says, it does not do. Put an action in a button beside it; drawn as a link (`asChild`), it follows the link.",
+    },
+    {
+      key: "Long words",
+      value: "Wrap inside the pill, which grows; nothing is cut off.",
+    },
+    {
+      key: "Forced colours",
+      value: "A 1px outline in the text colour draws the pill.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Role",
+      value:
+        "None: its words are read with the text around it. Given `loading`, true or false, its words are a polite status, said once each as they change",
+    },
+    { key: "Icon", value: "Hidden from screen readers; the words say it" },
+    {
+      key: "Tooltip",
+      value:
+        "A stop for the keyboard; the tooltip's words are its description, on hover and on focus",
+    },
+    {
+      key: "Dot",
+      value:
+        "Hidden beside words; alone, an image named by its variant (`badge.dot`) or `aria-label`",
+    },
+    {
+      key: "Contrast",
+      value: "Every variant's words on its fill 4.5:1, light and dark",
+      note: "checked by `node tokens/generate.ts --check`",
+    },
+  ]}
+/>
+<Rows
+  title="From shadcn"
+  rows={[
+    { group: "variant", key: "`default`, `secondary`", value: "`default`" },
+    { group: "variant", key: "`destructive`", value: "`destructive`" },
+    {
+      group: "variant",
+      key: "New",
+      value: "`success`, `warning`, `info`",
+      note: "the status tokens",
+    },
+    {
+      group: "variant",
+      key: "`outline`, `ghost`, `link`",
+      value: "Dropped",
+      note: "a badge is not a control",
+    },
+    {
+      group: "Elsewhere",
+      key: "`asChild`",
+      value: "The same",
+      note: "a link drawn as the badge",
+    },
+    {
+      group: "Elsewhere",
+      key: "`[&>svg]`",
+      value: "`icon`",
+      note: "a parent cannot style its children",
+    },
+    {
+      group: "Elsewhere",
+      key: "`className`",
+      value: "`style`",
+      note: "layout only",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props source="src/components/badge.tsx" type="BadgeProps" />
+
+</Reference>

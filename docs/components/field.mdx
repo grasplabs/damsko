@@ -1,0 +1,330 @@
+---
+title: Field
+description: A control with its label, its description and the error it shows.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/field"
+  use={
+    'import { Field, FieldContent, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@grasp-os/ui/components/field";'
+  }
+/>
+
+## Basic usage
+
+The label, the control, a line of help and the error, one under the other. The label shows the required mark when its control is `required`; the error shows once a send finds the control wrong.
+
+<Stage path="field/basic" label="Basic usage" />
+
+## An error from your code
+
+`data-invalid` shows the field as wrong at once, for an error your code decides: the server said no.
+
+<Stage path="field/invalid" label="An error from your code" />
+
+## A control and its words on one row
+
+`orientation="horizontal"`: a Checkbox or a Radio first and its words after it, or the words first and a Switch at the end. FieldContent holds the label and its description.
+
+<Stage path="field/horizontal" label="A control and its words on one row" />
+
+## Settings
+
+`orientation="responsive"`: a setting, its name and a line of help at the start and its control on an end edge every Field in its FieldGroup shares, a hairline between them. In a flush Card each topic is a card of rows. A control of ours inside needs no ids and no spread: the Field wires its label and help to it.
+
+<Stage path="field/responsive" label="Settings" />
+
+Under 34rem of its own width, a row puts its control under its words.
+
+<Stage path="field/narrow" label="In a narrow card" />
+
+## Named groups
+
+A FieldSet with a `FieldLegend variant="label"` names its rows for a screen reader and the eye, on a page with no card. A set after another stands under a hairline, so its name belongs to the rows under it. `controls="fit"` on a FieldGroup stands each control at its own width, beside its words at any width.
+
+<Stage path="field/legend" label="On a page, no card" />
+
+<Stage path="field/sets" label="Two sets in one card" />
+
+## Saving as it changes
+
+`FieldStatus` shows the save beside the control: a Spinner while it saves (`loading`), then a tick that leaves after a moment (`success`). Nothing under the name changes and the row keeps its size. Only a failure (`error`) writes under the name: it keeps the value and offers Try again (`onRetry`). Each is said once, politely; the words are the I18nProvider's (`field.statusLoading`, `field.statusSuccess`, `field.statusError`, `field.statusRetry`).
+
+<Stage path="field/status" label="Saving as it changes" />
+
+## Sets of fields
+
+`FieldSet` and `FieldLegend` for fields that belong together, a FieldDescription right inside the set to describe it, a FieldGroup to stack the fields and a FieldSeparator between parts of one form.
+
+<Stage path="field/set" label="Sets of fields" />
+
+## Out of use
+
+`disabled` dims the control, its label and its description together. Say why in the description.
+
+<Stage path="field/disabled" label="Out of use" />
+
+## Focus
+
+A field you type in shows focus by its own edge: the hairline goes a step darker (3:1 or more on the page) and a faint halo in the brand's mint stands round it, red when the field is wrong. There is no ring and no dark fill: the caret already says where the words go. A press and the keyboard look the same. Buttons and every other control keep the focus ring.
+
+<Stage
+  path="field/focus"
+  label="Every text field, at rest, wrong and out of use"
+/>
+
+Every size and variant takes the same focus. Select's `text` variant is a ghost button in a sentence, so it keeps the button's ring.
+
+<Stage path="field/focus-sizes" label="Every text field at every size" />
+
+## Every control it names
+
+Each control in a Field takes its name from the FieldLabel, required marks and all.
+
+<Stage path="form/required-names" label="Every control it names" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="field"
+  always={[
+    "One control in a form, with its label, a line of help and its error.",
+    "A label in sentence case that says what goes in: Work email, never a question.",
+    "An error that says what to do: Enter your work email.",
+    "A settings page: each topic a flush Card of responsive Fields, one setting a row.",
+  ]}
+  never={[
+    "A placeholder in the label's place: it goes when the person types.",
+    "An error before the person has had a chance: wait for the send, or for your server.",
+    "A Save button for a setting that saves when it changes: give it a FieldStatus.",
+    "Two controls in one responsive Field: a row is one setting.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Layout",
+      key: "Gap",
+      value: "{space-2} between the label, the control and the lines under it",
+    },
+    {
+      group: "Layout",
+      key: "Horizontal row",
+      value: "At least {tap-target} tall; a press anywhere on it works",
+    },
+    {
+      group: "Layout",
+      key: "Responsive row",
+      value:
+        "{field-row} at least, {space-2} above and below, {table-cell-inline} at the sides",
+      note: "the control column {field-control-column}; under 34rem the control goes under the words",
+    },
+    {
+      group: "Layout",
+      key: "Between settings",
+      value: "{hairline}",
+      tokens: ["border"],
+    },
+    {
+      group: "Words",
+      key: "Label",
+      value: "{text-sm} / {text-sm-line}, {font-weight-medium}",
+      note: "Label's own look",
+      tokens: ["foreground"],
+    },
+    {
+      group: "Words",
+      key: "Required mark",
+      value: "An asterisk after the label, {space-1} from it",
+      tokens: ["muted"],
+    },
+    {
+      group: "Words",
+      key: "Description",
+      value: "{text-xs} / {text-xs-line}",
+      note: "{text-sm} in a responsive Field",
+      tokens: ["muted"],
+    },
+    {
+      group: "Words",
+      key: "Error",
+      value: "{text-xs} / {text-xs-line}",
+      tokens: ["destructive"],
+    },
+    {
+      group: "State",
+      key: "Out of use",
+      value: "The control, the label and the description at {opacity-disabled}",
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      key: "Required",
+      value:
+        "The label shows its mark when the field holds a required control, read from the page itself, before any script runs.",
+    },
+    {
+      key: "Error",
+      value:
+        "FieldError shows after a send finds the control wrong (`match` names which check), or at once with `data-invalid` on the Field.",
+    },
+    {
+      key: "Name",
+      value:
+        "`name` on the Field is the name the control is sent under, when the control has none of its own.",
+    },
+    {
+      key: "Status",
+      value:
+        "FieldStatus: a Spinner, then a tick that leaves, beside the control; failed, under the name, keeps the value and offers Try again.",
+    },
+    {
+      key: "Another control",
+      value:
+        "A control that is not ours reads `useFieldControl()`: its id, the ids that describe it, and whether it is wrong, disabled and named.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Label",
+      value:
+        "Names the control: `for`, or `aria-labelledby` for a control that is not an input",
+      note: "wired by UI SDK's Field",
+    },
+    { key: "Description", value: "Read with the control (`aria-describedby`)" },
+    {
+      key: "Error",
+      value:
+        "Read with the control, and the control is `aria-invalid` while it shows",
+    },
+    {
+      key: "Required mark",
+      value:
+        "For the eye only, never in the label's text; the control's `required` says it",
+    },
+    {
+      key: "Status",
+      value:
+        "A polite status says saving, saved and the failure, once each; the spinner and the tick are for the eye only",
+    },
+    {
+      key: "Field set",
+      value:
+        "A `<fieldset>` named by its `<legend>`, said with each field in it",
+    },
+  ]}
+/>
+<Rows
+  title="From shadcn"
+  rows={[
+    {
+      group: "Parts",
+      key: "Field, FieldSet, FieldLegend, FieldGroup, FieldSeparator, FieldContent, FieldLabel, FieldTitle, FieldDescription, FieldError",
+      value: "The same parts",
+    },
+    {
+      group: "Parts",
+      key: "New",
+      value: "`FieldStatus`, `useFieldControl`",
+      note: "a save on change; the wiring for another control",
+    },
+    {
+      group: "Orientation",
+      key: "`responsive`",
+      value: "A setting's row",
+      note: "by the row's own width (a container query), not the window's",
+    },
+    {
+      group: "Wiring",
+      key: "`htmlFor` and ids by hand",
+      value: "Wired by UI SDK's Field",
+    },
+    {
+      group: "Error",
+      key: "`errors` from a form library",
+      value: "`errors`, and `match` on the browser's own checks",
+      note: "with `data-invalid` on the Field",
+    },
+    {
+      group: "Elsewhere",
+      key: "`className`",
+      value: "Dropped",
+      note: "`style` for where it sits",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/field.tsx"
+  type="FieldProps"
+  label="Field props"
+/>
+<Props
+  source="src/components/field.tsx"
+  type="FieldSetProps"
+  label="FieldSet props"
+/>
+<Props
+  source="src/components/field.tsx"
+  type="FieldLegendProps"
+  label="FieldLegend props"
+/>
+<Props
+  source="src/components/field.tsx"
+  type="FieldGroupProps"
+  label="FieldGroup props"
+/>
+<Props
+  source="src/components/field.tsx"
+  type="FieldSeparatorProps"
+  label="FieldSeparator props"
+/>
+<Props
+  source="src/components/field.tsx"
+  type="FieldContentProps"
+  label="FieldContent props"
+/>
+<Props
+  source="src/components/field.tsx"
+  type="FieldLabelProps"
+  label="FieldLabel props"
+/>
+<Props
+  source="src/components/field.tsx"
+  type="FieldTitleProps"
+  label="FieldTitle props"
+/>
+<Props
+  source="src/components/field.tsx"
+  type="FieldDescriptionProps"
+  label="FieldDescription props"
+/>
+<Props
+  source="src/components/field.tsx"
+  type="FieldErrorProps"
+  label="FieldError props"
+/>
+<Props
+  source="src/components/field.tsx"
+  type="FieldStatusProps"
+  label="FieldStatus props"
+/>
+
+</Reference>

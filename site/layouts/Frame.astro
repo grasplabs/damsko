@@ -1,0 +1,78 @@
+---
+// One example alone, for checks and for looking at a part with nothing around it: the tokens, the
+// fonts, the product's base and the example. Nothing of the site's frame or its styles.
+// Served at /examples/{path}.
+//
+// Its mode is the page's that holds it, when it is in a frame of the site, else the reader's
+// choice, else the system's. Its address can set the mode and the theme, for a reviewer looking at
+// it alone: ?theme=evergreen|pine|paper (the system's themes, src/styles/themes.css) and
+// ?mode=light|dark. With neither it draws as it always did.
+import "../../src/styles/tokens.css";
+import "../../src/styles/themes.css";
+import "../system/styles/tokens.css";
+import "../styles/fonts.css";
+import "../system/styles/base.css";
+
+import Island from "../system/Island.astro";
+import { robotsMeta } from "../system/indexing";
+import SiteIcons from "./SiteIcons.astro";
+
+interface Props {
+  path: string;
+}
+const { path } = Astro.props;
+
+const themeSync = `(() => {
+  const root = document.documentElement;
+  const stored = () => {
+    let theme = null;
+    try { theme = localStorage.getItem("damsko-theme"); } catch {}
+    return theme === "light" || theme === "dark" ? theme : matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  };
+  let asked = null;
+  try { asked = new URLSearchParams(location.search); } catch {}
+  const theme = asked?.get("theme");
+  const mode = asked?.get("mode");
+  if (theme === "evergreen" || theme === "pine" || theme === "paper") root.dataset.theme = theme;
+  if (mode === "light" || mode === "dark") {
+    root.dataset.mode = mode;
+    root.dataset.modeFromAddress = mode;
+    return;
+  }
+  try {
+    const host = window.parent !== window ? window.parent.document.documentElement : null;
+    root.dataset.mode = host?.dataset.mode ?? stored();
+    if (host) new MutationObserver(() => { root.dataset.mode = host.dataset.mode ?? stored(); }).observe(host, { attributeFilter: ["data-mode"] });
+  } catch {
+    root.dataset.mode = stored();
+  }
+})();`;
+---
+
+<!doctype html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content={robotsMeta("noindex")} />
+    <SiteIcons />
+    <style is:inline>@layer base, site;</style>
+    <!-- The island takes no box, as on the docs (site.css, .site-preview), which the frame does not
+         load: as a block it was the flex item, shrank to its content, and a chart had no width. -->
+    <style is:inline>@layer site { damsko-island.site-preview { display: contents; } }</style>
+    <script is:inline set:html={themeSync} />
+    <title>{path}</title>
+    {import.meta.env.DEV && <link rel="stylesheet" href="/virtual:stylex.css" />}
+  </head>
+  <!-- The example in the middle, laid out as a docs stage lays it out (site/blocks/stage.tsx, box):
+       the wrapper is as wide as the window and centres what it holds, so an example sized in
+       percent (a chart at width: 100%) has a width to take, as on the stage. Shrunk to its content
+       it had none, and a chart drew 0px wide. margin-block: auto keeps its top reachable when it is
+       taller than the window. -->
+  <body class="site-frame" style="display:flex;min-height:100svh;padding:1.5rem">
+    <div data-site-example style="box-sizing:border-box;width:100%;margin-block:auto;display:flex;flex-wrap:wrap;align-items:center;align-content:center;justify-content:center;gap:0.75rem"><Island path={path} eager /></div>
+    <script>
+      import "../system/client.ts";
+    </script>
+  </body>
+</html>

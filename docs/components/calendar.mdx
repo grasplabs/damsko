@@ -1,0 +1,295 @@
+---
+title: Calendar
+description: A month of days on the page, for choosing a date, several dates or a range.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/calendar"
+  use={'import { Calendar } from "@grasp-os/ui/components/calendar";'}
+/>
+
+## Basic usage
+
+One date, chosen with a press or the arrow keys and Enter.
+
+<Stage path="calendar/basic" label="Basic usage" />
+
+## Range
+
+`mode="range"` chooses a start and an end; two months suit it (`numberOfMonths={2}`).
+
+<Stage path="calendar/range" label="Range" />
+
+## Several dates
+
+`mode="multiple"` chooses any number of days.
+
+<Stage path="calendar/multiple" label="Several dates" />
+
+## Unavailable dates
+
+`unavailable` and `min` keep days from being chosen; the keys still reach them.
+
+<Stage path="calendar/unavailable" label="Unavailable dates" />
+
+## Every state
+
+Today, a range, a booked day struck through, days before `min` at half strength, and the days of the months round it, in one month. Hover a day, or reach it with the keys, for the rest.
+
+<Stage path="calendar/days" label="Every state" />
+
+## Language and week start
+
+The month's and the weekdays' names, and the day the week starts on, come from the page's language: the I18nProvider's `locale`, else the page's `lang`, through `Intl`. `locale` and `weekStartsOn` set them for one calendar. Previous month and Next month are named by the I18nProvider (`calendar.previous`, `calendar.next`).
+
+<Stage path="calendar/locale" label="Language and week start" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="calendar"
+  always={[
+    "`min` and `unavailable` for days that cannot be chosen, so the keys still reach them.",
+    "Choosing a date, several dates or a range, with the month always in view.",
+    "`min` and `unavailable` for days that cannot be chosen, so the keys still reach them.",
+    "Dates as ISO strings in and out; format them for people where they are shown.",
+  ]}
+  never={[
+    "A date in a form's field, opened only when asked, or a known date typed: use Date picker.",
+    "Colour alone for an unavailable day: it is struck through too.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Day",
+      key: "Size",
+      value: "32px square, 44px on a touch screen",
+      note: "{calendar-day}, {calendar-day-touch}",
+    },
+    {
+      group: "Day",
+      key: "Corner",
+      value: "6px, joined into a band inside a range",
+      note: "{radius-mark}",
+    },
+    {
+      group: "Day",
+      key: "Number",
+      value: "14px, figures tabular",
+      note: "{text-sm}",
+      tokens: ["body-foreground"],
+    },
+    {
+      group: "Day",
+      key: "Chosen",
+      value: "The first action's colour",
+      tokens: ["calendar-bg-selected", "calendar-text-selected"],
+    },
+    {
+      group: "Day",
+      key: "Inside a range",
+      tokens: ["calendar-bg-range", "foreground"],
+    },
+    {
+      group: "Day",
+      key: "Today",
+      value: "A quiet fill, medium weight",
+      tokens: ["calendar-bg-today", "foreground"],
+    },
+    {
+      group: "Day",
+      key: "Another month, unavailable",
+      value: "Quieter; unavailable is struck through",
+      tokens: ["subtle-foreground"],
+    },
+    {
+      group: "Day",
+      key: "Disabled",
+      value: "Half strength",
+      note: "{opacity-disabled}",
+    },
+    {
+      group: "Head",
+      key: "Month",
+      value: "14px, medium, between Previous and Next",
+      note: "{text-sm}, {font-weight-medium}",
+      tokens: ["foreground"],
+    },
+    {
+      group: "Head",
+      key: "Previous and Next",
+      value: "Ghost Buttons, 32px",
+      note: "{control-sm}",
+    },
+    {
+      group: "Head",
+      key: "Weekdays",
+      value: "13px, medium",
+      note: "{text-xs}",
+      tokens: ["muted"],
+    },
+    {
+      group: "Months",
+      key: "Gap",
+      value: "24px between months side by side",
+      note: "{space-6}",
+    },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    {
+      key: "Hover",
+      value: "The fill comes in over 150ms",
+      note: "{duration-hover}; pointer only; reduced: at once",
+      tokens: ["ease"],
+    },
+    {
+      key: "Choosing",
+      value: "The fill and number change over 150ms",
+      note: "{duration-hover}",
+      tokens: ["ease"],
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Keyboard",
+      key: "Days",
+      value: "Arrows move a day or a week; Home and End go to the week's ends.",
+    },
+    {
+      group: "Keyboard",
+      key: "Months",
+      value: "Page Up and Page Down turn the month; with Shift, the year.",
+    },
+    {
+      group: "Keyboard",
+      key: "Choosing",
+      value: "Enter or Space chooses the day the keys are on.",
+    },
+    {
+      group: "Range",
+      key: "Two presses",
+      value:
+        "The first press is the start, the second the end; Escape drops an unfinished range.",
+    },
+    {
+      group: "Limits",
+      key: "Unavailable",
+      value: "Reachable by the keys and heard, but cannot be chosen.",
+    },
+    {
+      group: "Limits",
+      key: "Min and max",
+      value: "The keys stop there, and Previous or Next stops at their month.",
+    },
+    {
+      group: "Values",
+      key: "Dates",
+      value: "ISO strings such as 2026-11-18, with no time or time zone.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Role",
+      value: "A `grid` per month, named by its heading",
+      note: "WAI-ARIA's date grid",
+    },
+    {
+      key: "Days",
+      value: "`gridcell`s with one tab stop; `aria-selected` when chosen",
+    },
+    { key: "Today", value: '`aria-current="date"`' },
+    { key: "Month", value: "The heading is read again when the month changes" },
+    {
+      key: "Buttons",
+      value: "Previous month and Next month by name",
+      note: "`calendar.previous`, `calendar.next` in the I18nProvider",
+    },
+    {
+      key: "Contrast",
+      value: "Numbers 4.5:1 on the day's fill, light and dark",
+      note: "checked by `node tokens/generate.ts --check`",
+    },
+  ]}
+/>
+<Rows
+  title="From shadcn"
+  rows={[
+    { group: "Base", key: "react-day-picker", value: "UI SDK's Calendar" },
+    {
+      group: "Props",
+      key: "`selected`, `onSelect`",
+      value: "`value`, `onValueChange`",
+      note: "ISO strings, not Date objects",
+    },
+    { group: "Props", key: "`numberOfMonths`", value: "`numberOfMonths`" },
+    {
+      group: "Props",
+      key: "`locale`, `weekStartsOn`",
+      value: "The same",
+      note: "names through `Intl`",
+    },
+    {
+      group: "Props",
+      key: "`disabled` matchers",
+      value: "`unavailable`, `min`, `max`",
+    },
+    {
+      group: "Look",
+      key: "`buttonVariant`",
+      value: "Dropped",
+      note: "Previous and Next are ghost Buttons",
+    },
+    {
+      group: "Look",
+      key: '`captionLayout="dropdown"`',
+      value: "Dropped for now",
+    },
+    {
+      group: "Elsewhere",
+      key: "`className`, `classNames`",
+      value: "Dropped",
+      note: "the look belongs to the calendar",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+### Calendar
+
+<Props
+  source="src/components/calendar.tsx"
+  type="CalendarProps"
+  label="Calendar"
+/>
+
+### CalendarMonths
+
+Previous, the month's name, Next and the days of each month: Calendar's inside, for a part that holds UI SDK's calendar itself, as DatePicker does in its popup.
+
+<Props
+  source="src/components/calendar.tsx"
+  type="CalendarMonthsProps"
+  label="CalendarMonths"
+/>
+
+</Reference>

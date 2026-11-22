@@ -1,0 +1,271 @@
+---
+title: Textarea
+description: A box for several lines of text that grows taller as you write.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/textarea @damsko/field"
+/>
+
+## Basic usage
+
+A FieldLabel above it says what goes in. It grows with its text, then scrolls.
+
+<Stage path="textarea/field" live label="Basic usage" />
+
+## States
+
+Wrong, disabled with why, and read only, which can still be copied.
+
+<Stage path="textarea/field-states" label="States" />
+
+## A limit
+
+`maxLength` stops the text at the limit, and the description counts towards it.
+
+<Stage path="textarea/count" label="A limit" />
+
+## Sending with the keyboard
+
+With `submitShortcut`, Cmd or Ctrl+Enter sends the form. Press it while empty to see the error.
+
+<Stage path="textarea/invalid" label="Sending with the keyboard" />
+
+## Words a machine reads
+
+`mono` sets the words in the system's mono face, a step smaller on the same lines, so the field keeps its height: a cron line in an Input, a JSON body in a Textarea. No colours; it is a field, not a code view.
+
+<Stage path="textarea/mono" label="Words a machine reads" />
+
+## Every state
+
+Hover and keyboard focus are forced from its own CSS; the rest are props.
+
+<States
+  path="textarea/states"
+  cells={[
+    { label: "Placeholder" },
+    { label: "Hover", force: "hover" },
+    { label: "Keyboard focus", force: "focus-visible" },
+    { label: "Filled", props: { value: "Ready for review" } },
+    { label: "Invalid", props: { value: "Ok", invalid: true } },
+    {
+      label: "Invalid, focused",
+      force: "focus-visible",
+      props: { value: "Ok", invalid: true },
+    },
+    {
+      label: "Read only",
+      props: { value: "Ready for review", readOnly: true },
+    },
+    { label: "Disabled", props: { value: "Ready for review", disabled: true } },
+  ]}
+/>
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="textarea"
+  always={[
+    "More than one sentence: Notes, Reason for the change.",
+    "A label that says what goes in: Notes, Reason for the change.",
+    "A visible count when there is a limit.",
+  ]}
+  never={[
+    "One line: use an Input.",
+    "A placeholder in place of a label: it goes when typing starts.",
+    "Enter that sends a message unless the product says so near it.",
+    "Colours, corners or padding set from outside: `style` takes layout and width only.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Size",
+      key: "Height",
+      value: "`rows` lines at least, up to {textarea-height}",
+      note: "3 lines unless set; {tap-target} at least on a touch screen",
+    },
+    {
+      group: "Size",
+      key: "Padding",
+      value: "{space-2} above and below, {space-3} at the sides",
+      note: "the first line stands where an Input's does",
+    },
+    {
+      group: "Size",
+      key: "Width",
+      value: "The column it stands in",
+      note: "`style` may narrow it",
+    },
+    {
+      group: "Type and shape",
+      key: "Words",
+      value: "{text-sm} / {text-sm-line}, {font-weight-normal}",
+      note: "{input-text-touch} on a touch screen",
+    },
+    {
+      group: "Type and shape",
+      key: "Corner",
+      value: "{radius}, {radius-shape}",
+      note: "capped as Input's",
+    },
+    {
+      group: "Colour",
+      key: "Fill, hairline and lift",
+      note: "Input's",
+      tokens: ["input-bg", "input", "input-shadow"],
+    },
+    {
+      group: "Colour",
+      key: "Words",
+      note: "value, then placeholder",
+      tokens: ["foreground", "muted"],
+    },
+    {
+      group: "Colour",
+      key: "Wrong",
+      note: "hairline and message",
+      tokens: ["input-border-invalid", "destructive"],
+    },
+    { group: "Colour", key: "Read only", tokens: ["input-bg-read"] },
+    {
+      group: "Focus and disabled",
+      key: "Focus",
+      note: "its own edge and a halo, as Input's",
+      tokens: ["input-focus"],
+    },
+    {
+      group: "Focus and disabled",
+      key: "Disabled",
+      value: "{opacity-disabled} opacity",
+      note: "label and description too",
+    },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    {
+      key: "Hover",
+      value: "Hairline one step stronger, {duration-hover}",
+      note: "pointer only; not read only or disabled",
+      tokens: ["ease"],
+    },
+    {
+      key: "Growing",
+      value: "Line by line, at once",
+      note: "no transition, so the caret never waits",
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Keyboard",
+      key: "Enter",
+      value: "Starts a line, unless `submitShortcut` says otherwise.",
+    },
+    {
+      group: "Keyboard",
+      key: "Send",
+      value:
+        'With `submitShortcut="mod+enter"`, Cmd or Ctrl+Enter sends the form; never while an input method is composing.',
+    },
+    {
+      group: "Content",
+      key: "Long text",
+      value: "Grows, then scrolls inside; never wider than its column.",
+    },
+    {
+      group: "Content",
+      key: "Fixed height",
+      value:
+        "With `autoResize` off, a handle drags it taller, with no most, never wider.",
+    },
+    {
+      group: "Checking",
+      key: "When",
+      value:
+        "After a submit, then as the value changes; at once with `data-invalid` on the Field.",
+    },
+    { group: "Settings", key: "Touch", value: "No hover." },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    { key: "Role", value: "A native `<textarea>`" },
+    {
+      key: "Name",
+      value: "Its FieldLabel, or `aria-label` when nothing is seen",
+    },
+    {
+      key: "Description",
+      value: "FieldDescription and a shown FieldError, by `aria-describedby`",
+    },
+    { key: "Wrong", value: "`aria-invalid` while its error shows" },
+    { key: "Agents", value: "Read and set by its name" },
+    {
+      key: "Contrast",
+      value:
+        "Value and placeholder 4.5:1, an error's hairline 3:1, light and dark",
+      note: "checked by `node tokens/generate.ts --check`",
+    },
+  ]}
+/>
+<Rows
+  title="From shadcn"
+  rows={[
+    { group: "Textarea", key: "`min-h-16`", value: "`rows`" },
+    {
+      group: "Textarea",
+      key: "`field-sizing-content`",
+      value: "`autoResize`",
+      note: "in every browser",
+    },
+    {
+      group: "Textarea",
+      key: "`border-input`, `dark:bg-input/30`",
+      value: "Input's hairline and fill",
+    },
+    {
+      group: "Textarea",
+      key: "`focus-visible:ring-[3px]`",
+      value: "Input's focus edge",
+    },
+    {
+      group: "Textarea",
+      key: "`md:text-sm`",
+      value: "Larger words by pointer, not by width",
+    },
+    {
+      group: "Elsewhere",
+      key: "`className`",
+      value: "`style`",
+      note: "layout and width only",
+    },
+    {
+      group: "Elsewhere",
+      key: "Base UI",
+      value: "UI SDK",
+      note: "an agent can read and fill it by name",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props source="src/components/textarea.tsx" type="TextareaProps" />
+
+</Reference>

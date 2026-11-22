@@ -1,0 +1,169 @@
+---
+title: Agent indicator
+description: A small moving mark that shows work in progress.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/agent-indicator"
+  use={
+    'import { AgentIndicator } from "@grasp-os/ui/components/agent-indicator";'
+  }
+/>
+
+## Beside words
+
+Nine dots, the light passing through them, its core in the accent. Words beside it say what is working and are the status.
+
+<Stage path="agent-indicator/with-words" label="Beside words" />
+
+## Alone
+
+Alone, with an `aria-label` a screen reader says.
+
+<Stage path="agent-indicator/alone" label="Alone" />
+
+## Named later
+
+Work may start before its name is known. Without a name it says nothing; once the `aria-label` comes, it is a status that says it, and keeps moving.
+
+<Stage path="agent-indicator/named-later" label="Named later" />
+
+## Success
+
+With `success`, it stops and a tick is drawn in where it stood. Leave it out where a place has its own mark for it.
+
+<Stage path="agent-indicator/done" label="Success" />
+
+## Every state
+
+The dither glyph's three paths, the three marks it was chosen from (`variant`), and success.
+
+<States
+  path="agent-indicator/states"
+  cells={[
+    { label: "Wave" },
+    { label: "Round the edge", props: { path: "circle" } },
+    { label: "Row by row", props: { path: "snake" } },
+    { label: "Orbit", props: { variant: "orbit" } },
+    { label: "Breath", props: { variant: "breath" } },
+    { label: "Bead", props: { variant: "bead" } },
+    { label: "Success", props: { success: true } },
+  ]}
+/>
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="agent-indicator"
+  always={[
+    "While work really runs, beside words that say what it is: Searching the web.",
+    "Alone, an `aria-label` that names the work.",
+    "`success` once the work ends well: a tick drawn in where it stood.",
+  ]}
+  never={[
+    "A second one in the same view.",
+    "Loading that is not work in progress: use Skeleton or Spinner.",
+    "A line of words that says what is working: use Shimmer.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      key: "Room",
+      value: "{icon-sm}",
+      note: "an icon's, so nothing shifts when it comes or goes",
+    },
+    {
+      key: "Dots",
+      value: "Nine of {agent-indicator-dot}, {agent-indicator-gap} apart",
+    },
+    {
+      key: "Colour",
+      value:
+        "{agent-indicator-rest} at rest, {agent-indicator-lit} where the light is",
+      note: "the middle dot {agent-indicator-accent}",
+    },
+    {
+      key: "Success",
+      value: "Tick, {icon-sm}",
+      tokens: ["agent-indicator-accent"],
+    },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    {
+      key: "Wave",
+      value:
+        "Each diagonal lights {agent-indicator-wave-step} after the last; the loop is {agent-indicator-wave}",
+      note: "transform and opacity",
+      tokens: ["ease-in-out"],
+    },
+    {
+      key: "Round, row by row",
+      value:
+        "{agent-indicator-circle-step} and {agent-indicator-circle}; {agent-indicator-snake-step} and {agent-indicator-snake}",
+    },
+    { key: "Off screen", value: "Paused, and in a hidden tab" },
+    {
+      key: "Success",
+      value: "The tick drawn in, {duration-mark}",
+      tokens: ["ease"],
+    },
+    {
+      key: "Reduced",
+      value: "Still, one line of the path lit; the tick simply there",
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      key: "Which mark",
+      value: "The dither glyph unless `variant` says otherwise.",
+    },
+    {
+      key: "One in view",
+      value: "Never two in one view.",
+    },
+    {
+      key: "Forced colours",
+      value: "Drawn in the text colour, the dots at rest in GrayText.",
+    },
+    {
+      key: "Right to left",
+      value: "The orbit turns and the tick draws the other way.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Alone",
+      value: "A `status` that says its `aria-label`, as hidden text",
+    },
+    { key: "Beside words", value: "Hidden; the words are the `status`" },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/agent-indicator.tsx"
+  type="AgentIndicatorProps"
+  label="AgentIndicator"
+/>
+
+</Reference>

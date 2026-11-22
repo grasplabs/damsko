@@ -1,0 +1,190 @@
+---
+title: Resizable
+description: A set of panels people resize by dragging the handles between them or with arrow keys.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/resizable"
+  use={
+    'import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@grasp-os/ui/components/resizable";'
+  }
+/>
+
+## Side by side
+
+Each handle carries what it resizes in `aria-label`; `minSize` keeps a panel usable.
+
+<Stage path="resizable/horizontal" label="Side by side" />
+
+## Stacked
+
+`orientation="vertical"` stacks the panels, with the handle across.
+
+<Stage path="resizable/vertical" label="Stacked" />
+
+## With a grip
+
+`withHandle` draws a grip on the handle; a `collapsible` panel folds away with Enter or a double click.
+
+<Stage path="resizable/grip" label="With a grip" />
+
+## Every state
+
+Keyboard focus is forced from the handle's own CSS; hover and dragging set the mark UI SDK puts on it.
+
+<States
+  path="resizable/states"
+  cells={[
+    { label: "Rest" },
+    { label: "Hover or dragged", props: { active: true } },
+    { label: "Keyboard focus", force: "focus-visible" },
+    { label: "With a grip", props: { withHandle: true } },
+  ]}
+/>
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="resizable"
+  always={[
+    "An `aria-label` on each handle that says what it resizes.",
+    "A `minSize` that keeps each panel usable.",
+  ]}
+  never={["A handle with no name: a screen reader hears only a separator."]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    { group: "Handle", key: "Line", value: "{hairline}" },
+    {
+      group: "Handle",
+      key: "Touch target",
+      value: "{tap-target}",
+      note: "on a touch screen, an unseen strip round the line",
+    },
+    {
+      group: "Handle",
+      key: "Grip",
+      value:
+        "{resizable-handle-width} by {resizable-handle-length}, {radius-full}",
+    },
+    {
+      group: "Handle",
+      key: "Cursor",
+      value: "`col-resize` or `row-resize`",
+      note: "the arrow when disabled",
+    },
+    { group: "Colour", key: "Line", tokens: ["resizable-line"] },
+    {
+      group: "Colour",
+      key: "Line under a pointer or dragged, and the grip",
+      tokens: ["resizable-line-active"],
+    },
+    {
+      group: "Colour",
+      key: "Focus ring",
+      value: "{ring-width}, {ring-offset} out",
+      tokens: ["ring"],
+    },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    {
+      key: "Line",
+      value: "Darkens under a pointer, {duration-mark}",
+      note: "reduced: at once",
+      tokens: ["ease"],
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Keyboard",
+      key: "Arrows",
+      value: "Move the handle 1%; with Shift, 10%.",
+    },
+    {
+      group: "Keyboard",
+      key: "Home and End",
+      value: "Take it as far as the panels allow.",
+    },
+    {
+      group: "Keyboard",
+      key: "Enter",
+      value: "Folds a `collapsible` panel beside it, or opens it again.",
+    },
+    {
+      group: "Pointer",
+      key: "Drag",
+      value: "Moves the handle; a double click folds a `collapsible` panel.",
+    },
+    {
+      group: "Panels",
+      key: "Limits",
+      value:
+        "`minSize` and `maxSize` hold each panel; content past its size scrolls.",
+    },
+    {
+      group: "Panels",
+      key: "Saving",
+      value:
+        "`autoSaveId` keeps the layout for the next visit; `onLayoutChanged` runs once a move ends.",
+    },
+    {
+      group: "Settings",
+      key: "Forced colours",
+      value: "The line and the grip in the text colour.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Role",
+      value: "Each handle is a `separator` with its value in percent",
+    },
+    { key: "Name", value: "The handle's `aria-label`: what it resizes" },
+    { key: "Disabled", value: "`aria-disabled`, out of the tab order" },
+    {
+      key: "Folded",
+      value: "A panel at 0 leaves the tab order and the screen reader",
+    },
+  ]}
+/>
+<Rows
+  title="From shadcn"
+  rows={[
+    {
+      key: "`ResizablePanelGroup`",
+      value: "`ResizablePanelGroup`",
+      note: "unchanged",
+    },
+    { key: "`withHandle`", value: "`withHandle`", note: "unchanged" },
+    { key: "`bg-border`", value: "{resizable-line}" },
+    { key: "`className`", value: "`style`", note: "size and layout only" },
+    { key: "react-resizable-panels", value: "UI SDK" },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props source="src/components/resizable.tsx" type="ResizablePanelGroupProps" />
+
+<Props source="src/components/resizable.tsx" type="ResizablePanelProps" />
+
+<Props source="src/components/resizable.tsx" type="ResizableHandleProps" />
+
+</Reference>

@@ -1,0 +1,31 @@
+---
+// Search: a modal dialog with one field and the sections it finds (site/behaviour/search.ts, over
+// the index from site/search-index.ts). Opened by the header's search button or ⌘K / Ctrl+K.
+// Rendered by the header. Looks: site/system/styles/site.css (.site-search-dialog).
+import { Icon, SearchIcon } from "@grasp-os/ui/lib/icons";
+---
+
+<dialog class="site-search-dialog" aria-label="Search the docs" aria-modal="true" data-search-dialog>
+  <div class="site-search-panel">
+    <label class="site-search-field">
+      <Icon icon={SearchIcon} />
+      <span class="site-visually-hidden">Search the docs</span>
+      <input
+        type="search"
+        role="combobox"
+        aria-autocomplete="list"
+        aria-controls="site-search-results"
+        aria-expanded="false"
+        autocomplete="off"
+        spellcheck="false"
+        placeholder="Search the docs"
+        enterkeyhint="go"
+        data-search-input
+        data-site-search-input
+      />
+      <kbd class="site-kbd" aria-hidden="true">Esc</kbd>
+    </label>
+    <div id="site-search-results" class="site-search-results" role="listbox" aria-label="Results" data-search-results data-site-search-results></div>
+    <p class="site-search-status" role="status" data-search-status></p>
+  </div>
+</dialog>

@@ -1,0 +1,179 @@
+---
+title: File tree
+description: The files an assistant changed or made, as folders that open, one file chosen.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/file-tree"
+  use={'import { FileTree } from "@grasp-os/ui/components/file-tree";'}
+/>
+
+## The files changed
+
+Folders open and close; a press, Enter or Space on a file chooses it. A press on a folder opens or closes it and never chooses it. A letter finds the next file or folder.
+
+<Stage path="file-tree/basic" label="The files changed" />
+
+## An icon for each kind of file
+
+Each file wears an icon for its extension: a document, a sheet, an image, a video, a sound, code, or the plain file for one it does not know. `icon` gives a file its own.
+
+<Stage path="file-tree/icons" label="An icon for each kind of file" />
+
+## Buttons on a row
+
+`FileTreeActions` holds a row's buttons at its end. Pressing one, or a key on one, runs it and leaves the row as it was: the chosen file stays chosen. Here the page holds the chosen file with `selectedPath` and `onSelect`.
+
+<Stage path="file-tree/actions" label="Buttons on a row" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="file-tree"
+  always={[
+    "The files an assistant changed or made in one turn, by folder.",
+    "Each file by its name on disk, under its folders' names.",
+    "One file chosen, to show it beside the tree.",
+  ]}
+  never={[
+    "One file the assistant read or changed: a Tool line says it.",
+    "Nested items that are not files, or a tree of pages: use Tree view.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Row",
+      key: "Look",
+      value: "Tree view's rows: height, indent, chevron, fills and type",
+    },
+    {
+      group: "Row",
+      key: "Icon",
+      value: "The folder, or one for the file's extension",
+      note: "{icon-sm}",
+      tokens: ["muted"],
+    },
+    {
+      group: "Row",
+      key: "Buttons",
+      value: "At the row's end, {space-1} apart",
+      note: "small icon Buttons",
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Keyboard",
+      key: "Moving and opening",
+      value:
+        "Tree view's: Up and Down move, Right opens a folder, Left closes it, a letter finds.",
+    },
+    {
+      group: "Keyboard",
+      key: "Choosing",
+      value:
+        "Enter or Space on a file chooses it; on a folder, nothing is chosen.",
+    },
+    {
+      group: "Pointer",
+      key: "Pressing",
+      value: "A press on a file chooses it; on a folder, opens or closes it.",
+    },
+    {
+      group: "Buttons",
+      key: "Pressing",
+      value:
+        "Runs the button only: the row is not chosen, opened or moved from.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Role",
+      value:
+        "Tree view's `tree` of `treeitem`s, named Files unless `aria-label` says otherwise",
+    },
+    { key: "Chosen", value: "`aria-selected` on the chosen file" },
+    {
+      key: "Icons",
+      value: "Hidden from a screen reader: the name says the file",
+    },
+    {
+      key: "Buttons",
+      value: "Each named for its file (Download page.tsx), each a Tab stop",
+    },
+  ]}
+/>
+<Rows
+  title="From shadcn"
+  rows={[
+    {
+      group: "Base",
+      key: "Collapsible and Button",
+      value: "Tree view",
+      note: "one tree: its keys, roles, typeahead and choice",
+    },
+    {
+      group: "Data",
+      key: "FileTreeFolder, FileTreeFile",
+      value: "`items` of nodes with `type`",
+      note: "the whole shape known to the keys and typeahead",
+    },
+    {
+      group: "Data",
+      key: "FileTreeIcon, FileTreeName",
+      value: "a node's `icon` and `name`",
+    },
+    {
+      group: "State",
+      key: "`expanded`, `selectedPath` as Sets and strings",
+      value:
+        "`expanded` as a list of paths; `defaultExpanded`, `defaultSelectedPath`",
+    },
+    {
+      group: "Parts",
+      key: "FileTreeActions",
+      value: "FileTreeActions, in a node's `actions`",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/file-tree.tsx"
+  type="FileTreeProps"
+  label="FileTree"
+/>
+
+### FileTreeNode
+
+<Props
+  source="src/components/file-tree.tsx"
+  type="FileTreeNode"
+  label="FileTreeNode"
+/>
+
+### FileTreeActions
+
+<Props
+  source="src/components/file-tree.tsx"
+  type="FileTreeActionsProps"
+  label="FileTreeActions"
+/>
+
+</Reference>

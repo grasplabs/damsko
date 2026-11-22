@@ -1,0 +1,204 @@
+---
+title: Inline citation
+description: A source in the sentence it supports, opening on hover or focus to its title, a line about it and a link.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/inline-citation"
+/>
+
+## A source in the sentence
+
+`InlineCitationText` holds the words the source supports; `InlineCitationCardTrigger` is a small secondary Button after them, named by where the source lives. Resting on it, or tabbing to it, opens `InlineCitationCardBody` with an `InlineCitationSource`: its title, a line about it, and a link to it by its host, in a new tab.
+
+<Stage path="inline-citation/basic" label="A source in the sentence" />
+
+## Several sources
+
+The chip says the first source's host and how many more. In the card, `InlineCitationCarousel` pages through them one at a time; its header holds Previous, Next and which source of how many. `InlineCitationQuote` sets off words quoted from a source.
+
+<Stage path="inline-citation/several" label="Several sources" />
+
+## An address that leads nowhere
+
+Every address is checked: only http, https and mailto become links, and the host shown is read from the checked address. Any other (`javascript:`, `data:`, a path) is shown as its words, and the chip says Source.
+
+<Stage path="inline-citation/untrusted" label="An address that leads nowhere" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="inline-citation"
+  always={[
+    "A source beside the claim it supports, inside the answer's text.",
+    "The same sources in Sources under the answer: a touch screen has no hover, and a screen reader may never open the card.",
+    "The addresses as the model or tool gave them: they are checked here.",
+  ]}
+  never={[
+    "The list of every source an answer drew on: use Sources.",
+    "A link that is the point of the sentence: use Link.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Chip",
+      key: "Button",
+      value: "A secondary Button at `xs` (28px): the host, and +N for more",
+    },
+    {
+      group: "Words",
+      key: "Lit",
+      value:
+        "The accent behind the cited words while the citation is pointed at or focused",
+      tokens: ["accent"],
+    },
+    {
+      group: "Card",
+      key: "Source",
+      value:
+        "Hover card's title and line, then the host as a Link, muted, {text-xs}",
+      tokens: ["foreground", "muted-foreground"],
+    },
+    {
+      group: "Card",
+      key: "Quote",
+      value: "Italic and muted, after a bar at the start",
+      tokens: ["border", "muted-foreground"],
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      key: "Open",
+      value:
+        "Resting on the chip or tabbing to it opens the card after 10ms; Tab moves into it; it closes 100ms after the pointer leaves, or on Escape.",
+    },
+    {
+      key: "Several",
+      value:
+        "Previous and Next, the arrow keys and a swipe page through the sources; the header says which of how many.",
+    },
+    {
+      key: "Address",
+      value:
+        "Checked with `safeHref`: only http, https and mailto are links, opening in a new tab; any other is words.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Chip",
+      value: "A `button` named by the host and how many more",
+    },
+    {
+      key: "Link",
+      value: "Named by the host, and said to open in a new tab",
+    },
+    {
+      key: "Carousel",
+      value: "Named Sources; each slide named by its place (1 of 3)",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/inline-citation.tsx"
+  type="InlineCitationProps"
+  label="InlineCitation props"
+/>
+
+<Props
+  source="src/components/inline-citation.tsx"
+  type="InlineCitationTextProps"
+  label="InlineCitationText props"
+/>
+
+<Props
+  source="src/components/inline-citation.tsx"
+  type="InlineCitationCardProps"
+  label="InlineCitationCard props"
+/>
+
+<Props
+  source="src/components/inline-citation.tsx"
+  type="InlineCitationCardTriggerProps"
+  label="InlineCitationCardTrigger props"
+/>
+
+<Props
+  source="src/components/inline-citation.tsx"
+  type="InlineCitationCardBodyProps"
+  label="InlineCitationCardBody props"
+/>
+
+<Props
+  source="src/components/inline-citation.tsx"
+  type="InlineCitationCarouselProps"
+  label="InlineCitationCarousel props"
+/>
+
+<Props
+  source="src/components/inline-citation.tsx"
+  type="InlineCitationCarouselContentProps"
+  label="InlineCitationCarouselContent props"
+/>
+
+<Props
+  source="src/components/inline-citation.tsx"
+  type="InlineCitationCarouselItemProps"
+  label="InlineCitationCarouselItem props"
+/>
+
+<Props
+  source="src/components/inline-citation.tsx"
+  type="InlineCitationCarouselHeaderProps"
+  label="InlineCitationCarouselHeader props"
+/>
+
+<Props
+  source="src/components/inline-citation.tsx"
+  type="InlineCitationCarouselIndexProps"
+  label="InlineCitationCarouselIndex props"
+/>
+
+<Props
+  source="src/components/inline-citation.tsx"
+  type="InlineCitationCarouselPrevProps"
+  label="InlineCitationCarouselPrev props"
+/>
+
+<Props
+  source="src/components/inline-citation.tsx"
+  type="InlineCitationCarouselNextProps"
+  label="InlineCitationCarouselNext props"
+/>
+
+<Props
+  source="src/components/inline-citation.tsx"
+  type="InlineCitationSourceProps"
+  label="InlineCitationSource props"
+/>
+
+<Props
+  source="src/components/inline-citation.tsx"
+  type="InlineCitationQuoteProps"
+  label="InlineCitationQuote props"
+/>
+
+</Reference>

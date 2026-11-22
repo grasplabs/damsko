@@ -1,0 +1,256 @@
+---
+title: Attachment
+description: A file or picture that goes with a message, with its picture or mark, its name and a line about it, its state on the way, and its actions.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/attachment"
+/>
+
+## Files to send
+
+An `AttachmentGroup` lists the files; each `Attachment` holds an `AttachmentMedia`, an `AttachmentContent` with its `AttachmentTitle` and `AttachmentDescription` (the size, through `formatFileSize`), and `AttachmentActions`. Name each `AttachmentAction` for its file. More files than room scroll sideways.
+
+<Stage path="attachment/basic" label="Files to send" />
+
+## Pictures and marks
+
+`AttachmentMedia` with `src` shows the picture as itself. A file with none, or whose picture will not load, wears the mark for its `type`. With no actions, nothing takes a file off.
+
+<Stage path="attachment/previews" label="Pictures and marks" />
+
+## Pictures from a chat
+
+A picture loads only from an address that cannot tell another site who looked: one written into the address (`data:` of a picture or video type, never SVG), one the page made (`blob:`) or a path on this site; an `http(s)` address loads only with `allowRemote`, for a source you trust.
+
+<Stage path="attachment/untrusted" label="Pictures from a chat" />
+
+## Your own mark
+
+Put your own mark for a kind of file in the `AttachmentMedia`, in place of the one for its media type.
+
+<Stage path="attachment/parts" label="Your own mark" />
+
+## On its way
+
+`state` says where the file is: `idle`, `uploading`, `processing`, `error` and `done`. Say why it failed in its description, so colour is not the only sign.
+
+<Stage path="attachment/states" label="On its way" />
+
+## Sizes
+
+`size` is `default`, `sm` or `xs`.
+
+<Stage path="attachment/sizes" label="Sizes" />
+
+## The whole card as a press
+
+`AttachmentTrigger` covers the card behind its actions: a link to the file, or a Dialog's trigger. Upright (`orientation="vertical"`), the picture fills the card's width.
+
+<Stage path="attachment/trigger" label="The whole card as a press" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="attachment"
+  always={[
+    "The files that go with one message: above the text while it is written, under it once sent.",
+    "The file's own name, cut in the middle so its extension stays.",
+    "Each icon-only action named for its file: Remove brief.pdf.",
+  ]}
+  never={[
+    "Choosing or dropping files: the prompt input or a file upload does that.",
+    "A failure said by colour alone: put the reason in the description.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "File",
+      key: "Width",
+      value: "As wide as its name, {attachment-max-width} at most",
+      note: "never wider than the row",
+    },
+    {
+      group: "File",
+      key: "Ground",
+      value: "{radius}, {radius-shape}",
+      tokens: ["muted", "border-strong"],
+    },
+    {
+      group: "File",
+      key: "Picture",
+      value:
+        "{attachment-thumb} square; {control-sm} at sm, {control-xs} at xs",
+      tokens: ["card", "border-strong"],
+    },
+    {
+      group: "Words",
+      key: "Name",
+      value: "{text-sm} / {text-sm-line}; {text-xs} at sm and xs",
+      tokens: ["foreground"],
+    },
+    {
+      group: "Words",
+      key: "Description",
+      value: "{text-xs} / {text-xs-line}",
+      tokens: ["muted"],
+    },
+    {
+      group: "State",
+      key: "idle",
+      value: "A dashed edge",
+      tokens: ["border-strong-color"],
+    },
+    {
+      group: "State",
+      key: "uploading, processing",
+      value: "The name muted, the picture at 60%",
+      tokens: ["muted-foreground"],
+    },
+    {
+      group: "State",
+      key: "error",
+      value: "The edge, the mark and the description destructive",
+      tokens: ["destructive-border", "destructive-subtle", "destructive"],
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Actions",
+      key: "Show",
+      value:
+        "Under a pointer or focus on their file, and always on a touch screen.",
+    },
+    {
+      group: "Actions",
+      key: "Taking a file off",
+      value:
+        "Focus goes on to the next file's first action, or the one before, and after the last to the group itself; when the group goes with it, to the nearest stop where it stood, never the page.",
+    },
+    {
+      group: "Trigger",
+      key: "Press",
+      value:
+        "The whole card, behind the actions: each action stays its own press.",
+    },
+    {
+      group: "Group",
+      key: "More than room",
+      value:
+        "Scrolls sideways with no bar; the keyboard brings each file into view.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Group",
+      value: "A list, named by `aria-label`, a row per file",
+    },
+    {
+      key: "Actions",
+      value:
+        "Buttons named by `aria-label` for what they do to their file; the prompt input's remove is named by the I18nProvider (`attachment.remove`): Remove brief.pdf",
+    },
+    {
+      key: "Keyboard",
+      value: "Each action and trigger is a Tab stop; the group itself is not",
+    },
+    {
+      key: "State",
+      value:
+        "Busy to a screen reader while `uploading` or `processing`; a failure said in words",
+    },
+    { key: "Picture", value: "Hidden from a screen reader: the name says it" },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+### AttachmentGroup
+
+<Props
+  source="src/components/attachment.tsx"
+  type="AttachmentGroupProps"
+  label="AttachmentGroup"
+/>
+
+### Attachment
+
+<Props
+  source="src/components/attachment.tsx"
+  type="AttachmentProps"
+  label="Attachment"
+/>
+
+### AttachmentMedia
+
+<Props
+  source="src/components/attachment.tsx"
+  type="AttachmentMediaProps"
+  label="AttachmentMedia"
+/>
+
+### AttachmentContent
+
+<Props
+  source="src/components/attachment.tsx"
+  type="AttachmentContentProps"
+  label="AttachmentContent"
+/>
+
+### AttachmentTitle
+
+<Props
+  source="src/components/attachment.tsx"
+  type="AttachmentTitleProps"
+  label="AttachmentTitle"
+/>
+
+### AttachmentDescription
+
+<Props
+  source="src/components/attachment.tsx"
+  type="AttachmentDescriptionProps"
+  label="AttachmentDescription"
+/>
+
+### AttachmentActions
+
+<Props
+  source="src/components/attachment.tsx"
+  type="AttachmentActionsProps"
+  label="AttachmentActions"
+/>
+
+### AttachmentAction
+
+<Props
+  source="src/components/attachment.tsx"
+  type="AttachmentActionProps"
+  label="AttachmentAction"
+/>
+
+### AttachmentTrigger
+
+<Props
+  source="src/components/attachment.tsx"
+  type="AttachmentTriggerProps"
+  label="AttachmentTrigger"
+/>
+
+</Reference>

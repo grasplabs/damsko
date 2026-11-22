@@ -1,0 +1,53 @@
+import { Button } from "@grasp-os/ui/components/button";
+import {
+  Popover,
+  PopoverClose,
+  PopoverContent,
+  PopoverDescription,
+  PopoverFooter,
+  PopoverHeader,
+  PopoverTitle,
+  PopoverTrigger,
+} from "@grasp-os/ui/components/popover";
+import { useState } from "react";
+
+// A stand-in for the real request: it takes a moment, so the action shows that it is working.
+const publishReport = () => new Promise((resolve) => setTimeout(resolve, 1200));
+
+// The action is a Button whose press returns a Promise: it works with the popover open, and closes it once done.
+export default function PopoverBasic() {
+  const [open, setOpen] = useState(false);
+  const publish = async () => {
+    await publishReport();
+    setOpen(false);
+  };
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="secondary">Publish report</Button>
+      </PopoverTrigger>
+      <PopoverContent>
+        <PopoverHeader>
+          <PopoverTitle>Publish this report</PopoverTitle>
+          <PopoverDescription>
+            Everyone in the workspace can read it once it is published. You can
+            unpublish it at any time.
+          </PopoverDescription>
+        </PopoverHeader>
+        <PopoverFooter>
+          <PopoverClose asChild>
+            <Button variant="outline">Cancel</Button>
+          </PopoverClose>
+          <Button
+            variant="default"
+            onClick={publish}
+            loadingLabel="Publishing"
+            errorLabel="Could not publish"
+          >
+            Publish
+          </Button>
+        </PopoverFooter>
+      </PopoverContent>
+    </Popover>
+  );
+}

@@ -1,0 +1,8 @@
+---
+// MDX's `h3`: Heading.astro at level 3.
+import Heading from "./Heading.astro";
+
+const {props} = Astro;
+---
+
+<Heading {...props} level={3}><slot /></Heading>

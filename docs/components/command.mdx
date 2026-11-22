@@ -1,0 +1,305 @@
+---
+title: Command
+description: A search box over a list of actions, where you type to find and run one.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/command"
+  use={
+    'import { Command, CommandInput, CommandEmpty, CommandList } from "@grasp-os/ui/components/command";'
+  }
+/>
+
+## Actions
+
+Groups name a run of actions; typing ranks them, and a shortcut runs one from anywhere on the page. It is drawn by shadcn's parts: CommandInput, CommandEmpty and CommandList. A CommandList with no children draws the root's `items`; or write the list out with CommandGroup, CommandItem, CommandShortcut and CommandSeparator.
+
+<Stage path="command/basic" live label="Actions" />
+
+## Work that takes time
+
+A command shows it is working, then says so on the command if it failed.
+
+<Stage path="command/working" label="Work that takes time" />
+
+## Search results
+
+The page owns the words and the results: it fetches as the words change, the list says it is searching meanwhile, and shows what comes back in the page's order. A result can carry a second line, and something of the page's at its end.
+
+<Stage path="command/search" label="Search results" />
+
+## People, with their faces
+
+`media` puts a face or a mark where a row's icon would stand: an Avatar or a Brand icon.
+
+<Stage path="command/people" label="People, with their faces" />
+
+## More for a result
+
+Enter runs a result; a quiet More at its end holds what else it can do. It shows on the highlighted or hovered row, and always on a touch screen. The right arrow opens it from the keys; Left or Escape comes back. Right to left, the two arrows swap.
+
+<Stage path="command/actions" label="More for a result" />
+
+## A palette over the page
+
+CommandDialog puts the list in a dialog's panel over the page: its button opens it, and so does its `shortcut` (mod+k, ⌘K on a Mac and Ctrl+K elsewhere) from anywhere. A shortcut without mod, Ctrl or Alt (`/`) waits while someone types in a field, and no shortcut opens a palette over a dialog already open. A command run closes it, and focus goes back to what opened it. Held by the page (`open`, `onOpenChange`, `trigger={null}`), the app's own button, a Sidebar row or a menu opens it. It takes what Command takes for a server's search and a row's actions (`inputValue`, `onInputValueChange`, `filter`, `loading`, `onItemAction`), and a command that returns `false` keeps it open. `current` marks the row that is open now, and CommandHighlight marks the words a search found in a row's second line.
+
+<Stage path="command/dialog" live label="A palette over the page" />
+
+## Written out by hand
+
+The list as parts: CommandGroup with its `heading`, CommandItem with the command's words as children, its keys as a CommandShortcut and what `items` says of a command as props, and CommandSeparator. A CommandItem's own `onAction` runs before the Command's.
+
+<Stage path="command/parts" label="Written out by hand" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="command"
+  always={[
+    "A person finds an action by typing and runs it.",
+    "The list over the page, opened from a button or a shortcut: CommandDialog.",
+    "`inputValue`, `onInputValueChange` and `filter={false}` for search results the page fetches itself, kept in its order.",
+    "`actions` on a command, with `onItemAction`, when a result has more to do than its one action: behind a quiet More, and the right arrow.",
+    "Commands that start with a verb: New project, not Project.",
+    "Groups when there are more than a handful.",
+    "An errorLabel for every command whose work can fail.",
+  ]}
+  never={[
+    "A shortcut the browser already uses, such as Ctrl+J or Ctrl+N.",
+    "Colours or corners set from outside: `style` takes layout and width only.",
+    "A command that only goes to another place: a Link.",
+    "Choosing a value in a form: a Combobox or a Select.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Surface",
+      key: "Fill and lift",
+      note: "the popup's, standing in the page",
+      tokens: ["popover", "popup-shadow"],
+    },
+    { group: "Surface", key: "Corner", value: "{radius}, {radius-shape}" },
+    {
+      group: "Search",
+      key: "Height",
+      value: "{text-base-line} and {space-2} above and below",
+      note: "40px, {tap-target} on a touch screen",
+    },
+    {
+      group: "Search",
+      key: "Words",
+      value: "{text-base}",
+      note: "16px on a touch screen",
+    },
+    {
+      group: "Search",
+      key: "Hairline under it",
+      tokens: ["border"],
+      note: "the focus colour while focus is inside",
+    },
+    {
+      group: "List",
+      key: "Height",
+      value: "Up to {popup-height}",
+      note: "then it scrolls",
+    },
+    { group: "List", key: "Padding", value: "{popup-padding}" },
+    {
+      group: "Items",
+      key: "Height",
+      value: "{control-sm}",
+      note: "{tap-target} on a touch screen",
+    },
+    {
+      group: "Items",
+      key: "Words",
+      value: "{text-xs}, {font-weight-medium}",
+      note: "quiet until highlighted",
+      tokens: ["muted", "foreground"],
+    },
+    { group: "Items", key: "Highlight", tokens: ["accent-highlight"] },
+    {
+      group: "Items",
+      key: "Shortcut",
+      value: "At the end, {text-xs}",
+      tokens: ["muted"],
+    },
+    {
+      group: "Items",
+      key: "Failed",
+      value: "Its errorLabel at the end",
+      tokens: ["destructive"],
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Keyboard",
+      key: "Typing",
+      value: "Ranks the commands and highlights the best match; Enter runs it.",
+    },
+    {
+      group: "Keyboard",
+      key: "Arrows",
+      value: "Up and Down move and wrap; a disabled command is skipped.",
+    },
+    { group: "Keyboard", key: "Escape", value: "Empties the field." },
+    {
+      group: "Keyboard",
+      key: "Shortcuts",
+      value:
+        "A command's CommandShortcut (`shortcut` in `items`) runs it while the list is on the page.",
+    },
+    {
+      group: "Search",
+      key: "The page's results",
+      value:
+        "With `inputValue`, `onInputValueChange` and `filter={false}`, the page fetches and orders the results; the list shows them as given.",
+    },
+    {
+      group: "More",
+      key: "Right arrow",
+      value:
+        "At the end of the words, opens the highlighted result's `actions`, focus on the first; Left or Escape comes back to the field with the words kept. Right to left, Left opens them and Right comes back.",
+    },
+    {
+      group: "More",
+      key: "Pointer and touch",
+      value:
+        "A quiet More on the highlighted or hovered row, over its own end so no words move; on a touch screen on every row, with a {tap-target} reach. Tab never stops on it.",
+    },
+    {
+      group: "Search",
+      key: "Loading",
+      value:
+        "`loading` marks the list busy and shows the I18nProvider's `command.loading` with a spinner where the results come; CommandEmpty waits until it is done.",
+    },
+    {
+      group: "Work",
+      key: "Working",
+      value:
+        "A Promise from `onAction` marks the command busy with a turning spinner.",
+    },
+    {
+      group: "Work",
+      key: "Failed",
+      value: "A throw or a rejection shows the command's `errorLabel`.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    { key: "Role", value: "A `combobox` field over a `listbox` of `option`s" },
+    { key: "Name", value: "CommandInput's `aria-label` names the field" },
+    {
+      key: "Working and failed",
+      value: "Said aloud: Working after a second, then the failure words",
+    },
+    {
+      key: "CommandDialog",
+      value:
+        "A `dialog` named by its `aria-label`; focus goes into the field, and back to what opened it as it closes",
+    },
+    {
+      key: "Agents",
+      value: "Find the list by name, read every command, and highlight one",
+      note: "UI SDK cannot run one for an agent yet",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/command.tsx"
+  type="CommandProps"
+  label="Command"
+/>
+
+<Props
+  source="src/components/command.tsx"
+  type="CommandInputProps"
+  label="CommandInput"
+/>
+
+<Props
+  source="src/components/command.tsx"
+  type="CommandEmptyProps"
+  label="CommandEmpty"
+/>
+
+<Props
+  source="src/components/command.tsx"
+  type="CommandListProps"
+  label="CommandList"
+/>
+
+<Props
+  source="src/components/command.tsx"
+  type="CommandGroupProps"
+  label="CommandGroup"
+/>
+
+<Props
+  source="src/components/command.tsx"
+  type="CommandItemProps"
+  label="CommandItem"
+/>
+
+<Props
+  source="src/components/command.tsx"
+  type="CommandShortcutProps"
+  label="CommandShortcut"
+/>
+
+<Props
+  source="src/components/command.tsx"
+  type="CommandSeparatorProps"
+  label="CommandSeparator"
+/>
+
+<Props
+  source="src/components/command.tsx"
+  type="CommandHighlightProps"
+  label="CommandHighlight"
+/>
+
+<Props
+  source="src/components/command.tsx"
+  type="CommandDialogProps"
+  label="CommandDialog"
+/>
+
+<Props
+  source="src/components/command.tsx"
+  type="CommandItemData"
+  label="CommandItemData"
+/>
+
+<Props
+  source="src/components/command.tsx"
+  type="CommandGroupData"
+  label="CommandGroupData"
+/>
+
+<Props
+  source="src/components/command.tsx"
+  type="CommandItemAction"
+  label="CommandItemAction"
+/>
+
+</Reference>

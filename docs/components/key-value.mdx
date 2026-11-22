@@ -1,0 +1,157 @@
+---
+title: Key and value rows
+description: A list of facts about one thing, each a short name with its value.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/key-value"
+/>
+
+## Basic usage
+
+Each name in a few words, its value under it.
+
+<Stage path="key-value/basic" label="Basic usage" />
+
+## Divided, with copy
+
+A line between the rows for a list on its own. An id goes in the mono face; `copyable` puts a Copy button at its row's end.
+
+<Stage path="key-value/divided" label="Divided, with copy" />
+
+## In another language
+
+The words the list says itself come from the page's `I18nProvider`: the copy button's (`copyButton`) and what a waiting value says (`keyValue.loading`).
+
+<Stage path="key-value/labels" label="In another language" />
+
+## Horizontal
+
+`orientation="horizontal"` for a short list in a small space; a long value drops under its name.
+
+<Stage path="key-value/inline" label="Horizontal" />
+
+## Facts that open
+
+Horizontal, a row with a `detail` opens in place: its name is a button over the whole row, one row is open at a time, and only the rows below it move. A `group` starts after a little room. A `loading` value waits as Skeleton's dot field at its own width, then crossfades in.
+
+<Stage path="key-value/rail" label="Facts that open" />
+
+`valueAlign="start"` sets every value on one column just after the widest name, close to it, with the chevrons at the row's end. A row that does not open keeps the chevron's room, so every value ends on one line. A row whose value is still on its way does not open until it lands, and nothing moves when it does.
+
+<Stage path="key-value/rail-start" label="Values on one column" />
+
+## With icons
+
+An `icon` stands before its name in the name's muted ink, on a column of its own; a row without one keeps its room. For a tight rail, `labelDisplay="icon"` shows the icons alone: each names its row for a screen reader, and in a Tooltip on hover and focus.
+
+<Stage path="key-value/icons" label="With icons" />
+
+<Rows
+  title="Facts that open"
+  rows={[
+    {
+      key: "Row",
+      value: "{control-default} at least; {space-2} of room round its words",
+      note: "only in a list with a row that opens",
+    },
+    { key: "Between rows", value: "{space-1}; {space-4} before a new group" },
+    {
+      key: "Hover and press",
+      tokens: ["accent", "accent-active"],
+      note: "the hover's fill stays while open",
+    },
+    {
+      key: "Chevron",
+      value: "{icon-sm}, turns over while open, {duration-ui}",
+      tokens: ["muted"],
+      note: "reduced: at once",
+    },
+    {
+      key: "Values at the start",
+      value: "One column after the widest name, {space-4} from it",
+      note: '`valueAlign="start"`',
+    },
+    {
+      key: "A row that does not open",
+      value: "Keeps the chevron's room ({icon-sm}), so values end on one line",
+    },
+    {
+      key: "A waiting row",
+      value: "Does not open, and shows no chevron, until its value lands",
+    },
+    {
+      key: "Icon",
+      value: "1em, before the name, {space-2} from it",
+      tokens: ["muted"],
+      note: "a row without one keeps its room",
+    },
+    {
+      key: "Icons alone",
+      value:
+        "`labelDisplay=\"icon\"`: the name is the row's accessible name and a Tooltip, above the row's start",
+    },
+    {
+      key: "Detail",
+      value: "{space-4} of room, a {hairline} edge, {radius}",
+      tokens: ["border"],
+    },
+    {
+      key: "Waiting value",
+      value:
+        "Skeleton's dot field at the value's width, crossfading in over {duration-ui}",
+      note: "reduced: at once; a screen reader hears that it is loading",
+    },
+    {
+      key: "Keyboard",
+      value:
+        "Tab reaches each name that opens; Enter or Space opens it and closes the one open",
+    },
+    {
+      key: "Accessibility",
+      value:
+        "The name is a button with `aria-expanded`; the detail is a `dd` it controls",
+    },
+  ]}
+/>
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="key-value"
+  always={[
+    "Facts about one thing, each a short name with its value: a description list a screen reader reads name by value.",
+    "A fact nobody changes here, beside settings: a horizontal row.",
+  ]}
+  never={[
+    "Rows of like things to compare: use Table.",
+    "A value someone edits: use Field with its control.",
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/key-value.tsx"
+  type="KeyValueListProps"
+  label="KeyValueList props"
+/>
+
+### KeyValueItem
+
+<Props
+  source="src/components/key-value.tsx"
+  type="KeyValueItem"
+  label="KeyValueItem"
+/>
+
+### KeyValueLabels
+
+The `keyValue` part of the I18nProvider's catalogue: what a waiting value says to a screen reader. The copy button's words are CopyButton's (`copyButton`).
+
+</Reference>

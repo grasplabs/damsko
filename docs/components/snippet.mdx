@@ -1,0 +1,159 @@
+---
+title: Snippet
+description: A value you can copy, whole on one line, with a copy button at its end.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/snippet"
+  use={'import { Snippet } from "@grasp-os/ui/components/snippet";'}
+/>
+
+## Basic usage
+
+An install command, the way it stands at the top of every page here. A press anywhere on it copies it.
+
+<Stage path="snippet/basic" label="Basic usage" />
+
+## Colours
+
+`swatch` puts the colour before its name, for a list of tokens. `size="sm"` for a list.
+
+<Stage path="snippet/colours" label="Colours" />
+
+## Sizes
+
+`sm` 28px for a list of values, `default` 32px for one value on its own.
+
+<Stage path="snippet/sizes" label="Sizes" />
+
+## A long value
+
+Narrower than its value, the field scrolls sideways and fades the end with more. It never breaks the value and never cuts it short.
+
+<Stage path="snippet/long" label="A long value" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="snippet"
+  always={[
+    "A value someone copies to use elsewhere: an install command, an id, a key, a token's name or value.",
+    "Show the whole value: what is copied is what is seen.",
+    "Name the button for what it copies: Copy the install command.",
+  ]}
+  never={[
+    "Code of more than one line, or code to read: use Code block.",
+    "A fact with its name, where copying is a side action: use Key value.",
+    "Something larger than what it shows (a message, a page): use Copy button.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Size",
+      key: "Height",
+      value: "{control-xs} small, {control-sm} default",
+    },
+    {
+      group: "Size",
+      key: "Padding",
+      value: "{space-3} before the value; the button is a square at the end",
+    },
+    {
+      group: "Type and shape",
+      key: "Value",
+      value: "{font-mono}, {text-xs}",
+      note: "on one line",
+    },
+    {
+      group: "Type and shape",
+      key: "Corner",
+      value: "{radius}, {radius-shape}",
+    },
+    {
+      group: "Colour",
+      key: "Field",
+      note: "fill, then once copied",
+      tokens: ["code-bg", "success-subtle"],
+    },
+    {
+      group: "Colour",
+      key: "Copy",
+      value: "A ghost CopyButton, a square as tall as the field",
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      key: "Press",
+      value:
+        "Anywhere on the field copies the value; the copy button is the one button",
+    },
+    {
+      key: "Copied",
+      value:
+        "The copy button shows its check and the field turns to {success-subtle} over {duration-swap}, for {duration-hold}",
+      note: "the value never moves",
+    },
+    {
+      key: "Failed",
+      value: "The alert mark, and Not copied is said",
+      note: "words from the I18nProvider (`copyButton`)",
+    },
+    {
+      key: "Long values",
+      value: "One line; scrolls sideways with no bar, the end with more fades",
+      note: "never an ellipsis",
+    },
+    { key: "Reduced motion", value: "The ground changes at once" },
+    { key: "Forced colours", value: "A 1px line draws the field" },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Element",
+      value:
+        "A `button` named by `aria-label`, inside a `label` that is the field",
+    },
+    {
+      key: "Tooltip",
+      value:
+        "The copy button shows its name in a Tooltip on hover and on focus",
+      note: "not a description, so the name is heard once",
+    },
+    {
+      key: "Keyboard",
+      value: "One tab stop; Enter or Space copies",
+      note: "the copy button's ring shows focus",
+    },
+    {
+      key: "Said",
+      value:
+        "Copied or Not copied, once, through the page's one polite live region",
+    },
+    { key: "Target", value: "44px on a touch screen" },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/snippet.tsx"
+  type="SnippetProps"
+  label="Snippet props"
+/>
+
+</Reference>

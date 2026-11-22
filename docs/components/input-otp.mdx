@@ -1,0 +1,291 @@
+---
+title: Input OTP
+description: A row of boxes for a one-time code or PIN, one character in each.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/input-otp @damsko/field"
+/>
+
+## Basic usage
+
+Six digits in two threes, as the code reads in its message.
+
+<Stage path="input-otp/basic" live label="Basic usage" />
+
+## Lengths
+
+A four-digit PIN, or a longer code split so it is easier to copy.
+
+<Stage path="input-otp/lengths" label="Lengths" />
+
+## Sizes
+
+36px squares in a form, 44px when the code is all a screen asks for.
+
+<Stage path="input-otp/sizes" label="Sizes" />
+
+## States
+
+A code turned down, one shown to copy, and one out of use.
+
+<Stage path="input-otp/states" label="States" />
+
+## Every state
+
+Hover is forced from its own CSS; the rest are props. The square typing goes to takes the focus edge only under real focus.
+
+<States
+  path="input-otp/state"
+  cells={[
+    { label: "Empty" },
+    { label: "Hover", force: "hover" },
+    { label: "Part typed", props: { value: "42" } },
+    { label: "Filled", props: { value: "4281" } },
+    { label: "Invalid", props: { value: "4281", invalid: true } },
+    { label: "Read only", props: { value: "4281", readOnly: true } },
+    { label: "Disabled", props: { value: "4281", disabled: true } },
+  ]}
+/>
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="input-otp"
+  always={[
+    "A one-time code or a PIN, checked as soon as the last square fills.",
+    "A label that says what the code is: Verification code, PIN.",
+    "`onComplete` to check the code as soon as the last square fills.",
+    "An error that says what to do next: Ask for a new one.",
+  ]}
+  never={[
+    "One input per square: paste and autofill break.",
+    "A password or a key that is not a code: use an Input.",
+    "Colours or sizes set from outside: `style` takes layout only.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Size",
+      key: "Square",
+      value: "{control-default}, {control-lg} when large",
+      note: "Input's heights",
+    },
+    {
+      group: "Size",
+      key: "Gap",
+      value: "{space-2} between squares and round a dash",
+    },
+    {
+      group: "Size",
+      key: "Dash",
+      value: "{icon-sm}, stroke {icon-stroke}",
+      note: "between runs",
+      tokens: ["muted"],
+    },
+    {
+      group: "Size",
+      key: "Touch target",
+      value: "{tap-target} tall",
+      note: "on a touch screen",
+    },
+    {
+      group: "Size",
+      key: "Narrow screen",
+      value: "Squares shrink together, staying square",
+    },
+    {
+      group: "Type and shape",
+      key: "Character",
+      value: "{text-base}, {text-lg} when large, {font-weight-medium}",
+      note: "tabular figures",
+    },
+    {
+      group: "Type and shape",
+      key: "Corner",
+      value: "{radius}, {radius-shape}",
+      note: "capped at half the square",
+    },
+    { group: "Colour", key: "Fill", tokens: ["input-bg"] },
+    {
+      group: "Colour",
+      key: "Hairline",
+      value: "1px, drawn inside",
+      tokens: ["input", "input-border-hover"],
+    },
+    { group: "Colour", key: "Lift", tokens: ["input-shadow"] },
+    { group: "Colour", key: "Character", tokens: ["foreground"] },
+    {
+      group: "Colour",
+      key: "Wrong",
+      note: "every square",
+      tokens: ["shadow-sm-destructive"],
+    },
+    { group: "Colour", key: "Read only", tokens: ["input-bg-read"] },
+    {
+      group: "Focus and disabled",
+      key: "Where typing goes",
+      value: "Input's focus edge on that square",
+      note: "red when wrong",
+      tokens: ["input-focus", "input-focus-invalid"],
+    },
+    {
+      group: "Focus and disabled",
+      key: "Disabled",
+      value: "{opacity-disabled} opacity",
+    },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    {
+      key: "Hover",
+      value: "Hairline one step stronger, {duration-hover}",
+      note: "pointer only; not wrong or read only; reduced: at once",
+      tokens: ["ease"],
+    },
+    {
+      key: "Typing",
+      value: "The focus edge moves to the next square, {duration-hover}",
+      note: "reduced: at once",
+      tokens: ["ease"],
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Input",
+      key: "One field",
+      value:
+        "One native input under the squares: typing, paste, undo and autofill from a message work as in any field.",
+    },
+    {
+      group: "Input",
+      key: "Pointer",
+      value: "A press anywhere on the squares reaches the input.",
+    },
+    {
+      group: "Input",
+      key: "Characters",
+      value:
+        "Only what `pattern` takes; anything else typed or pasted is ignored.",
+    },
+    {
+      group: "Input",
+      key: "Keyboard on a phone",
+      value: "Digits for `numeric`, letters otherwise.",
+    },
+    {
+      group: "Input",
+      key: "Complete",
+      value: "`onComplete` runs with the code once every square is filled.",
+    },
+    {
+      group: "Input",
+      key: "Read only",
+      value: "A quieter fill and no hover; can be read and copied.",
+    },
+    { group: "Input", key: "Disabled", value: "Not focusable and not sent." },
+    {
+      group: "Form",
+      key: "Sent",
+      value: "The code under its `name`; a reset returns to `defaultValue`.",
+    },
+    {
+      group: "Form",
+      key: "Required",
+      value: "Needs a whole code; part of one is too short either way.",
+    },
+    {
+      group: "Settings",
+      key: "Forced colours",
+      value:
+        "A 1px border replaces the hairline, and the square typing goes to takes an outline.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Role",
+      value: 'One native `<input>`, `autocomplete="one-time-code"`',
+      note: "the squares only draw it",
+    },
+    { key: "Name", value: "Its FieldLabel, or `aria-label`" },
+    { key: "Wrong", value: "`aria-invalid` while its error shows" },
+    { key: "Agents", value: "Found by its label and filled like any field" },
+  ]}
+/>
+<Rows
+  title="From shadcn"
+  rows={[
+    {
+      group: "Parts",
+      key: "`InputOTPGroup`, `InputOTPSlot`, `InputOTPSeparator`",
+      value: "The same parts",
+      note: "the dash is MinusIcon",
+    },
+    { group: "Parts", key: "`maxLength`", value: "`maxLength`" },
+    {
+      group: "Parts",
+      key: "`pattern` as a regular expression",
+      value: "`pattern`: `numeric`, `alphabetic`, `alphanumeric`",
+    },
+    { group: "Look", key: "`MinusIcon`", value: "`MinusIcon`" },
+    {
+      group: "Look",
+      key: "Ring on the active slot",
+      value: "{input-focus}",
+      note: "Input's focus edge",
+    },
+    {
+      group: "Elsewhere",
+      key: "`className`",
+      value: "`style`",
+      note: "layout only",
+    },
+    { group: "Elsewhere", key: "`input-otp`", value: "UI SDK's OTPInput" },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/input-otp.tsx"
+  type="InputOTPProps"
+  label="InputOTP props"
+/>
+
+<Props
+  source="src/components/input-otp.tsx"
+  type="InputOTPGroupProps"
+  label="InputOTPGroup props"
+/>
+
+<Props
+  source="src/components/input-otp.tsx"
+  type="InputOTPSlotProps"
+  label="InputOTPSlot props"
+/>
+
+<Props
+  source="src/components/input-otp.tsx"
+  type="InputOTPSeparatorProps"
+  label="InputOTPSeparator props"
+/>
+
+</Reference>

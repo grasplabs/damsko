@@ -1,0 +1,208 @@
+---
+title: Chart
+description: Numbers across kinds, over time, as parts of a whole, as flows between stages, or as a spark beside a figure.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/chart"
+  use={
+    'import { ChartArea, ChartBar, ChartBarList, ChartContainer, ChartGrid, ChartLabels, ChartLine, ChartPie, ChartSankey, ChartSparkline, ChartTooltip, ChartXAxis, ChartYAxis } from "@grasp-os/ui/components/chart";'
+  }
+/>
+
+## Bars
+
+`ChartContainer` holds the drawing; `ChartBar` draws each bar in the plain token colour. The arrow keys move between them.
+
+<Stage path="chart/bar-plain" label="Bars" />
+
+## Bars in pixels
+
+`pattern="dither-pixels"` dithers the body in 2px cells; a solid cap carries the value.
+
+<Stage path="chart/bar-pixels" label="Bars in pixels" />
+
+## Bars in dots
+
+`pattern="dither-dots"` uses fine 1px dots on a 3px pitch instead.
+
+<Stage path="chart/bar-dots" label="Bars in dots" />
+
+## Bars across
+
+`ChartBarList` lays kinds side by side as bars across, largest first. Each name is read where its bar starts and wraps by the word on a phone; each value stands at the row's end. No axis: the words carry the numbers.
+
+<Stage path="chart/bar-list" label="Bars across" />
+
+## Bars across in pixels
+
+`pattern="dither-pixels"` lights the dither at each bar's tip, with a solid cap saying the value.
+
+<Stage path="chart/bar-list-pixels" label="Bars across in pixels" />
+
+## Bars across in dots
+
+The fine dots, lit at each tip the same way.
+
+<Stage path="chart/bar-list-dots" label="Bars across in dots" />
+
+## This year against last
+
+A second series in the config is drawn as a muted bar under the first, and named on the first row instead of in a legend: beside the values, or above each bar on a narrow chart.
+
+<Stage path="chart/bar-list-compare" label="This year against last" />
+
+## Below zero
+
+A value below zero runs left from a faint zero line; the names stay where the row starts. `valueFormatter` writes the value, with a real minus sign (−), not a hyphen.
+
+<Stage path="chart/bar-list-change" label="Below zero" />
+
+## Area
+
+A line in the value colour with a faint wash under it.
+
+<Stage path="chart/area-plain" label="Area" />
+
+## Spend in a card
+
+The figure that matters at the card's start edge (a `bare` Stat, on the card's own room and ground), then the months under it at the card's full width: the grid, both axes (`ChartYAxis` in euros, given the `width` its longest label needs), the area and a tooltip.
+
+<Stage path="chart/spend-card" label="Spend in a card" />
+
+## Area in pixels
+
+The dither lit near the line and thinning to evergreen at the floor.
+
+<Stage path="chart/area-pixels" label="Area in pixels" />
+
+## Area in dots
+
+The same in the fine dots.
+
+<Stage path="chart/area-dots" label="Area in dots" />
+
+## A line
+
+`ChartLine` draws a trend as the line alone, in the value colour, with nothing under it.
+
+<Stage path="chart/line" label="A line" />
+
+## Lines compared
+
+Several `ChartLine`s share one chart. Each takes a `variant` (`solid`, `dashed`, `dotted`, `thin`), so the lines are told apart without colour, and `ChartLabels` names each at its end in place of a legend; where two end close together, their names step apart. Hover shows a point on every line and one tooltip, highest first (`sortOrder="descending"`). Five lines at most: past that, a table or one chart per line reads better.
+
+<Stage path="chart/lines-several" label="Lines compared" />
+
+## With a legend
+
+`ChartLegend` names each series under the chart, by its name in the config, beside a swatch of the line.
+
+<Stage path="chart/legend" label="With a legend" />
+
+## This period against last
+
+`variant="muted"` draws the earlier period muted, thinner and dashed, under the value.
+
+<Stage path="chart/lines-compare" label="This period against last" />
+
+## A ring
+
+`ChartPie` shows the parts of a whole round a ring, the total in its centre with one line of words (`caption`). Each part is a series in the config, in order from twelve o'clock, with a clear gap between. The names live in a quiet list beside the ring (under it on a narrow chart), never hung round it. Hover or focus a part and it lifts a little while the centre says it.
+
+<Stage path="chart/ring" label="A ring" />
+
+## A ring in pixels
+
+`pattern="dither-pixels"` dithers the first part, lit at its outer edge, with a solid cap along it. The rest step down the chart tones.
+
+<Stage path="chart/ring-pixels" label="A ring in pixels" />
+
+## A ring in dots
+
+The fine dots on the first part.
+
+<Stage path="chart/ring-dots" label="A ring in dots" />
+
+## Five parts
+
+Five parts at most: past that, bars across say it better. Write every value to the same number of decimals (`€14.0K`, not `€14K` under `€24.1K`), so the column reads as one precision and no value looks like a mistake.
+
+<Stage path="chart/ring-list" label="Five parts" />
+
+## One share
+
+One value and a `total` it is part of: the share in the centre, the rest of the ring a faint empty track.
+
+<Stage path="chart/ring-share" label="One share" />
+
+## A spark in a table
+
+`ChartSparkline` draws a trend small enough to sit beside its number: a line in the value colour, 20px tall, with no axis, grid or words inside it. The number beside it says the value; its `aria-label` and `summary` say the trend to a screen reader. `showHighlight="last"` puts one dot on the last point. In a table it is a picture, never a control.
+
+<Stage path="chart/spark-table" label="A spark in a table" />
+
+## A spark in a highlight
+
+`size="lg"` stands 44px tall under a highlight's figure (its `chart` prop), with a soft `area` if asked. Given `onHighlightChange`, the pointer or the arrow keys pick a week and the tile's own figure says it; no tooltip opens.
+
+<Stage path="chart/spark-tile" label="A spark in a highlight" />
+
+## Every shape
+
+Rising, falling, flat, noisy, crossing zero and a single point, at both sizes. Flat and one-point series draw a straight line; a faint zero line shows only where a series crosses zero; a wobble of a few per cent stays nearly flat. No dither at this size, and no draw-in.
+
+<Stage path="chart/spark-shapes" label="Every shape" />
+
+## Flows between stages
+
+`ChartSankey` shows how a whole moves between stages: each node as tall as what passes through it, each flow a ribbon as thick as its value, from its source's tone to its target's. Columns come from the longest path, and nodes are ordered in their column to cut crossings. A `muted` node is an end not hoped for (disputed, waiting): its ribbons fade to muted. Hover or Tab to a flow and its whole path lights while the rest steps back; a line under the drawing says its value and its share of where it came from, so nothing covers the flows. The ribbons draw in once, left to right; on a narrow chart the flows become a list by stage.
+
+<Stage path="chart/sankey" label="Flows between stages" />
+
+## Flows with dithered nodes
+
+`pattern="dither-pixels"` dithers the nodes, lit at the top. The dither is a fill: the thickness carries the hours.
+
+<Stage path="chart/sankey-hours" label="Flows with dithered nodes" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent of="chart" />
+
+<Reference>
+
+## API
+
+<Props source="src/components/chart.tsx" type="ChartContainerProps" />
+
+<Props source="src/components/chart.tsx" type="ChartBarProps" />
+
+<Props source="src/components/chart.tsx" type="ChartAreaProps" />
+
+<Props source="src/components/chart.tsx" type="ChartLineProps" />
+
+<Props source="src/components/chart.tsx" type="ChartBarListProps" />
+
+<Props source="src/components/chart.tsx" type="ChartLabelsProps" />
+
+<Props source="src/components/chart.tsx" type="ChartPieProps" />
+
+<Props source="src/components/chart.tsx" type="ChartSankeyProps" />
+
+<Props source="src/components/chart.tsx" type="ChartSparklineProps" />
+
+<Props source="src/components/chart.tsx" type="ChartXAxisProps" />
+
+<Props source="src/components/chart.tsx" type="ChartYAxisProps" />
+
+<Props source="src/components/chart.tsx" type="ChartGridProps" />
+
+<Props source="src/components/chart.tsx" type="ChartLegendProps" />
+
+<Props source="src/components/chart.tsx" type="ChartTooltipProps" />
+
+</Reference>

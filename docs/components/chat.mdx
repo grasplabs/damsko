@@ -1,0 +1,114 @@
+---
+title: Chat
+description: The whole thread, ready to use, with the messages in a Message scroller, an empty state before the first and the Prompt input under them.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/chat"
+/>
+
+## The thread
+
+Chat is the thread of a conversation with the assistant. Each turn is a `ChatMessage`, a Message in a Message scroller row; the person's turn is the scroll anchor, so a new question settles near the top and the reply streams in under it, followed while you stay at the end. The field under it is a Prompt input.
+
+<Stage path="chat/demo" label="The thread" />
+
+## Before the first turn
+
+`ChatEmptyState` stands in the thread until the first turn: a mark, a title and a sentence.
+
+<Stage path="chat/empty" label="Before the first turn" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="chat"
+  always={[
+    "A conversation with an assistant: its turns in `ChatMessages`, each a `ChatMessage` with its `key` and `messageId`, and the Prompt input under them.",
+    "`aria-busy` on `ChatMessages` while the reply streams.",
+    "A height for Chat: the thread scrolls inside it.",
+  ]}
+  never={[
+    "A transcript with rows that are not messages, or a thread with its own scrolling rules: compose Message scroller yourself.",
+    "Its own scrolling: Chat composes, and Message scroller owns where the thread stands.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Layout",
+      key: "Column",
+      value:
+        "What stands over the thread, the thread taking the room left, then the field",
+    },
+    {
+      group: "Empty state",
+      key: "Words",
+      value:
+        "{text-sm}, the title {font-weight-medium}, centred, {space-8} round it",
+      tokens: ["foreground", "muted"],
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      key: "Following",
+      value:
+        "Message scroller with `autoScroll`: it follows the reply while you are at the end.",
+    },
+    {
+      key: "A sent turn",
+      value:
+        "The person's turn is the scroll anchor: it settles near the top, the reply under it.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Thread",
+      value:
+        "Message scroller's named `log`; new turns said once each by count",
+    },
+    {
+      key: "Turns",
+      value: "Each Message named by who wrote it (You, Assistant)",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props source="src/components/chat.tsx" type="ChatProps" label="Chat props" />
+
+<Props
+  source="src/components/chat.tsx"
+  type="ChatMessagesProps"
+  label="ChatMessages props"
+/>
+
+<Props
+  source="src/components/chat.tsx"
+  type="ChatMessageProps"
+  label="ChatMessage props"
+/>
+
+<Props
+  source="src/components/chat.tsx"
+  type="ChatEmptyStateProps"
+  label="ChatEmptyState props"
+/>
+
+</Reference>

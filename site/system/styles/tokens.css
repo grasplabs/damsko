@@ -1,0 +1,130 @@
+/* The docs site's own tokens: the frame's grid and parts, the stage's ground, and the few values
+   the site's pages draw with that are not the library's (the library's are in
+   src/styles/tokens.css, loaded before this sheet). Written on the library's tokens where one
+   says the same thing, so they follow the theme and the scheme with it. The site's StyleX reads
+   them through site/system/site-tokens.stylex.ts. */
+
+:root {
+  /* Docs frame: grid. */
+  /* The height of the docs header, and of the menu's head. */
+  --frame-header: 56px;
+  /* The width of the docs page's column. */
+  --frame-column: 48rem;
+  /* The width of the rail that holds On this page. */
+  --frame-rail: 14rem;
+  /* The longest line of running text in the docs. */
+  --frame-measure: 40rem;
+
+  /* Docs frame: parts. */
+  /* The widest the search dialog grows. */
+  --frame-search-panel: 36rem;
+  /* The tallest the search dialog grows. */
+  --frame-search-panel-height: 32rem;
+  /* The width of a line that says where you are: the sidebar's, the rail's. */
+  --frame-mark: 2px;
+  /* The mint dot beside the current choice or page. */
+  --frame-dot: 6px;
+  /* How far a link's underline sits under its words. */
+  --frame-underline-offset: 3px;
+  /* The weight of a rule in the docs frame: the system's hairline. */
+  --frame-hairline: var(--damsko-hairline);
+
+  /* Docs frame: colours. */
+  /* The underline of a link in running text: ink at 30%, darker than a hairline. */
+  --frame-underline: light-dark(
+    oklch(0.267 0.048 169.88 / 0.3),
+    oklch(0.965 0.014 150 / 0.3)
+  );
+  /* The shade over the page behind the search dialog. */
+  --frame-scrim: oklch(0.173 0.028 169.36 / 0.24);
+
+  /* The stage. */
+  /* The ground of a stage's Paper: a soft off-white, so white controls read by their fill. In
+     dark, the card's step, apart from muted and night, so muted fills still show on it. */
+  --stage-bg: light-dark(oklch(0.985 0.003 165), oklch(0.235 0.032 168));
+  /* The least height of a stage that shows a part. */
+  --stage-min: 400px;
+
+  /* The brand book's and the pages' own marks. */
+  /* The reeded glass over the light: a ridge every 12px, a soft band every 96px. Lay it over the
+     light with soft-light. */
+  --flutes:
+    repeating-linear-gradient(
+      90deg,
+      oklch(1 0 0 / 0.16) 0 1px,
+      oklch(1 0 0 / 0) 1px 7px,
+      oklch(0 0 0 / 0.2) 7px 10px,
+      oklch(0 0 0 / 0) 10px 12px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      oklch(1 0 0 / 0) 0,
+      oklch(1 0 0 / 0.14) 24px,
+      oklch(1 0 0 / 0) 48px,
+      oklch(0 0 0 / 0.06) 72px,
+      oklch(1 0 0 / 0) 96px
+    );
+  /* The background size that goes with flutes. */
+  --flutes-size: 12px 100%, 96px 100%;
+  /* The second half of a statement set at 24px or more. Never smaller. */
+  --subtle-foreground-large: light-dark(
+    oklch(0.29 0.05 162 / 0.52),
+    oklch(0.96 0.02 150 / 0.44)
+  );
+  /* The 1px ring around a value chip: a little more than the edge, as a chip has no lift. */
+  --chip-ring: light-dark(
+    oklch(0.173 0.028 169.36 / 0.1),
+    oklch(0.96 0.02 150 / 0.14)
+  );
+  /* A tag: 13px capitals that name a section, never a page. */
+  --tracking-tag: 0.09em;
+
+  /* The brand book's halls (site/brand/hall-still.tsx). */
+  /* The lit cells of a hall's dither: pine, deep and quiet. */
+  --hall-dither-lit: light-dark(
+    oklch(0.4321 0.0778 175.187 / 0.3),
+    oklch(0.72 0.12 168 / 0.3)
+  );
+  /* Where a hall's dither shows: thin at the top, whole towards the foot. */
+  --hall-dither-mask: radial-gradient(
+    150% 135% at 50% 110%,
+    rgb(0 0 0 / 0.05) 0%,
+    rgb(0 0 0 / 0.07) 40%,
+    rgb(0 0 0 / 0.22) 62%,
+    rgb(0 0 0 / 0.6) 80%,
+    black 96%
+  );
+
+  /* The home page's showcase (site/pages/index.astro, site/start/). */
+  /* The lit cells of its living ground: the halls' deep pine. */
+  --showcase-ground-lit: var(--hall-dither-lit);
+  /* Where its ground shows: faint over the middle, whole towards the window's foot. */
+  --showcase-ground-mask: radial-gradient(
+    140% 120% at 50% 100%,
+    oklch(0 0 none / 0.4) 0%,
+    oklch(0 0 none / 0.55) 45%,
+    black 90%
+  );
+  /* App building's sketches (site/start/app-building/): one step of the build. */
+  --build-beat: 760ms;
+  /* The least height of a stage that builds. */
+  --build-min-height: 320px;
+  /* The pitch of the dots on a piece. */
+  --build-dither: 4px;
+  /* A soft block's fill, its dots and its lines. */
+  --build-block: color-mix(in oklch, var(--damsko-pine) 9%, transparent);
+  --build-dot: color-mix(in oklch, var(--damsko-pine) 30%, transparent);
+  --build-detail: color-mix(in oklch, var(--damsko-pine) 22%, transparent);
+  /* The blueprint's grid and its outlines. */
+  --build-grid: color-mix(in oklch, var(--damsko-mint-deep) 13%, transparent);
+  --build-outline: color-mix(
+    in oklch,
+    var(--damsko-mint-deep) 70%,
+    transparent
+  );
+  /* The words on a cursor's name tag. */
+  --build-on-cursor: light-dark(
+    var(--damsko-brand-paper),
+    var(--damsko-brand-night)
+  );
+}

@@ -1,0 +1,142 @@
+/* The pen's tones (site/overview/pen.ts says the drawing language). Every tone is a token, so
+   light and dark both follow the theme: outlines in the muted text colour set a little back,
+   dividers in the hairline, surfaces on the raised ground, the primary's fill in the action fill
+   and the one accent in mint. The texture is the system's dither, its dots in the pen's tone or
+   the accent's.
+
+   A drawing is never stretched: it is shown at one of two fixed sizes (pen.ts SCALE), each made
+   for its own pixels, so every line is one pixel and every dot of the dither sits on a whole one. */
+@layer site {
+  .sketch {
+    --sk-w: 240px;
+    --sk-h: 135px;
+    --sk-pen: color-mix(
+      in oklch,
+      var(--damsko-muted-foreground) 72%,
+      var(--stage-bg)
+    );
+    --sk-accent: var(--damsko-mint-deep);
+    position: absolute;
+    /* On a whole pixel, so nothing in it is smoothed: half a pixel off would blur every line. The
+       tiles start half a hairline in (the grid's ring, overview.css), which is taken off here. */
+    inset-block-start: calc(50% - var(--sk-h) / 2);
+    inset-block-start: calc(
+      round(down, calc(50% - var(--sk-h) / 2), 1px) + var(--overview-ring, 0px)
+    );
+    inset-inline-start: calc(50% - var(--sk-w) / 2);
+    inset-inline-start: calc(
+      round(down, calc(50% - var(--sk-w) / 2), 1px) + var(--overview-ring, 0px)
+    );
+    display: block;
+    width: var(--sk-w);
+    height: var(--sk-h);
+    overflow: visible;
+  }
+
+  /* Each drawing is in the page twice, made for each size: the one that fits is shown
+     (overview.css says where the tiles are small). */
+  .sketch-narrow {
+    --sk-w: 160px;
+    --sk-h: 90px;
+    display: none;
+  }
+
+  /* The patterns' own sheet: nothing to see, no room taken. */
+  .sketch-defs {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+  }
+
+  .sketch .sk-l {
+    fill: none;
+    stroke: var(--sk-pen);
+    stroke-width: 1px;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .sketch .sk-l.sk-hair {
+    stroke: var(--damsko-border);
+  }
+
+  .sketch .sk-l.sk-accent {
+    stroke: var(--sk-accent);
+  }
+
+  .sketch .sk-l.sk-on-accent {
+    stroke: var(--damsko-primary-foreground);
+  }
+
+  .sketch .sk-b {
+    stroke: none;
+  }
+
+  .sketch .sk-b.sk-title {
+    fill: color-mix(in oklch, var(--damsko-muted-foreground) 52%, transparent);
+  }
+
+  .sketch .sk-b.sk-body {
+    fill: color-mix(in oklch, var(--damsko-muted-foreground) 24%, transparent);
+  }
+
+  .sketch .sk-b.sk-accent {
+    fill: var(--sk-accent);
+  }
+
+  .sketch .sk-b.sk-on-accent {
+    fill: color-mix(
+      in oklch,
+      var(--damsko-primary-foreground) 88%,
+      transparent
+    );
+  }
+
+  .sketch .sk-f {
+    stroke: none;
+  }
+
+  .sketch .sk-f.sk-sheet {
+    fill: var(--damsko-card);
+  }
+
+  .sketch .sk-f.sk-pen {
+    fill: var(--sk-pen);
+  }
+
+  .sketch .sk-f.sk-tint {
+    fill: color-mix(in oklch, var(--damsko-muted-foreground) 14%, transparent);
+  }
+
+  .sketch .sk-f.sk-accent {
+    fill: var(--sk-accent);
+  }
+
+  .sketch .sk-f.sk-accent-fill {
+    fill: var(--damsko-primary);
+  }
+
+  /* The dither's dots: each a 1px square at a whole pixel, in a drawing whose units are pixels,
+     so no browser has anything to round (pen.ts). */
+
+  .sk-dots-ink {
+    fill: color-mix(in oklch, var(--damsko-muted-foreground) 80%, transparent);
+  }
+
+  .sk-dots-accent {
+    fill: var(--damsko-mint-deep);
+  }
+
+  @media (forced-colors: active) {
+    .sketch {
+      --sk-pen: CanvasText;
+      --sk-accent: CanvasText;
+    }
+
+    .sk-dots-ink,
+    .sk-dots-accent {
+      fill: CanvasText;
+    }
+  }
+}

@@ -1,0 +1,20 @@
+---
+// <Head lead={frontmatter.description} install="pnpm dlx shadcn@4.23.0 add @damsko/button" />
+// The page head under the title: one sentence and the install command as one compact copy control.
+// Markdown form: site/markdown.ts.
+import "../system/styles/blocks.css";
+import { HeadView } from "./head";
+
+interface Props {
+  lead: string;
+  install?: string;
+  /** The install control's name for a screen reader, before the command. */
+  installLabel?: string;
+}
+const { lead, install, installLabel = "Copy the install command" } = Astro.props;
+---
+
+<HeadView
+  lead={lead}
+  install={install ? { value: install, said: "Copied the install command", label: installLabel } : undefined}
+/>

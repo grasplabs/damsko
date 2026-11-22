@@ -1,0 +1,14 @@
+---
+// <Part title="Using it" />: where a page's guidance begins, after its pictures. On the page, one
+// hairline with room round it: the sections under it (When to use it, Specification) keep
+// their own `##` headings, which the Markdown twin and the llms files read by name,
+// and a label over a heading read as two headings for one thing. The name is the rail's: it groups
+// its items under it (site/chrome/Toc.astro, read from this tag in the page's source). Markdown
+// form: nothing.
+interface Props {
+  title: string;
+}
+const { title } = Astro.props;
+---
+
+<hr class="site-part-rule" data-site-part={title} />

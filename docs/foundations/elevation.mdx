@@ -1,0 +1,51 @@
+---
+title: Elevation
+description: One edge and three lifts, so a part reads by its fill and lift, not a line.
+---
+
+<Head lead={frontmatter.description} />
+
+<Scene
+  path="foundations/elevation-heights"
+  title="One edge, three lifts"
+  note="A list lies on the edge, a field stands on low lift, a card floats on medium and a dialog comes over all of it on high."
+  ground="soft"
+/>
+
+<Scene
+  path="foundations/elevation-edge"
+  title="An edge, not a border"
+  note="The same card under a glass: a faint ring outside the box and a breath of shadow, beside a hard line inside it."
+  ground="soft"
+/>
+
+<Scene
+  path="foundations/elevation-hover"
+  title="Lifted by what it does"
+  note="Point at an agent or reach it with Tab and it rises to medium lift; press it and it settles to low."
+  ground="soft"
+/>
+
+<AllTokens>
+
+<SampleRows
+  set="edges"
+  kind="lift"
+  note="Each square stands on the soft ground in its own shadow."
+/>
+
+</AllTokens>
+
+## Rules
+
+<Rules
+  always={[
+    "Give a control or a field low lift, a popup medium lift and a dialog high lift.",
+    "Draw an edge with the `edge` token, outside the part, so it adds no size.",
+  ]}
+  never={[
+    "An edge or a shadow value of your own.",
+    "A border line where the edge will do.",
+    "`lift-1`, `lift-2` or `lift-soft` in new code: they are kept for parts that read them.",
+  ]}
+/>

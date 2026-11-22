@@ -1,0 +1,199 @@
+---
+title: Skeleton
+description: Placeholder shapes that stand in for content while it loads, so the page does not jump.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/skeleton"
+  use={'import { Skeleton } from "@grasp-os/ui/components/skeleton";'}
+/>
+
+## How it waits
+
+`animation="wave"` (the default): a fine dot field with one wave of light across the whole page. `pulse`: the soft fill, breathing.
+
+<Stage path="skeleton/looks" label="How it waits" />
+
+## Shapes
+
+`text` for words, `rectangular` for an image or a chart, `circular` for an avatar.
+
+<Stage path="skeleton/shapes" label="Shapes" />
+
+## Text
+
+Each line as tall as the line of words it stands for (`size`: `sm`, `default`, `lg`); the last of a paragraph shorter.
+
+<Stage path="skeleton/text" label="Text" />
+
+## In a layout
+
+Each placeholder stands where its part will be, at its size, beside the others.
+
+<Stage path="skeleton/layout" label="In a layout" />
+
+## Still
+
+`animation={false}` keeps the soft fill still, for a long list.
+
+<Stage path="skeleton/still" label="Still" />
+
+## Every state
+
+Each variant and text size in the wave, then in the pulse.
+
+<States
+  path="skeleton/states"
+  cells={[
+    { label: "Small text" },
+    { label: "Body text", props: { size: "default" } },
+    { label: "Lead", props: { size: "lg" } },
+    { label: "Circular", props: { variant: "circular" } },
+    { label: "Rectangular", props: { variant: "rectangular" } },
+    { label: "Text, pulse", props: { animation: "pulse" } },
+    {
+      label: "Circular, pulse",
+      props: { variant: "circular", animation: "pulse" },
+    },
+    {
+      label: "Rectangular, pulse",
+      props: { variant: "rectangular", animation: "pulse" },
+    },
+  ]}
+/>
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="skeleton"
+  always={[
+    "The size and place of the content it stands for.",
+    "`aria-busy` on the region while it loads, and off once it has.",
+  ]}
+  never={["A placeholder in a shape the content will not have."]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Size",
+      key: "Line",
+      value: "{text-sm-line}, {text-base-line} or {text-lg-line} tall",
+      note: "the fill on the letters' height",
+    },
+    {
+      group: "Size",
+      key: "Block",
+      value: "{control-default} tall",
+      note: "or the size the layout gives it",
+    },
+    { group: "Size", key: "Circle", value: "{control-default}" },
+    { group: "Shape", key: "Line", value: "{radius-mark}, {radius-shape}" },
+    {
+      group: "Shape",
+      key: "Block",
+      value: "{radius}, {radius-shape}",
+      note: "capped at half its height",
+    },
+    { group: "Shape", key: "Circle", value: "{radius-circle}" },
+    {
+      group: "Field",
+      key: "Dots",
+      value: "1px on a 4px pitch, {foreground} at 20%",
+      note: "a block and a circle on {muted}; text on nothing",
+    },
+    {
+      group: "Field",
+      key: "Light",
+      value: "A 420px band, 105°, mint into pine",
+      note: "seen only through the dots, a little larger",
+      tokens: ["mint", "pine"],
+    },
+    { group: "Grey", key: "Fill", note: "no edge", tokens: ["skeleton-bg"] },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    {
+      key: "Light",
+      value:
+        "520px a second across the page, then a rest of a fifth of the pass",
+      note: "transform only; reduced or forced colours: no light",
+    },
+    {
+      key: "Down the page",
+      value:
+        "The wave repeats every screen's height, so a long list is lit all the way down",
+    },
+    {
+      key: "One field",
+      value:
+        "Every placeholder on the page's one clock, offset by where it stands",
+      note: "x plus 0.6 of y",
+    },
+    {
+      key: "Off screen",
+      value:
+        "The light pauses; in view again it is measured afresh and takes up the page's clock",
+      note: "and when the window or the page changes size",
+    },
+    {
+      key: "Pulse",
+      value:
+        "`pulse`: full, then {skeleton-low}, then full, every {skeleton-pulse}",
+      note: "reduced: still",
+      tokens: ["skeleton-ease"],
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    { key: "Pointer", value: "The progress cursor over it." },
+    {
+      key: "Forced colours",
+      value:
+        "The wave: an outline in the system's grey text colour. Pulse and still: filled in it.",
+    },
+    { key: "Right to left", value: "The light crosses from the right." },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    { key: "Screen readers", value: "Hidden: `aria-hidden`" },
+    {
+      key: "The region",
+      value:
+        "`aria-busy`, with a `status` that says what loads, set by the page",
+    },
+  ]}
+/>
+<Rows
+  title="From shadcn"
+  rows={[
+    { key: "`bg-accent`", value: "{skeleton-bg}" },
+    {
+      key: "`rounded-md`",
+      value: "`variant`",
+      note: "text, rectangular or circular",
+    },
+    { key: "`animate-pulse`", value: '`animation="pulse"`' },
+    { key: "`className`", value: "`style`", note: "size and layout only" },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props source="src/components/skeleton.tsx" type="SkeletonProps" />
+
+</Reference>

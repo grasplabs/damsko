@@ -1,0 +1,11 @@
+---
+// <Ways items={[{ name, line, href }]} />: Get started's numbered list rows, each one link.
+// Markdown form: a numbered list of links (site/markdown.ts).
+import "../system/styles/blocks.css";
+import { WaysView } from "./ways";
+import type { Way } from "./ways";
+
+const { items } = Astro.props as { items: Way[] };
+---
+
+<WaysView items={items} />

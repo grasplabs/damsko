@@ -1,0 +1,55 @@
+---
+title: Settings
+description: A settings page as rows, every control on one edge, a card for each topic.
+---
+
+<Head lead={frontmatter.description} />
+
+## The page
+
+The title, then a heading over each group of rows, centred 640px wide (`Container size="sm" align="center"`). Each row is a responsive Field with one control at its own width (`FieldGroup controls="fit"`), so every row is one height.
+
+<Stage path="patterns/settings-page" label="The page" />
+
+## On a phone
+
+The column takes the whole width. Each control keeps its own width beside its words, which wrap.
+
+<Stage path="patterns/settings-page-phone" label="On a phone" />
+
+## Members
+
+People on the setting rows' height: a face, a quieter You and a role on one edge.
+
+<Stage path="patterns/settings-members" label="Members" />
+
+## Plain settings
+
+What can change as a setting, what cannot as a read-only field. A failed save keeps the choice and offers Try again (`FieldStatus`).
+
+Help under a label is one short phrase. Anything longer, a sentence or a line that would wrap, goes under the group's title.
+
+<Stage path="patterns/settings-general" label="Plain settings" />
+
+## One topic
+
+A page with one topic is one card with no title of its own: the page's title names it.
+
+<Stage path="patterns/settings-profile" label="One topic" />
+
+## Rules
+
+<Rules
+  always={[
+    'The page in a centred column 640px wide (Container size="sm" align="center"), a big table or a log alone running the whole width. A topic is always a card: one flush, small Card per topic, its title on the page just above it (SectionHeader variant="group"), its rows inside, never a frameless group. The page\'s title in the serif at the middle size (PageHeader size="sm").',
+    "Every control in the control column, on one end edge. A value of the person's or the workspace's own they cannot change here (an email, an address) is a read-only field in the same box; so is a fact about the system (data location, the plan).",
+    "A select or a switch saves as it changes: a spinner, then a tick, beside the control, never a line under the name; a failure keeps the value and offers Try again.",
+    "Lists of things (members, invitations) as Items at the setting rows' height.",
+  ]}
+  never={[
+    "A Save button for a row that saves as it changes.",
+    "A lead under a settings sub-page's title: the crumbs say where you are.",
+    "A card per setting, or two controls in one row. A topic's title in a bar inside its card.",
+    "A form for adding a thing on the page: it opens in a Dialog.",
+  ]}
+/>

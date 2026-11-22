@@ -1,0 +1,247 @@
+---
+// The one layout: the library's Sidebar and its inset page (../chrome/DocsShell.tsx) around the page's
+// column, the rail with "On this page" beside it in the card, and the page's end. Every docs page and the 404 use it.
+//
+// The ids, data attributes and class names below are the ones the site's scripts and checks read
+// (#content, [data-site-doc-grid], [data-site-toc] and the rest).
+//
+// Order in the head matters:
+//   1. the cascade layers' order, before any sheet: the product base, then the site, then StyleX's
+//      own layers (declared by its sheet, which always comes after), so a component's style wins
+//      over anything of the site's, whatever its specificity (site/system/styles/README in base.css)
+//   2. the theme and the reading direction, set before the first paint, so there is no flash
+//   3. the router, which swaps pages in place
+//
+// Slots: the default one is the page's words (in .site-prose); `before` goes above them in the
+// column, outside the prose (Get started's light band); `wide` is a band across the column and
+// the rail, above both (site/system/styles/site.css, "A wide opening").
+import { ClientRouter } from "astro:transitions";
+import { libraryName, navOpenKey, navStorageKey } from "../system/name";
+import { sidebarStateScript } from "@grasp-os/ui/components/sidebar";
+
+import "../../src/styles/tokens.css";
+// The system's themes: the site stands on Evergreen (site/system/head-scripts.ts, siteTheme).
+import "../../src/styles/themes.css";
+// The docs frame's own tokens: its grid, the stage's ground.
+import "../system/styles/tokens.css";
+import "../styles/fonts.css";
+import "../system/styles/base.css";
+// A page on paper: no shell, its full length (print only).
+import "../system/styles/print.css";
+import "../system/styles/site.css";
+import "../system/styles/prose.css";
+import "../system/styles/blocks.css";
+
+import markSvg from "../../public/brand/grasp-mark-ink.svg?raw";
+import DocsShell from "../chrome/DocsShell.tsx";
+import { navGroups } from "../chrome/nav";
+import Search from "../chrome/Search.astro";
+import PageEnd from "../chrome/PageEnd.astro";
+import PrevNext from "../chrome/PrevNext.astro";
+import Toc from "../chrome/Toc.astro";
+import { sectionOf, sidebar } from "../system/content";
+import { kinds } from "../system/kinds";
+import { directionInit, groundInit, scrollInit, sidebarScroll, themeInit } from "../system/head-scripts";
+import { robotsMeta } from "../system/indexing";
+import SiteIcons from "./SiteIcons.astro";
+
+interface Props {
+  route: string;
+  title: string;
+  description?: string;
+  /** `part`: the page part it is in (the rail groups by it); `folded`: a closed Reference fold. */
+  headings?: { depth: number; slug: string; text: string; part?: string; folded?: boolean }[];
+  prev?: { route: string; label: string } | null;
+  next?: { route: string; label: string } | null;
+  /** The 404: no rail, no page end, not indexed. */
+  bare?: boolean;
+  /**
+   * Full bleed (the start page): no sidebar, no rail, no text column and no page end; what the
+   * page puts in its slot runs to the window's edges under the top bar, and lays itself out. The
+   * phone menu still holds every section.
+   */
+  bleed?: boolean;
+  /**
+   * Full width (the components overview): no rail; the page takes the column's and the rail's room
+   * together. Its sections are already the sidebar's groups, so a rail would only repeat them.
+   */
+  full?: boolean;
+  /**
+   * Fullscreen (the home page, the brand book): the page alone, to the window's edges, with no
+   * frame, top bar or sidebar; it brings its own way into the docs. Search (Ctrl+K) still opens.
+   */
+  fullscreen?: boolean;
+  /**
+   * A look this page always has, whatever the reader chose ("dark" on the home page). The choice is
+   * kept and every other page follows it; the head script (site/system/head-scripts.ts) reads this
+   * before the first paint.
+   */
+  mode?: "dark" | "light";
+}
+
+const { route, title, description, headings = [], prev = null, next = null, bare = false, bleed = false, full = false, fullscreen = false, mode } = Astro.props;
+// The robots meta from the one switch (../system/indexing.ts); a bare page (a study) is never listed.
+const robots = robotsMeta(bare ? "noindex" : undefined);
+// A page may open with one band wider than the text: <div slot="wide">. It spans the column and the
+// rail, on the frame's own grid lines; the rail and the rest of the page start under it. Without
+// it the layout is as it always was.
+const wide = Astro.slots.has("wide");
+// The current section's pages, in runs, as plain data for the shell (an island's props are JSON).
+const section = sectionOf(route);
+// Each run gets a stable id (the kind's id in Components, else its label in lower case), which the
+// sidebar keeps its folds under.
+// One sidebar for the whole site (no Docs | Components switch): the docs' runs,
+// then the components', each section marked as the part it starts.
+const runsOf = (part: "docs" | "components") =>
+  navGroups(sidebar(part)).map((group) => ({
+    id: kinds.find((kind) => kind.label === group.label)?.id ?? group.label.toLowerCase().replaceAll(" ", "-"),
+    label: group.label,
+    part,
+    pages: group.pages.map((page) => ({ route: page.route, label: page.label })),
+  }));
+// The parts' overviews are reached by the parts' names (DocsShell), not by a row of their own.
+const overviews = new Set(["/docs", "/components"]);
+const navigation = [...runsOf("docs"), ...runsOf("components")]
+  .map((run) => ({ ...run, pages: run.pages.filter((page) => !overviews.has(page.route)) }))
+  .filter((run) => run.pages.length > 0);
+const hereRun = navigation.find((run) => run.pages.some((page) => page.route === route))?.id;
+// The mark in the ink of the page, so it follows light and dark; it fills the sidebar's mark box.
+const mark = markSvg
+  .replaceAll('fill="#04251B"', 'fill="currentColor"')
+  .replace("<svg ", '<svg aria-hidden="true" focusable="false" width="100%" height="100%" ');
+const base = import.meta.env.BASE_URL.replace(/\/$/u, "");
+const markdown = route === "/" ? "/index.md" : `${route}.md`;
+// The h2 and h3 of the page, as the rail lists them.
+const rail = headings.filter((heading) => heading.depth === 2 || heading.depth === 3);
+---
+
+<!doctype html>
+<html lang="en" dir="ltr" data-mode-fixed={mode}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style is:inline>@layer base, site;</style>
+    <script is:inline set:html={themeInit} />
+    <script is:inline set:html={directionInit} />
+    <script is:inline set:html={scrollInit} />
+    <script is:inline set:html={groundInit} />
+    {/* The run holding this page is open on arrival, whatever was kept for it: written into the kept
+        folds before the shell wakes, so it stays open and stays kept (site/chrome/nav-folds.ts). */}
+    {!bleed && hereRun && <script is:inline data-astro-rerun set:html={`(()=>{try{const k=${JSON.stringify(navStorageKey)},f=JSON.parse(localStorage.getItem(k)||"{}");f[${JSON.stringify(hereRun)}]=false;localStorage.setItem(k,JSON.stringify(f));}catch(e){}})()`} />}
+    <!-- The sidebar folded or open as the reader left it, on the first paint, before the shell wakes. -->
+    {!bleed && <script is:inline data-astro-rerun set:html={sidebarStateScript(navOpenKey)} />}
+    <ClientRouter />
+    <title>{`${title} - ${libraryName}`}</title>
+    <SiteIcons />
+    <link rel="preload" href="/fonts/geist-common.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/geist-serif-common.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/geist-mono-common.woff2" as="font" type="font/woff2" crossorigin />
+    {description && <meta name="description" content={description} />}
+    {/* The one address of this page: without a trailing slash (astro.config.ts, trailingSlash). */}
+    {!bare && <link rel="canonical" href={route === "/" ? "/" : route.replace(/\/$/u, "")} />}
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={libraryName} />
+    <meta property="og:title" content={`${title} - ${libraryName}`} />
+    {description && <meta property="og:description" content={description} />}
+    {robots && <meta name="robots" content={robots} />}
+    {!bare && <link href={markdown} rel="alternate" type="text/markdown" />}
+    <link href="/llms.txt" rel="describedby" type="text/plain" />
+    {
+      /* Dev only: StyleX's CSS as a sheet in the head, so a page is styled on first paint with no
+         script. In a build it is /_astro/stylex.css, linked after the base sheet (site/system/vite.ts). */
+      import.meta.env.DEV && <link rel="stylesheet" href="/virtual:stylex.css" />
+    }
+  </head>
+  <body class="site-body">
+    {
+      /* Dev only: StyleX's CSS as a sheet in the body too, after every sheet in the head, so its
+         layers are declared after the base's (the header used to carry this). */
+      import.meta.env.DEV && <link rel="stylesheet" href="/virtual:stylex.css" />
+    }
+    <a class="site-skip" href="#content">Skip to content</a>
+    {
+      /* The frame is the library's own Sidebar and its inset page (../chrome/DocsShell.tsx). client:load
+         hydrates what the server already drew in full, so nothing moves when it wakes; the page's
+         words come in as static HTML and stay that way. */
+    }
+    {
+      fullscreen ? (
+        <div class="site-fullscreen" id="content" data-site-fullscreen>
+          <slot />
+        </div>
+      ) : (
+    <DocsShell
+      client:load
+      section={section}
+      groups={navigation}
+      route={route}
+      title={title}
+      libraryName={libraryName}
+      mark={mark}
+      base={base}
+      bleed={bleed}
+    >
+      {
+        bleed ? (
+          <div class="site-bleed" id="content" data-site-bleed>
+            <slot />
+          </div>
+        ) : (
+          <div class="site-room">
+          <div class="site-page" id="content" data-site-doc-grid data-wide={wide ? "" : undefined} data-full={full ? "" : undefined}>
+            {wide && (
+              <div class="site-wide">
+                <slot name="wide" />
+              </div>
+            )}
+            <div class="site-main-column">
+              <slot name="before" />
+              {!bare && !full && <Toc headings={rail} title="On this page" variant="mobile" />}
+              <article class="site-prose">
+                <slot />
+              </article>
+              {
+                !bare && (
+                  <div class="site-end" data-site-page-end>
+                    <PageEnd route={route} />
+                    <PrevNext prev={prev} next={next} />
+                  </div>
+                )
+              }
+              <footer class="site-footer">
+                <p>Damsko is proprietary: its source is public to read, and only Grasp, its affiliates and its contractors working for Grasp may use it.</p>
+                <p>© Grasp. Proprietary: see the <a href="/licence.txt">licence</a>.</p>
+              </footer>
+            </div>
+            {
+              !bare && !full && (
+                <aside class="site-rail-column" aria-label="On this page" data-site-toc>
+                  <Toc headings={rail} title="On this page" variant="desktop" />
+                </aside>
+              )
+            }
+          </div>
+          </div>
+        )
+      }
+    </DocsShell>
+      )
+    }
+    {/* The sidebar keeps its own scroll across page changes, and brings this page's link into view. */}
+    {!fullscreen && <script is:inline set:html={sidebarScroll} />}
+    <Search />
+    <script>
+      // The header's behaviour and the islands in one script: one request, not two.
+      import "../behaviour/docs.ts";
+      import "../behaviour/one-toaster.ts";
+      import "../behaviour/main-scroll.ts";
+      import "../behaviour/chat-links.ts";
+      import "../behaviour/print.ts";
+      import "../behaviour/folds.ts";
+      import "../behaviour/rail-follow.ts";
+      import "../behaviour/code-edges.ts";
+      import "../behaviour/recent.ts";
+      import "../system/client.ts";
+    </script>
+  </body>
+</html>

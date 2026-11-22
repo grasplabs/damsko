@@ -1,0 +1,214 @@
+---
+title: Terminal
+description: The output of a shell command an assistant runs, as it streams.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/terminal"
+/>
+
+## A command that ran
+
+Terminal is a Trace with one row that opens. `TerminalTitle` is the row's line, the command as a sentence ("Ran pnpm build"); a press opens `TerminalContent` on what it printed, on the code surface.
+
+<Stage path="terminal/basic" label="A command that ran" />
+
+## Exit code
+
+A command that exits with any code other than 0 failed: give its `TerminalHeader` `status="error"` and say so in the title.
+
+<Stage path="terminal/error" label="Exit code" />
+
+<Rows
+  title="Status and title"
+  rows={[
+    { key: "Running", value: "status running: Running pnpm build" },
+    { key: "Exited with 0", value: "no status: Ran pnpm build" },
+    {
+      key: "Exited with another code",
+      value: "status error: pnpm lint exited with code 1",
+    },
+  ]}
+/>
+
+While `isStreaming`, the line runs without a `status`.
+
+## Colours
+
+The output's ANSI colours and marks are drawn in Damsko's syntax and status colours, as text; every other escape sequence is taken out. Without children it draws its own header: the title, `TerminalCopyButton`, which copies the words without their escape sequences, and `TerminalClearButton` when there is an `onClear`.
+
+<Stage path="terminal/colours" label="Colours" />
+
+## While it runs
+
+The line runs and opens once the command prints. The output follows its end as it grows, until you scroll up; the line is said once when the command is done. `TerminalStatus` stands beside the line while it runs.
+
+<Stage path="terminal/live" live label="While it runs" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="terminal"
+  always={[
+    "A shell command an assistant runs: a lint, a test run, a build, and what it printed.",
+    "A title in the tense of the status: Running pnpm build, Ran pnpm build, pnpm lint exited with code 1.",
+    "Several commands as several Terminals, one under another.",
+  ]}
+  never={[
+    "Code to read or copy: use Code block.",
+    "A tool call that is not a command: use Tool.",
+    "A failure's stack frames: use Stack trace.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Line",
+      key: "Row",
+      value:
+        "Trace's row that opens: the terminal's mark, the title, the chevron",
+      tokens: ["muted-foreground"],
+    },
+    {
+      group: "Line",
+      key: "Buttons",
+      value: "Ghost icon buttons at the row's end, {space-1} apart",
+    },
+    {
+      group: "Output",
+      key: "Surface",
+      value:
+        "The code surface: the wash, the strong edge, the one corner, {space-3} inside; scrolls past the popup height",
+      tokens: ["code-block-bg"],
+    },
+    {
+      group: "Output",
+      key: "Text",
+      value: "{text-xs} mono on the code line height; long lines wrap",
+      tokens: ["body-foreground"],
+    },
+    {
+      group: "Output",
+      key: "Colours",
+      value:
+        "Red, green, yellow and blue in the status colours, magenta and cyan in the syntax colours, black and dim muted, grounds in the matching wash",
+      tokens: [
+        "destructive",
+        "success",
+        "warning",
+        "info",
+        "syntax-keyword",
+        "syntax-constant",
+      ],
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      key: "Line",
+      value: "Click, Enter or Space opens and closes the output.",
+    },
+    {
+      key: "Opening",
+      value:
+        "Opens once the running command prints, unless the person opened or closed it first.",
+    },
+    {
+      key: "Following",
+      value:
+        "Follows the end as the output grows; scrolling up stops it, scrolling back to the end follows again.",
+    },
+    {
+      key: "Escape sequences",
+      value:
+        "Colours and marks are drawn; everything else (moving the cursor, a title, a link) is taken out. A carriage return redraws its line.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Line",
+      value:
+        "A `button` with `aria-expanded`, named by the title; the status in words (Working, Failed) after it",
+    },
+    {
+      key: "Announcements",
+      value:
+        "The line is said once when the command finishes or fails; Clear says the output was cleared",
+    },
+    {
+      key: "Output",
+      value:
+        "Text, never HTML; while it scrolls it is a region named Terminal output that the keyboard reaches",
+    },
+    {
+      key: "Buttons",
+      value: "Copy the output and Clear the output, each named, with a tooltip",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/terminal.tsx"
+  type="TerminalProps"
+  label="Terminal props"
+/>
+
+<Props
+  source="src/components/terminal.tsx"
+  type="TerminalHeaderProps"
+  label="TerminalHeader props"
+/>
+
+<Props
+  source="src/components/terminal.tsx"
+  type="TerminalTitleProps"
+  label="TerminalTitle props"
+/>
+
+<Props
+  source="src/components/terminal.tsx"
+  type="TerminalStatusProps"
+  label="TerminalStatus props"
+/>
+
+<Props
+  source="src/components/terminal.tsx"
+  type="TerminalActionsProps"
+  label="TerminalActions props"
+/>
+
+<Props
+  source="src/components/terminal.tsx"
+  type="TerminalCopyButtonProps"
+  label="TerminalCopyButton props"
+/>
+
+<Props
+  source="src/components/terminal.tsx"
+  type="TerminalClearButtonProps"
+  label="TerminalClearButton props"
+/>
+
+<Props
+  source="src/components/terminal.tsx"
+  type="TerminalContentProps"
+  label="TerminalContent props"
+/>
+
+</Reference>

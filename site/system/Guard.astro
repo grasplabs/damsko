@@ -1,0 +1,36 @@
+---
+// Draws a page's body, and if anything in it throws (a block given a path that is not there, a
+// block with a bug), draws the problem instead, so the page and every other page still render.
+// The problem is recorded, so a build lists it at the end and fails (./broken.ts).
+//
+// The body is rendered to HTML here, inside the try, and then written out; a throw part of the way
+// through leaves nothing half drawn.
+import { lineOf, recordProblem } from "./broken";
+import Problem from "./Problem.astro";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { root } from "./content";
+
+interface Props {
+  /** The page's file, from the root: "docs/components/button.mdx". */
+  file: string;
+}
+
+const { file } = Astro.props;
+let html = "";
+let problem = null;
+try {
+  html = await Astro.slots.render("default");
+} catch (error) {
+  const message = error instanceof Error ? error.message : String(error);
+  let source = "";
+  try {
+    source = readFileSync(join(root, file), "utf-8");
+  } catch {}
+  problem = { file, message, line: lineOf(source, message) };
+  recordProblem(problem);
+  console.error(`[grasp] ${file}: ${message}`);
+}
+---
+
+{problem ? <Problem {...problem} /> : <Fragment set:html={html} />}

@@ -1,0 +1,221 @@
+---
+title: Model selector
+description: The model an assistant answers with, picked from a searchable list beside its trigger.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/model-selector"
+/>
+
+## By maker
+
+The models are yours: group them by maker with `ModelSelectorGroup`, each with its maker's logo (`ModelSelectorLogo`, an IconData of the product's). `ModelSelectorList` holds the chosen model (`value` and `onValueChange`). Typing narrows the list; the arrows and Enter pick; the trigger then names the model picked.
+
+<Stage path="model-selector/basic" label="By maker" />
+
+## With a footer
+
+`footer` on `ModelSelectorContent` holds what the product adds under the list, such as how hard the model thinks.
+
+<Stage path="model-selector/footer" label="With a footer" />
+
+## Model and effort
+
+Two menus under a message field, as shadcn's pattern has them: the model, searched, and how hard it thinks, a Dropdown menu of three beside it.
+
+<Stage path="model-selector/effort" label="Model and effort" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="model-selector"
+  always={[
+    "Choosing the model an assistant answers with, in a prompt input's tools or a settings row.",
+    "Models grouped by maker, each with its maker's logo, from the product's own list.",
+  ]}
+  never={[
+    "A short list of plain choices with no search: use Select.",
+    "Actions to run, not a value to choose: use Command.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Trigger",
+      key: "Look",
+      value:
+        "A small ghost Button: the logo, the name cut with an ellipsis, a chevron",
+    },
+    {
+      group: "Panel",
+      key: "Surface",
+      value:
+        "Command's: the popup's fill, lift and corner, {popover-width} wide at most",
+      tokens: ["popover"],
+    },
+    {
+      group: "Panel",
+      key: "Footer",
+      value: "Under a hairline, on the popup's padding",
+      tokens: ["border"],
+    },
+    {
+      group: "Items",
+      key: "Chosen",
+      value: "Medium weight and a tick at the end",
+      tokens: ["foreground"],
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    { key: "Opening", value: "The trigger opens it on the search field." },
+    {
+      key: "Picking",
+      value:
+        "Enter or a press picks; the panel closes and focus goes back to the trigger.",
+    },
+    {
+      key: "Escape",
+      value:
+        "Closes the panel, focus back on the trigger; stopped there, so the page does not also hear it.",
+    },
+    {
+      key: "Disabled",
+      value: "A model out of use is passed by the keys and the pointer.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Trigger",
+      value:
+        "A `button` named by the selector's word and the model it shows (Model: …), with `aria-expanded`",
+    },
+    {
+      key: "Search",
+      value: "A `combobox` named Search models, over a `listbox`",
+    },
+    { key: "Chosen", value: "`aria-current` on the chosen model's option" },
+  ]}
+/>
+
+<Rows
+  title="From shadcn"
+  rows={[
+    {
+      group: "Base",
+      key: "Dropdown Menu",
+      value: "Popover and Command",
+      note: "shadcn keeps the search parts on Command when the list is searched; this one is",
+    },
+    {
+      group: "List",
+      key: "A radio group holding the chosen model",
+      value: "`value` and `onValueChange` on ModelSelectorList",
+      note: "the chosen one marked current and ticked",
+    },
+    {
+      group: "Trigger",
+      key: "An outline InputGroupButton",
+      value: "A small ghost Button",
+      note: "Damsko's look, kept",
+    },
+    {
+      group: "Parts",
+      key: "ModelSelectorDialog",
+      value: "None",
+      note: "the panel opens beside its trigger; a list in a dialog is Command's own",
+    },
+    {
+      group: "Panel",
+      key: "No footer",
+      value: "`footer` on ModelSelectorContent",
+      note: "the product's own row under the list",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/model-selector.tsx"
+  type="ModelSelectorProps"
+  label="ModelSelector props"
+/>
+
+<Props
+  source="src/components/model-selector.tsx"
+  type="ModelSelectorTriggerProps"
+  label="ModelSelectorTrigger props"
+/>
+
+<Props
+  source="src/components/model-selector.tsx"
+  type="ModelSelectorContentProps"
+  label="ModelSelectorContent props"
+/>
+
+<Props
+  source="src/components/model-selector.tsx"
+  type="ModelSelectorInputProps"
+  label="ModelSelectorInput props"
+/>
+
+<Props
+  source="src/components/model-selector.tsx"
+  type="ModelSelectorListProps"
+  label="ModelSelectorList props"
+/>
+
+<Props
+  source="src/components/model-selector.tsx"
+  type="ModelSelectorEmptyProps"
+  label="ModelSelectorEmpty props"
+/>
+
+<Props
+  source="src/components/model-selector.tsx"
+  type="ModelSelectorGroupProps"
+  label="ModelSelectorGroup props"
+/>
+
+<Props
+  source="src/components/model-selector.tsx"
+  type="ModelSelectorItemProps"
+  label="ModelSelectorItem props"
+/>
+
+<Props
+  source="src/components/model-selector.tsx"
+  type="ModelSelectorLogoProps"
+  label="ModelSelectorLogo props"
+/>
+
+<Props
+  source="src/components/model-selector.tsx"
+  type="ModelSelectorLogoGroupProps"
+  label="ModelSelectorLogoGroup props"
+/>
+
+<Props
+  source="src/components/model-selector.tsx"
+  type="ModelSelectorNameProps"
+  label="ModelSelectorName props"
+/>
+
+`ModelSelectorShortcut` and `ModelSelectorSeparator` are Command's `CommandShortcut` and `CommandSeparator`, and take their props.
+
+</Reference>

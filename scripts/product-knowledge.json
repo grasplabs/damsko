@@ -1,0 +1,31 @@
+{
+  "imports": {
+    "^@lingui/": "Lingui: a primitive's words come from the I18nProvider",
+    "^(?:react-router|react-router-dom|@tanstack/react-router|@tanstack/router|wouter|next)(?:/|$)": "a router: a link takes its href or a render prop",
+    "^@grasp-os/ui(?:/|$)": "Damsko's own path, as a product imports it: imports inside src/ are relative",
+    "^@grasp-os/": "the product's own packages"
+  },
+  "words": [
+    {
+      "match": "\\bGrasp\\b",
+      "in": "strings",
+      "why": "Grasp as a product name"
+    },
+    { "match": "\\bStephen\\b", "in": "text", "why": "the product's agent" },
+    {
+      "match": "\\bBrain\\b",
+      "in": "text",
+      "why": "the Brain, a product noun"
+    },
+    {
+      "match": "\\b[Ww]orkflow runs?\\b",
+      "in": "text",
+      "why": "workflow runs, product data"
+    },
+    {
+      "match": "\\bComposio\\b",
+      "in": "text",
+      "why": "the product's connector service"
+    }
+  ]
+}

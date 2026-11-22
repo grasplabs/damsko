@@ -1,0 +1,246 @@
+---
+title: Audio player
+description: A bar that plays a sound file, with a timeline, a playback rate button and mute.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/audio-player"
+  use={'import { AudioPlayer } from "@grasp-os/ui/components/audio-player";'}
+/>
+
+## Default
+
+Space, except on a button, or K plays and pauses while focus is in the bar. The arrows go back and on five seconds.
+
+<Stage path="audio-player/basic" label="Default" />
+
+## Narrow bars
+
+The bar answers to its own width. The skips go first, then the times.
+
+<Stage path="audio-player/narrow" label="Narrow bars" />
+
+## Playback rates
+
+The rate button steps through the `playbackRates` it is given, starting with the first.
+
+<Stage path="audio-player/speeds" label="Playback rates" />
+
+## A moment of the file
+
+`startTime` and `endTime` play a part of the file. The page hears where it is with `onTimeUpdate` and seeks it through `ref`.
+
+<Stage path="audio-player/moment" label="A moment of the file" />
+
+## Failed
+
+When the file cannot play, the bar says so in place of its controls.
+
+<Stage path="audio-player/failed" label="Failed" />
+
+## Sounds from a chat
+
+A sound plays only from an address that cannot tell another site who listened: one written into the address (`data:audio/…`), one the page made (`blob:`) or a path on this site; an `http(s)` address plays only with `allowRemote`, for a source you trust, and any other says it cannot play.
+
+<Stage path="audio-player/untrusted" label="Sounds from a chat" />
+
+## In another language
+
+Its words come from the `I18nProvider`: each button, the timeline's thumb, and where the sound is (`audioPlayer.timeOf`), in that language's order.
+
+<Stage path="audio-player/labels" label="In another language" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="audio-player"
+  always={[
+    "A sound file to play, beside what it belongs to: a call, a recording.",
+    "An `aria-label` that says what is playing: Call with the design team.",
+    "One player per sound, beside what it belongs to.",
+    "An `errorLabel` that says what to do when the file has moved.",
+  ]}
+  never={[
+    "Sound that should start on its own.",
+    "Sound that matters only in the player: say it in words too.",
+    "Rates past 2×, where words stop being words.",
+    "Colours, heights or corners set from outside: `style` takes layout and width only.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    { group: "Bar", key: "Width", value: "Up to {audio-width}" },
+    {
+      group: "Bar",
+      key: "Height",
+      value: "{control-sm} and {space-1} round it",
+      note: "40px",
+    },
+    {
+      group: "Bar",
+      key: "Surface",
+      value: "{radius}, capped at half its height",
+      tokens: ["card", "shadow-sm"],
+    },
+    {
+      group: "Buttons",
+      key: "Size",
+      value: "{control-sm}",
+      note: "ghost Buttons; {tap-target} on a touch screen",
+    },
+    {
+      group: "Buttons",
+      key: "Icons",
+      value: "{icon-sm}",
+      note: "PlayIcon, PauseIcon, GoBackward10Icon, GoForward10Icon, VolumeIcon, VolumeOffIcon",
+    },
+    {
+      group: "Times",
+      key: "Words",
+      value: "{text-sm} / {text-sm-line}, {font-weight-medium}",
+      note: "figures of one width",
+      tokens: ["foreground"],
+    },
+    {
+      group: "Timeline",
+      key: "Track",
+      value: "{slider-track}",
+      tokens: ["progress-track", "progress-bg"],
+    },
+    {
+      group: "Timeline",
+      key: "Thumb",
+      value: "{slider-thumb}",
+      note: "shown under a pointer or with focus",
+      tokens: ["primary-foreground-on-color", "shadow-sm"],
+    },
+    { group: "Narrow", key: "Under 32rem", value: "The skips go" },
+    {
+      group: "Narrow",
+      key: "Under 22rem",
+      value: "The times go",
+      note: "the timeline keeps its room",
+    },
+    {
+      group: "Failed",
+      key: "Words",
+      value: "{text-sm}, the Alert icon",
+      tokens: ["destructive"],
+    },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    { key: "Thumb", value: "Appears in {duration-hover}", tokens: ["ease"] },
+    {
+      key: "Buttons",
+      value: "Button's hover and press",
+      note: "the shared press scale",
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Keyboard",
+      key: "Space or K",
+      value:
+        "Plays and pauses while focus is in the bar; Space on a button presses the button.",
+    },
+    {
+      group: "Keyboard",
+      key: "Left and Right",
+      value:
+        "Back and on five seconds; reversed right to left. On the timeline, its own steps.",
+    },
+    { group: "Keyboard", key: "M", value: "Turns the sound off and on." },
+    {
+      group: "Buttons",
+      key: "Back and forward",
+      value: "Ten seconds, never past either end.",
+    },
+    {
+      group: "Page",
+      key: "One at a time",
+      value: "When another player on the page starts, this one pauses.",
+    },
+    {
+      group: "Buttons",
+      key: "Playback rate",
+      value: "Steps through `playbackRates` and starts over.",
+    },
+    {
+      group: "File",
+      key: "Slow",
+      value:
+        "Waiting for data for more than half a second, play turns into a spinner and says the I18nProvider's `audioPlayer.loading`.",
+    },
+    {
+      group: "File",
+      key: "Cannot play",
+      value:
+        "The bar says `errorLabel` (else `audioPlayer.error`) in place of its controls.",
+    },
+    {
+      group: "File",
+      key: "Loaded early",
+      value:
+        "A file that loads or fails before the page wakes is read once on mount.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    { key: "Region", value: "A `section` named by `aria-label`" },
+    {
+      key: "Buttons",
+      value: "Named for what they do now: Play or Pause, Turn sound off or on",
+    },
+    {
+      key: "Playback rate",
+      value: 'Named "Speed" with its value, the word unseen',
+    },
+    {
+      key: "Timeline",
+      value:
+        "A slider named Position, read as minutes and seconds of the whole",
+    },
+    { key: "Failure", value: "An `alert` with the words" },
+    { key: "Agents", value: "Play, pause and seek by name" },
+    {
+      key: "Contrast",
+      value: "Times and the failure 4.5:1 on the bar, light and dark",
+      note: "checked by `node tokens/generate.ts --check`",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/audio-player.tsx"
+  type="AudioPlayerProps"
+  label="AudioPlayer props"
+/>
+
+`ref` takes these:
+
+<Props
+  source="src/components/audio-player.tsx"
+  type="AudioPlayerHandle"
+  label="AudioPlayerHandle"
+/>
+
+</Reference>

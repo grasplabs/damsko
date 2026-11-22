@@ -1,0 +1,125 @@
+---
+title: Data grid
+description: A spreadsheet in the page, where people edit cells in place and copy and paste.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/data-grid"
+/>
+
+## Active cell A: soft halo
+
+The default for now: the hairlines round the cell turn pine, and a mint shadow fades out.
+
+<Stage path="data-grid/active-halo" label="Active cell A: soft halo" />
+
+## Active cell B: lifted
+
+The cell lifts off the sheet with the medium lift and a fine pine edge, as if picked up.
+
+<Stage path="data-grid/active-lifted" label="Active cell B: lifted" />
+
+## Active cell C: underline
+
+The calmest: a mint wash and a pine line under the words. By keyboard, the line goes all round.
+
+<Stage path="data-grid/active-underline" label="Active cell C: underline" />
+
+## Range A: wash and a pine edge
+
+The default for now: a soft mint wash, quiet mint lines inside, and its edge in pine.
+
+<Stage path="data-grid/range-wash" label="Range A: wash and a pine edge" />
+
+## Range B: wash and a mint edge
+
+The same wash and quiet lines, closed by a firmer mint edge that reads from across the room.
+
+<Stage path="data-grid/range-outline" label="Range B: wash and a mint edge" />
+
+## Range C: dither and a pine edge
+
+Our fine dither over the wash, so a range reads apart from a chosen row, with the pine edge.
+
+<Stage path="data-grid/range-dither" label="Range C: dither and a pine edge" />
+
+## Header A: quiet
+
+The default for now: a soft ground under muted names, each with its column type's icon.
+
+<Stage path="data-grid/header-quiet" label="Header A: quiet" />
+
+## Header B: lifted
+
+On the raised ground, casting the low lift as a scrolled header does, the type icons in pine.
+
+<Stage path="data-grid/header-lifted" label="Header B: lifted" />
+
+## Header C: kind chips
+
+Each type's icon in a small chip with a mint wash: the one accent, kept quiet.
+
+<Stage path="data-grid/header-chip" label="Header C: kind chips" />
+
+## Tab A: moves on
+
+The default: Tab steps cell to cell, as a spreadsheet's does. To leave sooner, press Ctrl or Command with End, then Tab.
+
+<Stage path="data-grid/tab-move" label="Tab A: moves on" />
+
+## Tab B: leaves
+
+With `tabNavigation="leave"` the grid is one stop: Tab leaves at once, and the arrows alone move inside.
+
+<Stage path="data-grid/tab-leave" label="Tab B: leaves" />
+
+## Rows that change
+
+Rows can come and go while the grid is open, as a refetch brings them. The chosen cells and an open editor keep to their rows, by `getRowId`; an editor whose row goes closes, and focus stays in the grid.
+
+<Stage path="data-grid/live" label="Rows that change" />
+
+## Read only
+
+Without `onCellsChange` the grid is read-only: cells are chosen and copied, and a paste changes nothing.
+
+<Stage path="data-grid/read-only" label="Read only" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="data-grid"
+  always={[
+    "People edit values in place, cell by cell, and copy and paste with a spreadsheet.",
+    'An `aria-label` that says what the rows are ("Launch plan").',
+    'The default `tabNavigation="move"`: Tab steps cell to cell, as a spreadsheet\'s does. `tabNavigation="leave"` where the grid is one stop among the page\'s controls.',
+  ]}
+  never={[
+    "Rows to read, sort, search and act on, not to edit: use Data table.",
+    "A few facts that never change: use Table.",
+  ]}
+/>
+
+Press a cell and type. The arrows move, Shift or a drag chooses a range, and copy and paste work with a spreadsheet.
+
+<Stage path="data-grid/basic" label="Data grid" />
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/data-grid/data-grid.tsx"
+  type="DataGridProps"
+  label="DataGrid props"
+/>
+<Props
+  source="src/components/data-grid/model.ts"
+  type="DataGridColumn"
+  label="DataGridColumn"
+/>
+
+</Reference>

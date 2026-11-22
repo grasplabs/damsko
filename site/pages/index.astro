@@ -1,0 +1,412 @@
+---
+// The home page ("/"): the showcase, a field in flight. The library's components at three depths
+// across the whole window, drifting past at their own rates as the page is scrolled, some very
+// large and cut by the window's edge, some small and far; a few caught being built by App
+// building's cursors; a living dither under them all. It shows and does not explain: the only
+// words are the name and the components' own. Installing is on Get started (/get-started). No docs
+// sidebar or header: the page is fullscreen and dark, with its own way into the docs.
+//
+// What loads when:
+//   first paint   static HTML and CSS: the whole composition at rest, every piece in its place
+//   no scripts    the same, at rest (nothing drifts; a piece shows its resting state)
+//   at once       the ground (client:load) and the page's small inline scripts
+//   on first move the islands at the top of the second screenful and App building in the first
+//                 (client:scroll, site/start/scroll-directive.ts)
+//   near a piece  the others (client:near, a quarter of a window ahead: near-directive.ts)
+//
+// Motion: each piece drifts by the scroll (scroll-driven CSS, site/start/showcase.css); a piece's
+// own motion (a button pressed, a switch turned, a shimmer) runs only while the piece is on screen
+// (data-seen) and with motion wanted. With reduced motion nothing drifts and every piece rests.
+import "../start/showcase.css";
+
+import { Badge } from "@grasp-os/ui/components/badge";
+import { Card, CardDescription, CardTitle } from "@grasp-os/ui/components/card";
+import { Kbd } from "@grasp-os/ui/components/kbd";
+import { Slider } from "@grasp-os/ui/components/slider";
+import { Spinner } from "@grasp-os/ui/components/spinner";
+import { Tag } from "@grasp-os/ui/components/tag";
+
+import Docs from "../layouts/Docs.astro";
+import { ditherDefs } from "../overview/pen.ts";
+import { sketchOf } from "../overview/sketches/index.ts";
+import { Building } from "../start/Building";
+import { promptInputSketch } from "../start/prompt-input-sketch";
+import { Ground } from "../start/ground/ground";
+import { GroundStill } from "../start/ground/ground-still";
+import { ActivityLive, Faces, Finale, FillingProgress, FillingRing, MovingStepper, PickingRange, ReportsLive, PressedButton, Shimmer, ThreadLive, TurningSwitch, Working } from "../start/Live";
+import { description, name, route, title } from "../start/page";
+import { ArchiveDialog, DocsDoor, EmailField, PeriodTabs } from "../start/Stills";
+
+// The overview's own dithered drawings, far off: the library seen from a distance.
+const far = ["button", "switch", "dialog", "calendar", "chart", "tabs", "select", "slider", "toast"]
+  .map((part) => ({ part, drawing: sketchOf(part) ?? "" }))
+  .concat({ part: "prompt-input", drawing: promptInputSketch() });
+
+/**
+ * Where a piece stands: `t` screenfuls down, `l` from the left, its depth `d` (how much it drifts:
+ * 1 near and fast, 0.1 far and slow), its scale `s` and width `w`; then the same on a phone (`tp`,
+ * `lp`, `sp`, `wp`), each falling back to the wide value. Written as custom properties that
+ * showcase.css reads; the composition's numbers are here, once.
+ */
+const at = (place: { t: number; l: string; d: number; s?: number; w?: string; h?: string; tp?: number; lp?: string; sp?: number; wp?: string; hp?: string; o?: number }) =>
+  [
+    `--t:${place.t}`,
+    `--l:${place.l}`,
+    `--d:${place.d}`,
+    place.s === undefined ? "" : `--s:${place.s}`,
+    place.w === undefined ? "" : `--w:${place.w}`,
+    place.h === undefined ? "" : `--h:${place.h}`,
+    place.o === undefined ? "" : `--o:${place.o}`,
+    place.tp === undefined ? "" : `--tp:${place.tp}`,
+    place.lp === undefined ? "" : `--lp:${place.lp}`,
+    place.sp === undefined ? "" : `--sp:${place.sp}`,
+    place.wp === undefined ? "" : `--wp:${place.wp}`,
+    place.hp === undefined ? "" : `--hp:${place.hp}`,
+  ]
+    .filter(Boolean)
+    .join(";");
+
+// The far field: the overview's own drawings, small and slow, all the way down.
+const farAt = [
+  { t: 0.06, l: "16%", d: 0.12, s: 0.7 },
+  { t: 0.86, l: "16%", d: 0.15, s: 0.6 },
+  { t: 1.35, l: "60%", d: 0.12, s: 0.55, tp: 2.16, lp: "50%" },
+  { t: 2.02, l: "4%", d: 0.15, s: 0.7 },
+  { t: 2.84, l: "4%", d: 0.12, s: 0.6 },
+  { t: 3.62, l: "min(84%, calc(100% - 11rem))", d: 0.15, s: 0.65, tp: 3.56, lp: "40%" },
+  { t: 4.0, l: "4%", d: 0.12, s: 0.6 },
+  { t: 4.86, l: "8%", d: 0.2, s: 0.9, tp: 5.5, lp: "30%" },
+  { t: 5.84, l: "70%", d: 0.15, s: 0.8 },
+  { t: 5.86, l: "14%", d: 0.1, s: 0.7 },
+];
+
+const dither = ditherDefs();
+
+/** The people the agent works with, in the Agent stretch (pictures load as they near). */
+const people = [
+  { name: "Lars", picture: "/people/avatar-1.svg" },
+  { name: "Bas", picture: "/people/avatar-2.svg" },
+  { name: "Koen", picture: "/people/avatar-3.svg" },
+  { name: "Tijn", picture: "/people/avatar-4.svg" },
+];
+
+// Before the first paint: the room a screenful is (the height of what scrolls), whether the
+// pieces drift (scroll-driven animations, and motion wanted), and which pieces are on screen.
+// The entrance on a visit's first load: the name, then the pieces of the first screen, then the docs
+// button, each drawn through the library's 4×4 ordered dither (the Bayer matrix the ground and the
+// chart use), from a sparse, coarse ghost to the solid thing: the density climbs and the cells
+// shrink. Only a mask changes, so no box moves; the name stays its own words for a screen reader.
+const bayer = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
+const tile = (level: number) =>
+  `url("data:image/svg+xml,${encodeURIComponent(
+    `<svg xmlns='http://www.w3.org/2000/svg' width='4' height='4' shape-rendering='crispEdges'>${bayer
+      .map((value, index) => (value < level ? `<rect x='${index % 4}' y='${Math.floor(index / 4)}' width='1' height='1'/>` : ""))
+      .join("")}</svg>`,
+  )}")`;
+const tiles = Object.fromEntries([1, 2, 3, 4, 6, 8, 10, 12, 14, 15].map((level) => [level, tile(level)]));
+
+// While the entrance is due (the field script marks it before any piece is parsed), every part it
+// plays stands as its sparsest ghost from the very first paint, whenever the browser paints a page
+// it has only half read; the animations take over from there.
+const entranceStill = `
+.sc[data-entrance] .sc-name-words { mask-image: ${tiles[1]}; mask-size: 32px 32px; }
+.sc[data-entrance] :is(.sc-piece > :not(astro-island), .sc-piece > astro-island > *, .sc-door > *) { mask-image: ${tiles[1]}; mask-size: 24px 24px; }
+.sc[data-entrance] .sc-door::before { mask-image: ${tiles[1]}, var(--sc-dome); mask-size: 24px 24px, 100% 100%; mask-repeat: repeat, no-repeat; mask-composite: intersect; }
+`;
+
+const entrance = `(() => {
+  const f = document.currentScript.closest("[data-showcase]");
+  if (!f || !f.hasAttribute("data-entrance")) return;
+  const tiles = ${JSON.stringify(tiles)};
+  // From a ghost to the thing, coarse to fine: [density of 16, the cell's size in px] at each step.
+  const steps = (cells) => cells.map(([level, size], i, all) => ({ offset: i / all.length, maskImage: tiles[level], maskSize: (size * 4) + "px " + (size * 4) + "px", easing: "step-end" }));
+  const nameSteps = steps([[1, 8], [2, 7], [3, 6], [4, 5], [6, 4], [8, 3], [10, 3], [12, 2], [14, 1], [15, 1]]);
+  const pieceSteps = steps([[1, 6], [2, 6], [3, 5], [4, 5], [6, 4], [8, 3], [10, 3], [12, 2], [14, 2], [15, 1]]);
+  const play = (element, frames, delay, duration) => {
+    const animation = element.animate([...frames, { offset: 1, maskImage: "none" }], { delay, duration, fill: "both" });
+    animation.id = "sc-entrance";
+    return animation;
+  };
+  const running = [];
+  // A scroll, a key or a press takes over at once: everything stands as it is at rest.
+  // The ghosts (CSS) go first, then the animations, which held each part solid since they ended.
+  let ended = false;
+  const done = () => {
+    if (ended) return;
+    ended = true;
+    f.removeAttribute("data-entrance");
+    for (const animation of running) animation.cancel();
+    // The first screen's live parts start once the page has drawn itself at rest (client:scroll),
+    // in a task of their own, after the frame that drops the entrance.
+    requestAnimationFrame(() => setTimeout(() => dispatchEvent(new Event("showcase:settled"))));
+    for (const kind of ["wheel", "touchstart", "keydown", "pointerdown"]) removeEventListener(kind, done, true);
+  };
+  for (const kind of ["wheel", "touchstart", "keydown", "pointerdown"]) addEventListener(kind, done, { capture: true, passive: true });
+  // The clock starts once the page's own load work is done (its modules, its first full render), so
+  // the entrance's seconds are its own; till then the ghosts above hold the first paint.
+  const begin = () => {
+    if (ended) return;
+    performance.mark("showcase:entrance");
+    const room = innerHeight;
+    const name = f.querySelector(".sc-name");
+    const centre = (box) => [box.left + box.width / 2, box.top + box.height / 2];
+    const nameBox = name ? name.getBoundingClientRect() : { left: 0, top: 0, width: 0, height: 0 };
+    const [nx, ny] = centre(nameBox);
+    if (name) running.push(play(name.querySelector(".sc-name-words") || name, nameSteps, 40, 700));
+    // The first screen's pieces, nearest the name first, the far drawings last.
+    const pieces = [...f.querySelectorAll("[data-piece]:not(.sc-name)")]
+      .map((piece) => ({ piece, box: piece.getBoundingClientRect() }))
+      .filter(({ box }) => box.bottom > 0 && box.top < room && box.width > 0);
+    const far = Math.max(1, ...pieces.map(({ box }) => Math.hypot(centre(box)[0] - nx, centre(box)[1] - ny)));
+    // In three waves behind the name, each by its distance from the name: the cards (the large
+    // pieces), then the small ones (tags, keys, a control), then the far drawings.
+    for (const { piece, box } of pieces) {
+      const [x, y] = centre(box);
+      const near = Math.hypot(x - nx, y - ny) / far;
+      const wave = piece.classList.contains("sc-far") ? 2 : box.width * box.height > 60000 ? 0 : 1;
+      const delay = [240, 520, 820][wave] + 280 * near;
+      // What draws: an island's own script, which shows nothing, is not drawn in.
+      const parts = [...piece.children]
+        .flatMap((child) => (getComputedStyle(child).display === "contents" ? [...child.children] : [child]))
+        .filter((part) => getComputedStyle(part).display !== "none");
+      for (const part of parts) {
+        const animation = play(part, pieceSteps, delay, 620);
+        running.push(animation);
+        // Resolved, its live part starts at once (client:scroll on the first screen): a card that
+        // builds is building as it comes out of the dither, never an empty box until the page rests.
+        animation.finished.then(() => part.dispatchEvent(new Event("showcase:resolved", { bubbles: true })), () => {});
+      }
+      // A card's cursors and their name tags after the card they work on.
+      for (const hand of piece.querySelectorAll('[data-slot="app-building-cursor"]')) running.push(play(hand, pieceSteps, delay + 320, 520));
+    }
+    // The docs button last, with its dome (the door's ::before, larger than its box: animated on its
+    // own, so no mask on the door cuts it off and nothing pops in at the end).
+    const door = f.querySelector(".sc-door");
+    if (door) {
+      for (const part of door.children) running.push(play(part, pieceSteps, 1460, 500));
+      // The dome keeps its own shape: the dither is laid over it (intersect), never in its place.
+      const domeSteps = pieceSteps.map((step) => ({ ...step, maskImage: step.maskImage + ", var(--sc-dome)", maskSize: step.maskSize + ", 100% 100%", maskRepeat: "repeat, no-repeat", maskComposite: "intersect" }));
+      const dome = door.animate([...domeSteps, { offset: 1, maskImage: "var(--sc-dome)", maskSize: "100% 100%", maskRepeat: "no-repeat", maskComposite: "add" }], { delay: 1420, duration: 540, fill: "both", pseudoElement: "::before" });
+      dome.id = "sc-entrance";
+      running.push(dome);
+    }
+    setTimeout(done, 2100);
+  };
+  // And once the ground has drawn its first living picture (it crossfades in over the entrance, so its
+  // light comes up with the rest), or after 600ms if it has not: a slow phone holds the still no longer.
+  const lit = () => !!f.querySelector(".sc-ground[data-lit]");
+  const after = () => {
+    const since = performance.now();
+    const wait = () => (lit() || performance.now() - since > 600 ? requestAnimationFrame(() => requestAnimationFrame(begin)) : requestAnimationFrame(wait));
+    wait();
+  };
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", after, { once: true });
+  else after();
+})();`;
+
+const field = `(() => {
+  const f = document.currentScript.parentElement;
+  let box = f.parentElement;
+  while (box && !/(auto|scroll)/.test(getComputedStyle(box).overflowY)) box = box.parentElement;
+  f.style.setProperty("--sc-room", (box ? box.clientHeight : innerHeight) + "px");
+  // The page is fullscreen, so the window scrolls: at once, not gliding (the docs' smooth scroll is
+  // for their own box), and as it was again once the page is left.
+  const root = document.documentElement;
+  root.style.scrollBehavior = "auto";
+  document.addEventListener("astro:before-swap", () => root.style.removeProperty("scroll-behavior"), { once: true });
+  const moving = !matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (moving && CSS.supports("animation-timeline: view()")) f.dataset.drift = "";
+  // The entrance (the script at the field's foot plays it): on every load of this page, not a page
+  // the router swapped in, not Back, with motion wanted.
+  const how = performance.getEntriesByType("navigation")[0];
+  if (moving && document.readyState === "loading" && !(how && how.type === "back_forward") && "animate" in Element.prototype) f.dataset.entrance = "";
+  // A piece's own motion runs only while it is seen: showcase.css pauses its CSS animations, and
+  // animations started from script (a switch's light, say) are paused here as it leaves and played
+  // again as it comes back.
+  const held = new WeakMap();
+  // Animations started from script (not the CSS ones) in a piece that is not seen are paused, and
+  // played again when it is: on each change of what is seen, and when an island wakes (it may start
+  // its own while still off screen). Never on every scroll: reading every piece's animations each
+  // frame cost a frame of its own.
+  const hold = (piece) => {
+    const paused = piece.getAnimations({ subtree: true }).filter((a) => a.playState === "running" && !(a instanceof CSSAnimation) && a.id !== "sc-entrance" && a.effect && a.effect.target !== piece);
+    for (const a of paused) a.pause();
+    held.set(piece, [...(held.get(piece) ?? []), ...paused]);
+  };
+  const release = (piece) => {
+    for (const a of held.get(piece) ?? []) a.play();
+    held.delete(piece);
+  };
+  const seen = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      entry.target.toggleAttribute("data-seen", entry.isIntersecting);
+      if (entry.isIntersecting) release(entry.target);
+      else hold(entry.target);
+    }
+  });
+  // Only the pieces whose island just woke are read (reading every piece's animations at once was
+  // a long frame of its own).
+  const woke = new Set();
+  const sweep = () => { for (const piece of woke) if (!piece.hasAttribute("data-seen")) hold(piece); woke.clear(); };
+  // An island has woken when Astro takes its "ssr" mark off.
+  new MutationObserver((records) => {
+    if (!woke.size) setTimeout(sweep, 200);
+    for (const r of records) { const piece = r.target.closest("[data-piece]"); if (piece) woke.add(piece); }
+  }).observe(f, { attributes: true, attributeFilter: ["ssr"], subtree: true });
+  // The ground is lit once its canvas has drawn its first picture (showcase.css crossfades its still
+  // out): this marks the ground once and stops listening.
+  const lit = new MutationObserver((records) => {
+    const ground = records[0].target.closest(".sc-ground");
+    if (ground) { ground.dataset.lit = ""; lit.disconnect(); }
+  });
+  lit.observe(f, { attributes: true, attributeFilter: ["data-drawn"], subtree: true });
+  const watch = () => { for (const piece of f.querySelectorAll("[data-piece]")) seen.observe(piece); };
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", watch, { once: true });
+  else watch();
+})();`;---
+
+<Docs route={route} title={title} description={description} fullscreen mode="dark">
+  <div class="sc" data-showcase>
+    <style is:inline set:html={entranceStill}></style>
+    <script is:inline data-astro-rerun set:html={field} />
+    <div class="sc-ground" aria-hidden="true">
+      <div class="sc-ground-fade">
+        <GroundStill />
+        <Ground client:load />
+      </div>
+    </div>
+    <Fragment set:html={dither} />
+
+    {/* The way in: always in view, over everything, to the docs and their sidebar. */}
+    <nav class="sc-door" aria-label="Docs">
+      <DocsDoor href="/get-started" words="Open the docs" />
+    </nav>
+
+    <div class="sc-field">
+      {/* The far field, all the way down. */}
+      {
+        far.map((tile, index) => (
+          <div class={`sc-piece sc-far ${farAt[index]?.tp === undefined ? "sc-wide-only" : ""}`} data-piece aria-hidden="true" inert style={at(farAt[index] ?? { t: 0, l: "0", d: 0.1 })}>
+            <div class="sc-sketch" set:html={tile.drawing} />
+          </div>
+        ))
+      }
+
+      {/* 1. Cursors building, and the name. */}
+      <h1 class="sc-piece sc-name" data-piece style={at({ t: 0.22, l: "5%", d: 0.25, tp: 0.16, lp: "5%" })}><span class="sc-name-words">{name}</span></h1>
+      <div class="sc-piece sc-box sc-blueprint" data-piece aria-hidden="true" style={at({ t: 0.48, l: "58%", d: 0.9, w: "min(44rem, 40%)", h: "min(26rem, max(20rem, calc(var(--sc-room) * 0.4)))", tp: 0.36, lp: "4%", wp: "92vw", hp: "20rem" })}>
+        <Building client:scroll look="blueprint" step="Sketching the screens" seed={9} />
+      </div>
+      <div class="sc-piece sc-box sc-wide-only sc-mini" data-piece aria-hidden="true" style={at({ t: 0.04, l: "min(70%, calc(100% - 23.5rem))", d: 0.35, w: "22rem", h: "14rem" })}>
+        <Building client:scroll look="blocks" step="Laying out the pages" seed={2} />
+      </div>
+      <div class="sc-piece sc-row" data-piece aria-hidden="true" inert style={at({ t: 0.1, l: "40%", d: 0.5, s: 1.4, tp: 0.06, lp: "6%", sp: 1 })}>
+        <Badge variant="success">Live</Badge>
+        <Badge variant="warning">Needs review</Badge>
+        <Badge>Draft</Badge>
+      </div>
+      <div class="sc-piece sc-wide-only" data-piece aria-hidden="true" inert style={at({ t: 0.74, l: "10%", d: 0.6, s: 2.6 })}>
+        <Kbd>⌘K</Kbd>
+      </div>
+      <div class="sc-piece sc-row sc-wide-only sc-tags" data-piece aria-hidden="true" inert style={at({ t: 0.6, l: "36%", d: 0.45, s: 1.3 })}>
+        <Tag>Design</Tag>
+        <Tag variant="outline">Research</Tag>
+        <Tag>Agents</Tag>
+      </div>
+
+      {/* 2. Motion: things at work. */}
+      <div class="sc-piece" data-piece aria-hidden="true" inert style={at({ t: 1.08, l: "-3%", d: 1, s: 3.2, tp: 1.2, lp: "-10%", sp: 2.4 })}>
+        <PressedButton client:scroll words="Save changes" done="Saved" />
+      </div>
+      <div class="sc-piece sc-fit" data-piece style={at({ t: 1.02, l: "min(54%, calc(100% - 25rem))", d: 0.55, s: 1.3, w: "18rem", tp: 1.52, lp: "5%", sp: 1, wp: "min(18rem, 88vw)" })}>
+        <TurningSwitch client:scroll label="Weekly summary" />
+      </div>
+      <div class="sc-piece sc-words" data-piece aria-hidden="true" style={at({ t: 1.45, l: "34%", d: 0.45, tp: 1.74, lp: "6%" })}>
+        <Shimmer client:scroll words="Reading the Field page" />
+      </div>
+      <div class="sc-piece" data-piece aria-hidden="true" style={at({ t: 1.28, l: "84%", d: 0.3, s: 4, tp: 1.38, lp: "76%", sp: 3 })}>
+        <Working client:scroll label="Working" />
+      </div>
+      <div class="sc-piece sc-wide-only" data-piece aria-hidden="true" inert style={at({ t: 1.62, l: "72%", d: 0.65, s: 3 })}>
+        <Spinner />
+      </div>
+      <div class="sc-piece" data-piece aria-hidden="true" style={at({ t: 1.8, l: "6%", d: 0.7, w: "min(30rem, 40vw)", tp: 1.92, lp: "5%", wp: "90vw" })}>
+        <MovingStepper client:near steps={["Details", "Members", "Billing", "Review"]} />
+      </div>
+      <div class="sc-piece" data-piece aria-hidden="true" style={at({ t: 1.92, l: "58%", d: 0.4, w: "min(22rem, 30vw)", tp: 2.1, lp: "5%", wp: "90vw" })}>
+        <FillingProgress client:near label="Exporting the report" />
+      </div>
+
+      {/* 3. Corners and shape. */}
+      <div class="sc-piece sc-box sc-dash" data-piece aria-hidden="true" style={at({ t: 2.06, l: "26%", d: 0.85, w: "min(36rem, 46vw)", h: "min(22rem, calc(var(--sc-room) * 0.4))", tp: 2.32, lp: "4%", wp: "92vw", hp: "18rem" })}>
+        <Building client:near look="blocks" step="Putting the dashboard together" seed={4} />
+      </div>
+      <div class="sc-piece sc-weekly" data-piece aria-hidden="true" inert style={at({ t: 2.2, l: "max(calc(100% - 30rem), calc(26% + min(36rem, 46vw) + 2rem))", d: 1.1, s: 2, w: "40rem", tp: 2.9, lp: "calc(100% - 19rem)", sp: 1.4 })}>
+        <Card>
+          <CardTitle>Weekly report</CardTitle>
+          <CardDescription>Every Monday morning.</CardDescription>
+        </Card>
+      </div>
+      <div class="sc-piece sc-wide-only" data-piece aria-hidden="true" inert style={at({ t: 2.56, l: "3%", d: 0.6, s: 2 })}>
+        <PeriodTabs />
+      </div>
+      <div class="sc-piece sc-wide-only sc-volume" data-piece aria-hidden="true" inert style={at({ t: 2.52, l: "62%", d: 0.5, s: 1.4, w: "18rem" })}>
+        <Slider label="Volume" defaultValue={64} />
+      </div>
+      <div class="sc-piece sc-dialog" data-piece aria-hidden="true" inert style={at({ t: 2.7, l: "30%", d: 0.8, s: 1.3, w: "26rem", h: "15rem", tp: 3.15, lp: "4%", sp: 1, wp: "92vw", hp: "15rem" })}>
+        <ArchiveDialog />
+      </div>
+      <div class="sc-piece sc-wide-only sc-email" data-piece aria-hidden="true" inert style={at({ t: 2.82, l: "75%", d: 0.45, w: "20rem" })}>
+        <EmailField />
+      </div>
+
+      {/* 4. The agent thinking and writing. */}
+      <div class="sc-piece sc-row sc-faces sc-wide-only" data-piece aria-hidden="true" inert style={at({ t: 3.0, l: "6%", d: 0.55, s: 1.4 })}>
+        <Faces client:near people={people} />
+      </div>
+      <div class="sc-piece" data-piece aria-hidden="true" style={at({ t: 3.18, l: "30%", d: 0.5, w: "min(30rem, 34vw)", tp: 3.7, lp: "4%", wp: "92vw" })}>
+        <ThreadLive
+          client:near
+          question="Which suppliers changed their terms this quarter?"
+          working={["Searching 3 sources", "Reading the contracts", "Comparing the prices"]}
+          answer="Three changed their terms. Only Harbour Logistics raised its prices, by four percent from January."
+        />
+      </div>
+      <div class="sc-piece sc-act" data-piece aria-hidden="true" style={at({ t: 3.08, l: "min(66%, calc(100% - 23.5rem))", d: 0.75, w: "22rem", tp: 4.5, lp: "6%", wp: "88vw" })}>
+        <ActivityLive
+          client:near
+          head="Searched once and read 1 file"
+          steps={[
+            { id: "search", title: "Searched the contracts", active: "Searching the contracts" },
+            { id: "read", title: "Read 3 files", active: "Reading 3 files" },
+            { id: "think", title: "Compared the prices", active: "Comparing the prices" },
+          ]}
+        />
+      </div>
+      <div class="sc-piece sc-words sc-wide-only" data-piece aria-hidden="true" style={at({ t: 3.8, l: "6%", d: 0.35 })}>
+        <Shimmer client:near words="Writing the answer" />
+      </div>
+      <div class="sc-piece sc-wide-only" data-piece aria-hidden="true" style={at({ t: 3.36, l: "9%", d: 0.6, s: 2.4 })}>
+        <Working client:near label="Working" />
+      </div>
+
+      {/* 5. Data. */}
+      <div class="sc-piece sc-panel sc-cal" data-piece aria-hidden="true" inert style={at({ t: 4.06, l: "46%", d: 0.2, s: 1.5, tp: 4.92, lp: "4%", sp: 1 })}>
+        <PickingRange client:near months={1} />
+      </div>
+      <div class="sc-piece sc-panel sc-reports sc-wide-only" data-piece aria-hidden="true" inert style={at({ t: 4.28, l: "2%", d: 0.8, w: "min(30rem, 36vw)" })}>
+        <ReportsLive client:near />
+      </div>
+      <div class="sc-piece sc-ring" data-piece aria-hidden="true" inert style={at({ t: 4.7, l: "74%", d: 0.65, s: 2.4, tp: 4.26, lp: "56%", sp: 1.6 })}>
+        <FillingRing client:near label="Done this week" />
+      </div>
+
+      {/* 6. The whole library far off (its drawings, above), and the ending: a screen put together
+          by App building's cursors, which hands over to the real screen, and works. */}
+      <div class="sc-piece sc-box sc-end" data-piece style={at({ t: 5.17, l: "calc(50% - min(32rem, 45vw))", d: 0.15, w: "min(64rem, 90vw)", h: "min(23rem, calc(var(--sc-room) * 0.6))", tp: 5.7, lp: "4%", wp: "92vw", hp: "min(calc(var(--sc-room) * 0.52), 22.5rem)" })}>
+        <Finale client:near />
+      </div>
+    </div>
+    <script is:inline data-astro-rerun set:html={entrance} />
+  </div>
+</Docs>

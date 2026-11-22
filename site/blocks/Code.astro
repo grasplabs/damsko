@@ -1,0 +1,19 @@
+---
+// MDX's `code`. Two kinds reach it: code in a sentence, and the inside of a highlighted block
+// (Shiki's lines, which Pre.astro puts in a CodeBlock). Code in a sentence is the one inline
+// code style; over 24 characters it may break, so it never runs out of its column.
+import "../system/styles/blocks.css";
+import { InlineCode } from "./parts";
+
+const html = await Astro.slots.render("default");
+const isBlock = html.includes('class="line"');
+const text = html
+  .replaceAll(/<[^>]+>/gu, "")
+  .replaceAll("&lt;", "<")
+  .replaceAll("&gt;", ">")
+  .replaceAll("&quot;", '"')
+  .replaceAll("&#39;", "'")
+  .replaceAll("&amp;", "&");
+---
+
+{isBlock ? <Fragment set:html={html} /> : <InlineCode>{text}</InlineCode>}

@@ -1,0 +1,310 @@
+---
+title: Carousel
+description: A set of slides that people page through with buttons, a swipe or the arrow keys.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/carousel @damsko/button"
+  use={
+    'import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@grasp-os/ui/components/carousel";'
+  }
+/>
+
+## Basic usage
+
+One slide a view, with Previous, Next and a mark for each page.
+
+<Stage path="carousel/basic" label="Basic usage" />
+
+## Several a view
+
+Three slides a view, going round from the last page to the first.
+
+<Stage path="carousel/several" label="Several a view" />
+
+## Down
+
+`orientation="vertical"` runs the slides down: the up and down arrows page them, and Previous and Next point up and down. Give the content a height.
+
+<Stage path="carousel/vertical" label="Down" />
+
+## In another language
+
+Its words come from the `I18nProvider`: the buttons, the row of marks and each mark, what a screen reader calls it and its slides (`carousel.carousel`, `carousel.slide`), and the name of a slide that has none (`carousel.slideLabel`, "2 of 5").
+
+<Stage path="carousel/labels" label="In another language" />
+
+## Every state
+
+The controls under the slides. Hover, keyboard focus and pressed are forced from their own CSS; the page is a prop.
+
+<States
+  path="carousel/states"
+  label="Every page"
+  cells={[
+    { label: "First page" },
+    { label: "Middle page", props: { page: 2 } },
+    { label: "Last page", props: { page: 3 } },
+  ]}
+/>
+
+<States
+  path="carousel/states"
+  label="Every state of a control"
+  choose={{
+    prop: "show",
+    label: "Control",
+    options: [
+      { id: "next", label: "Next" },
+      { id: "mark", label: "Mark" },
+    ],
+  }}
+  cells={[
+    { label: "Rest" },
+    { label: "Hover", force: "hover" },
+    { label: "Keyboard focus", force: "focus-visible" },
+    { label: "Pressed", force: "active" },
+  ]}
+/>
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="carousel"
+  always={[
+    "More slides than fit side by side, each whole on its own.",
+    "An `aria-label` that says what the slides are: Featured stories.",
+  ]}
+  never={[
+    "A carousel that turns by itself.",
+    "A few things that fit side by side: show them all.",
+    "The one thing people must see: put it on the page, not on a later slide.",
+    "Views of one thing, chosen by name: use Tabs.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    { group: "Slides", key: "Between slides", value: "{carousel-gap}" },
+    {
+      group: "Slides",
+      key: "Width",
+      value: "The view shared out by `slidesPerPage`, less the gaps",
+      note: "`auto`: each slide's own",
+    },
+    {
+      group: "Slides",
+      key: "Corner",
+      value: "{radius}, {radius-shape}",
+      note: "the view's, which the focus ring follows",
+    },
+    { group: "Controls", key: "Under the slides", value: "{space-4}" },
+    {
+      group: "Controls",
+      key: "Previous and Next",
+      value: "Quiet Buttons, {control-sm}, {space-2} apart",
+      note: "at the row's end",
+    },
+    { group: "Controls", key: "Marks to buttons", value: "{space-3} at least" },
+    {
+      group: "Marks",
+      key: "Mark",
+      value: "{carousel-dot} round",
+      tokens: ["carousel-dot-bg"],
+    },
+    {
+      group: "Marks",
+      key: "Current page",
+      value: "{carousel-dot-active} wide",
+      tokens: ["carousel-dot-bg-active"],
+    },
+    {
+      group: "Marks",
+      key: "Press area",
+      value: "{carousel-dot-target} square",
+      note: "{tap-target} on a touch screen",
+    },
+    {
+      group: "Marks",
+      key: "Focus ring",
+      value: "{ring-width}, {ring-offset} out",
+      tokens: ["ring"],
+    },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    {
+      key: "Current mark",
+      value: "Widens and darkens, {duration-ui}",
+      note: "reduced: at once",
+      tokens: ["ease"],
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Moving",
+      key: "Previous and Next",
+      value: "Move one page: as many slides as `slidesPerPage`.",
+    },
+    {
+      group: "Moving",
+      key: "Swipe and keys",
+      value:
+        "It scrolls natively: a swipe, a trackpad, or the arrow keys once the slides have focus.",
+    },
+    { group: "Moving", key: "Marks", value: "A mark jumps to its page." },
+    {
+      group: "Moving",
+      key: "Never on its own",
+      value: "It does not turn by itself; a person decides when to move on.",
+    },
+    {
+      group: "Ends",
+      key: "Without `loop`",
+      value: "Previous on the first page and Next on the last do nothing.",
+    },
+    {
+      group: "Ends",
+      key: "With `loop`",
+      value: "Next on the last page comes back to the first.",
+    },
+    {
+      group: "Saving",
+      key: "`onPageChange`",
+      value: "Runs with the page, from 1, once the slides come to rest.",
+    },
+    {
+      group: "Settings",
+      key: "Forced colours",
+      value:
+        "Marks in the grey text colour, the current one in the text colour.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Role",
+      value:
+        "A `region` described as a carousel, each slide a `group` described as a slide",
+    },
+    { key: "Name", value: "`aria-label`; each slide says where it is: 2 of 4" },
+    {
+      key: "Out of view",
+      value: "Slides out of view are `inert` and hidden from a screen reader",
+    },
+    {
+      key: "Marks",
+      value:
+        "A `tablist` named Pages of its label; each mark a `tab`, Page 1, `aria-selected` when current",
+    },
+    {
+      key: "Buttons",
+      value:
+        "Named Previous and Next; `aria-disabled` at the ends without `loop`",
+    },
+    { key: "Agents", value: "Find the buttons and the marks by name" },
+  ]}
+/>
+<Rows
+  title="From shadcn"
+  rows={[
+    {
+      group: "Parts",
+      key: "`CarouselContent`, `CarouselItem`",
+      value: "The same parts",
+      note: "one item a slide",
+    },
+    {
+      group: "Parts",
+      key: "`CarouselPrevious`, `CarouselNext`",
+      value: "The same parts, under the slides",
+      note: "outline Buttons, not at the sides",
+    },
+    {
+      group: "Parts",
+      key: "No marks",
+      value: "A mark per page, on by default",
+      note: "`showIndicators`",
+    },
+    {
+      group: "Layout",
+      key: "`basis-1/3` on each item",
+      value: "`slidesPerPage`",
+    },
+    { group: "Layout", key: "`opts={{ loop: true }}`", value: "`loop`" },
+    {
+      group: "Layout",
+      key: '`orientation="vertical"`',
+      value: "Kept",
+      note: "the up and down arrows page it",
+    },
+    {
+      group: "Elsewhere",
+      key: "`setApi`",
+      value: "`page`, `defaultPage`, `onPageChange`",
+    },
+    {
+      group: "Elsewhere",
+      key: "`className`",
+      value: "`style`",
+      note: "layout and width only",
+    },
+    {
+      group: "Elsewhere",
+      key: "Embla",
+      value: "UI SDK",
+      note: "native scrolling",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/carousel.tsx"
+  type="CarouselProps"
+  label="Carousel props"
+/>
+
+<Props
+  source="src/components/carousel.tsx"
+  type="CarouselContentProps"
+  label="CarouselContent props"
+/>
+
+<Props
+  source="src/components/carousel.tsx"
+  type="CarouselItemProps"
+  label="CarouselItem props"
+/>
+
+<Props
+  source="src/components/carousel.tsx"
+  type="CarouselPreviousProps"
+  label="CarouselPrevious props"
+/>
+
+<Props
+  source="src/components/carousel.tsx"
+  type="CarouselNextProps"
+  label="CarouselNext props"
+/>
+
+Previous and Next stand at the end of the row under the slides, after the marks, wherever they are written.
+
+</Reference>

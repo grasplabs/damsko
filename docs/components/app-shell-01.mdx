@@ -1,0 +1,62 @@
+---
+title: App shell
+description: The frame every page of an app sits in, with its main navigation beside the page.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/app-shell-01"
+  use={
+    'import { AppShell } from "@grasp-os/ui/blocks/app-shell-01/app-shell-01";'
+  }
+/>
+
+## Basic usage
+
+`sidebar` takes the product's Sidebar parts; the page stands beside it as a card. Across the card's top, the header holds the sidebar's trigger (Cmd+B or Ctrl+B fold it too), where the page is and its `actions`. With `onRename` a press on the page's name, Enter or F2 renames it in place. The page scrolls under the header. A block: it installs as source, to edit.
+
+<Stage path="app-shell-01/basic" label="Basic usage" />
+
+## A panel at the end
+
+`panel` holds one Side panel at the page's end, seated unframed. Drag its handle or move it with the arrow keys; the header's panel button hides and shows it. On a narrow window it opens as a sheet from the end, which holds Tab inside and gives focus back to the button when it closes. Keep it with `panelOpen` and `onPanelOpenChange`.
+
+<Stage path="app-shell-01/panel" label="A panel at the end" />
+
+## A banner
+
+`banner` stands above the header, across the page: a notice for the whole product, on every page.
+
+<Stage path="app-shell-01/banner" label="A banner" />
+
+## On a phone
+
+Under the lg breakpoint the sidebar is Sidebar's own sheet from the start, opened by the same trigger; following a link in it closes it.
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="app-shell-01"
+  always={[
+    "The frame every page of a product stands in, with its main navigation beside it.",
+  ]}
+  never={[
+    "A page's title row, with its actions and its tabs: use Page header.",
+    "The main navigation alone, without the frame: use Sidebar.",
+    "Details of one thing beside a page with no frame: use Side panel or Sheet.",
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/blocks/app-shell-01/app-shell-01.tsx"
+  type="AppShellProps"
+  label="App shell props"
+/>
+
+</Reference>

@@ -1,0 +1,403 @@
+---
+title: Code block
+description: A box of highlighted code, with its language named, line numbers and a copy button.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/code-block"
+  use={
+    'import { CodeBlock, CodeBlockActions, CodeBlockContent, CodeBlockCopyButton, CodeBlockHeader, CodeBlockTitle } from "@grasp-os/ui/components/code-block";'
+  }
+/>
+
+## Basic usage
+
+A `CodeBlock` in its `language`, a `CodeBlockHeader` with its `CodeBlockTitle` (the language's name) and `CodeBlockActions` holding the `CodeBlockCopyButton`, and the code as text in `CodeBlockContent`, which highlights it. A region named by its language; `lineNumbers` numbers the lines.
+
+<Stage path="code-block/basic" label="Basic usage" />
+
+## A title and highlighted lines
+
+A title in `CodeBlockTitle`, such as a file name, heads it beside the language and names the region. To mark lines, give `CodeBlockContent` its lines as `CodeBlockLine`s: `useHighlightedCode` gives them highlighted, and `variant="highlighted"` washes the lines an answer is about in mint, with a bar.
+
+<Stage path="code-block/file" label="A title and highlighted lines" />
+
+## A change
+
+`variant="added"` and `variant="removed"` wash a line in the diff's colours, a bar at its start in each.
+
+<Stage path="code-block/diff" label="A change" />
+
+## More beside Copy
+
+More in `CodeBlockActions` before the copy button, in the order given: Download here, a ghost icon Button the copy button's size (`icon-sm`). On a phone they stay in the header and the title gives way.
+
+<Stage path="code-block/actions" label="More beside Copy" />
+
+## No header
+
+`CodeBlockActions` straight in the `CodeBlock` stand over the code's corner, shown under a pointer or focus, and always on a touch screen. `aria-label` names the block.
+
+<Stage path="code-block/floating" label="No header" />
+
+## Long code
+
+Past `maxLines` on `CodeBlockContent`, 18 by default, it is folded under Show more, with a fade where it is cut. Show more is a Button: Enter or Space opens it, and again folds it. Past 1,000 lines or 50,000 characters the rest is plain, so a whole file pasted in never draws hundreds of thousands of coloured runs.
+
+<Stage path="code-block/long" label="Long code" />
+
+## Very long output
+
+Folded, only the lines that show are drawn; opened, at most the first 2,000 are, and a line under them says how many more there are. Copy takes all of it.
+
+<Stage path="code-block/output" label="Very long output" />
+
+## A command
+
+Without `lineNumbers`, for a line to copy and run.
+
+<Stage path="code-block/command" label="A command" />
+
+## Wrapping
+
+`wrap` on `CodeBlockContent` lets long lines wrap rather than scroll sideways.
+
+<Stage path="code-block/wrap" label="Wrapping" />
+
+## While it is written
+
+`streaming` on the `CodeBlock`: the title says it is being written, copying waits, and the code grows in place, read again at most once a frame however fast it comes. `showStreamingIndicator` adds a Spinner beside the words.
+
+<Stage path="code-block/streaming" label="While it is written" />
+
+## Every state
+
+The copy button under a pointer and with keyboard focus are forced from its own CSS.
+
+<States
+  path="code-block/states"
+  code="code-block/command"
+  cells={[
+    { label: "At rest" },
+    { label: "Copy, hover", force: "hover" },
+    { label: "Copy, keyboard focus", force: "focus-visible" },
+    { label: "While it is written", props: { streaming: true } },
+  ]}
+/>
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="code-block"
+  always={[
+    "The language, so the code is coloured and named.",
+    "A title when the code belongs to a file.",
+  ]}
+  never={[
+    "A value to copy in one line: use Snippet.",
+    "What changed, before and after: use Diff viewer.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Box",
+      key: "Surface",
+      value: "One soft ground in the one corner, no ring",
+      note: "{radius}, {radius-shape}",
+      tokens: ["code-block-bg"],
+    },
+    {
+      group: "Header",
+      key: "Height",
+      value: "36px, a hairline under it",
+      note: "{code-block-head}",
+      tokens: ["border"],
+    },
+    {
+      group: "Header",
+      key: "Words",
+      value: "13px; the title in Geist Mono",
+      note: "{text-xs}",
+      tokens: ["muted", "body-foreground"],
+    },
+    {
+      group: "Header",
+      key: "Copy",
+      value: "A CopyButton, ghost, 32px, at the end",
+      note: "{control-sm}",
+    },
+    {
+      group: "Code",
+      key: "Type",
+      value: "Geist Mono 14px / 20px",
+      note: "{font-mono}, {text-sm}",
+      tokens: ["body-foreground"],
+    },
+    {
+      group: "Code",
+      key: "Padding",
+      value: "12px round the code",
+      note: "{space-3}",
+    },
+    {
+      group: "Code",
+      key: "Line numbers",
+      value: "16px before the code, never copied",
+      note: "{space-4}",
+      tokens: ["code-block-gutter"],
+    },
+    {
+      group: "Code",
+      key: "Highlighted line",
+      value: "A wash and a 2px bar at its start",
+      note: "{code-block-bar-width}",
+      tokens: ["code-block-marked", "code-block-marked-bar"],
+    },
+    {
+      group: "Code",
+      key: "Added and removed lines",
+      value: "The diff's wash and a 2px bar in its colour",
+      note: "{code-block-bar-width}",
+      tokens: [
+        "diff-viewer-added-bg",
+        "syntax-inserted",
+        "diff-viewer-removed-bg",
+        "syntax-deleted",
+      ],
+    },
+    {
+      group: "Code",
+      key: "sm",
+      value: "13px on the same lines",
+      note: "{text-xs}",
+    },
+    {
+      group: "Box",
+      key: "destructive",
+      value: "The edge and the header's words destructive",
+      tokens: ["destructive-border", "destructive"],
+    },
+    {
+      group: "Code",
+      key: "Fold",
+      value: "18 lines, with a 48px fade",
+      note: "{code-block-fade}",
+    },
+    {
+      group: "Highlighting",
+      key: "Colours",
+      tokens: [
+        "syntax-keyword",
+        "syntax-string",
+        "syntax-constant",
+        "syntax-comment",
+        "syntax-function",
+        "syntax-punctuation",
+        "syntax-attribute",
+      ],
+    },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    {
+      key: "Writing",
+      value: "Its word breathes over 2s while code comes in",
+      note: "{skeleton-pulse}; reduced: still",
+      tokens: ["ease-in-out"],
+    },
+    {
+      key: "Copy",
+      value: "The CopyButton's press, then its check",
+      note: "{button-press-scale}, {duration-press}",
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Highlighting",
+      key: "Loading",
+      value:
+        "Plain text first; Prism and the language load the first time it is shown.",
+    },
+    {
+      group: "Highlighting",
+      key: "Languages",
+      value:
+        "TSX, TypeScript, JavaScript, JSON, Bash, Python, CSS, HTML, Markdown, YAML, SQL, Diff, Go, Rust; others as text.",
+    },
+    {
+      group: "Copy",
+      key: "What is copied",
+      value:
+        "The code exactly, without line numbers; the button shows its check and the page's one live region says Copied.",
+    },
+    {
+      group: "Width",
+      key: "Long lines",
+      value:
+        "Scroll sideways inside the block, or wrap with `wrap`; the page never moves.",
+    },
+    {
+      group: "Length",
+      key: "Long code",
+      value:
+        "Folded under Show more past `maxLines`; never while it is being written, never without script.",
+    },
+    {
+      group: "Streaming",
+      key: "Growing",
+      value:
+        "The code grows in place; the header says Writing, and copying waits.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Region",
+      value:
+        "A `section` named by its CodeBlockTitle's title, else its language, or by `aria-label`",
+    },
+    {
+      key: "Code",
+      value: "A `code` element of text, never HTML from the code",
+    },
+    {
+      key: "Line numbers",
+      value: "Hidden from screen readers and from selection",
+    },
+    {
+      key: "Scrolling",
+      value:
+        "A wide block's code is a focusable region, named by its title or language",
+    },
+    {
+      key: "Show more",
+      value:
+        "A Button with `aria-expanded` and `aria-controls`; Enter and Space",
+    },
+    {
+      key: "Copy",
+      value: "A CopyButton named Copy, its result said once",
+      note: "words from the I18nProvider (`copyButton`)",
+    },
+    { key: "Writing", value: "A status that says Writing while code comes in" },
+    {
+      key: "Contrast",
+      value:
+        "Every colour of the highlighting 4.5:1 on the block, light and dark",
+      note: "checked by `node tokens/generate.ts --check`",
+    },
+  ]}
+/>
+<Rows
+  title="From shadcn"
+  rows={[
+    {
+      group: "Parts",
+      key: "Names and props",
+      value:
+        "shadcn's CodeBlock, CodeBlockHeader, CodeBlockTitle, CodeBlockActions, CodeBlockCopyButton, CodeBlockContent, CodeBlockLine and CodeBlockFooter",
+    },
+    {
+      group: "Highlighting",
+      key: "Engine",
+      value: "Prism 1.30.0 in place of Shiki",
+      note: "one language at a time; `useHighlightedCode`",
+    },
+    {
+      group: "Added",
+      key: "Damsko's own",
+      value:
+        "`language`, `streaming` and `aria-label` on CodeBlock; `maxLines` and Show more on CodeBlockContent",
+    },
+    {
+      group: "Look",
+      key: "Type, padding and copy button",
+      value: "Grasp's soft ground and corner",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+### CodeBlock
+
+<Props
+  source="src/components/code-block.tsx"
+  type="CodeBlockProps"
+  label="CodeBlock"
+/>
+
+### CodeBlockHeader
+
+<Props
+  source="src/components/code-block.tsx"
+  type="CodeBlockHeaderProps"
+  label="CodeBlockHeader"
+/>
+
+### CodeBlockTitle
+
+<Props
+  source="src/components/code-block.tsx"
+  type="CodeBlockTitleProps"
+  label="CodeBlockTitle"
+/>
+
+### CodeBlockActions
+
+<Props
+  source="src/components/code-block.tsx"
+  type="CodeBlockActionsProps"
+  label="CodeBlockActions"
+/>
+
+### CodeBlockCopyButton
+
+<Props
+  source="src/components/code-block.tsx"
+  type="CodeBlockCopyButtonProps"
+  label="CodeBlockCopyButton"
+/>
+
+### CodeBlockContent
+
+<Props
+  source="src/components/code-block.tsx"
+  type="CodeBlockContentProps"
+  label="CodeBlockContent"
+/>
+
+### CodeBlockLine
+
+<Props
+  source="src/components/code-block.tsx"
+  type="CodeBlockLineProps"
+  label="CodeBlockLine"
+/>
+
+### CodeBlockFooter
+
+<Props
+  source="src/components/code-block.tsx"
+  type="CodeBlockFooterProps"
+  label="CodeBlockFooter"
+/>
+
+</Reference>

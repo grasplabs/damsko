@@ -1,0 +1,215 @@
+---
+title: Trace
+description: The building block for a line of an assistant's work, with a mark, a title and a body that opens, for a step no part built on it names.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/trace"
+/>
+
+## Steps
+
+`Trace` is a list of lines. A `TraceLine` straight inside it is a step: a quiet line of dots down from its mark to the next step's, its `TraceTitle` and a `TraceDescription`. In every line a first `TraceIcon` sits in a seat at its start, so titles start at one edge. A `TraceIcon` with nothing in it is the status mark.
+
+<Stage path="trace/steps" label="Steps" />
+
+## A row that opens
+
+Put the `TraceLine` in a `TraceCollapsibleTrigger` and the detail in `TraceCollapsibleContent`: a quiet row, as wide as its line, its words muted until the pointer is on it or it is open, its chevron turning as it opens. More lines in a `Trace` inside it make a chain of thought.
+
+<Stage path="trace/chain-of-thought" label="A row that opens" />
+
+## A tool call
+
+A line in a trigger can hold more than its title: here a Badge says the call's state. The chevron stands straight after the line.
+
+<Stage path="trace/tool" label="A tool call" />
+
+## Thinking
+
+The thoughts open under a row that says how long the thinking took.
+
+<Stage path="trace/reasoning" label="Thinking" />
+
+## A commit
+
+A row with a line for each file the commit changed: what changed in the title, the lines in the description, the diff under each.
+
+<Stage path="trace/commit" label="A commit" />
+
+## While it works
+
+A line is said once, when its status changes after it was drawn: when it finishes or fails. A line is never said for appearing. Press Next to finish the running step.
+
+<Stage path="trace/live" live label="While it works" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="trace"
+  always={[
+    "The steps an assistant takes: calling a tool, searching, reading, thinking, editing a file.",
+    "A title in the tense of the status: Searching the web while running, Searched the web once done, Failed to search the web when it failed.",
+    "A line in a trigger to make it open, or in a link or a dialog's trigger to make it go somewhere.",
+  ]}
+  never={[
+    "A step a part built on Trace already names: use Tool for a call, Reasoning for thinking, Chain of thought for an answer's steps, Task, Plan, Queue or Subagent.",
+    "The assistant's reply: use Message.",
+    "A question for the person, such as approving a tool: use Confirmation, outside the Trace.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Step",
+      key: "Row",
+      value: "{text-sm} on its line height, {space-2} above and below",
+      tokens: ["muted-foreground"],
+    },
+    {
+      group: "Line",
+      key: "Mark",
+      value:
+        "{icon-sm} seat, {space-3} to the words, level with the first line, in a step and in a trigger alike; a dot, the alert when failed, or an icon",
+      tokens: ["muted-foreground"],
+    },
+    {
+      group: "Step",
+      key: "Line between",
+      value:
+        "Fine dots from mark to mark, {space-1} clear of each; muted once done, faint ahead of the work",
+      tokens: ["muted-foreground", "agent-indicator-rest"],
+    },
+    {
+      group: "Line",
+      key: "Title and description",
+      value:
+        "Title in the line's ink, description muted after it, {space-2} apart; both wrap",
+      tokens: ["muted-foreground"],
+    },
+    {
+      group: "Status",
+      key: "Running",
+      value: "Title in ink and in the shimmer, mark in ink",
+      tokens: ["foreground"],
+    },
+    {
+      group: "Status",
+      key: "Error",
+      value: "Title and mark in red, the alert as the status mark",
+      tokens: ["destructive"],
+    },
+    {
+      group: "Status",
+      key: "Pending",
+      value: "The status mark faint",
+      tokens: ["agent-indicator-rest"],
+    },
+    {
+      group: "Row that opens",
+      key: "Trigger",
+      value:
+        "As wide as its line, {control-sm} tall, {font-weight-normal} on {text-sm-line}, muted until hovered or open, the ghost fill under the pointer, the chevron muted {space-2} after the line",
+      tokens: ["muted-foreground", "foreground", "control-sm"],
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      key: "Trigger",
+      value: "Click, Enter or Space opens and closes the row.",
+    },
+    {
+      key: "Arriving",
+      value:
+        "A step fades in a little lower first; with reduced motion it is simply there.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Line",
+      value:
+        "Plain text, not a tab stop; inside a trigger it is the name of a `button` with `aria-expanded`",
+    },
+    {
+      key: "Mark",
+      value: "Hidden from screen readers: the title says what happened",
+    },
+    {
+      key: "Status",
+      value:
+        "Said in words after the line (Working, Failed, Waiting), not only by its mark and colour",
+    },
+    {
+      key: "Announcements",
+      value:
+        "A line is said once, when its status changes after it was drawn: to done from running or pending, or to failed. Never for appearing, nested or not; lines that change together are said together",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/trace.tsx"
+  type="TraceProps"
+  label="Trace props"
+/>
+
+<Props
+  source="src/components/trace.tsx"
+  type="TraceLineProps"
+  label="TraceLine props"
+/>
+
+<Props
+  source="src/components/trace.tsx"
+  type="TraceIconProps"
+  label="TraceIcon props"
+/>
+
+<Props
+  source="src/components/trace.tsx"
+  type="TraceTitleProps"
+  label="TraceTitle props"
+/>
+
+<Props
+  source="src/components/trace.tsx"
+  type="TraceDescriptionProps"
+  label="TraceDescription props"
+/>
+
+<Props
+  source="src/components/trace.tsx"
+  type="TraceCollapsibleProps"
+  label="TraceCollapsible props"
+/>
+
+<Props
+  source="src/components/trace.tsx"
+  type="TraceCollapsibleTriggerProps"
+  label="TraceCollapsibleTrigger props"
+/>
+
+<Props
+  source="src/components/trace.tsx"
+  type="TraceCollapsibleContentProps"
+  label="TraceCollapsibleContent props"
+/>
+
+</Reference>

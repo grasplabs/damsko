@@ -1,0 +1,46 @@
+---
+title: Controls
+description: One height and one text style a size, shared by every field and the Button beside it.
+---
+
+<Head lead={frontmatter.description} />
+
+<Scene
+  path="foundations/controls-field-row"
+  title="Field row"
+  note="Input, Select, Combobox, Input group with a badge and two Buttons at sm, md and lg. Each row stands one height."
+  ground="soft"
+/>
+
+<Scene
+  path="foundations/controls-setting-row"
+  title="In a setting row"
+  note="A setting row and the Button beside its section's heading take sm, 32px, whatever the control."
+  ground="soft"
+/>
+
+<AllTokens>
+
+<SampleRows
+  set="targets"
+  kind="space"
+  note="Each bar is as long as its token."
+/>
+
+</AllTokens>
+
+## Rules
+
+<Rules
+  always={[
+    "Give every part in one row one size: Input, Select, Combobox, Input group, Number input, Tag input and the Button beside them take `sm` (32px), `md` (36px) or `lg` (44px).",
+    "Use `sm` in a setting row, a table, a toolbar and beside a section's heading; `md`, the default, in a form and a page header's actions; `lg` for the one field that matters on a phone.",
+    "Write a field's words in text-sm on the text-sm line at every size. On a phone or a touch screen every field takes field-text-touch (16px) together, so the phone does not zoom.",
+    "Draw a field and the quiet Button beside it with one outline (field-edge is the quiet bevel's edge), and put a Badge inside a field with Input group's text.",
+  ]}
+  never={[
+    "An `xs` Button beside a field: `xs` is for a card's foot or a prompt input, where no field stands.",
+    "A field at the default `md` beside `sm` Buttons, as a search beside a section's Invite.",
+    "A height, a padding or a font size of your own on a field: the size sets all three.",
+  ]}
+/>

@@ -1,0 +1,110 @@
+---
+title: Aspect ratio
+description: A box that keeps its width-to-height ratio, holding an image's space before it loads.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/aspect-ratio"
+  use={'import { AspectRatio } from "@grasp-os/ui/components/aspect-ratio";'}
+/>
+
+## Ratios
+
+`ratio` is width over height; what it holds fills it at width and height 100%.
+
+<Stage path="aspect-ratio/ratios" label="Ratios" />
+
+## Flush in a frame
+
+`rounded={false}` when the frame around it cuts the corner.
+
+<Stage path="aspect-ratio/flush" label="Flush in a frame" />
+
+## Every state
+
+It has no states of its own, so the row shows its common ratios, and flush.
+
+<States
+  path="aspect-ratio/states"
+  cells={[
+    { label: "16:9", props: { ratio: 1.7778 } },
+    { label: "4:3", props: { ratio: 1.3333 } },
+    { label: "1:1", props: { ratio: 1 } },
+    { label: "Flush", props: { ratio: 1.7778, rounded: false } },
+  ]}
+/>
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="aspect-ratio"
+  always={[
+    "The ratio of what it holds, so nothing that matters is cut.",
+    "An image inside it with `alt` that says what it shows.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    { key: "Ratio", value: "Width over height, 1 by default" },
+    {
+      key: "Width",
+      value: "As wide as its box",
+      note: "the ratio sets the height",
+    },
+    {
+      key: "Corner",
+      value: "{radius}, {radius-shape}",
+      note: "none with `rounded={false}`",
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      key: "Loading",
+      value:
+        "The room is held before an image loads, so nothing below it moves.",
+    },
+    {
+      key: "Content",
+      value:
+        "Fills it at width and height 100%; an image or a video with `object-fit: cover`.",
+    },
+    { key: "Overflow", value: "What runs past the box is cut." },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    { key: "Role", value: "None: a plain `div`" },
+    { key: "Name", value: "What it holds carries it: an image's `alt`" },
+  ]}
+/>
+<Rows
+  title="From shadcn"
+  rows={[
+    { key: "`ratio`", value: "`ratio`", note: "unchanged" },
+    {
+      key: "New",
+      value: "`rounded`",
+      note: "cut to {radius} unless it sits flush",
+    },
+    { key: "`className`", value: "`style`", note: "width and layout only" },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props source="src/components/aspect-ratio.tsx" type="AspectRatioProps" />
+
+</Reference>

@@ -1,0 +1,28 @@
+---
+// <Props source="src/components/button.tsx" type="ButtonProps" />: the component's props,
+// read from its real props type with the TypeScript checker (site/props-data.ts), so the table is
+// always what the code accepts. `head` names the first column ("Option"), `caption` puts a tag
+// over the table ("Returns"), and `required={false}` leaves out "Required" (what a hook returns).
+import "../system/styles/blocks.css";
+import { readPropsResult } from "../props-data";
+import { resolve } from "../rows-data";
+import { PropsView } from "./props";
+
+interface Props {
+  source: string;
+  type: string;
+  label?: string;
+  head?: string;
+  caption?: string;
+  required?: boolean;
+}
+const { source, type, label = "Props", head, caption, required } = Astro.props;
+// Never throws: a problem (a prop documented twice, a missing type) shows as a note in the table,
+// and `node scripts/check-props.ts` fails on it.
+const read = readPropsResult(source, type);
+// A token named in a prop's sentence ({duration-press-and-hold}) reads as its value, as in a Rows table.
+const rows = read.rows.map((row) => ({ ...row, description: resolve(row.description) }));
+const {problems} = read;
+---
+
+<PropsView rows={rows} problems={problems} label={label} head={head} caption={caption} required={required} />

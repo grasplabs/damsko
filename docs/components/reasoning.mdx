@@ -1,0 +1,148 @@
+---
+title: Reasoning
+description: The model's own thinking, as words, shown while it streams, then folded into one quiet line.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/reasoning"
+/>
+
+## When it is done
+
+Built as shadcn's Reasoning pattern is, on [Trace](/components/trace): `Reasoning` is a Trace with one row that opens, `ReasoningTrigger` its line. `ReasoningTrigger` says how long the assistant thought, from `duration` in seconds. A press opens `ReasoningContent`, the thoughts in Markdown, loaded the first time they show. The chevron after the line says it opens.
+
+<Stage path="reasoning/basic" label="When it is done" />
+
+## While it thinks
+
+With `isStreaming` the line runs (Trace's `status="running"`), says Thinking in the shimmer, and the thoughts open by themselves. A second after it ends the line settles into how long it thought, measured when no `duration` is given, and closes, unless the person opened or closed it meanwhile. Press Think to run it.
+
+<Stage path="reasoning/live" live label="While it thinks" />
+
+## Every state
+
+Thinking, then thought for a second, or for longer.
+
+<Stage path="reasoning/states" label="Every state" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="reasoning"
+  always={[
+    "The model's own thinking before an answer, as words: one per answer, above it.",
+    "Pass isStreaming while the thinking arrives and turn it off the moment it ends.",
+    "Read the state in a part of your own with useReasoning.",
+  ]}
+  never={[
+    "The steps an assistant took (searching, reading, running a tool): use Chain of thought.",
+    "The answer itself: it stands under the thoughts, in the message.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Line",
+      key: "Trigger",
+      value:
+        "Trace's row: a brain mark, the words and the chevron, as wide as they are, muted until hovered or open; the words in the shimmer while it runs",
+      tokens: ["muted", "text-sm", "text-sm-line", "font-weight-normal"],
+    },
+    {
+      group: "Thoughts",
+      key: "Edge",
+      value: "A {hairline} down the start edge, the words {space-3} in from it",
+      tokens: ["border"],
+    },
+    {
+      group: "Thoughts",
+      key: "Words",
+      value:
+        "Markdown at its note size, {message-text}; a line that is only bold becomes a label",
+      tokens: ["muted", "foreground"],
+    },
+    {
+      group: "Thoughts",
+      key: "Room",
+      value: "{space-5} before the answer below",
+    },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    {
+      key: "Opening and closing",
+      value: "Collapsible's: the panel's height, in {collapsible-open}",
+      note: "reduced: at once",
+    },
+    {
+      key: "Thinking",
+      value: "The line in the shimmer",
+      note: "reduced: still, muted",
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Opening",
+      key: "Line",
+      value: "Click, Enter or Space opens and closes the thoughts.",
+    },
+    {
+      group: "Opening",
+      key: "Streaming",
+      value:
+        "Opens when the thinking starts and closes a second after it ends; once the person opened or closed it, it stays as they left it.",
+    },
+    {
+      group: "Line",
+      key: "Words",
+      value: "Thinking, then Thought for n seconds.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    { key: "Line", value: "A `button` with `aria-expanded`" },
+    {
+      key: "Thinking",
+      value:
+        "Thinking that starts on the page is said once; its end, and thinking drawn from history, are not",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/reasoning.tsx"
+  type="ReasoningProps"
+  label="Reasoning props"
+/>
+
+<Props
+  source="src/components/reasoning.tsx"
+  type="ReasoningTriggerProps"
+  label="ReasoningTrigger props"
+/>
+
+<Props
+  source="src/components/reasoning.tsx"
+  type="ReasoningContentProps"
+  label="ReasoningContent props"
+/>
+
+</Reference>

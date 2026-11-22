@@ -1,0 +1,47 @@
+---
+title: Approvals inbox
+description: Everything agents wait for you to answer, in one screen of finished components.
+---
+
+<Head lead={frontmatter.description} />
+
+## The screen
+
+Choose a request to read it beside the table and answer; [open it on its own](/examples/patterns/approvals-inbox) to try 1440, 1024 and 390.
+
+<Stage path="patterns/approvals-inbox" label="The screen" />
+
+## Nothing waiting
+
+An empty tab says what will appear there, and when.
+
+<Stage path="patterns/approvals-inbox-empty" label="Nothing waiting" />
+
+## Loading
+
+The table waits in its own loading rows, each column's placeholder on its column's side; the rows fade in where they stood, and nothing is counted until they are there.
+
+<Stage path="patterns/approvals-inbox-loading" label="Loading" />
+
+## When it fails
+
+It says plainly that nothing loaded and nothing was answered, with a way to try again.
+
+<Stage path="patterns/approvals-inbox-failed" label="When it fails" />
+
+## Rules
+
+<Rules
+  always={[
+    "The request settles in place, its row stays until it closes, and Undo stands on its line; a toast only for declining several.",
+    "Ask again in place for a yes that cannot be undone; an alert dialog when it is grave.",
+    "The request opens beside the table on a wide screen, in a sheet on a phone.",
+    "Declining several at once, never approving several at once.",
+  ]}
+  never={[
+    "Approve in a table row: a yes is given with the request read.",
+    "An agent answering any request in the inbox.",
+    "A failed load shown as an empty inbox.",
+    "Expired requests mixed in with those that wait.",
+  ]}
+/>

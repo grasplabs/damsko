@@ -1,0 +1,35 @@
+---
+// Previous and next, at the top of the page, beside its title: one click to the next component
+// without scrolling to the page's end. Two small arrows, no names (a name
+// beside the title read as a button for something on the page); each arrow's accessible name and
+// title say where it goes. The same pages as the end's Previous and Next (./PrevNext.astro), in the
+// sidebar's order.
+import { ArrowLeftIcon, ArrowRightIcon, Icon } from "@grasp-os/ui/lib/icons";
+import { href } from "./nav";
+
+interface Props {
+  prev: { route: string; label: string } | null;
+  next: { route: string; label: string } | null;
+  label?: string;
+  previousLabel?: string;
+  nextLabel?: string;
+}
+const { prev, next, label = "Previous and next page", previousLabel = "Previous", nextLabel = "Next" } = Astro.props;
+---
+
+{
+  (prev || next) && (
+    <nav class="site-step" aria-label={label}>
+      {prev && (
+        <a class="site-step-link" href={href(prev.route)} aria-label={`${previousLabel}: ${prev.label}`} title={prev.label} data-step="prev">
+          <Icon icon={ArrowLeftIcon} />
+        </a>
+      )}
+      {next && (
+        <a class="site-step-link" href={href(next.route)} aria-label={`${nextLabel}: ${next.label}`} title={next.label} data-step="next">
+          <Icon icon={ArrowRightIcon} />
+        </a>
+      )}
+    </nav>
+  )
+}

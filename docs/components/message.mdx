@@ -1,0 +1,373 @@
+---
+title: Message
+description: One message in a conversation, the row round its surface, with its avatar, header, actions and footer.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/message"
+/>
+
+## Conversation
+
+A `Message` is the row; its `MessageContent` is the column that holds the surface. The person's message stands at the end (`align="end"`), its words in a muted [Bubble](/components/bubble); the assistant's is plain words across the column. Each message is named by who wrote it (You at the end, Assistant at the start), so a screen reader tells the two apart by more than their side; `aria-label` names it otherwise. `MessageFooter` holds the time, which shows where a pointer hovers the message or the focus is in it.
+
+<Stage path="message/conversation" label="Conversation" />
+
+## An answer in Markdown
+
+`MessageResponse` draws the answer from Markdown: lists, tables and code. Copy copies the Markdown source as it was written.
+
+<Stage path="message/chat-text" label="An answer in Markdown" />
+
+## Streaming
+
+With `status="streaming"`, the words come in smoothly between chunks, never in bursts, and what is half-written is drawn whole. With reduced motion they are drawn as they arrive. When the stream ends, all of it shows at once. Its actions keep their room while it is written, unseen, so the end moves nothing.
+
+<Stage path="message/streaming" label="Streaming" />
+
+## Failed
+
+`MessageError` says what did not happen, and Try again asks once more. The answer is written again in place, the focus stays in the message, and "Answer ready" is said once.
+
+<Stage path="message/failed" label="Failed" />
+
+## Stopped
+
+Stopped part way, the answer keeps the words it had written, says Stopped under them, and still offers its actions.
+
+<Stage path="message/stopped" live label="Stopped" />
+
+## Actions
+
+`MessageActions` is a named row under the surface: a `CopyButton` first, then `MessageAction`s, each a ghost icon button named by its `label`, with a tooltip. A rating given stays pressed. The person's message can be edited.
+
+<Stage path="message/actions" label="Actions" />
+
+## Avatar
+
+`MessageAvatar` stands beside the surface, level with its foot, on the message's own side.
+
+<Stage path="message/avatar" label="Avatar" />
+
+## A group
+
+`MessageGroup` stacks consecutive messages from one writer. An empty `MessageAvatar` keeps the room of the avatar beside the ones before the last.
+
+<Stage path="message/group" label="A group" />
+
+## Header and footer
+
+`MessageHeader` names who wrote it, above the surface; `MessageFooter` says when it was sent or whether it was read, under it.
+
+<Stage path="message/header-footer" label="Header and footer" />
+
+## Every state
+
+The person's message, then the assistant's done, being written, stopped and failed.
+
+<States
+  path="message/states"
+  code="message/conversation"
+  cells={[
+    { label: "User", props: { align: "end" } },
+    { label: "Assistant" },
+    { label: "Streaming", props: { status: "streaming" } },
+    { label: "Stopped", props: { status: "stopped" } },
+    { label: "Failed", props: { status: "error" } },
+  ]}
+/>
+
+## With a prompt input
+
+One chat state drives both. PromptInput's `status` is the AI SDK's own (`ready`, `submitted`, `streaming`, `error`), and Message's describes one answer (`thinking`, `streaming`, `done`, `stopped`, `error`), so the latest answer's is read from it: `submitted` is `thinking`, `streaming` is `streaming`, `ready` is `done` (or `stopped` once the person stopped it), `error` is `error`. Every earlier answer is `done`.
+
+```tsx
+const { messages, status, sendMessage, stop } = useChat();
+const [stopped, setStopped] = useState(false);
+const answer: Record<ChatStatus, MessageStatus> = {
+  submitted: "thinking",
+  streaming: "streaming",
+  ready: stopped ? "stopped" : "done",
+  error: "error",
+};
+
+{
+  messages.map((message, index) => (
+    <Message
+      key={message.id}
+      align={message.role === "user" ? "end" : "start"}
+      status={index === messages.length - 1 ? answer[status] : "done"}
+    >
+      …
+    </Message>
+  ));
+}
+<PromptInput
+  status={status}
+  onSubmit={({ text }) => {
+    setStopped(false);
+    return sendMessage({ text });
+  }}
+>
+  …
+  <PromptInputSubmit
+    onStop={() => {
+      setStopped(true);
+      void stop();
+    }}
+  />
+</PromptInput>;
+```
+
+## Loading
+
+`MessageSkeleton` is a message's shape while it loads, at the message's own widths: a muted Bubble at the end (`align="end"`), or the assistant's lines. Put them in a Message scroller with `loading`, which says once what is loading.
+
+<Stage path="message/loading" label="Loading" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="message"
+  always={[
+    "One message in a conversation, the person's at the end and the assistant's at the start, in a Message scroller or a Chat.",
+    "The person's words in a muted Bubble; the assistant's answer in MessageResponse.",
+    "Copy on every finished answer, copying its Markdown source.",
+    "A failure that says what did not happen, and Try again when trying again can work.",
+  ]}
+  never={[
+    "The list that holds the whole conversation: use Message scroller, or Chat for the whole thread.",
+    "Where the user writes to the assistant: use Prompt input.",
+    "The assistant's steps while it works: use Chain of thought, or Reasoning for its thinking.",
+    "A bubble for the assistant's answer: its words are the page's.",
+    "A line that marks an event between messages (a date, New messages): use Marker.",
+    "Reading each arriving word aloud: Writing is said once, then that the answer is ready.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Words",
+      key: "Text",
+      value: "{message-text} / {message-text-line}",
+      tokens: ["foreground"],
+    },
+    {
+      group: "Person",
+      key: "Surface",
+      value: "A muted Bubble, at the end of the column",
+      tokens: ["muted", "border-strong"],
+    },
+    { group: "Assistant", key: "Words", value: "Across the column, no bubble" },
+    {
+      group: "Assistant",
+      key: "Answer",
+      value: "Markdown at its default size",
+    },
+    {
+      group: "Both",
+      key: "Gap",
+      value:
+        "{space-2} between header, surface, actions and footer, and beside the avatar",
+    },
+    {
+      group: "Header",
+      key: "Name",
+      value: "{text-xs}, medium, at the message's own edge",
+      tokens: ["muted"],
+    },
+    {
+      group: "Avatar",
+      key: "Place",
+      value: "Beside the surface, level with its foot",
+    },
+    { group: "Group", key: "Gap", value: "{space-2}" },
+    {
+      group: "Footer",
+      key: "Time",
+      value: "{text-xs}, at the message's own edge",
+      note: 'the start, or the end with `align="end"`',
+      tokens: ["muted"],
+    },
+    {
+      group: "Stopped",
+      key: "Words",
+      value: "{text-sm}, the Stop icon, under the answer",
+      tokens: ["muted"],
+    },
+    {
+      group: "Failed",
+      key: "Words",
+      value: "{text-sm}, the alert icon; Try again a small ghost Button",
+      tokens: ["destructive"],
+    },
+    {
+      group: "Actions",
+      key: "Buttons",
+      value: "Ghost icon Buttons, {control-sm}",
+      note: "{tap-target} apart on a touch screen",
+    },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    {
+      key: "Streaming",
+      value:
+        "Each frame lets out a share of the words still to show, so a burst is spread over about 300ms",
+      note: "reduced: drawn as they arrive; the end always at once",
+    },
+    {
+      key: "Footer",
+      value: "Fades in on hover or focus, {duration-hover}",
+      note: "reduced: at once; on touch always shown",
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Streaming",
+      key: "Words",
+      value: "Grow as they arrive; half-written Markdown is drawn whole.",
+    },
+    {
+      group: "Streaming",
+      key: "Actions",
+      value:
+        "Keep their room, unseen and out of reach, until the message is done.",
+    },
+    {
+      group: "Stopped",
+      key: "Words",
+      value: "Kept as written, a link half-written at the end tidied away.",
+    },
+    {
+      group: "Failed",
+      key: "Try again",
+      value:
+        "Shows when `onRetry` is given; when the error goes, the focus goes to the message, never the page.",
+    },
+    {
+      group: "Actions",
+      key: "Copy",
+      value: "A `CopyButton` with the answer's Markdown source.",
+    },
+    {
+      group: "Actions",
+      key: "Pressed",
+      value:
+        "A rating stays on (`pressed`), said as pressed, until it is pressed again.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Message",
+      value:
+        'An `article`, named "You" at the end or "Assistant" at the start, or by `aria-label`',
+    },
+    {
+      key: "Streaming",
+      value:
+        '`aria-busy` on the answer; "Writing" said once, then "Answer ready" (or "Stopped"), never each word, through the page\'s one live region',
+    },
+    {
+      key: "Failed",
+      value: "An `alert` with the words; Try again beside it, not inside it",
+    },
+    {
+      key: "Actions",
+      value:
+        "A `group` named Message actions; every button named, reached by Tab",
+    },
+    {
+      key: "Loading",
+      value: "MessageSkeleton is busy and hidden from screen readers",
+    },
+    { key: "Forced colours", value: "The Bubble keeps a real outline" },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/message.tsx"
+  type="MessageGroupProps"
+  label="MessageGroup props"
+/>
+
+<Props
+  source="src/components/message.tsx"
+  type="MessageProps"
+  label="Message props"
+/>
+
+<Props
+  source="src/components/message.tsx"
+  type="MessageAvatarProps"
+  label="MessageAvatar props"
+/>
+
+<Props
+  source="src/components/message.tsx"
+  type="MessageContentProps"
+  label="MessageContent props"
+/>
+
+<Props
+  source="src/components/message.tsx"
+  type="MessageHeaderProps"
+  label="MessageHeader props"
+/>
+
+<Props
+  source="src/components/message.tsx"
+  type="MessageResponseProps"
+  label="MessageResponse props"
+/>
+
+<Props
+  source="src/components/message.tsx"
+  type="MessageActionsProps"
+  label="MessageActions props"
+/>
+
+<Props
+  source="src/components/message.tsx"
+  type="MessageActionProps"
+  label="MessageAction props"
+/>
+
+<Props
+  source="src/components/message.tsx"
+  type="MessageFooterProps"
+  label="MessageFooter props"
+/>
+
+<Props
+  source="src/components/message.tsx"
+  type="MessageErrorProps"
+  label="MessageError props"
+/>
+
+<Props
+  source="src/components/message.tsx"
+  type="MessageSkeletonProps"
+  label="MessageSkeleton props"
+/>
+
+</Reference>

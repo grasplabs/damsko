@@ -1,0 +1,278 @@
+---
+title: Questionnaire
+description: The questions an assistant asks and waits on, one at a time, each answered with a choice, several, or the person's own words.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/questionnaire"
+/>
+
+Unlike shadcn's, it is a group, not a form, so it can stand inside a form of its own, a PromptInput's.
+
+## One choice
+
+A `QuestionnaireItem` holds a `QuestionnaireTitle`, a `QuestionnaireDescription` and its `QuestionnaireChoices`: radios. A `QuestionnaireInput` after them takes an answer of the person's own (Other), which takes the chosen choice's place. Send waits for an answer; once sent, the answer stands in one line. On an item that is not `required`, `QuestionnaireSkip` skips it; here its `onClick` lets the product move on.
+
+<Stage path="questionnaire/single" label="One choice" />
+
+## Several choices
+
+`multiple` on the item: the choices are checkboxes.
+
+<Stage path="questionnaire/multi" label="Several choices" />
+
+## Two columns
+
+`columns={2}` on `QuestionnaireChoices`, for short choices with no description; one column on a phone.
+
+<Stage path="questionnaire/columns" label="Two columns" />
+
+## The person's own words
+
+A `QuestionnaireInput` alone in its item, named by the title. Enter sends, Shift+Enter starts a line.
+
+<Stage path="questionnaire/text" label="The person's own words" />
+
+## Several questions
+
+One item shows at a time, in the page's order. `QuestionnaireProgress` says where the person is; `QuestionnaireNext` waits for an answer and goes on, `QuestionnairePrevious` goes back with the answer kept, and `QuestionnaireSubmit` on the last item sends every answer. `items` gives the order before the items are drawn, so the server's first draw shows the right one.
+
+<Stage path="questionnaire/steps" label="Several questions" />
+
+## An answer that fails
+
+When `onSubmit`'s Promise rejects, the questionnaire says it could not send, keeps the answer, and can be sent again.
+
+<Stage path="questionnaire/failed" label="An answer that fails" />
+
+## Held by the page
+
+`checked` on a `QuestionnaireChoice` and `value` on a `QuestionnaireInput` hold the answer in the page, as shadcn's do; `onCheckedChange` and `onValueChange` say each change.
+
+<Stage path="questionnaire/controlled" label="Held by the page" />
+
+## Names from a model
+
+Item names a model writes are keys of the answers like any other, even those every object knows (`__proto__`, `constructor`, `toString`).
+
+<Stage path="questionnaire/untrusted" label="Names from a model" />
+
+## In a prompt input
+
+A questionnaire is a group, not a form, so it may stand in a PromptInput's body for a while. Enter on a choice and its Send answer the question; the message is not sent.
+
+<Stage path="questionnaire/in-prompt-input" label="In a prompt input" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="questionnaire"
+  always={[
+    "Questions an assistant needs answered before it goes on: a choice, several, or a few words, one question at a time.",
+    "Mark the choice the assistant recommends with `recommended`, one at most.",
+    "Say in the title or description that a `required` question must be answered: nothing else shows it.",
+  ]}
+  never={[
+    "A yes before a step the assistant takes: use Confirmation.",
+    "A few prompts the person may send next with one press: use Suggestion.",
+    "A form the person fills in on their own: use Field and Form.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Card",
+      key: "Surface",
+      value: "The card's fill and lift, the one corner, {space-3} by {space-4}",
+      tokens: ["card"],
+    },
+    {
+      group: "Choices",
+      key: "Card",
+      value:
+        "A hairline inside, {tap-target} tall at least; chosen, the quiet fill",
+      tokens: ["border", "accent-highlight"],
+    },
+    {
+      group: "Choices",
+      key: "Key",
+      value:
+        "Its number, 1 to 9 (or letter, A to Z), quiet at the end; none on a touch screen",
+      tokens: ["muted"],
+    },
+    {
+      group: "Progress",
+      key: "Words",
+      value: "Question 2 of 3, {text-sm}, figures of one width",
+      tokens: ["muted"],
+    },
+    {
+      group: "Answer",
+      key: "Sent",
+      value: "One line, a tick before it",
+      tokens: ["muted", "success"],
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      key: "Next, Submit",
+      value:
+        "Wait until the item is answered or skipped; Submit works while its Promise runs.",
+    },
+    {
+      key: "Navigation",
+      value:
+        "Previous on every item but the first, Next on every item but the last, Submit on the last, Skip on an item not `required`.",
+    },
+    {
+      key: "Keys",
+      value:
+        "Tab to the choices, the arrows between them, Space chooses, 1 to 9 pick, Enter on a choice goes on, Cmd or Ctrl+Enter goes on from anywhere in it, left and right go back and on away from a radio.",
+    },
+    {
+      key: "Other",
+      value:
+        "In a single choice, words of one's own take the chosen choice's place.",
+    },
+    {
+      key: "Answers",
+      value:
+        "By item name, the values in the page's order; a skipped item is left out.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Root",
+      value:
+        "A `group`, named by `aria-label` when given; each item is named by its title",
+    },
+    {
+      key: "Item",
+      value:
+        "A fieldset named by its title and described by its description and, while invalid, its error; the others hidden and inert",
+    },
+    {
+      key: "Choices",
+      value:
+        "A `radiogroup` or a `group` of checkboxes named by the title; each named by its words (and Recommended), described by its description",
+    },
+    {
+      key: "Progress",
+      value: "A `progressbar` named Progress, its value said in words",
+    },
+    {
+      key: "Moving",
+      value:
+        "Focus goes to the item shown; a sent answer is a `status`, and focus that was on Submit lands on it",
+    },
+    { key: "Failed", value: "An `alert` that describes the group" },
+    {
+      key: "Touch",
+      value:
+        "Each choice and button takes a finger 21px off its middle each way",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/questionnaire.tsx"
+  type="QuestionnaireProps"
+  label="Questionnaire props"
+/>
+
+<Props
+  source="src/components/questionnaire.tsx"
+  type="QuestionnaireAnswer"
+  label="QuestionnaireAnswer"
+/>
+
+<Props
+  source="src/components/questionnaire.tsx"
+  type="QuestionnaireItemDefinition"
+  label="QuestionnaireItemDefinition"
+/>
+
+<Props
+  source="src/components/questionnaire.tsx"
+  type="QuestionnaireProgressProps"
+  label="QuestionnaireProgress props"
+/>
+
+<Props
+  source="src/components/questionnaire.tsx"
+  type="QuestionnaireItemProps"
+  label="QuestionnaireItem props"
+/>
+
+<Props
+  source="src/components/questionnaire.tsx"
+  type="QuestionnaireTitleProps"
+  label="QuestionnaireTitle props"
+/>
+
+<Props
+  source="src/components/questionnaire.tsx"
+  type="QuestionnaireDescriptionProps"
+  label="QuestionnaireDescription props"
+/>
+
+<Props
+  source="src/components/questionnaire.tsx"
+  type="QuestionnaireChoicesProps"
+  label="QuestionnaireChoices props"
+/>
+
+<Props
+  source="src/components/questionnaire.tsx"
+  type="QuestionnaireChoiceProps"
+  label="QuestionnaireChoice props"
+/>
+
+<Props
+  source="src/components/questionnaire.tsx"
+  type="QuestionnaireChoiceDescriptionProps"
+  label="QuestionnaireChoiceDescription props"
+/>
+
+<Props
+  source="src/components/questionnaire.tsx"
+  type="QuestionnaireInputProps"
+  label="QuestionnaireInput props"
+/>
+
+<Props
+  source="src/components/questionnaire.tsx"
+  type="QuestionnaireErrorProps"
+  label="QuestionnaireError props"
+/>
+
+<Props
+  source="src/components/questionnaire.tsx"
+  type="QuestionnaireActionsProps"
+  label="QuestionnaireActions props"
+/>
+
+<Props
+  source="src/components/questionnaire.tsx"
+  type="QuestionnaireNavigationProps"
+  label="QuestionnairePrevious, QuestionnaireSkip, QuestionnaireNext and QuestionnaireSubmit props"
+/>
+
+</Reference>

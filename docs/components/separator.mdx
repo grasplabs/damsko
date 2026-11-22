@@ -1,0 +1,104 @@
+---
+title: Separator
+description: A thin line that sets apart groups of content on the page.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/separator"
+  use={'import { Separator } from "@grasp-os/ui/components/separator";'}
+/>
+
+## Horizontal
+
+Between groups stacked one above the other, as wide as the column.
+
+<Stage path="separator/horizontal" label="Horizontal" />
+
+## Vertical
+
+Between items in a flex or grid row, as tall as the row.
+
+<Stage path="separator/vertical" label="Vertical" />
+
+## In a list
+
+Between the rows of a list, never after the last one.
+
+<Stage path="separator/in-a-list" label="In a list" />
+
+## Decorative
+
+When the words around it already divide, `decorative` keeps it from a screen reader.
+
+<Stage path="separator/decorative" label="Decorative" />
+
+## Every state
+
+Each orientation, alone and between words.
+
+<States
+  path="separator/states"
+  cells={[
+    { label: "Horizontal" },
+    { label: "Vertical", props: { orientation: "vertical" } },
+    { label: "Between words", props: { words: true } },
+    {
+      label: "Vertical, between words",
+      props: { orientation: "vertical", words: true },
+    },
+  ]}
+/>
+
+<Part title="Using it" />
+
+## When to use it
+
+- Between groups of content that belong apart, where space alone does not divide them.
+- Not where space alone already divides, above a heading that already starts a group, or after another separator. A line people drag to resize what is on each side is a Resizable.
+- Between the rows of a list, never after the last one.
+- `decorative` when the words around it already divide, such as "or" between two ways to sign in: a screen reader skips it.
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    { key: "Line", value: "{separator-width}", tokens: ["border"] },
+    {
+      key: "Room around it",
+      value: "None of its own",
+      note: "the layout's gap, the same on both sides",
+    },
+  ]}
+/>
+<Rows title="Motion" rows={[{ key: "Motion", value: "None: it is a line" }]} />
+<Rows
+  title="Behaviour"
+  rows={[{ key: "Forced colours", value: "Drawn in the text colour." }]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    { key: "Role", value: "`separator`, with `aria-orientation`" },
+    { key: "Decorative", value: "No role: hidden from screen readers" },
+    { key: "Focus", value: "Never takes it" },
+  ]}
+/>
+<Rows
+  title="From shadcn"
+  rows={[
+    { key: "`bg-border`", value: "{border}" },
+    { key: "`h-px`, `w-px`", value: "{separator-width}" },
+    { key: "`className`", value: "`style`", note: "layout only" },
+    { key: "Base UI", value: "UI SDK" },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props source="src/components/separator.tsx" type="SeparatorProps" />
+
+</Reference>

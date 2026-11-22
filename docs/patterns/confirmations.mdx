@@ -1,0 +1,53 @@
+---
+title: Confirmations
+description: Ask first only when it cannot be undone; otherwise act and offer the way back.
+---
+
+<Head lead={frontmatter.description} />
+
+## Can be undone
+
+No question: it happens at once, and a toast says so with Undo.
+
+<Stage path="patterns/confirmations-undo" label="Can be undone" />
+
+## From a menu
+
+Move to trash in a menu does not ask either: it happens as it is pressed, and a toast offers Undo.
+
+<Stage path="patterns/confirmations-menu-undo" label="From a menu" />
+
+## Cannot be undone
+
+Hold to confirm; a click asks in a small popover, for anyone who cannot hold.
+
+<Stage path="patterns/confirmations-hold" label="Cannot be undone" />
+
+## When the loss is grave
+
+An alert dialog names the thing and what is lost, and its action repeats the verb in danger.
+
+<Stage path="patterns/confirmations-delete" label="When the loss is grave" />
+
+## When it fails
+
+Hold the button: it says plainly that the removal did not happen.
+
+<Stage path="patterns/confirmations-failed" label="When it fails" />
+
+## Rules
+
+<Rules
+  always={[
+    "Undo in a toast for anything that can be brought back.",
+    "Hold to confirm for a small loss that cannot be undone: a draft, a member.",
+    "An alert dialog for a grave loss, naming the thing and what is lost: Delete Quarterly review?",
+    "The confirming action repeats the verb, not OK or Yes, and a failure says so on it.",
+  ]}
+  never={[
+    "A question before something that can be undone.",
+    "Danger as the colour of an action that does not delete or remove.",
+    "A dialog that closes before its work has finished.",
+    "Are you sure? as the whole question.",
+  ]}
+/>

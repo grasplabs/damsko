@@ -1,0 +1,44 @@
+---
+// <Stage path="button/variants" label="Variants" code="button/action" />.
+// The example drawn live in the page by ../system/Island.astro, its real source in the Code view. With
+// `code`, the Code view shows another example's source: for a stage that draws a part standing
+// still, the code a product writes. Under the code, on a component page, "Also add" when the example
+// imports an item the page's install line does not bring (../lib/install-extra.ts).
+import "../system/styles/blocks.css";
+import { innerCode } from "./code";
+import { StageView } from "./stage";
+import { hasExample, loadSource } from "../system/examples";
+import { alsoAdd } from "../lib/install-extra";
+import { highlight } from "../system/highlight";
+import Island from "../system/Island.astro";
+
+interface Props {
+  path: string;
+  /** The section it shows, for the tabs' name. Default: the file's name. */
+  label?: string;
+  /** Another example whose source the Code view shows. Default: `path`. */
+  code?: string;
+  /** An agent may operate it. Without it the stage is a specimen, hidden from the agent bridge. */
+  live?: boolean;
+}
+
+const { path, label, code = path, live = false } = Astro.props;
+if (!hasExample(path)) {
+  throw new Error(`<Stage path="${path}">: no example at examples/${path}.tsx.`);
+}
+if (!hasExample(code)) {
+  throw new Error(`<Stage path="${path}" code="${code}">: no example at examples/${code}.tsx.`);
+}
+const source = await loadSource(code);
+const highlighted = await highlight(source, "tsx");
+// On a component page: what this example imports that the page's install line does not bring.
+const page = /^\/components\/([a-z0-9-]+)\/?$/u.exec(Astro.url.pathname)?.[1];
+const extra = page === undefined ? null : alsoAdd(page, source);
+// The same on every build: one stage per example on a page.
+const id = `stage-${path.replaceAll(/[^a-z0-9]+/giu, "-")}`;
+const name = label ?? (path.split("/").at(-1) ?? path).replace(/^./u, (first) => first.toUpperCase());
+---
+
+<StageView id={id} label={name} codeHtml={innerCode(highlighted)} file={`${code}.tsx`} live={live} alsoAdd={extra ?? undefined}>
+  <Island path={path} />
+</StageView>

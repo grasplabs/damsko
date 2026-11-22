@@ -1,0 +1,81 @@
+---
+// The components overview: every component as a tile with its preview, its name and its page's
+// sentence, after the reference's cards, in Grasp's tokens. The tiles come from docs/components
+// (../../overview/tiles.ts), so a new page has a tile with no list to edit.
+//
+// Each preview is the component's drawing (../../overview/sketches/<name>.ts, drawn by the pen at
+// build time): inline SVG, so it is there on the first paint and without script, and no script is
+// sent for it. A component with no sketch shows an empty room. The preview is hidden from screen readers: the tile's one link is the component's name,
+// stretched over the whole tile.
+import "../../overview/overview.css";
+import "../../overview/pen.css";
+
+import Head from "../../blocks/Head.astro";
+import Docs from "../../layouts/Docs.astro";
+import { ditherDefs } from "../../overview/pen.ts";
+import { libraryName } from "../../system/name";
+import { sketchOf } from "../../overview/sketches/index.ts";
+import { tileGroups } from "../../overview/tiles";
+
+const title = "Components";
+const description = `Every part of ${libraryName}. Choose one to see how it works and how to use it.`;
+const groups = tileGroups();
+const list = groups.flatMap((group) => group.tiles);
+// The groups' headings, which the rail lists as "On this page".
+const headings = groups.map((group) => ({ depth: 2, slug: group.id, text: group.label }));
+
+// Each tile's sketch, by its route, where it has one.
+const sketches = new Map<string, string>();
+for (const tile of list) {
+  const drawing = sketchOf(tile.route.split("/").pop() ?? "");
+  if (drawing) {sketches.set(tile.route, drawing);}
+}
+// The dither's patterns, one per level the drawings used at each of the two sizes, and the rules
+// that fill with them.
+const dither = ditherDefs();
+---
+
+<Docs route="/components" title={title} description={description} headings={headings} full>
+  <h1>{title}</h1>
+  {/* The page's sentence as every page has it under its title (the Head block): the same size, ink
+      and room. As its own muted 15px line it sat flush under the title, unlike any other page. */}
+  <Head lead={description} />
+  <div class="overview not-prose">
+    <Fragment set:html={dither} />
+    {
+      groups.map((group) => (
+        <section class="overview-group" aria-labelledby={group.id}>
+          <h2 class="overview-heading" id={group.id}>
+            {group.label}
+          </h2>
+          <ul class="overview-grid">
+            {
+              group.tiles.map((tile) => (
+                <li class="overview-tile">
+                  <div class="overview-preview" inert aria-hidden="true">
+                    <div class="overview-room">
+                      {sketches.has(tile.route) && <Fragment set:html={sketches.get(tile.route)} />}
+                    </div>
+                  </div>
+                  <div class="overview-text">
+                    <a class="overview-name" href={tile.route}>
+                      {tile.name}
+                    </a>
+                    {
+                      /* Whole, on at most two lines from a tablet up; none on a phone (overview.css). */
+                      tile.description && (
+                        <p class="overview-description">
+                          {tile.description}
+                        </p>
+                      )
+                    }
+                  </div>
+                </li>
+              ))
+            }
+          </ul>
+        </section>
+      ))
+    }
+  </div>
+</Docs>

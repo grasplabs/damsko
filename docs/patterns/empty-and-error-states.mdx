@@ -1,0 +1,87 @@
+---
+title: Empty and error states
+description: What a page says when there is nothing, when nothing matches, and when it failed.
+---
+
+<Head lead={frontmatter.description} />
+
+## Nothing yet
+
+The list's rows wait, drawn faint. Say what will appear, and give the one action that makes it.
+
+<Stage path="empty-and-error/first-use" label="Nothing yet" />
+
+## Nothing matches
+
+The search hid everything: keep what was typed, name it, and give the way back.
+
+<Stage path="empty-and-error/no-results" label="Nothing matches" />
+
+## It did not load
+
+An error in the list's place, never an empty list. Try again works in the button itself.
+
+<Stage path="empty-and-error/did-not-load" label="It did not load" />
+
+## A page that failed
+
+When the whole page did not load, not a list in it: a real heading, one plain sentence, Try again and a quiet way to the start page. Under them, the one fact that can change by itself, whether Grasp can be reached (checking, cannot be reached, reachable again), and a reference to copy for support. It is said once, when it appears; Try again says how it went in the button itself. Rule: a failed page keeps its heading and one sentence, never a code in their place; the reference stands last, to copy, not to read.
+
+<Stage path="empty-and-error/page-failed" label="A page that failed" />
+
+[The same as the whole window](/examples/empty-and-error/page-failed-whole), its heading the page's h1.
+
+## All done
+
+Everything is answered: say so plainly, and where the next one will appear.
+
+<Stage path="empty-and-error/cleared" label="All done" />
+
+## No access
+
+The thing exists and is shut: say who can open it, and let the person ask from here.
+
+<Stage path="empty-and-error/no-access" label="No access" />
+
+## Offline
+
+Say what is kept and what happens when the connection is back.
+
+<Stage path="empty-and-error/offline" label="Offline" />
+
+## One part failed
+
+The page loaded and one part did not: a note where that part would be.
+
+<Stage path="empty-and-error/part-failed" label="One part failed" />
+
+## An action failed
+
+The control says it failed, in words, and can be pressed again.
+
+<Stage
+  path="empty-and-error/action-failed-still"
+  code="empty-and-error/action-failed"
+  label="An action failed"
+/>
+
+## Words
+
+The words follow the [Writing](/guidelines/writing#empty-states) guideline: why it is empty, and what fills it.
+
+## Rules
+
+<Rules
+  always={[
+    "Tell the cases apart: nothing yet, no match, all done, no access, offline and failed each have their own picture, words and way on.",
+    "Say what failed in plain words, and what to do next.",
+    "Keep the place's shape and what the person had: their search, their text, what did load.",
+    "Let a failed action reach an agent as a failure, with the words the person sees.",
+  ]}
+  never={[
+    "An empty state while a list is still loading, or in place of an error.",
+    "Jokes or blame: Oops, something went wrong!",
+    "A code or a stack trace as the message.",
+    "A toast as the only sign that something failed.",
+  ]}
+/>

@@ -1,0 +1,13 @@
+---
+// /examples/{path}: one example alone (../../layouts/Frame.astro).
+import { wanted } from "../../system/subset";
+import Frame from "../../layouts/Frame.astro";
+import { examplePaths, hasExample } from "../../system/examples";
+
+export const getStaticPaths = () => examplePaths().filter((path) => wanted(`/examples/${path}`)).map((path) => ({ params: { path } }));
+
+const path = Astro.params.path ?? "";
+if (!hasExample(path)) {return new Response(null, { status: 404 });}
+---
+
+<Frame path={path} />

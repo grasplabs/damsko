@@ -1,0 +1,137 @@
+---
+title: Number field
+description: A box for typing a number, with buttons to step it down and up.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/number-field"
+/>
+
+## Basic usage
+
+`min` and `max` keep it in range: a number typed past an end is brought to it when the field is left.
+
+<Stage path="number-field/basic" label="Basic usage" />
+
+## A unit or a sign
+
+`suffix` after the number, `prefix` before it. `step` sets one step, `largeStep` what Page Up and Down move, `smallStep` what Alt with an arrow moves.
+
+<Stage path="number-field/units" label="A unit or a sign" />
+
+## The page's language
+
+Separators follow the page's language, or `locale`. A form gets the plain number.
+
+<Stage path="number-field/locale" label="The page's language" />
+
+## Sizes
+
+32, 36 and 44px, as Input's, so the two stand level in a row.
+
+<Stage path="number-field/sizes" label="Sizes" />
+
+## States
+
+Invalid with its reason from the Field, read only, and disabled.
+
+<Stage path="number-field/states" label="States" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="number-field"
+  always={[
+    "A number someone types or steps, kept between a least and a most.",
+    "A number with a unit after it or a sign before it: kg, €.",
+  ]}
+  never={[
+    "A value set along a scale by dragging: use a Slider.",
+    "A one-time code of digits: use an InputOTP.",
+    "Digits that are no amount, a phone number or an id: use an Input.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Keyboard",
+      key: "Arrow Up, Arrow Down",
+      value: "One step up or down, kept between `min` and `max`.",
+    },
+    {
+      group: "Keyboard",
+      key: "Page Up, Page Down",
+      value:
+        "`largeStep` (ten steps unless set); Shift with an arrow or a step button too.",
+    },
+    {
+      group: "Keyboard",
+      key: "Alt with an arrow",
+      value: "`smallStep` (a tenth of a step unless set), for a fine change.",
+    },
+    {
+      group: "Keyboard",
+      key: "Home, End",
+      value: "To `min` and to `max`.",
+    },
+    {
+      group: "Keyboard",
+      key: "Enter",
+      value:
+        "Commits what is typed: brought into range and snapped to the step.",
+    },
+    {
+      group: "Pointer",
+      key: "Steps",
+      value:
+        "Step once, then repeat while held; out of the Tab order, as the arrow keys do the same.",
+    },
+    { group: "Pointer", key: "Wheel", value: "Never steps it." },
+    {
+      group: "Content",
+      key: "Language",
+      value:
+        "Shown in the page's language (or `locale`), sent as a plain number.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    { key: "Role", value: "A native text `<input>`, its steps buttons" },
+    {
+      key: "Name",
+      value: "Its FieldLabel, or `aria-label` when nothing is seen",
+    },
+    {
+      key: "Description",
+      value:
+        "Its prefix and suffix, then FieldDescription and a shown FieldError",
+    },
+    {
+      key: "Steps",
+      value:
+        "Named Decrease and Increase from the I18nProvider (`numberField`)",
+    },
+    { key: "Wrong", value: "`aria-invalid` while its error shows" },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/number-field.tsx"
+  type="NumberFieldProps"
+  label="NumberField props"
+/>
+
+</Reference>

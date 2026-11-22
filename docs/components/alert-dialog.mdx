@@ -1,0 +1,260 @@
+---
+title: Alert dialog
+description: A window that asks one question before a step that cannot be undone.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/alert-dialog"
+  use={
+    'import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@grasp-os/ui/components/alert-dialog";'
+  }
+/>
+
+## Basic usage
+
+The title names the thing, the description says what is lost, and focus starts on the safe answer. The trigger is a plain wrapper: `asChild` hands its behaviour to a Button. `AlertDialogCancel` is the safe answer, an outline Button, as shadcn draws it; `AlertDialogAction` is the one action, and closes it with its `value`.
+
+<Stage path="alert-dialog/basic" live label="Basic usage" />
+
+## With work that can fail
+
+Work before it closes is a Button in the footer whose `onClick` returns a Promise, as in a Dialog. While it works the alert dialog holds, and Escape waits: its `onOpenChange` cancels the close. When it fails, the Button says so and the alert dialog stays open.
+
+<Stage path="alert-dialog/failed" label="With work that can fail" />
+
+## Confirm without danger
+
+Grave but deleting nothing: the action is `default`, not `destructive`, and still repeats the verb.
+
+<Stage path="alert-dialog/confirm" label="Confirm without danger" />
+
+## Long description
+
+It wraps, and past the window's height only the description scrolls: a region named by the title, so the keys scroll it too.
+
+<Stage path="alert-dialog/long-description" label="Long description" />
+
+## With Cancel
+
+Given no words, `AlertDialogCancel` says the I18nProvider's `alertDialog.cancel`: Cancel. Put it first, so focus starts on it.
+
+<Stage path="alert-dialog/cancel" label="With Cancel" />
+
+## On a phone
+
+Under 640px it is a sheet along the bottom, and its answers share the line under the thumb. Nothing to set: the window's width decides.
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="alert-dialog"
+  always={[
+    "A grave loss that cannot be undone, naming the thing and what is lost.",
+    "A yes to an agent's request that is grave and cannot be undone.",
+    "The safe answer first, as AlertDialogCancel, and the one action last.",
+    "`destructive` on the answer that deletes, `default` on a grave step that deletes nothing.",
+  ]}
+  never={[
+    "Something that can be undone: do it at once and offer Undo in a Toast.",
+    "A small loss that cannot be undone, such as a draft or a member: hold to confirm with a Hold button.",
+    "A task with fields to fill, or more than one answer: use Dialog.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Size",
+      key: "Panel",
+      value: "Dialog's: {dialog-width}, its gutters, its padding",
+    },
+    {
+      group: "Size",
+      key: "Answers",
+      value: "Small Buttons, {control-sm}, {space-2} apart",
+      note: "a sheet's share the line",
+    },
+    {
+      group: "Type",
+      key: "Title",
+      value: "{text-base} / {text-base-line}, {font-weight-medium}",
+      tokens: ["foreground"],
+    },
+    {
+      group: "Type",
+      key: "Description",
+      value: "{text-base} / {text-base-line}",
+      tokens: ["muted"],
+    },
+    {
+      group: "Surface",
+      key: "Panel and shade",
+      value: "Dialog's",
+      note: "no close button",
+      tokens: ["card", "shadow-lg", "dialog-scrim"],
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Input",
+      key: "Opening",
+      value:
+        "Its trigger, by pointer, Enter or Space. Focus starts on the safe answer (AlertDialogCancel, else the footer's first answer).",
+    },
+    {
+      group: "Input",
+      key: "Closing",
+      value:
+        "An answer, or Escape. A press on the shade does nothing. Focus returns to the trigger, or to what opened it by `open`.",
+    },
+    {
+      group: "Input",
+      key: "Tab",
+      value: "Stays inside, wrapping from the last answer to the first.",
+    },
+    {
+      group: "Input",
+      key: "Not dismissible",
+      value: "`dismissible={false}`: Escape does nothing either.",
+    },
+    {
+      group: "Input",
+      key: "Agents",
+      value:
+        "Open it by its trigger's name, read its title, press an answer by name. The action waits for the person's yes; a failed action answers not ok, with its `errorLabel`.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    { key: "Role", value: "`alertdialog`, with `aria-modal`" },
+    { key: "Name", value: "Its title, by `aria-labelledby`" },
+    { key: "Description", value: "Its description, by `aria-describedby`" },
+    {
+      key: "A description that scrolls",
+      value: "A `region` named by the title, in the Tab order",
+    },
+    {
+      key: "Cancel",
+      value: "Says the I18nProvider's `alertDialog.cancel` when given no words",
+    },
+  ]}
+/>
+<Rows
+  title="From shadcn"
+  rows={[
+    {
+      group: "Parts",
+      key: "Every part",
+      value: "Kept",
+      note: "AlertDialogContent brings its shade, in the top layer",
+    },
+    {
+      group: "Parts",
+      key: "`AlertDialogMedia`, `size`",
+      value: "Not yet",
+    },
+    {
+      group: "Look",
+      key: "The panel",
+      value: "Dialog's",
+      note: "dialogStyles",
+    },
+    {
+      group: "Behaviour",
+      key: "Base UI's AlertDialog",
+      value: "UI SDK's AlertDialog",
+      note: "so an agent can open it and press its answers",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+Parts nest as the basic stage shows. The root, trigger, content and answers also take the rest of their UI SDK part.
+
+### AlertDialog
+
+<Props
+  source="src/components/alert-dialog.tsx"
+  type="AlertDialogProps"
+  label="AlertDialog"
+/>
+
+### AlertDialogTrigger
+
+<Props
+  source="src/components/alert-dialog.tsx"
+  type="AlertDialogTriggerProps"
+  label="AlertDialogTrigger"
+/>
+
+### AlertDialogContent
+
+<Props
+  source="src/components/alert-dialog.tsx"
+  type="AlertDialogContentProps"
+  label="AlertDialogContent"
+/>
+
+### AlertDialogHeader
+
+<Props
+  source="src/components/alert-dialog.tsx"
+  type="AlertDialogHeaderProps"
+  label="AlertDialogHeader"
+/>
+
+### AlertDialogTitle
+
+<Props
+  source="src/components/alert-dialog.tsx"
+  type="AlertDialogTitleProps"
+  label="AlertDialogTitle"
+/>
+
+### AlertDialogDescription
+
+<Props
+  source="src/components/alert-dialog.tsx"
+  type="AlertDialogDescriptionProps"
+  label="AlertDialogDescription"
+/>
+
+### AlertDialogFooter
+
+<Props
+  source="src/components/alert-dialog.tsx"
+  type="AlertDialogFooterProps"
+  label="AlertDialogFooter"
+/>
+
+### AlertDialogAction
+
+<Props
+  source="src/components/alert-dialog.tsx"
+  type="AlertDialogActionProps"
+  label="AlertDialogAction"
+/>
+
+### AlertDialogCancel
+
+<Props
+  source="src/components/alert-dialog.tsx"
+  type="AlertDialogCancelProps"
+  label="AlertDialogCancel"
+/>
+
+</Reference>

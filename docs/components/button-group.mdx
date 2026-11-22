@@ -1,0 +1,273 @@
+---
+title: Button group
+description: A row of buttons for actions on the same thing, like Archive and Delete.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/button-group @damsko/button"
+/>
+
+## Basic usage
+
+Actions on the same thing, with the words that say what each does. The buttons are plain `ghost` Buttons.
+
+<Stage path="button-group/basic" label="Basic usage" />
+
+## Icons
+
+Icon-only buttons in a toolbar row; each label is its name.
+
+<Stage path="button-group/icons" label="Icons" />
+
+## Split button
+
+The usual action, a hairline, and a button for its other ways.
+
+<Stage path="button-group/split" label="Split button" />
+
+## Sizes
+
+Button's heights: 32px, 36px or 44px. The group's corner follows its buttons' size.
+
+<Stage path="button-group/sizes" label="Sizes" />
+
+## Vertical
+
+Stacked, each button as wide as the widest.
+
+<Stage path="button-group/vertical" label="Vertical" />
+
+## Text
+
+Quiet words at the buttons' height. With `asChild` they are the one element given, a Label here, which keeps its behaviour and takes the text's look.
+
+<Stage path="button-group/text" label="Text" />
+
+## Every state
+
+Its buttons' states, in order. Hover, keyboard focus and pressed show on Send only, one button at a time.
+
+<States
+  path="button-group/states"
+  cells={[
+    { label: "Rest" },
+    { label: "Hover", props: { forced: "hover" } },
+    { label: "Keyboard focus", props: { forced: "focus-visible" } },
+    { label: "Pressed", props: { forced: "active" } },
+    { label: "Loading", props: { loading: true } },
+    { label: "Disabled", props: { disabled: true } },
+  ]}
+/>
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="button-group"
+  always={[
+    "Buttons that act on the same thing.",
+    "A split button: the usual action, and a button for its other ways.",
+    "An `aria-label` that says what the buttons are for: Message actions, Text alignment.",
+    "A separator in a split button, between the action and its other ways.",
+    '`ghost` Buttons of one size; `orientation="vertical"` to stack them, each as wide as the widest.',
+  ]}
+  never={[
+    "A choice that stays on: use Toggle.",
+    "The view's main action: it has its own default Button.",
+    "Many actions for one thing, most of them rarely used: use Dropdown menu.",
+    "Colours, heights or corners set from outside: `style` takes layout only.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Size",
+      key: "Height",
+      value: "{control-sm}, {control-default}, {control-lg}",
+      note: "Button's; every button the group's",
+    },
+    {
+      group: "Size",
+      key: "Padding",
+      value: "None round the buttons",
+      note: "each keeps Button's own",
+    },
+    {
+      group: "Size",
+      key: "Separator",
+      value: "{separator-width}, {space-2} in from the surface's edges",
+      tokens: ["border"],
+    },
+    {
+      group: "Size",
+      key: "Vertical",
+      value: "Each button as wide as the widest",
+    },
+    {
+      group: "Shape",
+      key: "Corner",
+      value: "{radius}, {radius-shape}",
+      note: "capped at half the height",
+    },
+    {
+      group: "Colour",
+      key: "Surface",
+      note: "the quiet button's, once round all",
+      tokens: ["secondary", "bevel-muted"],
+    },
+    {
+      group: "Colour",
+      key: "Buttons",
+      note: "ghost: no fill at rest",
+      tokens: ["foreground", "accent", "accent-active"],
+    },
+    {
+      group: "Focus and disabled",
+      key: "Focus ring",
+      value: "Button's {ring-width} ring, on the one button",
+      tokens: ["ring"],
+    },
+    {
+      group: "Focus and disabled",
+      key: "Disabled",
+      value: "{opacity-disabled} opacity",
+      note: "per button",
+    },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    {
+      key: "Hover",
+      value: "Fill one step deeper, {duration-hover}",
+      note: "the one button under the pointer",
+      tokens: ["ease"],
+    },
+    {
+      key: "Press",
+      value: "Scale {button-press-scale}, {duration-press}",
+      note: "reduced: at once",
+      tokens: ["ease"],
+    },
+    {
+      key: "Words change",
+      value: "Crossfade, {duration-swap}",
+      note: "Button's, when an action works or ends",
+      tokens: ["ease"],
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Input",
+      key: "Keyboard",
+      value:
+        "Tab reaches every button in turn; it is not a toolbar, so arrows do nothing.",
+    },
+    {
+      group: "Input",
+      key: "Pointer",
+      value: "Lights only the button it is on.",
+    },
+    {
+      group: "Input",
+      key: "Actions",
+      value:
+        "Each button is its own; a press that returns a Promise gives it loading, success and error.",
+    },
+    {
+      group: "Settings",
+      key: "Right to left",
+      value: "The buttons follow the reading direction.",
+    },
+    {
+      group: "Settings",
+      key: "Forced colours",
+      value: "A 1px outline in the text colour draws the surface.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    { key: "Role", value: "`group`, named by `aria-label`" },
+    { key: "Direction", value: '`aria-orientation="vertical"` when stacked' },
+    { key: "Buttons", value: "Their words, or `aria-label` when only an icon" },
+    { key: "Separator", value: "Only a line, hidden from screen readers" },
+    { key: "Agents", value: "Each button pressed by its name" },
+  ]}
+/>
+<Rows
+  title="From shadcn"
+  rows={[
+    {
+      group: "Buttons",
+      key: "Any Button",
+      value: "A `ghost` Button",
+      note: "of one size; its corners follow the group's",
+    },
+    {
+      group: "Buttons",
+      key: "Joined borders",
+      value: "One quiet surface",
+      note: "{secondary}, {bevel-muted}",
+    },
+    {
+      group: "Parts",
+      key: "`ButtonGroupText`",
+      value: "`ButtonGroupText`",
+      note: "quiet words at the buttons' height",
+    },
+    {
+      group: "Parts",
+      key: "`ButtonGroupSeparator`",
+      value: "`ButtonGroupSeparator`",
+      note: "the page's hairline, set in, following the group's direction",
+    },
+    {
+      group: "Group",
+      key: "`aria-label`",
+      value: "`aria-label`",
+      note: "say what the buttons are for",
+    },
+    {
+      group: "Elsewhere",
+      key: "`className`",
+      value: "`style`",
+      note: "layout only",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/button-group.tsx"
+  type="ButtonGroupProps"
+  label="ButtonGroup"
+/>
+
+<Props
+  source="src/components/button-group.tsx"
+  type="ButtonGroupSeparatorProps"
+  label="ButtonGroupSeparator"
+/>
+
+<Props
+  source="src/components/button-group.tsx"
+  type="ButtonGroupTextProps"
+  label="ButtonGroupText"
+/>
+
+</Reference>

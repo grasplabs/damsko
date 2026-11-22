@@ -1,0 +1,412 @@
+---
+title: Sidebar
+description: A column of an app's main places down one side, which folds away or down to its icons.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/sidebar"
+  use={
+    'import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarInset, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger } from "@grasp-os/ui/components/sidebar";'
+  }
+/>
+
+## Basic usage
+
+shadcn's parts: a SidebarProvider holds whether it is open and the row it stands in, the Sidebar beside a SidebarInset, the page. In the sidebar a SidebarHeader, a SidebarContent of SidebarGroups and a SidebarFooter. A group holds a SidebarGroupLabel over a SidebarMenu of SidebarMenuItems, each a SidebarMenuButton, a link through `asChild`, with a SidebarMenuBadge or a SidebarMenuSub beside it. `isActive` raises the page you are on. With `collapsible="icon"` the trigger, the rail or Cmd+B (Ctrl+B elsewhere) folds it to its icons, and each button's `tooltip` names it there.
+
+<Stage path="sidebar/basic" label="Basic usage" />
+
+## Off the canvas
+
+The default, `collapsible="offcanvas"`: folded, it slides out past its side, the page takes the width and nothing in it is a tab stop. `keyboardShortcut` changes the keys, `false` turns them off.
+
+<Stage path="sidebar/collapsible" label="Off the canvas" />
+
+## Floating and inset
+
+`variant="floating"` raises it a little in from the edges; `variant="inset"` leaves the page as a card on the sidebar's ground.
+
+<Stage path="sidebar/floating" label="Floating" />
+
+<Stage path="sidebar/inset" label="Inset" />
+
+## At the end
+
+`side="end"`, after the SidebarInset. Start and end follow the reading direction.
+
+<Stage path="sidebar/side" label="At the end" />
+
+## Groups
+
+A Collapsible folds a group from its label: its trigger is drawn as the SidebarGroupLabel with `asChild`. A SidebarGroupAction stands at the end of the label; a SidebarInput in the header filters the rows.
+
+<Stage path="sidebar/groups" label="Groups" />
+
+## A row's actions
+
+A SidebarMenuAction at the end of a row opens its menu, shown while the pointer or focus is on the row with `showOnHover`, and always on a touch screen. Whatever the product marks a row with, such as an agent's working indicator, goes in the button's children.
+
+<Stage path="sidebar/actions" label="A row's actions" />
+
+## The foot
+
+The footer holds what the product composes there: the theme control, then the person signed in, a large SidebarMenuButton as their menu's trigger.
+
+<Stage path="sidebar/footer" label="The foot" />
+
+## Before the rows arrive
+
+SidebarMenuSkeleton draws quiet bars in the rows' own boxes, the same shapes every time. They are hidden from a screen reader: the menu says it is busy.
+
+<Stage path="sidebar/states" label="Before the rows arrive" />
+
+## Kept as the person left it
+
+`storageKey` keeps the open state in localStorage. `sidebarStateScript(storageKey)` in the page's head draws it before the page wakes, so nothing moves. Or keep it yourself with `open` and `onOpenChange`, from a cookie read on the server.
+
+<Stage path="sidebar/persisted" label="Kept as the person left it" />
+
+## From the page
+
+`useSidebar()` reads and sets the open state from anywhere inside the provider: a page's own control folds it with `setOpen`, which takes a value or an updater, as React's `setState`.
+
+<Stage path="sidebar/from-the-page" label="From the page" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="sidebar"
+  always={[
+    "An app's main places, in groups, down one side of the window.",
+    "The current place said so: `isActive` on its SidebarMenuButton.",
+    "A `tooltip` on every button of a sidebar that folds to its icons.",
+    "A SidebarTrigger in the page's bar: on a phone it is the only way in.",
+  ]}
+  never={[
+    "Actions rather than places to go: a Menubar or a DropdownMenu.",
+    "A site's main links in a row across the top: a NavigationMenu.",
+    "Views of one thing: Tabs.",
+    "A product's own parts built in: compose them into the parts.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Size",
+      key: "Width",
+      value: "15rem open, 56px folded to its icons",
+      note: "{sidebar-width}, {sidebar-rail-width}",
+    },
+    {
+      group: "Size",
+      key: "Row",
+      value: "32px; 28px when sm, 44px when lg; 44px on a touch screen",
+      note: "{sidebar-menu-button-height}, {control-xs}, {control-lg}, {tap-target}",
+    },
+    {
+      group: "Surface",
+      key: "Ground",
+      value: "A step back from the page",
+      tokens: ["sidebar"],
+    },
+    {
+      group: "Surface",
+      key: "Current row",
+      value: "Raised, with the edge",
+      tokens: ["sidebar-accent"],
+    },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    {
+      key: "Folding",
+      value: "Its width and its panel move together in {duration-ui}",
+      note: "reduced motion: there and gone at once",
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Folding",
+      key: "Ways",
+      value:
+        "The trigger, the rail, or Cmd+B (Ctrl+B elsewhere) from anywhere on the page, not in rich text; where a page holds several, the one holding focus answers, else the first.",
+    },
+    {
+      group: "Folding",
+      key: "In a field",
+      value:
+        "Cmd+B (Ctrl+B) folds the sidebar from inside an input or a textarea too, as shadcn's does: a page whose fields want those keys sets `keyboardShortcut` to others, or `false`.",
+    },
+    {
+      group: "Folding",
+      key: "Focus",
+      value:
+        "Folded off the canvas while focus is inside, focus goes to the trigger.",
+    },
+    {
+      group: "Phone",
+      key: "Under 1024px",
+      value:
+        "A Sheet from its side: Tab stays inside, Escape or the shade closes it, and focus goes back to the trigger.",
+    },
+    {
+      group: "Kept",
+      key: "storageKey",
+      value:
+        "The open state in localStorage; nothing is read or kept without it.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Landmarks",
+      value:
+        "A `complementary` landmark named by the I18nProvider's `sidebar.name`, its content a `navigation` named `sidebar.main`; the inset is `main`.",
+    },
+    {
+      key: "Trigger",
+      value:
+        "A button named `sidebar.toggle`, with `aria-expanded`, `aria-controls` and `aria-keyshortcuts`.",
+    },
+    {
+      key: "Current place",
+      value: '`aria-current="page"` on the active button',
+    },
+    {
+      key: "Folded to icons",
+      value: "Each button keeps its name; its tooltip shows it",
+    },
+  ]}
+/>
+<Rows
+  title="From shadcn"
+  rows={[
+    {
+      group: "Parts",
+      key: "Every part",
+      value: "Kept, with its props",
+    },
+    {
+      group: "Props",
+      key: "`side`",
+      value: '`"start"` or `"end"`',
+      note: "logical, as Sheet's",
+    },
+    {
+      group: "Props",
+      key: "Cookie",
+      value: "`storageKey` and `sidebarStateScript`",
+      note: "localStorage, only when given; or `open` from the server",
+    },
+    {
+      group: "Layout",
+      key: "Fixed to the window",
+      value: "In the page's flow",
+      note: "so it lives in any frame; held in view while the page scrolls",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+### SidebarProvider
+
+<Props
+  source="src/components/sidebar.tsx"
+  type="SidebarProviderProps"
+  label="SidebarProvider"
+/>
+
+### Sidebar
+
+<Props
+  source="src/components/sidebar.tsx"
+  type="SidebarProps"
+  label="Sidebar"
+/>
+
+### SidebarTrigger
+
+<Props
+  source="src/components/sidebar.tsx"
+  type="SidebarTriggerProps"
+  label="SidebarTrigger"
+/>
+
+### SidebarRail
+
+<Props
+  source="src/components/sidebar.tsx"
+  type="SidebarRailProps"
+  label="SidebarRail"
+/>
+
+### SidebarInset
+
+<Props
+  source="src/components/sidebar.tsx"
+  type="SidebarInsetProps"
+  label="SidebarInset"
+/>
+
+### SidebarHeader
+
+<Props
+  source="src/components/sidebar.tsx"
+  type="SidebarHeaderProps"
+  label="SidebarHeader"
+/>
+
+### SidebarContent
+
+<Props
+  source="src/components/sidebar.tsx"
+  type="SidebarContentProps"
+  label="SidebarContent"
+/>
+
+### SidebarFooter
+
+<Props
+  source="src/components/sidebar.tsx"
+  type="SidebarFooterProps"
+  label="SidebarFooter"
+/>
+
+### SidebarSeparator
+
+<Props
+  source="src/components/sidebar.tsx"
+  type="SidebarSeparatorProps"
+  label="SidebarSeparator"
+/>
+
+### SidebarInput
+
+<Props
+  source="src/components/sidebar.tsx"
+  type="SidebarInputProps"
+  label="SidebarInput"
+/>
+
+### SidebarGroup
+
+<Props
+  source="src/components/sidebar.tsx"
+  type="SidebarGroupProps"
+  label="SidebarGroup"
+/>
+
+### SidebarGroupLabel
+
+<Props
+  source="src/components/sidebar.tsx"
+  type="SidebarGroupLabelProps"
+  label="SidebarGroupLabel"
+/>
+
+### SidebarGroupAction
+
+<Props
+  source="src/components/sidebar.tsx"
+  type="SidebarGroupActionProps"
+  label="SidebarGroupAction"
+/>
+
+### SidebarGroupContent
+
+<Props
+  source="src/components/sidebar.tsx"
+  type="SidebarGroupContentProps"
+  label="SidebarGroupContent"
+/>
+
+### SidebarMenu
+
+<Props
+  source="src/components/sidebar.tsx"
+  type="SidebarMenuProps"
+  label="SidebarMenu"
+/>
+
+### SidebarMenuItem
+
+<Props
+  source="src/components/sidebar.tsx"
+  type="SidebarMenuItemProps"
+  label="SidebarMenuItem"
+/>
+
+### SidebarMenuButton
+
+<Props
+  source="src/components/sidebar.tsx"
+  type="SidebarMenuButtonProps"
+  label="SidebarMenuButton"
+/>
+
+### SidebarMenuAction
+
+<Props
+  source="src/components/sidebar.tsx"
+  type="SidebarMenuActionProps"
+  label="SidebarMenuAction"
+/>
+
+### SidebarMenuBadge
+
+<Props
+  source="src/components/sidebar.tsx"
+  type="SidebarMenuBadgeProps"
+  label="SidebarMenuBadge"
+/>
+
+### SidebarMenuSkeleton
+
+<Props
+  source="src/components/sidebar.tsx"
+  type="SidebarMenuSkeletonProps"
+  label="SidebarMenuSkeleton"
+/>
+
+### SidebarMenuSub
+
+<Props
+  source="src/components/sidebar.tsx"
+  type="SidebarMenuSubProps"
+  label="SidebarMenuSub"
+/>
+
+### SidebarMenuSubItem
+
+<Props
+  source="src/components/sidebar.tsx"
+  type="SidebarMenuSubItemProps"
+  label="SidebarMenuSubItem"
+/>
+
+### SidebarMenuSubButton
+
+<Props
+  source="src/components/sidebar.tsx"
+  type="SidebarMenuSubButtonProps"
+  label="SidebarMenuSubButton"
+/>
+
+</Reference>

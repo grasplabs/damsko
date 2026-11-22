@@ -1,0 +1,221 @@
+---
+title: Test Results
+description: The results of a test run an assistant made, its counts, its suites, its tests and their failures.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/test-results"
+/>
+
+## A run
+
+Test Results is a Trace with a row that opens for the run. `TestResultsHeader` is the row's line: the flask, `TestResultsSummary` counting what ran and failed from `summary`, and `TestResultsDuration`. In red when a test failed, and then open at first. Each `Test` is a line with its mark, its name and its duration; a failed one with a `TestError` opens on the error, its `TestErrorMessage` and `TestErrorStack` on the code surface.
+
+<Stage path="test-results/basic" label="A run" />
+
+## Suites
+
+Group tests by file: each `TestSuite` is a row of its own, its `TestSuiteName` the file and `TestSuiteStats` its counts, open at first when it failed. A skipped test says so in its name.
+
+<Stage path="test-results/suites" label="Suites" />
+
+## Every test passed
+
+A run where every test passed stays closed until opened. `TestResultsProgress` shows how many passed as a bar.
+
+<Stage path="test-results/passed" label="Every test passed" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="test-results"
+  always={[
+    "A test run an assistant made: its counts, its suites, each test's status and duration, and each failure's error.",
+    "The counts in the run's and the suites' lines, so what failed is said in words.",
+  ]}
+  never={[
+    "The run's raw output: use Terminal.",
+    "An error with frames to open: use Stack trace.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Run and suites",
+      key: "Line",
+      value:
+        "Trace's row that opens: the flask or the file's mark, the counts, the duration quiet after them; red when a test failed",
+      tokens: ["muted-foreground", "destructive"],
+    },
+    {
+      group: "Test",
+      key: "Line",
+      value:
+        "Trace's step: a tick when it passed, a cross in red when it failed, a struck circle when skipped, the dot while it runs; the duration quiet after the name",
+      tokens: ["muted-foreground", "destructive"],
+    },
+    {
+      group: "Error",
+      key: "Surface",
+      value:
+        "The code surface: the wash, the strong edge, the one corner, {space-3} inside; {text-xs} mono, the message in ink, the stack muted under it",
+      tokens: ["code-block-bg", "body-foreground", "muted-foreground"],
+    },
+    {
+      group: "Progress",
+      key: "Bar",
+      value:
+        "A small Progress: green when every test passed, red when one failed",
+      tokens: ["success", "destructive"],
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      key: "Lines",
+      value:
+        "Click, Enter or Space opens and closes the run, a suite or a failed test.",
+    },
+    {
+      key: "Open at first",
+      value:
+        "The run and each suite when a test in it failed; a failed test with `defaultOpen`.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Status",
+      value:
+        "In words as well as by mark and colour: the counts in the run's and the suites' lines, Failed said after a failed line, Working after a running one, Skipped in a skipped test's name",
+    },
+    {
+      key: "Lines",
+      value:
+        "A line that opens is a `button` with `aria-expanded`, named by its words",
+    },
+    {
+      key: "Progress",
+      value: "A progress bar named by how many passed of how many",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/test-results.tsx"
+  type="TestResultsProps"
+  label="TestResults props"
+/>
+
+<Props
+  source="src/components/test-results.tsx"
+  type="TestResultsHeaderProps"
+  label="TestResultsHeader props"
+/>
+
+<Props
+  source="src/components/test-results.tsx"
+  type="TestResultsSummaryProps"
+  label="TestResultsSummary props"
+/>
+
+<Props
+  source="src/components/test-results.tsx"
+  type="TestResultsDurationProps"
+  label="TestResultsDuration props"
+/>
+
+<Props
+  source="src/components/test-results.tsx"
+  type="TestResultsProgressProps"
+  label="TestResultsProgress props"
+/>
+
+<Props
+  source="src/components/test-results.tsx"
+  type="TestResultsContentProps"
+  label="TestResultsContent props"
+/>
+
+<Props
+  source="src/components/test-results.tsx"
+  type="TestSuiteProps"
+  label="TestSuite props"
+/>
+
+<Props
+  source="src/components/test-results.tsx"
+  type="TestSuiteNameProps"
+  label="TestSuiteName props"
+/>
+
+<Props
+  source="src/components/test-results.tsx"
+  type="TestSuiteStatsProps"
+  label="TestSuiteStats props"
+/>
+
+<Props
+  source="src/components/test-results.tsx"
+  type="TestSuiteContentProps"
+  label="TestSuiteContent props"
+/>
+
+<Props
+  source="src/components/test-results.tsx"
+  type="TestProps"
+  label="Test props"
+/>
+
+<Props
+  source="src/components/test-results.tsx"
+  type="TestStatusProps"
+  label="TestStatus props"
+/>
+
+<Props
+  source="src/components/test-results.tsx"
+  type="TestNameProps"
+  label="TestName props"
+/>
+
+<Props
+  source="src/components/test-results.tsx"
+  type="TestDurationProps"
+  label="TestDuration props"
+/>
+
+<Props
+  source="src/components/test-results.tsx"
+  type="TestErrorProps"
+  label="TestError props"
+/>
+
+<Props
+  source="src/components/test-results.tsx"
+  type="TestErrorMessageProps"
+  label="TestErrorMessage props"
+/>
+
+<Props
+  source="src/components/test-results.tsx"
+  type="TestErrorStackProps"
+  label="TestErrorStack props"
+/>
+
+</Reference>

@@ -1,0 +1,32 @@
+---
+title: Agent workspace
+description: One screen of finished parts where you ask, the agent works and you say yes.
+---
+
+<Head lead={frontmatter.description} />
+
+## The screen
+
+The agent's request waits for your yes; Replay plays the run from the question, the agent working, and its answer with sources. [Open it on its own](/examples/patterns/agent-workspace) to try 1440, 1024 and 390.
+
+<Stage path="patterns/agent-workspace" label="The screen" />
+
+## What it is made of
+
+The Sidebar in an App shell; a MessageScroller of Messages, the agent's holding its steps (ChainOfThought) and its Sources; a Confirmation waiting in the conversation; the PromptInput at the foot; and beside them, in the App shell's panel, the DiffViewer of what the agent asks to change. On a narrow window the panel is a Sheet, opened from the header or from See the change. The agent's thinking is left out: Reasoning is not in the library yet. Nothing on this screen was changed to make it fit.
+
+## Rules
+
+<Rules
+  always={[
+    "The agent's steps above its answer, and the answer's sources under it.",
+    "A change the agent wants waits in the conversation, as a Confirmation, until you answer.",
+    "The change itself beside the conversation on a wide screen, in a sheet on a narrow one.",
+    "The PromptInput stays at the foot, streaming while the agent works.",
+  ]}
+  never={[
+    "A change made before it is approved.",
+    "An answer without its sources when it rests on them.",
+    "The conversation jumping while the agent writes and you read above.",
+  ]}
+/>

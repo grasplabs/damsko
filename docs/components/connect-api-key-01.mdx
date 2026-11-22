@@ -1,0 +1,98 @@
+---
+title: Connect API key
+description: Choose a service, paste its key, and see it connect, in one card with no dialog.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/connect-api-key-01"
+  use={
+    'import { ConnectApiKey } from "@grasp-os/ui/blocks/connect-api-key-01/connect-api-key-01";'
+  }
+/>
+
+## Choose, paste, connect
+
+The providers stand as tiles; the chosen one becomes a row with Change, then its key. A provider with `address` asks for its address first. A block: it installs as source, to edit.
+
+<Stage path="connect-api-key-01/basic" label="Choose, paste, connect" />
+
+## A refused key
+
+`onConnect` throws an Error with the service's reason: it stands under the key, and the key is cleared, as a secret that did not work is not kept. Connect says Not connected for a moment, then takes the key put right.
+
+## Once connected
+
+`connected` holds the provider and its key's last four, never the key. The card shows them with where it runs, Replace key, and Disconnect in the row's menu, which asks first and names what is lost (`disconnectDetail`).
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="connect-api-key-01"
+  always={[
+    "One card for the whole connection: the choice, the key and the connected row, with no dialog.",
+    "The service's own words for a refused key, under the key.",
+    "Disconnect behind a question that names the service and what is lost.",
+  ]}
+  never={[
+    "Showing a saved key: only its last four characters.",
+    "Disconnect bare in the row: it stands in the row's menu.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Choose",
+      key: "A tile",
+      value:
+        "The tiles give way to its row with Change; the focus goes to its first field",
+    },
+    {
+      group: "Choose",
+      key: "Change",
+      value:
+        "Back to the tiles, the focus on the tile it came from; while replacing a key, back to Replace key",
+    },
+    {
+      group: "Key",
+      key: "Field",
+      value:
+        "A SecretInput: masked, kept from password managers and agents, pasted whole",
+    },
+    {
+      group: "Key",
+      key: "Connect",
+      value:
+        "Connecting while `onConnect` works, then Connected; a refusal says Not connected, its reason under the key, the key cleared and focused",
+    },
+    {
+      group: "Connected",
+      key: "Disconnect",
+      value:
+        "In the row's menu; it asks first, Keep it keeps it, and the question stays open while `onDisconnect` works",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/blocks/connect-api-key-01/connect-api-key-01.tsx"
+  type="ConnectApiKeyProps"
+  label="ConnectApiKey props"
+/>
+<Props
+  source="src/blocks/connect-api-key-01/connect-api-key-01.tsx"
+  type="ConnectApiKeyProvider"
+  label="A provider"
+/>
+
+</Reference>

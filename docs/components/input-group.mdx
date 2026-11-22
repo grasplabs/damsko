@@ -1,0 +1,359 @@
+---
+title: Input group
+description: A text box with a unit, an icon or a button inside, like a search field.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/input-group @damsko/field"
+  use={
+    'import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupText } from "@grasp-os/ui/components/input-group";'
+  }
+/>
+
+## Words
+
+A prefix, a suffix or a unit beside what is typed, in an `InputGroupAddon`: `align="inline-start"` before the input, `"inline-end"` after it. It is shown, never sent, and a press on it puts the caret in the input.
+
+<Stage path="input-group/text" label="Words" />
+
+## Search
+
+An icon says what goes in, and a clear button shows once there is text.
+
+<Stage path="input-group/search" label="Search" />
+
+## With a button
+
+An `InputGroupButton` in an addon acts on what the field holds: a ghost Button, small, set in from the edge by the same room on every side. Icon only, it takes an `aria-label`.
+
+<Stage path="input-group/button" label="With a button" />
+
+## Several lines
+
+`InputGroupTextarea` grows with its text; an addon with `align="block-end"` stands under it, across the group, and `"block-start"` over it.
+
+<Stage path="input-group/textarea" label="Several lines" />
+
+## Sizes
+
+Input's heights: 36px, or 44px where a form has room.
+
+<Stage path="input-group/sizes" label="Sizes" />
+
+## Small, in a settings row
+
+`size="sm"` is Input's 32px: a field that holds a badge stands level with a plain small Input beside it, with the same words.
+
+<Stage path="input-group/small" label="Small, in a settings row" />
+
+## Every state
+
+The group shows its input's state round all its parts. Hover, keyboard focus and pressed are forced from its CSS; the rest are props.
+
+<States
+  path="input-group/states"
+  cells={[
+    { label: "Placeholder" },
+    { label: "Hover", force: "hover" },
+    { label: "Keyboard focus", force: "focus-visible" },
+    { label: "Filled", props: { value: "alex.morgan" } },
+    { label: "Invalid", props: { value: "alex morgan", invalid: true } },
+    {
+      label: "Read only",
+      props: { value: "alex.morgan", readOnly: true, button: true },
+    },
+    {
+      label: "Button pressed",
+      force: "active",
+      props: { value: "alex.morgan", readOnly: true, button: true },
+    },
+    { label: "Disabled", props: { value: "alex.morgan", disabled: true } },
+  ]}
+/>
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="input-group"
+  always={[
+    "Words that help read the value: a prefix, a unit, a domain.",
+    "One button that acts on what the field holds: Copy, Send.",
+    "A label on the field: the words inside the edge are not its name.",
+  ]}
+  never={[
+    "A label or a sentence inside the edge.",
+    "More than one button: put the rest beside the field.",
+    "A field with nothing inside its edge: use Input.",
+    "Colours, heights or corners set from outside: `style` takes layout and width only.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Size",
+      key: "Height",
+      value: "{control-sm}, {control-default}, {control-lg}",
+      note: "Input's and Button's",
+    },
+    {
+      group: "Size",
+      key: "Touch target",
+      value: "{tap-target}",
+      note: "on a touch screen, at both sizes",
+    },
+    {
+      group: "Size",
+      key: "Padding",
+      value: "{space-3} at the group's edge, {space-4} when large",
+      note: "{space-2} between the input and a neighbour",
+    },
+    {
+      group: "Size",
+      key: "Width",
+      value: "The column it stands in",
+      note: "`style` may narrow it",
+    },
+    {
+      group: "Parts",
+      key: "Words and icon",
+      value: "{icon-sm}, stroke {icon-stroke}, {space-2} from the words",
+      tokens: ["muted"],
+    },
+    {
+      group: "Parts",
+      key: "Button",
+      value: "Button's {control-sm}, the same room on every side",
+      note: "ghost by default; {control-xs} in a small group",
+    },
+    {
+      group: "Parts",
+      key: "Clear",
+      value: "A square as tall as the group, {icon-sm}",
+      note: "ink under a pointer",
+      tokens: ["muted", "foreground"],
+    },
+    {
+      group: "Type and shape",
+      key: "Value",
+      value: "{text-sm} / {text-sm-line}",
+      note: "{input-text-touch} on a touch screen",
+    },
+    {
+      group: "Type and shape",
+      key: "Corner",
+      value: "{radius}, {radius-shape}",
+      note: "capped at half the height",
+    },
+    { group: "Colour", key: "Fill", tokens: ["input-bg"] },
+    {
+      group: "Colour",
+      key: "Hairline",
+      value: "1px, drawn inside, round every part",
+      tokens: ["input", "input-border-hover"],
+    },
+    {
+      group: "Colour",
+      key: "Lift",
+      note: "none when disabled",
+      tokens: ["input-shadow"],
+    },
+    { group: "Colour", key: "Wrong", tokens: ["shadow-sm-destructive"] },
+    { group: "Colour", key: "Read only", tokens: ["input-bg-read"] },
+    {
+      group: "Focus and disabled",
+      key: "Focus",
+      value: "Input's focus edge round the whole group",
+      note: "red when wrong",
+      tokens: ["input-focus", "input-focus-invalid"],
+    },
+    {
+      group: "Focus and disabled",
+      key: "Disabled",
+      value: "{opacity-disabled} opacity",
+      note: "the whole group",
+    },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    {
+      key: "Hover",
+      value: "Hairline one step stronger, {duration-hover}",
+      note: "pointer only; not read only, wrong or focused",
+      tokens: ["ease"],
+    },
+    {
+      key: "Focus and wrong",
+      value: "The edge changes over {duration-hover}",
+      tokens: ["ease"],
+    },
+    {
+      key: "Clear",
+      value: "Muted to ink, {duration-hover}",
+      note: "pointer only",
+      tokens: ["ease"],
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Input",
+      key: "Keyboard",
+      value:
+        "Tab reaches the input, then any button in the group; typing and pasting are the browser's own.",
+    },
+    {
+      group: "Input",
+      key: "Pointer",
+      value: "A press on the words or an icon puts the caret in the input.",
+    },
+    {
+      group: "Input",
+      key: "Clear",
+      value:
+        "Shows only while there is text; a press empties the input and puts the caret back.",
+    },
+    {
+      group: "Input",
+      key: "Read only",
+      value:
+        "A quieter fill and no hover, caret or focus ring; focus from the keys shows as the hairline one step stronger. Still focusable, selectable and sent.",
+    },
+    {
+      group: "Input",
+      key: "Disabled",
+      value: "The input is not focusable and not sent; the whole group dims.",
+    },
+    {
+      group: "Content",
+      key: "Words",
+      value: "Shown beside the value, never sent with the form.",
+    },
+    {
+      group: "Content",
+      key: "Long value",
+      value: "Scrolls inside the input; the words and button beside it stay.",
+    },
+    {
+      group: "Settings",
+      key: "Touch",
+      value:
+        "A {tap-target} target and {input-text-touch} words, so iOS does not zoom in.",
+    },
+    {
+      group: "Settings",
+      key: "Right to left",
+      value: "Parts and padding follow the reading direction.",
+    },
+    {
+      group: "Settings",
+      key: "Forced colours",
+      value:
+        "A 1px border replaces the hairline, and focus draws an outline round the group.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    { key: "Role", value: "A native `<input>`, of its `type`" },
+    {
+      key: "Name",
+      value: "Its FieldLabel, or `aria-label`",
+      note: "the words beside it are not its name",
+    },
+    { key: "Buttons", value: "Their words, or `aria-label` when only an icon" },
+    { key: "Wrong", value: "`aria-invalid` while its error shows" },
+    {
+      key: "Agents",
+      value: "Read and set by its name; Clear and a button pressed by theirs",
+    },
+  ]}
+/>
+<Rows
+  title="From shadcn"
+  rows={[
+    {
+      group: "Parts",
+      key: "`InputGroupAddon`, `InputGroupText`, `InputGroupInput`, `InputGroupTextarea`, `InputGroupButton`",
+      value: "The same parts",
+    },
+    {
+      group: "Parts",
+      key: "New",
+      value: "`InputGroupClear`",
+      note: "on UI SDK's InputClear",
+    },
+    {
+      group: "Button",
+      key: "`size`",
+      value: "`xs`, `sm`, `icon-xs`, `icon-sm`",
+      note: "by the group's size when left out",
+    },
+    {
+      group: "Group",
+      key: "Focus ring",
+      value: "{input-focus}",
+      note: "Input's focus edge, not a ring",
+    },
+    {
+      group: "Elsewhere",
+      key: "`className`",
+      value: "`style`",
+      note: "layout and width only",
+    },
+    { group: "Elsewhere", key: "Base UI", value: "UI SDK" },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/input-group.tsx"
+  type="InputGroupProps"
+  label="InputGroup props"
+/>
+<Props
+  source="src/components/input-group.tsx"
+  type="InputGroupAddonProps"
+  label="InputGroupAddon props"
+/>
+<Props
+  source="src/components/input-group.tsx"
+  type="InputGroupTextProps"
+  label="InputGroupText props"
+/>
+<Props
+  source="src/components/input-group.tsx"
+  type="InputGroupInputProps"
+  label="InputGroupInput props"
+/>
+<Props
+  source="src/components/input-group.tsx"
+  type="InputGroupTextareaProps"
+  label="InputGroupTextarea props"
+/>
+<Props
+  source="src/components/input-group.tsx"
+  type="InputGroupButtonProps"
+  label="InputGroupButton props"
+/>
+<Props
+  source="src/components/input-group.tsx"
+  type="InputGroupClearProps"
+  label="InputGroupClear props"
+/>
+
+</Reference>

@@ -1,0 +1,29 @@
+---
+// <Scene path="foundations/colour-grounds" title="One screen, three grounds" note="..." ground="paper" />:
+// a live scene on a foundations page (site/blocks/scene.tsx), drawn by an example in
+// examples/foundations/ and made live by ../system/Island.astro. Markdown form: the title as a
+// heading and the note (site/markdown.ts).
+import "../system/styles/blocks.css";
+import { hasExample } from "../system/examples";
+import Island from "../system/Island.astro";
+import { SceneView } from './scene';
+import type { SceneGround } from './scene';
+
+interface Props {
+  path: string;
+  title?: string;
+  note?: string;
+  ground?: SceneGround;
+  /** The first scene, right under the page's lead: less room above it. */
+  first?: boolean;
+}
+
+const { path, title, note, ground = "paper", first = false } = Astro.props;
+if (!hasExample(path)) {
+  throw new Error(`<Scene path="${path}">: no example at examples/${path}.tsx.`);
+}
+---
+
+<SceneView title={title} note={note} ground={ground} first={first}>
+  <Island path={path} />
+</SceneView>

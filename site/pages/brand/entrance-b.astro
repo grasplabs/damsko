@@ -1,0 +1,11 @@
+---
+// Take B of the entrance (site/brand/entrance-takes.tsx), kept as a page and linked from nowhere.
+// Take A is the entrance at /brand (site/brand/entrance.tsx).
+import "../../brand/brand.css";
+import Docs from "../../layouts/Docs.astro";
+import { TakeB } from "../../brand/entrance-takes";
+---
+
+<Docs route="/brand" title="Brand book" description="How Grasp looks, sounds and moves, in thirteen rooms." fullscreen>
+  <TakeB client:load />
+</Docs>

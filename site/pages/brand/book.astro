@@ -1,0 +1,39 @@
+---
+// /brand/book: the brand book as one still document, the source of the one-file download. Drawn on
+// the server only (no islands, no script): every room in order, each part in its still form
+// (site/brand/still.ts). After the build, site/brand/book-file.ts inlines its styles, fonts and
+// pictures into dist/brand/grasp-brand-book.html.
+import "../../../src/styles/tokens.css";
+import "../../../src/styles/themes.css";
+import "../../system/styles/tokens.css";
+import "../../styles/fonts.css";
+import "../../system/styles/base.css";
+import "../../overview/pen.css";
+import "../../brand/brand.css";
+import Book from "../../brand/book";
+import { bookWords, visualWords } from "../../brand/content";
+import { ditherDefs } from "../../overview/pen.ts";
+import { sketchOf } from "../../overview/sketches/index.ts";
+import { robotsMeta } from "../../system/indexing";
+import { siteTheme } from "../../system/head-scripts";
+
+const sketches = visualWords.sketches.map((part) => sketchOf(part) ?? "");
+const robots = robotsMeta("noindex");
+---
+
+<!doctype html>
+<!-- The site's own theme, set here rather than by the head script the site uses: the book has no script. -->
+<html lang="en-GB" data-theme={siteTheme}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{bookWords.title}</title>
+    <meta name="description" content={bookWords.line} />
+    {robots && <meta name="robots" content={robots} />}
+    {import.meta.env.DEV && <link rel="stylesheet" href="/virtual:stylex.css" />}
+  </head>
+  <body>
+    <Fragment set:html={ditherDefs()} />
+    <Book sketches={sketches} />
+  </body>
+</html>

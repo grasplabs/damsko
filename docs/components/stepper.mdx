@@ -1,0 +1,124 @@
+---
+title: Stepper
+description: A list of named steps that shows which are done, current, still to come or failed.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/stepper"
+  use={'import { Stepper, StepperNav } from "@grasp-os/ui/components/stepper";'}
+/>
+
+## The light on the line
+
+The Stepper's look: small dots on one line. Done is a filled dot, and the line after it in the value colour; a step still to come is a small open ring, its line in a quiet colour; across, each name starts on its dot's edge; the current step is a filled dot with one quiet ring; a step with `status: "error"` is a small square in the destructive tone, its name in that tone. Press Next, Back, Fail or In progress.
+
+<Stage path="stepper/look-light" label="The light on the line" />
+
+## In progress
+
+`loading` says the current step is under way: its ring gives way to a short stretch of the working light, travelling the line toward the next step, ambient and slow. With reduced motion it is a short lit stretch at rest; in forced colours the light is gone and the marks alone carry the state.
+
+<Stage path="stepper/working" label="In progress" />
+
+## Marks alone
+
+`hideLabels` shows the marks alone, for a long run of steps under a screen that asks one thing at a time: each step's name is its name for a screen reader and its tooltip on hover and on focus, and every step takes focus. Nothing else changes: the same marks, the light on the line, `loading` and failed. Across, the marks stand a calm pitch apart instead of filling the width; a `style` width still wins. On a phone the row folds to the marks and "Step 3 of 9 · Team", as it does with names.
+
+<Stage path="stepper/marks" label="Marks alone" />
+
+## Forward to a step reached
+
+With `onValueChange` a done step is a way back. `reached`, the furthest step the person has reached, makes every step up to it a button, forward as well as back; the steps after it are not. A step reached and come back from was done, so its mark is drawn as done (and said so), while the line stays lit only to the current step. Left out, only a done step can be pressed.
+
+<Stage path="stepper/reached" label="Forward to a step reached" />
+
+## Basic usage
+
+Across, the names beside their marks; the steps before the current one are done.
+
+<Stage path="stepper/basic" label="Basic usage" />
+
+## Down
+
+`orientation="vertical"` runs down, with a line under each name.
+
+<Stage path="stepper/vertical" label="Down" />
+
+## Failed and finished
+
+A step that stopped says so on its mark and its name; a finished stepper is every dot filled, the whole line solid.
+
+<Stage path="stepper/failed" label="Failed and finished" />
+
+## Back and Next
+
+`StepperNav` is a guided flow's Back, how far through, and Next, for a flow that asks one thing at a time and goes on in order. As its foot (`variant="footer"`, the default) Next is the step's one action, its word and an arrow; on the last step `finishLabel` says what it does. Back is hidden on the first step, its room kept; on a phone it is the arrow alone, its word in a tooltip.
+
+<Stage path="stepper/nav-footer" label="Back and Next" />
+
+## The bar at the top
+
+`variant="bar"` is the quiet bar at the top of the flow, where the answer should stand alone: Back and Next as ghost arrows either side of the progress, named in their tooltips. `showCount` shows "Step 3 of 7" beside it.
+
+<Stage path="stepper/nav-bar" label="The bar at the top" />
+
+## Working and held
+
+`disabled` with `disabledReason` holds Next and says why in its tooltip, keeping its place in the keys; `loading` puts a Spinner in it while the step works.
+
+<Stage path="stepper/nav-footer-states" label="Footer states" />
+
+<Stage path="stepper/nav-bar-states" label="Bar states" />
+
+## In a form
+
+Without `onNext`, Next is its form's submit button (`nextType`): Enter in a field goes on, as a form's does. Mod+Enter is Next anywhere in the flow, and Alt+Left is Back (Alt+Right right to left).
+
+<Stage path="stepper/nav-form" label="In a form" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="stepper"
+  always={[
+    "Steps in order, each named, showing which are done, current, coming or failed.",
+    "StepperNav for a flow that asks one thing at a time and goes on in order: Back, how far through, Next.",
+    "The bar where the answer should stand alone; the footer where the flow needs its one action at its end.",
+  ]}
+  never={[
+    "Views of one thing, not steps in order: use Tabs.",
+    "How far one task has come, with no named steps: use Progress.",
+    "A form on one page, saved at once: use Form.",
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/stepper.tsx"
+  type="StepperProps"
+  label="Stepper props"
+/>
+
+### StepperStep
+
+<Props
+  source="src/components/stepper.tsx"
+  type="StepperStep"
+  label="StepperStep"
+/>
+
+### StepperNav
+
+<Props
+  source="src/components/stepper.tsx"
+  type="StepperNavProps"
+  label="StepperNav props"
+/>
+
+</Reference>

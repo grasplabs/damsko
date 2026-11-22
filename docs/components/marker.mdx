@@ -1,0 +1,149 @@
+---
+title: Marker
+description: A line in a conversation that marks what happened, a status, a note, or a word between two rules.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/marker"
+/>
+
+## Between messages
+
+`Marker` holds a `MarkerIcon` and `MarkerContent`: a step the assistant took, the work under way, or a word between two rules. It stands between Messages in a conversation.
+
+<Stage path="marker/demo" label="Between messages" />
+
+## Variants
+
+`variant`: `default` a line of words, `separator` its words in the middle of a hairline, `border` a line with a hairline under it.
+
+<Stage path="marker/variants" label="Variants" />
+
+## Separators
+
+For a day, where the unread messages start, or a span of work. Its words are ordinary content: give it no `separator` role, which would hide them. A Checkpoint is a separator with a button that takes the conversation back to that point.
+
+<Stage path="marker/separator" label="Separators" />
+
+## Work under way
+
+With `role="status"` its words are said as they change. Put a Spinner in its MarkerIcon, or its words in a Shimmer.
+
+<Stage path="marker/status" live label="Work under way" />
+
+## Rows with a rule
+
+<Stage path="marker/border" label="Rows with a rule" />
+
+## Links and buttons
+
+With `asChild`, the Marker draws the one link or button it is given: underlined, reached by Tab, named by its words.
+
+<Stage path="marker/link" label="Links and buttons" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="marker"
+  always={[
+    "A line in a conversation that marks an event: a day, New messages, a step done, a checkpoint.",
+    '`role="status"` on work under way, so its words are said as they change.',
+    "Words beside an icon: the icon is hidden from screen readers.",
+  ]}
+  never={[
+    "A message: use Message, with a Bubble for its surface.",
+    'A `role="separator"` on a separator with words: its words would not be read.',
+    "An icon alone with no name: give it words or an `aria-label`.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Marker",
+      key: "Words",
+      value: "{text-sm}, {space-2} from the icon",
+      tokens: ["muted-foreground"],
+    },
+    { group: "Marker", key: "Icon", value: "{icon-sm}" },
+    {
+      group: "Separator",
+      key: "Words",
+      value: "{text-xs}, medium, {space-3} clear of a hairline on each side",
+      tokens: ["muted-foreground", "border"],
+    },
+    {
+      group: "Border",
+      key: "Rule",
+      value: "A hairline under it, {space-2} below its words",
+      tokens: ["border"],
+    },
+    {
+      group: "Link",
+      key: "Words",
+      value: "Underlined; the foreground under a pointer",
+      tokens: ["foreground"],
+    },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    {
+      key: "Link",
+      value: "Its words darken under a pointer, {duration-hover}",
+      note: "reduced: at once",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Marker",
+      value:
+        'Presentational; `role="status"` for work under way, said as its words change',
+    },
+    {
+      key: "Separator",
+      value: "Its words read as content; its rules drawn, not read",
+    },
+    { key: "Icon", value: "Hidden from screen readers" },
+    {
+      key: "Link",
+      value:
+        "A real `a` or `button`, named by its words, with the keyboard's ring",
+    },
+    { key: "Forced colours", value: "Its rules in the system's text colour" },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/marker.tsx"
+  type="MarkerProps"
+  label="Marker props"
+/>
+
+<Props
+  source="src/components/marker.tsx"
+  type="MarkerIconProps"
+  label="MarkerIcon props"
+/>
+
+<Props
+  source="src/components/marker.tsx"
+  type="MarkerContentProps"
+  label="MarkerContent props"
+/>
+
+</Reference>

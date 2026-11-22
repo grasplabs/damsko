@@ -1,0 +1,49 @@
+---
+// One live example: drawn to HTML here, on the server, so it reads and is styled before any script
+// runs (and with none at all); made live in the browser by ./island.ts when it scrolls into view.
+//
+// The element is the preview's edge (`.site-preview`, site/system/styles/site.css): it takes no
+// box of its own (display: contents) and sets the text the example inherits back to the product's
+// base, so a part looks here exactly as it does in a product and in the bare frame.
+//
+// `useId` must give the same ids on both sides, so each island has its own prefix, written into the
+// element and read back by the browser. Props travel as JSON, so they are plain data only.
+import { createElement } from "react";
+import { prerender } from "react-dom/static";
+
+import { loadExample } from "./examples";
+
+interface Props {
+  /** The example, as `examples/{path}.tsx` without the extension: "button/states". */
+  path: string;
+  /** Props for the example: plain data only. */
+  props?: Record<string, unknown>;
+  /** Live at once, not when it comes into view: the bare frame, where it is all there is. */
+  eager?: boolean;
+}
+
+const { path, props = {}, eager = false } = Astro.props;
+const Example = await loadExample(path);
+
+// Islands numbered within one page, in the order they are drawn: the same on every build.
+const counts = (globalThis.__damskoIslands ??= new WeakMap<object, number>());
+const index = counts.get(Astro.request) ?? 0;
+counts.set(Astro.request, index + 1);
+const prefix = `i${index}-`;
+
+// Drawn to the end, waiting for what a part loads lazily (Button's hold, in a Suspense): a render
+// that cannot wait leaves such a part to the browser, which then reports it could not finish on
+// the server (React error 419) on whichever page drew it first. A part that never settles is
+// given up on after a while, and left to the browser as before.
+const { prelude } = await prerender(createElement(Example, props), {
+  identifierPrefix: prefix,
+  signal: AbortSignal.timeout(20_000),
+});
+const html = await new Response(prelude).text();
+
+declare global {
+  var __damskoIslands: WeakMap<object, number> | undefined;
+}
+---
+
+<damsko-island class="site-preview" data-example={path} data-props={JSON.stringify(props)} data-prefix={prefix} data-eager={eager ? "" : undefined} ssr><Fragment set:html={html} /></damsko-island>

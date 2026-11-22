@@ -1,0 +1,68 @@
+---
+title: Inspector
+description: The details of one thing beside its page, in sections that all keep the same rhythm.
+---
+
+<Head lead={frontmatter.description} />
+
+## A report's details
+
+Owner, status, people with access, linked sources and activity. No views, so only the hairline comes as it scrolls. The inspector is the App shell's panel: beside the page on a wide window, a Sheet from the end on a narrow one. [Open it on its own](/examples/patterns/inspector-report) to try 1440 and 390.
+
+<Stage path="patterns/inspector-report" label="A report's details" />
+
+## A person's record
+
+Fields, tags, open approvals and notes, beside the list they came from; scroll and the views slide into the bar.
+
+<Stage path="patterns/inspector-record" label="A person's record" />
+
+## The rhythm
+
+<Rows
+  title="Every section"
+  rows={[
+    {
+      key: "Parts",
+      value:
+        "A quiet label, one quiet action at its end, one card under it. Nothing else.",
+    },
+    {
+      key: "Space",
+      value:
+        "{side-panel-gap} between sections, {side-panel-label-gap} from label row to card",
+    },
+    {
+      key: "One left edge",
+      value:
+        "Content inset {side-panel-pad}; labels a further {side-panel-padding}, on the cards' text line",
+    },
+    {
+      key: "Weight",
+      value:
+        "On the cards: the title, the row names and one filled button. Labels and actions are quiet.",
+    },
+    {
+      key: "Colour",
+      value:
+        "One accent, on the kind icons and the object's tile. Everything else neutral.",
+    },
+  ]}
+/>
+
+## Rules
+
+<Rules
+  always={[
+    "Beside the page on a wide screen, in a Sheet on a phone.",
+    "One line of copy per section, in its label's tooltip.",
+    "An empty section as one row that adds the first.",
+    "The rarely changed in a Collapsible at the foot.",
+  ]}
+  never={[
+    "A second accent colour: the kind icons share one.",
+    "A section without a card, or two cards in one section.",
+    "A label that wraps.",
+    "Motion that repeats: each spark happens once.",
+  ]}
+/>

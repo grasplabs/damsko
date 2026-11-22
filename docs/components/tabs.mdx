@@ -1,0 +1,322 @@
+---
+title: Tabs
+description: A row of tabs that switch between views of one thing, one at a time.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/tabs"
+/>
+
+## Basic usage
+
+Views of one thing, one panel shown at a time. `variant="line"` on the list: a line under the chosen tab.
+
+<Stage path="tabs/basic" live label="Basic usage" />
+
+## Disabled and more than fit
+
+Seven tabs in a narrow column, one of them out of use.
+
+<Stage path="tabs/many" label="Disabled and more than fit" />
+
+## Default
+
+The default look: a small switch for a toolbar, the chosen tab raised out of a soft track.
+
+<Stage path="tabs/segmented" label="Default" />
+
+## As links
+
+Views with their own address: links that look like tabs, the current one marked. A navigation, not a tablist: links go somewhere. With a router, its link is the child, with `asChild`.
+
+<Stage path="tabs/links" label="As links" />
+
+## Links in a narrow place
+
+Where the links do not fit, they fold to one button with the current view; its menu holds the same links.
+
+<Stage path="tabs/links-fold" label="Links in a narrow place" />
+
+## Views with icons
+
+An `icon` on each link, and `size="sm"` on the nav: the view you are on shows its icon and words, the others their icon alone, their words in a tooltip and still their name. The words ease in and out as the view changes.
+
+<Stage path="tabs/views" label="Views with icons" />
+
+## Tabs that close
+
+`onClose` on a TabsTrigger, for open files: a small × at the tab's end, its own button named "Close" and the tab's words, and Delete on the focused tab. The chosen tab's × is the one Tab stop after it; focus moves to the tab beside one that closes. The × keeps its room, so no tab changes size under the pointer.
+
+<Stage path="tabs/files" label="Tabs that close" />
+
+## Every state
+
+Hover and keyboard focus are forced from its own CSS; the rest are props.
+
+<States
+  path="tabs/states"
+  choose={{
+    prop: "variant",
+    label: "Variant",
+    options: [
+      { id: "line", label: "Line" },
+      { id: "default", label: "Default" },
+    ],
+  }}
+  cells={[
+    { label: "Rest" },
+    { label: "Hover", force: "hover" },
+    { label: "Keyboard focus", force: "focus-visible" },
+    { label: "Chosen", props: { chosen: true } },
+    {
+      label: "Chosen, focused",
+      force: "focus-visible",
+      props: { chosen: true },
+    },
+    { label: "Disabled", props: { disabled: true } },
+  ]}
+/>
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="tabs"
+  always={[
+    "Views of one thing, one shown at a time, each named by a short noun.",
+    "Views of one thing that each have their own address: TabsNav with TabsLink, links that look like tabs.",
+    "A name for the list: what the tabs are of.",
+    "As links, `current` from your own route match, never from a router link's active state.",
+  ]}
+  never={[
+    "Going to another page: use Link.",
+    "Steps in order: use Stepper.",
+    "One view alone.",
+    "An icon without words.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Size",
+      key: "Tab height",
+      value: "{control-sm}",
+      note: "{tap-target} to a finger; line: {control-lg}",
+    },
+    {
+      group: "Size",
+      key: "Between tabs",
+      value: "{space-1}, on a track {space-1} deep",
+      note: "line: {tab-gap}",
+    },
+    { group: "Size", key: "Panel", value: "{space-4} below the list" },
+    {
+      group: "Type",
+      key: "Words",
+      value: "{text-sm} / {text-sm-line}, {font-weight-medium}",
+      note: "on one line",
+    },
+    { group: "Colour", key: "At rest", tokens: ["muted"] },
+    {
+      group: "Colour",
+      key: "Chosen, line",
+      value: "A {tab-line-width} line",
+      tokens: ["foreground", "tab-line"],
+    },
+    {
+      group: "Colour",
+      key: "Chosen",
+      value: "Raised out of a soft track, with {shadow-sm}",
+      tokens: ["foreground", "tab-bg-selected", "muted"],
+    },
+    {
+      group: "Colour",
+      key: "The list's line",
+      value: "1px",
+      tokens: ["border"],
+    },
+    {
+      group: "Focus and disabled",
+      key: "Focus",
+      note: "the one ring",
+      tokens: ["ring"],
+    },
+    {
+      group: "Focus and disabled",
+      key: "Disabled",
+      value: "{opacity-disabled} opacity",
+    },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    {
+      key: "Hover",
+      value: "Words to ink, {duration-mark}",
+      note: "pointer only",
+      tokens: ["ease"],
+    },
+    {
+      key: "Choosing",
+      value: "The line or fill and the words change, {duration-mark}",
+      note: "the panel shows at once",
+      tokens: ["ease"],
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Keyboard",
+      key: "Tab",
+      value: "Reaches the chosen tab, then the panel.",
+    },
+    {
+      group: "Keyboard",
+      key: "Arrows",
+      value:
+        'Left and Right choose the next tab; Home and End the first and last. With `activationMode="manual"`, Enter or Space chooses.',
+    },
+    {
+      group: "Keyboard",
+      key: "Right to left",
+      value: "Left and Right follow the reading direction.",
+    },
+    {
+      group: "Content",
+      key: "Many tabs",
+      value: "The row scrolls sideways inside itself; the page does not.",
+    },
+    {
+      group: "Content",
+      key: "Disabled",
+      value: "Reached by the arrows, never chosen.",
+    },
+    {
+      group: "Content",
+      key: "Panels",
+      value:
+        "Only the chosen one is in the page, unless `keepMounted` (on Tabs, or on one TabsContent).",
+    },
+    {
+      group: "Settings",
+      key: "Without script",
+      value:
+        "The chosen tab and its panel show; the others wait for the script.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Role",
+      value: "`tablist` of `tab`s, each controlling its `tabpanel`",
+      note: "WAI-ARIA's tabs",
+    },
+    {
+      key: "Name",
+      value: "`aria-label` on the list; each panel is named by its tab",
+    },
+    {
+      key: "Chosen",
+      value: "`aria-selected`, and the line or fill, never colour alone",
+    },
+    { key: "Agents", value: "Read the tabs and choose one by its words" },
+    {
+      key: "Contrast",
+      value: "Words 4.5:1 at rest and chosen, the line 3:1, light and dark",
+      note: "checked by `node tokens/generate.ts --check`",
+    },
+  ]}
+/>
+<Rows
+  title="From shadcn"
+  rows={[
+    {
+      group: "Parts",
+      key: "`TabsTrigger`, `TabsContent`",
+      value: "The same",
+    },
+    {
+      group: "Parts",
+      key: "`TabsNav`, `TabsLink`",
+      value: "Added",
+      note: "views with their own address, folding to a menu",
+    },
+    {
+      group: "Look",
+      key: "`variant` on `TabsList`, `default` and `line`",
+      value: "The same",
+      note: "the line glides between tabs",
+    },
+    {
+      group: "Look",
+      key: '`orientation="vertical"`',
+      value: "Dropped, for now",
+    },
+    {
+      group: "Elsewhere",
+      key: "`className`",
+      value: "`style`",
+      note: "layout and width only",
+    },
+    { group: "Elsewhere", key: "Base UI", value: "UI SDK" },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props source="src/components/tabs.tsx" type="TabsProps" label="Tabs props" />
+
+### TabsList
+
+<Props
+  source="src/components/tabs.tsx"
+  type="TabsListProps"
+  label="TabsList props"
+/>
+
+### TabsTrigger
+
+<Props
+  source="src/components/tabs.tsx"
+  type="TabsTriggerProps"
+  label="TabsTrigger props"
+/>
+
+### TabsContent
+
+<Props
+  source="src/components/tabs.tsx"
+  type="TabsContentProps"
+  label="TabsContent props"
+/>
+
+### TabsNav
+
+<Props
+  source="src/components/tabs.tsx"
+  type="TabsNavProps"
+  label="TabsNav props"
+/>
+
+### TabsLink
+
+<Props
+  source="src/components/tabs.tsx"
+  type="TabsLinkProps"
+  label="TabsLink props"
+/>
+
+</Reference>

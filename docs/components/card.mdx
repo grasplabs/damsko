@@ -1,0 +1,401 @@
+---
+title: Card
+description: A box on the page that holds one thing and what belongs to it.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/card"
+  use={
+    'import { Card, CardHeader, CardTitle, CardDescription, CardAction, CardContent, CardFooter } from "@grasp-os/ui/components/card";'
+  }
+/>
+
+## Basic usage
+
+A title that says what it is, and a sentence under it.
+
+<Stage path="card/basic" label="Basic usage" />
+
+## Variants
+
+`default` is the usual card, lifted off the page. `outline` is a quiet panel that lies in it.
+
+<Stage path="card/grounds" label="Variants" />
+
+## Padding
+
+16px inside for a grid of many cards, 24px for one that stands alone, none for rows that run to the edge.
+
+<Stage path="card/padding" label="Padding" />
+
+## In a list
+
+Each card an `li` in a `ul` (`asChild`), its title a heading. A long name wraps and the card grows.
+
+<Stage path="card/list" label="In a list" />
+
+## A card that is one link
+
+`CardLink` makes the whole card one link; hovered or focused, its media dims and its title is underlined. Put no other control inside.
+
+<Stage path="card/link" label="A card that is one link" />
+
+## Header, action and footer
+
+shadcn's parts: `CardHeader` holds the `CardTitle` and `CardDescription`, with a `CardAction` at its end beside both; `CardFooter` puts its buttons or a total in a row at the foot (`justify` to stand them at the end or apart). A card made of parts stands them 16px apart.
+
+<Stage path="card/parts" label="Header, action and footer" />
+
+## A part of a page
+
+With a `CardContent`, the parts carry the room themselves: the header, what it holds and a line at the foot under a hairline. Drawn as a `section` (`asChild`), the card is a landmark named by its title.
+
+<Stage path="card/section" label="A part of a page" />
+
+## Flush
+
+`CardContent flush`: a table or a list runs edge to edge under a hairline, and the header and the footer line up with its first column.
+
+<Stage path="card/flush" label="Flush" />
+
+## In a narrow card
+
+When the card is narrow, the header's actions take the line under the title, never past the edge.
+
+<Stage path="card/members" label="In a narrow card" />
+
+## Small
+
+`size="sm"` for a settings card: the header at text-sm, the same room above the first row with or without a sentence.
+
+<Stage path="card/compact" label="Small" />
+
+## Without a title
+
+One card on a page whose title names it: no header, `aria-label` names it, the rows flush to the top.
+
+<Stage path="card/no-title" label="Without a title" />
+
+## Title above the card
+
+A group of settings: the title stands on the page and the card holds the rows alone. A composition, not a part: a `section` named by its `SectionHeader`, then the `Card`.
+
+<Stage path="card/grouped" label="Title above the card" />
+
+## Every state
+
+Each ground, and without padding, holding one word. Large padding is in Padding above.
+
+<States
+  path="card/states"
+  cells={[
+    { label: "Default" },
+    { label: "Outline", props: { variant: "outline" } },
+    { label: "No padding", props: { padding: "none" } },
+  ]}
+/>
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="card"
+  always={[
+    "One thing and what belongs to it, on a surface of its own.",
+    "A title that says what the card is, in a few words.",
+    "Cards in one grid with the same padding.",
+    "The part's own buttons in the CardAction; the page's buttons elsewhere.",
+  ]}
+  never={[
+    "Inside another card.",
+    "Rows of like things to compare: use Table or Data table.",
+    "More than two actions in the header: put the rest in a menu.",
+    "Colours, corners or shadows set from outside: `style` takes layout and width only.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    { group: "Shape", key: "Corner", value: "{radius}, {radius-shape}" },
+    {
+      group: "Shape",
+      key: "Edge and lift",
+      value: "A hairline drawn as a ring, and a soft lift",
+      note: "outline: the edge only",
+      tokens: ["shadow-md", "border-strong"],
+    },
+    {
+      group: "Shape",
+      key: "Padding",
+      value: "{space-4}, {space-6} when large, or none",
+    },
+    {
+      group: "Shape",
+      key: "Media's corner",
+      value: "{radius} less the padding, never under {radius-mark}",
+      note: "concentric with the card",
+    },
+    { group: "Colour", key: "Grounds", tokens: ["card", "muted"] },
+    {
+      group: "Type",
+      key: "Title",
+      value: "{text-lg} / {text-lg-line}, {font-weight-medium}",
+      tokens: ["foreground"],
+    },
+    {
+      group: "Type",
+      key: "Description",
+      value: "{text-base} / {text-base-line}",
+      tokens: ["muted"],
+    },
+    {
+      group: "Shape",
+      key: "Between parts",
+      value: "{space-1}",
+      note: "{space-4} in a card made of a `CardHeader` and a `CardFooter`",
+    },
+    {
+      group: "Parts",
+      key: "Room",
+      value: "{space-5} round the header, what it holds and the foot",
+      note: "with a `CardContent`; {space-3} and {space-4} at `sm`",
+    },
+    {
+      group: "Parts",
+      key: "Header's type",
+      value:
+        "{text-lg} / {text-lg-line}, the sentence {text-base} / {text-base-line}",
+      note: "with a `CardContent`; {text-sm} at `sm`",
+    },
+    {
+      group: "Parts",
+      key: "Flush",
+      value: "Edge to edge, under a 1px hairline",
+      tokens: ["border"],
+    },
+    {
+      group: "Parts",
+      key: "Foot",
+      value: "{text-sm}, under a 1px hairline",
+      tokens: ["muted", "border"],
+    },
+    {
+      group: "Shape",
+      key: "Header's action",
+      value:
+        "At the header's end, {space-4} from the words, beside the title and the line under it",
+    },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    {
+      key: "Motion",
+      value: "None of its own: what it holds moves, the card stands still",
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Content",
+      key: "Width",
+      value: "The column or grid cell it stands in; `style` may set it.",
+    },
+    {
+      group: "Content",
+      key: "Long words",
+      value:
+        "Break inside the word, hyphenated in the page's language; nothing is cut off.",
+    },
+    {
+      group: "Content",
+      key: "Height",
+      value:
+        "As tall as what it holds; cards in one grid row stretch to one height.",
+    },
+    {
+      group: "Content",
+      key: "Fill",
+      value:
+        "`fullHeight`: the height of its grid cell; one child, or the CardContent, stretches to it, several stand from the top, and what runs past the foot is clipped.",
+    },
+    {
+      group: "Settings",
+      key: "Forced colours",
+      value: "A 1px border in the text colour replaces the lift.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Role",
+      value:
+        "None of its own: a `div`, or its child `article`, `section` or `li` by `asChild`; drawn as one, it is named by its `CardTitle` unless `aria-label` names it",
+      note: "an `li` needs a `ul` or `ol`",
+    },
+    {
+      key: "Title",
+      value:
+        "A heading, `h3` unless `level` says otherwise, so cards can be jumped between",
+    },
+    {
+      key: "Actions",
+      value:
+        "The CardAction's controls stand after the title and the sentence, in reading order",
+    },
+    {
+      key: "Contrast",
+      value: "Title and description 4.5:1 on every ground, light and dark",
+      note: "checked by `node tokens/generate.ts --check`",
+    },
+  ]}
+/>
+<Rows
+  title="From shadcn"
+  rows={[
+    {
+      group: "Parts",
+      key: "`CardTitle`, `CardDescription`",
+      value: "Kept",
+      note: "a heading and a sentence",
+    },
+    {
+      group: "Parts",
+      key: "`CardHeader`, `CardAction`, `CardFooter`",
+      value: "Kept",
+      note: "the action beside the header's words, the footer a row",
+    },
+    {
+      group: "Parts",
+      key: "`CardContent`",
+      value: "Kept",
+      note: "with it the parts carry the room; `flush` runs edge to edge",
+    },
+    {
+      group: "Look",
+      key: "`rounded-xl border shadow-sm`",
+      value: "{radius}, {shadow-md}",
+      note: "a ring, not a border line",
+    },
+    {
+      group: "Look",
+      key: "`py-6` and `px-6`",
+      value: "`padding`",
+      note: "none, 16px or 24px",
+    },
+    {
+      group: "Look",
+      key: "`size`",
+      value: "default or sm",
+      note: "the dense card",
+    },
+    { group: "New", key: "`variant`", value: "Default or outline" },
+    {
+      group: "New",
+      key: "`fullHeight`",
+      value: "The height of a fixed grid cell",
+    },
+    {
+      group: "Elsewhere",
+      key: "`className`",
+      value: "`style`",
+      note: "layout and width only",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props source="src/components/card.tsx" type="CardProps" label="Card props" />
+
+### CardTitle
+
+<Props
+  source="src/components/card.tsx"
+  type="CardTitleProps"
+  label="CardTitle props"
+/>
+
+### CardDescription
+
+One or two sentences under the title, in muted.
+
+<Props
+  source="src/components/card.tsx"
+  type="CardDescriptionProps"
+  label="CardDescription props"
+/>
+
+### CardHeader
+
+The title and the line under it, and a `CardAction` at its end.
+
+<Props
+  source="src/components/card.tsx"
+  type="CardHeaderProps"
+  label="CardHeader props"
+/>
+
+### CardAction
+
+The card's own button or menu, at the end of its header.
+
+<Props
+  source="src/components/card.tsx"
+  type="CardActionProps"
+  label="CardAction props"
+/>
+
+### CardContent
+
+What the card holds, with the parts' room round it, or edge to edge.
+
+<Props
+  source="src/components/card.tsx"
+  type="CardContentProps"
+  label="CardContent props"
+/>
+
+### CardFooter
+
+Buttons, a total or a link, in a row at the card's foot.
+
+<Props
+  source="src/components/card.tsx"
+  type="CardFooterProps"
+  label="CardFooter props"
+/>
+
+### CardLink
+
+The whole card as one link.
+
+<Props
+  source="src/components/card.tsx"
+  type="CardLinkProps"
+  label="CardLink props"
+/>
+
+### CardMedia
+
+A drawing or picture at a linked card's top.
+
+<Props
+  source="src/components/card.tsx"
+  type="CardMediaProps"
+  label="CardMedia props"
+/>
+
+</Reference>

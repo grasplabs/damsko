@@ -1,0 +1,46 @@
+---
+// <Reference> ## API … </Reference>: the page's reference, folded. Every `##` section inside becomes
+// one fold of the library's own Collapsible, closed by default, its heading the fold's words; the
+// section's own h3s stay inside it.
+//
+// A closed fold is still in the page: its panel is `hidden="until-found"`, so the browser's find
+// opens it, and a link to its id (#api) or to a heading inside it (#useaction) opens it too
+// (site/behaviour/folds.ts). The rail lists every fold. Markdown form: site/markdown.ts (the
+// sections as they are, open: an agent loses nothing).
+import "../system/styles/blocks.css";
+import { Fold } from "./fold";
+
+interface Props {
+  /** The words over the folds. */
+  label?: string;
+}
+const { label = "Reference" } = Astro.props;
+const html = await Astro.slots.render("default");
+
+// Split at each h2: what stands before the first one (nothing, as a rule) stays open above them.
+const parts = html.split(/(?=<h2[\s>])/u);
+const lead = parts[0]?.startsWith("<h2") ? "" : (parts.shift() ?? "");
+const folds = parts.map((part) => {
+  const open = /^<h2([^>]*)>([\s\S]*?)<\/h2>/u.exec(part);
+  const id = open ? (/\bid="([^"]+)"/u.exec(open[1] ?? "")?.[1] ?? "") : "";
+  // The heading's words, without its link mark.
+  const words = open ? (open[2] ?? "").replace(/<a[\s\S]*<\/a>/u, "").replaceAll(/<[^>]+>/gu, "").trim() : "";
+  return { id, words, body: open ? part.slice(open[0].length) : part };
+});
+---
+
+<section class="site-reference" aria-labelledby="site-reference-label" data-site-reference>
+  <p class="site-part" id="site-reference-label">{label}</p>
+  {lead && <Fragment set:html={lead} />}
+  {
+    folds.map((fold) => (
+      <div class="site-fold" id={fold.id || undefined} data-site-fold>
+        <Fold client:load title={fold.words}>
+          <div class="site-fold-body">
+            <Fragment set:html={fold.body} />
+          </div>
+        </Fold>
+      </div>
+    ))
+  }
+</section>

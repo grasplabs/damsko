@@ -1,0 +1,72 @@
+---
+title: Text
+description: Body text for paragraphs and labels, in one of four sizes and four colours.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/text"
+  use={'import { Text } from "@grasp-os/ui/components/text";'}
+/>
+
+## Sizes
+
+A lead, body text, a control's size and the smallest there is, each with the line height made for it.
+
+<Stage path="text/sizes" label="Sizes" />
+
+## Colours and weight
+
+`default` is read first and `subtle` last; `secondary`, body text, is the default. Medium marks a name or a label. Each colour holds 4.5:1 on every ground.
+
+<Stage path="text/tones" label="Colours and weight" />
+
+## A display lead
+
+`variant="display"` sets the line in the serif: one line that opens a card or a section.
+
+<Stage path="text/display" label="A display lead" />
+
+## A long line
+
+`wrap` sets how a long line breaks: at a space, or at any letter (an email, an id). `truncate` keeps it on one line, cut with an ellipsis.
+
+<Stage path="text/wrap" label="A long line" />
+
+## Truncated in a narrow head
+
+While `truncate` cuts the words, a tooltip shows them whole to the pointer; words that fit have none. A screen reader always reads them whole.
+
+<Stage path="text/truncate" label="Truncated in a narrow head" />
+
+Words that grow in a box that does not are measured again: renamed to a longer name, the line is cut and its tooltip shows the whole words.
+
+<Stage path="text/rename" label="Renamed to a longer name" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="text"
+  always={[
+    "Running words, so a product never sets a font size, a line height or a grey by hand.",
+    "`truncate` for one line in a dense row (an email, a path): cut with an ellipsis, whole in its tooltip.",
+    '`wrap="anywhere"` for an email or an id in a box that sizes to what it holds.',
+    '`size="lg"` for a lead under a page title, `sm` for controls, menus and dense lists, `xs` for notes and labels.',
+    '`weight="medium"` for a label or a name.',
+  ]}
+  never={[
+    "A title in the page's outline: use Heading.",
+    "Code of more than a word or two: use Code block.",
+    "Words that take you somewhere: use Link.",
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props source="src/components/text.tsx" type="TextProps" label="Text props" />
+
+</Reference>

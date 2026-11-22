@@ -1,0 +1,203 @@
+---
+title: Section header
+description: A heading for one part of a page, with a sentence and that part's actions.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/section-header"
+  use={
+    'import { Section, SectionHeader } from "@grasp-os/ui/components/section-header";'
+  }
+/>
+
+## Basic
+
+A title and one sentence that says what the section holds.
+
+<Stage path="section-header/basic" label="Basic" />
+
+## In a section
+
+`Section` keeps the same room between the header and each part under it.
+
+<Stage path="section-header/section" label="In a section" />
+
+## Loading
+
+`loading` puts placeholders where the words will be.
+
+<Stage path="section-header/loading" label="Loading" />
+
+## Beside a long title
+
+The action stays on the title's row while it fits; a long title wraps beside it.
+
+<Stage path="section-header/actions" label="Beside a long title" />
+
+## Over a card
+
+`variant="group"` names a group of rows standing over its card: the title a step over the rows' own labels, and an xs action raised so its foot meets the foot of the title's line. Compose it with a Card in a `section` named by the header's `id`.
+
+<Stage path="card/grouped" label="Over a card" />
+
+## Every state
+
+A header has nothing to hover or press: it rests or loads. Its actions keep their own states.
+
+<States
+  path="section-header/states"
+  column
+  cells={[{ label: "Rest" }, { label: "Loading", props: { loading: true } }]}
+/>
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="section-header"
+  always={[
+    "The title of a part of a page, with actions that act on that part only.",
+    "A title that names what the section holds, in sentence case: Usage, Billing.",
+    "Heading levels in order: a section in a page with an h1 takes `headingLevel` 2.",
+    "Actions that act on this section only, at the end of its row.",
+  ]}
+  never={[
+    "The page's own title: use Page header.",
+    "More than two actions: put the rest in a Dropdown menu.",
+    "A title alone, with no sentence and no actions: use Heading.",
+    "A sentence that repeats the title in more words.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Words",
+      key: "Title",
+      value: "{text-lg} / {text-lg-line}, {font-weight-medium}",
+      tokens: ["foreground"],
+    },
+    {
+      group: "Words",
+      key: "Sentence",
+      value: "{text-base} / {text-base-line}",
+      tokens: ["muted"],
+    },
+    { group: "Words", key: "Title to sentence", value: "{space-1}" },
+    { group: "Words", key: "Title to aside", value: "{space-2}" },
+    {
+      group: "Row",
+      key: "Words to actions",
+      value: "{space-4} across, {space-3} when the actions wrap below",
+    },
+    {
+      group: "Row",
+      key: "Words",
+      value: "At least 16rem before the actions wrap",
+    },
+    { group: "Row", key: "Between actions", value: "{space-2}" },
+    {
+      group: "Loading",
+      key: "Placeholders",
+      value:
+        "The title {section-header-title-wait} wide; the description to its line's end",
+      note: "Skeleton's lines, as tall as the words",
+    },
+    {
+      group: "Section",
+      key: "Gap",
+      value: "{section-header-gap}",
+      note: "between the header and each part under it",
+    },
+    {
+      group: "Section",
+      key: "Link target",
+      value: "{space-6} above the title",
+      note: "when a link lands on its `id`",
+    },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    {
+      key: "Loading",
+      value: "Placeholders breathe, {skeleton-pulse} a cycle",
+      note: "Skeleton's; reduced: still",
+      tokens: ["skeleton-ease"],
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      key: "Narrow",
+      value: "The actions wrap below the words, at the start of the row.",
+    },
+    {
+      key: "Long words",
+      value:
+        "The title wraps balanced and the sentence wraps; nothing is cut off.",
+    },
+    {
+      key: "Loading",
+      value:
+        "A sentence placeholder shows only when the header has a sentence to come.",
+    },
+    {
+      key: "Layout",
+      value: "`style` takes width, alignment and margins; never its look.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Role",
+      value: "A heading at `headingLevel`: `h2`, `h3` or `h4`",
+      note: "keeps the page's outline in order",
+    },
+    {
+      key: "Section",
+      value:
+        "A `section`; a region when `aria-labelledby` names the title's `id`",
+    },
+    {
+      key: "Loading",
+      value: "`aria-busy` on the header; the placeholders are hidden",
+    },
+    {
+      key: "Contrast",
+      value:
+        "Title and sentence 4.5:1 on paper, soft and raised, light and dark",
+      note: "checked by `node tokens/generate.ts --check`",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/section-header.tsx"
+  type="SectionHeaderProps"
+  label="SectionHeader props"
+/>
+
+### Section
+
+<Props
+  source="src/components/section-header.tsx"
+  type="SectionProps"
+  label="Section props"
+/>
+
+</Reference>

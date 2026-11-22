@@ -1,0 +1,72 @@
+---
+title: Table of contents
+description: A long page's sections beside it, the one you are reading marked.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/table-of-contents"
+  use={
+    'import { TableOfContents } from "@grasp-os/ui/components/table-of-contents";'
+  }
+/>
+
+## Basic
+
+One mark glides beside the section being read; the line under the title fills as you read. Tab stops once, arrows move within.
+
+<Stage path="table-of-contents/basic" label="Basic" />
+
+## Groups and collapsed sections
+
+Sections with one `group` stand under its name; a `collapsed` one gets a chevron and a word for screen readers. Actions go in `footer`.
+
+<Stage path="table-of-contents/parts" label="Groups and collapsed sections" />
+
+## In a box that scrolls
+
+For a page that scrolls in its own box, pass its selector as `container`. `offset` sets the reading line below a header that sticks.
+
+<Stage path="table-of-contents/box" label="In a box that scrolls" />
+
+## Compact
+
+`variant="compact"` draws a tick per section, for a narrow column. Hover or focus opens the names; Escape closes them.
+
+<Stage path="table-of-contents/compact" label="Compact" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="table-of-contents"
+  always={[
+    "A long page of sections, read from top to bottom: a guide, a reference, a policy.",
+    "Beside the page, in a column of its own, with the page's own actions in its footer.",
+  ]}
+  never={[
+    "A short page of two or three sections: the page is its own table of contents.",
+    "Views of one thing, one shown at a time: use Tabs.",
+    "The pages of a site or a product, not the sections of one page: use Sidebar or Navigation menu.",
+    "The steps of a task, in order: use Stepper.",
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/table-of-contents.tsx"
+  type="TableOfContentsProps"
+  label="TableOfContents"
+/>
+
+<Props
+  source="src/components/table-of-contents.tsx"
+  type="TableOfContentsItem"
+  label="TableOfContentsItem"
+/>
+
+</Reference>

@@ -1,0 +1,65 @@
+/* The few rules the blocks (site/blocks, StyleX) need from a plain sheet: inside a block of code,
+   which StyleX cannot reach because Shiki writes the lines. Replaced the sheet of the same name that
+   the previous docs system used, without its two rules that only undid the previous docs system's base inside a stage, and without the
+   rollback of the previous docs system's prose: there is no prose rule that reaches a block here.
+
+   In the `site` layer, and scoped to a block of code, ending at a preview's edge. */
+
+@layer site {
+  @scope (.site-codeblock) to (.site-preview) {
+    /* Highlighted code (site/blocks/code.tsx): Shiki writes each token's colour into --shiki-light
+       and --shiki-dark, which name a token of the highlighter's theme that site.css points at a
+       Grasp colour. */
+    [data-code-source] span[style*="--shiki-light"] {
+      color: light-dark(var(--shiki-light), var(--shiki-dark));
+    }
+
+    /* Line numbers: a counter on each of Shiki's lines, in a quiet gutter, right-aligned. Drawn,
+       not text, so they are never selected or copied. 24px of number and 16px to the code. */
+    code[data-code-source] {
+      counter-reset: damsko-line;
+    }
+    code[data-code-source] .line::before {
+      counter-increment: damsko-line;
+      content: counter(damsko-line);
+      display: inline-block;
+      inline-size: var(--damsko-space-6);
+      margin-inline-end: var(--damsko-space-4);
+      text-align: end;
+      color: var(--damsko-subtle-foreground);
+      font-variant-numeric: tabular-nums;
+      user-select: none;
+    }
+  }
+
+  /* A stage's third ground is the other scheme from the site's (site/blocks/stage.tsx): Night on a
+     light page, Day on a dark one. Read from the root the head script sets before the first paint,
+     as the theme button's glyph; with no script, from the system. */
+  :root[data-mode="dark"] .site-stage {
+    --site-stage-other: light;
+    --site-stage-night-word: none;
+    --site-stage-day-word: inline;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-mode]) .site-stage {
+      --site-stage-other: light;
+      --site-stage-night-word: none;
+      --site-stage-day-word: inline;
+    }
+  }
+
+  /* Without script a stage's Code tab cannot be opened, so its code stands under its preview: the
+     source is still there to read and to copy by hand. With script the tabs switch as usual. */
+  @media (scripting: none) {
+    @scope (.site-stage) to (.site-preview) {
+      /* The two panels share one grid cell when one shows at a time; here they stack. */
+      [role="tabpanel"] {
+        display: block !important;
+        grid-area: auto !important;
+      }
+      [role="tabpanel"] + [role="tabpanel"] {
+        margin-top: var(--damsko-space-4);
+      }
+    }
+  }
+}

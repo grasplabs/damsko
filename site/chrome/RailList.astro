@@ -1,0 +1,43 @@
+---
+// The rail's list (./Toc.astro): the page's sections in runs by part, each run under its part's
+// name. A folded Reference section has a small chevron after its name and says so to a screen reader.
+import { ChevronRightIcon, Icon } from "@grasp-os/ui/lib/icons";
+
+interface Props {
+  groups: { part: string; items: { depth: number; slug: string; text: string; folded?: boolean }[] }[];
+  /** Prefixes the part names' ids, so the rail and the bar can both be on a page. */
+  id: string;
+  foldedLabel: string;
+}
+const { groups, id, foldedLabel } = Astro.props;
+const grouped = groups.some((group) => group.part !== "");
+---
+
+<ul class="site-rail-groups">
+  {
+    groups.map((group, index) => (
+      <li class="site-rail-group" data-part={group.part || undefined}>
+        {grouped && group.part && (
+          <span class="site-rail-part" id={`${id}-${index}`}>
+            {group.part}
+          </span>
+        )}
+        <ul aria-labelledby={grouped && group.part ? `${id}-${index}` : undefined}>
+          {group.items.map((heading) => (
+            <li data-depth={heading.depth}>
+              <a href={`#${heading.slug}`} data-rail-link data-folded={heading.folded ? "" : undefined}>
+                <span>{heading.text}</span>
+                {heading.folded && (
+                  <span class="site-rail-fold" aria-hidden="true">
+                    <Icon icon={ChevronRightIcon} />
+                  </span>
+                )}
+                {heading.folded && <span class="site-visually-hidden">, {foldedLabel}</span>}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </li>
+    ))
+  }
+</ul>

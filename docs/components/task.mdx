@@ -1,0 +1,121 @@
+---
+title: Task
+description: One piece of work being done, behind a line that opens on the steps it took and the files it touched.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/task"
+/>
+
+## A finished task
+
+`Task` is a Trace with one row that opens. `TaskTrigger` is its line, the task's `title`; it starts open on `TaskContent`, the steps it took, each a `TaskItem` with its mark. A file a step names is a `TaskItemFile` chip.
+
+<Stage path="task/basic" label="A finished task" />
+
+## While it runs
+
+Each step arrives when the assistant takes it, running until it is done. The task's title is in the present tense while a step runs and in the past once all are done; then it closes. A step or a task that finishes is said once. Press Next to finish the running step.
+
+<Stage path="task/live" live label="While it runs" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="task"
+  always={[
+    "Work whose steps come from the work itself: the assistant knows the next step only once it has taken the last.",
+    "A title in the tense of its status: Updating the page metadata while a step runs, Updated the page metadata once done, Failed to update the page metadata when a step failed.",
+    "Several tasks one under another, the running one open, each closing once it is done.",
+  ]}
+  never={[
+    "Steps decided before the work starts, some still waiting: use Plan.",
+    "The steps of one answer, each with what it found, folded into the run's summary: use Chain of thought.",
+    "One call to a tool, with its input and output: use Tool.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Trigger",
+      key: "Line",
+      value: "Trace's row that opens: its mark, the title, the chevron",
+    },
+    {
+      group: "Steps",
+      key: "Step",
+      value: "Trace's step: its mark in a seat, the dotted line to the next",
+      tokens: ["muted-foreground"],
+    },
+    {
+      group: "Steps",
+      key: "File",
+      value:
+        "{text-xs} on the muted ground, a hairline round it, the mark's corner",
+      tokens: ["muted", "border", "foreground"],
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      key: "Trigger",
+      value:
+        "Click, Enter or Space opens and closes the steps. It starts open.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Trigger",
+      value: "A `button` with `aria-expanded`, named by its title and status",
+    },
+    {
+      key: "Announcements",
+      value:
+        "A step or a task that finishes or fails after the first draw is said once (Trace)",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props source="src/components/task.tsx" type="TaskProps" label="Task props" />
+
+<Props
+  source="src/components/task.tsx"
+  type="TaskTriggerProps"
+  label="TaskTrigger props"
+/>
+
+<Props
+  source="src/components/task.tsx"
+  type="TaskContentProps"
+  label="TaskContent props"
+/>
+
+<Props
+  source="src/components/task.tsx"
+  type="TaskItemProps"
+  label="TaskItem props"
+/>
+
+<Props
+  source="src/components/task.tsx"
+  type="TaskItemFileProps"
+  label="TaskItemFile props"
+/>
+
+</Reference>

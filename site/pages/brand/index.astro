@@ -1,0 +1,11 @@
+---
+// /brand: the brand book's entrance, through the glass (site/brand/entrance.tsx). The page alone,
+// like the Showcase: its own bar leads into the rooms and back to the docs.
+import "../../brand/brand.css";
+import Docs from "../../layouts/Docs.astro";
+import Entrance from "../../brand/entrance";
+---
+
+<Docs route="/brand" title="Brand book" description="How Grasp looks, sounds and moves, in thirteen rooms." fullscreen>
+  <Entrance client:load />
+</Docs>

@@ -1,0 +1,51 @@
+---
+// The Docs overview (/docs): every page of Foundations, Patterns and Guidelines as a tile with its
+// name and its page's sentence, so a reader sees what the docs hold and can jump (the sidebar's "Docs" is its link). The components overview's grid and tiles
+// (../overview/overview.css): one size a row, the sentence whole on at most two lines from a tablet
+// up, none on a phone. The docs pages have no drawings, so a tile is its name and its sentence. Words
+// and the Markdown twin: ../start/docs-overview.ts.
+import "../overview/overview.css";
+
+import Head from "../blocks/Head.astro";
+import TopStep from "../chrome/TopStep.astro";
+import Docs from "../layouts/Docs.astro";
+import { description, docsGroups, route, title } from "../start/docs-overview";
+import { listPages, neighbours } from "../system/content";
+
+const groups = docsGroups(listPages());
+// The groups' headings, which the rail lists as "On this page".
+const headings = groups.map((group) => ({ depth: 2, slug: group.id, text: group.label }));
+// Previous and next as every docs page has them: Get started before, Colour after.
+const around = neighbours(route);
+const prev = around.prev && { route: around.prev.route, label: around.prev.title };
+const next = around.next && { route: around.next.route, label: around.next.title };
+---
+
+<Docs route={route} title={title} description={description} headings={headings} prev={prev} next={next} full>
+  <TopStep prev={prev} next={next} />
+  <h1>{title}</h1>
+  <Head lead={description} />
+  <div class="overview not-prose">
+    {
+      groups.map((group) => (
+        <section class="overview-group" aria-labelledby={group.id}>
+          <h2 class="overview-heading" id={group.id}>
+            {group.label}
+          </h2>
+          <ul class="overview-grid">
+            {group.pages.map((page) => (
+              <li class="overview-tile" data-overview-words-only="">
+                <div class="overview-text">
+                  <a class="overview-name" href={page.route}>
+                    {page.title}
+                  </a>
+                  {page.description && <p class="overview-description">{page.description}</p>}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))
+    }
+  </div>
+</Docs>

@@ -1,0 +1,150 @@
+---
+title: Link
+description: Words you press to go to another page or address, in a sentence or alone.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/link"
+  use={'import { Link } from "@grasp-os/ui/components/link";'}
+/>
+
+## In a sentence
+
+It takes the sentence's colour and size, and its underline finds it without colour.
+
+<Stage path="link/inline" label="In a sentence" />
+
+## On its own
+
+`variant="plain"`: foreground and medium, underlined under the pointer, for a link on its own line, such as View all reports.
+
+<Stage path="link/standalone" label="On its own" />
+
+## Leaving the product
+
+`external` opens it in a new tab, with a mark after the words and the same said to a screen reader.
+
+<Stage path="link/external" label="Leaving the product" />
+
+## With a router
+
+Give the router's own link as the child, with `asChild`: it becomes the element, with the look, its own words and props, and no wrapper. Link knows no router.
+
+<Stage path="link/router" label="With a router" />
+
+## Every state
+
+Hover and keyboard focus are forced from its own CSS, for each variant.
+
+<States
+  path="link/states"
+  choose={{
+    prop: "variant",
+    label: "Variant",
+    options: [
+      { id: "underline", label: "In a sentence" },
+      { id: "plain", label: "On its own" },
+    ],
+  }}
+  cells={[
+    { label: "Rest" },
+    { label: "Hover", force: "hover" },
+    { label: "Keyboard focus", force: "focus-visible" },
+  ]}
+/>
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="link"
+  always={[
+    "Words that go to another page or address: anything with an address is a link.",
+  ]}
+  never={[
+    "An action (save, send, delete): use Button.",
+    "A site's main places, grouped under a row of names: use Navigation menu.",
+    "The path back up to the page someone is on: use Breadcrumb.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Line",
+      key: "Underline",
+      value: "{link-underline-width}, {link-underline-offset} under the words",
+      tokens: ["link-underline"],
+    },
+    { group: "Line", key: "Corner of the focus ring", value: "{radius-mark}" },
+    {
+      group: "In a sentence",
+      key: "Words",
+      value: "The sentence's colour, size and weight",
+    },
+    {
+      group: "On its own",
+      key: "Words",
+      value: "{font-sans}, {font-weight-medium}",
+      tokens: ["foreground"],
+    },
+    {
+      group: "On its own",
+      key: "Underline",
+      value: "None until the pointer is on it, then the words' colour",
+    },
+    {
+      group: "On its own",
+      key: "Touch target",
+      value: "{tap-target} each way on a touch screen",
+    },
+    {
+      group: "External",
+      key: "Mark",
+      value: "{link-mark}, {link-mark-gap} after the last word",
+    },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    {
+      key: "Hover",
+      value: "The underline takes the words' colour, {duration-hover}",
+      tokens: ["ease"],
+    },
+    { key: "Reduced motion", value: "The same change, at once" },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Role",
+      value: "A native link: Enter follows it, the browser's own menu works",
+    },
+    {
+      key: "External",
+      value:
+        'Opens in a new tab with `rel="noopener noreferrer"`, and says so to a screen reader (`link.external` in the I18nProvider) as well as by its mark',
+    },
+    {
+      key: "Focus",
+      value: "The ring round its words, for the keyboard only; nothing moves",
+    },
+    { key: "Forced colours", value: "Words and underline in LinkText" },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props source="src/components/link.tsx" type="LinkProps" label="Link props" />
+
+</Reference>

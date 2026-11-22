@@ -1,0 +1,46 @@
+---
+title: Space
+description: One scale of steps, four pixels apart at the small end, wider as parts grow.
+---
+
+<Head lead={frontmatter.description} />
+
+<Scene
+  path="foundations/space-room"
+  title="Room to breathe"
+  note="Turn on the switch to see the room a card keeps, each band named by its step."
+/>
+
+<Scene
+  path="foundations/space-scale"
+  title="Small steps, wide steps"
+  note="Every step at its true size: the small ones inside a control, the wide ones between sections."
+  ground="soft"
+/>
+
+<Scene
+  path="foundations/space-near"
+  title="Near and far"
+  note="A label sits nearer its own field than the next one, so each pair reads as one."
+  ground="soft"
+/>
+
+<AllTokens>
+
+<SampleRows set="scale" kind="space" note="Each bar is as long as its space." />
+
+</AllTokens>
+
+## Rules
+
+<Rules
+  always={[
+    "Use a step by its name, `--damsko-space-4` in CSS or `space[4]` in StyleX.",
+    "Hold related things closer than unrelated ones: a label sits nearer its field than the next field.",
+    "Use space-4 as the gutter on a phone.",
+  ]}
+  never={[
+    "A pixel value of your own for a margin, a padding or a gap.",
+    "A step between two steps of the scale.",
+  ]}
+/>

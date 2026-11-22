@@ -1,0 +1,24 @@
+Copyright (c) 2026 Grasp. All rights reserved.
+
+This repository and everything in it (the source code, the components, the
+design tokens, the documentation, the images and the other assets, together
+"the Software") are the proprietary property of Grasp.
+
+Only Grasp, its affiliates and its contractors working for Grasp may use the
+Software. No one else is granted any licence or right to use, copy, modify,
+install, distribute, sublicense or sell the Software, in whole or in part, or
+to build products or other works with it or from it.
+
+The repository is public so that it can be read. Viewing it, and forking it
+on GitHub, as GitHub's Terms of Service allow for a public repository, is
+permitted; nothing here limits those rights, and they grant no other.
+
+Third-party material identified in THIRD_PARTY_NOTICES.md remains under its
+own licence.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL GRASP
+BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

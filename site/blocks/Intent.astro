@@ -1,0 +1,61 @@
+---
+// <Intent of="button" always={[...]} never={[...]} />: the page's guidance as one Do / Don't block:
+// Do is what always holds, Don't what never to do, at most four lines each, a repeat left out
+// (guidanceColumn in site/guidance.ts); the Markdown twin keeps every line. Under it, the Choosing
+// groups the component is in, each folded into one line ("Could be taken for", then a fold per
+// group) that opens to the comparison; `compare="open"` shows them open. Markdown form:
+// site/markdown.ts (the groups in full).
+import "../system/styles/blocks.css";
+import { Fold } from "./fold";
+import { groupsOf } from "../choosing";
+import { chooseRows, guidanceColumn } from "../guidance";
+import { ChooseView, GuidanceView } from "./intent";
+
+interface Props {
+  of: string;
+  /** The page's own rules: what always holds, and what never to do. */
+  always?: string[];
+  never?: string[];
+  /** The two columns' names. */
+  doTitle?: string;
+  dontTitle?: string;
+  /** The Choosing groups folded to one line each (the default) or open. */
+  compare?: "folded" | "open";
+  /** The words over the folded groups; each fold is named by its group alone, so it fits a phone. */
+  compareLabel?: string;
+}
+const { of, always = [], never = [], doTitle = "Do", dontTitle = "Don't", compare = "folded", compareLabel = "Could be taken for" } = Astro.props;
+// The Choosing groups it is in (site/choosing.ts), each with this component's row marked: the answer
+// to "this one or that one" where the person already is. None for a component in no group.
+const groups = groupsOf(of);
+const titleOf = (title: string) => `Could be taken for: ${title.replace(/^./u, (letter) => letter.toLowerCase())}`;
+---
+
+{
+  (always.length > 0 || never.length > 0) && (
+    <GuidanceView
+      does={guidanceColumn(always)}
+      donts={guidanceColumn(never)}
+      doTitle={doTitle}
+      dontTitle={dontTitle}
+    />
+  )
+}
+{
+  compare === "open"
+    ? groups.map((group) => <ChooseView title={titleOf(group.title)} rows={chooseRows(group.of, of)} />)
+    : groups.length > 0 && (
+        <div class="site-compare" data-site-compare>
+          <p class="site-compare-label">{compareLabel}</p>
+          {groups.map((group) => (
+            <div class="site-compare-fold">
+              <Fold client:load title={group.title.replace(/^./u, (letter) => letter.toUpperCase())}>
+                <div class="site-fold-body">
+                  <ChooseView rows={chooseRows(group.of, of)} />
+                </div>
+              </Fold>
+            </div>
+          ))}
+        </div>
+      )
+}

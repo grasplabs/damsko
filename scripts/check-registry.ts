@@ -1,0 +1,311 @@
+// The registry holds: registry.json is what scripts/build-registry.ts writes now and matches
+// shadcn's schema; every file is `registry:file` with the target `~/<its path>`; npm packages are
+// named without a version; every import in an item's files resolves, installed, to a file of the
+// item or of an item it names, and every package it imports is one of its dependencies; and every
+// version in package.json comes from an exact pin in the catalog; and the docs' install commands
+// name items that exist, at the catalog's versions. Reads files only; no server.
+//
+//   node scripts/check-registry.ts
+//
+// Fails with the item, the file and what is wrong. After changing a component, run
+// `pnpm run generate` and commit registry.json with it.
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
+import nodePath from "node:path";
+
+import { registrySchema } from "shadcn/schema";
+import ts from "typescript6";
+
+import {
+  buildRegistry,
+  catalog,
+  exactVersion,
+  packageOf,
+  registryText,
+  root,
+} from "./build-registry.ts";
+import { readJson, stringsAt } from "./json.ts";
+
+/**
+ * Every module a file reaches, and every declaration it references, read from a full parse: its
+ * own reader, not the generator's quick scan, so a file the scan misreads still fails here. CSS
+ * gives its @import and url() targets.
+ */
+const modulesOf = (path: string, text: string): string[] => {
+  if (path.endsWith(".css")) {
+    return [
+      ...text.matchAll(
+        /@import\s+(?:url\()?\s*["'](?<imported>[^"']+)["']|url\(\s*["']?(?<url>[^"')]+)["']?\s*\)/gu
+      ),
+    ]
+      .map((match) => match.groups?.imported ?? match.groups?.url ?? "")
+      .filter(
+        (target) => target !== "" && !/^(?:data:|https?:|#)/u.test(target)
+      );
+  }
+  if (!/\.tsx?$/u.test(path)) {
+    return [];
+  }
+  const found: string[] = [];
+  const kind = path.endsWith("x") ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
+  const visit = (node: ts.Node) => {
+    if (
+      (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) &&
+      node.moduleSpecifier &&
+      ts.isStringLiteral(node.moduleSpecifier)
+    ) {
+      found.push(node.moduleSpecifier.text);
+    } else if (
+      ts.isImportTypeNode(node) &&
+      ts.isLiteralTypeNode(node.argument) &&
+      ts.isStringLiteral(node.argument.literal)
+    ) {
+      found.push(node.argument.literal.text);
+    } else if (
+      ts.isCallExpression(node) &&
+      node.expression.kind === ts.SyntaxKind.ImportKeyword
+    ) {
+      const [argument] = node.arguments;
+      if (
+        argument &&
+        (ts.isStringLiteral(argument) ||
+          ts.isNoSubstitutionTemplateLiteral(argument))
+      ) {
+        found.push(argument.text);
+      }
+    }
+    ts.forEachChild(node, visit);
+  };
+  const file = ts.createSourceFile(
+    path,
+    text,
+    ts.ScriptTarget.Latest,
+    true,
+    kind
+  );
+  visit(file);
+  // A declaration a file references (`/// <reference path>`) must be installed with it too.
+  return [
+    ...found,
+    ...file.referencedFiles.map((reference) => reference.fileName),
+  ];
+};
+
+/** Every docs page (MDX) under a folder, as paths relative to the repository. */
+const docPages = (dir: string): string[] =>
+  readdirSync(nodePath.join(root, dir), { withFileTypes: true }).flatMap(
+    (entry) => {
+      const path = nodePath.posix.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        return docPages(path);
+      }
+      return path.endsWith(".mdx") ? [path] : [];
+    }
+  );
+
+const failures: string[] = [];
+let checks = 0;
+const check = (ok: boolean, message: string) => {
+  checks += 1;
+  if (!ok) {
+    failures.push(message);
+  }
+};
+
+// Exact pins: every package.json entry comes from the catalog, and every catalog entry is one
+// version (or an npm alias of one), never a range.
+const manifest = readJson(nodePath.join(root, "package.json"));
+for (const field of [
+  "dependencies",
+  "devDependencies",
+  "peerDependencies",
+  "optionalDependencies",
+]) {
+  for (const [name, version] of Object.entries(stringsAt(manifest, field))) {
+    check(
+      version === "catalog:",
+      `package.json ${field}: ${name} is "${version}", use "catalog:" and pin it in pnpm-workspace.yaml`
+    );
+  }
+}
+for (const [name, version] of Object.entries(catalog)) {
+  check(
+    exactVersion.test(version.replace(/^npm:.+@/u, "")),
+    `pnpm-workspace.yaml catalog: ${name} is "${version}", pin an exact version`
+  );
+}
+
+const { registry, problems } = buildRegistry();
+for (const problem of problems) {
+  check(
+    false,
+    `${problem.item}${problem.file === undefined ? "" : ` (${problem.file})`}: ${problem.message}`
+  );
+}
+
+// dependencies is what a component needs: every entry is imported by a file under src/, or is a
+// required peer of one that is. Site-only packages belong in devDependencies.
+{
+  const imported = new Set<string>();
+  const walk = (dir: string) => {
+    for (const entry of readdirSync(dir)) {
+      const path = nodePath.join(dir, entry);
+      if (statSync(path).isDirectory()) {
+        walk(path);
+      } else {
+        for (const target of modulesOf(path, readFileSync(path, "utf-8"))) {
+          if (!target.startsWith(".")) {
+            imported.add(packageOf(target));
+          }
+        }
+      }
+    }
+  };
+  walk(nodePath.join(root, "src"));
+  const needed = new Set(imported);
+  for (const name of imported) {
+    const path = nodePath.join(root, "node_modules", name, "package.json");
+    if (existsSync(path)) {
+      for (const peer of Object.keys(
+        stringsAt(readJson(path), "peerDependencies")
+      )) {
+        needed.add(peer);
+      }
+    }
+  }
+  for (const name of Object.keys(stringsAt(manifest, "dependencies"))) {
+    check(
+      needed.has(name),
+      `package.json dependencies: ${name} is imported by no file under src/, move it to devDependencies`
+    );
+  }
+}
+
+// registry.json is current and matches shadcn's own schema (the CLI a project runs).
+const written = nodePath.join(root, "registry.json");
+check(
+  existsSync(written) &&
+    readFileSync(written, "utf-8") === registryText(registry),
+  "registry.json is out of date: run pnpm run generate"
+);
+const parsed = registrySchema.safeParse(registry);
+check(
+  parsed.success,
+  `registry.json does not match the schema: ${JSON.stringify(parsed.error?.issues.slice(0, 3))}`
+);
+
+const items = new Map(registry.items.map((item) => [item.name, item]));
+check(items.size === registry.items.length, "two items share a name");
+const paths = (name: string) =>
+  new Set((items.get(name)?.files ?? []).map((file) => file.path));
+
+// Installed, every import resolves: a relative one to a file of the item or of an item it names,
+// a package one to one of its dependencies.
+for (const item of registry.items) {
+  const needs = (item.registryDependencies ?? []).map((name) =>
+    name.replace(/^@damsko\//u, "")
+  );
+  for (const name of needs) {
+    check(
+      items.has(name),
+      `${item.name}: needs @damsko/${name}, which is not an item`
+    );
+  }
+  const reachable = new Set([
+    ...paths(item.name),
+    ...needs.flatMap((name) => [...paths(name)]),
+  ]);
+  const packages = new Set(item.dependencies);
+  for (const spec of [
+    ...(item.dependencies ?? []),
+    ...(item.devDependencies ?? []),
+  ]) {
+    check(
+      !/.@/u.test(spec),
+      `${item.name}: ${spec} names a version; list packages by name, so a project's catalog: stands`
+    );
+  }
+  for (const file of item.files) {
+    check(
+      file.type === "registry:file" && file.target === `~/${file.path}`,
+      `${item.name}: ${file.path} must be registry:file with the target ~/${file.path}`
+    );
+    const text = readFileSync(nodePath.join(root, file.path), "utf-8");
+    check(text.length > 0, `${item.name}: ${file.path} is empty`);
+    for (const specifier of modulesOf(file.path, text)) {
+      if (specifier.startsWith(".")) {
+        const base = nodePath.posix.join(
+          nodePath.posix.dirname(file.path),
+          specifier
+        );
+        const found = [
+          base,
+          `${base}.ts`,
+          `${base}.tsx`,
+          `${base}.d.ts`,
+          `${base}/index.ts`,
+        ].some((path) => reachable.has(path));
+        check(
+          found,
+          `${item.name}: ${file.path} imports "${specifier}", which no file it installs provides`
+        );
+      } else if (!["react", "react-dom"].includes(packageOf(specifier))) {
+        check(
+          packages.has(packageOf(specifier)),
+          `${item.name}: ${file.path} imports ${specifier}, and ${packageOf(specifier)} is not in its dependencies`
+        );
+      }
+    }
+  }
+}
+
+// The docs' commands work against this registry as written: every `shadcn@<version> add` runs the
+// catalog's shadcn and names items that exist, and every package a command pins is at the
+// catalog's version, so a project set up from the docs builds with what Damsko is tested with.
+for (const page of [...docPages("docs"), "site/start/get-started.ts"]) {
+  // A command in a TypeScript string has its line breaks written `\n`.
+  const text = readFileSync(nodePath.join(root, page), "utf-8").replaceAll(
+    String.raw`\n`,
+    "\n"
+  );
+  for (const command of text.matchAll(
+    /\bshadcn@(?<version>[^\s"`]+) add (?<names>[^"`\\\n]+)/gu
+  )) {
+    check(
+      command.groups?.version === catalog.shadcn,
+      `${page}: runs shadcn@${command.groups?.version}, the catalog has ${catalog.shadcn}`
+    );
+    for (const name of (command.groups?.names ?? "").trim().split(/\s+/u)) {
+      const item = /^@damsko\/(?<item>[\w-]+)$/u.exec(name)?.groups?.item;
+      check(
+        item !== undefined && items.has(item),
+        `${page}: adds ${name}, which is not an item`
+      );
+    }
+  }
+  for (const command of text.matchAll(/\bpnpm add (?<packages>[^"`\\\n]+)/gu)) {
+    for (const spec of (command.groups?.packages ?? "").split(/\s+/u)) {
+      const pinned = /^(?<name>@?[^@\s]+)@(?<version>[^\s]+)$/u.exec(
+        spec
+      )?.groups;
+      if (pinned?.name !== undefined) {
+        check(
+          pinned.version === catalog[pinned.name],
+          `${page}: pins ${spec}, the catalog has ${pinned.name} ${catalog[pinned.name] ?? "not at all"}`
+        );
+      }
+    }
+  }
+}
+
+if (failures.length > 0) {
+  for (const message of failures) {
+    console.error(`FAIL  ${message}`);
+  }
+  console.error(
+    `\nregistry: ${failures.length} problem(s) in ${registry.items.length} items`
+  );
+  process.exit(1);
+}
+console.log(
+  `registry: ${registry.items.length} items, ${checks} checks passed`
+);

@@ -1,0 +1,322 @@
+---
+title: Radio group
+description: A short list of choices where you pick exactly one, all shown at once.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/radio-group"
+  use={
+    'import { RadioGroup, RadioGroupItem } from "@grasp-os/ui/components/radio-group";'
+  }
+/>
+
+## In a group
+
+The group's name asks the question, and each radio's label is one answer to it. The RadioGroup stands in a Field, whose FieldLabel names it; each RadioGroupItem draws its circle only, in its own horizontal Field with its FieldLabel, and a press on the circle, its label or the space around them chooses it. Tab lands on the chosen radio and the arrow keys move the choice, the other way round in right to left.
+
+<Stage path="radio-group/basic" live label="In a group" />
+
+## With descriptions
+
+A sentence under the group, or under a choice, says what choosing it means.
+
+<Stage path="radio-group/description" label="With descriptions" />
+
+## Disabled
+
+The group keeps its choice in view, and the sentence under its name says why it cannot change.
+
+<Stage path="radio-group/disabled" label="Disabled" />
+
+## When it is wrong
+
+The edges turn danger and the error says what to do, until one is chosen: `data-invalid` on the Field round the group, with its FieldError. A `required` group shows the same after a send with nothing chosen.
+
+<Stage path="radio-group/invalid" label="When it is wrong" />
+
+## Every state
+
+Hover, focus and pressed are forced from the radio's own CSS; the rest are its props.
+
+<States
+  path="radio-group/states"
+  choose={{
+    prop: "value",
+    label: "Value",
+    options: [
+      { id: "unchosen", label: "Not chosen" },
+      { id: "chosen", label: "Chosen" },
+    ],
+  }}
+  cells={[
+    { label: "Rest" },
+    { label: "Hover", force: "hover" },
+    { label: "Keyboard focus", force: "focus-visible" },
+    { label: "Pressed", force: "active" },
+    { label: "Disabled", props: { disabled: true } },
+    { label: "Invalid", props: { invalid: true } },
+  ]}
+/>
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="radio-group"
+  always={[
+    "One answer from a few choices, all in view at once, under a group name that asks the question: Summary email, then Daily, Weekly, Never.",
+    "A choice already made when one is safe, so nobody has to choose before they can go on.",
+    "Say why near a disabled group.",
+    "An error that says how to put it right: Choose a file type to start the export.",
+  ]}
+  never={[
+    "More than about seven choices: use a Select.",
+    "One choice alone: use a Checkbox.",
+    "Choices that do something the moment they are chosen: use a Switch or a Button; a view chosen in a toolbar: use a Toggle.",
+    "Mint for a chosen radio: mint is for approving.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Size",
+      key: "Circle",
+      value: "{radio-size}",
+      note: "on the first line of the label",
+    },
+    { group: "Size", key: "Dot", value: "{radio-dot}" },
+    { group: "Size", key: "Circle to words", value: "{space-3}" },
+    {
+      group: "Size",
+      key: "Row",
+      value: "{tap-target} at least",
+      note: "the circle, its words and the space between",
+    },
+    {
+      group: "Type and shape",
+      key: "Name and choices",
+      value: "{text-sm} / {text-sm-line}, {font-weight-medium}",
+    },
+    {
+      group: "Type and shape",
+      key: "Description and error",
+      value: "{text-xs} / {text-xs-line}",
+    },
+    {
+      group: "Colour",
+      key: "Not chosen",
+      value: "A {checkbox-border-width} edge inside",
+      note: "no fill, a soft line",
+      tokens: ["control-border"],
+    },
+    {
+      group: "Colour",
+      key: "Chosen",
+      note: "the fill, and the dot",
+      tokens: ["primary", "primary-foreground"],
+    },
+    {
+      group: "Colour",
+      key: "Invalid",
+      note: "the edge, or a line round a chosen circle",
+      tokens: ["input-border-invalid"],
+    },
+    {
+      group: "Focus and disabled",
+      key: "Focus ring",
+      value: "{ring-width} on its edge, keyboard only",
+      tokens: ["ring"],
+    },
+    {
+      group: "Focus and disabled",
+      key: "Disabled",
+      value: "{opacity-disabled} opacity",
+      note: "circle and words",
+    },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    {
+      key: "Choose",
+      value:
+        "The dot grows from {checkbox-mark-from} and fades in, {duration-mark}",
+      note: "reduced: at once",
+      tokens: ["ease"],
+    },
+    {
+      key: "Leave",
+      value: "The dot shrinks and fades out, {duration-hover}",
+      note: "faster than it came",
+    },
+    {
+      key: "Hover",
+      value:
+        "Edge stronger and a faint fill; chosen, a lighter fill. {duration-hover}",
+      note: "anywhere on the row",
+      tokens: ["control-border-hover", "accent", "checkbox-bg-hover"],
+    },
+    {
+      key: "Press",
+      value: "Scale {button-press-scale}, {duration-press}",
+      note: "reduced: at once",
+      tokens: ["ease"],
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Input",
+      key: "Keyboard",
+      value:
+        "Tab reaches the chosen radio, or the first; arrows move and choose, past disabled ones and round from the last. Enter sends its form.",
+    },
+    {
+      group: "Input",
+      key: "Pointer",
+      value:
+        "A press on the circle, its label or the space around them chooses it; one on a description does not.",
+    },
+    {
+      group: "Input",
+      key: "Read only",
+      value:
+        "Arrows still move focus; nothing changes the choice, and it is sent.",
+    },
+    {
+      group: "Forms",
+      key: "Sent",
+      value:
+        "The chosen `value` under the group's `name`; nothing when none is chosen.",
+    },
+    {
+      group: "Forms",
+      key: "Required",
+      value:
+        "The form will not send until one is chosen; the first radio takes focus and `error` shows.",
+    },
+    {
+      group: "Content",
+      key: "Long labels",
+      value: "Wrap beside the circle; the circle stays on the first line.",
+    },
+    {
+      group: "Settings",
+      key: "Right to left",
+      value:
+        "The circle stands at the right; arrows follow the reading direction.",
+    },
+    {
+      group: "Settings",
+      key: "Forced colours",
+      value: "A 1px border and the dot in the text colour.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Role",
+      value: "`radiogroup` of `radio`s, each with `aria-checked`",
+    },
+    { key: "Name", value: "The group by its name; each radio by its label" },
+    {
+      key: "Description",
+      value: "The group's and each choice's, by `aria-describedby`",
+    },
+    {
+      key: "Invalid",
+      value: "`aria-invalid`, and the error in words, never colour alone",
+    },
+    {
+      key: "Agents",
+      value:
+        "Found by the group's name; `setValue` takes one of its choices, nothing else",
+    },
+    {
+      key: "Contrast",
+      value:
+        "The chosen fill 3:1 on every ground; the empty edge is soft on purpose",
+      note: "checked by `node tokens/generate.ts --check`",
+    },
+  ]}
+/>
+<Rows
+  title="From shadcn"
+  rows={[
+    {
+      group: "Parts",
+      key: "`RadioGroupItem`",
+      value: "The same part",
+    },
+    {
+      group: "Parts",
+      key: '`Field orientation="horizontal"`, `FieldLabel`',
+      value: "The same parts",
+      note: "the row, at least 44px, is the Field's",
+    },
+    {
+      group: "Parts",
+      key: "`Field`, `FieldLabel`, `FieldError` round the group",
+      value: "The same parts",
+      note: "the group's name and its error",
+    },
+    {
+      group: "Look",
+      key: "`after:-inset-x-3 -inset-y-2`",
+      value: "The whole row",
+    },
+    {
+      group: "Look",
+      key: "An outlined circle",
+      value: "{primary} with a dot",
+      note: "as a checked box",
+    },
+    {
+      group: "Elsewhere",
+      key: "`className`",
+      value: "`style`",
+      note: "layout only",
+    },
+    {
+      group: "Elsewhere",
+      key: "Base UI",
+      value: "UI SDK",
+      note: "an agent can find and choose",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/radio-group.tsx"
+  type="RadioGroupProps"
+  label="RadioGroup props"
+/>
+
+Its `form`, `loop` and `controller` are UI SDK's, and pass through.
+
+### RadioGroupItem
+
+<Props
+  source="src/components/radio-group.tsx"
+  type="RadioGroupItemProps"
+  label="RadioGroupItem props"
+/>
+
+The rest of a `<button>` passes through.
+
+</Reference>

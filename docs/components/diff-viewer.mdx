@@ -1,0 +1,441 @@
+---
+title: Diff viewer
+description: A before-and-after view of changes, marked by line for code and by word for prose, for one file or several.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/diff-viewer"
+  use={
+    'import { DiffViewer, DiffViewerFiles } from "@grasp-os/ui/components/diff-viewer";'
+  }
+/>
+
+## Unified
+
+Each removed line over the one that replaced it; the words that changed are marked a step deeper. Every line says Added or Removed to a screen reader, as well as its colour and its plus or minus.
+
+<Stage path="diff-viewer/unified" label="Unified" />
+
+## Side by side
+
+Before on the left, after on the right, for a wide screen.
+
+<Stage path="diff-viewer/split" label="Side by side" />
+
+## Switching the view
+
+`mode` is the page's to switch: here a ToggleGroup between unified and side by side.
+
+<Stage path="diff-viewer/view" label="Switching the view" />
+
+## Hunks and whole lines
+
+For code read by people who know patches: `showHunkHeaders` puts a hunk's header, `@@ -12,7 +12,8 @@` as git writes it, before each run of lines, and `wrap={false}` keeps each line whole, the lines scrolling sideways inside the diff, never the page.
+
+<Stage path="diff-viewer/hunks" label="Hunks and whole lines" />
+
+## Review
+
+Accept or reject each change of an edit: it is taken at once, the row stays put, and Undo puts it back. `onDecisionChange` hears each.
+
+<Stage path="diff-viewer/review" label="Review" />
+
+## Prose
+
+`mode="inline"`: what was taken out is struck through, what was put in is underlined.
+
+<Stage path="diff-viewer/prose" label="Prose" />
+
+## A long file
+
+Unchanged stretches fold away; past `virtualizeThreshold` rows a long diff draws only the lines in view.
+
+<Stage path="diff-viewer/long" label="A long file" />
+
+## Several files
+
+`DiffViewerFiles`: each file under its own header, the folder quiet, the file's name strong, Added, Deleted or Modified in a Badge, and its lines added and removed. A file with no `oldValue` is new; one with no `newValue` is deleted. Its lines are DiffViewer's, unified, with a hunk's header before each run and long lines kept whole.
+
+<Stage path="diff-viewer/basic" label="Several files" />
+
+## A big file
+
+A file with more changed lines than `foldFrom` opens folded, so it does not bury the rest; its header, a Collapsible's trigger, opens it.
+
+<Stage path="diff-viewer/folded" label="A big file" />
+
+## Every state
+
+Hover and keyboard focus on a fold are forced from its own CSS.
+
+<States
+  path="diff-viewer/states"
+  column
+  cells={[
+    { label: "Added", props: { part: "added" } },
+    { label: "Removed", props: { part: "removed" } },
+    { label: "Changed words", props: { part: "words" } },
+    { label: "Folded", props: { part: "fold" } },
+    { label: "Folded, hover", force: "hover", props: { part: "fold" } },
+    {
+      label: "Folded, keyboard focus",
+      force: "focus-visible",
+      props: { part: "fold" },
+    },
+  ]}
+/>
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="diff-viewer"
+  always={[
+    "What changed in a file or a document, before and after; a person answering an edit, change by change.",
+    "A title that names the file or the document.",
+    "Several files in the order the person reads them: what they asked for first.",
+  ]}
+  never={[
+    "Code to read or copy, with nothing changed: use Code block.",
+    "A value that changed: say the old and the new in words, with Text.",
+    "Colour alone for added and removed: the marks, the words and the strike stay.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Box",
+      key: "Surface",
+      value: "{radius} up to {space-4}, the edge",
+      tokens: ["card", "border-strong"],
+    },
+    {
+      group: "Box",
+      key: "Head",
+      value:
+        "The title in Geist Mono, the counts at the end, a 1px hairline under it",
+      tokens: ["success", "destructive", "border"],
+    },
+    {
+      group: "Lines",
+      key: "Type",
+      value: "Geist Mono, {text-sm} / {text-sm-line}",
+      note: "long lines wrap",
+    },
+    {
+      group: "Lines",
+      key: "Numbers",
+      value: "{diff-viewer-number} each, before and after, never selected",
+      tokens: ["muted"],
+    },
+    {
+      group: "Lines",
+      key: "Mark",
+      value: "Plus or Minus, {icon-sm}, in {space-6}",
+      tokens: ["success", "destructive"],
+    },
+    {
+      group: "Lines",
+      key: "Added",
+      tokens: ["diff-viewer-added-bg", "diff-viewer-added-word"],
+    },
+    {
+      group: "Lines",
+      key: "Removed",
+      value: "Changed words also struck through",
+      tokens: ["diff-viewer-removed-bg", "diff-viewer-removed-word"],
+    },
+    {
+      group: "Folds",
+      key: "Run",
+      value: "A row, {text-sm}, an icon and the count",
+      tokens: ["diff-viewer-fold-bg", "muted"],
+    },
+    {
+      group: "Hunks",
+      key: "Head",
+      value:
+        "Geist Mono, {text-sm}, on the folds' band; it stays in view as the lines scroll sideways",
+      tokens: ["diff-viewer-fold-bg", "muted"],
+    },
+    {
+      group: "Side by side",
+      key: "Between",
+      value: "A 1px hairline; an empty side on the fold's ground",
+      tokens: ["border", "diff-viewer-fold-bg"],
+    },
+    {
+      group: "Review",
+      key: "Change head",
+      value: "Which change and its size, then Button's sm Reject and Accept",
+      tokens: ["diff-viewer-fold-bg"],
+    },
+    {
+      group: "Review",
+      key: "Result",
+      value: "Where Accept stood, as tall: the mark and word on a soft ground",
+      tokens: ["success-subtle", "destructive-subtle"],
+    },
+    {
+      group: "Review",
+      key: "Left behind",
+      value: "The side a decision drops, at {opacity-disabled}",
+    },
+    {
+      group: "Prose",
+      key: "Words",
+      value: "{text-base} / {text-base-line}",
+      note: "put in underlined, taken out struck through",
+    },
+    {
+      group: "Long",
+      key: "Height",
+      value: "Up to {diff-viewer-height}, then it scrolls inside",
+    },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    {
+      key: "Opening a fold",
+      value: "The lines take its place and fade in over {duration-mark}",
+      note: "at once with reduced motion",
+    },
+    {
+      key: "Deciding",
+      value:
+        "The answers cross-fade with the result over {duration-swap}; its mark, then its word",
+      note: "a fade alone with reduced motion",
+    },
+    {
+      key: "Fold, hover",
+      value: "Its ground one step deeper",
+      note: "pointer only",
+    },
+    { key: "Scrolling", value: "Native; only the lines in view are drawn" },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Lines",
+      key: "Changed",
+      value:
+        "A removed line beside the one added in its place is one line changed: its words are marked.",
+    },
+    {
+      group: "Lines",
+      key: "Long",
+      value:
+        "Wrap under their own start; with `wrap={false}` they stay whole and scroll sideways inside the diff, under the line numbers and marks, which stay at the start.",
+    },
+    {
+      group: "Hunks",
+      key: "`showHunkHeaders`",
+      value:
+        "A head before each run of shown lines, as git writes it; the count is left out when it is 1, and an empty side starts at the line before.",
+    },
+    {
+      group: "Folds",
+      key: "Context",
+      value:
+        "`contextLines` unchanged lines round each change; the rest fold; one line alone stays.",
+    },
+    {
+      group: "Folds",
+      key: "Opening",
+      value:
+        "Shows the run in place; by keys focus stays in the diff, a click leaves it alone.",
+    },
+    {
+      group: "Review",
+      key: "Answers",
+      value:
+        "Taken at once; Undo where Reject stood, the result where Accept stood. `onDecisionChange` hears each.",
+    },
+    {
+      group: "Long",
+      key: "Past `virtualizeThreshold`",
+      value:
+        "Draws only the lines in view, in a box that takes focus to scroll.",
+    },
+    { group: "Empty", key: "No change", value: "Says nothing changed." },
+    {
+      group: "Prose",
+      key: "`inline`",
+      value: "Word by word, in the flow of the text.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Role",
+      value:
+        "A `section` named by its title (else its counts), holding a `table` of rows",
+      note: "column heads for a screen reader",
+    },
+    { key: "Marks", value: "Said as Added and Removed, not only drawn" },
+    {
+      key: "Line numbers",
+      value: "Not selected with the code, so a copy is the code alone",
+    },
+    { key: "Counts", value: "Said as lines added and removed" },
+    {
+      key: "Hunk heads",
+      value: 'Said in words: "Lines 12 to 18 before, lines 12 to 19 after"',
+      note: "the `@@` text is hidden from a screen reader",
+    },
+    {
+      key: "Whole lines",
+      value: "The lines' box takes focus, so the keys scroll it sideways",
+    },
+    { key: "Prose", value: "`ins` and `del`, each said as Added or Removed" },
+    {
+      key: "Long",
+      value: "Every row keeps its place: `aria-rowcount` and `aria-rowindex`",
+    },
+    {
+      key: "Contrast",
+      value: "Words 4.5:1 on every tint, light and dark",
+      note: "checked by `node tokens/generate.ts --check`",
+    },
+  ]}
+/>
+
+<Rows
+  title="Several files: values"
+  rows={[
+    { group: "List", key: "Gap", value: "{space-3} between files" },
+    {
+      group: "List",
+      key: "Total",
+      value: "{text-sm}, the files changed, then the counts",
+      tokens: ["muted", "success", "destructive"],
+    },
+    {
+      group: "File",
+      key: "Box",
+      value: "DiffViewer's: {radius} up to {space-4}, the edge",
+      tokens: ["card", "border-strong"],
+    },
+    {
+      group: "File",
+      key: "Header",
+      value:
+        "{text-sm}, {space-2} by {space-3}; a 1px hairline under it while open",
+      tokens: ["border"],
+    },
+    {
+      group: "File",
+      key: "Path",
+      value:
+        "Geist Mono: the folder quiet and cut from its start, the name in {font-weight-medium}",
+      tokens: ["muted", "foreground"],
+    },
+    {
+      group: "File",
+      key: "Badge",
+      value:
+        "Badge, sm, default: the words alone; colour is only on the counts",
+    },
+    {
+      group: "File",
+      key: "Counts",
+      value: "+n and −n in {font-weight-medium}",
+      tokens: ["success", "destructive"],
+    },
+    {
+      group: "Lines",
+      key: "Form",
+      value:
+        "DiffViewer's, unified, `showHunkHeaders` and `wrap={false}` by default; the numbers and mark pinned at the start while the words scroll",
+    },
+  ]}
+/>
+<Rows
+  title="Several files: behaviour"
+  rows={[
+    {
+      group: "Files",
+      key: "Added",
+      value: "All its lines added, from an empty file.",
+    },
+    {
+      group: "Files",
+      key: "Deleted",
+      value: "All its lines removed, to an empty file.",
+    },
+    {
+      group: "Files",
+      key: "Counts",
+      value:
+        "Worked out from the two texts, on DiffViewer's line diff; none are given.",
+    },
+    {
+      group: "Folding",
+      key: "Header",
+      value: "Its whole row folds the file and opens it again.",
+    },
+    {
+      group: "Folding",
+      key: "`foldFrom`",
+      value: "A file past it opens folded.",
+    },
+    {
+      group: "Lines",
+      key: "Long",
+      value:
+        "Whole, scrolling sideways inside the file; the page never scrolls sideways.",
+    },
+    { group: "Empty", key: "No files", value: "Says no files changed." },
+  ]}
+/>
+<Rows
+  title="Several files: accessibility"
+  rows={[
+    {
+      key: "Role",
+      value:
+        'A `section` named by its total ("3 files changed"); each file a `section` named by its path',
+    },
+    {
+      key: "Header",
+      value:
+        "A Collapsible's trigger: `aria-expanded`, `aria-controls`, Enter and Space",
+    },
+    { key: "Badge", value: "Words in a Badge, not a colour alone" },
+    { key: "Counts", value: "Said as lines added and removed" },
+    {
+      key: "Lines",
+      value:
+        "DiffViewer's table, its hunk headers said in words, its lines' box focusable to scroll",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/diff-viewer.tsx"
+  type="DiffViewerProps"
+  label="DiffViewer props"
+/>
+<Props
+  source="src/components/diff-viewer.tsx"
+  type="DiffViewerFilesProps"
+  label="DiffViewerFiles props"
+/>
+
+</Reference>

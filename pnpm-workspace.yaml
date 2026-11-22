@@ -1,0 +1,85 @@
+# Supply-chain defaults, as in the product repo: new versions wait 3 days,
+# exotic sub-dependencies are blocked, and only the packages listed here may
+# run install scripts.
+minimumReleaseAge: 4320
+blockExoticSubdeps: true
+strictDepBuilds: true
+allowBuilds:
+  esbuild: true
+  sharp: false
+
+catalog:
+  # Tooling: the product repo's versions.
+  "@commitlint/cli": 21.2.3
+  "@commitlint/config-conventional": 21.2.3
+  "@secretlint/secretlint-rule-preset-recommend": 13.0.5
+  "@shadcn/lint": 0.1.5
+  "@types/node": 26.6.2
+  secretlint: 13.0.5
+  typescript: 7.0.2
+  ultracite: 7.12.0
+  vite: npm:@voidzero-dev/vite-plus-core@0.3.3
+  vite-plus: 0.3.3
+  # Vite+'s own oxlint and oxfmt, as vite-plus pins them. They move with
+  # vite-plus.
+  oxfmt: 0.68.0
+  oxlint: 1.83.0
+  vitest: 4.1.11
+  # The registry build and the words check read TypeScript through its
+  # JavaScript API, which TypeScript 7 has none of.
+  typescript6: npm:typescript@6.0.3
+
+  # The docs site.
+  "@astrojs/mdx": 8.1.5
+  "@astrojs/react": 7.1.8
+  acorn: 8.19.0
+  astro: 7.4.11
+  github-slugger: 2.0.0
+  lightningcss: 1.33.0
+  # @astrojs/react's optional peer for react({ compiler: true }).
+  oxc-transform-react: 0.145.0
+  postcss: 8.5.32
+  satteri: 0.11.7
+  shiki: 4.6.0
+  yaml: 2.9.1
+
+  # The components.
+  "@hugeicons/core-free-icons": 4.4.0
+  "@hugeicons/react": 1.1.10
+  "@stylexjs/stylex": 0.19.2
+  "@tanstack/react-table": 9.3.1
+  "@ui-sdk/core": 0.1.0-beta.13
+  "@ui-sdk/react": 0.1.0-beta.13
+  mdast-util-from-markdown: 2.0.3
+  mdast-util-gfm: 3.1.0
+  micromark-extension-gfm: 3.0.0
+  prismjs: 1.30.0
+  react: 19.3.1
+  react-dom: 19.3.1
+  react-is: 19.3.1
+  recharts: 3.10.1
+  "@types/mdast": 4.0.4
+  "@types/prismjs": 1.26.6
+  "@types/react": 19.3.0
+  "@types/react-dom": 19.3.0
+
+  # Build-time compilers: StyleX's Babel plugin and the React Compiler, as
+  # the product builds the components.
+  "@babel/core": 7.29.13
+  "@types/babel__core": 7.20.5
+  "@stylexjs/babel-plugin": 0.19.2
+  "@stylexjs/unplugin": 0.19.2
+  babel-plugin-react-compiler: 1.0.0
+  "@playwright/test": 1.65.0
+  shadcn: 4.23.0
+
+# Vite+ replaces Vite and pins Vitest for every package.
+overrides:
+  vite: "catalog:"
+  vitest: "catalog:"
+  # One mdast-util-from-markdown, the one the components pin.
+  mdast-util-from-markdown: "catalog:"
+
+peerDependencyRules:
+  allowedVersions:
+    vite: "*"
