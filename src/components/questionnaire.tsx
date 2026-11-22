@@ -28,7 +28,11 @@
 // time, in the page's order: QuestionnairePrevious and QuestionnaireNext move between them, and
 // QuestionnaireProgress says where the person is. Each item is a fieldset named by its title; its
 // choices are radios, or checkboxes with `multiple`, each named by its words and described by its
-// description. 1 to 9 pick the first nine (or A to Z, `shortcuts="letters"`); Enter on a choice
+// description. A choice is a card: the key that picks it stands boxed at its start, where the
+// control is (RadioGroup's or Checkbox's own, unseen under it), and chosen the box fills and a tick
+// stands at the card's end. Beside choices the QuestionnaireInput is one more card, a plus at its
+// start. 1 to 9 pick the first nine (or A to Z, `shortcuts="letters"`), the key after the last
+// choice the words of one's own; Enter on a choice
 // or in the words goes on, as Next or Submit does; Cmd or Ctrl+Enter goes on from anywhere in it;
 // the left and right arrows go back and on, away from a radio or the words. Next and Submit wait
 // until the item is answered, or skipped. `onSubmit` may return a Promise: Submit works until it
@@ -50,7 +54,13 @@ import {
 import type { KeyboardEvent, MouseEvent, ReactNode } from "react";
 
 import { useI18n } from "../lib/i18n";
-import { CircleAlertIcon, CircleCheckIcon, Icon } from "../lib/icons";
+import {
+  CheckIcon,
+  CircleAlertIcon,
+  CircleCheckIcon,
+  Icon,
+  PlusIcon,
+} from "../lib/icons";
 import { focusRingText, focusWithin } from "../lib/styles";
 import {
   colors,
@@ -121,8 +131,8 @@ export interface QuestionnaireProps {
    */
   items?: readonly QuestionnaireItemDefinition[];
   /**
-   * The keys that pick a choice: `numbers` 1 to 9, `letters` A to Z. Each choice shows its key at
-   * its end, but on a touch screen.
+   * The keys that pick a choice: `numbers` 1 to 9, `letters` A to Z. Each choice shows its key
+   * boxed at its start.
    * @default "numbers"
    */
   shortcuts?: "letters" | "numbers";
@@ -134,6 +144,8 @@ export interface QuestionnaireProps {
 
 /** Every prop a QuestionnaireProgress takes. */
 export interface QuestionnaireProgressProps {
+  /** What the run is, in a word or two at the head's start ("Questions"). */
+  children?: ReactNode;
   /**
    * Its name for a screen reader.
    * @default "Progress" (`questionnaire.progressLabel`)
@@ -275,12 +287,12 @@ export interface QuestionnaireNavigationProps {
   children?: ReactNode;
   /**
    * The button's look.
-   * @default "outline" for Previous and Skip, "default" for Next and Submit
+   * @default "outline" for Previous, "ghost" for Skip, "default" for Next and Submit
    */
   variant?: ButtonVariant;
   /**
    * The button's size.
-   * @default "default"
+   * @default "sm"
    */
   size?: "xs" | "sm" | "default" | "lg";
   /** Runs first when it is pressed; `event.preventDefault()` keeps it from doing its own work. */
@@ -319,11 +331,20 @@ const styles = stylex.create({
     color: colors.foreground,
     fontFamily: font.sans,
   },
+  // The head's first line: what the run is at its start, the person's place at its end. It stands
+  // a small step over the question, not the root's whole gap.
   progress: {
+    display: "flex",
+    justifyContent: "space-between",
+    gap: space["2"],
     margin: 0,
-    fontSize: font.textSm,
-    lineHeight: font.textSmLine,
+    marginBlockEnd: `calc(${space["1"]} - ${space["4"]})`,
+    fontSize: font.textXs,
+    lineHeight: font.textXsLine,
     color: colors.mutedForeground,
+  },
+  place: {
+    marginInlineStart: "auto",
     fontVariantNumeric: "tabular-nums",
   },
   // One item: the root's rhythm inside it. Hidden while another item shows.
@@ -374,10 +395,10 @@ const styles = stylex.create({
       [TWO]: "repeat(2, minmax(0, 1fr))",
     },
   },
-  // A choice is a card: the whole card is the target, at least a finger tall. Under a pointer its
-  // edge strengthens; chosen, it takes the quiet fill, so it never rests on the control alone.
-  // Every card is as tall as the tallest: a card of one line stands its words in the middle, so
-  // its height never reads as an empty second line.
+  // A choice is a card: its own surface with a low lift, the whole card the target, at least a
+  // finger tall. Under a pointer its edge strengthens; pressed, the shared press scale; chosen, the
+  // quiet fill, its mark filled and a tick at its end, so it never rests on colour alone. Every
+  // card is as tall as the tallest: a card of one line stands its words in the middle.
   choice: {
     position: "relative",
     display: "flex",
@@ -386,9 +407,7 @@ const styles = stylex.create({
     boxSizing: "border-box",
     minWidth: 0,
     minHeight: size.tapTarget,
-    // On a touch screen a step more round the control, so a finger a little off it still lands
-    // on its card.
-    padding: { default: space["3"], [COARSE]: space["4"] },
+    padding: space["3"],
     borderWidth: { default: 0, [FORCED]: 1 },
     borderStyle: "solid",
     borderColor: "currentColor",
@@ -399,16 +418,19 @@ const styles = stylex.create({
       ":has([aria-checked=true])": colors.accent,
     },
     boxShadow: {
-      default: `inset 0 0 0 ${size.hairline} ${colors.border}`,
+      default: shadow.sm,
       ":hover": {
         default: null,
-        [HOVER]: `inset 0 0 0 ${size.hairline} ${colors.controlBorderHover}`,
+        [HOVER]: `inset 0 0 0 ${size.hairline} ${colors.controlBorderHover}, ${shadow.sm}`,
       },
-      ":has([aria-checked=true])": `inset 0 0 0 ${size.hairline} ${colors.controlBorderHover}`,
+    },
+    transform: {
+      default: "none",
+      ":active:not(:has(input:focus))": `scale(${size.buttonPressScale})`,
     },
     cursor: "pointer",
     counterIncrement: "questionnaire-choice",
-    transitionProperty: "box-shadow, background-color",
+    transitionProperty: "box-shadow, background-color, transform",
     transitionDuration: motionVars.hover,
     transitionTimingFunction: duration.ease,
   },
@@ -416,12 +438,76 @@ const styles = stylex.create({
     opacity: size.opacityDisabled,
     cursor: "not-allowed",
   },
-  // The control's line, the height of the words' first line.
+  // The words of one's own, beside choices: one more card, a small step under them, not the
+  // item's whole gap; filled like a chosen one while it holds words.
+  own: {
+    marginBlockStart: `calc(${space["2"]} - ${space["4"]})`,
+    backgroundColor: {
+      default: colors.card,
+      ":has(input[type=text]:not(:placeholder-shown))": colors.accent,
+    },
+    cursor: "text",
+  },
+  // The mark's line, the height of the words' first line.
   control: {
     display: "flex",
     alignItems: "center",
     flexShrink: 0,
     height: font.textSmLine,
+  },
+  // The mark: the key that picks the choice, boxed as a Kbd is, where the control stands. A pointer
+  // anywhere on the card lifts it a step; chosen, it takes the main fill, under a pointer too (so
+  // written under the hover's media query as well, which would outrank it).
+  mark: {
+    position: "relative",
+    display: "inline-grid",
+    placeItems: "center",
+    flexShrink: 0,
+    boxSizing: "border-box",
+    width: size.kbdHeight,
+    height: size.kbdHeight,
+    borderWidth: { default: 0, [FORCED]: 1 },
+    borderStyle: "solid",
+    borderColor: "currentColor",
+    borderRadius: radius.mark,
+    cornerShape: radius.shape,
+    backgroundColor: {
+      default: colors.secondary,
+      [stylex.when.ancestor(":hover")]: {
+        default: null,
+        [HOVER]: colors.secondaryHover,
+      },
+      [stylex.when.ancestor(
+        ":has(:is([aria-checked=true], input[type=text]:not(:placeholder-shown)))"
+      )]: { default: colors.primary, [HOVER]: colors.primary },
+    },
+    boxShadow: size.borderStrong,
+    color: {
+      default: colors.mutedForeground,
+      [stylex.when.ancestor(":hover")]: {
+        default: null,
+        [HOVER]: colors.foreground,
+      },
+      [stylex.when.ancestor(
+        ":has(:is([aria-checked=true], input[type=text]:not(:placeholder-shown)))"
+      )]: {
+        default: colors.primaryForeground,
+        [HOVER]: colors.primaryForeground,
+      },
+    },
+    fontSize: font.textXs,
+    lineHeight: 1,
+    fontWeight: font.weightMedium,
+    fontVariantNumeric: "tabular-nums",
+  },
+  // RadioGroup's or Checkbox's own control, unseen over the mark: it keeps the role, the state,
+  // the keys and the press; the mark is what it looks like here.
+  unseen: {
+    position: "absolute",
+    inset: 0,
+    display: "grid",
+    placeItems: "center",
+    opacity: 0,
   },
   words: {
     display: "grid",
@@ -442,14 +528,21 @@ const styles = stylex.create({
     color: colors.foreground,
     overflowWrap: "anywhere",
   },
-  // The assistant's recommended choice: a quiet word after its label, never a coloured badge.
+  // The assistant's recommended choice: a quiet word after its label, on the quiet fill with the
+  // system's edge, never a coloured badge.
   recommended: {
     paddingInline: space["1"],
+    borderWidth: { default: 0, [FORCED]: 1 },
+    borderStyle: "solid",
+    borderColor: "currentColor",
     borderRadius: radius.mark,
-    backgroundColor: colors.muted,
+    cornerShape: radius.shape,
+    backgroundColor: colors.secondary,
+    boxShadow: size.borderStrong,
     color: colors.mutedForeground,
     fontSize: font.textXs,
     lineHeight: font.textXsLine,
+    fontWeight: font.weightNormal,
     whiteSpace: "nowrap",
   },
   choiceDescription: {
@@ -458,19 +551,11 @@ const styles = stylex.create({
     color: colors.mutedForeground,
     overflowWrap: "anywhere",
   },
-  // The key that picks it, quiet at its end; none past the last key, nor on a touch screen.
-  shortcut: {
-    flexShrink: 0,
-    color: colors.subtleForeground,
-    fontSize: font.textXs,
-    lineHeight: font.textSmLine,
-    fontVariantNumeric: "tabular-nums",
-  },
+  // The key in the mark: its number or letter while there is a key for it, a tick past the last.
   numbers: {
     display: {
       default: null,
       [stylex.when.ancestor(":nth-child(n + 10)")]: "none",
-      [COARSE]: "none",
     },
     "::before": {
       content: "counter(questionnaire-choice)",
@@ -480,11 +565,56 @@ const styles = stylex.create({
     display: {
       default: null,
       [stylex.when.ancestor(":nth-child(n + 27)")]: "none",
-      [COARSE]: "none",
     },
     "::before": {
       content: "counter(questionnaire-choice, upper-alpha)",
     },
+  },
+  pastNumbers: {
+    display: {
+      default: "none",
+      [stylex.when.ancestor(":nth-child(n + 10)")]: "flex",
+    },
+  },
+  pastLetters: {
+    display: {
+      default: "none",
+      [stylex.when.ancestor(":nth-child(n + 27)")]: "flex",
+    },
+  },
+  // The tick at a chosen card's end. Its room is kept at rest, so choosing never moves the words.
+  tick: {
+    display: "flex",
+    flexShrink: 0,
+    marginInlineStart: "auto",
+    color: colors.foreground,
+    visibility: {
+      default: "hidden",
+      [stylex.when.ancestor(":has([aria-checked=true])")]: "visible",
+    },
+  },
+  // The words of one's own, written in their card: bare, as the choices' words are.
+  ownInput: {
+    flexGrow: 1,
+    minWidth: 0,
+    minHeight: { default: 0, [COARSE]: size.tapTarget },
+    margin: 0,
+    padding: 0,
+    appearance: "none",
+    borderWidth: 0,
+    backgroundColor: "transparent",
+    outline: "none",
+    color: colors.foreground,
+    caretColor: colors.foreground,
+    fontFamily: font.sans,
+    // 16px on a phone or a touch screen, or Safari zooms the page in when the field takes focus.
+    fontSize: {
+      default: font.textSm,
+      [media.maxSmOrCoarse]: size.inputTextTouch,
+    },
+    lineHeight: font.textSmLine,
+    fontWeight: font.weightMedium,
+    "::placeholder": { color: colors.mutedForeground, opacity: 1 },
   },
   actions: {
     display: "flex",
@@ -889,8 +1019,22 @@ export const Questionnaire = ({
       shortcuts === "letters" ? "abcdefghijklmnopqrstuvwxyz" : "123456789";
     const index =
       event.key.length === 1 ? keys.indexOf(event.key.toLowerCase()) : -1;
-    const choice = choicesIn(entries.get(shown)?.element)[index];
+    const choices = choicesIn(entries.get(shown)?.element);
+    const choice = choices[index];
     const picked = choice?.dataset.value;
+    if (index === choices.length) {
+      // The key after the last choice: the words of one's own, beside them.
+      const own = entries
+        .get(shown)
+        ?.element.querySelector<HTMLElement>(
+          "[data-slot=questionnaire-input] input"
+        );
+      if (own !== null && own !== undefined) {
+        event.preventDefault();
+        own.focus();
+      }
+      return;
+    }
     if (index === -1 || choice === undefined || picked === undefined) {
       return;
     }
@@ -1079,8 +1223,13 @@ export const Questionnaire = ({
   );
 };
 
-/** Where the person is in the run: "Question 2 of 3", a progress bar to a screen reader. Gone once sent. */
+/**
+ * The head's first line: what the run is at its start ("Questions"), and at its end where the
+ * person is in it ("2 of 3"), a progress bar to a screen reader ("Question 2 of 3"). A run of one
+ * question shows no place. Gone once sent.
+ */
 export const QuestionnaireProgress = ({
+  children,
   "aria-label": named,
   style,
 }: QuestionnaireProgressProps) => {
@@ -1102,7 +1251,12 @@ export const QuestionnaireProgress = ({
       data-slot="questionnaire-progress"
       {...stylex.props(styles.progress, style)}
     >
-      {words.progress(current, total)}
+      {children !== undefined && <span>{children}</span>}
+      {total > 1 && (
+        <span {...stylex.props(styles.place)}>
+          {words.step(current, total)}
+        </span>
+      )}
     </p>
   );
 };
@@ -1292,7 +1446,7 @@ export const QuestionnaireChoiceDescription = ({
   </span>
 );
 
-/** One choice: a card the whole of which chooses it, its control at the start, its key at the end. */
+/** One choice: a card the whole of which chooses it, its key boxed at the start, a tick at the end once chosen. */
 export const QuestionnaireChoice = ({
   value,
   children,
@@ -1363,11 +1517,32 @@ export const QuestionnaireChoice = ({
       )}
     >
       <span {...stylex.props(styles.control)}>
-        {multiple ? (
-          <Checkbox value={value} disabled={disabled} {...wiring} />
-        ) : (
-          <RadioGroupItem value={value} disabled={disabled} {...wiring} />
-        )}
+        <span
+          data-slot="questionnaire-choice-mark"
+          {...stylex.props(styles.mark)}
+        >
+          <span {...stylex.props(styles.unseen)}>
+            {multiple ? (
+              <Checkbox value={value} disabled={disabled} {...wiring} />
+            ) : (
+              <RadioGroupItem value={value} disabled={disabled} {...wiring} />
+            )}
+          </span>
+          <span
+            aria-hidden="true"
+            {...stylex.props(
+              shortcuts === "letters" ? styles.letters : styles.numbers
+            )}
+          />
+          <span
+            aria-hidden="true"
+            {...stylex.props(
+              shortcuts === "letters" ? styles.pastLetters : styles.pastNumbers
+            )}
+          >
+            <Icon icon={CheckIcon} />
+          </span>
+        </span>
       </span>
       <span {...stylex.props(styles.words)}>
         <span {...stylex.props(styles.labelLine)}>
@@ -1386,22 +1561,18 @@ export const QuestionnaireChoice = ({
           </ChoiceDescriptionContext>
         )}
       </span>
-      <span
-        aria-hidden="true"
-        data-slot="questionnaire-choice-shortcut"
-        {...stylex.props(
-          styles.shortcut,
-          shortcuts === "letters" ? styles.letters : styles.numbers
-        )}
-      />
+      <span aria-hidden="true" {...stylex.props(styles.tick)}>
+        <Icon icon={CircleCheckIcon} />
+      </span>
     </label>
   );
 };
 
 /**
  * The person's own words: alone in its item the answer itself, named by the title; beside choices
- * an answer of their own, named Other, which takes a single choice's place. Enter goes on;
- * Shift+Enter starts a line. Put it after the QuestionnaireChoices. Gone once sent.
+ * an answer of their own, named Other, one more card under them with a plus at its start, which
+ * takes a single choice's place. Enter goes on; alone, Shift+Enter starts a line. Put it after the
+ * QuestionnaireChoices. Gone once sent.
  */
 export const QuestionnaireInput = ({
   placeholder,
@@ -1437,24 +1608,62 @@ export const QuestionnaireInput = ({
     return null;
   }
   const { values, text } = answerOf(name);
-  const alone = !hasChoices;
+  const write = (written: string) => {
+    // One choice is one answer: words of one's own take the chosen choice's place.
+    const clear = !multiple && written.trim() !== "" && values.length > 0;
+    answer(name, {
+      text: written,
+      skipped: false,
+      ...(clear ? { values: [] } : {}),
+    });
+  };
+  if (hasChoices) {
+    return (
+      <label
+        data-slot="questionnaire-input"
+        {...stylex.props(
+          stylex.defaultMarker(),
+          styles.choice,
+          styles.own,
+          focusWithin
+        )}
+      >
+        <span aria-hidden="true" {...stylex.props(styles.control)}>
+          <span {...stylex.props(styles.mark)}>
+            <Icon icon={PlusIcon} />
+          </span>
+        </span>
+        <input
+          type="text"
+          aria-label={named ?? words.other}
+          // A space when there is none: the card reads its placeholder to know it is empty.
+          placeholder={placeholder ?? words.other}
+          value={text}
+          onChange={(event) => {
+            write(event.currentTarget.value);
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" && !event.nativeEvent.isComposing) {
+              // Not also the form round it (a PromptInput's).
+              event.preventDefault();
+              event.stopPropagation();
+              forward();
+            }
+          }}
+          {...stylex.props(styles.ownInput)}
+        />
+      </label>
+    );
+  }
   return (
     <div data-slot="questionnaire-input">
       <Textarea
-        aria-label={alone ? named : (named ?? words.other)}
-        aria-labelledby={alone && named === undefined ? titleId : undefined}
-        placeholder={placeholder ?? (alone ? undefined : words.other)}
-        rows={alone ? 2 : 1}
+        aria-label={named}
+        aria-labelledby={named === undefined ? titleId : undefined}
+        placeholder={placeholder}
+        rows={2}
         value={text}
-        onValueChange={(written: string) => {
-          // One choice is one answer: words of one's own take the chosen choice's place.
-          const clear = !multiple && written.trim() !== "" && values.length > 0;
-          answer(name, {
-            text: written,
-            skipped: false,
-            ...(clear ? { values: [] } : {}),
-          });
-        }}
+        onValueChange={write}
         submitShortcut="enter"
         onSubmit={forward}
       />
@@ -1502,7 +1711,7 @@ export const QuestionnaireActions = ({
 export const QuestionnairePrevious = ({
   children,
   variant = "outline",
-  size: sized = "default",
+  size: sized = "sm",
   onClick,
 }: QuestionnaireNavigationProps) => {
   const { order, active, previous } = useQuestionnaire("QuestionnairePrevious");
@@ -1533,8 +1742,8 @@ export const QuestionnairePrevious = ({
 /** Skips the item: it is left out of the answers, and the next item shows. Only on an item not required. */
 export const QuestionnaireSkip = ({
   children,
-  variant = "outline",
-  size: sized = "default",
+  variant = "ghost",
+  size: sized = "sm",
   onClick,
 }: QuestionnaireNavigationProps) => {
   const { active, requiredOf, skip } = useQuestionnaire("QuestionnaireSkip");
@@ -1566,7 +1775,7 @@ export const QuestionnaireSkip = ({
 export const QuestionnaireNext = ({
   children,
   variant = "default",
-  size: sized = "default",
+  size: sized = "sm",
   onClick,
 }: QuestionnaireNavigationProps) => {
   const { order, active, statusOf, forward } =
@@ -1604,7 +1813,7 @@ export const QuestionnaireNext = ({
 export const QuestionnaireSubmit = ({
   children,
   variant = "default",
-  size: sized = "default",
+  size: sized = "sm",
   onClick,
 }: QuestionnaireNavigationProps) => {
   const { order, active, statusOf, submit, sending } = useQuestionnaire(

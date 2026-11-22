@@ -5,7 +5,9 @@ import {
   QuestionnaireActions,
   QuestionnaireChoice,
   QuestionnaireChoices,
+  QuestionnaireInput,
   QuestionnaireItem,
+  QuestionnaireProgress,
   QuestionnaireSubmit,
   QuestionnaireTitle,
 } from "@grasp-os/ui/components/questionnaire";
@@ -25,6 +27,7 @@ const teams = [
 export default function QuestionnaireColumns() {
   return (
     <Questionnaire onSubmit={() => undefined} style={layout.column}>
+      <QuestionnaireProgress>Question</QuestionnaireProgress>
       <QuestionnaireItem name="teams" multiple required>
         <QuestionnaireTitle>
           Which teams should get the summary?
@@ -36,6 +39,7 @@ export default function QuestionnaireColumns() {
             </QuestionnaireChoice>
           ))}
         </QuestionnaireChoices>
+        <QuestionnaireInput />
       </QuestionnaireItem>
       <QuestionnaireActions>
         <QuestionnaireSubmit />
