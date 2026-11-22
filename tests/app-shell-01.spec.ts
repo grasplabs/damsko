@@ -179,3 +179,36 @@ test("right to left, the sidebar stands at the right and the panel at the left",
   expect(sidebar?.x ?? 0).toBeGreaterThan(heading?.x ?? 0);
   expect(panel?.x ?? 0).toBeLessThan(heading?.x ?? 0);
 });
+
+for (const [theme, ground, card] of [
+  ["light", "oklch(0.957 0 0)", "oklch(1 0 0)"],
+  ["dark", "oklch(0.18 0 0)", "oklch(0.215 0 0)"],
+] as const) {
+  test(`${theme}: the page is a card on the sidebar's neutral ground, 6px in on every side`, async ({
+    page,
+  }) => {
+    await openExample(page, "app-shell-01", "basic", { theme });
+    const sidebar = page.getByRole("complementary", { name: "Sidebar" });
+    const main = page.getByRole("main");
+    await expect(main).toHaveCSS("background-color", card);
+    await expect(main).toHaveCSS("box-shadow", "none");
+    // The ground under the card is the sidebar's own.
+    await expect(main.locator("..")).toHaveCSS("background-color", ground);
+    const aside = await sidebar.boundingBox();
+    const page_ = await main.boundingBox();
+    const shell = await main.locator("..").boundingBox();
+    if (aside === null || page_ === null || shell === null) {
+      throw new Error("The shell has no box.");
+    }
+    expect(page_.x - (aside.x + aside.width)).toBe(6);
+    expect(page_.y - shell.y).toBe(6);
+    expect(shell.x + shell.width - (page_.x + page_.width)).toBe(6);
+    expect(shell.y + shell.height - (page_.y + page_.height)).toBe(6);
+    // The rows reach 8px from the sidebar's edges: nothing stands between it and the window.
+    const row = await sidebar
+      .getByRole("link", { name: "Projects" })
+      .boundingBox();
+    expect((row?.x ?? 0) - aside.x).toBe(8);
+    expect(aside.width - (row?.width ?? 0)).toBe(16);
+  });
+}

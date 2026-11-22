@@ -905,12 +905,14 @@
   --damsko-sidebar-width: 15rem;
   /* The width of a sidebar folded to its icons. */
   --damsko-sidebar-rail-width: 56px;
-  /* The sidebar's ground, a step back from the page. */
-  --damsko-sidebar: var(--damsko-muted);
+  /* The sidebar's ground, which the page's card stands on. */
+  --damsko-sidebar: light-dark(oklch(0.957 0 0), oklch(0.18 0 0));
   /* The height of a row, as Button's small one. */
   --damsko-sidebar-menu-button-height: var(--damsko-control-sm);
-  /* The row of the page you are on, raised with the edge. */
-  --damsko-sidebar-accent: var(--damsko-card);
+  /* The height of a large row: a picture and two lines (a person, a workspace). */
+  --damsko-sidebar-menu-button-height-lg: 46px;
+  /* The row of the page you are on: ink laid flat over the ground. */
+  --damsko-sidebar-accent: light-dark(oklch(0 0 0 / 0.05), oklch(1 0 0 / 0.07));
   /* Sidebar: sidebar colours. */
   /* The page's card on the ground. */
   --damsko-sidebar-card: light-dark(oklch(1 0 0), oklch(0.215 0 0));
@@ -922,10 +924,10 @@
   --damsko-sidebar-text: light-dark(oklch(0.269 0 0), oklch(0.96 0 0));
   /* The rows' words and their icons. */
   --damsko-sidebar-text-secondary: light-dark(oklch(0.52 0 0), oklch(0.72 0 0));
-  /* Labels over the rows' groups. */
+  /* A mark quieter than the rows' words: the chevrons at the end of a person's row. */
   --damsko-sidebar-text-tertiary: light-dark(oklch(0.64 0 0), oklch(0.6 0 0));
-  /* The card lifting off the ground by a hair, with a faint ring round it. */
-  --damsko-sidebar-card-shadow: 0 4px 4px 0 oklch(0 0 0 / 0.02), 0 4px 80px 8px oklch(0 0 0 / 0.02), 0 0 0 1px light-dark(oklch(0 0 0 / 0.05), oklch(1 0 0 / 0.08));
+  /* The line drawn inside the page card's edge, round every corner; the card has no lift. */
+  --damsko-sidebar-card-border: light-dark(oklch(0 0 0 / 0.1), oklch(1 0 0 / 0.1));
   /* Sidebar: sidebar sizes. */
   /* The room between two rows. */
   --damsko-sidebar-row-gap: 2px;
@@ -935,16 +937,22 @@
   --damsko-sidebar-icon-gap: 10px;
   /* A row's icon. */
   --damsko-sidebar-icon: 16px;
-  /* The width of the Sidebar's tree guide, the stem and branches of its nested rows, and a Tree's (tree-guide): a hairline, as the product drew it. */
-  --damsko-sidebar-guide: var(--damsko-hairline);
   /* A button that is only an icon in the frame (the sidebar's toggle). */
   --damsko-sidebar-icon-button: var(--damsko-control-xs);
   /* A row's corner. */
   --damsko-sidebar-radius: 6px;
+  /* A large row's corner. */
+  --damsko-sidebar-radius-lg: 10px;
   /* The page card's corner. */
   --damsko-sidebar-card-radius: 12px;
+  /* The room round the page's card, on the sidebar's ground. */
+  --damsko-sidebar-card-gap: 6px;
   /* The rows' letter spacing: a hair tighter than set. */
   --damsko-sidebar-tracking: -0.01em;
+  /* The line height of a large row's first line: the person's name at the sidebar's foot. */
+  --damsko-sidebar-name-line: 1.125rem;
+  /* The line height of a large row's second line: the organisation under the person's name. */
+  --damsko-sidebar-note-line: 1rem;
   /* A row's count: its padding at the sides. */
   --damsko-sidebar-count-inline: 5px;
   /* App shell: app shell. */
@@ -1071,8 +1079,8 @@
   --damsko-tree-view-text: var(--damsko-body-foreground);
   /* The room between a tree row's chevron, icon and words. */
   --damsko-tree-view-icon-gap: var(--damsko-space-2);
-  /* The width of a tree's guide (`guides`): its stem and elbows, the Sidebar's own. */
-  --damsko-tree-view-guide: var(--damsko-sidebar-guide);
+  /* The width of a tree's guide (`guides`): its stem and elbows, a hairline. */
+  --damsko-tree-view-guide: var(--damsko-hairline);
   /* A tree row's chevron and icon: quieter than its words, unless a host draws them in the words' colour (a sidebar does). */
   --damsko-tree-view-icon: var(--damsko-muted-foreground);
   /* A tree row's words under a pointer: as they stand, unless a host brightens them (a sidebar does). */

@@ -425,7 +425,7 @@ export default function ChatsWindow({
                       <SidebarMenuButton asChild>
                         <a href={`#${place.id}`}>
                           <Icon icon={place.icon} />
-                          <span>{place.name}</span>
+                          {place.name}
                         </a>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -447,7 +447,7 @@ export default function ChatsWindow({
                           }}
                         >
                           <Icon icon={MessageSquareIcon} />
-                          <span>{chat.title}</span>
+                          {chat.title}
                           {chat.working === true && <AgentIndicator />}
                         </a>
                       </SidebarMenuButton>
@@ -459,7 +459,7 @@ export default function ChatsWindow({
                         setOpen(true);
                       }}
                     >
-                      <span>All chats</span>
+                      All chats
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 </SidebarMenu>

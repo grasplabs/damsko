@@ -549,7 +549,7 @@ const ChatSidebar = ({ current }: { current: string }) => (
             <SidebarMenuButton asChild>
               <a href="#home">
                 <Icon icon={HouseIcon} />
-                <span>Home</span>
+                Home
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -557,7 +557,7 @@ const ChatSidebar = ({ current }: { current: string }) => (
             <SidebarMenuButton asChild>
               <a href="#inbox">
                 <Icon icon={InboxIcon} />
-                <span>Inbox</span>
+                Inbox
               </a>
             </SidebarMenuButton>
             <SidebarMenuBadge>2</SidebarMenuBadge>
@@ -566,7 +566,7 @@ const ChatSidebar = ({ current }: { current: string }) => (
             <SidebarMenuButton asChild>
               <a href="#projects">
                 <Icon icon={FolderKanbanIcon} />
-                <span>Projects</span>
+                Projects
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -582,7 +582,7 @@ const ChatSidebar = ({ current }: { current: string }) => (
               <SidebarMenuButton asChild isActive={chat.id === current}>
                 <a href={`#chat-${chat.id}`}>
                   <Icon icon={MessageSquareIcon} />
-                  <span>{chat.title}</span>
+                  {chat.title}
                   {chat.working === true && <AgentIndicator />}
                 </a>
               </SidebarMenuButton>
@@ -590,9 +590,7 @@ const ChatSidebar = ({ current }: { current: string }) => (
           ))}
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
-              <a href="#chats">
-                <span>All chats</span>
-              </a>
+              <a href="#chats">All chats</a>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

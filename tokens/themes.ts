@@ -10,7 +10,7 @@
 //
 // The brand's colours, the status colours and the app shell's own greys are never moved: the light
 // is Grasp's in every theme (tokens/generate.ts). Each theme's block restates every colour token, so
-// references like `sidebar: {muted}` follow the theme on any subtree.
+// references like `tree-view-guide: {hairline}` follow the theme on any subtree.
 
 /** A colour value for one token, light and dark, in oklch(). */
 export interface ThemeColour {

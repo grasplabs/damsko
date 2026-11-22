@@ -114,7 +114,7 @@ export default function SidebarGroups() {
                                 href={`#${row.toLowerCase().replaceAll(" ", "-")}`}
                               >
                                 <Icon icon={FolderIcon} />
-                                <span>{row}</span>
+                                {row}
                               </a>
                             </SidebarMenuButton>
                           </SidebarMenuItem>
