@@ -271,6 +271,15 @@ const styles = stylex.create({
     overflow: "hidden",
     textOverflow: "ellipsis",
   },
+  // A step that leads nowhere, last on its path (a file's name in a path): where the path ends, in
+  // the page's ink and weight, though it is not the page you are on.
+  end: {
+    color: {
+      default: colors.mutedForeground,
+      ":is(li:last-child > *)": colors.foreground,
+    },
+    fontWeight: { default: null, ":is(li:last-child > *)": font.weightMedium },
+  },
   page: {
     display: "block",
     minWidth: 0,
@@ -507,7 +516,10 @@ export const BreadcrumbLink = ({
   );
   if (own === undefined && href === undefined) {
     return (
-      <span data-slot="breadcrumb-link" {...stylex.props(styles.link, style)}>
+      <span
+        data-slot="breadcrumb-link"
+        {...stylex.props(styles.link, styles.end, style)}
+      >
         {content}
       </span>
     );

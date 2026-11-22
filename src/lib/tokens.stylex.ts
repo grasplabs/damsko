@@ -480,6 +480,7 @@ export const size = stylex.defineConsts({
   swapScale: "var(--damsko-swap-scale)",
   resultMarkFrom: "var(--damsko-result-mark-from)",
   resultShift: "var(--damsko-result-shift)",
+  resultShake: "var(--damsko-result-shake)",
   // Fields: fields.
   inputInvalid: "var(--damsko-input-invalid)",
   inputFocus: "var(--damsko-input-focus)",
@@ -681,6 +682,7 @@ export const size = stylex.defineConsts({
   formColumn: "var(--damsko-form-column)",
   formWidth: "var(--damsko-form-width)",
   itemGridTile: "var(--damsko-item-grid-tile)",
+  connectTile: "var(--damsko-connect-tile)",
   fieldControlColumn: "var(--damsko-field-control-column)",
   // Confirmation: confirmation.
   confirmationWidth: "var(--damsko-confirmation-width)",

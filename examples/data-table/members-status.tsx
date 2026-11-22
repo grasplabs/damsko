@@ -1,4 +1,7 @@
+import { Avatar, AvatarFallback } from "@grasp-os/ui/components/avatar";
 import { DataTable } from "@grasp-os/ui/components/data-table";
+import { colors, space } from "@grasp-os/ui/lib/tokens.stylex";
+import * as stylex from "@stylexjs/stylex";
 
 interface Member {
   id: string;
@@ -39,6 +42,27 @@ const members: Member[] = [
   },
 ];
 
+const layout = stylex.create({
+  person: { display: "flex", alignItems: "center", gap: space[2], minWidth: 0 },
+  words: { display: "grid", minWidth: 0 },
+  // Each on one line, cut with an ellipsis where the column is narrow.
+  line: { overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
+  email: { color: colors.mutedForeground },
+});
+
+// A person in a cell: their initials (the name beside it says who), their name and their email.
+const Person = ({ member }: { member: Member }) => (
+  <span {...stylex.props(layout.person)}>
+    <Avatar name={member.name} size="sm" decorative>
+      <AvatarFallback />
+    </Avatar>
+    <span {...stylex.props(layout.words)}>
+      <span {...stylex.props(layout.line)}>{member.name}</span>
+      <span {...stylex.props(layout.line, layout.email)}>{member.email}</span>
+    </span>
+  </span>
+);
+
 // A row's state over the whole row (`rowStatus`): Lena is invited and not yet here, so her row
 // fades from its start to its end; Sam was removed, so his is greyed. Both are said in words too,
 // and each row's actions stay whole and usable.
@@ -61,6 +85,7 @@ export default function DataTableMembersStatus() {
           id: "name",
           header: "Name",
           value: (member) => member.name,
+          cell: (member) => <Person member={member} />,
         },
         { id: "role", header: "Role", value: (member) => member.role },
       ]}

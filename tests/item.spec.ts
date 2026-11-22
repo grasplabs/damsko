@@ -189,3 +189,41 @@ test("actions shown on hover are always there for the keyboard, and the add row 
     page.getByRole("img", { name: "Cannot be removed" })
   ).toBeVisible();
 });
+
+for (const theme of ["light", "dark"] as const) {
+  test(`in a side panel's card an xs row is 44px of the panel's words, its icon in the accent and its detail at the row's end, ${theme}`, async ({
+    page,
+  }) => {
+    await openExample(page, "item", "tools", { theme });
+    const list = page.getByRole("list", { name: "Tools" });
+    const rows = list.getByRole("listitem");
+    const first = await rows.nth(0).boundingBox();
+    const second = await rows.nth(1).boundingBox();
+    // Flush rows: the hairline between two is the top pixel of the second.
+    expect(first?.height).toBe(44);
+    expect((second?.y ?? 0) - (first?.y ?? 0)).toBe(44);
+    const name = rows.nth(0).getByText("Customer records");
+    await expect(name).toHaveCSS("font-size", "13px");
+    await expect(name).toHaveCSS("line-height", "18px");
+    const detail = rows.nth(0).getByText("Read only");
+    const detailBox = await detail.boundingBox();
+    const bin = await rows
+      .nth(1)
+      .getByRole("button", { name: "Remove Search the web" })
+      .boundingBox();
+    // The detail ends where a row's action begins, less their gap, on every row.
+    expect(Math.round((detailBox?.x ?? 0) + (detailBox?.width ?? 0))).toBe(
+      Math.round((bin?.x ?? 0) - 8)
+    );
+    const accent = await rows.nth(0).evaluate((row) => {
+      const probe = document.createElement("span");
+      probe.style.color = "var(--damsko-mint-deep)";
+      row.append(probe);
+      const want = getComputedStyle(probe).color;
+      probe.remove();
+      const icon = row.querySelector("svg");
+      return icon !== null && getComputedStyle(icon).color === want;
+    });
+    expect(accent).toBe(true);
+  });
+}
