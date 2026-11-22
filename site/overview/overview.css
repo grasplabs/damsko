@@ -145,6 +145,17 @@
     z-index: 1;
   }
 
+  /* A kind's sentence under its heading (Blocks): the tiles' quiet words, at reading size. */
+  .overview .overview-says {
+    margin: calc(-1 * var(--damsko-space-2)) 0 var(--damsko-space-4);
+    max-width: 40rem;
+    font-family: var(--damsko-font-sans);
+    font-size: var(--damsko-text-sm);
+    line-height: var(--damsko-text-sm-line);
+    color: var(--damsko-muted-foreground);
+    text-wrap: pretty;
+  }
+
   .overview-description {
     margin: 0;
     min-width: 0;

@@ -48,6 +48,7 @@ const dither = ditherDefs();
           <h2 class="overview-heading" id={group.id}>
             {group.label}
           </h2>
+          {group.says && <p class="overview-says">{group.says}</p>}
           <ul class="overview-grid">
             {
               group.tiles.map((tile) => (

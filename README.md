@@ -1,6 +1,6 @@
 # Damsko
 
-Grasp's design system: React components, design tokens and icons built on StyleX and UI SDK, published as a shadcn registry. A product installs a component with the stock shadcn CLI and owns the source it gets.
+Grasp's design system: React components, a few ready-made blocks, design tokens and icons built on StyleX and UI SDK, published as a shadcn registry. A product installs a component with the stock shadcn CLI and owns the source it gets.
 
 Docs, every component and its examples: https://damsko.joingrasp.com
 

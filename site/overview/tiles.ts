@@ -21,6 +21,8 @@ export interface TileGroup {
   id: string;
   /** The kind's name, as the sidebar shows it: "Forms". */
   label: string;
+  /** The kind's sentence, where it has one. */
+  says?: string;
   tiles: Tile[];
 }
 
@@ -41,6 +43,7 @@ export const tileGroups = (): TileGroup[] => {
     .map((kind) => ({
       id: kind.id,
       label: kind.label,
+      says: kind.says,
       tiles: all.filter(
         (tile) => kindOf(tile.route.split("/").pop() ?? "").id === kind.id
       ),
