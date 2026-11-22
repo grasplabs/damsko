@@ -8,8 +8,9 @@
 //     { id: "user", label: "User ID", value: "usr_4f81c2", mono: true, copyable: true },
 //   ]} />
 //
-// Horizontal, a row can open in place (a facts rail): with a `detail`, its name is a button that
-// shows the detail under the row, one row open at a time, and only the rows below it move. A
+// Horizontal, a row can open in place (a facts rail): with a `detail`, the row is a Collapsible
+// whose trigger is the row's name, a button over the whole row, and whose panel holds the detail.
+// The list keeps which row is open, so one is open at a time, and only the rows below it move. A
 // `group` starts after a little room, and a `loading` value waits as Skeleton's dot field at its
 // own width, then crossfades in.
 //
@@ -33,7 +34,7 @@ import { useI18n } from "../lib/i18n";
 import type { I18nCatalog } from "../lib/i18n";
 import { ChevronDownIcon, Icon } from "../lib/icons";
 import type { IconData } from "../lib/icons";
-import { focusRing, visuallyHidden } from "../lib/styles";
+import { disclosureStyles, focusRing, visuallyHidden } from "../lib/styles";
 import {
   colors,
   duration,
@@ -46,6 +47,11 @@ import {
 import { durations } from "../lib/tokens.values";
 import type { LayoutStyle } from "../lib/utils";
 import { iconVars, motionVars } from "../lib/vars.stylex";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "./collapsible";
 import { CopyButton } from "./copy-button";
 import { Skeleton } from "./skeleton";
 import { TooltipContent } from "./tooltip";
@@ -214,7 +220,8 @@ const styles = stylex.create({
 
   // ---- A facts rail: rows that open in place ----
   rail: { rowGap: space[1] },
-  railRow: { display: "grid", minWidth: 0 },
+  // Room a stretched list gives a row goes to its head, never to a closed detail's panel.
+  railRow: { display: "grid", gridTemplateRows: "1fr auto", minWidth: 0 },
   // The row's head: its name and its value on one line, the whole of it the button's to press.
   head: {
     [iconVars.size]: size.iconSm,
@@ -234,36 +241,27 @@ const styles = stylex.create({
     },
     paddingBlock: space[2],
     paddingInline: space[2],
-    borderRadius: radius.mark,
-    cornerShape: radius.shape,
-    transitionProperty: "background-color",
-    transitionDuration: duration.hover,
-    transitionTimingFunction: duration.ease,
   },
-  headLive: {
-    backgroundColor: {
-      default: "transparent",
-      ":has(> dt > button:hover)": {
-        default: null,
-        [media.hover]: colors.accent,
-      },
-      ":has(> dt > button:active)": colors.accentActive,
-    },
-  },
-  headOpen: { backgroundColor: colors.accent },
-  // The row's button: the whole head, under the words, so a press anywhere on the row opens it. It
-  // is named by the row's name.
+  // The row's button, the Collapsible's trigger: the whole head, under the words, so a press
+  // anywhere on the row opens it. It is named by the row's name, and wears the disclosure's quiet
+  // fill (disclosureStyles.ghost) on a row's corner.
   toggle: {
     position: "absolute",
     inset: 0,
     margin: 0,
     padding: 0,
     borderWidth: 0,
-    borderRadius: radius.mark,
+    borderRadius: `min(${radius.base}, calc(${size.controlDefault} / 2))`,
     cornerShape: radius.shape,
-    backgroundColor: "transparent",
     cursor: "pointer",
+    transitionProperty: "background-color",
+    transitionDuration: duration.hover,
+    transitionTimingFunction: duration.ease,
   },
+  // The hover's fill stays while the row is open.
+  toggleOpen: { backgroundColor: colors.accent },
+  // The words of a row that opens: drawn over its button, and a press on them goes through to it.
+  over: { position: "relative", pointerEvents: "none" },
   railLabel: {
     fontSize: font.textSm,
     lineHeight: font.textSmLine,
@@ -302,6 +300,8 @@ const styles = stylex.create({
   headStart: { columnGap: space[4] },
   valueStart: { marginBlockStart: 0, textAlign: "start" },
   across: { gridColumn: "1 / -1" },
+  // Where the detail's panel stands in the row.
+  under: { minWidth: 0 },
   // The chevron, or its room in a row that does not open (or not yet): every value ends on one line.
   tail: {
     display: "inline-flex",
@@ -310,23 +310,15 @@ const styles = stylex.create({
     gap: space[2],
   },
   room: { visibility: "hidden" },
-  chevron: {
-    display: "inline-flex",
-    flexShrink: 0,
-    color: colors.mutedForeground,
-    transitionProperty: "transform",
-    transitionDuration: motionVars.ui,
-    transitionTimingFunction: duration.ease,
-  },
-  chevronOpen: { transform: "rotate(0.5turn)" },
+  chevron: { color: colors.mutedForeground },
   // Over the name's reach: a copy button in an opening row is pressed on its own.
   above: { position: "relative", display: "inline-flex" },
+  // The detail, in the Collapsible's panel, which keeps it a step off the row above and below.
   detail: {
     display: "flex",
     flexDirection: "column",
     gap: space[4],
-    marginInline: 0,
-    marginBlock: space[2],
+    margin: 0,
     paddingBlock: space[4],
     paddingInline: space[4],
     borderWidth: size.hairline,
@@ -403,84 +395,84 @@ const Mark = ({ icon }: { icon: IconData | undefined }) => (
   <span
     aria-hidden="true"
     data-slot="key-value-icon"
-    {...stylex.props(styles.mark)}
+    {...stylex.props(styles.mark, styles.over)}
   >
     {icon === undefined ? null : <Icon icon={icon} />}
   </span>
 );
 
-/** What a row's button needs: whether it is open, the detail it controls, and its press. */
-interface ToggleProps {
-  isOpen: boolean;
-  detailId: string;
-  onToggle: () => void;
-}
+/** The row's button: the Collapsible's trigger, over the whole head. */
+const Toggle = ({
+  isOpen,
+  ...props
+}: { isOpen: boolean } & Record<string, unknown>) => (
+  <CollapsibleTrigger asChild>
+    <button
+      {...props}
+      type="button"
+      {...stylex.props(
+        styles.toggle,
+        disclosureStyles.ghost,
+        isOpen && styles.toggleOpen,
+        focusRing
+      )}
+    />
+  </CollapsibleTrigger>
+);
 
 /** A name shown as its icon alone: the name is its accessible name, shown in a Tooltip. */
 const IconLabel = ({
   label,
   icon,
   opens,
-  toggle,
+  isOpen,
 }: {
   label: string;
   icon: IconData;
   opens: boolean;
-  toggle: ToggleProps;
-}) => {
-  const { isOpen, detailId, onToggle } = toggle;
+  isOpen: boolean;
+}) => (
   // UI SDK's Tooltip as a label: the icon has no name of its own, so the tooltip's words are it.
-  return (
-    <TooltipPrimitive delay={durations.tooltipDelay} type="label">
-      <TriggerPrimitive
-        render={(trigger: Record<string, unknown>) =>
-          opens ? (
-            <button
-              {...trigger}
-              type="button"
-              aria-expanded={isOpen}
-              aria-controls={isOpen ? detailId : undefined}
-              onClick={onToggle}
-              {...stylex.props(styles.toggle, focusRing)}
-            />
-          ) : (
-            <span
-              {...trigger}
-              // An icon, drawn as SVG and named by its Tooltip.
-              role="img"
-              // oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- the icon stands for its row's name, which its Tooltip shows to the keyboard too
-              tabIndex={0}
-              {...stylex.props(styles.mark, styles.markAlone, focusRing)}
-            >
-              <Icon icon={icon} />
-            </span>
-          )
-        }
-      />
-      <TooltipContent side="top" align="start">
-        {label}
-      </TooltipContent>
-    </TooltipPrimitive>
-  );
-};
+  <TooltipPrimitive delay={durations.tooltipDelay} type="label">
+    <TriggerPrimitive
+      render={(trigger: Record<string, unknown>) =>
+        opens ? (
+          <Toggle {...trigger} isOpen={isOpen} />
+        ) : (
+          <span
+            {...trigger}
+            // An icon, drawn as SVG and named by its Tooltip.
+            role="img"
+            // oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- the icon stands for its row's name, which its Tooltip shows to the keyboard too
+            tabIndex={0}
+            {...stylex.props(styles.mark, styles.markAlone, focusRing)}
+          >
+            <Icon icon={icon} />
+          </span>
+        )
+      }
+    />
+    <TooltipContent side="top" align="start">
+      {label}
+    </TooltipContent>
+  </TooltipPrimitive>
+);
 
 /** The row's name: its button when it opens, its icon or the icon's room, and its words. */
 const Label = ({
   item,
   opens,
+  isOpen,
   icons,
   alone,
-  labelId,
-  toggle,
 }: {
   item: KeyValueItem;
   opens: boolean;
+  isOpen: boolean;
   icons: boolean;
   alone: boolean;
-  labelId: string;
-  toggle: ToggleProps;
 }) => {
-  const { isOpen, detailId, onToggle } = toggle;
+  const labelId = useId();
   if (alone && item.icon !== undefined) {
     return (
       <>
@@ -488,7 +480,7 @@ const Label = ({
           label={item.label}
           icon={item.icon}
           opens={opens}
-          toggle={toggle}
+          isOpen={isOpen}
         />
         {opens ? <Mark icon={item.icon} /> : null}
       </>
@@ -496,18 +488,11 @@ const Label = ({
   }
   return (
     <>
-      {opens ? (
-        <button
-          type="button"
-          aria-labelledby={labelId}
-          aria-expanded={isOpen}
-          aria-controls={isOpen ? detailId : undefined}
-          onClick={onToggle}
-          {...stylex.props(styles.toggle, focusRing)}
-        />
-      ) : null}
+      {opens ? <Toggle aria-labelledby={labelId} isOpen={isOpen} /> : null}
       {icons ? <Mark icon={item.icon} /> : null}
-      <span id={labelId}>{item.label}</span>
+      <span id={labelId} {...stylex.props(opens && styles.over)}>
+        {item.label}
+      </span>
     </>
   );
 };
@@ -533,8 +518,10 @@ const Tail = ({
         aria-hidden="true"
         data-slot="key-value-chevron"
         {...stylex.props(
+          disclosureStyles.chevron,
           styles.chevron,
-          isOpen && styles.chevronOpen,
+          styles.over,
+          isOpen && disclosureStyles.chevronOpen,
           !opens && styles.room
         )}
       >
@@ -549,7 +536,7 @@ const Tail = ({
   );
 };
 
-/** One row of a list that can open: its head, and its detail under it while open. */
+/** One row of a list that can open: its head, and, when it has a detail, the panel under it. */
 interface RailRowProps {
   item: KeyValueItem;
   isOpen: boolean;
@@ -558,7 +545,7 @@ interface RailRowProps {
   /** Some row in the list has an icon: every row keeps the icon column's room. */
   icons: boolean;
   labelDisplay: "text" | "icon";
-  onToggle: () => void;
+  onOpenChange: (open: boolean) => void;
 }
 
 const RailRow = ({
@@ -568,66 +555,67 @@ const RailRow = ({
   start,
   icons,
   labelDisplay,
-  onToggle,
+  onOpenChange,
 }: RailRowProps) => {
-  const detailId = useId();
-  const labelId = useId();
   const opens = opensOf(item);
-  const alone = labelDisplay === "icon" && item.icon !== undefined;
-  return (
+  const head = (
+    <div
+      {...stylex.props(
+        styles.head,
+        start ? [styles.onGrid, styles.headStart] : styles.headEnd
+      )}
+    >
+      <dt
+        {...stylex.props(styles.label, styles.railLabel, icons && styles.named)}
+      >
+        <Label
+          item={item}
+          opens={opens}
+          isOpen={isOpen}
+          icons={icons}
+          alone={labelDisplay === "icon" && item.icon !== undefined}
+        />
+      </dt>
+      <dd
+        {...stylex.props(
+          styles.value,
+          start ? styles.valueStart : styles.valueEnd,
+          item.mono === true && styles.mono,
+          opens && styles.over
+        )}
+      >
+        <ValueOf item={item} />
+      </dd>
+      <Tail item={item} opens={opens} isOpen={isOpen} />
+    </div>
+  );
+  const row = (
     <div
       data-slot="key-value-item"
-      data-open={isOpen}
       {...stylex.props(
         styles.railRow,
         start && styles.onGrid,
         starts && styles.groupStart
       )}
     >
-      <div
-        {...stylex.props(
-          styles.head,
-          start ? [styles.onGrid, styles.headStart] : styles.headEnd,
-          opens && styles.headLive,
-          isOpen && styles.headOpen
-        )}
-      >
-        <dt
-          {...stylex.props(
-            styles.label,
-            styles.railLabel,
-            icons && styles.named
-          )}
-        >
-          <Label
-            item={item}
-            opens={opens}
-            icons={icons}
-            alone={alone}
-            labelId={labelId}
-            toggle={{ isOpen, detailId, onToggle }}
-          />
-        </dt>
-        <dd
-          {...stylex.props(
-            styles.value,
-            start ? styles.valueStart : styles.valueEnd,
-            item.mono === true && styles.mono
-          )}
-        >
-          <ValueOf item={item} />
-        </dd>
-        <Tail item={item} opens={opens} isOpen={isOpen} />
-      </div>
-      {isOpen ? (
-        <dd
-          id={detailId}
-          {...stylex.props(styles.detail, start && styles.across)}
-        >
-          {item.detail}
-        </dd>
+      {head}
+      {opens ? (
+        <div {...stylex.props(styles.under, start && styles.across)}>
+          <CollapsibleContent>
+            <dd {...stylex.props(styles.detail)}>{item.detail}</dd>
+          </CollapsibleContent>
+        </div>
       ) : null}
     </div>
+  );
+  // A row with a detail is a Collapsible from the start, drawn as the row, so a value that lands
+  // does not draw the row anew; its trigger and its panel come only once it has.
+  return item.detail === undefined ? (
+    row
+  ) : (
+    <Collapsible asChild open={isOpen} onOpenChange={onOpenChange}>
+      {row}
+    </Collapsible>
   );
 };
 
@@ -639,12 +627,11 @@ const useOpenRow = (
 ) => {
   const [own, setOwn] = useState<string | null>(defaultValue);
   const current = value === undefined ? own : value;
-  const toggle = (id: string) => {
-    const next = current === id ? null : id;
+  const change = (next: string | null) => {
     setOwn(next);
     onValueChange?.(next);
   };
-  return [current, toggle] as const;
+  return [current, change] as const;
 };
 
 /** The rows of a list that can open in place. */
@@ -667,7 +654,7 @@ const Rail = ({
   labelDisplay,
   style,
 }: RailProps) => {
-  const [current, toggle] = useOpenRow(value, defaultValue, onValueChange);
+  const [current, change] = useOpenRow(value, defaultValue, onValueChange);
   const icons = items.some((item) => item.icon !== undefined);
   return (
     <dl
@@ -690,8 +677,8 @@ const Rail = ({
           start={start}
           icons={icons}
           labelDisplay={labelDisplay}
-          onToggle={() => {
-            toggle(item.id);
+          onOpenChange={(open) => {
+            change(open ? item.id : null);
           }}
         />
       ))}
