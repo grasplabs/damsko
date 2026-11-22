@@ -5,7 +5,7 @@ import { Button } from "@grasp-os/ui/components/button";
 export default function ButtonNames() {
   return (
     <div>
-      <Button variant="secondary" aria-label="Delete Spring launch">
+      <Button variant="outline" aria-label="Delete Spring launch">
         Delete
       </Button>
     </div>

@@ -139,7 +139,7 @@ export default function MembersTeams({
             actions={
               <Button
                 size="xs"
-                variant="secondary"
+                variant="outline"
                 onClick={() => {
                   const team = {
                     id: `team-${String(list.length + 1)}`,

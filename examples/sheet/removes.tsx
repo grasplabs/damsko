@@ -50,7 +50,7 @@ export default function SheetRemoves() {
             {row}
             <Button
               size="sm"
-              variant="secondary"
+              variant="outline"
               onClick={() => {
                 setAsking(row);
               }}

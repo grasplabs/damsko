@@ -32,7 +32,7 @@ export default function DialogNested() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="secondary">Edit the report</Button>
+        <Button variant="outline">Edit the report</Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

@@ -57,7 +57,7 @@ export default function NoResults() {
             </EmptyHeader>
             <EmptyContent>
               <Button
-                variant="secondary"
+                variant="outline"
                 size="sm"
                 onClick={() => {
                   setWords("");

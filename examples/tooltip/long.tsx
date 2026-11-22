@@ -10,7 +10,7 @@ export default function TooltipLong() {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <Button variant="secondary">Refresh</Button>
+        <Button variant="outline">Refresh</Button>
       </TooltipTrigger>
       <TooltipContent>
         Fetches the latest figures from every source, and charts keep their

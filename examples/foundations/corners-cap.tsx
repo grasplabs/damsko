@@ -83,19 +83,19 @@ export default function CornersCap() {
         <Facts tall={24} corner={12} />
       </li>
       <li {...stylex.props(styles.part)}>
-        <Button size="xs" variant="secondary">
+        <Button size="xs" variant="outline">
           Try again
         </Button>
         <Facts tall={28} corner={14} />
       </li>
       <li {...stylex.props(styles.part)}>
-        <Button size="sm" variant="secondary">
+        <Button size="sm" variant="outline">
           Open
         </Button>
         <Facts tall={32} corner={16} />
       </li>
       <li {...stylex.props(styles.part)}>
-        <Button variant="secondary">Share</Button>
+        <Button variant="outline">Share</Button>
         <Facts tall={36} corner={18} />
       </li>
       <li {...stylex.props(styles.part)}>

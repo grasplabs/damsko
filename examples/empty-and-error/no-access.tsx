@@ -30,7 +30,7 @@ export default function NoAccess() {
         </EmptyHeader>
         <EmptyContent>
           <Button
-            variant="secondary"
+            variant="outline"
             size="sm"
             onClick={ask}
             loadingLabel="Asking"

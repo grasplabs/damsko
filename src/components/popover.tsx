@@ -5,7 +5,7 @@
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
 //   <Popover>
-//     <PopoverTrigger asChild><Button variant="secondary">Share</Button></PopoverTrigger>
+//     <PopoverTrigger asChild><Button variant="outline">Share</Button></PopoverTrigger>
 //     <PopoverContent>
 //       <PopoverHeader>
 //         <PopoverTitle>Share this report</PopoverTitle>

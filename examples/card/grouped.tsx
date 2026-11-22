@@ -48,7 +48,7 @@ export default function CardGrouped() {
             title="Plan"
             variant="group"
             actions={
-              <Button size="xs" variant="secondary">
+              <Button size="xs" variant="outline">
                 Change plan
               </Button>
             }

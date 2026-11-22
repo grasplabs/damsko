@@ -116,7 +116,7 @@ export default function ToastInDialog() {
     <div {...stylex.props(layout.row)}>
       <Dialog>
         <DialogTrigger asChild>
-          <Button variant="secondary">Share in a dialog</Button>
+          <Button variant="outline">Share in a dialog</Button>
         </DialogTrigger>
         <DialogContent>
           <DialogHeader>
@@ -128,7 +128,7 @@ export default function ToastInDialog() {
       </Dialog>
       <AlertDialog>
         <AlertDialogTrigger asChild>
-          <Button variant="secondary">Share in an alert dialog</Button>
+          <Button variant="outline">Share in an alert dialog</Button>
         </AlertDialogTrigger>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -140,7 +140,7 @@ export default function ToastInDialog() {
       </AlertDialog>
       <Sheet>
         <SheetTrigger asChild>
-          <Button variant="secondary">Share in a sheet</Button>
+          <Button variant="outline">Share in a sheet</Button>
         </SheetTrigger>
         <SheetContent>
           <SheetHeader>
@@ -152,7 +152,7 @@ export default function ToastInDialog() {
       </Sheet>
       <Drawer>
         <DrawerTrigger asChild>
-          <Button variant="secondary">Share in a drawer</Button>
+          <Button variant="outline">Share in a drawer</Button>
         </DrawerTrigger>
         <DrawerContent>
           <DrawerHeader>
@@ -164,7 +164,7 @@ export default function ToastInDialog() {
       </Drawer>
       <Popover>
         <PopoverTrigger asChild>
-          <Button variant="secondary">Share in a popover</Button>
+          <Button variant="outline">Share in a popover</Button>
         </PopoverTrigger>
         <PopoverContent>
           <PopoverHeader>

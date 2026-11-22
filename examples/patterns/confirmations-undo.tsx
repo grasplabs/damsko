@@ -35,7 +35,7 @@ export default function ConfirmationsUndo() {
       </span>
       <Button
         ref={button}
-        variant="secondary"
+        variant="outline"
         // Off once archived, and still a stop: the press that archived keeps its focus.
         disabled={archived}
         focusableWhenDisabled

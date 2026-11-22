@@ -71,7 +71,7 @@ const Task = ({
   return (
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>
-        <Button variant="secondary">{trigger}</Button>
+        <Button variant="outline">{trigger}</Button>
       </DrawerTrigger>
       <DrawerContent>
         <DrawerHeader>

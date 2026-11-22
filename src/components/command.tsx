@@ -1447,7 +1447,7 @@ export const CommandDialog = ({
     >
       {triggerless ? null : (
         <DialogTrigger asChild shortcut={shortcut ?? undefined}>
-          <Button variant="secondary">
+          <Button variant="outline">
             <Icon icon={SearchIcon} />
             {trigger ?? words.dialogTrigger}
           </Button>

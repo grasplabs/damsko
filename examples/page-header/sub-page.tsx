@@ -14,7 +14,7 @@ export default function PageHeaderSubPage() {
       size="xs"
       title="AI providers"
       actions={
-        <Button size="sm" variant="secondary">
+        <Button size="sm" variant="outline">
           Add a provider
         </Button>
       }

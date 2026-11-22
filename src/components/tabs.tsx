@@ -1098,7 +1098,7 @@ const Fold = ({
 }) => (
   <DropdownMenu>
     <DropdownMenuTrigger asChild>
-      <Button size="sm" variant={segmented ? "secondary" : "ghost"}>
+      <Button size="sm" variant={segmented ? "outline" : "ghost"}>
         <span>
           <PlaceContext value="trigger">{children}</PlaceContext>
           <span {...stylex.props(navStyles.fallback)}>{label}</span>

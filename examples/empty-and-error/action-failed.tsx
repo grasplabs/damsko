@@ -12,7 +12,7 @@ export default function ActionFailed() {
   const archive = archiveProject;
   return (
     <Button
-      variant="secondary"
+      variant="outline"
       onClick={archive}
       loadingLabel="Archiving"
       successLabel="Archived"

@@ -74,7 +74,7 @@ export default function LoadingSpinner() {
       )}
       <div {...stylex.props(layout.actions)}>
         <Button
-          variant="secondary"
+          variant="outline"
           size="sm"
           focusableWhenDisabled
           disabled={loading}

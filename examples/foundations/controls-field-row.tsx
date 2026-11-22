@@ -98,8 +98,8 @@ export default function ControlsFieldRow() {
             </InputGroup>
           </span>
           <div {...stylex.props(layout.actions)}>
-            <span data-part="Button, secondary" {...stylex.props(layout.part)}>
-              <Button size={size} variant="secondary">
+            <span data-part="Button, outline" {...stylex.props(layout.part)}>
+              <Button size={size} variant="outline">
                 Settings
               </Button>
             </span>

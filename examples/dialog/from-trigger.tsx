@@ -29,7 +29,7 @@ const layout = stylex.create({
 const Example = ({ label }: { label: string }) => (
   <Dialog>
     <DialogTrigger asChild>
-      <Button variant="secondary">{label}</Button>
+      <Button variant="outline">{label}</Button>
     </DialogTrigger>
     <DialogContent>
       <DialogHeader>

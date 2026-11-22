@@ -38,6 +38,12 @@ A row with a line for each file the commit changed: what changed in the title, t
 
 <Stage path="trace/commit" label="A commit" />
 
+## A plan
+
+When every step is known before the work starts, show them all from the start: the ones not begun are `pending`. The row's line holds the goal as its title and the progress as its description, and is `running` while the plan is worked through.
+
+<Stage path="trace/plan" label="A plan" />
+
 ## While it works
 
 A line is said once, when its status changes after it was drawn: when it finishes or fails. A line is never said for appearing. Press Next to finish the running step.
@@ -56,7 +62,7 @@ A line is said once, when its status changes after it was drawn: when it finishe
     "A line in a trigger to make it open, or in a link or a dialog's trigger to make it go somewhere.",
   ]}
   never={[
-    "A step a part built on Trace already names: use Tool for a call, Reasoning for thinking, Chain of thought for an answer's steps, Task, Plan, Queue or Subagent.",
+    "A step a part built on Trace already names: use Tool for a call, Reasoning for thinking, Chain of thought for an answer's steps, Queue or Subagent.",
     "The assistant's reply: use Message.",
     "A question for the person, such as approving a tool: use Confirmation, outside the Trace.",
   ]}

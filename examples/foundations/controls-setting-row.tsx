@@ -50,7 +50,7 @@ export default function ControlsSettingRow() {
           <CardHeader>
             <CardTitle level={2}>Profile</CardTitle>
             <CardAction>
-              <Button size="sm" variant="secondary">
+              <Button size="sm" variant="outline">
                 Change photo
               </Button>
             </CardAction>

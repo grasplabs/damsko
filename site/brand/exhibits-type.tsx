@@ -184,7 +184,7 @@ export const Scale = () => (
 );
 
 export const ScalePickup = () => (
-  <Button variant="secondary" size="sm" asChild>
+  <Button variant="outline" size="sm" asChild>
     <a href={typeWords.foundationsHref}>
       {typeWords.foundations}
       <Icon icon={ArrowRightIcon} />
