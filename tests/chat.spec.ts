@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { openExample } from "./example.ts";
+import { hasFocusRing, openExample } from "./example.ts";
 
 test("before the first turn it shows its empty state", async ({ page }) => {
   await openExample(page, "chat", "empty");
@@ -42,4 +42,72 @@ test("a sent question settles near the top, the answer streams in under it, and 
   });
   await page.getByRole("button", { name: "Start over" }).click();
   await expect(log.getByText("What should we plan?")).toBeVisible();
+});
+
+test("a checkpoint's words are read and its button is named for the checkpoint", async ({
+  page,
+}) => {
+  await openExample(page, "chat", "checkpoint");
+  const log = page.getByRole("log", { name: "Rename the button" });
+  await expect(log.getByText("Button renamed")).toBeVisible();
+  await expect(
+    log.getByRole("button", { name: "Restore to Button renamed" })
+  ).toBeVisible();
+  await expect(page.getByRole("separator")).toHaveCount(0);
+});
+
+test("a checkpoint's tooltip opens on hover and describes its button", async ({
+  page,
+}) => {
+  await openExample(page, "chat", "checkpoint");
+  const restore = page.getByRole("button", {
+    name: "Restore to Button renamed",
+  });
+  await restore.hover();
+  await expect(page.getByRole("tooltip")).toHaveText(
+    "Drops the messages after this point"
+  );
+  await expect(restore).toHaveAccessibleDescription(
+    "Drops the messages after this point"
+  );
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("tooltip")).toBeHidden();
+});
+
+test("the keyboard reaches a checkpoint's button with a ring, and Enter drops the turns after it", async ({
+  page,
+}) => {
+  await openExample(page, "chat", "checkpoint");
+  await expect(page.getByText("Update the docs to match.")).toBeVisible();
+  const restore = page.getByRole("button", {
+    name: "Restore to Button renamed",
+  });
+  await page.getByRole("log", { name: "Rename the button" }).focus();
+  await page.keyboard.press("Tab");
+  await expect(restore).toBeFocused();
+  expect(await hasFocusRing(restore)).toBe(true);
+  await expect(page.getByRole("tooltip")).toBeVisible();
+  await page.keyboard.press("Enter");
+  await expect(page.getByText("Update the docs to match.")).toBeHidden();
+  await expect(
+    page.getByText("Renamed Button to Action in components/ui/button.tsx.")
+  ).toBeVisible();
+});
+
+test("with nothing after a checkpoint, its button is out of use but keeps focus, and its tooltip says why", async ({
+  page,
+}) => {
+  await openExample(page, "chat", "checkpoint");
+  const restore = page.getByRole("button", {
+    name: "Restore to Button renamed",
+  });
+  await restore.click();
+  await expect(restore).toBeDisabled();
+  await expect(restore).toBeFocused();
+  await expect(restore).toHaveAccessibleDescription(
+    "Nothing after this point to drop"
+  );
+  await page.getByRole("button", { name: "Send again" }).click();
+  await expect(page.getByText("Update the docs to match.")).toBeVisible();
+  await expect(restore).toBeEnabled();
 });
