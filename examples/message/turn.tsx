@@ -37,7 +37,13 @@ const STEP = 16;
 const TICK = 60;
 
 const layout = stylex.create({
-  column: { display: "grid", gap: space["3"], justifyItems: "start" },
+  column: {
+    display: "grid",
+    gap: space["3"],
+    justifyItems: "start",
+    width: "100%",
+    maxWidth: size.promptInputWidth,
+  },
   box: {
     width: "100%",
     maxWidth: size.promptInputWidth,
