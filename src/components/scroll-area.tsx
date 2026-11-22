@@ -97,6 +97,7 @@ const styles = stylex.create({
     minHeight: 0,
     width: "100%",
     borderRadius: "inherit",
+    cornerShape: "inherit",
   },
   bar: {
     display: "flex",

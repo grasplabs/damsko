@@ -728,7 +728,7 @@ export const groups: TokenGroup[] = [
             name: "radius-full",
             category: "radius",
             value: "999px",
-            use: "A pill: a chip, a tag, a toggle track.",
+            use: "A pill: a chip, a tag, the track of a switch or a slider. Never a control that holds buttons.",
           },
           {
             name: "radius-circle",

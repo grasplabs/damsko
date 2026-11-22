@@ -2702,7 +2702,7 @@ const sankeyStyles = stylex.create({
     display: "block",
     gridColumn: "1 / -1",
     height: space[1],
-    borderRadius: 2,
+    borderRadius: radius.full,
     backgroundColor: colors.chart5,
     overflow: "hidden",
   },
@@ -2710,7 +2710,7 @@ const sankeyStyles = stylex.create({
     display: "block",
     width: `${Math.round(share * 1000) / 10}%`,
     height: "100%",
-    borderRadius: 2,
+    borderRadius: radius.full,
   }),
   barTone: {
     backgroundColor: { default: colors.chartPlain, [FORCED]: "CanvasText" },
@@ -3278,6 +3278,7 @@ const sparkStyles = stylex.create({
   live: {
     position: "relative",
     borderRadius: radius.base,
+    cornerShape: radius.shape,
     paddingInline: LIVE_PAD,
     paddingBlock: space[1],
   },

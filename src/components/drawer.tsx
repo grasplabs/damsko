@@ -234,7 +234,7 @@ const styles = stylex.create({
     display: "block",
     width: sizes.drawerHandleWidth,
     height: sizes.drawerHandleHeight,
-    borderRadius: sizes.drawerHandleHeight,
+    borderRadius: radius.full,
     backgroundColor: {
       default: colors.drawerHandleBg,
       [FORCED]: "CanvasText",

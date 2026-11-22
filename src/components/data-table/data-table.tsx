@@ -611,7 +611,7 @@ const styles = stylex.create({
     width: size.avatarSm,
     height: size.avatarSm,
     overflow: "hidden",
-    borderRadius: "50%",
+    borderRadius: radius.circle,
   },
   personName: { width: "8rem" },
   personDetail: { width: "11rem", maxWidth: "100%" },
