@@ -571,6 +571,33 @@ test("a send that fails puts the words back and says so", async ({ page }) => {
   );
 });
 
+for (const width of [1440, 390]) {
+  test(`at ${width}, a note in one row takes a line of its own and the words keep the width`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 800 });
+    await openExample(page, "prompt-input", "failed", { time: fixedTime });
+    const text = page.getByRole("textbox", { name: "Message" });
+    await text.click();
+    await page.keyboard.press("Enter");
+    await page.clock.runFor(1000);
+    const note = page.getByText("Could not send. Your message is kept.");
+    await expect(note).toBeVisible();
+    const card = page.getByRole("group").filter({ has: text });
+    const [textBox, cardInner, noteBox] = await Promise.all([
+      text.boundingBox(),
+      card.evaluate((element) => element.clientWidth),
+      note.boundingBox(),
+    ]);
+    expect(textBox).not.toBeNull();
+    expect(noteBox).not.toBeNull();
+    if (textBox !== null && noteBox !== null) {
+      expect(textBox.width).toBeGreaterThanOrEqual(cardInner * 0.8);
+      expect(noteBox.y).toBeGreaterThanOrEqual(textBox.y + textBox.height - 1);
+    }
+  });
+}
+
 test("a question in the text's place takes the focus, and the text takes it back", async ({
   page,
 }) => {

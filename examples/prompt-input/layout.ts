@@ -9,6 +9,8 @@ export const layout = stylex.create({
     width: "100%",
     maxWidth: size.promptInputWidth,
   },
+  // A control above the prompt input stands at the start, as wide as its words.
+  start: { justifySelf: "start" },
   item: { display: "grid", gap: space["2"], minWidth: 0 },
   name: {
     margin: 0,
