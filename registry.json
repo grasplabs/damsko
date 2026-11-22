@@ -484,6 +484,7 @@
         "@stylexjs/stylex"
       ],
       "registryDependencies": [
+        "@damsko/empty",
         "@damsko/lib",
         "@damsko/message",
         "@damsko/message-scroller"
