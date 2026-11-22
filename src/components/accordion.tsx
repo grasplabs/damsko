@@ -239,7 +239,12 @@ export const AccordionContent = ({
       render={<div data-slot="accordion-content" />}
       hiddenUntilFound={!disabled}
       className={
-        stylex.props(disclosureStyles.panel, styles.height, style).className
+        stylex.props(
+          disclosureStyles.panel,
+          disclosureStyles.quiet,
+          styles.height,
+          style
+        ).className
       }
     >
       <div {...stylex.props(disclosureStyles.body, styles.body)}>

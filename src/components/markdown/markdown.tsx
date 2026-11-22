@@ -51,6 +51,11 @@ import {
   CodeBlockHeader,
   CodeBlockTitle,
 } from "../code-block";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "../collapsible";
 import { Link } from "../link";
 import { Separator } from "../separator";
 import {
@@ -357,10 +362,10 @@ const styles = stylex.create({
   },
 });
 
-// A section that folds inside prose, as a document's toggle, not a panel's disclosure (that is
-// Collapsible): the chevron before the summary, pointing along the line while closed and turned
-// down while open; the summary at the body's size in the medium weight; the body indented to the
-// summary's first letter.
+// A section that folds inside prose, as a document's toggle: a Collapsible drawn as the section,
+// with a look of its own and none of a panel's. The chevron before the summary, pointing along the
+// line while closed and turned down while open; the summary at the body's size in the medium
+// weight; the body indented to the summary's first letter.
 const sectionStyles = stylex.create({
   // Toggle and summary on the first row, the body under the summary on the second.
   section: {
@@ -395,14 +400,19 @@ const sectionStyles = stylex.create({
   // The chevron's holder turns (the drawing itself mirrors right to left, as a pointing icon does).
   chevron: {
     display: "inline-flex",
+    // Open, it points down: a quarter turn from along the line, either way round.
+    transform: {
+      default: null,
+      ":is([aria-expanded=true] > *)": {
+        default: "rotate(90deg)",
+        ":dir(rtl)": "rotate(-90deg)",
+      },
+    },
     transitionProperty: "transform",
     transitionDuration: motionVars.ui,
     transitionTimingFunction: duration.ease,
   },
-  // Open, it points down: a quarter turn from along the line, either way round.
-  chevronOpen: {
-    transform: { default: "rotate(90deg)", ":dir(rtl)": "rotate(-90deg)" },
-  },
+
   summary: {
     gridColumn: "2",
     gridRow: "1",
@@ -412,11 +422,16 @@ const sectionStyles = stylex.create({
     fontWeight: font.weightMedium,
     color: colors.foreground,
   },
-  // Under the summary, from its first letter: the answer's own column of blocks.
-  body: {
+  // Under the summary, from its first letter: the Collapsible's panel, drawn as this.
+  under: {
     gridColumn: "2",
     gridRow: "2",
-    display: { default: "flex", ":is([hidden])": "none" },
+    minWidth: 0,
+  },
+  // The answer's own column of blocks, a step under the summary. Inside the panel: room on the
+  // panel itself would show while it is closed.
+  body: {
+    display: "flex",
     flexDirection: "column",
     gap: space["4"],
     minWidth: 0,
@@ -1304,49 +1319,38 @@ const Section = ({
   context: Context;
   children: ReactNode;
 }) => {
-  const [open, setOpen] = useState(grouped.open);
-  const id = useId().replaceAll(":", "");
+  const id = useId();
   const { base } = grouped.key;
   return (
-    <div
-      data-slot="markdown-section"
-      data-open={open || undefined}
-      {...stylex.props(sectionStyles.section)}
-    >
-      <button
-        type="button"
-        aria-expanded={open}
-        aria-controls={`${id}-body`}
-        aria-labelledby={`${id}-summary`}
-        onClick={() => {
-          setOpen(!open);
-        }}
-        {...stylex.props(sectionStyles.toggle, focusRing)}
-      >
-        <span
-          aria-hidden="true"
-          {...stylex.props(
-            sectionStyles.chevron,
-            open && sectionStyles.chevronOpen
-          )}
-        >
-          <Icon icon={ChevronRightIcon} />
-        </span>
-      </button>
-      <div id={`${id}-summary`} {...stylex.props(sectionStyles.summary)}>
-        <Phrasing
-          nodes={grouped.summary}
-          context={base === 0 ? context : { ...context, base }}
-        />
-      </div>
+    <Collapsible asChild defaultOpen={grouped.open}>
       <div
-        id={`${id}-body`}
-        hidden={!open}
-        {...stylex.props(sectionStyles.body)}
+        data-slot="markdown-section"
+        {...stylex.props(sectionStyles.section)}
       >
-        {children}
+        <CollapsibleTrigger asChild>
+          <button
+            type="button"
+            aria-labelledby={id}
+            {...stylex.props(sectionStyles.toggle, focusRing)}
+          >
+            <span aria-hidden="true" {...stylex.props(sectionStyles.chevron)}>
+              <Icon icon={ChevronRightIcon} />
+            </span>
+          </button>
+        </CollapsibleTrigger>
+        <div id={id} {...stylex.props(sectionStyles.summary)}>
+          <Phrasing
+            nodes={grouped.summary}
+            context={base === 0 ? context : { ...context, base }}
+          />
+        </div>
+        <CollapsibleContent asChild>
+          <div {...stylex.props(sectionStyles.under)}>
+            <div {...stylex.props(sectionStyles.body)}>{children}</div>
+          </div>
+        </CollapsibleContent>
       </div>
-    </div>
+    </Collapsible>
   );
 };
 

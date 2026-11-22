@@ -997,7 +997,8 @@ export const tapTarget = tapStyles.target;
 // chevron at its end that turns as it opens, and the panel under it that opens over its height.
 //
 //   stylex.props(disclosureStyles.trigger, disclosureStyles.ghost, focusRing)
-//   stylex.props(disclosureStyles.panel, panelHeight)   with the part's own --…-panel-height
+//   stylex.props(disclosureStyles.panel, disclosureStyles.quiet, panelHeight)
+//                                          with the part's own --…-panel-height
 //
 // A part marks itself disabled with data-disabled, as UI SDK does.
 
@@ -1095,12 +1096,16 @@ export const disclosureStyles = stylex.create({
     // Without script nothing opens a panel, so every panel shows open.
     display: { default: null, [media.noScript]: "block" },
     overflow: "hidden",
-    fontSize: font.textXs,
-    lineHeight: "1.125rem",
-    color: colors.mutedForeground,
     transitionProperty: "height",
     transitionDuration: motionVars.collapsibleOpen,
     transitionTimingFunction: "ease-out",
+  },
+  // The panel's own words: small and quiet under the trigger. A panel drawn as a part of its own
+  // (CollapsibleContent's `asChild`) leaves it out and keeps that part's type.
+  quiet: {
+    fontSize: font.textXs,
+    lineHeight: "1.125rem",
+    color: colors.mutedForeground,
   },
   // The words in an open panel stand a step off the trigger above and the next thing below. On a
   // part inside the panel: padding on the panel itself would show while it is closed.

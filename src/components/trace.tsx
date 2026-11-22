@@ -629,7 +629,12 @@ export const TraceCollapsibleContent = ({
     render={<div data-slot="trace-collapsible-content" />}
     hiddenUntilFound
     className={
-      stylex.props(disclosureStyles.panel, styles.height, style).className
+      stylex.props(
+        disclosureStyles.panel,
+        disclosureStyles.quiet,
+        styles.height,
+        style
+      ).className
     }
   >
     <div
