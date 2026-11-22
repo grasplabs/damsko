@@ -22,7 +22,7 @@ Seven tabs in a narrow column, one of them out of use.
 
 ## Default
 
-The default look: a small switch for a toolbar, the chosen tab raised out of a soft track.
+The default look: the chosen tab raised out of a soft track, the track a ToggleGroup stands on. Tabs switch panels: each tab shows a TabsContent. A control that sets a value and shows no panel of its own (a view mode, a text style) is a [ToggleGroup](/components/toggle).
 
 <Stage path="tabs/segmented" label="Default" />
 
@@ -93,6 +93,7 @@ Hover and keyboard focus are forced from its own CSS; the rest are props.
   never={[
     "Going to another page: use Link.",
     "Steps in order: use Stepper.",
+    "Setting a value that shows no panel of its own, such as a view mode in a toolbar: use a ToggleGroup.",
     "One view alone.",
     "An icon without words.",
   ]}

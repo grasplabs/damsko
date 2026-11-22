@@ -1104,6 +1104,39 @@ export const disclosureStyles = stylex.create({
   },
 });
 
+// ---- The segmented track -------------------------------------------------------------------------
+//
+// One of a few, on one soft track, the chosen one raised out of it: Tabs' default list, a
+// ToggleGroup and ThemeToggle's segmented form. Each lays its own items out on the track.
+//
+//   stylex.props(segmentedStyles.track)
+//   stylex.props(chosen && segmentedStyles.chosen)
+
+export const segmentedStyles = stylex.create({
+  // The same room on every side, so the chosen one stands evenly inside the track.
+  track: {
+    padding: space.toggleTrackPadding,
+    borderRadius: radius.base,
+    cornerShape: radius.shape,
+    backgroundColor: colors.muted,
+    // Forced colours drop the fill: a line keeps the track.
+    outline: { default: "none", [FORCED]: "1px solid CanvasText" },
+    outlineOffset: "-1px",
+  },
+  // Raised out of the track with the low lift, so the choice is a shape and not a colour alone. In
+  // dark a lift's shadow is lost on the dark ground and the fill is barely off the track, so there
+  // it also takes the pressed veil. Light is untouched.
+  chosen: {
+    color: { default: colors.foreground, [FORCED]: "HighlightText" },
+    backgroundColor: { default: colors.tabBgSelected, [FORCED]: "Highlight" },
+    backgroundImage: {
+      default: `linear-gradient(light-dark(transparent, ${colors.accentActive}), light-dark(transparent, ${colors.accentActive}))`,
+      [FORCED]: "none",
+    },
+    boxShadow: shadow.sm,
+  },
+});
+
 // ---- The code surface ----------------------------------------------------------------------------
 //
 // What code, a command's output and an error's text stand on: CodeBlock's box, Terminal's output,
