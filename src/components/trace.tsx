@@ -263,10 +263,12 @@ const styles = stylex.create({
   joinDone: {
     color: { default: colors.mutedForeground, [FORCED]: "CanvasText" },
   },
-  // The status mark: a dot in the mark's ink, faint while the step waits.
+  // The status mark: a dot in the mark's ink, faint while the step waits. An even size, as its seat
+  // (icon-sm) and the joining line (two hairlines) are: an odd dot stands half a pixel off the
+  // line's middle.
   dot: {
-    width: `calc(${space["1"]} + ${space["1"]} / 4)`,
-    height: `calc(${space["1"]} + ${space["1"]} / 4)`,
+    width: `calc(${space["1"]} + ${space["1"]} / 2)`,
+    height: `calc(${space["1"]} + ${space["1"]} / 2)`,
     borderRadius: radius.circle,
     backgroundColor: { default: "currentColor", [FORCED]: "CanvasText" },
     forcedColorAdjust: "none",
