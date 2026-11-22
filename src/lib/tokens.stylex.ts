@@ -41,6 +41,7 @@ export const colors = stylex.defineConsts({
   infoSubtle: "var(--damsko-info-subtle)",
   // Colour: focus.
   ring: "var(--damsko-ring)",
+  ringOnColor: "var(--damsko-ring-on-color)",
   ringHaloInvalid: "var(--damsko-ring-halo-invalid)",
   destructiveBorder: "var(--damsko-destructive-border)",
   destructiveShadowColor: "var(--damsko-destructive-shadow-color)",

@@ -77,3 +77,45 @@ test("a row of reactions is one picture with a name, laid over the bubble's edge
   expect(pill?.y ?? 0).toBeLessThan(foot);
   expect((pill?.y ?? 0) + (pill?.height ?? 0)).toBeGreaterThan(foot);
 });
+
+for (const theme of ["light", "dark"] as const) {
+  test(`a link in a filled bubble shows a ring seen on the fill, ${theme}`, async ({
+    page,
+  }) => {
+    await openExample(page, "bubble", "link", { theme });
+    await page.keyboard.press("Tab");
+    const link = page.getByRole("link", { name: "quarterly report" });
+    await expect(link).toBeFocused();
+    expect(await hasFocusRing(link)).toBe(true);
+    // The ring against the fill it stands on, as WCAG measures contrast.
+    const ratio = await link.evaluate((element) => {
+      const canvas = document.createElement("canvas");
+      canvas.width = 1;
+      canvas.height = 1;
+      const context = canvas.getContext("2d", { willReadFrequently: true });
+      const luminance = (colour: string) => {
+        if (context === null) {
+          return 0;
+        }
+        context.fillStyle = colour;
+        context.fillRect(0, 0, 1, 1);
+        const [red = 0, green = 0, blue = 0] = [
+          ...context.getImageData(0, 0, 1, 1).data,
+        ].map((channel) => {
+          const part = channel / 255;
+          return part <= 0.04045
+            ? part / 12.92
+            : ((part + 0.055) / 1.055) ** 2.4;
+        });
+        return 0.2126 * red + 0.7152 * green + 0.0722 * blue;
+      };
+      const fill = element.closest("[data-slot=bubble-content]");
+      const ring = luminance(getComputedStyle(element).outlineColor);
+      const ground = luminance(
+        fill === null ? "" : getComputedStyle(fill).backgroundColor
+      );
+      return (Math.max(ring, ground) + 0.05) / (Math.min(ring, ground) + 0.05);
+    });
+    expect(ratio).toBeGreaterThanOrEqual(3);
+  });
+}

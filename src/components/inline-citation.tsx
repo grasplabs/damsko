@@ -37,7 +37,7 @@ import {
 } from "../lib/tokens.stylex";
 import { citedSource, listOf } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
-import { motionVars } from "../lib/vars.stylex";
+import { motionVars, ringInsetMarker } from "../lib/vars.stylex";
 import { Button } from "./button";
 import {
   Carousel,
@@ -319,7 +319,7 @@ export const InlineCitationCardTrigger = ({
   const words = useI18n().inlineCitation;
   const first = citedSource(sources[0]);
   return (
-    <span {...stylex.props(styles.chip, style)}>
+    <span {...stylex.props(styles.chip, ringInsetMarker, style)}>
       <HoverCardTrigger variant="default" asChild>
         <Button variant="secondary" size="xs">
           {words.trigger(

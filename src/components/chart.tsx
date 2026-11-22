@@ -2147,7 +2147,7 @@ const pieStyles = stylex.create({
     transitionDuration: motionVars.hover,
     transitionTimingFunction: duration.ease,
     stroke: { default: "transparent", ":focus-visible": colors.ring },
-    strokeWidth: 2,
+    strokeWidth: size.ringWidth,
   },
   lift: (x: number, y: number) => ({ transform: `translate(${x}px, ${y}px)` }),
   // The row of the part under the pointer or the keys: its name in ink. Nothing else dims.
@@ -2620,7 +2620,7 @@ const sankeyStyles = stylex.create({
   flow: {
     outline: "none",
     stroke: { default: "transparent", ":focus-visible": colors.ring },
-    strokeWidth: 2,
+    strokeWidth: size.ringWidth,
     transitionProperty: "opacity",
     transitionDuration: motionVars.hover,
   },

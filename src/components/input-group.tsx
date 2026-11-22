@@ -43,7 +43,7 @@ import {
 } from "../lib/tokens.stylex";
 import { assignRef } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
-import { iconVars } from "../lib/vars.stylex";
+import { iconVars, ringInsetMarker } from "../lib/vars.stylex";
 import { Button } from "./button";
 import type { ButtonProps, ButtonVariant } from "./button";
 
@@ -198,6 +198,7 @@ export const InputGroup = ({
       render={<div data-slot="input-group" />}
       {...stylex.props(
         stylex.defaultMarker(),
+        ringInsetMarker,
         groupStyles.group,
         groupStyles[size],
         focusField.withinEditable,

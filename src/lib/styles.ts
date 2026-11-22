@@ -25,6 +25,7 @@ import {
   listMarker,
   menuMarker,
   motionVars,
+  ringInsetMarker,
   traceCardMarker,
 } from "./vars.stylex";
 
@@ -40,13 +41,20 @@ const REDUCED = media.reducedMotion;
 //                                                   checkbox, a radio, a switch): the ring stands off
 //   stylex.props(styles.thumb, focusWithin)         a part whose focus is on a hidden input inside it
 //   stylex.props(styles.link, focusRingText)        words: a link, a row's name
-//   stylex.props(styles.scroller, focusRingInset)   a box its parent clips: a code view, a nav row
+//   stylex.props(styles.scroller, focusRingInset)   a box its parent clips, or one whose
+//                                                   neighbours touch it: a code view, a nav row, a
+//                                                   segment
+//   stylex.props(styles.fill, focusOnColor)         a part filled with the action colour that holds
+//                                                   controls: their rings take the ink seen on it
 //   stylex.props(styles.input, focusField.default)  a field you type in: no ring, its own edge and
 //                                                   halo say it (`within` for a box round the input,
 //                                                   `slot` for a one-time code's cell)
 //   stylex.props(styles.tab, focusMarker, focusCarrier) with stylex.props(styles.words, focusLabel)
 //                                                   a control drawn edge to edge (a line tab): the
 //                                                   ring goes round its words, with a small corner
+//
+// The ring is ring-width of the ring's ink, standing ring-offset off the control's edge with the
+// ground showing between them, so it reads as a ring round the control and never as its border.
 //
 // A control shows focus only for the keyboard (:focus-visible), so a click shows nothing extra. A
 // field shows it whenever it has focus, because typing needs to know where it goes, but draws no
@@ -58,9 +66,9 @@ const REDUCED = media.reducedMotion;
 // ring.
 
 const line = `${size.ringWidth} solid ${colors.ring}`;
-// In forced colours a control already has a line of its own at rest (its edge), and the ring on
-// that edge would look like rest: the ring is twice as thick, in the system's Highlight, and stands
-// off the edge, so a focused control is told from one at rest. Normal colours are untouched.
+// In forced colours a control already has a line of its own at rest (its edge), and a ring as fine
+// as that edge would look like rest: the ring is twice as thick, in the system's Highlight, and
+// stands off the edge, so a focused control is told from one at rest.
 const forcedLine = `calc(2 * ${size.ringWidth}) solid Highlight`;
 const forcedThin = `${size.ringWidth} solid`;
 
@@ -144,13 +152,19 @@ const focusStyles = stylex.create({
       default: "none",
       [KEY]: { default: line, [FORCED]: forcedLine },
     },
+    // Inside a part that packs or clips its controls (ringInsetMarker) the ring is drawn just
+    // inside the control, as focusRingInset draws it.
     outlineOffset: {
       default: size.ringOffset,
+      [stylex.when.ancestor(":is(*)", ringInsetMarker)]: {
+        default: `calc(-1 * ${size.ringWidth})`,
+        [FORCED]: size.ringOffsetMark,
+      },
       [FORCED]: size.ringOffsetMark,
     },
   },
-  // A small mark whose own edge is already a line: on that edge the ring would be lost, so it
-  // stands off it, a gap of the ground between them.
+  // A small mark whose own edge is already a line: the ring stands ring-offset-mark off it, the
+  // mark's own measure, a gap of the ground between them.
   ringOffset: {
     outline: {
       default: "none",
@@ -171,6 +185,11 @@ const focusStyles = stylex.create({
     outline: { default: "none", [KEY]: line },
     outlineOffset: `calc(-1 * ${size.ringWidth})`,
   },
+  // On action-fill the ring's own ink is lost (the fill is that ink's mode): the rings inside take
+  // the other mode's. Not for the filled control itself, whose ring stands off it, on the ground.
+  onColor: {
+    "--damsko-ring": colors.ringOnColor,
+  },
   // A control whose ring is drawn on its words (focusLabel): it draws none itself.
   carrier: {
     outline: "none",
@@ -187,11 +206,11 @@ const focusStyles = stylex.create({
   },
 });
 
-/** The keyboard's ring on a control's edge. */
+/** The keyboard's ring round a control, standing off its edge. */
 export const focusRing = focusStyles.ring;
 /** The ring standing off a small mark whose own edge is a line (a checkbox, a radio, a switch). */
 export const focusRingOffset = focusStyles.ringOffset;
-/** The ring just inside a box its parent clips (a code view, a nav row). */
+/** The ring just inside a box its parent clips or its neighbours touch (a code view, a nav row). */
 export const focusRingInset = focusStyles.ringInset;
 /** The ring round words (a link, a row's name). */
 export const focusRingText = focusStyles.ringText;
@@ -201,6 +220,8 @@ export const focusWithin = focusStyles.within;
 export const focusLabel = focusStyles.label;
 /** A control whose ring is drawn on its words (focusLabel). */
 export const focusCarrier = focusStyles.carrier;
+/** A part filled with the action colour: every ring inside it takes the ink seen on that fill. */
+export const focusOnColor = focusStyles.onColor;
 
 /**
  * A field you type in: its own edge and halo show focus, so no ring, only the system's line in
