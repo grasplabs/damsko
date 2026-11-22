@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { hasFocusRing, openExample } from "./example.ts";
+import { drawnEdges, hasFocusRing, openExample, panelOf } from "./example.ts";
 
 test("the error's line names it, says it failed, and opens and closes its frames", async ({
   page,
@@ -78,4 +78,25 @@ test("Firefox's and Safari's frames show as they wrote them, behind a line that 
   await expect(
     page.getByRole("button", { name: "Copy the stack trace" })
   ).toBeVisible();
+});
+
+test("what opens under the line starts on the line's own start edge, its mark's, and ends where the header's last button does", async ({
+  page,
+}) => {
+  await openExample(page, "stack-trace", "basic");
+  const line = page.getByRole("button", {
+    name: /^TypeError: Cannot read properties/u,
+  });
+  if ((await line.getAttribute("aria-expanded")) === "false") {
+    await line.press("Enter");
+  }
+  const panel = await panelOf(line);
+  await expect(panel).toBeVisible();
+  const header = await drawnEdges(line);
+  const body = await drawnEdges(panel);
+  expect(Math.abs(body.start - header.start)).toBeLessThanOrEqual(1);
+  const last = await drawnEdges(
+    page.getByRole("button", { name: "Copy the stack trace" })
+  );
+  expect(Math.abs(body.end - last.end)).toBeLessThanOrEqual(1);
 });

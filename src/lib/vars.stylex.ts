@@ -95,3 +95,10 @@ export const toastRegionMarker = stylex.defineMarker();
  * every Button in it takes an equal part of the line (button.tsx).
  */
 export const layerFooterMarker = stylex.defineMarker();
+
+/**
+ * The marker of a card that holds a Trace row (Tool's): the row's trigger runs the card's width and
+ * takes no fill under the pointer, only its words turn to ink, as a row that opens in a list does
+ * (trace.tsx). A fill only as wide as the words would stand as a block of its own inside the card.
+ */
+export const traceCardMarker = stylex.defineMarker();

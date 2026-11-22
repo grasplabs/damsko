@@ -2883,6 +2883,7 @@
         "@stylexjs/stylex"
       ],
       "registryDependencies": [
+        "@damsko/badge",
         "@damsko/code-block",
         "@damsko/lib",
         "@damsko/trace"

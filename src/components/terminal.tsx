@@ -201,6 +201,9 @@ const styles = stylex.create({
     marginInlineStart: "auto",
     alignItems: "center",
     gap: space["1"],
+    // The last icon ends on the output's end edge, as the line's mark starts on its start edge; the
+    // button's fill under the pointer reaches past it by the button's own padding.
+    marginInlineEnd: `calc((${size.iconSm} - ${size.controlSm}) / 2)`,
     flexShrink: 0,
   },
   // The output, on the code surface as a small CodeBlock draws it: the wash, the strong edge, the

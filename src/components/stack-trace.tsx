@@ -32,7 +32,7 @@ import type { ReactNode } from "react";
 
 import { useI18n } from "../lib/i18n";
 import { focusRingText, tapTarget } from "../lib/styles";
-import { colors, font, media, radius, space } from "../lib/tokens.stylex";
+import { colors, font, media, radius, size, space } from "../lib/tokens.stylex";
 import type { LayoutStyle } from "../lib/utils";
 import { CopyButton } from "./copy-button";
 import { parseStackTrace } from "./stack-trace-parse";
@@ -186,6 +186,9 @@ const styles = stylex.create({
     gridRow: 1,
     alignItems: "center",
     gap: space["1"],
+    // The last icon ends on the output's end edge, as the line's mark starts on its start edge; the
+    // button's fill under the pointer reaches past it by the button's own padding.
+    marginInlineEnd: `calc((${size.iconSm} - ${size.controlSm}) / 2)`,
   },
   // The frames: a muted block of monospace lines, the dependencies' muted and the product's in ink.
   frames: {

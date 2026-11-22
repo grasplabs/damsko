@@ -1,6 +1,12 @@
 import { expect, test } from "@playwright/test";
 
-import { hasFocusRing, listenToLiveRegions, openExample } from "./example.ts";
+import {
+  drawnEdges,
+  hasFocusRing,
+  listenToLiveRegions,
+  openExample,
+  panelOf,
+} from "./example.ts";
 
 test("each section is a line named by its count and label that opens and folds its list", async ({
   page,
@@ -123,4 +129,19 @@ test("a remote picture from a chat is never requested and an SVG never drawn; on
   await expect(page.getByRole("img", { name: "drawing.svg" })).toHaveCount(0);
   await page.waitForLoadState("networkidle");
   expect(requested).toStrictEqual([]);
+});
+
+test("what opens under the line starts on the line's own start edge, its mark's", async ({
+  page,
+}) => {
+  await openExample(page, "queue", "basic");
+  const line = page.getByRole("button", { name: "3 to do" });
+  if ((await line.getAttribute("aria-expanded")) === "false") {
+    await line.press("Enter");
+  }
+  const panel = await panelOf(line);
+  await expect(panel).toBeVisible();
+  const header = await drawnEdges(line);
+  const body = await drawnEdges(panel);
+  expect(Math.abs(body.start - header.start)).toBeLessThanOrEqual(1);
 });
