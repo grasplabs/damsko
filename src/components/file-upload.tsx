@@ -483,7 +483,7 @@ const Row = ({
               styles.failed
           )}
         >
-          {told?.loading === true ? <Spinner /> : null}
+          {told?.loading === true ? <Spinner size="sm" /> : null}
           {metaLine(file, state, words, told, locale)}
         </span>
       </span>

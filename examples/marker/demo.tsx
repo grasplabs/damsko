@@ -22,7 +22,7 @@ export default function MarkerDemo() {
       </Marker>
       <Marker role="status">
         <MarkerIcon>
-          <Spinner />
+          <Spinner size="sm" />
         </MarkerIcon>
         <MarkerContent>Reading the contract</MarkerContent>
       </Marker>

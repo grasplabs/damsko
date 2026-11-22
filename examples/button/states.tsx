@@ -20,7 +20,7 @@ export default function ButtonState({
       focusableWhenDisabled={loading}
       aria-busy={loading || undefined}
     >
-      {loading && <Spinner />}
+      {loading && <Spinner size="sm" />}
       Save changes
     </Button>
   );

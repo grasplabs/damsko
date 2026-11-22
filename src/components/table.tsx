@@ -575,7 +575,7 @@ const styles = stylex.create({
     verticalAlign: "middle",
     fontSize: font.textSm,
     fontWeight: font.weightMedium,
-    color: colors.tableHeadText,
+    color: colors.tableHeadForeground,
     whiteSpace: "nowrap",
   },
   // A head with controls after its name (a column's menu, a resize handle): they sit at its end.

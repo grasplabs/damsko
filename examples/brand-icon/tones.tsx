@@ -29,7 +29,7 @@ export default function BrandIconsTones() {
               key={brand}
               {...logos[brand]}
               variant={variant}
-              size="lg"
+              size="default"
             />
           ))}
         </div>

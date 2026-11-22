@@ -394,7 +394,7 @@ export const TerminalStatus = ({ children, style }: TerminalStatusProps) => {
   }
   return (
     <span data-slot="terminal-status" {...stylex.props(styles.status, style)}>
-      {children ?? <Spinner />}
+      {children ?? <Spinner size="sm" />}
     </span>
   );
 };

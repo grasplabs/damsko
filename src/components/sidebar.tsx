@@ -125,7 +125,7 @@ const styles = stylex.create({
       ':is([data-state="collapsed"][data-collapsible="icon"])':
         size.sidebarRailWidth,
     },
-    color: colors.sidebarText,
+    color: colors.sidebarForeground,
     transitionProperty: "width",
     transitionDuration: motionVars.ui,
     transitionTimingFunction: duration.ease,
@@ -220,7 +220,7 @@ const styles = stylex.create({
     flexDirection: "column",
     flexGrow: 1,
     minHeight: 0,
-    color: colors.sidebarText,
+    color: colors.sidebarForeground,
     fontFamily: font.sans,
     fontSize: font.textSm,
     lineHeight: font.textSmLine,
@@ -348,7 +348,7 @@ const styles = stylex.create({
     borderWidth: 0,
     borderRadius: radius.sidebarRadius,
     backgroundColor: "transparent",
-    color: colors.sidebarTextTertiary,
+    color: colors.sidebarTertiaryForeground,
     fontFamily: font.sans,
     fontSize: font.textXs,
     lineHeight: font.textXsLine,
@@ -398,8 +398,8 @@ const styles = stylex.create({
     borderColor: "ButtonText",
     borderRadius: radius.sidebarRadius,
     color: {
-      default: colors.sidebarTextSecondary,
-      [HOVER]: { default: null, ":hover": colors.sidebarText },
+      default: colors.sidebarSecondaryForeground,
+      [HOVER]: { default: null, ":hover": colors.sidebarForeground },
     },
     backgroundColor: {
       default: "transparent",
@@ -507,8 +507,8 @@ const styles = stylex.create({
     borderRadius: radius.sidebarRadius,
     overflow: "hidden",
     color: {
-      default: colors.sidebarTextSecondary,
-      [HOVER]: { default: null, ":hover": colors.sidebarText },
+      default: colors.sidebarSecondaryForeground,
+      [HOVER]: { default: null, ":hover": colors.sidebarForeground },
     },
     backgroundColor: {
       default: "transparent",
@@ -580,9 +580,9 @@ const styles = stylex.create({
   },
   // The page you are on: raised, in the words' own ink. In forced colours a border marks it.
   active: {
-    color: colors.sidebarText,
+    color: colors.sidebarForeground,
     backgroundColor: colors.sidebarAccent,
-    boxShadow: `0 0 0 ${size.hairline} ${colors.sidebarRule}`,
+    boxShadow: `0 0 0 ${size.hairline} ${colors.sidebarBorder}`,
     borderColor: { default: "transparent", [FORCED]: "Highlight" },
   },
 
@@ -609,10 +609,10 @@ const styles = stylex.create({
     paddingInline: size.sidebarCountInline,
     borderWidth: size.hairline,
     borderStyle: "solid",
-    borderColor: { default: colors.sidebarRule, [FORCED]: "CanvasText" },
+    borderColor: { default: colors.sidebarBorder, [FORCED]: "CanvasText" },
     borderRadius: radius.full,
     backgroundColor: colors.sidebarCard,
-    color: colors.sidebarTextSecondary,
+    color: colors.sidebarSecondaryForeground,
     fontSize: font.textXs,
     lineHeight: font.textXsLine,
     fontWeight: font.weightMedium,
@@ -661,7 +661,7 @@ const styles = stylex.create({
     borderInlineStartWidth: size.hairline,
     borderInlineStartStyle: "solid",
     borderInlineStartColor: {
-      default: colors.sidebarRule,
+      default: colors.sidebarBorder,
       [FORCED]: "CanvasText",
     },
     listStyle: "none",

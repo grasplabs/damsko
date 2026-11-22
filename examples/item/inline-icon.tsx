@@ -27,7 +27,7 @@ export default function ItemInlineIcon() {
       <ItemGroup aria-label="AI providers">
         <Item size="sm">
           <ItemMedia align="center">
-            <BrandIcon {...logos.chatgpt} size="sm" decorative />
+            <BrandIcon {...logos.chatgpt} size="xs" decorative />
           </ItemMedia>
           <ItemContent>
             <ItemTitle>OpenAI</ItemTitle>
@@ -42,7 +42,7 @@ export default function ItemInlineIcon() {
         <ItemSeparator />
         <Item size="sm">
           <ItemMedia align="center">
-            <BrandIcon {...logos.claude} size="sm" decorative />
+            <BrandIcon {...logos.claude} size="xs" decorative />
           </ItemMedia>
           <ItemContent>
             <ItemTitle>Anthropic</ItemTitle>

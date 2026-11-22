@@ -18,7 +18,7 @@ export default function MarkerStatus() {
     <div {...stylex.props(layout.column)}>
       <Marker role="status">
         <MarkerIcon>
-          <Spinner />
+          <Spinner size="sm" />
         </MarkerIcon>
         <MarkerContent>Summarising the conversation</MarkerContent>
       </Marker>
@@ -29,7 +29,7 @@ export default function MarkerStatus() {
       </Marker>
       <Marker variant="separator" role="status">
         <MarkerIcon>
-          <Spinner />
+          <Spinner size="sm" />
         </MarkerIcon>
         <MarkerContent>Running the checks</MarkerContent>
       </Marker>

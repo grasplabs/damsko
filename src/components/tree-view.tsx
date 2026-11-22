@@ -186,7 +186,7 @@ const styles = stylex.create({
     fontFamily: font.sans,
     fontSize: font.textSm,
     lineHeight: font.textSmLine,
-    color: colors.treeViewText,
+    color: colors.treeViewForeground,
     listStyle: "none",
   },
   // An item holds its row and, when it is a branch, its group. Focus is on the item; its row
@@ -223,13 +223,13 @@ const styles = stylex.create({
     letterSpacing: size.treeViewTracking,
     // Chosen or current: a fill, which forced colours drop, so the system's highlight there.
     color: {
-      default: colors.treeViewText,
+      default: colors.treeViewForeground,
       ":hover:not([data-selected], [data-current])": {
         default: null,
-        [HOVER]: colors.treeViewTextHover,
+        [HOVER]: colors.treeViewForegroundHover,
       },
       [chosen]: {
-        default: colors.treeViewTextSelected,
+        default: colors.treeViewForegroundSelected,
         [FORCED]: "HighlightText",
       },
     },
@@ -582,7 +582,7 @@ const Chevron = (
     {...stylex.props(styles.chevron, state.failed === true && styles.failed)}
   >
     {state.loading === true ? (
-      <Spinner />
+      <Spinner size="sm" />
     ) : (
       <Icon icon={state.failed === true ? CircleAlertIcon : ChevronRightIcon} />
     )}
@@ -866,7 +866,7 @@ export const TreeView = ({
         }}
       />
       {query !== "" && shown.length === 0 ? (
-        <output {...stylex.props(styles.none)}>{words.noMatches}</output>
+        <output {...stylex.props(styles.none)}>{words.empty}</output>
       ) : (
         tree
       )}

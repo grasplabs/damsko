@@ -66,7 +66,7 @@ import type { InputSize } from "./input";
 import { Tag } from "./tag";
 
 /** The words a TagsInput says, so the product can say them in its own language. */
-export type TagsInputTranslations = I18nCatalog["tagsInput"];
+export type TagsInputLabels = I18nCatalog["tagsInput"];
 
 /** Every prop a TagsInput takes. */
 export interface TagsInputProps {
@@ -91,7 +91,7 @@ export interface TagsInputProps {
    * Checks a value: `true` when it is right; `false`, or the words that say why ("not an email
    * address"), when it is wrong. A wrong value is kept, so the person can see and correct it: its
    * tag gets a destructive edge, and a screen reader hears, after its words, the words returned, or
-   * `translations.invalid` for `false`. Say what is wrong under the field, as any field does.
+   * `labels.invalid` for `false`. Say what is wrong under the field, as any field does.
    */
   validate?: (value: string) => boolean | string;
   /** The name each value is sent under in a form. Inside a Field, the Field's `name` serves. */
@@ -105,7 +105,7 @@ export interface TagsInputProps {
    * suggestions say when none matches what was typed. The rest comes from the I18nProvider
    * (`tagsInput`).
    */
-  translations?: Partial<TagsInputTranslations>;
+  labels?: Partial<TagsInputLabels>;
   /** Layout only: where it sits and how wide it is. */
   style?: LayoutStyle;
 }
@@ -304,7 +304,7 @@ const refusalNow = (
   refused: Refusal | null,
   values: readonly string[],
   max: number | undefined,
-  words: TagsInputTranslations
+  words: TagsInputLabels
 ): string => {
   if (refused === null) {
     return "";
@@ -356,14 +356,14 @@ export const TagsInput = ({
   name,
   disabled,
   "aria-label": ariaLabel,
-  translations,
+  labels,
   style,
 }: TagsInputProps) => {
   const [own, setOwn] = useState(defaultValue);
-  // What it says: the I18nProvider's, with this field's own `translations` over them.
-  const words: TagsInputTranslations = {
+  // What it says: the I18nProvider's, with this field's own `labels` over them.
+  const words: TagsInputLabels = {
     ...useI18n().tagsInput,
-    ...translations,
+    ...labels,
   };
   const values = value ?? own;
   const [query, setQuery] = useState("");

@@ -37,10 +37,10 @@ export interface TextProps {
    */
   size?: TextSize;
   /**
-   * `regular` for running text; `medium` for a label or a name. Nothing heavier exists.
-   * @default "regular"
+   * `normal` for running text; `medium` for a label or a name. Nothing heavier exists.
+   * @default "normal"
    */
-  weight?: "regular" | "medium";
+  weight?: "normal" | "medium";
   /**
    * `default` for words that must be read first, `secondary` for body text, `muted` for what
    * supports it, `subtle` for the least: a timestamp, a count. Each holds 4.5:1 on every ground.
@@ -103,7 +103,7 @@ const sizeStyles = stylex.create({
 });
 
 const weightStyles = stylex.create({
-  regular: { fontWeight: font.weightNormal },
+  normal: { fontWeight: font.weightNormal },
   medium: { fontWeight: font.weightMedium },
 });
 
@@ -152,7 +152,7 @@ const useCut = (element: HTMLElement | null, truncate: boolean) => {
 export const Text = ({
   children,
   size = "default",
-  weight = "regular",
+  weight = "normal",
   color = "secondary",
   as: Tag = "p",
   wrap = "wrap",

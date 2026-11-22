@@ -148,7 +148,7 @@ const styles = stylex.create({
       ":is([data-today])": colors.foreground,
       [middle]: colors.foreground,
       [chosen]: {
-        default: colors.calendarTextSelected,
+        default: colors.calendarForegroundSelected,
         [media.forcedColors]: "SelectedItemText",
       },
     },

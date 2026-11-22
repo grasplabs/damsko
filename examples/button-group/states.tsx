@@ -33,7 +33,7 @@ export default function ButtonGroupState({
           focusableWhenDisabled={loading}
           aria-busy={loading || undefined}
         >
-          {loading && <Spinner />}
+          {loading && <Spinner size="sm" />}
           Send
         </Button>
       </span>

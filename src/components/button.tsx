@@ -457,7 +457,7 @@ const variantStyles = stylex.create({
   // or dense action where a row of edged, lifted buttons would be too heavy.
   secondary: {
     color: colors.foreground,
-    backgroundColor: colors.buttonSecondary,
+    backgroundColor: colors.secondary,
     boxShadow: "none",
   },
   destructive: {
@@ -469,7 +469,7 @@ const variantStyles = stylex.create({
   // input beside it.
   outline: {
     color: colors.foreground,
-    backgroundColor: colors.secondary,
+    backgroundColor: colors.control,
     boxShadow: shadow.bevelMuted,
   },
   ghost: {
@@ -519,11 +519,11 @@ const liveStyles = stylex.create({
   },
   secondary: {
     backgroundColor: {
-      default: colors.buttonSecondary,
-      ":hover": { default: null, [HOVER]: colors.buttonSecondaryHover },
+      default: colors.secondary,
+      ":hover": { default: null, [HOVER]: colors.secondaryHover },
       ":active": {
-        default: colors.buttonSecondaryActive,
-        [HOVER]: colors.buttonSecondaryActive,
+        default: colors.secondaryActive,
+        [HOVER]: colors.secondaryActive,
       },
     },
   },
@@ -550,11 +550,11 @@ const liveStyles = stylex.create({
   },
   outline: {
     backgroundColor: {
-      default: colors.secondary,
-      ":hover": { default: null, [HOVER]: colors.secondaryHover },
+      default: colors.control,
+      ":hover": { default: null, [HOVER]: colors.controlHover },
       ":active": {
-        default: colors.secondaryActive,
-        [HOVER]: colors.secondaryActive,
+        default: colors.controlActive,
+        [HOVER]: colors.controlActive,
       },
     },
   },
@@ -834,7 +834,7 @@ type Labels = Partial<Record<Exclude<ActionStatus, "idle">, string>>;
 /** A state's mark: the spinner while it works, a tick, the alert. */
 const Mark = ({ status }: { status: Exclude<ActionStatus, "idle"> }) => {
   if (status === "loading") {
-    return <Spinner />;
+    return <Spinner size="sm" />;
   }
   return <Icon icon={status === "success" ? CheckIcon : CircleAlertIcon} />;
 };

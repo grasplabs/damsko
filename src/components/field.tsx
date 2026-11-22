@@ -838,7 +838,7 @@ export const FieldStatus = ({ status, onRetry }: FieldStatusProps) => {
     >
       {status === "loading" && (
         <span aria-hidden="true" {...stylex.props(statusStyles.mark)}>
-          <Spinner />
+          <Spinner size="sm" />
         </span>
       )}
       {status === "success" && (

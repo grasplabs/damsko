@@ -7,7 +7,7 @@
 //     <MarkerContent>Today</MarkerContent>
 //   </Marker>
 //   <Marker role="status">
-//     <MarkerIcon><Spinner /></MarkerIcon>
+//     <MarkerIcon><Spinner size="sm" /></MarkerIcon>
 //     <MarkerContent>Reading 4 files</MarkerContent>
 //   </Marker>
 //

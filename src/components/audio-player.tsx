@@ -381,7 +381,7 @@ const IconPress = ({ icon, label, onPress, waiting }: IconPressProps) => {
       focusableWhenDisabled
       onClick={onPress}
     >
-      {busy ? <Spinner /> : <Icon icon={icon} />}
+      {busy ? <Spinner size="sm" /> : <Icon icon={icon} />}
     </Button>
   );
 };

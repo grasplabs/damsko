@@ -353,7 +353,7 @@ export const Inspector = ({
         <SidePanelHeader
           icon={
             icon === undefined ? undefined : (
-              <IconTile icon={icon} variant="tint" />
+              <IconTile icon={icon} variant="tinted" />
             )
           }
           title={title}

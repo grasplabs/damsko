@@ -29,7 +29,7 @@ export default function PageHeaderActionsKinds() {
             Delete
           </Button>
           <Button variant="outline" disabled focusableWhenDisabled>
-            <Spinner />
+            <Spinner size="sm" />
             Export
           </Button>
           <Button variant="outline" disabled>

@@ -5,8 +5,8 @@
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
 //   <Spinner aria-label="Loading the report" />            alone: a status that says its label
-//   <p role="status"><Spinner /> Loading the report</p>    beside words: they are the status
-//   <Button disabled><Spinner /> Saving</Button>           in a button: the button's words say it
+//   <p role="status"><Spinner /> Loading the report</p>    beside body text: they are the status
+//   <Button disabled><Spinner size="sm" /> Saving</Button> in a button: the button's words say it
 //
 // A caller may set layout only (the `style` prop). A part round it may set `spinnerVars`.
 import * as stylex from "@stylexjs/stylex";
@@ -18,7 +18,7 @@ import type { LayoutStyle } from "../lib/utils";
 import { iconVars } from "../lib/vars.stylex";
 import { spinnerVars } from "./spinner.stylex";
 
-export type SpinnerSize = "default" | "lg" | "xl";
+export type SpinnerSize = "sm" | "default" | "lg";
 
 /** Every prop a Spinner takes. */
 export interface SpinnerProps {
@@ -29,7 +29,7 @@ export interface SpinnerProps {
    */
   "aria-label"?: string;
   /**
-   * `default` beside small text and in a button, `lg` beside body text, `xl` alone in a panel.
+   * `sm` beside small text and in a button, `default` beside body text, `lg` alone in a panel.
    * @default "default"
    */
   size?: SpinnerSize;
@@ -68,12 +68,12 @@ const styles = stylex.create({
     },
     animationIterationCount: "infinite",
   },
-  default: { [iconVars.size]: size.iconSm },
-  lg: { [iconVars.size]: size.iconDefault },
-  xl: { [iconVars.size]: size.spinnerLg },
+  sm: { [iconVars.size]: size.iconSm },
+  default: { [iconVars.size]: size.iconDefault },
+  lg: { [iconVars.size]: size.spinnerLg },
 });
 
-const sizes = { default: styles.default, lg: styles.lg, xl: styles.xl };
+const sizes = { sm: styles.sm, default: styles.default, lg: styles.lg };
 
 export const Spinner = ({
   "aria-label": label,

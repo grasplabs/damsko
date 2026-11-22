@@ -16,7 +16,7 @@ export default function HeadingSizes() {
       <Heading level={2} size="lg">
         Reports
       </Heading>
-      <Heading level={3} size="md">
+      <Heading level={3} size="default">
         This quarter
       </Heading>
       <Heading level={4} size="sm">

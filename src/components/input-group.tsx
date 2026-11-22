@@ -355,7 +355,7 @@ const fieldStyles = stylex.create({
     // Read only: the words a step quieter, as Input's.
     color: {
       default: colors.foreground,
-      ":read-only:not(:disabled)": colors.inputInkRead,
+      ":read-only:not(:disabled)": colors.inputForegroundRead,
     },
     // Read only: no caret, nothing says type here (Input's readOnly).
     caretColor: { default: colors.foreground, ":read-only": "transparent" },

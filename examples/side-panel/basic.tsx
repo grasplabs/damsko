@@ -56,7 +56,7 @@ export default function SidePanelBasic() {
     <div {...stylex.props(layout.box)}>
       <SidePanel aria-label="Report details" defaultValue="details">
         <SidePanelHeader
-          icon={<IconTile icon={ChartColumnIcon} variant="tint" />}
+          icon={<IconTile icon={ChartColumnIcon} variant="tinted" />}
           title="Quarterly delivery review"
           description="How each project moved this quarter, against its plan."
           meta={["By Jonas Weber", "Updated Tuesday"]}

@@ -1,10 +1,10 @@
 // IconTile: the small square that holds an object's own icon at the head of its details (an
 // agent, a report, a person), in the system's squircle with the colour rationed. Three variants:
-// `default`, white on the medium lift with the icon in the one accent; `tint`, a quiet wash of
+// `default`, white on the medium lift with the icon in the one accent; `tinted`, a quiet wash of
 // mint; and `gradient`, the pane of light the success colour stands in, with its inner light. One
 // tile per view.
 //
-//   <IconTile icon={ChartColumnIcon} variant="tint" />
+//   <IconTile icon={ChartColumnIcon} variant="tinted" />
 //   <IconTile icon={WandSparklesIcon} variant="gradient" loading />
 //
 // While the object is working, the gradient's light leans down once and stays leaned until it
@@ -29,14 +29,14 @@ import type { LayoutStyle } from "../lib/utils";
 import { iconVars, motionVars } from "../lib/vars.stylex";
 
 /** The tile's ground: white and raised, a tint, or the pane of light. */
-export type IconTileVariant = "default" | "tint" | "gradient";
+export type IconTileVariant = "default" | "tinted" | "gradient";
 
 /** Every prop an IconTile takes. */
 export interface IconTileProps {
   /** The object's own icon: what kind of thing it is (an agent, a report). From lib/icons. */
   icon: IconData;
   /**
-   * `default` for a quiet head, white with the icon in the accent; `tint` a wash of mint;
+   * `default` for a quiet head, white with the icon in the accent; `tinted` a wash of mint;
    * `gradient` the pane of light, for the one object a view is about.
    * @default "default"
    */
@@ -84,7 +84,7 @@ const styles = stylex.create({
     backgroundColor: colors.card,
     boxShadow: shadow.md,
   },
-  tint: {
+  tinted: {
     color: colors.iconTileForeground,
     backgroundColor: colors.iconTileTint,
   },
@@ -140,7 +140,7 @@ export const IconTile = ({
       {...stylex.props(
         styles.tile,
         variant === "default" && styles.default,
-        variant === "tint" && styles.tint,
+        variant === "tinted" && styles.tinted,
         variant === "gradient" && styles.gradient,
         variant === "gradient" && loading && styles.loading,
         size === "sm" && styles.sm,

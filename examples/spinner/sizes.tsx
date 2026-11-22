@@ -11,9 +11,9 @@ const layout = stylex.create({
 export default function SpinnerSizes() {
   return (
     <div {...stylex.props(layout.row)}>
+      <Spinner size="sm" />
       <Spinner />
       <Spinner size="lg" />
-      <Spinner size="xl" />
     </div>
   );
 }

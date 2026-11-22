@@ -278,7 +278,7 @@ const styles = stylex.create({
       default: `inset 0 0 0 1px ${colors.input}`,
       [KEYBOARD]: sizes.inputFocusRead,
     },
-    color: colors.inputInkRead,
+    color: colors.inputForegroundRead,
     caretColor: "transparent",
     cursor: "default",
   },

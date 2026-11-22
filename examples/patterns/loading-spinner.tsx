@@ -58,7 +58,7 @@ export default function LoadingSpinner() {
     <div {...stylex.props(layout.panel)}>
       {loading ? (
         <p role="status" {...stylex.props(layout.status)}>
-          <Spinner />
+          <Spinner size="sm" />
           Loading comments
         </p>
       ) : (

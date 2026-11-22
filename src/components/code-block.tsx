@@ -753,7 +753,7 @@ export const CodeBlockTitle = ({ children }: CodeBlockTitleProps) => {
       </span>
       {/* Always in the page, so a screen reader hears it start; empty once the code is written. */}
       <output {...stylex.props(streaming ? styles.streaming : visuallyHidden)}>
-        {streaming && showStreamingIndicator && <Spinner />}
+        {streaming && showStreamingIndicator && <Spinner size="sm" />}
         {streaming ? words.streaming : ""}
       </output>
     </>

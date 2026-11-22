@@ -39,7 +39,7 @@ export default function SpinnerOnFills() {
           focusableWhenDisabled
           aria-busy
         >
-          <Spinner />
+          <Spinner size="sm" />
           {words}
         </Button>
       ))}

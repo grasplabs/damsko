@@ -509,7 +509,7 @@ const ActionButton = ({
   }, [failed, errorLabel]);
   return (
     <Button {...props} variant="outline" size="sm">
-      {state.pending && <Spinner />}
+      {state.pending && <Spinner size="sm" />}
       {failed && !state.pending ? errorLabel : label}
     </Button>
   );

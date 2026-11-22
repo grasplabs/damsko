@@ -511,9 +511,9 @@ const lookOf = (variant: ButtonVariant) =>
 // While held, the button keeps its rest fill under the pointer and the press: the fill shows it.
 const heldStyles = stylex.create({
   default: { backgroundColor: { default: null, [HELD]: colors.primary } },
-  outline: { backgroundColor: { default: null, [HELD]: colors.secondary } },
+  outline: { backgroundColor: { default: null, [HELD]: colors.control } },
   secondary: {
-    backgroundColor: { default: null, [HELD]: colors.buttonSecondary },
+    backgroundColor: { default: null, [HELD]: colors.secondary },
   },
   destructive: {
     backgroundColor: { default: null, [HELD]: colors.destructiveFill },
@@ -537,7 +537,7 @@ const fillStyles = stylex.create({
   outline: {
     "::before": {
       backgroundImage: {
-        default: flat(colors.secondaryActive),
+        default: flat(colors.controlActive),
         [FORCED]: flat("Highlight"),
       },
     },
@@ -545,7 +545,7 @@ const fillStyles = stylex.create({
   secondary: {
     "::before": {
       backgroundImage: {
-        default: flat(colors.buttonSecondaryActive),
+        default: flat(colors.secondaryActive),
         [FORCED]: flat("Highlight"),
       },
     },
