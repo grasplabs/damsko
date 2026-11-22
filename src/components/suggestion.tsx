@@ -21,7 +21,7 @@ import type { ReactNode } from "react";
 
 import { useScrollEdges } from "../hooks/use-scroll-edges";
 import { useI18n } from "../lib/i18n";
-import { scrollbarHidden } from "../lib/styles";
+import { edgeFade, scrollbarHidden } from "../lib/styles";
 import { size, space } from "../lib/tokens.stylex";
 import type { LayoutStyle } from "../lib/utils";
 import { Button } from "./button";
@@ -69,10 +69,6 @@ export interface SuggestionProps {
 
 // The room the keyboard's ring takes round a button: kept inside the scroller so it is never cut.
 const RING_ROOM = `calc(${size.ringWidth} + ${size.ringOffset})`;
-// The fade at a side with more beyond it, clear for the ring's room at the very edge.
-const FADE = space["10"];
-const fadeStart = `transparent ${RING_ROOM}, black ${FADE}`;
-const fadeEnd = `black calc(100% - ${FADE}), transparent calc(100% - ${RING_ROOM})`;
 
 const styles = stylex.create({
   // The scroller: sideways only, no bar, and the sideways wheel stays in it. It stands out by the
@@ -87,17 +83,6 @@ const styles = stylex.create({
     overflowX: "auto",
     overflowY: "hidden",
     overscrollBehaviorX: "contain",
-    // A button reached by Tab stops clear of the fade, its ring in view.
-    scrollPaddingInline: FADE,
-    maskImage: {
-      default: null,
-      ":is([data-under-end]:not([data-under-start]))": `linear-gradient(to right, ${fadeEnd})`,
-      ":is([data-under-start]:not([data-under-end]))": `linear-gradient(to right, ${fadeStart}, black)`,
-      ":is([data-under-start][data-under-end])": `linear-gradient(to right, ${fadeStart}, ${fadeEnd})`,
-      ":is([dir=rtl] *):is([data-under-end]:not([data-under-start]))": `linear-gradient(to left, ${fadeEnd})`,
-      ":is([dir=rtl] *):is([data-under-start]:not([data-under-end]))": `linear-gradient(to left, ${fadeStart}, black)`,
-      ":is([dir=rtl] *):is([data-under-start][data-under-end])": `linear-gradient(to left, ${fadeStart}, ${fadeEnd})`,
-    },
   },
   // The buttons in one line, as wide as they come to.
   row: {
@@ -124,7 +109,7 @@ export const Suggestions = ({
       role="group"
       aria-label={label ?? words.name}
       data-slot="suggestions"
-      {...stylex.props(styles.scroller, scrollbarHidden, style)}
+      {...stylex.props(styles.scroller, scrollbarHidden, edgeFade, style)}
     >
       <div {...stylex.props(styles.row)}>{children}</div>
     </div>

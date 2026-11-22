@@ -1,9 +1,11 @@
 "use client";
 
 import { ShareDialog } from "@grasp-os/ui/blocks/share-dialog-01/share-dialog-01";
-import type { ShareMember } from "@grasp-os/ui/blocks/share-dialog-01/share-dialog-01";
+import type {
+  ShareMember,
+  SharePerson,
+} from "@grasp-os/ui/blocks/share-dialog-01/share-dialog-01";
 import { Button } from "@grasp-os/ui/components/button";
-import type { UserPickerUser } from "@grasp-os/ui/components/user-picker";
 import {
   BuildingIcon,
   Icon,
@@ -19,7 +21,7 @@ const levels = [
 ];
 
 // Who the workspace knows: anyone already in the list is not offered again.
-const people: UserPickerUser[] = [
+const people: SharePerson[] = [
   { id: "design", name: "Design team", detail: "6 people" },
   { id: "pieter", name: "Pieter de Boer", detail: "pieter@contoso.example" },
   { id: "mees", name: "Mees Bakker", detail: "mees@contoso.example" },

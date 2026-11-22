@@ -5,7 +5,12 @@ import { space } from "@grasp-os/ui/lib/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
 
 const layout = stylex.create({
-  column: { display: "grid", gap: space["3"], width: "100%" },
+  column: {
+    display: "grid",
+    gridTemplateColumns: "minmax(0, 1fr)",
+    gap: space["3"],
+    width: "100%",
+  },
 });
 
 // Sounds whose addresses came in a chat. A remote address does not play (loading it would tell its

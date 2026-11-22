@@ -541,8 +541,10 @@ const styles = stylex.create({
     overflowWrap: "anywhere",
     hyphens: "manual",
   },
-  // In forced colours a fill is dropped, so the highlight is the system's own there.
+  // In forced colours a fill is dropped, so the highlight is the system's own there, drawn by the
+  // item itself: left to the browser, a backplate in the page's colour hides its words.
   itemHighlighted: {
+    forcedColorAdjust: { default: null, [FORCED]: "none" },
     backgroundColor: {
       default: colors.accentHighlight,
       [FORCED]: "Highlight",
@@ -564,13 +566,15 @@ const styles = stylex.create({
   itemDescription: {
     fontSize: font.textXs,
     lineHeight: font.textXsLine,
-    color: colors.mutedForeground,
+    // In forced colours it takes its row's colour, the highlighted row's too.
+    color: { default: colors.mutedForeground, [FORCED]: "inherit" },
     whiteSpace: "normal",
   },
   tick: {
     display: "inline-flex",
     flexShrink: 0,
-    color: colors.foreground,
+    // In forced colours it takes its row's colour, the highlighted row's too.
+    color: { default: colors.foreground, [FORCED]: "inherit" },
   },
   // A group's name: small and quiet, above its items.
   groupLabel: {

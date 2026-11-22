@@ -79,6 +79,7 @@ Hover and keyboard focus are forced from its own CSS; the rest are props.
 <Intent
   of="select"
   always={[
+    "A handful of choices people can scan, with no typing.",
     "A label that says what is chosen: Role, Time zone.",
     "A placeholder that is a verb and the thing: Choose a role.",
     "Items in an order people expect: by size, by time, or A to Z.",
@@ -86,6 +87,7 @@ Hover and keyboard focus are forced from its own CSS; the rest are props.
     "`items` on the root when a value is set before the list opens, so the control shows its words.",
   ]}
   never={[
+    "A list too long to scan, or people to find by name: use Combobox, which filters as you type.",
     "An item that says nothing on its own: Other, Misc.",
     "Colours, heights or corners set from outside: `style` takes layout and width only.",
   ]}

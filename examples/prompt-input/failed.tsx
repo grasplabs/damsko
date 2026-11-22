@@ -19,11 +19,13 @@ const offline = async () =>
   });
 
 // A send that fails puts the words back, says so, and Submit sends again. The failure line is the
-// page's: here a note in the card while the status is `error`.
+// page's: here a note in the card while the status is `error`. In one row (`compact`), as a chat's
+// foot has it, the note folds the card: the words keep the whole width, the note goes under them.
 export default function PromptInputFailed() {
   const [failed, setFailed] = useState(false);
   return (
     <PromptInput
+      compact
       status={failed ? "error" : "ready"}
       defaultValue={["Which invoices are still unpaid this quarter?"]}
       onSubmit={async () => {

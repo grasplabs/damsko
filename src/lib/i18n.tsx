@@ -851,16 +851,6 @@ export interface I18nCatalog {
     loading: string;
     success: string;
   };
-  userPicker: {
-    /** Said in the list when no one matches. */
-    empty: string;
-    /** Why an agent's choice is refused: the value is no one in the list. */
-    notInList: (value: string) => string;
-    /** What the field says while no one is chosen. */
-    placeholder: string;
-    /** The name of the button that opens the list of people. */
-    trigger: string;
-  };
 }
 
 const english: I18nCatalog = {
@@ -1482,12 +1472,6 @@ const english: I18nCatalog = {
     error: "Could not finish",
     loading: "Working",
     success: "Done",
-  },
-  userPicker: {
-    empty: "No one has that name",
-    notInList: (value: string) => `${value} is not one of the people listed`,
-    placeholder: "Choose a person",
-    trigger: "Show the people",
   },
 };
 

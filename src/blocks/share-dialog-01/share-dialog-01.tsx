@@ -1,5 +1,5 @@
 // Share dialog: share one thing with people at a level of access, in a Dialog. The add row on top
-// (a UserPicker over who can be added, the level to give, Add), then everyone who has access with
+// (a Combobox over who can be added, the level to give, Add), then everyone who has access with
 // their level (the owner's row says Owner; Remove is the last choice of a level), and a foot with
 // the link to copy and Done. A level applies when it is chosen: there is no Save.
 //
@@ -24,6 +24,7 @@ import type { ReactNode } from "react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "../../components/avatar";
 import { Button } from "../../components/button";
+import { Combobox, ComboboxEmpty } from "../../components/combobox";
 import {
   Dialog,
   DialogBody,
@@ -53,10 +54,8 @@ import {
 } from "../../components/select";
 import type { SelectItems } from "../../components/select";
 import { Snippet } from "../../components/snippet";
-import { UserPicker } from "../../components/user-picker";
-import type { UserPickerUser } from "../../components/user-picker";
 import { useAction } from "../../hooks/use-action";
-import { Icon } from "../../lib/icons";
+import { Icon, UsersIcon } from "../../lib/icons";
 import type { IconData } from "../../lib/icons";
 import { colors, font, space } from "../../lib/tokens.stylex";
 
@@ -72,6 +71,8 @@ export interface ShareDialogLabels {
   copyLink: string;
   /** The close button. */
   done: string;
+  /** Said in the add field's list when no one matches the words typed. */
+  empty: string;
   /** Said when an invite failed. */
   failedInvite: string;
   /** The add field's name and placeholder. */
@@ -96,6 +97,7 @@ const LABELS: ShareDialogLabels = {
   adding: "Adding",
   copyLink: "Copy link",
   done: "Done",
+  empty: "No one has that name",
   failedInvite: "Could not invite",
   find: "Add people or groups",
   inviteLevel: "Access for who you add",
@@ -126,6 +128,18 @@ export interface ShareMember {
   level?: string;
 }
 
+/** One who can be added: a person, or a group, found by typing their name. */
+export interface SharePerson {
+  /** What `onInvite` receives. Unique and lasting. */
+  id: string;
+  /** Their name ("Pieter de Boer", "Design team"). Typing finds it, and initials come from it. */
+  name: string;
+  /** A quiet line under the name: an email, a count ("6 people"). Typing finds it too. */
+  detail?: string;
+  /** Their picture. Without it, their initials. */
+  src?: string;
+}
+
 /** One level of access ("Can edit"). */
 export interface ShareLevel {
   /** What the events receive. A level with the value `"none"` is offered on the rows only. */
@@ -147,7 +161,7 @@ export interface ShareDialogProps {
   /** Runs when the dialog wants to open or close. */
   onOpenChange?: (open: boolean) => void;
   /** Who can be added, as the product knows them. Anyone already in `members` is left out. */
-  people: readonly UserPickerUser[];
+  people: readonly SharePerson[];
   /** Who has access, in the order shown: the owner first is usual. */
   members: readonly ShareMember[];
   /** The levels, from least to most. */
@@ -224,7 +238,7 @@ const AddRow = ({
   onInvite,
   words,
 }: {
-  people: readonly UserPickerUser[];
+  people: readonly SharePerson[];
   levels: readonly ShareLevel[];
   onInvite: ShareDialogProps["onInvite"];
   words: ShareDialogLabels;
@@ -257,13 +271,26 @@ const AddRow = ({
   return (
     <div {...stylex.props(styles.add)}>
       <div ref={who} {...stylex.props(styles.who)}>
-        <UserPicker
-          users={people}
+        <Combobox
+          items={people.map((person) => ({
+            value: person.id,
+            label: person.name,
+            description: person.detail,
+            media: (
+              <Avatar name={person.name} size="xs" decorative>
+                <AvatarImage src={person.src} />
+                <AvatarFallback />
+              </Avatar>
+            ),
+          }))}
+          media={<Icon icon={UsersIcon} />}
           value={picked}
           onValueChange={setPicked}
           aria-label={words.find}
           placeholder={words.find}
-        />
+        >
+          <ComboboxEmpty>{words.empty}</ComboboxEmpty>
+        </Combobox>
       </div>
       <div {...stylex.props(styles.level)}>
         <Select

@@ -49,6 +49,7 @@ import type {
 } from "react";
 
 import { placeNear } from "../hooks/use-return-focus";
+import { useScrollEdges } from "../hooks/use-scroll-edges";
 import {
   AudioWaveformIcon,
   FileIcon,
@@ -58,7 +59,12 @@ import {
   VideoIcon,
 } from "../lib/icons";
 import type { IconData } from "../lib/icons";
-import { focusRingInset, scrollbarHidden, tileEdge } from "../lib/styles";
+import {
+  edgeFade,
+  focusRingInset,
+  scrollbarHidden,
+  tileEdge,
+} from "../lib/styles";
 import {
   colors,
   duration,
@@ -247,16 +253,23 @@ const styles = stylex.create({
     listStyle: "none",
     overflowX: "auto",
     overflowY: "hidden",
+    overscrollBehaviorX: "contain",
     // A card's widest is the row's own width, so a long name never runs past it. A size container
     // takes no width from its cards: in a row it is given a width (a prompt input gives it the
     // header's whole line).
     containerType: "inline-size",
     fontFamily: font.sans,
   },
+  // With more than one file, a card leaves the room of a fade at each side, so a long name never
+  // puts its card's actions under the fade nor scrolls them out from under it; alone, it takes the
+  // whole row and nothing fades. (The fade's reach is edgeFade's, space-10.)
   item: {
     display: "flex",
     flexShrink: 0,
-    maxWidth: "100%",
+    maxWidth: {
+      default: `calc(100% - 2 * ${space["10"]})`,
+      ":only-child": "100%",
+    },
   },
   card: {
     [iconVars.size]: sizes.iconSm,
@@ -268,7 +281,7 @@ const styles = stylex.create({
     boxSizing: "border-box",
     // As wide as its name, up to a sensible most or the row's own width: only a name that truly
     // does not fit is cut, in the middle.
-    maxWidth: `min(${sizes.attachmentMaxWidth}, 100cqi)`,
+    maxWidth: `min(${sizes.attachmentMaxWidth}, 100cqi, 100%)`,
     padding: space["1"],
     paddingInlineEnd: space["2"],
     overflow: "hidden",
@@ -467,23 +480,28 @@ export const AttachmentGroup = ({
   children,
   "aria-label": label,
   style,
-}: AttachmentGroupProps) => (
-  // Out of the tab order: Firefox makes a box that scrolls a Tab stop of its own, with no ring;
-  // each file's actions take the keys and scroll it into view. Focus comes to the list itself when
-  // its last file is taken off.
-  <InGroup value>
-    <ul
-      // oxlint-disable-next-line jsx-a11y/no-redundant-roles -- Safari drops a list's role once its markers are hidden
-      role="list"
-      aria-label={label}
-      tabIndex={-1}
-      data-slot="attachment-group"
-      {...stylex.props(styles.group, scrollbarHidden, style)}
-    >
-      {children}
-    </ul>
-  </InGroup>
-);
+}: AttachmentGroupProps) => {
+  // The sides with files beyond them are marked for the fade there.
+  const edges = useScrollEdges();
+  return (
+    // Out of the tab order: Firefox makes a box that scrolls a Tab stop of its own, with no ring;
+    // each file's actions take the keys and scroll it into view. Focus comes to the list itself when
+    // its last file is taken off.
+    <InGroup value>
+      <ul
+        // oxlint-disable-next-line jsx-a11y/no-redundant-roles -- Safari drops a list's role once its markers are hidden
+        role="list"
+        aria-label={label}
+        ref={edges}
+        tabIndex={-1}
+        data-slot="attachment-group"
+        {...stylex.props(styles.group, scrollbarHidden, edgeFade, style)}
+      >
+        {children}
+      </ul>
+    </InGroup>
+  );
+};
 
 /** One file: its picture or mark, its name and a line about it, and its actions. */
 export const Attachment = ({
