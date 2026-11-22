@@ -327,10 +327,13 @@ test("a task's box is round at the corner, its tick the icon's own size", async 
     }
     const look = getComputedStyle(face);
     return {
-      // Where the browser draws corner shapes, the plain round one.
+      // Where the browser draws corner shapes, the plain round one (computed as superellipse(1)),
+      // not the system's squircle.
       round:
         !CSS.supports("corner-shape", "round") ||
-        look.getPropertyValue("corner-shape") === "round",
+        ["round", "superellipse(1)"].includes(
+          look.getPropertyValue("corner-shape")
+        ),
       radius: look.borderTopLeftRadius,
       tick: mark.getBoundingClientRect().width,
     };
