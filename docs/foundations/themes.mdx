@@ -1,0 +1,85 @@
+---
+title: Themes
+description: Light, dark or the system's, with Grasp's own themes on a page or any part.
+---
+
+<Head lead={frontmatter.description} />
+
+## The themes
+
+Evergreen is Grasp as it is; Pine and Paper move the neutrals to one hue and keep mint, lime and the status colours. The fourth panel is a proposal: Pine with a dither on its grounds.
+
+<Stage path="theme/themes" label="The themes" />
+
+## Set it up
+
+Two steps: the CSS, and two attributes the product writes.
+
+```bash
+pnpm dlx shadcn@4.23.0 add @damsko/theme-toggle
+```
+
+Import `styles/tokens.css` and then `styles/themes.css` once, as a product's `@grasp-os/ui/styles.css` does. Every colour token is a `--damsko-` variable; `data-mode` (`light`, `dark` or `system`) and `data-theme` (`evergreen`, `pine` or `paper`) on an element restate them for it and everything inside:
+
+```tsx
+import "@grasp-os/ui/styles.css";
+
+<html data-mode={mode} data-theme={theme}>
+  …
+</html>;
+```
+
+The product holds the choice and keeps it: in its own settings, in an account or in storage. Write the attributes before the first paint (in the head, or on the server), so the page opens in the kept choice before anything is drawn. `isThemeMode` and `isThemeId` from the toggle check a value read back from storage.
+
+```tsx
+import { isThemeMode, ThemeToggle } from "@grasp-os/ui/components/theme-toggle";
+import type { ThemeMode } from "@grasp-os/ui/components/theme-toggle";
+
+const [mode, setMode] = useState<ThemeMode>(() => {
+  const kept = localStorage.getItem("theme");
+  return isThemeMode(kept) ? kept : "system";
+});
+
+<ThemeToggle mode={mode} onModeChange={setMode} />;
+```
+
+Without `data-mode` the system's setting wins. In forced colours the system's palette wins over any theme.
+
+## The switch
+
+How a person chooses is the [Theme toggle](/components/theme-toggle): a segmented control by default, an icon button where space is short, and a picker of tiles for settings.
+
+## The change
+
+A person's own pick grows from the switch in 300ms; loading, the system's setting and a part of a page change in one frame. The product picks a crossfade or one frame instead, and reduced motion is always one frame.
+
+<Stage path="theme/change" label="The change, three ways" />
+
+## On one part of a page
+
+`data-mode` and `data-theme` on one element hold that part in its own mode and theme while the rest of the page keeps its own.
+
+<Stage path="theme/system" label="On one part of a page" />
+
+## Rules
+
+<Rules
+  always={[
+    "Write `data-mode` and `data-theme` before the first paint, so the page opens in the person's theme.",
+    "Keep the system's setting as a choice, and as the default.",
+    "Keep the choice in the product: the toggle reads and writes no storage.",
+  ]}
+  never={[
+    "Read the kept choice during a render on the server: the page has already drawn it.",
+    "A colour of your own on top of a theme: a theme moves the tokens, so use them.",
+    "The reveal for a change the person did not make.",
+  ]}
+/>
+
+## API
+
+<Props
+  source="src/components/theme-toggle.tsx"
+  type="ThemeToggleProps"
+  label="Theme toggle props"
+/>

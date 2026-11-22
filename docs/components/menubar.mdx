@@ -1,0 +1,303 @@
+---
+title: Menubar
+description: A row of menus, like File, Edit and View, that hold an app's actions.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/menubar"
+/>
+
+## Menus
+
+The arrows move between menus and through them; a menu out of use keeps its place in the bar.
+
+The bar holds no open value of its own, as UI SDK's has none: to follow a menu, give its `MenubarMenu` an `onOpenChange`, which runs as it opens and closes and can keep it as it is.
+
+<Stage path="menubar/editor" live label="Menus" />
+
+## Every state
+
+Hover and keyboard focus are forced from the trigger's own CSS; its menus' items are on [Context menu](/components/context-menu).
+
+<States
+  path="menubar/states"
+  cells={[
+    { label: "Rest" },
+    { label: "Hover", force: "hover" },
+    { label: "Keyboard focus", force: "focus-visible" },
+    { label: "Out of use", props: { disabled: true } },
+  ]}
+/>
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="menubar"
+  always={[
+    "One short word per menu, in the order people expect: File, Edit, View.",
+    "The same actions reachable another way for people who never open a menu.",
+  ]}
+  never={[
+    "More than about seven menus in the bar.",
+    "Colours, heights or corners set from outside: `style` takes layout only.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Bar",
+      key: "Height",
+      value: "{control-sm} and {space-1} round it",
+      note: "{tap-target} on a touch screen",
+    },
+    { group: "Bar", key: "Between menus", value: "{space-1}" },
+    {
+      group: "Bar",
+      key: "Corner",
+      value: "{radius}, {radius-shape}",
+      note: "capped at half its height",
+    },
+    {
+      group: "Bar",
+      key: "Edge",
+      note: "the system's hairline, no fill of its own",
+      tokens: ["border-strong"],
+    },
+    {
+      group: "Bar",
+      key: "Too narrow",
+      value: "It scrolls sideways; the menus keep their names",
+    },
+    {
+      group: "Trigger",
+      key: "Height",
+      value: "{control-sm}",
+      note: "a {tap-target} area round it on a touch screen",
+    },
+    { group: "Trigger", key: "Padding", value: "{space-3} at each end" },
+    {
+      group: "Trigger",
+      key: "Words",
+      value: "{text-sm} / {text-sm-line}, {font-weight-medium}",
+      tokens: ["foreground"],
+    },
+    {
+      group: "Trigger",
+      key: "Hover and open",
+      note: "the list's highlight",
+      tokens: ["accent-highlight"],
+    },
+    { group: "Trigger", key: "Out of use", value: "{opacity-disabled}" },
+    {
+      group: "Menu",
+      key: "Place",
+      value: "Under its trigger, from its start, {menu-gap} off",
+      note: "kept {popup-gutter} inside the window",
+    },
+    {
+      group: "Menu",
+      key: "Look",
+      note: "Dropdown menu's panel and items, item for item",
+      tokens: ["popover", "menu-shadow"],
+    },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    {
+      key: "Hover",
+      value: "The highlight comes in, {duration-hover}",
+      note: "pointer only",
+      tokens: ["ease"],
+    },
+    {
+      key: "Opening",
+      value: "From {popup-from-scale} and clear, {duration-ui}",
+      note: "from its trigger; reduced: at once",
+      tokens: ["ease"],
+    },
+    {
+      key: "Closing",
+      value: "Back the same way, {duration-leave}",
+      note: "faster than it came",
+      tokens: ["ease"],
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Keyboard",
+      key: "Tab",
+      value: "Enters the bar once, at the menu last used; Tab again leaves it.",
+    },
+    {
+      group: "Keyboard",
+      key: "In the bar",
+      value: "Left and Right move between menus and wrap; Home and End jump.",
+    },
+    {
+      group: "Keyboard",
+      key: "Opening",
+      value: "Down, Enter or Space opens a menu with its first item lit.",
+    },
+    {
+      group: "Keyboard",
+      key: "In a menu",
+      value:
+        "Up and Down move; Left and Right open the next menu along; Enter chooses.",
+    },
+    {
+      group: "Keyboard",
+      key: "Escape",
+      value: "Closes the menu; focus goes back to its name in the bar.",
+    },
+    {
+      group: "Pointer",
+      key: "Opening",
+      value:
+        "A click opens a menu; while one is open, the pointer on another name opens that one.",
+    },
+    {
+      group: "Menus",
+      key: "Out of use",
+      value: "Keeps its place and is reached by the arrows, but opens nothing.",
+    },
+    {
+      group: "Items",
+      key: "Everything else",
+      value:
+        "As Dropdown menu's: settings stay open, work shows working, a failure is said.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Role",
+      value: "`menubar` of `menuitem` triggers, each opening a `menu`",
+    },
+    { key: "Name", value: "`aria-label`, what the bar works on (Editor)" },
+    {
+      key: "Tab stops",
+      value: "One for the whole bar: the others take `tabindex=-1`",
+    },
+    { key: "Out of use", value: "`aria-disabled` on its trigger" },
+    {
+      key: "Failed",
+      value: "Said in a status line after the bar, in the words it shows",
+    },
+    { key: "Focus", value: "The shared ring on the trigger", tokens: ["ring"] },
+    {
+      key: "Contrast",
+      value: "Names 4.5:1 on the page and on the highlight, light and dark",
+      note: "checked by `node tokens/generate.ts --check`",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/menubar.tsx"
+  type="MenubarProps"
+  label="Menubar"
+/>
+
+<Props
+  source="src/components/menubar.tsx"
+  type="MenubarMenuProps"
+  label="MenubarMenu"
+/>
+
+<Props
+  source="src/components/menubar.tsx"
+  type="MenubarTriggerProps"
+  label="MenubarTrigger"
+/>
+
+<Props
+  source="src/components/menubar.tsx"
+  type="MenubarContentProps"
+  label="MenubarContent"
+/>
+
+<Props
+  source="src/components/menubar.tsx"
+  type="MenubarItemProps"
+  label="MenubarItem"
+/>
+
+<Props
+  source="src/components/menubar.tsx"
+  type="MenubarCheckboxItemProps"
+  label="MenubarCheckboxItem"
+/>
+
+<Props
+  source="src/components/menubar.tsx"
+  type="MenubarRadioGroupProps"
+  label="MenubarRadioGroup"
+/>
+
+<Props
+  source="src/components/menubar.tsx"
+  type="MenubarRadioItemProps"
+  label="MenubarRadioItem"
+/>
+
+<Props
+  source="src/components/menubar.tsx"
+  type="MenubarGroupProps"
+  label="MenubarGroup"
+/>
+
+<Props
+  source="src/components/menubar.tsx"
+  type="MenubarLabelProps"
+  label="MenubarLabel"
+/>
+
+<Props
+  source="src/components/menubar.tsx"
+  type="MenubarSeparatorProps"
+  label="MenubarSeparator"
+/>
+
+<Props
+  source="src/components/menubar.tsx"
+  type="MenubarShortcutProps"
+  label="MenubarShortcut"
+/>
+
+<Props
+  source="src/components/menubar.tsx"
+  type="MenubarSubProps"
+  label="MenubarSub"
+/>
+
+<Props
+  source="src/components/menubar.tsx"
+  type="MenubarSubTriggerProps"
+  label="MenubarSubTrigger"
+/>
+
+<Props
+  source="src/components/menubar.tsx"
+  type="MenubarSubContentProps"
+  label="MenubarSubContent"
+/>
+
+</Reference>

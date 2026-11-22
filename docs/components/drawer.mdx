@@ -1,0 +1,306 @@
+---
+title: Drawer
+description: A panel that slides up from the bottom for a short task on a phone.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/drawer"
+  use={
+    'import { Drawer, DrawerBody, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger } from "@grasp-os/ui/components/drawer";'
+  }
+/>
+
+## Basic usage
+
+A title, a sentence under it, and the actions that finish the task. The trigger is a plain wrapper: `asChild` hands its behaviour to a Button. Cancel is a `DrawerClose`, which draws an outline Button beside the action; the action is a `default` Button whose `onClick` returns a Promise and closes the drawer once its work is done. While it works, the drawer holds: its `onOpenChange` cancels the close.
+
+<Stage path="drawer/basic" live label="Basic usage" />
+
+## Long body
+
+When the body holds more than the drawer, only the body scrolls.
+
+<Stage path="drawer/long-body" label="Long body" />
+
+## Two heights
+
+`snapPoints` lets it rest low or high. A drag or a press on the handle moves it.
+
+<Stage path="drawer/heights" label="Two heights" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="drawer"
+  always={[
+    "A title that names the task, a verb first.",
+    "A short task on a phone.",
+    "`snapPoints` when the lower height is useful on its own, as a list of results.",
+    "`dismissible={false}` while a drag would lose unsaved work: ask in `onDismissAttempt`.",
+  ]}
+  never={[
+    "A task on a wide screen: use Dialog or Sheet.",
+    "A second task over an open drawer: finish one first.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Size",
+      key: "Width",
+      value: "The window's, up to 40rem",
+      note: "{drawer-width}",
+    },
+    {
+      group: "Size",
+      key: "Height",
+      value: "Its content, up to 85% of the window",
+      note: "{drawer-height}; with two heights it stands at the taller",
+    },
+    { group: "Size", key: "Padding", value: "24px", note: "{space-6}" },
+    {
+      group: "Size",
+      key: "Grip",
+      value: "40 by 4px, in a 44px wide handle",
+      note: "{drawer-handle-width}, {drawer-handle-height}",
+      tokens: ["drawer-handle-bg"],
+    },
+    {
+      group: "Type",
+      key: "Title",
+      value: "15px / 24px, medium",
+      note: "{text-base}, {font-weight-medium}",
+      tokens: ["foreground"],
+    },
+    {
+      group: "Type",
+      key: "Description",
+      value: "15px / 24px",
+      note: "{text-base}",
+      tokens: ["muted"],
+    },
+    {
+      group: "Surface",
+      key: "Panel",
+      value: "20px on its top corners",
+      note: "{radius}, {radius-shape}",
+      tokens: ["card", "shadow-lg"],
+    },
+    {
+      group: "Surface",
+      key: "Shade",
+      value: "Over the whole window",
+      tokens: ["dialog-scrim"],
+    },
+    {
+      group: "Footer",
+      key: "Actions",
+      value: "Small Buttons, 8px apart; halves of the width on a phone",
+      note: "{control-sm}, {space-2}",
+    },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    {
+      key: "Opening and closing",
+      value: "Slides from the bottom on UI SDK's spring, as a system sheet",
+      note: "reduced: a fade",
+    },
+    { key: "Dragging", value: "Follows the finger; a fling down closes it" },
+    { key: "Shade", value: "Darkens as the drawer rises" },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Closing",
+      key: "Ways",
+      value: "Escape, a press on the shade, a drag down, or an action.",
+    },
+    {
+      group: "Closing",
+      key: "Focus",
+      value: "Moves in on opening and back to the trigger on closing.",
+    },
+    {
+      group: "Heights",
+      key: "Two heights",
+      value:
+        "`snapPoints`: the handle steps between them; the arrow keys move it.",
+    },
+    {
+      group: "Body",
+      key: "Long",
+      value:
+        "Only the body scrolls; a drag scrolls it first, then moves the drawer.",
+    },
+    {
+      group: "Actions",
+      key: "Work",
+      value:
+        "An action whose press returns a Promise keeps it open until its work is done; its Button shows a Spinner and keeps focus. Cancel the close in `onOpenChange` while it works.",
+    },
+    {
+      group: "Actions",
+      key: "Failure",
+      value: "The drawer stays open and the Button says its `errorLabel`.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Role",
+      value:
+        "A modal `dialog`, named by its title and described by its description",
+    },
+    {
+      key: "Handle",
+      value:
+        "A button named by the I18nProvider's `drawer.handle` (Resize) when there are two heights; a mark only otherwise",
+    },
+    {
+      key: "Body",
+      value: "A focusable region named by the title when it scrolls",
+    },
+    {
+      key: "Agents",
+      value:
+        "Opened by the trigger's name; a failed action fails with its words",
+    },
+    {
+      key: "Contrast",
+      value: "Words 4.5:1 on the panel, light and dark",
+      note: "checked by `node tokens/generate.ts --check`",
+    },
+  ]}
+/>
+<Rows
+  title="From shadcn"
+  rows={[
+    { group: "Base", key: "Vaul", value: "UI SDK's Drawer" },
+    {
+      group: "Parts",
+      key: "`DrawerContent`",
+      value: "Kept",
+      note: "with the shade and the handle",
+    },
+    {
+      group: "Parts",
+      key: "`DrawerOverlay`, `DrawerPortal`",
+      value: "Inside `DrawerContent`",
+      note: "the content brings its shade, in the top layer",
+    },
+    {
+      group: "Parts",
+      key: "`DrawerTrigger`, `DrawerClose`",
+      value: "Plain wrappers",
+      note: "`asChild` onto the element inside; DrawerClose alone draws an outline Button, as shadcn's does",
+    },
+    {
+      group: "Parts",
+      key: "New",
+      value: "`DrawerBody`",
+      note: "the one part that scrolls",
+    },
+    {
+      group: "Props",
+      key: "`direction`",
+      value: "Dropped",
+      note: "a side panel is a Sheet",
+    },
+    {
+      group: "Elsewhere",
+      key: "`className`",
+      value: "Dropped",
+      note: "the look belongs to the drawer; `style` takes layout only",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+Parts nest as the basic stage shows. Each also takes the rest of its UI SDK part.
+
+### Drawer
+
+<Props source="src/components/drawer.tsx" type="DrawerProps" label="Drawer" />
+
+### DrawerTrigger
+
+<Props
+  source="src/components/drawer.tsx"
+  type="DrawerTriggerProps"
+  label="DrawerTrigger"
+/>
+
+### DrawerContent
+
+<Props
+  source="src/components/drawer.tsx"
+  type="DrawerContentProps"
+  label="DrawerContent"
+/>
+
+### DrawerHeader
+
+<Props
+  source="src/components/drawer.tsx"
+  type="DrawerHeaderProps"
+  label="DrawerHeader"
+/>
+
+### DrawerTitle
+
+<Props
+  source="src/components/drawer.tsx"
+  type="DrawerTitleProps"
+  label="DrawerTitle"
+/>
+
+### DrawerDescription
+
+<Props
+  source="src/components/drawer.tsx"
+  type="DrawerDescriptionProps"
+  label="DrawerDescription"
+/>
+
+### DrawerBody
+
+<Props
+  source="src/components/drawer.tsx"
+  type="DrawerBodyProps"
+  label="DrawerBody"
+/>
+
+### DrawerFooter
+
+<Props
+  source="src/components/drawer.tsx"
+  type="DrawerFooterProps"
+  label="DrawerFooter"
+/>
+
+### DrawerClose
+
+<Props
+  source="src/components/drawer.tsx"
+  type="DrawerCloseProps"
+  label="DrawerClose"
+/>
+
+</Reference>

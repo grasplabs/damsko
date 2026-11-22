@@ -1,0 +1,372 @@
+---
+title: Switch
+description: A control you press to turn a setting on or off, taking effect at once.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/switch"
+  use={'import { Switch } from "@grasp-os/ui/components/switch";'}
+/>
+
+## With a label
+
+The switch draws itself only; its words are Field's parts. In a Field with `orientation="horizontal"`, the FieldLabel first and the Switch at the end: the label names the setting and stays the same, on or off, and a press on the switch, its label or the space around them turns it.
+
+<Stage path="switch/label" label="With a label" />
+
+## With a description
+
+One sentence under the label, a FieldDescription in a FieldContent with the label, says what turning it on does.
+
+<Stage path="switch/description" label="With a description" />
+
+## Pressing and dragging
+
+Pressed, the thumb stretches towards where it will go. Drag it across and let go: the side it is on decides.
+
+<Stage path="switch/press" live label="Pressing and dragging" />
+
+## Saving as it turns
+
+With `onSave`, it holds still with a spinner while it saves (`loading`), and says so when it could not (`error`): its `errorLabel` ("Could not save" unless you give your own) shows in the row, under the words.
+
+<Stage path="switch/save" live label="Saving as it turns" />
+
+## In a setting row
+
+In a responsive Field the switch stands on the group's end edge, named and described by the Field's words. Outside any Field, give it an `aria-label` where the words around it already name it.
+
+<Stage path="field/legend" label="In a setting row" />
+
+## Disabled
+
+It keeps its setting in view, and the sentence beside it says why it cannot change.
+
+<Stage path="switch/disabled" label="Disabled" />
+
+## Every state
+
+Hover, focus and pressed are forced from the switch's own CSS; the rest are its props.
+
+<States
+  path="switch/states"
+  choose={{
+    prop: "value",
+    label: "Value",
+    options: [
+      { id: "off", label: "Off" },
+      { id: "on", label: "On" },
+    ],
+  }}
+  cells={[
+    { label: "Rest" },
+    { label: "Hover", force: "hover" },
+    { label: "Keyboard focus", force: "focus-visible" },
+    { label: "Pressed", force: "active" },
+    { label: "Loading", props: { status: "loading" } },
+    { label: "Error", props: { status: "error" } },
+    { label: "Disabled", props: { disabled: true } },
+  ]}
+/>
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="switch"
+  always={[
+    "A setting, named by its label, that takes effect at once.",
+    "A change saved to a server: with `onSave` it says how it went.",
+    "Say a failure plainly: Could not save, not Error.",
+  ]}
+  never={[
+    "A form that waits for a Save button, or a choice someone must accept, like terms: use a Checkbox.",
+    "A button that stays pressed in a toolbar, with no label beside it: use a Toggle.",
+    "A switch without its label.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Size",
+      key: "Track",
+      value: "{switch-width} by {switch-height}",
+      note: "Apple's proportion, on the first line of the label",
+    },
+    {
+      group: "Size",
+      key: "Thumb",
+      value: "{switch-thumb-width} by {switch-thumb}",
+      note: "a pill, 2px inside the track",
+    },
+    {
+      group: "Size",
+      key: "Stretch",
+      value: "{switch-stretch}",
+      note: "pressed, towards the side it will travel to",
+    },
+    { group: "Size", key: "Words to track", value: "{space-4}" },
+    {
+      group: "Size",
+      key: "Row",
+      value: "{tap-target} at least",
+      note: "the words, the switch and the space between",
+    },
+    {
+      group: "Type and shape",
+      key: "Label",
+      value: "{text-sm} / {text-sm-line}, {font-weight-medium}",
+    },
+    {
+      group: "Type and shape",
+      key: "Description and failure",
+      value: "{text-xs} / {text-xs-line}",
+    },
+    {
+      group: "Type and shape",
+      key: "Corner",
+      value: "{radius-full}",
+      note: "the track and the thumb",
+    },
+    {
+      group: "Colour",
+      key: "Off",
+      note: "a soft track, and a white thumb with a soft shadow",
+      tokens: [
+        "switch-track",
+        "primary-foreground-on-color",
+        "switch-thumb-shadow",
+      ],
+    },
+    {
+      group: "Colour",
+      key: "On",
+      note: "Approve's green with its light and bevel, and a white thumb",
+      tokens: [
+        "success-fill",
+        "success-light",
+        "bevel-success-face",
+        "primary-foreground-on-color",
+      ],
+    },
+    {
+      group: "Colour",
+      key: "Light",
+      note: "inside the green, behind the thumb",
+      tokens: ["switch-light"],
+    },
+    {
+      group: "Colour",
+      key: "Error",
+      note: "a danger line round the track, and the words",
+      tokens: ["error-border", "destructive"],
+    },
+    {
+      group: "Focus and disabled",
+      key: "Focus ring",
+      value: "{ring-width} on its edge, keyboard only",
+      tokens: ["ring"],
+    },
+    {
+      group: "Focus and disabled",
+      key: "Disabled",
+      value: "{opacity-disabled} opacity",
+      note: "switch and words",
+    },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    {
+      key: "Turn",
+      value:
+        "The thumb travels on a spring, {switch-travel}; the green fades in with it",
+      note: "reduced: at once",
+      tokens: ["switch-spring", "ease"],
+    },
+    {
+      key: "Light",
+      value: "Follows the thumb on the spring, {switch-trail}",
+      note: "reduced: at once",
+      tokens: ["switch-spring"],
+    },
+    {
+      key: "Hover",
+      value: "Off, the track one step stronger; on, the light leans in",
+      note: "anywhere on the row",
+      tokens: ["switch-track-hover"],
+    },
+    {
+      key: "Press",
+      value:
+        "Scale {button-press-scale} from the thumb's end, and the thumb stretches, {duration-press}",
+      note: "reduced: at once",
+      tokens: ["ease"],
+    },
+    {
+      key: "Drag",
+      value:
+        "The thumb follows the pointer; the green shows the side it would land on",
+      note: "a move under 3px is a press",
+    },
+    {
+      key: "Loading",
+      value: "A spinner in the thumb, one turn per {duration-spin}",
+      note: "reduced: a still pulse",
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Input",
+      key: "Keyboard",
+      value: "Tab reaches it; Space turns it. Enter sends its form.",
+    },
+    {
+      group: "Input",
+      key: "Pointer",
+      value:
+        "A press on the switch, its label or the space around them turns it; one on the description does not.",
+    },
+    {
+      group: "Input",
+      key: "Drag",
+      value:
+        "The thumb can be dragged; the release decides the side. A second press mid-way turns it back from where it is.",
+    },
+    {
+      group: "Input",
+      key: "Read only",
+      value:
+        "Keeps focus and is sent with the form; a press does not change it.",
+    },
+    {
+      group: "Saving",
+      key: "Loading",
+      value:
+        "It holds still until the save worked; a press meanwhile does nothing.",
+    },
+    {
+      group: "Saving",
+      key: "Error",
+      value: "It stays where it was, and the words stay until the next press.",
+    },
+    {
+      group: "Saving",
+      key: "Reset",
+      value:
+        "A form reset puts it back where the page started and saves nothing.",
+    },
+    {
+      group: "Content",
+      key: "Long labels",
+      value: "Wrap beside the switch, which stays on the first line.",
+    },
+    {
+      group: "Settings",
+      key: "Right to left",
+      value:
+        "The switch stands at the left; its thumb, its stretch and its light run leftwards to turn on.",
+    },
+    {
+      group: "Settings",
+      key: "Forced colours",
+      value:
+        "A 1px border in the text colour draws the track; the green and the light are dropped, and the thumb's place says it.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    { key: "Role", value: "`switch`, with `aria-checked`" },
+    { key: "Name", value: "The Field's FieldLabel, or its `aria-label`" },
+    { key: "Description", value: "By `aria-describedby`" },
+    { key: "Loading", value: "`aria-busy`" },
+    {
+      key: "Error",
+      value:
+        "`aria-invalid`, its words by `aria-describedby`, and said once in the page's live region",
+    },
+    {
+      key: "Agents",
+      value:
+        "Found by its label; `setChecked` goes through `onSave`, and it turns once the save worked",
+    },
+    {
+      key: "Contrast",
+      value:
+        "On a light ground the green is 6.1:1 or more. On a dark ground it is under 3:1 (1.9 to 2.8:1 across its light), so the white thumb at the end says it is on. Off, the track is soft on purpose.",
+    },
+  ]}
+/>
+<Rows
+  title="From shadcn"
+  rows={[
+    {
+      group: "Parts",
+      key: "A track alone",
+      value: "The same, in a horizontal Field",
+      note: "FieldLabel and FieldDescription first, wired up by the row",
+    },
+    {
+      group: "Parts",
+      key: "No saving",
+      value: "`onSave`, `errorLabel`, `status`",
+      note: "loading and error, in the switch",
+    },
+    { group: "Look", key: "`size`", value: "Dropped", note: "one size" },
+    {
+      group: "Look",
+      key: "`after:-inset-x-3 -inset-y-2`",
+      value: "The whole row",
+    },
+    {
+      group: "Look",
+      key: "`transition-transform`",
+      value: "A spring, a stretch and a drag",
+      note: "transform and opacity only",
+    },
+    {
+      group: "Elsewhere",
+      key: "`className`",
+      value: "`style`",
+      note: "layout only",
+    },
+    {
+      group: "Elsewhere",
+      key: "Base UI",
+      value: "UI SDK",
+      note: "an agent can find and turn it",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props source="src/components/switch.tsx" type="SwitchProps" />
+
+The rest of UI SDK's Switch (`name`, `value`, `controller`) and of a `<button>` pass through.
+
+### Field, in a row
+
+`orientation="horizontal"` on a Field makes the row: the words first, then the Switch at its end. Its other props are on the Input page.
+
+<Props
+  source="src/components/field.tsx"
+  type="FieldContentProps"
+  label="FieldContent props"
+/>
+
+</Reference>

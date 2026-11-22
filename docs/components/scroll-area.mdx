@@ -1,0 +1,178 @@
+---
+title: Scroll area
+description: A box whose content scrolls inside it, with a thin bar that shows while in use.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/scroll-area"
+  use={'import { ScrollArea } from "@grasp-os/ui/components/scroll-area";'}
+/>
+
+## Vertical
+
+Give it a height; what runs past it scrolls.
+
+<Stage path="scroll-area/vertical" label="Vertical" />
+
+## Horizontal
+
+`orientation="horizontal"` for a row wider than the box.
+
+<Stage path="scroll-area/horizontal" label="Horizontal" />
+
+## Words alone
+
+With nothing inside to focus, `aria-label` makes it a named tab stop the keyboard can scroll.
+
+<Stage path="scroll-area/words" label="Words alone" />
+
+## Every state
+
+The bar shows while the pointer is over it; thumb hover and keyboard focus are forced from its own CSS.
+
+<States
+  path="scroll-area/states"
+  cells={[
+    { label: "Rest" },
+    { label: "Pointer over or scrolling", props: { shown: true } },
+    { label: "Thumb under a pointer", force: "hover", props: { shown: true } },
+    { label: "Keyboard focus", force: "focus-visible" },
+  ]}
+/>
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="scroll-area"
+  always={[
+    "A height, or a box that gives it one: without it nothing scrolls.",
+    "`aria-label` when nothing inside can take focus.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Bar",
+      key: "Width",
+      value: "{scrollbar-size}",
+      note: "its height when horizontal",
+    },
+    {
+      group: "Bar",
+      key: "Room round the thumb",
+      value: "{scrollbar-padding}",
+      note: "twice that on the content's side",
+    },
+    {
+      group: "Bar",
+      key: "Ends",
+      value: "{space-2} short of each end",
+      note: "so a round corner never cuts the thumb",
+    },
+    { group: "Bar", key: "Thumb corner", value: "{radius-full}" },
+    { group: "Colour", key: "Thumb", tokens: ["scroll-thumb"] },
+    {
+      group: "Colour",
+      key: "Thumb under a pointer or dragged",
+      tokens: ["scroll-thumb-hover"],
+    },
+    {
+      group: "Colour",
+      key: "Focus ring",
+      value: "{ring-width}, inside its edge",
+      note: "when it has a name",
+      tokens: ["ring"],
+    },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    {
+      key: "Bar",
+      value: "Fades in and out, {duration-mark}",
+      note: "reduced: at once",
+      tokens: ["ease"],
+    },
+    {
+      key: "Thumb",
+      value: "Darkens under a pointer, {duration-mark}",
+      note: "reduced: at once",
+      tokens: ["ease"],
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Bar",
+      key: "When it shows",
+      value:
+        "`hover`: while the pointer is over it or it scrolls; `type` changes that.",
+    },
+    {
+      group: "Bar",
+      key: "Nothing to scroll",
+      value: "No bar, unless `type` is `always`.",
+    },
+    { group: "Bar", key: "Thumb", value: "Drags the content with it." },
+    {
+      group: "Scrolling",
+      key: "Input",
+      value:
+        "The browser's own scroller, its bar hidden: wheel, touch, keys and find in page all work.",
+    },
+    {
+      group: "Scrolling",
+      key: "`stickToEnd`",
+      value:
+        "Starts at the end and stays there as content grows, until someone scrolls back.",
+    },
+    {
+      group: "Settings",
+      key: "Forced colours",
+      value: "The thumb in the text colour.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    { key: "Role", value: "None; a `region` when it has `aria-label`" },
+    {
+      key: "Keyboard",
+      value: "With a name it is a tab stop the arrow keys scroll",
+    },
+    { key: "Bar", value: "Hidden from screen readers; they read the content" },
+  ]}
+/>
+<Rows
+  title="From shadcn"
+  rows={[
+    {
+      key: "`ScrollBar`",
+      value: "`orientation`",
+      note: "vertical, horizontal or both",
+    },
+    { key: "`bg-border`", value: "{scroll-thumb}" },
+    { key: "New", value: "`type`, `stickToEnd`, `aria-label`" },
+    { key: "`className`", value: "`style`", note: "size and layout only" },
+    { key: "Base UI", value: "UI SDK" },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props source="src/components/scroll-area.tsx" type="ScrollAreaProps" />
+
+</Reference>

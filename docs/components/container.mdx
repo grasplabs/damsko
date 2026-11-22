@@ -1,0 +1,54 @@
+---
+title: Container
+description: A page's content in one column of a reading width in the page's middle, with room for a child that runs the whole width.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/container"
+  use={
+    'import { Container, ContainerBleed } from "@grasp-os/ui/components/container";'
+  }
+/>
+
+## A settings page
+
+The serif title and a card per topic in a 720px column in the page's middle, its margins equal, and a table under them in the same column, its edges on the cards' edges.
+
+<Stage path="container/settings" label="A settings page" />
+
+## Settings width
+
+`size="sm"` makes the column 640px, and a table on a settings page stays in it. `size="lg"` makes it 1024px, for a page of wider things. `ContainerBleed` is for what needs more room than the column, a wide table or a chart on a page of wider things, and runs the page's whole width. `align="start"` stands any column at the page's start instead, with all the room past it at its end.
+
+<Stage path="patterns/settings-page" label="Settings width" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="container"
+  always={[
+    "A settings page or a form page: a card per topic in the column, beside the nav.",
+    "`ContainerBleed` for what needs more room than the column: a wide table or a chart.",
+  ]}
+  never={["A page of cards or a dashboard that uses the whole width."]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/container.tsx"
+  type="ContainerProps"
+  label="Container props"
+/>
+<Props
+  source="src/components/container.tsx"
+  type="ContainerBleedProps"
+  label="ContainerBleed props"
+/>
+
+</Reference>

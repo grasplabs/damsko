@@ -1,0 +1,321 @@
+/* The page's own words: the title, headings, paragraphs, lists, links, tables and rules a page
+   writes in Markdown, in the column (<article class="site-prose">, site/layouts/Docs.astro).
+
+   In the `site` layer, under StyleX's, and inside @scope that ends at a preview's edge: a rule here
+   reaches the page's words and stops at `.site-preview`, so it can never touch a live example, a
+   heading in a card shown in a stage included. A block (a stage, a row, a table of props) is
+   StyleX and wins over anything here; a block that is itself a list or a paragraph (.not-prose)
+   is left out of the rules for the page's own lists and paragraphs, as it was under the previous docs system. */
+
+@layer site {
+  @scope (.site-prose) to (.site-preview) {
+    :scope {
+      overflow-wrap: break-word;
+      font-size: var(--damsko-text-base);
+      line-height: var(--damsko-text-base-line);
+      color: var(--damsko-body-foreground);
+    }
+    :scope > h1 {
+      margin: 0;
+      font-family: var(--damsko-font-serif);
+      font-size: var(--damsko-heading-xl);
+      font-weight: var(--damsko-font-weight-normal);
+      line-height: var(--damsko-heading-xl-line);
+      color: var(--damsko-foreground);
+      letter-spacing: var(--damsko-tracking-title);
+      text-wrap: balance;
+    }
+    @media (max-width: 39.99rem) {
+      :scope > h1 {
+        font-size: var(--damsko-heading-lg);
+        line-height: var(--damsko-heading-lg-line);
+      }
+    }
+    :scope > h2 {
+      margin: var(--damsko-space-16) 0 var(--damsko-space-2);
+      font-family: var(--damsko-font-serif);
+      font-size: var(--damsko-heading-md);
+      font-weight: var(--damsko-font-weight-normal);
+      line-height: var(--damsko-heading-md-line);
+      color: var(--damsko-foreground);
+      letter-spacing: var(--damsko-tracking-title);
+    }
+    :scope > h3 {
+      margin: var(--damsko-space-10) 0 var(--damsko-space-2);
+      font-family: var(--damsko-font-sans);
+      font-size: var(--damsko-text-base);
+      font-weight: var(--damsko-font-weight-medium);
+      line-height: var(--damsko-text-base-line);
+      color: var(--damsko-foreground);
+      letter-spacing: 0;
+    }
+    :scope > :is(h2, h3) {
+      scroll-margin-top: calc(var(--frame-header) + var(--damsko-space-6));
+    }
+
+    /* The page's rhythm, on the 4px scale and the same on every page:
+         title to its sentence        space-2   (site/blocks/head.tsx)
+         the head to the first section space-20; to a picture that opens the page (the light, the
+                                       three faces) space-12
+         one section to the next      space-16  (h2's margin above)
+         a heading to its note        space-2   (h2's margin below)
+         a heading to a block         space-6
+         a note to its block          space-4   (a paragraph's margin below)
+       A block's own margins are left to these rules; the blocks set none above themselves. */
+    :scope > .site-head + h2 {
+      margin-top: var(--damsko-space-20);
+    }
+    /* A component page opens on its pictures: the head stands closer to the first. */
+    :scope > .site-head:has([data-install]) + h2 {
+      margin-top: var(--damsko-space-12);
+    }
+    :scope > .site-head + :not(h2) {
+      margin-top: var(--damsko-space-12);
+    }
+    :scope > h2 + .not-prose {
+      margin-top: var(--damsko-space-6);
+    }
+    :scope > h2 + .site-opens-with-note {
+      margin-top: 0;
+    }
+    :scope > :is(p, ul, ol):not(.not-prose) {
+      max-width: var(--frame-measure);
+      margin: 0 0 var(--damsko-space-4);
+      text-wrap: pretty;
+    }
+    :scope > :is(ul, ol):not(.not-prose) {
+      display: grid;
+      gap: var(--damsko-space-1);
+      padding-inline-start: var(--damsko-space-5);
+    }
+    :scope > ul:not(.not-prose) {
+      list-style: disc;
+    }
+    :scope > ol:not(.not-prose) {
+      list-style: decimal;
+    }
+    :scope > :is(ul, ol):not(.not-prose) > li {
+      margin: 0;
+      padding-inline-start: var(--damsko-space-1);
+    }
+    :scope > ul:not(.not-prose) > li::marker {
+      color: var(--damsko-subtle-foreground);
+    }
+    :scope > :is(p, ul, ol, .site-table-scroll):not(.not-prose) :is(strong, b) {
+      font-weight: var(--damsko-font-weight-medium);
+      color: var(--damsko-foreground);
+    }
+    :scope > :is(p, ul, ol, .site-table-scroll):not(.not-prose) a {
+      font-weight: inherit;
+      color: var(--damsko-foreground);
+      text-decoration: underline;
+      /* Ink at 30%, as the rules' links: a hairline is too faint to show a link is one. */
+      text-decoration-color: var(--frame-underline);
+      text-decoration-thickness: var(--frame-hairline);
+      text-underline-offset: var(--frame-underline-offset);
+      transition: text-decoration-color var(--damsko-duration-hover)
+        var(--damsko-ease);
+    }
+    @media (hover: hover) and (pointer: fine) {
+      :scope > :is(p, ul, ol, .site-table-scroll):not(.not-prose) a:hover {
+        text-decoration-color: var(--damsko-foreground);
+      }
+    }
+    :scope > hr {
+      margin: var(--damsko-space-12) 0;
+      border: 0;
+      border-top: var(--frame-hairline) solid var(--damsko-border);
+    }
+
+    /* A table in the page's words (site/system/blocks/Table.astro): a box in the one corner with
+       the soft edge, that scrolls sideways inside the column; a hairline under the head and between
+       rows. The geometry is the previous docs system's typography's (12px cells, 13px words); the head is weight 500,
+       not 600, the lines are text-xs-line (20px, not 22.3), and the box has the edge
+       token, not a border line. */
+    :scope > .site-table-scroll {
+      overflow-x: auto;
+      /* Scrolls by touch, wheel and keys (it takes focus), with no bar of its own. */
+      scrollbar-width: none;
+      margin: var(--damsko-space-6) 0;
+      border-radius: var(--damsko-radius);
+      box-shadow: var(--damsko-border-strong);
+    }
+    .site-table-scroll > table {
+      width: 100%;
+      font-size: var(--damsko-text-xs);
+      line-height: var(--damsko-text-xs-line);
+    }
+    .site-table-scroll :is(th, td) {
+      padding: var(--damsko-space-3);
+      text-align: start;
+      vertical-align: baseline;
+    }
+    .site-table-scroll th {
+      font-weight: var(--damsko-font-weight-medium);
+      white-space: nowrap;
+      vertical-align: bottom;
+    }
+    .site-table-scroll thead,
+    .site-table-scroll tbody tr:not(:last-child) {
+      border-bottom: var(--frame-hairline) solid var(--damsko-border);
+    }
+
+    /* A heading inside a block (a token group's name, a row's title) had the previous docs system's base heading
+       face and tracking under it, and the blocks were drawn with it; it stays, for the blocks only.
+       The scope ends at a preview, so a heading in a card in a stage is the component's own. A
+       block that sets its own face or tracking wins (StyleX's layer). -0.05em is the previous docs system's value. */
+    .not-prose :is(h1, h2, h3, h4, h5, h6) {
+      font-family: var(--damsko-font-serif);
+      letter-spacing: -0.05em;
+    }
+
+    /* Previous and next beside the title (site/chrome/TopStep.astro): at the end of the title's
+       line, centred on it; the title wraps round it. */
+    :scope > .site-step {
+      float: inline-end;
+      display: flex;
+      gap: var(--damsko-space-1);
+      margin-block-start: calc(
+        (var(--damsko-heading-xl-line) - var(--damsko-control-sm)) / 2
+      );
+      margin-inline-start: var(--damsko-space-4);
+    }
+    @media (max-width: 39.99rem) {
+      :scope > .site-step {
+        margin-block-start: calc(
+          (var(--damsko-heading-lg-line) - var(--damsko-control-sm)) / 2
+        );
+      }
+    }
+    .site-step-link {
+      display: inline-flex;
+      gap: var(--damsko-space-2);
+      align-items: center;
+      justify-content: center;
+      box-sizing: border-box;
+      width: var(--damsko-control-sm);
+      height: var(--damsko-control-sm);
+      padding: 0;
+      border-radius: var(--damsko-radius);
+      font-size: var(--damsko-text-sm);
+      line-height: var(--damsko-text-sm-line);
+      color: var(--damsko-muted-foreground);
+      text-decoration: none;
+      /* The arrows alone, with no plate or edge behind them. */
+      transition: color var(--damsko-duration-hover) var(--damsko-ease);
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .site-step-link:hover {
+        color: var(--damsko-foreground);
+      }
+    }
+    @media (pointer: coarse) {
+      .site-step-link {
+        width: var(--damsko-tap-target);
+        height: var(--damsko-tap-target);
+      }
+    }
+    :dir(rtl) .site-step-link svg {
+      transform: scaleX(-1);
+    }
+    .site-step-link svg {
+      width: var(--damsko-icon-sm);
+      height: var(--damsko-icon-sm);
+      flex: none;
+    }
+
+    /* ---- The page's parts: "Using it" and the Reference (site/blocks/Part.astro, Reference.astro) ----
+       A hairline marks where the pictures end and the guidance begins (its name is only in the
+       rail); a quiet label over a hairline marks where the reference's folds begin. */
+    :scope > .site-part-rule {
+      margin: var(--damsko-space-20) 0 0;
+      border: 0;
+      border-top: var(--frame-hairline) solid var(--damsko-border);
+    }
+    :scope > .site-part-rule + h2 {
+      margin-top: var(--damsko-space-12);
+    }
+    .site-reference > .site-part {
+      margin: var(--damsko-space-20) 0 0;
+      padding-block-start: var(--damsko-space-4);
+      border-top: var(--frame-hairline) solid var(--damsko-border);
+      font-size: var(--damsko-text-sm);
+      font-weight: var(--damsko-font-weight-medium);
+      line-height: var(--damsko-text-sm-line);
+      color: var(--damsko-muted-foreground);
+    }
+    :scope > .site-reference {
+      display: grid;
+    }
+    .site-reference > .site-part {
+      margin-block-end: var(--damsko-space-4);
+    }
+    /* Each fold: a hairline under it; its words the size of an h3. */
+    .site-fold {
+      border-bottom: var(--frame-hairline) solid var(--damsko-border);
+      padding-block: var(--damsko-space-1);
+      scroll-margin-top: calc(var(--frame-header) + var(--damsko-space-6));
+    }
+    .site-fold-body {
+      padding-block: var(--damsko-space-2) var(--damsko-space-6);
+      font-size: var(--damsko-text-base);
+      line-height: var(--damsko-text-base-line);
+      color: var(--damsko-body-foreground);
+    }
+    .site-fold-body > h3 {
+      margin: var(--damsko-space-8) 0 var(--damsko-space-2);
+      font-family: var(--damsko-font-sans);
+      font-size: var(--damsko-text-base);
+      font-weight: var(--damsko-font-weight-medium);
+      line-height: var(--damsko-text-base-line);
+      color: var(--damsko-foreground);
+      letter-spacing: 0;
+      scroll-margin-top: calc(var(--frame-header) + var(--damsko-space-6));
+    }
+    .site-fold-body > h3:first-child {
+      margin-top: var(--damsko-space-2);
+    }
+    .site-fold-body > h3 + .not-prose {
+      margin-top: var(--damsko-space-4);
+    }
+    .site-fold-body > :is(p, ul, ol):not(.not-prose) {
+      max-width: var(--frame-measure);
+      margin: 0 0 var(--damsko-space-4);
+      text-wrap: pretty;
+    }
+    .site-fold-body > .not-prose + .not-prose {
+      margin-top: var(--damsko-space-6);
+    }
+    /* "Could be taken for", folded under When to use it (site/blocks/Intent.astro). */
+    :scope > .site-compare {
+      margin-top: var(--damsko-space-8);
+    }
+    .site-compare-label {
+      margin: 0 0 var(--damsko-space-2);
+      font-size: var(--damsko-text-sm);
+      line-height: var(--damsko-text-sm-line);
+      font-weight: var(--damsko-font-weight-medium);
+      color: var(--damsko-muted-foreground);
+    }
+    .site-compare-fold {
+      padding-block: var(--damsko-space-1);
+      border-top: var(--frame-hairline) solid var(--damsko-border);
+    }
+    .site-compare-fold:last-child {
+      border-bottom: var(--frame-hairline) solid var(--damsko-border);
+    }
+    /* Focus on the page's own links and boxes; a block has its own (focusRing in lib/styles). */
+    :focus-visible {
+      outline: var(--damsko-ring-width) solid var(--damsko-ring);
+      outline-offset: var(--damsko-ring-offset-text);
+    }
+
+    /* The section a search result led to: a mint line under its heading for duration-hold. */
+    [data-search-arrived] {
+      text-decoration-line: underline;
+      text-decoration-color: var(--damsko-mint);
+      text-decoration-thickness: var(--frame-mark);
+      text-underline-offset: var(--damsko-space-2);
+    }
+  }
+}

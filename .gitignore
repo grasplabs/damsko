@@ -1,0 +1,17 @@
+node_modules/
+dist/
+.astro/
+.wrangler/
+.vite-hooks/_/
+.env*
+.DS_Store
+coverage/
+*.tsbuildinfo
+# scripts/check-es2023.ts's temporary config, removed when it ends.
+.tsconfig.es2023.*.json
+
+# Playwright Test's results and report (tests/).
+/test-results/
+/playwright-report/
+# Agent settings, skills and launch configurations are local, never committed.
+.claude/

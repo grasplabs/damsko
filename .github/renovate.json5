@@ -1,0 +1,98 @@
+// Dependency updates. Versions live in the pnpm catalog (pnpm-workspace.yaml),
+// so one pull request bumps a dependency everywhere it's used.
+{
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+  extends: [
+    "config:recommended",
+    "helpers:pinGitHubActionDigestsToSemver",
+    ":semanticCommits",
+    ":dependencyDashboard",
+  ],
+  timezone: "Europe/Amsterdam",
+  schedule: ["before 7am on monday"],
+  // Same 3-day wait as pnpm's minimumReleaseAge; no pull request until a
+  // version is old enough to install.
+  minimumReleaseAge: "3 days",
+  internalChecksFilter: "strict",
+  rangeStrategy: "pin",
+  prConcurrentLimit: 10,
+  lockFileMaintenance: {
+    enabled: true,
+    schedule: ["before 7am on monday"],
+  },
+  packageRules: [
+    // Stable minor and patch updates of the docs site's own dependencies and
+    // the actions merge themselves once required checks pass.
+    {
+      matchUpdateTypes: ["minor", "patch", "pin", "digest"],
+      matchCurrentVersion: "!/^0/",
+      automerge: true,
+    },
+    // Majors never merge themselves: approve them on the dependency dashboard.
+    // Below 1.0, where a minor can break, updates also wait for review.
+    {
+      matchUpdateTypes: ["major"],
+      automerge: false,
+      dependencyDashboardApproval: true,
+    },
+
+    // The toolchain, and everything a product installs a component with,
+    // stay at the product repo's versions (AGENTS.md): one pull request for
+    // all of them, never merged by itself, merged when the product repo
+    // moves to the same versions.
+    {
+      groupName: "product repo versions",
+      matchPackageNames: [
+        // The toolchain.
+        "vite-plus",
+        "vite",
+        "@voidzero-dev/vite-plus-core",
+        "vitest",
+        "oxlint",
+        "oxfmt",
+        "typescript",
+        "typescript6",
+        "ultracite",
+        "@shadcn/lint",
+        "@types/node",
+        "@commitlint/**",
+        "secretlint",
+        "@secretlint/**",
+        "@playwright/test",
+        "shadcn",
+        "lightningcss",
+        "yaml",
+        // The compilers the product builds the components with.
+        "@babel/core",
+        "@types/babel__core",
+        "babel-plugin-react-compiler",
+        "@stylexjs/**",
+        // What the components import.
+        "react",
+        "react-dom",
+        "react-is",
+        "@types/react",
+        "@types/react-dom",
+        "@ui-sdk/**",
+        "@hugeicons/**",
+        "@tanstack/react-table",
+        "recharts",
+        "mdast-util-from-markdown",
+        "mdast-util-gfm",
+        "micromark-extension-gfm",
+        "@types/mdast",
+        "prismjs",
+        "@types/prismjs",
+      ],
+      automerge: false,
+    },
+    {
+      groupName: "astro",
+      matchPackageNames: ["astro", "@astrojs/**"],
+    },
+    {
+      groupName: "github actions",
+      matchManagers: ["github-actions"],
+    },
+  ],
+}

@@ -1,0 +1,65 @@
+---
+title: Chat page
+description: One chat as a page of its own, from the library's parts, as the product should build it.
+---
+
+<Head lead={frontmatter.description} />
+
+## The page
+
+A chat at its own address. The switch above the page shows each state the product meets; Answering plays the answer live, and Stop stops it. [Open it on its own](/examples/patterns/chat-page) to try 1440, 1024 and 390, or give it `?state=streaming`, `loading`, `empty`, `failed-answer`, `failed-send` or `unavailable`.
+
+<Stage path="patterns/chat-page" label="The page" />
+
+## What it is made of
+
+- **App shell** (the `app-shell-01` block): the header carries the chat's title as the last step of the breadcrumb, renamed in place, and the chat's menu (Copy link, Delete with Undo) at its end.
+- **Sidebar**, its Chats group with this chat active, one still answering with the working mark, All chats last.
+- A column the **PromptInput**'s width (`prompt-input-width`), the **MessageScroller** over the PromptInput. It scrolls itself and follows new words while you are at the end.
+- The person's **Message**, with Copy. The assistant's **Message** holds, in order: its steps in a **ChainOfThought** (each step active while it runs, folded to one line once done), the answer in **MessageResponse** (streaming while words arrive), the **Sources** it drew on once it is written, then its actions: Copy, thumbs up and down, Write it again (**MessageAction**).
+- The **PromptInput** at the foot: its `status` is `streaming` while the assistant works, so Submit turns into **Stop**; `disabled` while the chat loads.
+
+## The states
+
+- **Answered**, the first HTML: the whole chat, readable without script.
+- **Answering**: the steps one by one, then the words fading in. Stop keeps what was written: the answer says Stopped under its words and keeps its actions (Message's `stopped` status), and Copy takes what was written.
+- **Loading the chat**: the shape of a question and its answer (**MessageSkeleton**), the PromptInput disabled.
+- **A new chat**: not this page. It begins where the product starts a chat; this page links there.
+- **The answer failed**: the message says what failed, with Try again (**MessageError**), which plays the answer again.
+- **A send failed**: the PromptInput holds the words that did not go and says Could not send in its footer, its `status` `error`.
+- **A source is gone**: its row says it could not be opened; the answer still lists it.
+
+## All chats
+
+One window over the page holds every chat, opened by ⌘K and by the Sidebar's **All chats**: a **CommandDialog** the page holds, with no trigger of its own (`trigger={null}`). **New chat** first; the chats by day (Today, Yesterday, Earlier this week, then by month), each with its time at the end, or the working mark while it answers, and the open one marked current; **Archived** last. Typing searches the server: its ranked results as given, each with a line saying where the words were, marked with **CommandHighlight**. A row's actions open with the right arrow or More: Rename, Archive, and Delete, which happens at once and offers Undo. A search that fails says so in the list with one row to try again, and the window stays open.
+
+<Stage path="patterns/chats-window" label="All chats" />
+
+<Stage
+  path="patterns/chats-window-failed"
+  label="All chats, a search that fails"
+/>
+
+## What did not fit
+
+Each is worked round in the example, and each is the library's to fix.
+
+1. **Thinking.** The assistant's thinking before its steps is left out: Reasoning is not in the library yet.
+2. **Citations.** MessageResponse has no inline citation, so the answer cites nothing in its words; its Sources stand under it.
+
+## Rules
+
+<Rules
+  always={[
+    "A chat at its own address, the Sidebar's Chats group marking it current.",
+    "The assistant's steps above its answer, folded once done; the answer's sources under it.",
+    "The PromptInput at the foot, streaming while the assistant works, with Stop.",
+    "A failure said where it happened: on the answer with Try again, under the box with the words kept.",
+  ]}
+  never={[
+    "A new chat drawn as an empty thread: it starts where the product starts a chat.",
+    "Raw Markdown in an answer.",
+    "The conversation jumping while the assistant writes and you read above.",
+    "An answer without its sources when it rests on them.",
+  ]}
+/>

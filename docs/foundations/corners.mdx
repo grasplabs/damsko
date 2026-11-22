@@ -1,0 +1,47 @@
+---
+title: Corners
+description: One corner for almost everything, a squircle, so a curve meets its edge cleanly.
+---
+
+<Head lead={frontmatter.description} />
+
+<Scene
+  path="foundations/corners-squircle"
+  title="The squircle"
+  note="One corner at six times its size: the squircle eases into its edge where a round corner turns at once."
+/>
+
+<Scene
+  path="foundations/corners-cap"
+  title="Capped at half the height"
+  note="Every part takes the one corner, never more than half its height, so small things become pills."
+  ground="soft"
+/>
+
+<Scene
+  path="foundations/corners-nest"
+  title="Corners nest"
+  note="A corner inside another is the outer one less the room between them, so the mint room stays even."
+  ground="soft"
+/>
+
+<AllTokens>
+
+<SampleRows
+  set="corners"
+  kind="corner"
+  note="Each square is drawn with the token itself."
+/>
+
+</AllTokens>
+
+## Rules
+
+<Rules
+  always={[
+    "Write `corner-shape` after `corner`, so the squircle takes the radius.",
+    "Give a mark under 24px tall the mark corner.",
+    "Use the pill for a chip, a tag or a track, and the circle for an avatar or a dot.",
+  ]}
+  never={["A radius of your own.", "Square corners on a control or a card."]}
+/>

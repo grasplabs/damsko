@@ -1,0 +1,78 @@
+---
+title: Colour
+description: Ink on paper, one light, and every colour measured in light and dark.
+---
+
+<Head lead={frontmatter.description} />
+
+<LightStrip />
+
+<Scene
+  path="foundations/colour-grounds"
+  title="One screen, three grounds"
+  note="The same screen in the same code. Every colour is a token, so the night is one line of CSS. Drag a line across."
+/>
+
+<Scene
+  path="foundations/colour-inks"
+  title="Four inks, darkest first"
+  note="Each says what it is for in its own colour, measured against the ground you choose."
+/>
+
+<Scene
+  path="foundations/colour-pairs"
+  title="Every pair, measured"
+  note="Each colour that carries words, on each ground, read from what is drawn. Text needs 4.5:1."
+/>
+
+<Scene
+  path="foundations/colour-status"
+  title="Status says it in words"
+  note="A mark and a sentence on a soft ground. The colour helps; the words carry it."
+/>
+
+<AllTokens>
+
+<TokenFilter sets={["grounds", "inks", "accents", "status", "focus", "code"]} />
+
+<Tokens
+  set="grounds"
+  label="Grounds"
+  note="What a part stands on. In dark, paper becomes the night."
+/>
+<Tokens set="inks" label="Inks" note="Darkest first. Text needs 4.5:1." />
+<Tokens
+  set="accents"
+  label="Accents"
+  note="Mint and lime are fills for brand-ink; the others hold as text."
+/>
+<Tokens
+  set="status"
+  label="Status"
+  note="Words and marks, then a soft ground. Always say it in words too."
+/>
+<Tokens
+  set="focus"
+  label="Focus"
+  note="One focus colour, 3:1 or more on every ground. Only for the keyboard: press Tab to see it."
+/>
+<Tokens set="code" label="Code" note="The grounds of code and chips." />
+
+</AllTokens>
+
+## Rules
+
+<Rules
+  always={[
+    "Use a token by its name, `--damsko-foreground` in CSS or `colors.foreground` in StyleX, so every colour is written once.",
+    "Write a new colour in `oklch()`, with a dark value that holds 4.5:1 as text; `node tokens/generate.ts --check` fails below.",
+    "Put words on mint and lime in brand-ink.",
+    "Set `color-scheme: dark` on a night ground and let the tokens follow.",
+  ]}
+  never={[
+    "A hex, `rgb()` or `hsl()` value in new code.",
+    "Border as a text colour, or a status colour as decoration.",
+    "The light's stops for text or for a control's fill.",
+    "White text on mint or lime.",
+  ]}
+/>

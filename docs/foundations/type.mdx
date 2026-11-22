@@ -1,0 +1,55 @@
+---
+title: Type
+description: The serif names things and Geist does the work, in two weights (a third for one use) and never under 13px.
+---
+
+<Head lead={frontmatter.description} />
+
+<Scene
+  path="foundations/type-scale"
+  title="Your words, every size"
+  note="Write a line and watch it run down the scale: the serif for titles, Geist for the rest."
+/>
+
+<Scene
+  path="foundations/type-families"
+  title="Three families, three jobs"
+  note="The serif names things, Geist does the work, and Geist Mono holds what is typed exactly."
+/>
+
+<Scene
+  path="foundations/type-roles"
+  title="Every word has a role"
+  note="Point at any words on this report to read the role, face and size they were given."
+/>
+
+<AllTokens>
+
+<TypeFaces />
+
+## Sizes
+
+<TypeRows set="sizes" />
+
+## Weights and tracking
+
+<TypeRows set="weights" />
+
+</AllTokens>
+
+## Rules
+
+<Rules
+  always={[
+    "Set a size with its own line height: `--damsko-text-base` with `--damsko-text-base-line`.",
+    "Name things in the serif at 400: titles, figures, names in a list.",
+    "Track serif titles from heading-sm up with `--damsko-tracking-title`.",
+    "Use Geist for everything that is not a title, and Geist Mono for anything typed exactly.",
+  ]}
+  never={[
+    "Text under 13px.",
+    "A weight above 500 but a grouped title's 600, or the serif at 500.",
+    "Capitals outside a tag, or a tag over a page title.",
+    "The serif above 44px.",
+  ]}
+/>

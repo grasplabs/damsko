@@ -1,0 +1,173 @@
+---
+title: Stack Trace
+description: An error and its stack frames, from a failed tool call or a command.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/stack-trace"
+/>
+
+## An error and its frames
+
+Stack Trace is a Trace with one row that opens. `StackTraceHeader` is the row's trigger, its line failed, and `StackTraceError` the line's title, the error's `StackTraceErrorType` and `StackTraceErrorMessage` in red; `StackTraceActions` stands beside the trigger, as a button cannot sit inside it; a press opens `StackTraceFrames`, a muted block where the app's own frames stand in ink and the frames from `node_modules` and the runtime stay muted.
+
+<Stage path="stack-trace/basic" label="An error and its frames" />
+
+## Opening a file
+
+With `onFilePathClick`, each frame's path is a button that hands the path, the line and the column to the product, which opens the file there. Without it a path is text: it is never a link made from the stack. `showInternalFrames={false}` leaves out the framework's frames, so the ones you can fix stand alone.
+
+<Stage path="stack-trace/files" label="Opening a file" />
+
+## Firefox and Safari
+
+Their stacks have no error line and write `fn@file:line:column`; the frames read the same. With no children it draws its line, `StackTraceCopyButton` and the frames.
+
+<Stage path="stack-trace/browser" label="Firefox and Safari" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="stack-trace"
+  always={[
+    "A tool call or a command that threw, with the frames it sent: `error.stack`, or the AI SDK part's `errorText` when the server sends the stack.",
+    "A path that opens the file, through `onFilePathClick`, in development, where the paths are the product's own.",
+  ]}
+  never={[
+    "A failure without frames: say it in the Tool's or Terminal's line.",
+    "Stacks from a server in production: they show its file paths.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Line",
+      key: "Error",
+      value:
+        "Trace's row that opens, in red with the alert: the type in semibold, then the message",
+      tokens: ["destructive"],
+    },
+    {
+      group: "Frames",
+      key: "Block",
+      value:
+        "{text-xs} mono on the code line height, on the muted fill, {space-3} inside, the one corner; lines wrap",
+      tokens: ["muted", "muted-foreground"],
+    },
+    {
+      group: "Frames",
+      key: "The app's own",
+      value: "In ink; the dependencies' and the runtime's muted",
+      tokens: ["foreground"],
+    },
+    {
+      group: "Frames",
+      key: "Path",
+      value: "Dotted under when it opens a file; in ink under the pointer",
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      key: "Line",
+      value: "Click, Enter or Space opens and closes the frames.",
+    },
+    {
+      key: "Reading",
+      value:
+        "V8's frames (at fn (file:line:column)) and Firefox's and Safari's (fn@file:line:column); the first 200 frames of the first 100,000 characters.",
+    },
+    {
+      key: "Copy",
+      value: "Copies the stack as it was given.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Line",
+      value:
+        "A `button` with `aria-expanded`, named by the error, then Failed in words",
+    },
+    {
+      key: "Frames",
+      value:
+        "A list named Stack frames; a path that opens a file is a `button`",
+    },
+    {
+      key: "Content",
+      value: "Text, never HTML",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/stack-trace.tsx"
+  type="StackTraceProps"
+  label="StackTrace props"
+/>
+
+<Props
+  source="src/components/stack-trace.tsx"
+  type="StackTraceHeaderProps"
+  label="StackTraceHeader props"
+/>
+
+<Props
+  source="src/components/stack-trace.tsx"
+  type="StackTraceErrorProps"
+  label="StackTraceError props"
+/>
+
+<Props
+  source="src/components/stack-trace.tsx"
+  type="StackTraceErrorTypeProps"
+  label="StackTraceErrorType props"
+/>
+
+<Props
+  source="src/components/stack-trace.tsx"
+  type="StackTraceErrorMessageProps"
+  label="StackTraceErrorMessage props"
+/>
+
+<Props
+  source="src/components/stack-trace.tsx"
+  type="StackTraceActionsProps"
+  label="StackTraceActions props"
+/>
+
+<Props
+  source="src/components/stack-trace.tsx"
+  type="StackTraceCopyButtonProps"
+  label="StackTraceCopyButton props"
+/>
+
+<Props
+  source="src/components/stack-trace.tsx"
+  type="StackTraceContentProps"
+  label="StackTraceContent props"
+/>
+
+<Props
+  source="src/components/stack-trace.tsx"
+  type="StackTraceFramesProps"
+  label="StackTraceFrames props"
+/>
+
+</Reference>

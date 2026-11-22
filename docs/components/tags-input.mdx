@@ -1,0 +1,131 @@
+---
+title: Tags input
+description: A box where you type several values, like labels, each shown as a tag.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/tags-input"
+  use={'import { TagsInput } from "@grasp-os/ui/components/tags-input";'}
+/>
+
+## Basic usage
+
+Enter or a comma adds what was typed; pasted words split on commas and lines. A value already there is refused, and the field says why.
+
+<Stage path="tags-input/basic" label="Basic usage" />
+
+## Suggestions
+
+`suggestions` open as you type; anything else typed is added as it is.
+
+<Stage path="tags-input/suggestions" label="Suggestions" />
+
+## Many tags
+
+They wrap onto more lines inside the field. `max` sets how many it takes.
+
+<Stage path="tags-input/many" label="Many tags" />
+
+## A wrong value
+
+`validate` returns `true` for a right value, and `false` or the words that say why for a wrong one. A wrong value is kept, so it can be corrected, with a destructive edge, and a screen reader hears why after its words. Say under the field what is wrong, as any field does.
+
+<Stage path="tags-input/invalid" label="A wrong value" />
+
+## In a form
+
+Each tag is sent under the Field's name, and a reset brings back the tags it started with. A Field that is out of use takes the field with it.
+
+<Stage path="tags-input/form" label="In a form" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="tags-input"
+  always={[
+    "Several values typed into one field, such as labels, with suggestions or without.",
+  ]}
+  never={[
+    "One value chosen from a long list: use a Combobox.",
+    "One line of free text: use an Input.",
+    "A few fixed choices, several of them at once: use Checkboxes.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Keyboard",
+      key: "Enter, comma",
+      value:
+        "Adds what was typed; a value already there, or one past `max`, is refused with the reason.",
+    },
+    {
+      group: "Keyboard",
+      key: "Backspace",
+      value:
+        "In the empty field, goes to the last tag; on a tag, Backspace or Delete takes it away.",
+    },
+    {
+      group: "Keyboard",
+      key: "Arrow Left, Arrow Right",
+      value:
+        "From the start of the field to the last tag, then between the tags; past the last, back to the field.",
+    },
+    {
+      group: "Pointer",
+      key: "Paste",
+      value: "Words split on commas and new lines, each added in turn.",
+    },
+    {
+      group: "Content",
+      key: "Form",
+      value:
+        "Each value under its `name`, or the Field's; a reset returns to `defaultValue`.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    { key: "Role", value: "A `combobox` field among `group`s, one per tag" },
+    {
+      key: "Name",
+      value:
+        "Its FieldLabel, or `aria-label`; each tag by its words, its remove button Remove and its words",
+    },
+    {
+      key: "Refusal",
+      value:
+        "Said in a `status` region under the field, which describes the field while it holds",
+    },
+    {
+      key: "Wrong",
+      value:
+        "A wrong tag is described by the words `validate` gave; the field is `aria-invalid` while its Field's error shows",
+    },
+    {
+      key: "Words",
+      value:
+        "From the I18nProvider (`tagsInput`), any of them replaced by `translations`",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/tags-input.tsx"
+  type="TagsInputProps"
+  label="TagsInput props"
+/>
+
+</Reference>

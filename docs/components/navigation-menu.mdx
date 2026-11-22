@@ -1,0 +1,330 @@
+---
+title: Navigation menu
+description: A row of a site's main links across the top, with groups that open as panels.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/navigation-menu"
+/>
+
+## Main links
+
+Rest on a trigger or press it; more than three links stand in two columns.
+
+<Stage path="navigation-menu/main" label="Main links" />
+
+## Open on a press
+
+`openOnHover={false}` for a row people pass over often, like an app's header.
+
+<Stage path="navigation-menu/press" label="Open on a press" />
+
+## Every state
+
+A group's trigger, then a link in the row; hover and keyboard focus are forced from their own CSS.
+
+<States
+  path="navigation-menu/states"
+  label="Every state of a trigger"
+  cells={[
+    { label: "Trigger" },
+    { label: "Hover", force: "hover" },
+    { label: "Keyboard focus", force: "focus-visible" },
+    { label: "Holds this page", props: { active: true } },
+    { label: "Out of use", props: { disabled: true } },
+  ]}
+/>
+
+<States
+  path="navigation-menu/states"
+  label="Every state of a link"
+  cells={[
+    { label: "Link", props: { kind: "link" } },
+    { label: "Hover", force: "hover", props: { kind: "link" } },
+    {
+      label: "Keyboard focus",
+      force: "focus-visible",
+      props: { kind: "link" },
+    },
+    { label: "This page", props: { kind: "link", active: true } },
+  ]}
+/>
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="navigation-menu"
+  always={[
+    "A short line under each link that says what is there, not what it is called.",
+    "The page someone is on marked with `active`, in the panel and on its trigger.",
+  ]}
+  never={[
+    "A trigger that is also a link: its panel holds the links.",
+    "More than about six items in the row.",
+    "A panel of more than eight links: split it into two groups.",
+    "Actions: use Menubar or Dropdown menu.",
+    "The path back up to the page someone is on: use Breadcrumb.",
+    "The places of a product, down its side: use Sidebar.",
+    "Views of one thing: use Tabs.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Row",
+      key: "Between items",
+      value: "{space-1}",
+      note: "the 44px areas' worth on a touch screen",
+    },
+    { group: "Row", key: "Too narrow", value: "Wraps to a second line" },
+    {
+      group: "Trigger",
+      key: "Height",
+      value: "{control-sm}",
+      note: "a {tap-target} area round it on a touch screen",
+    },
+    {
+      group: "Trigger",
+      key: "Padding",
+      value: "{space-3} at each end, {space-1} before the chevron",
+    },
+    {
+      group: "Trigger",
+      key: "Words",
+      value: "{text-sm} / {text-sm-line}, {font-weight-medium}",
+      tokens: ["foreground"],
+    },
+    { group: "Trigger", key: "Chevron", value: "{icon-sm}", tokens: ["muted"] },
+    {
+      group: "Trigger",
+      key: "Hover and open",
+      note: "the list's highlight",
+      tokens: ["accent-highlight"],
+    },
+    { group: "Trigger", key: "Out of use", value: "{opacity-disabled}" },
+    {
+      group: "Panel",
+      key: "Place",
+      value: "Under its trigger, from its start, {popup-gap} off",
+      note: "kept {popup-gutter} inside the window",
+    },
+    {
+      group: "Panel",
+      key: "Width",
+      value: "{popover-width}; 1.6 times that in two columns",
+      note: "two columns from four links; one under 640px",
+    },
+    {
+      group: "Panel",
+      key: "Padding and gap",
+      value: "{popup-padding} in, {space-1} between links",
+    },
+    {
+      group: "Panel",
+      key: "Surface",
+      value: "{radius}",
+      tokens: ["popover", "popup-shadow"],
+    },
+    {
+      group: "Links",
+      key: "Height",
+      value: "{control-default} at least",
+      note: "{tap-target} on a touch screen",
+    },
+    {
+      group: "Links",
+      key: "Padding",
+      value: "{space-2} above and below, {space-3} at each end",
+    },
+    {
+      group: "Links",
+      key: "Title",
+      value: "{text-sm} / {text-sm-line}, {font-weight-medium}",
+      tokens: ["foreground"],
+    },
+    {
+      group: "Links",
+      key: "Line under it",
+      value: "{text-xs} / {text-xs-line}",
+      tokens: ["muted"],
+    },
+    {
+      group: "Links",
+      key: "Icon",
+      value: "{icon-sm}, {space-2} before the title",
+      tokens: ["muted"],
+    },
+    {
+      group: "Links",
+      key: "Hover and keyboard",
+      note: "the list's highlight",
+      tokens: ["accent-highlight"],
+    },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    {
+      key: "Hover",
+      value: "The highlight comes in, {duration-hover}",
+      note: "pointer only",
+      tokens: ["ease"],
+    },
+    {
+      key: "Opening",
+      value: "From {popup-from-scale} and clear, {duration-ui}",
+      note: "from its trigger; reduced: at once",
+      tokens: ["ease"],
+    },
+    {
+      key: "Closing",
+      value: "Back the same way, {duration-leave}",
+      note: "faster than it came",
+      tokens: ["ease"],
+    },
+    {
+      key: "Chevron",
+      value: "Turns over while open, {duration-ui}",
+      note: "back in {duration-leave}; reduced: at once",
+      tokens: ["ease"],
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Pointer",
+      key: "Hover",
+      value:
+        "Resting on a trigger opens its panel; sliding to the next opens that one; leaving closes it.",
+    },
+    {
+      group: "Pointer",
+      key: "Press",
+      value: "A click opens or closes a panel, with `openOnHover={false}` too.",
+    },
+    {
+      group: "Keyboard",
+      key: "Tab",
+      value:
+        "Moves through the triggers and links, and into an open panel's links.",
+    },
+    {
+      group: "Keyboard",
+      key: "Opening",
+      value:
+        "Enter or Space opens a panel; Left and Right move between triggers.",
+    },
+    {
+      group: "Keyboard",
+      key: "In a panel",
+      value: "Up and Down move between its links.",
+    },
+    {
+      group: "Keyboard",
+      key: "Escape",
+      value: "Closes the panel; focus goes back to its trigger.",
+    },
+    {
+      group: "Links",
+      key: "Press",
+      value:
+        "Every link is an ordinary link: it goes to its page, in a new tab too.",
+    },
+    {
+      group: "Out of use",
+      key: "Trigger",
+      value: "Keeps its place and opens nothing.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    { key: "Landmark", value: "`nav` named by `aria-label` (Main)" },
+    {
+      key: "Triggers",
+      value:
+        "Buttons with `aria-expanded`: the disclosure navigation pattern, not a menu",
+    },
+    { key: "This page", value: '`aria-current="page"` on its link' },
+    {
+      key: "Panels",
+      value:
+        "Kept in the page while closed, so the links are there before they show",
+    },
+    {
+      key: "Focus",
+      value: "The shared ring on a trigger; a panel's link takes the highlight",
+      tokens: ["ring"],
+    },
+    {
+      key: "Contrast",
+      value: "Names 4.5:1 on the page and on the highlight, light and dark",
+      note: "checked by `node tokens/generate.ts --check`",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/navigation-menu.tsx"
+  type="NavigationMenuProps"
+  label="NavigationMenu"
+/>
+
+<Props
+  source="src/components/navigation-menu.tsx"
+  type="NavigationMenuListProps"
+  label="NavigationMenuList"
+/>
+
+<Props
+  source="src/components/navigation-menu.tsx"
+  type="NavigationMenuItemProps"
+  label="NavigationMenuItem"
+/>
+
+<Props
+  source="src/components/navigation-menu.tsx"
+  type="NavigationMenuTriggerProps"
+  label="NavigationMenuTrigger"
+/>
+
+<Props
+  source="src/components/navigation-menu.tsx"
+  type="NavigationMenuContentProps"
+  label="NavigationMenuContent"
+/>
+
+<Props
+  source="src/components/navigation-menu.tsx"
+  type="NavigationMenuLinkProps"
+  label="NavigationMenuLink"
+/>
+
+<Props
+  source="src/components/navigation-menu.tsx"
+  type="NavigationMenuIndicatorProps"
+  label="NavigationMenuIndicator"
+/>
+
+<Props
+  source="src/components/navigation-menu.tsx"
+  type="NavigationMenuViewportProps"
+  label="NavigationMenuViewport"
+/>
+
+</Reference>

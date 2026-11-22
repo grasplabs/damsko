@@ -1,0 +1,255 @@
+---
+title: Alert
+description: A short message in the page that tells people something is done, wrong or worth knowing.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/alert"
+  use={
+    'import { Alert, AlertDescription, AlertTitle } from "@grasp-os/ui/components/alert";'
+  }
+/>
+
+## Variants
+
+`variant` says what the note means: `default` something to know, `success` it went well, `warning` something to look at, `destructive` it went wrong, `info` a plain note.
+
+<Stage path="alert/variants" label="Variants" />
+
+## Compositions
+
+Every part is optional: an `AlertDescription` alone, an `AlertTitle` alone, or no icon.
+
+<Stage path="alert/compositions" label="Compositions" />
+
+## Banner and subtle
+
+`appearance="banner"` is news about the whole page or the app, across its top: its `AlertAction` after the words, and with `onClose` a close button at the end. `appearance="subtle"` drops the fill and the inset, for an alert inside a row or a rail.
+
+<Stage path="alert/banner" label="Banner and subtle" />
+
+## How it is heard
+
+`live` sets it in a live region's words: polite, assertive or off. It wins over the variant's own role.
+
+<Stage path="alert/live" label="How it is heard" />
+
+## Every state
+
+An alert is read, not pressed: its states are its four variants and its parts.
+
+<States
+  path="alert/states"
+  cells={[
+    { label: "Default" },
+    { label: "Success", props: { variant: "success", title: "Exported" } },
+    { label: "Warning", props: { variant: "warning", title: "Almost full" } },
+    {
+      label: "Destructive",
+      props: { variant: "destructive", title: "Not loaded" },
+    },
+    { label: "Info", props: { variant: "info", title: "Note" } },
+    { label: "Sentence only", props: { title: null, words: "Ready." } },
+    { label: "No icon", props: { icon: false } },
+    {
+      label: "Success, sentence",
+      props: { variant: "success", title: null, words: "Saved." },
+    },
+    {
+      label: "Destructive, sentence",
+      props: { variant: "destructive", title: null, words: "Not saved." },
+    },
+  ]}
+/>
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="alert"
+  always={[
+    "Something to know, something done or something wrong, near what it is about.",
+    "Say what it means and what to do, in one or two sentences.",
+    "A title only when the sentence needs a few words before it.",
+    "One alert per message, near what it is about.",
+  ]}
+  never={[
+    "A receipt that something happened, for a moment: use Toast.",
+    "What is wrong with one field of a form: use Field.",
+    "Two alerts saying the same thing.",
+    "Colour alone: the icon and the words say it too.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Shape",
+      key: "Padding",
+      value: "{space-3} above and below, {space-4} at the sides",
+    },
+    { group: "Shape", key: "Corner", value: "{radius}, {radius-shape}" },
+    { group: "Shape", key: "Edge", value: "None: the tint is the edge" },
+    {
+      group: "Icon",
+      key: "Mark",
+      value: "{icon-default}, {space-3} from the words",
+      note: "on the first line",
+    },
+    {
+      group: "Type",
+      key: "Title",
+      value: "{text-sm} / {text-sm-line}, {font-weight-medium}",
+      tokens: ["foreground"],
+    },
+    {
+      group: "Type",
+      key: "Words",
+      value: "{text-sm} / {text-sm-line}, {space-1} under the title",
+      tokens: ["body-foreground"],
+    },
+    {
+      group: "Colour",
+      key: "Default",
+      tokens: ["alert-bg-default", "muted"],
+    },
+    { group: "Colour", key: "Success", tokens: ["success-subtle", "success"] },
+    {
+      group: "Colour",
+      key: "Warning",
+      tokens: ["warning-subtle", "warning"],
+    },
+    {
+      group: "Colour",
+      key: "Destructive",
+      tokens: ["destructive-subtle", "destructive"],
+    },
+    { group: "Colour", key: "Info", tokens: ["info-subtle", "info"] },
+    {
+      group: "Banner",
+      key: "Shape",
+      value: "{space-3} all round, the system's edge, {icon-sm}",
+      tokens: ["border-strong"],
+    },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    {
+      key: "Arriving",
+      value: "None: it appears with what it is about",
+      note: "a page that adds one later decides how",
+    },
+    { key: "Reduced motion", value: "The same; nothing moves" },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    { group: "Content", key: "Width", value: "The column it stands in." },
+    {
+      group: "Settings",
+      key: "Without script",
+      value: "The same; it has no behaviour.",
+    },
+    {
+      group: "Settings",
+      key: "Forced colours",
+      value: "A 1px border in the text colour draws its edge.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Warning, destructive",
+      value:
+        '`role="alert"`: said when it appears, not on a page\'s first render',
+    },
+    {
+      key: "Default, success, info",
+      value:
+        '`role="status"`: said when its words change; read where it stands when it appears',
+    },
+    {
+      key: "Live",
+      value:
+        "`live`: `polite` is a status, `assertive` an alert, `off` no live role; it wins over the variant's",
+    },
+    {
+      key: "Close",
+      value:
+        "A `button` named by the I18nProvider (`alert.close`); once pressed, focus goes to the control before the alert, else the one after it, never to the page",
+      note: "with `onClose`",
+    },
+    { key: "Icon", value: "Hidden from screen readers: the words say it" },
+    {
+      key: "Contrast",
+      value: "Title and words 4.5:1, icons 3:1, on every tint, light and dark",
+      note: "checked by `node tokens/generate.ts --check`",
+    },
+  ]}
+/>
+<Rows
+  title="From shadcn"
+  rows={[
+    {
+      group: "Parts",
+      key: "`AlertTitle`, `AlertDescription`, `AlertAction`",
+      value: "The same",
+    },
+    {
+      group: "Behaviour",
+      key: '`role="alert"` always',
+      value: "By variant",
+      note: "status for neutral and success",
+    },
+    {
+      group: "New",
+      key: "`success`, `warning`, `info`",
+      value: "Three more variants",
+    },
+    {
+      group: "New",
+      key: "`appearance`",
+      value: "`inline`, `subtle`, `banner`",
+    },
+    { group: "Look", key: "`border`", value: "A tint instead" },
+    {
+      group: "Elsewhere",
+      key: "`className`",
+      value: "`style`",
+      note: "layout and width only",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props source="src/components/alert.tsx" type="AlertProps" label="Alert" />
+<Props
+  source="src/components/alert.tsx"
+  type="AlertTitleProps"
+  label="AlertTitle"
+/>
+<Props
+  source="src/components/alert.tsx"
+  type="AlertDescriptionProps"
+  label="AlertDescription"
+/>
+<Props
+  source="src/components/alert.tsx"
+  type="AlertActionProps"
+  label="AlertAction"
+/>
+
+</Reference>

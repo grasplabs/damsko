@@ -1,0 +1,16 @@
+{
+  // The docs site and the registry (dist/r/*.json), as static assets on a Cloudflare Worker, at
+  // damsko.joingrasp.com. No Worker code: every address is a file of `pnpm run build`.
+  "name": "damsko",
+  "compatibility_date": "2026-11-01",
+  "workers_dev": false,
+  "preview_urls": false,
+  "assets": {
+    "directory": "dist",
+    // A page answers with or without its trailing slash (astro.config.ts, trailingSlash "ignore").
+    "html_handling": "auto-trailing-slash",
+    // An unknown address gets the site's own 404 page with a 404 status.
+    "not_found_handling": "404-page",
+  },
+  "routes": [{ "pattern": "damsko.joingrasp.com", "custom_domain": true }],
+}

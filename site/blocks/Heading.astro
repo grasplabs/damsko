@@ -1,0 +1,27 @@
+---
+// MDX's `h2` and `h3`: the heading, and a link mark that copies its address (the site's one copy
+// behaviour, site/behaviour/copy.ts). With a pointer the mark shows at its left on hover; it
+// shows on keyboard focus everywhere. Without script it is a plain link to the section.
+import { CheckIcon, Icon, LinkIcon } from "@grasp-os/ui/lib/icons";
+
+interface Props {
+  id?: string;
+  level?: 2 | 3;
+  [key: string]: unknown;
+}
+const { id, level = 2 } = Astro.props;
+const Tag = level === 3 ? "h3" : "h2";
+const text = (await Astro.slots.render("default")).replaceAll(/<[^>]+>/gu, "").trim();
+---
+
+<Tag id={id} class="site-heading">
+  <slot />
+  {
+    id && (
+      <a class="site-anchor" href={`#${id}`} data-copy-link="" data-copy-said={`Copied the link to ${text}`} aria-label={`Copy the link to ${text}`}>
+        <span class="site-anchor-rest"><Icon icon={LinkIcon} /></span>
+        <span class="site-anchor-done"><Icon icon={CheckIcon} /></span>
+      </a>
+    )
+  }
+</Tag>

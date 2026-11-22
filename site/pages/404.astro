@@ -1,0 +1,12 @@
+---
+// The page for an address that does not exist: site/chrome/NotFound.tsx, server-rendered.
+import { href } from "../chrome/nav";
+import NotFound from "../chrome/NotFound";
+import Docs from "../layouts/Docs.astro";
+---
+
+<Docs route="/404" title="Page not found" bare>
+  <div class="site-not-found">
+    <NotFound components={href("/components")} />
+  </div>
+</Docs>

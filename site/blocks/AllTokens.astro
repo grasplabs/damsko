@@ -1,0 +1,10 @@
+---
+// <AllTokens count={37}>…token groups…</AllTokens>: a foundations page's full token list as one
+// closed row (site/blocks/scene.tsx). Markdown form: a heading and the groups inside it.
+import "../system/styles/blocks.css";
+import { ReferenceView } from "./scene";
+
+const { label, count } = Astro.props as { label?: string; count?: number };
+---
+
+<ReferenceView label={label} count={count}><slot /></ReferenceView>

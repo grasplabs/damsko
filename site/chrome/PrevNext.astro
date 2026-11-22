@@ -1,0 +1,41 @@
+---
+// Previous and Next: two halves on a hairline, each one link: the tag, then the page's name in the
+// serif. On hover the name steps 4px and the arrow 3px. Stacked on a phone. Drawn by the layout
+// (site/layouts/Docs.astro) at the page's end.
+import { ArrowLeftIcon, ArrowRightIcon, Icon } from "@grasp-os/ui/lib/icons";
+import { href } from "./nav";
+
+interface Props {
+  prev: { route: string; label: string } | null;
+  next: { route: string; label: string } | null;
+  [key: string]: unknown;
+}
+const { prev, next } = Astro.props;
+---
+
+{
+  (prev || next) && (
+    <nav class="site-pager" aria-label="Previous and next page">
+      {prev ? (
+        <a class="site-pager-link" data-side="prev" href={href(prev.route)} rel="prev">
+          <span class="site-tag">Previous</span>
+          <span class="site-pager-name">
+            <Icon icon={ArrowLeftIcon} />
+            <span>{prev.label}</span>
+          </span>
+        </a>
+      ) : (
+        <span />
+      )}
+      {next && (
+        <a class="site-pager-link" data-side="next" href={href(next.route)} rel="next">
+          <span class="site-tag">Next</span>
+          <span class="site-pager-name">
+            <span>{next.label}</span>
+            <Icon icon={ArrowRightIcon} />
+          </span>
+        </a>
+      )}
+    </nav>
+  )
+}

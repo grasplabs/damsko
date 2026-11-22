@@ -1,0 +1,139 @@
+# Trunk-based: a branch, a pull request into main, then the merge queue,
+# which checks it on top of the latest main and squash-merges it. Every
+# check runs on pull requests and in the queue; a push to main runs them
+# once more on what landed, and the nightly run checks everything again,
+# with the component specs in every browser engine.
+#
+# Safe for pull requests from forks: `pull_request` (never
+# `pull_request_target`), a read-only token and no secrets.
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+  merge_group:
+  push:
+    branches: [main]
+  schedule:
+    # Every night, 02:17 UTC: everything, and the component specs in
+    # Firefox and WebKit too.
+    - cron: "17 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name != 'push' }}
+
+jobs:
+  # What may be in the tree, before anything is installed: pictures, video
+  # and audio only under public/, no file over 1 MB, Markdown only from an
+  # allowlist (scripts/guard.ts).
+  guard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+          package-manager-cache: false
+      - run: node scripts/guard.ts
+
+  # Format, lint and types; the static gates; the unit tests; the site's
+  # build. On a pull request also its branch name; its title and description
+  # are checked in pull-request.yml.
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+          package-manager-cache: false
+      - uses: voidzero-dev/setup-vp@3754dd7dbdb32bd8f6d28b6043de13ad3a75f21f # v1.21.1
+        with:
+          node-manager: false
+          cache: true
+          run-install: false
+      - run: vp install --frozen-lockfile
+      - if: github.event_name == 'pull_request'
+        run: node scripts/check-branch-name.ts
+      # The whole tree, not only what a commit stages (the pre-commit hook).
+      - run: vp run check:secrets
+      - run: vp check
+      - run: node scripts/gates.ts
+      - run: vp test
+      - run: vp run build
+
+  # The registry as a product installs it: every item added by name with the
+  # stock shadcn CLI from the registry built here, served on 127.0.0.1, into
+  # a fresh project; byte for byte, only the packages the items name, and it
+  # type-checks (scripts/check-install.ts). Its own job: it installs from npm.
+  install:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+          package-manager-cache: false
+      - uses: voidzero-dev/setup-vp@3754dd7dbdb32bd8f6d28b6043de13ad3a75f21f # v1.21.1
+        with:
+          node-manager: false
+          cache: true
+          run-install: false
+      - run: vp install --frozen-lockfile
+      - run: node scripts/check-install.ts
+
+  # The browser specs (tests/*.spec.ts) against the built site, in four
+  # shards: Chromium on every pull request; the nightly run adds Firefox and
+  # WebKit. The test results (traces of a retried test) are kept when one
+  # fails.
+  specs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        project: ${{ github.event_name == 'schedule' && fromJSON('["chromium", "firefox", "webkit"]') || fromJSON('["chromium"]') }}
+        shard: [1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+          package-manager-cache: false
+      - uses: voidzero-dev/setup-vp@3754dd7dbdb32bd8f6d28b6043de13ad3a75f21f # v1.21.1
+        with:
+          node-manager: false
+          cache: true
+          run-install: false
+      - run: vp install --frozen-lockfile
+      - run: vp exec playwright install --with-deps "$PROJECT"
+        env:
+          PROJECT: ${{ matrix.project }}
+      - run: vp run build
+      - run: vp exec playwright test --project="$PROJECT" --shard="$SHARD/4"
+        env:
+          PROJECT: ${{ matrix.project }}
+          SHARD: ${{ matrix.shard }}
+      - if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: test-results-${{ matrix.project }}-${{ matrix.shard }}
+          path: test-results/
+          retention-days: 7

@@ -1,0 +1,178 @@
+---
+title: Writing
+description: Plain, short British English in sentence case that says what to do next.
+---
+
+<Head lead={frontmatter.description} />
+
+## Voice
+
+Say it as a helpful colleague would, in the fewest plain words that are still clear: never blaming, never cute.
+
+<Stage path="guidelines/writing-voice" label="Voice" />
+
+## Buttons
+
+A verb and the thing it acts on, so the button promises exactly what happens when it is pressed.
+
+<Stage path="guidelines/writing-buttons" label="Buttons" />
+
+## While it works and after
+
+The button shows a spinner and says Saving, then shows Saved or Not saved, so nothing happens in silence. Press each one.
+
+A result on a button is one or two words: Saved, Sent, Not saved, Not loaded. The button keeps the width of its longest words, so a long result makes a short action wide; why it failed goes in the line or the toast beside it, never on the button.
+
+<Stage path="guidelines/writing-progress" label="While it works and after" />
+
+## Questions before a step
+
+One question that names the thing and what is lost, answered with the same verb: Delete Quarterly review? Delete, or Keep it.
+
+<Stage path="guidelines/writing-questions" label="Questions before a step" />
+
+## Errors
+
+Say what happened and what to do, under its field, and never blame the person; see [Empty and error states](/patterns/empty-and-error-states).
+
+<Stage path="guidelines/writing-errors" label="Errors" />
+
+## Empty states
+
+Say why it is empty and what fills it, so the next step is plain; see [Empty and error states](/patterns/empty-and-error-states).
+
+<Stage path="guidelines/writing-empty" label="Empty states" />
+
+## Loading and progress
+
+Say what is happening: Thinking, then Thought for 4 seconds. Never Loading where a truer word exists, nor an ellipsis for a word.
+
+<Stage path="guidelines/writing-loading" label="Loading and progress" />
+
+## Confirmations and undo
+
+Say what was done, and offer Undo while it can still be undone. Press each one.
+
+<Stage path="guidelines/writing-confirmations" label="Confirmations and undo" />
+
+## Status words
+
+A state is said in a word, never by [colour alone](/guidelines/accessibility#colour-and-contrast), and the same state takes the same word everywhere.
+
+<Stage path="guidelines/writing-status" label="Status words" />
+
+## Numbers, dates and plurals
+
+Real figures, as a person reads them: No sources, 1 source, 12 sources, Tuesday 14:02. The words are functions, so each language pluralises.
+
+```ts title="src/lib/i18n.tsx"
+sources: { count: (count) => `${count} ${count === 1 ? "source" : "sources"}` },
+```
+
+<Stage path="guidelines/writing-counts" label="Numbers, dates and plurals" />
+
+## Long words and cut text
+
+Text wraps before it is cut, and cut text stays whole in a title. Give `lang`; see [Zoom and long text](/guidelines/accessibility#zoom-and-long-text).
+
+<Stage path="guidelines/writing-long-words" label="Long words and cut text" />
+
+## Labels and placeholders
+
+The label names the field and stays; the placeholder is an example answer, never the label or the instruction.
+
+<Stage path="guidelines/writing-labels" label="Labels and placeholders" />
+
+## An agent's own work
+
+What it did, in the past tense with names and counts, and what it does as it happens. Never I, sorry or false certainty.
+
+<Stage path="guidelines/writing-agent" label="An agent's own work" />
+
+## Accessible words
+
+Every control has a name that stands alone: Copy, not Icon; Play, Shift planner at 0:05, not Play twice.
+
+<Stage path="guidelines/writing-names" label="Accessible words" />
+
+| What | Its words | More |
+| --- | --- | --- |
+| Icon button | Its action as its `label`: Copy, More actions. | [Names](/guidelines/accessibility#names) |
+| Several alike | Told apart by what they act on: Play, Shift planner at 0:05. | [Names](/guidelines/accessibility#names) |
+| Link | Words that stand alone: Read the pricing notes, never Click here. | [Names](/guidelines/accessibility#names) |
+| Picture | `alt` says what it shows, and is empty when it is only decoration. | [Names](/guidelines/accessibility#names) |
+| Error | Tied to its field, and said when it appears. | [Forms and errors](/guidelines/accessibility#forms-and-errors) |
+| Out of view | Said once, in the words a person would read: Writing, then Answer ready. | [Announcements](/guidelines/accessibility#announcements) |
+| Right to left | Mirrors by itself; a number and its unit keep their order: 1×. | [Right to left](/guidelines/accessibility#right-to-left) |
+
+## Words as props, and translation
+
+Every word shown or said is a prop with an English default, never glued from pieces. German and Dutch run a third longer.
+
+```tsx
+<I18nProvider locale="nl-NL" catalog={nl}>
+  <MessageError onRetry={retry}>
+    Kon niet antwoorden. De agenda reageerde niet.
+  </MessageError>
+</I18nProvider>
+```
+
+<Stage
+  path="guidelines/writing-translation"
+  label="Words as props, and translation"
+/>
+
+## One instance's own words
+
+The product gives every part its words once per root, in its language, through `I18nProvider`, with a catalogue (`I18nCatalog` in `src/lib/i18n.tsx`) keyed by part: `message`, `audioPlayer`, `appShell01`. A part in one place can say something of its own: the error under one answer says why it failed, not only "Could not answer". Give that instance its words through its own children or prop:
+
+```tsx
+<MessageError onRetry={retry}>Could not answer. The calendar did not respond.</MessageError>
+<MessageActions aria-label="Answer actions">…</MessageActions>
+<Button onClick={saveName} errorLabel="Could not save. Your name is kept.">Save</Button>
+```
+
+Each such prop wins over the catalogue for that instance only. Words it leaves out come from the catalogue, else English. Only words that differ from the catalogue need giving. A word the catalogue gives as a function (`count: (count) => …`) is given as a function, so each language pluralises.
+
+The catalogue is a `Partial<I18nCatalog>`: a part it leaves out keeps its English. Build it once, as a module constant, never during render. Providers do not merge: an inner one replaces the outer one's words for what it wraps, so give one per root.
+
+## Words we use
+
+Take the word on the left; where a component says it itself, the right column names it.
+
+| Use | Not | Where it is said |
+| --- | --- | --- |
+| Delete | Remove permanently | Alert dialog's and Hold button's examples |
+| Keep it | Cancel, in a question before a step | Connect API key block |
+| Not saved | Error saving | Button's press that takes time |
+| Could not save | Error | Field, Inline edit, Image upload |
+| Try again | Retry | Message, Data table, Field, File upload |
+| Thinking | Loading | Reasoning |
+| You are offline. Your changes are kept on this device and sent when you are back online. | Saved here and send when you are back | Toast's example |
+| Loading the sound | Loading | Audio player |
+| Loading the page | Loading | Pagination |
+| No sources | 0 sources | Sources |
+| Show less (text) | Show fewer (text) | Code block |
+| Send answer, Send | Submit | Questionnaire, Prompt input |
+| Sources | References | Sources |
+| You | The user | Message |
+| Choose | Select | Data table, Date picker, User picker, File upload |
+| Undo | Revert | Data table, Diff viewer |
+| Sign in | Log in | Brand icon |
+
+## Rules
+
+<Rules
+  always={[
+    "Sentence case and British spelling everywhere: colour, organise, cancelled.",
+    "Real figures only; leave a number out rather than guess it.",
+    "The same word for the same thing on every page.",
+    "Every word shown or said a prop, and every control a name of its own.",
+  ]}
+  never={[
+    "Em dashes, exclamation marks or jokes in the product.",
+    "OK, Yes or Submit on a button, or Loading where a truer word exists.",
+    "Blame, apology or I: You entered an invalid date. Sorry, I failed.",
+    "A placeholder as the label, or capitals for emphasis.",
+  ]}
+/>

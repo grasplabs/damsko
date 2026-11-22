@@ -1,0 +1,221 @@
+---
+title: Markdown
+description: An agent's answer in Markdown, shown as formatted text, even while it is still arriving.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/markdown"
+  use={'import { Markdown } from "@grasp-os/ui/components/markdown";'}
+/>
+
+## An answer
+
+Headings, lists, a table (Table, scrolling sideways in its own box), code in a sentence and in a fence (CodeBlock), a quote and a link (Link), in the interface's own type.
+
+<Stage path="markdown/answer" label="An answer" />
+
+## While it is written
+
+`streaming`: what is half-written at the end is drawn as what it will be. A table is a table from its head, code shows as it comes in a CodeBlock that says it is being written, a link still being written is its words with its arrow's room kept, and bold is bold from its first letter. Nothing flickers or re-flows when a mark closes. The words come as they are given: pacing them is the message's job. A screen reader hears each block once it is finished, never each word; `live="off"` keeps it silent, for words beside the answer that another part already says (Reasoning's thoughts).
+
+<Stage path="markdown/streaming" label="While it is written" />
+
+<Stage path="markdown/half-written" label="Caught part way" />
+
+## Cut off
+
+An answer stopped part way ends tidily: once `streaming` turns false, a link still being written at its end goes and bold or code left open is closed, so no raw mark shows. A cut answer drawn later, from history, does the same with `truncated`.
+
+<Stage path="markdown/cut" live label="Cut off" />
+
+## Single line breaks
+
+A model often writes short lines (a label and its value, a list of steps) with one newline between them. As CommonMark has it, one newline is a space, so those lines run together. `softBreaks="line"` draws every single newline as a line break; `auto` breaks only a paragraph of short lines (two or more, each under 60 characters, or each "Label: value"), so a paragraph the model wrapped by hand still reads as one. While the answer streams, a short line breaks as its newline comes, and no lines drawn apart run together again.
+
+<Stage path="markdown/line-breaks" label="Single line breaks" />
+
+## Headings
+
+A `#` heading is an `h1`, `##` an `h2`, and so on. Under a page's own title, `headingLevel` starts them lower, so the page's outline never skips or repeats a level; their look stays the answer's own.
+
+<Stage path="markdown/headings" label="Headings" />
+
+## Tasks and rules
+
+Task lists are Checkbox's box, read only, each said as done or not done; a rule is a Separator.
+
+<Stage path="markdown/tasks" label="Tasks and rules" />
+
+## Sections that fold
+
+A section written as GitHub's `<details>` with a `<summary>` line is drawn as a section: its summary a button, its body under it, closed until it is opened. Only that form: any other HTML stays text.
+
+<Stage path="markdown/sections" label="Sections that fold" />
+
+## Untrusted text
+
+Its links may come from a page the agent read. Raw HTML is text, never HTML, and a link of Markdown's own leads only to http, https or mailto; a picture is never loaded.
+
+<Stage path="markdown/safe" label="Untrusted text" />
+
+<Rows
+  title="What untrusted text becomes"
+  rows={[
+    {
+      group: "Links",
+      key: "javascript:, vbscript:",
+      value:
+        "Words, in any case and with a tab, space or control character in the scheme",
+    },
+    { group: "Links", key: "data:, file:", value: "Words" },
+    {
+      group: "Links",
+      key: "A relative path",
+      value: "Words: never resolved against the page",
+    },
+    {
+      group: "Links",
+      key: "A bare address",
+      value: "A link, when it is http or https",
+    },
+    {
+      group: "Links",
+      key: "A link inside a link",
+      value:
+        "The inner link; the outer one is words. Never an anchor in an anchor",
+    },
+    {
+      group: "HTML",
+      key: "Raw HTML",
+      value: "The text it is: no element is made, no handler runs",
+    },
+    {
+      group: "HTML",
+      key: "<details> with a <summary> line",
+      value:
+        "A section that folds, drawn by Markdown itself: the summary's words read as Markdown, nothing of the HTML kept",
+    },
+    {
+      group: "Pictures",
+      key: "![alt](url)",
+      value:
+        "Never loaded: its alt words, a link to the picture when http or https. The host may draw it (renderLink, type image)",
+    },
+    {
+      group: "Streaming",
+      key: "Half-arrived",
+      value: "The same at every step of an answer still arriving",
+    },
+  ]}
+/>
+
+## The host's links
+
+Markdown knows no router and no citation. `renderLink` draws every link and picture, any scheme, before the filter, and gets its address as written, its scheme, its title, its words and its `type` (`link`, `autolink` or `image`); undefined leaves it to Markdown. Here a link out asks first, and a path inside the product goes through the product's router as Link's child (`asChild`). A part around Markdown can draw links for every Markdown inside it with `MarkdownLinkProvider`: here the product's `cite:` links are numbered chips. The page's own `renderLink` is asked first. While an answer is written, a link inside a provider is held back until its address has arrived, so a citation never shows first as words.
+
+```tsx
+<MarkdownLinkProvider
+  renderLink={(link) =>
+    link.scheme === "cite" ? <Citation href={link.href} /> : undefined
+  }
+>
+  <Markdown
+    renderLink={(link) =>
+      link.href.startsWith("/") ? (
+        <Link asChild>
+          <RouterLink to={link.href}>{link.children}</RouterLink>
+        </Link>
+      ) : undefined
+    }
+  >
+    {answer}
+  </Markdown>
+</MarkdownLinkProvider>
+```
+
+<Stage path="markdown/host-links" label="The host's links" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="markdown"
+  always={[
+    "An agent's answer written in Markdown, finished or still arriving.",
+    "An agent's words in a card or a panel (size sm): its instructions, a note.",
+    "renderLink when the answer may hold links from untrusted text: the host draws each one, asking before it leaves.",
+  ]}
+  never={[
+    "The whole message, with who sent it and what can be done to it: use Message.",
+    "Code on its own, to read or copy: use Code block.",
+    "The interface's own words, which are no agent's answer: use Text.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Type",
+      key: "Body",
+      value: "15px / 24px",
+      note: "{text-base}",
+      tokens: ["body-foreground"],
+    },
+    {
+      group: "Type",
+      key: "Headings",
+      value: "17px for # and ##, 15px below them, medium",
+      note: "{text-lg}, {text-base}, {font-weight-medium}",
+      tokens: ["foreground"],
+    },
+    {
+      group: "Type",
+      key: "Code in a sentence",
+      value: "Geist Mono 14px on the code chip",
+      note: "{text-sm}",
+      tokens: ["code-bg", "foreground"],
+    },
+    { group: "Space", key: "Between blocks", value: "16px", note: "{space-4}" },
+    {
+      group: "Space",
+      key: "Lists",
+      value: "24px in, 4px between items",
+      note: "{space-6}, {space-1}",
+    },
+    {
+      group: "Blocks",
+      key: "Tables",
+      value: "Table, scrolling sideways in its own box with no bar",
+    },
+    { group: "Blocks", key: "Fenced code", value: "CodeBlock" },
+    { group: "Blocks", key: "Tasks", value: "Checkbox's box, read only" },
+    {
+      group: "Blocks",
+      key: "Quote",
+      value: "A 2px line at its start, in muted words",
+      tokens: ["border", "muted"],
+    },
+    {
+      group: "Blocks",
+      key: "Rule",
+      value: "A Separator",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/markdown/markdown.tsx"
+  type="MarkdownProps"
+  label="Markdown"
+/>
+
+</Reference>

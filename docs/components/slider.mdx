@@ -1,0 +1,398 @@
+---
+title: Slider
+description: A bar with a handle you drag to set a number, or two for a range.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/slider"
+  use={'import { Slider } from "@grasp-os/ui/components/slider";'}
+/>
+
+## With a label
+
+The label says what it sets; the value stands at the end of the same line.
+
+<Stage path="slider/basic" live label="With a label" />
+
+## With a description
+
+`format` writes the value as people read it, a percentage here; a sentence under it says what it changes.
+
+<Stage path="slider/description" label="With a description" />
+
+## A range
+
+Two thumbs set the lowest and the highest; give each its name in `thumbLabels`, or the second goes unnamed.
+
+<Stage path="slider/range" label="A range" />
+
+## Disabled
+
+It keeps its value in view, and the sentence under it says why it cannot change.
+
+<Stage path="slider/disabled" label="Disabled" />
+
+## In a Field
+
+Without a `label`, the Field round it names it with its FieldLabel and describes it with its FieldDescription, as a Switch or a RadioGroup stands.
+
+<Stage path="slider/field" label="In a Field" />
+
+## Upright
+
+`orientation="vertical"` runs it from the bottom up; Arrow Up raises it. Its height comes from `style`.
+
+<Stage path="slider/vertical" label="Upright" />
+
+## Every state
+
+Keyboard focus and pressed are forced from the slider's own CSS; disabled is its prop.
+
+<States
+  path="slider/states"
+  cells={[
+    { label: "Rest" },
+    { label: "Keyboard focus", force: "focus-visible" },
+    { label: "Pressed", force: "active" },
+    { label: "Disabled", props: { disabled: true } },
+  ]}
+/>
+
+## Levels
+
+`variant="levels"`: one of a short named scale, two to seven levels, chosen along a round track filled with a halftone of dots: dark up to the thumb, with a warm scatter at its edge, faint past it. The scale's ends are named under it; the chosen level is said in words to a screen reader.
+
+<Stage path="slider/levels" label="Levels" />
+
+### Every level
+
+Low to Max. The top level is a state of its own: the dots take the working light, a wave runs along them, and the thumb glows.
+
+<Stage path="slider/levels-sheet" label="Every level" />
+
+### Sizes
+
+`default`, a 32px track, on a page or in a form; `sm`, a 24px track, inside a popup or a menu.
+
+<Stage path="slider/levels-sizes" label="Levels sizes" />
+
+### Three levels
+
+The same track with three stops. Under four levels the last is not extra; pass `top` to choose.
+
+<Stage path="slider/levels-three" label="Three levels" />
+
+### In a popup
+
+The small size, beside other rows.
+
+<Stage path="slider/levels-popup" label="In a popup" />
+
+### Out of use
+
+Half strength, no drag, no focus. Say why beside it.
+
+<Stage path="slider/levels-disabled" label="Levels out of use" />
+
+### Every level state
+
+<States
+  path="slider/levels-states"
+  code="slider/levels"
+  cells={[
+    { label: "Rest" },
+    { label: "Hover", force: "hover" },
+    { label: "Keyboard focus", force: "focus-visible" },
+    { label: "Pressed", force: "active" },
+    { label: "Max", props: { value: "max" } },
+    { label: "Three levels", props: { scale: "three", value: "standard" } },
+    { label: "No levels", props: { scale: "none" } },
+    { label: "Disabled", props: { disabled: true } },
+  ]}
+/>
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="slider"
+  always={[
+    "A number along a scale, with its value in its own units, or a range: the lowest and the highest.",
+    "A label that says what it sets, and the value in its own units.",
+    "`levels`: how much of something in two to seven named steps whose order matters (effort, detail), lowest first.",
+  ]}
+  never={[
+    "An exact number someone must type: use a NumberField or an Input.",
+    "A few named choices with no order between them: use a RadioGroup or a Select.",
+    "A setting that is on or off: use a Switch.",
+    "A second readout of a level beside its heading: the track and its ends say it.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Size",
+      key: "Track",
+      value: "{slider-track} thick",
+      note: "as wide as the slider",
+    },
+    { group: "Size", key: "Thumb", value: "{slider-thumb}" },
+    {
+      group: "Size",
+      key: "Press area",
+      value: "{tap-target} tall",
+      note: "round the track",
+    },
+    {
+      group: "Type",
+      key: "Label and value",
+      value: "{text-sm} / {text-sm-line}",
+      note: "the value in tabular figures",
+    },
+    { group: "Colour", key: "Track", tokens: ["switch-track"] },
+    {
+      group: "Colour",
+      key: "Track under a pointer",
+      tokens: ["switch-track-hover"],
+    },
+    { group: "Colour", key: "Range", tokens: ["primary"] },
+    {
+      group: "Colour",
+      key: "Thumb",
+      note: "white, with the low lift",
+      tokens: ["primary-foreground-on-color", "shadow-sm"],
+    },
+    {
+      group: "Focus and disabled",
+      key: "Focus ring",
+      value: "{ring-width}, {ring-offset} out",
+      note: "on the thumb",
+      tokens: ["ring"],
+    },
+    {
+      group: "Focus and disabled",
+      key: "Disabled",
+      value: "{opacity-disabled} opacity",
+    },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    {
+      key: "Press and drag",
+      value: "The thumb scales to {button-press-scale}, {duration-press}",
+      note: "reduced: at once",
+      tokens: ["ease"],
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Input",
+      key: "Pointer",
+      value:
+        "A press on the track moves the nearest thumb there and starts a drag.",
+    },
+    {
+      group: "Input",
+      key: "Keyboard",
+      value:
+        "Arrows move one `step`; Page Up and Down ten; Home and End to the ends.",
+    },
+    {
+      group: "Input",
+      key: "Range",
+      value:
+        "Tab moves from one thumb to the other; they never pass each other.",
+    },
+    {
+      group: "Saving",
+      key: "`onValueCommit`",
+      value:
+        "Runs once a drag or a key press ends: save then, not on every step.",
+    },
+    {
+      group: "Settings",
+      key: "Right to left",
+      value: "The scale runs from the right; ArrowRight lowers it.",
+    },
+    {
+      group: "Settings",
+      key: "Forced colours",
+      value:
+        "The range in the highlight colour, the thumb ringed in the text colour.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Role",
+      value: "A `slider` per thumb: a native range input inside it",
+    },
+    { key: "Name", value: "The label, or each thumb's own name in a range" },
+    { key: "Description", value: "Said after the name: `aria-describedby`" },
+    { key: "Value", value: "Read out as `format` writes it" },
+    { key: "Agents", value: "Found by the label; `setValue` moves it" },
+  ]}
+/>
+<Rows
+  title="From shadcn"
+  rows={[
+    {
+      key: "A track alone",
+      value: "`label`, `description`",
+      note: "the value on the label's line",
+    },
+    { key: "`bg-muted`, `bg-primary`", value: "{switch-track}, {primary}" },
+    { key: "`className`", value: "`style`", note: "layout and width only" },
+    { key: "Base UI", value: "UI SDK" },
+  ]}
+/>
+
+<Rows
+  title="Levels: values"
+  rows={[
+    {
+      group: "Size",
+      key: "Track",
+      value: "24px at `sm`, 32px at `default`, round",
+      tokens: ["slider-levels-track", "slider-levels-track-regular"],
+    },
+    {
+      group: "Size",
+      key: "Reach",
+      value: "44px tall, the whole row",
+      tokens: ["tap-target"],
+    },
+    {
+      group: "Dots",
+      key: "Grid",
+      value:
+        "A dot on every 4px, inside the track's round shape; none touch: the largest is its cell less 1px, in a narrow spread",
+      tokens: ["slider-levels-pitch"],
+    },
+    {
+      group: "Dots",
+      key: "Lit",
+      value:
+        "Ink and its deeper green up to the thumb, a touch larger further along",
+      tokens: ["brand-ink", "brand-pine"],
+    },
+    {
+      group: "Dots",
+      key: "Edge",
+      value:
+        "Up to five warm dots just before the thumb, most in the nearest column",
+      tokens: ["slider-levels-warm"],
+    },
+    {
+      group: "Dots",
+      key: "Rest",
+      value: "Small and faint past the thumb, on the soft fill",
+      tokens: ["slider-levels-rest"],
+    },
+    {
+      group: "Dots",
+      key: "Top level",
+      value: "The working light's mint and lime, fuller",
+      tokens: ["brand-mint", "brand-lime"],
+    },
+    {
+      group: "Thumb",
+      key: "Shape",
+      value:
+        "Round, 3px inside the track, white; its run stops 2px short of each end, so its ring stays inside",
+      tokens: [
+        "slider-levels-thumb-padding",
+        "slider-levels-thumb",
+        "slider-levels-run-padding",
+      ],
+    },
+    {
+      group: "Thumb",
+      key: "Top level",
+      value: "A mint glow round it",
+      tokens: ["mint", "mint-deep"],
+    },
+  ]}
+/>
+<Rows
+  title="Levels: motion"
+  rows={[
+    {
+      key: "Settling",
+      value:
+        "The thumb and the dots reach a new level in 160ms, ease-out, no overshoot",
+      note: "{slider-levels-snap}",
+    },
+    {
+      key: "The top",
+      value:
+        "The working light's lighter stop drifts along the dots, one pass every 4.8s, while it is in view",
+    },
+    {
+      key: "Reduced motion",
+      value: "No settling, no wave: the top level's dots stand still",
+    },
+  ]}
+/>
+<Rows
+  title="Levels: behaviour"
+  rows={[
+    {
+      group: "Pointer",
+      key: "Drag",
+      value: "The thumb follows the pointer; the level is the nearest stop.",
+    },
+    {
+      group: "Pointer",
+      key: "Press",
+      value: "Anywhere on the row goes to the nearest level.",
+    },
+    {
+      group: "Pointer",
+      key: "Hover",
+      value: "The thumb grows a touch, to be taken hold of.",
+    },
+    {
+      group: "Settings",
+      key: "Forced colours",
+      value:
+        "A bordered track, the part up to the thumb in Highlight, the thumb bordered.",
+    },
+    {
+      group: "Settings",
+      key: "Without script",
+      value: "The range input works; the dots wait for script.",
+    },
+  ]}
+/>
+<Rows
+  title="Levels: accessibility"
+  rows={[
+    { key: "Role", value: "A native range input: `slider`, named by `label`" },
+    { key: "Keys", value: "Arrows step, Home and End jump" },
+    { key: "Value", value: "`aria-valuetext` is the level's label" },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props source="src/components/slider.tsx" type="SliderProps" />
+
+The rest of UI SDK's Slider (`largeStep`, `minStepsBetweenThumbs`, `readOnly`, `name`, `locale`, `controller`) passes through to the default variant.
+
+</Reference>

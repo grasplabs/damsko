@@ -1,0 +1,258 @@
+// ToggleGroup: toggles on one soft track, from shadcn's (registry/bases/base/ui/toggle-group.tsx,
+// on Base UI), converted from Tailwind to StyleX and built on UI SDK's ToggleGroup: one tab stop,
+// the arrow keys between toggles. The track soft, the pressed item raised out of it.
+// Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
+//
+//   <ToggleGroup aria-label="View" defaultValue={["list"]}>
+//     <ToggleGroupItem value="list">List</ToggleGroupItem>
+//     <ToggleGroupItem value="board">Board</ToggleGroupItem>
+//   </ToggleGroup>
+"use client";
+
+import * as stylex from "@stylexjs/stylex";
+import {
+  ToggleGroup as ToggleGroupPrimitive,
+  Toggle as TogglePrimitive,
+} from "@ui-sdk/react/toggle";
+import type { ToggleState } from "@ui-sdk/react/toggle";
+import { createContext, useContext } from "react";
+import type { ComponentProps, ReactNode } from "react";
+
+import { focusRing } from "../lib/styles";
+import {
+  colors,
+  media,
+  radius,
+  shadow,
+  size as sizes,
+  space,
+} from "../lib/tokens.stylex";
+import type { LayoutStyle } from "../lib/utils";
+import { iconOnly, toggleVariants } from "./toggle";
+import type { ToggleSize } from "./toggle";
+
+type ToggleGroupPrimitiveProps = ComponentProps<
+  typeof ToggleGroupPrimitive<string>
+>;
+
+interface ToggleGroupOwnProps {
+  /** Its ToggleGroupItems. */
+  children: ReactNode;
+  /** What the toggles set, as a screen reader and an agent say it ("Text style"). */
+  "aria-label"?: string;
+  /** The pressed items' values now, for a group your code holds. */
+  value?: string[];
+  /** The pressed items' values at first, when the group holds its own. */
+  defaultValue?: string[];
+  /** Runs when a press changes which items are pressed, with their values. */
+  onValueChange?: ToggleGroupPrimitiveProps["onValueChange"];
+  /**
+   * Several may be pressed at once. Otherwise pressing one lifts the others.
+   * @default false
+   */
+  multiple?: boolean;
+  /**
+   * Toggle's ladder: `xs` 28 alone or in a toolbar; `sm` 32, `default` 36 and `lg` 44, the track
+   * level with a field of that size in the same row. Every item in it takes this size.
+   * @default "xs"
+   */
+  size?: ToggleSize;
+  /**
+   * Every item out of use, still reachable by the keyboard. Say why near it.
+   * @default false
+   */
+  disabled?: boolean;
+  /** Where it sits: margins and alignment. The look belongs to the group. */
+  style?: LayoutStyle;
+}
+
+/** Every prop a ToggleGroup takes: the ones above, and the rest of UI SDK's ToggleGroup. */
+export type ToggleGroupProps = ToggleGroupOwnProps &
+  Omit<
+    ToggleGroupPrimitiveProps,
+    keyof ToggleGroupOwnProps | "className" | "render"
+  >;
+
+type TogglePrimitiveProps = ComponentProps<typeof TogglePrimitive>;
+
+interface ToggleGroupItemOwnProps {
+  /** Its name in the group: the group's value lists the pressed items by it. */
+  value: string;
+  /** Its words, its icon (`<Icon icon={…} />`), or both. An icon alone needs an `aria-label`. */
+  children?: ReactNode;
+  /** Its name when it shows only an icon ("Bold"). */
+  "aria-label"?: string;
+  /**
+   * Out of use: no press, half strength.
+   * @default false
+   */
+  disabled?: boolean;
+  /** Where it sits: margins and alignment. */
+  style?: LayoutStyle;
+}
+
+/** Every prop a ToggleGroupItem takes: the ones above, and the rest of UI SDK's Toggle. */
+export type ToggleGroupItemProps = ToggleGroupItemOwnProps &
+  Omit<
+    TogglePrimitiveProps,
+    | keyof ToggleGroupItemOwnProps
+    | "className"
+    | "render"
+    | "pressed"
+    | "defaultPressed"
+    | "onPressedChange"
+  >;
+
+const HOVER = media.hover;
+const FORCED = media.forcedColors;
+
+const styles = stylex.create({
+  group: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: sizes.toggleGap,
+    boxSizing: "border-box",
+    maxWidth: "100%",
+    // The same room on every side, so the pressed item stands evenly inside the track.
+    padding: space.toggleTrackPadding,
+    borderRadius: radius.base,
+    cornerShape: radius.shape,
+    backgroundColor: colors.muted,
+    // Forced colours drop the fill: a line keeps the track.
+    outline: { default: "none", [FORCED]: "1px solid CanvasText" },
+    outlineOffset: "-1px",
+  },
+  vertical: {
+    flexDirection: "column",
+    alignItems: "stretch",
+  },
+  // A step shorter than the size, inside a track that leaves the same room on every side, so the
+  // track itself stands at the size's height.
+  xs: {
+    height: `calc(${sizes.toggleHeight} - 2 * ${sizes.toggleGap})`,
+    minWidth: `calc(${sizes.toggleHeight} - 2 * ${sizes.toggleGap})`,
+  },
+  sm: {
+    height: `calc(${sizes.controlSm} - 2 * ${space.toggleTrackPadding})`,
+    minWidth: `calc(${sizes.controlSm} - 2 * ${space.toggleTrackPadding})`,
+  },
+  default: {
+    height: `calc(${sizes.controlDefault} - 2 * ${space.toggleTrackPadding})`,
+    minWidth: `calc(${sizes.controlDefault} - 2 * ${space.toggleTrackPadding})`,
+  },
+  lg: {
+    height: `calc(${sizes.controlLg} - 2 * ${space.toggleTrackPadding})`,
+    minWidth: `calc(${sizes.controlLg} - 2 * ${space.toggleTrackPadding})`,
+  },
+  item: {
+    borderRadius: `calc(${radius.base} - ${space.toggleTrackPadding})`,
+  },
+  // An icon alone: square.
+  square: { paddingInline: 0 },
+  // Can be pressed: the word alone turns ink under a pointer, with no fill, so it never reads as the
+  // choice beside the raised one.
+  live: {
+    color: {
+      default: colors.mutedForeground,
+      ":hover": { default: null, [HOVER]: colors.foreground },
+    },
+    backgroundColor: "transparent",
+  },
+  // Pressed: raised out of the track with the low lift, so the choice is a shape and not a colour
+  // alone.
+  raised: {
+    color: { default: colors.foreground, [FORCED]: "HighlightText" },
+    backgroundColor: { default: colors.tabBgSelected, [FORCED]: "Highlight" },
+    // In dark the chosen fill is barely off the track; the veil a chosen segmented tab wears there
+    // lifts it as clearly.
+    backgroundImage: {
+      default: `linear-gradient(light-dark(transparent, ${colors.accentActive}), light-dark(transparent, ${colors.accentActive}))`,
+      [FORCED]: "none",
+    },
+    boxShadow: shadow.sm,
+  },
+  disabled: {
+    opacity: sizes.opacityDisabled,
+    cursor: "not-allowed",
+    transform: "none",
+  },
+  // A finger needs 44px: an invisible area inside the item reaches past its top and bottom on
+  // touch. Never past its sides, where it would lie over its neighbour and take that one's press.
+  target: {
+    position: "absolute",
+    insetInline: 0,
+    insetBlock: {
+      default: 0,
+      [media.pointerCoarse]: `calc((100% - ${sizes.tapTarget}) / 2)`,
+    },
+  },
+});
+
+/** An item's height in the track, by the group's size. */
+const sizeStyle = (size: ToggleSize) => {
+  if (size === "sm") {
+    return styles.sm;
+  }
+  if (size === "default") {
+    return styles.default;
+  }
+  if (size === "lg") {
+    return styles.lg;
+  }
+  return styles.xs;
+};
+
+// The group's size, which every item in it takes.
+const GroupSize = createContext<ToggleSize>("xs");
+
+export const ToggleGroup = ({
+  children,
+  size = "xs",
+  style,
+  ...rest
+}: ToggleGroupProps) => (
+  <GroupSize value={size}>
+    <ToggleGroupPrimitive
+      {...rest}
+      data-slot="toggle-group"
+      {...stylex.props(
+        styles.group,
+        rest.orientation === "vertical" && styles.vertical,
+        style
+      )}
+    >
+      {children}
+    </ToggleGroupPrimitive>
+  </GroupSize>
+);
+
+/** One toggle in a ToggleGroup: pressed when the group's value lists it. */
+export const ToggleGroupItem = ({
+  children,
+  style,
+  ...rest
+}: ToggleGroupItemProps) => {
+  const size = useContext(GroupSize);
+  return (
+    <TogglePrimitive
+      {...rest}
+      data-slot="toggle-group-item"
+      className={(state: ToggleState) =>
+        stylex.props(
+          toggleVariants({ size }),
+          sizeStyle(size),
+          styles.item,
+          iconOnly(children) && styles.square,
+          !state.disabled && !state.pressed && styles.live,
+          state.pressed && styles.raised,
+          state.disabled && styles.disabled,
+          style,
+          focusRing
+        ).className
+      }
+    >
+      <span aria-hidden="true" {...stylex.props(styles.target)} />
+      {children}
+    </TogglePrimitive>
+  );
+};

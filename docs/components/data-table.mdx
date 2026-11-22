@@ -1,0 +1,468 @@
+---
+title: Data table
+description: A table of rows that people can sort, search, select and page through.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/data-table"
+  use={'import { DataTable } from "@grasp-os/ui/components/data-table";'}
+/>
+
+## Basic usage
+
+Press a column's name to sort by it; the search keeps the rows that hold its words.
+
+<Stage path="data-table/basic" label="Basic usage" />
+
+## Choosing rows
+
+A checkbox on each row, one in the head for every row shown, and a count.
+
+<Stage path="data-table/selectable" label="Choosing rows" />
+
+## Columns
+
+The View menu hides columns (`columnVisibilityFeature`); each column's menu pins, moves and hides it (`columnPinningFeature`, `columnOrderingFeature`). Its handle resizes it by pointer or arrow keys (`columnResizingFeature`).
+
+<Stage path="data-table/columns" label="Columns" />
+
+## Acting on rows
+
+A bulk action's `severity` picks how it is confirmed: Archive (`undoable`) is undone from its toast; Delete (`grave`) asks first; a `moderate` one is held to confirm. A row opens to its summary (`rowExpandingFeature` with `renderDetailPanel`), and `filterable` narrows the rows by one condition. The toasts go to the page's one `<Toaster />` (the shared `toast`), so the page needs one at its root; a host that keeps its own queue passes it as `toaster`, as this example does.
+
+<Stage path="data-table/rows" label="Acting on rows" />
+
+## A row that opens a page
+
+`getRowHref` makes each row's name a real link to its page, drawn as the cell's own words on the column's line (no control padding; a long name wraps at the start). The whole row is its press area; the checkbox, the row's menu and a column marked `control` stay their own. Tab stops once on each name, Enter follows it, and the row takes the ring. With scripts off it still works; it opens in a new tab as any link does.
+
+<Stage path="data-table/opens-page" label="A row that opens a page" />
+
+## A row that opens, its first column held
+
+With `stickyFirstColumn` the held name cell is the row's press area, not the whole row: a held cell is a box of its own, which the name's press area cannot reach past. The name opens the page as in any row; the other cells do not.
+
+<Stage
+  path="data-table/opens-held"
+  label="A row that opens, its first column held"
+/>
+
+## A row that opens a panel
+
+`onRowClick` makes the name a button that opens something on the page. `isRowActive` marks the row open now: said as current, with a quiet fill of its own, apart from the selection.
+
+<Stage path="data-table/opens-panel" label="A row that opens a panel" />
+
+## Members
+
+A person in the lead cell is the page's own `cell`; `control` on the role's column keeps the row's height with a Select in it. `skeleton: "person"` makes a column wait in a person's shape while the table loads.
+
+<Stage path="data-table/members" label="Members" />
+
+## A row's state
+
+`getRowStatus` draws a row's state over the whole row, never cell by cell: `pending` (someone invited, not yet here) fades from the row's start to its end, and `removed` greys it. Each is said after the row's first words too, and the row's actions stay whole and usable. Right to left, the fade runs the other way.
+
+<Stage path="data-table/members-status" label="A row's state" />
+
+## Columns that make room
+
+`hideBelow` on a column takes it away, head and cells, when the table's own box is narrower than the `sm` (40rem) or `md` (48rem) breakpoint. It answers to the table's box, not the window, so a table in a narrow panel makes room too. A column you hide must never be the only place its fact lives: keep it in the row or on the row's own page, and never hide the first column, which names the row.
+
+`description` on a column puts an info mark beside its name, whose tooltip says more about the column (here, what each role may do). The name stays `header`, which sorting and the column's menu say.
+
+<Stage path="data-table/members-narrow" label="Columns that make room" />
+
+## Dates
+
+`dateColumn` says when, as people do, in the reader's language. Hover or focus shows the full date; it sorts by the date, and a search and the export read it as the date (`2026-11-12T09:30:00.000Z`). Any column whose value is not words to read takes a `text` for them.
+
+<Stage path="data-table/dates" label="Dates" />
+
+## Groups
+
+Rows gathered by owner (`groupingFeature` with `groupBy`), each group counted; a group's heading opens and closes it.
+
+<Stage path="data-table/grouped" label="Groups" />
+
+## Groups kept
+
+`collapsedGroups` keeps the collapsed groups in your state, by value; `location` keeps them in the link. A reload keeps them closed.
+
+<Stage path="data-table/groups-kept" label="Groups kept" />
+
+## Phases as headings
+
+Each group's heading is a heading: a step above a row, its count in a Badge, with room above it so it belongs to its rows. `getGroupVariant` gives a group the warning variant, on its count alone, and it is said in words too. A group's rows stand on the columns' own lines. A closed group is part of the view in the link (`location`), and in a table with a `height` its heading stays under the head while its rows pass.
+
+<Stage path="data-table/workflows" label="Phases as headings" />
+
+## From a server
+
+The server sorts, searches and pages (`rowCount` with `sort`, `query` and `page` in state); placeholders hold the rows' place, then the rows fade in.
+
+<Stage path="data-table/server" label="From a server" />
+
+## Endless
+
+More rows come as the last one scrolls into view, with placeholders while they do.
+
+<Stage path="data-table/endless" label="Endless" />
+
+## Nothing yet, loading, error
+
+Each says so in words, in the rows' place: `emptyState`, `loading` and `error`.
+
+<Stage path="data-table/outcomes" label="Nothing yet, loading, failed" />
+
+## Nothing matches
+
+`noResults` is handed the search and the filter, so the words name them and the action clears them.
+
+<Stage path="data-table/no-match" label="Nothing matches" />
+
+## A view in the link
+
+Sort, search, hide or move a column: the address keeps it (`searchParamsLocation`). Export CSV saves the rows found (`exportFileName`).
+
+<Stage path="data-table/views" label="A view in the link" />
+
+## Density
+
+Compact, default and comfortable rows: 32, 42 and 50px. The words stay the same size.
+
+<Stage path="data-table/density" label="Density" />
+
+## A filter on its own
+
+`DataTableFilters` is the filter a `filterable` table draws, for a page that filters something else: a field, an operator and a value as one joined control. Each field says which operators it takes and whether its value is chosen, a number or words; a shared `compatibilityKey` keeps the value across fields.
+
+<Stage path="data-table/filters" label="A filter on its own" />
+
+## Every state
+
+Hover and keyboard focus are forced from the parts' own CSS; the rest are props.
+
+<States
+  path="data-table/states"
+  cells={[
+    { label: "Row" },
+    { label: "Row, hover", force: "hover" },
+    { label: "Row, selected", props: { chosen: true } },
+    { label: "Checkbox, keyboard focus", force: "focus-visible" },
+    { label: "Search", props: { part: "search" } },
+    {
+      label: "Search, keyboard focus",
+      force: "focus-visible",
+      props: { part: "search" },
+    },
+    { label: "Searching", props: { part: "search", query: "plan" } },
+    { label: "Nothing matches", props: { part: "empty" } },
+  ]}
+/>
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="data-table"
+  always={[
+    "Rows people sort, search, select and page through.",
+    "A list that runs past a screen, in pages with `pageSize`.",
+    "A first column that names the row: it names its checkbox too.",
+    "`value` as a number for a figure, so it sorts as one.",
+    'Figures at the end of their column: `align: "end"`.',
+  ]}
+  never={[
+    "A few facts that never change: use Table.",
+    "Values edited in place, cell by cell, as in a spreadsheet: use Data grid.",
+    "A card's short list of things, one line each: use Item.",
+    "A sortable column whose order means nothing.",
+    "Actions hidden in the rows only: act on the chosen rows from a bar above.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Table",
+      key: "Rows, head and cells",
+      value: "Table's",
+      note: "its hairlines, room and type",
+    },
+    {
+      group: "Table",
+      key: "Chosen row",
+      tokens: ["table-row-bg-selected-mint"],
+    },
+    {
+      group: "Choosing",
+      key: "Checkbox",
+      value: "{checkbox-box}",
+      note: "its 44px reach spills over the row; the row keeps its height",
+    },
+    {
+      group: "Choosing",
+      key: "Count",
+      value: "{text-sm}, tabular figures",
+      tokens: ["muted"],
+    },
+    {
+      group: "Search",
+      key: "Field",
+      value: "InputGroup, {control-default}",
+      note: "up to 320px wide",
+    },
+    {
+      group: "Search",
+      key: "Bar",
+      value: "{space-3} between the search and the count, and above the table",
+    },
+    {
+      group: "Pages",
+      key: "Pagination",
+      value: "Pagination's",
+      note: "under the table, only when there is more than a page",
+    },
+    {
+      group: "Empty",
+      key: "Words",
+      value: "One row across every column",
+      tokens: ["muted"],
+    },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    {
+      key: "Hover",
+      value: "Table's: the row lights, {duration-hover}",
+      note: "pointer only",
+      tokens: ["ease"],
+    },
+    {
+      key: "Sorting, searching, paging",
+      value: "At once",
+      note: "the rows change in place; nothing moves",
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Sort",
+      key: "A column's name",
+      value: "Sorts low to high; again, high to low. Numbers sort as numbers.",
+    },
+    {
+      group: "Sort",
+      key: "Shift and a name",
+      value:
+        "Adds the column to the sort; each sorted head shows and says its place.",
+    },
+    {
+      group: "Choose",
+      key: "Shift and a checkbox",
+      value: "Chooses every row between it and the last one pressed.",
+    },
+    {
+      group: "Columns",
+      key: "View menu",
+      value:
+        "Shows and hides columns (`columnVisibilityFeature`); the first column always stays.",
+    },
+    {
+      group: "Columns",
+      key: "Handle",
+      value:
+        "Drag it, or arrow keys a step at a time; a double press restores the first width (`columnResizingFeature`).",
+    },
+    {
+      group: "Columns",
+      key: "Moving",
+      value:
+        "Drag a head, or Move earlier and Move later in its menu (`columnOrderingFeature`).",
+    },
+    {
+      group: "Columns",
+      key: "Pinning",
+      value:
+        "Pin to the start or end from its menu (`columnPinningFeature`); held columns cast the low lift while others pass under.",
+    },
+    {
+      group: "Height",
+      key: "`height`",
+      value:
+        "Rows scroll inside; the head stays and casts the low lift while rows pass under.",
+    },
+    {
+      group: "Search",
+      key: "Typing",
+      value:
+        "Keeps the rows where any column's value holds the words, and goes back to page 1.",
+    },
+    {
+      group: "Search",
+      key: "No match",
+      value: "One row says nothing matches, with the words typed.",
+    },
+    {
+      group: "Choose",
+      key: "A row",
+      value: "Its checkbox chooses it; the row takes the chosen fill.",
+    },
+    {
+      group: "Choose",
+      key: "The head's checkbox",
+      value: "Chooses every row shown, or none; mixed in between.",
+    },
+    {
+      group: "Choose",
+      key: "Across pages",
+      value: "A choice stays when the page, the search or the sort changes.",
+    },
+    {
+      group: "Pages",
+      key: "Size",
+      value: "`pageSize` rows a page; no pages when they all fit.",
+    },
+    {
+      group: "Width",
+      key: "Narrow",
+      value: "Table's: it scrolls sideways inside its own box.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Table",
+      value: "A real `table`, named by its caption or `aria-label`",
+    },
+    { key: "Sorted", value: "`aria-sort` on the column's head" },
+    { key: "Row checkbox", value: "Named Choose and the row's first value" },
+    {
+      key: "Head checkbox",
+      value: 'Choose every … shown, `aria-checked="mixed"` in between',
+    },
+    {
+      key: "Count",
+      value: "Said when it changes",
+      note: '`aria-live="polite"`',
+    },
+    { key: "Search", value: "`searchbox` named Search and the table's label" },
+    {
+      key: "Sort by several",
+      value: "Each sorted head says its place: sorted first, second",
+    },
+    {
+      key: "Resize handle",
+      value:
+        "A slider named Width of … with `aria-valuenow`; arrow keys resize",
+    },
+    {
+      key: "Column menu",
+      value: "A button named Column: …; every piece's action is in it",
+    },
+    {
+      key: "Agents",
+      value:
+        "Found by its label; read, sortBy, search, filter, choose and page, as a person would",
+      note: "danger actions still wait for the person",
+    },
+  ]}
+/>
+<Rows
+  title="From shadcn"
+  rows={[
+    {
+      group: "Recipe",
+      key: "TanStack Table",
+      value: "Kept, 9.3.1",
+      note: "the engine; features opt-in",
+    },
+    {
+      group: "Recipe",
+      key: "`columns` with `accessorKey`, `cell`",
+      value: "`columns` with `value`, `cell`",
+      note: "`value` sorts and searches",
+    },
+    {
+      group: "Recipe",
+      key: "Column visibility menu",
+      value: "`columnVisibilityFeature`",
+      note: "only when a table needs it",
+    },
+    {
+      group: "Parts",
+      key: "`Table`, `Checkbox`, `Input`, `Button`s",
+      value: "Table, Checkbox, InputGroup, Pagination",
+      note: "the finished ones",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/data-table/data-table.tsx"
+  type="DataTableProps"
+  label="DataTable props"
+/>
+<Props
+  source="src/components/data-table/data-table.tsx"
+  type="DataTableColumn"
+  label="DataTableColumn"
+/>
+<Props
+  source="src/components/data-table/data-table.tsx"
+  type="DataTableSort"
+  label="DataTableSort"
+/>
+<Props
+  source="src/components/data-table/data-table.tsx"
+  type="DataTableAction"
+  label="DataTableAction"
+/>
+<Props
+  source="src/components/data-table/data-table.tsx"
+  type="DataTableRowAction"
+  label="DataTableRowAction"
+/>
+<Props
+  source="src/components/data-table/data-table.tsx"
+  type="DataTableEmptyState"
+  label="DataTableEmptyState"
+/>
+<Props
+  source="src/components/data-table/data-table.tsx"
+  type="DataTableSearchState"
+  label="DataTableSearchState"
+/>
+<Props
+  source="src/components/data-table/filters.tsx"
+  type="DataTableFiltersProps"
+  label="DataTableFilters props"
+/>
+<Props
+  source="src/components/data-table/filters.tsx"
+  type="DataTableFilterField"
+  label="DataTableFilterField"
+/>
+<Props
+  source="src/components/data-table/filters.tsx"
+  type="DataTableFilterCondition"
+  label="DataTableFilterCondition"
+/>
+
+</Reference>

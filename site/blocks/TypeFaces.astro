@@ -1,0 +1,13 @@
+---
+// <TypeFaces />: the Type page's first picture, the three families as "Aa" (site/blocks/type.tsx).
+// Markdown form: a table (site/markdown.ts).
+import "../system/styles/blocks.css";
+import { TypeFacesView } from "./type";
+import { tokenSet } from "./token-data";
+
+// The serif names things, so it comes first.
+const order = ["font-serif", "font-sans", "font-mono"];
+const families = [...tokenSet("families")].sort((a, b) => order.indexOf(a.name) - order.indexOf(b.name));
+---
+
+<TypeFacesView families={families} />

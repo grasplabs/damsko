@@ -1,0 +1,1138 @@
+/* The docs site's frame: the header, the sidebar, the rail, Previous and Next, search, the phone
+   menu and the 404, plus the edge of every preview, written against site/layouts/Docs.astro. The page's own words are in prose.css, the blocks' few rules in
+   blocks.css, the product's base in base.css.
+
+   Everything here is in the `site` layer, under StyleX's layers: a component, and a block, always
+   wins over a rule of the frame's. Every rule is keyed on one of the frame's own classes (.site-*)
+   or the frame's own elements, so no rule here can match inside a preview or inside a popup a
+   preview opens.
+
+   One exception to the layers: an icon in the frame is the system's Icon, styled by StyleX, and the
+   frame sizes, hides and moves its icons. Those few declarations (the rules ending in `svg`) are
+   !important, which in this earlier layer wins over StyleX's normal ones, as the unlayered
+   chrome.css did under the previous docs system.
+
+   Every size and colour is a token (tokens/tokens.ts; the docs frame's own are frame-*), hairlines
+   included. The one literal left is a time: the 1ms of reduced motion.
+
+   The grid: frame-sidebar, frame-column and, from 84rem, frame-rail, space-12 apart, centred.
+   The header sits on the same columns. Below 64rem the column stands alone and the sidebar moves
+   into the phone menu. Media queries cannot read custom properties; the breakpoints in them are
+   the tokens' values: bp-phone 40rem, bp-sidebar 64rem, bp-rail 84rem. */
+
+@layer site {
+  :root {
+    /* The one property here that is not a token: the gutter, space-6, or space-4 on a phone. */
+    --site-gutter: var(--damsko-space-6);
+    /* Which way the line runs, as a sign: a shadow or a nudge that has no logical form (an inset
+     line at the start, Next's step forward) is multiplied by it, so right to left it mirrors. */
+    --site-forward: 1;
+
+    /* The code highlighter's colours (a css-variables theme, site/system/highlight.ts), from the tokens. */
+    --code-foreground: var(--damsko-body-foreground);
+    --code-background: transparent;
+    --code-token-keyword: var(--damsko-lavender);
+    --code-token-constant: var(--damsko-pine);
+    --code-token-string: var(--damsko-mint-deep);
+    --code-token-string-expression: var(--damsko-mint-deep);
+    --code-token-comment: var(--damsko-muted-foreground);
+    --code-token-function: var(--damsko-foreground);
+    --code-token-parameter: var(--damsko-body-foreground);
+    --code-token-punctuation: var(--damsko-muted-foreground);
+    --code-token-link: var(--damsko-info);
+    --code-token-inserted: var(--damsko-success);
+    --code-token-deleted: var(--damsko-destructive);
+    --code-token-changed: var(--damsko-warning);
+  }
+  @media (max-width: 39.99rem) {
+    :root {
+      --site-gutter: var(--damsko-space-4);
+    }
+  }
+  :root[dir="rtl"] {
+    --site-forward: -1;
+  }
+
+  html {
+    background: var(--damsko-background);
+    /* With scroll padding, focusing a control in the sticky header scrolled the page by hundreds of
+     pixels to "reveal" it. A section clears the header by its scroll-margin instead. */
+    scroll-padding-top: 0;
+  }
+  /* The body is the product's base (base.css); the docs add nothing to it, since a popup a preview
+   opens is drawn in the body too. */
+
+  /* Focus, for what in the frame has no focus look of its own. Only for the keyboard. Words get the
+   ring a little apart from the letters; the chrome's pills and segments take it on their edge, like
+   every control. It appears at once. Named place by place, never a bare :focus-visible, so it
+   cannot reach a preview or a popup; the page's own words have theirs in prose.css. */
+  :is(.site-skip, .site-rail-column, .site-end, .site-not-found):focus-visible,
+  :is(.site-rail-column, .site-end, .site-not-found, .site-search-dialog)
+    :focus-visible {
+    outline: var(--damsko-ring-width) solid var(--damsko-ring);
+    outline-offset: var(--damsko-ring-offset-text);
+  }
+  /* Focus a script put there after a click (site/behaviour/quiet-focus.ts) is not keyboard focus:
+   no ring, in every browser. */
+  .site-search-dialog [data-site-quiet]:focus-visible {
+    outline: none;
+  }
+
+  .site-visually-hidden {
+    position: absolute;
+    width: var(--frame-hairline);
+    height: var(--frame-hairline);
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  /* The tag: names a section, never a page. */
+  .site-tag {
+    margin: 0;
+    font-family: var(--damsko-font-sans);
+    font-size: var(--damsko-text-xs);
+    font-weight: var(--damsko-font-weight-medium);
+    line-height: var(--damsko-text-xs-line);
+    color: var(--damsko-muted-foreground);
+    letter-spacing: var(--tracking-tag);
+    text-transform: uppercase;
+  }
+
+  .site-kbd {
+    display: inline-flex;
+    align-items: center;
+    padding-inline: var(--damsko-space-1);
+    font-family: var(--damsko-font-sans);
+    font-size: var(--damsko-text-xs);
+    line-height: var(--damsko-text-xs-line);
+    color: var(--damsko-muted-foreground);
+    background: var(--damsko-card);
+    border-radius: var(--damsko-radius-mark);
+    box-shadow: var(--damsko-border-strong);
+  }
+
+  /* ---- The sidebar's runs ------------------------------------------------------------------------ */
+  /* A run's chevron (site/chrome/DocsShell.tsx) points at its pages while they are folded, and turns
+     down as they open. The library's Collapsible turns its own chevron; the run's trigger is the
+     sidebar's row, so the run draws its own. */
+  .site-run-chevron {
+    display: inline-flex;
+    flex: none;
+    color: var(--damsko-subtle-foreground);
+    transition: rotate var(--damsko-duration-ui) var(--damsko-ease);
+  }
+  [aria-expanded="true"] > .site-run-chevron {
+    rotate: 90deg;
+  }
+  :root[dir="rtl"] .site-run-chevron {
+    scale: -1 1;
+  }
+  /* A part's name (Docs, Components) is a heading's weight over its runs. */
+  .site-part {
+    font-weight: var(--damsko-font-weight-medium);
+  }
+
+  /* ---- The column -------------------------------------------------------------------------------- */
+  /* Full bleed (the start page, Docs.astro `bleed`): the window's whole width under the top bar, at
+   least its whole height; the page lays out what it puts here. */
+  .site-bleed {
+    display: block;
+    inline-size: 100%;
+    min-block-size: calc(100dvh - var(--frame-header));
+    padding: 0;
+  }
+  /* Get started's band of the light comes first, 48px above the title. */
+  .site-main-column > .site-light-band {
+    margin-bottom: var(--damsko-space-12);
+  }
+  .site-main-column > .site-prose {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+  }
+
+  /* ---- A wide opening ------------------------------------------------------------------------------ */
+  /* The column beside a wide band (site/layouts/Docs.astro, the `wide` slot). */
+  .site-main-column {
+    display: flex;
+    flex-direction: column;
+    grid-column: 1;
+    grid-row: 2;
+    min-width: 0;
+  }
+
+  /* ---- The rail: "On this page" ------------------------------------------------------------------ */
+  .site-rail-column {
+    display: none;
+  }
+  @media (min-width: 84rem) {
+    .site-rail-column {
+      position: sticky;
+      overflow-y: auto;
+      scrollbar-width: none;
+      display: block;
+      top: var(--frame-header);
+      height: calc(100dvh - var(--frame-header));
+      padding: var(--damsko-space-12) 0 var(--damsko-space-10);
+      font-size: var(--damsko-text-sm);
+      line-height: var(--damsko-text-sm-line);
+    }
+  }
+  /* The rail is the library's Outline (site/chrome/Toc.astro): its own title, list, mark and measure.
+   The page tools stand in its foot, on the same edge as the sections. */
+  .site-rail-tools .site-quiet-link {
+    font-size: var(--damsko-text-xs);
+    line-height: var(--damsko-text-xs-line);
+  }
+
+  /* ---- The list the bar opens where there is no rail (site/chrome/RailList.astro) --------------- */
+  .site-onpage-list ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .site-onpage-title {
+    font-size: var(--damsko-text-sm);
+    font-weight: var(--damsko-font-weight-medium);
+    line-height: var(--damsko-text-sm-line);
+    color: var(--damsko-foreground);
+    letter-spacing: 0;
+    text-transform: none;
+  }
+  .site-rail-group + .site-rail-group {
+    margin-block-start: var(--damsko-space-4);
+  }
+  .site-rail-part {
+    display: block;
+    padding: var(--damsko-space-1) var(--damsko-space-1);
+    margin-inline-start: calc(
+      var(--frame-mark) + var(--damsko-space-3) - var(--damsko-space-1)
+    );
+    font-size: var(--damsko-text-xs);
+    line-height: var(--damsko-text-xs-line);
+    color: var(--damsko-subtle-foreground);
+  }
+  .site-onpage-list a {
+    position: relative;
+    display: flex;
+    gap: var(--damsko-space-1);
+    align-items: center;
+  }
+  .site-rail-fold {
+    display: inline-flex;
+    flex: none;
+    color: var(--damsko-subtle-foreground);
+  }
+  .site-rail-fold svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  /* ---- "On this page" where there is no rail: one bar at the top of the column ----------------- */
+  /* Sticks to the very top of the shell's scrolling main, past its padding (space-7, the App shell's). */
+  .site-onpage {
+    position: sticky;
+    top: calc(-1 * var(--damsko-space-7));
+    z-index: 2;
+    margin-block-end: var(--damsko-space-6);
+    /* As wide as the column and no wider: its rule starts and ends with the words above and below it. */
+    /* The shell card's own ground, so the bar is one with the page under it. */
+    background: var(--damsko-background);
+    border-bottom: var(--frame-hairline) solid var(--damsko-border);
+  }
+  .site-onpage > summary {
+    display: flex;
+    gap: var(--damsko-space-2);
+    align-items: center;
+    min-height: var(--damsko-tap-target);
+    /* The chevron ends where the title's next arrow does, centred in its control-sm button: 8px in
+     from the column's end, not on it. */
+    padding-inline-end: calc(
+      (var(--damsko-control-sm) - var(--damsko-icon-sm)) / 2
+    );
+    list-style: none;
+    cursor: pointer;
+    border-radius: var(--damsko-radius-mark);
+  }
+  .site-onpage > summary::-webkit-details-marker {
+    display: none;
+  }
+  .site-onpage-current {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    font-size: var(--damsko-text-sm);
+    line-height: var(--damsko-text-sm-line);
+    color: var(--damsko-muted-foreground);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  /* The dot before the current section: drawn as a shape, not a typed glyph. */
+  .site-onpage-current:not(:empty)::before {
+    content: "";
+    display: inline-block;
+    width: 3px;
+    height: 3px;
+    margin-inline: var(--damsko-space-1) var(--damsko-space-2);
+    vertical-align: middle;
+    background: var(--damsko-subtle-foreground);
+    border-radius: var(--damsko-radius-circle);
+  }
+  .site-onpage-chevron {
+    display: inline-flex;
+    flex: none;
+    margin-inline-start: auto;
+    color: var(--damsko-muted-foreground);
+    transition: transform var(--damsko-duration-hover) var(--damsko-ease);
+  }
+  .site-onpage[open] .site-onpage-chevron {
+    transform: rotate(0.5turn);
+  }
+  .site-onpage-list {
+    max-height: calc(100dvh - 10rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+    padding: 0 0 var(--damsko-space-4);
+  }
+  .site-onpage-list .site-rail-part {
+    margin-inline-start: 0;
+    padding-inline: 0;
+    margin-block-start: var(--damsko-space-3);
+  }
+  .site-onpage-list a {
+    min-height: var(--damsko-control-sm);
+    font-size: var(--damsko-text-sm);
+    line-height: var(--damsko-text-sm-line);
+    color: var(--damsko-muted-foreground);
+    text-decoration: none;
+  }
+  @media (pointer: coarse) {
+    .site-onpage-list a {
+      min-height: var(--damsko-tap-target);
+    }
+  }
+  .site-onpage-list a[aria-current] {
+    color: var(--damsko-foreground);
+  }
+  .site-onpage-list li[data-depth="3"] a {
+    padding-inline-start: var(--damsko-space-3);
+  }
+  @container site-room (min-width: 65rem) {
+    .site-onpage {
+      display: none;
+    }
+  }
+
+  /* ---- The page tools: Copy as Markdown, Open in chat --------------------------------------------- */
+  .site-tools-list {
+    display: grid;
+    justify-items: start;
+  }
+  .site-quiet-link {
+    display: inline-flex;
+    gap: var(--damsko-space-2);
+    align-items: center;
+    box-sizing: border-box;
+    padding: var(--damsko-space-1) 0;
+    font: inherit;
+    font-size: var(--damsko-text-sm);
+    line-height: var(--damsko-text-sm-line);
+    color: var(--damsko-muted-foreground);
+    text-align: start;
+    text-decoration: none;
+    cursor: pointer;
+    background: none;
+    border: 0;
+    border-radius: var(--damsko-radius-mark);
+    transition: color var(--damsko-duration-hover) var(--damsko-ease);
+  }
+  .site-quiet-link > svg {
+    flex: none !important;
+  }
+  .site-quiet-link[data-action-state="done"] {
+    color: var(--damsko-mint-deep);
+  }
+  .site-quiet-link[data-action-state="failed"] {
+    color: var(--damsko-destructive);
+  }
+  .site-quiet-link [data-action-label],
+  .site-copy-mark {
+    transition: opacity var(--damsko-duration-swap) var(--damsko-ease);
+  }
+  .site-quiet-link[data-action-state="swap"] [data-action-label],
+  .site-quiet-link[data-action-state="swap"] .site-copy-mark {
+    opacity: 0;
+  }
+  /* A copy action's mark (Copy as Markdown): the copy icon at rest, the tick once copied, the failed
+   mark when it could not, in one cell, swapped while the control is unseen (copy.ts's
+   data-action-shown), as the library's Copy field and every copy button do. */
+  .site-copy-mark {
+    flex: none;
+    display: inline-grid;
+  }
+  .site-copy-mark > span {
+    grid-area: 1 / 1;
+    display: inline-flex;
+  }
+  .site-copy-done,
+  .site-copy-failed,
+  [data-action-shown] > .site-copy-mark > .site-copy-rest {
+    visibility: hidden;
+  }
+  [data-action-shown="done"] > .site-copy-mark > .site-copy-done,
+  [data-action-shown="failed"] > .site-copy-mark > .site-copy-failed {
+    visibility: visible;
+  }
+  .site-chat > summary {
+    list-style: none;
+  }
+  .site-chat > summary::-webkit-details-marker {
+    display: none;
+  }
+  .site-chat ul {
+    display: grid;
+    justify-items: start;
+    margin: 0;
+    padding: 0 0 0 var(--damsko-space-6);
+    list-style: none;
+  }
+  .site-chat[open] > summary {
+    color: var(--damsko-foreground);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .site-quiet-link:hover {
+      color: var(--damsko-foreground);
+    }
+  }
+  @media (pointer: coarse) {
+    .site-quiet-link {
+      min-height: var(--damsko-tap-target);
+    }
+  }
+  /* Where there is no rail, the tools sit at the page's end, in one row. */
+  .site-page-end {
+    margin-top: var(--damsko-space-16);
+  }
+  .site-page-end .site-tools-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--damsko-space-6);
+    align-items: flex-start;
+  }
+  @media (min-width: 84rem) {
+    .site-page-end {
+      display: none;
+    }
+  }
+
+  /* ---- The footer: the licence, under every page ------------------------------------------------ */
+  .site-footer {
+    display: grid;
+    gap: var(--damsko-space-1);
+    margin-top: var(--damsko-space-12);
+    padding-top: var(--damsko-space-5);
+    border-top: var(--frame-hairline) solid var(--damsko-border);
+    color: var(--damsko-muted-foreground);
+    font-size: var(--damsko-text-xs);
+    line-height: var(--damsko-text-xs-line);
+  }
+  .site-footer p {
+    margin: 0;
+  }
+  .site-footer a {
+    color: inherit;
+  }
+
+  /* ---- Previous and Next ------------------------------------------------------------------------- */
+  .site-pager {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--damsko-space-6);
+    margin-top: var(--damsko-space-16);
+    border-top: var(--frame-hairline) solid var(--damsko-border);
+  }
+  .site-page-end + .site-pager {
+    margin-top: var(--damsko-space-6);
+  }
+  /* Beside the rail the page end is gone: Previous and Next keep the full space above them. */
+  @media (min-width: 84rem) {
+    .site-page-end + .site-pager {
+      margin-top: var(--damsko-space-16);
+    }
+  }
+  .site-pager-link {
+    display: grid;
+    gap: var(--damsko-space-1);
+    align-content: start;
+    padding-top: var(--damsko-space-5);
+    color: var(--damsko-foreground);
+    text-decoration: none;
+    border-radius: var(--damsko-radius-mark);
+  }
+  .site-pager-link[data-side="next"] {
+    grid-column: 2;
+    justify-items: end;
+    text-align: end;
+  }
+  .site-pager-name {
+    display: inline-flex;
+    gap: var(--damsko-space-2);
+    align-items: center;
+    font-family: var(--damsko-font-serif);
+    font-size: var(--damsko-heading-md);
+    line-height: var(--damsko-heading-md-line);
+    letter-spacing: var(--damsko-tracking-title);
+    transition: translate var(--damsko-duration-ui) var(--damsko-ease);
+  }
+  .site-pager-name > svg {
+    color: var(--damsko-muted-foreground) !important;
+    transition:
+      translate var(--damsko-duration-ui) var(--damsko-ease),
+      color var(--damsko-duration-hover) var(--damsko-ease) !important;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .site-pager-link[data-side="next"]:hover .site-pager-name {
+      translate: calc(var(--site-forward) * var(--damsko-space-1)) 0;
+    }
+    .site-pager-link[data-side="next"]:hover .site-pager-name > svg {
+      translate: calc(var(--site-forward) * var(--damsko-space-1)) 0 !important;
+      color: var(--damsko-foreground) !important;
+    }
+    .site-pager-link[data-side="prev"]:hover .site-pager-name {
+      translate: calc(-1 * var(--site-forward) * var(--damsko-space-1)) 0;
+    }
+    .site-pager-link[data-side="prev"]:hover .site-pager-name > svg {
+      translate: calc(-1 * var(--site-forward) * var(--damsko-space-1)) 0 !important;
+      color: var(--damsko-foreground) !important;
+    }
+  }
+  @media (max-width: 39.99rem) {
+    .site-pager {
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+    .site-pager-link[data-side="next"] {
+      grid-column: 1;
+    }
+    .site-pager-link + .site-pager-link {
+      margin-top: var(--damsko-space-5);
+      border-top: var(--frame-hairline) solid var(--damsko-border);
+    }
+    .site-pager > span:empty {
+      display: none;
+    }
+  }
+
+  /* ---- A heading's link mark ---------------------------------------------------------------------- */
+  /* site/blocks/Heading.astro: a 16px mark at the heading's left, muted. With a pointer it fades in
+   on hover; it shows on keyboard focus everywhere, and while it says what it did. A click copies
+   the section's address (site/behaviour/copy.ts) and goes to it. */
+  .site-heading {
+    position: relative;
+    scroll-margin-top: calc(var(--frame-header) + var(--damsko-space-6));
+  }
+  .site-anchor {
+    position: absolute;
+    top: 0;
+    inset-inline-end: 100%;
+    display: inline-grid;
+    place-items: center;
+    /* 20px and the 4px gap: the page's narrowest outer gutter (24px, from 640px until the column
+     centres) holds it whole; at 24px wide it stood 4px past the page (tests/widths.spec.ts). */
+    width: var(--damsko-space-5);
+    height: 100%;
+    max-height: var(--damsko-heading-md-line);
+    margin-inline-end: var(--damsko-space-1);
+    color: var(--damsko-muted-foreground);
+    text-decoration: none;
+    border-radius: var(--damsko-radius-mark);
+    opacity: 0;
+    transition:
+      opacity var(--damsko-duration-hover) var(--damsko-ease),
+      color var(--damsko-duration-hover) var(--damsko-ease);
+  }
+  h3.site-heading .site-anchor {
+    max-height: var(--damsko-text-base-line);
+  }
+  /* On a phone the gutter (space-4) is narrower than the mark, which stood past the page's edge (and
+   right to left made the page scroll sideways): it goes inside, at the heading's end. */
+  @media (max-width: 39.99rem) {
+    .site-heading {
+      padding-inline-end: calc(var(--damsko-space-5) + var(--damsko-space-1));
+    }
+    .site-anchor {
+      inset-inline-end: 0;
+      margin-inline-end: 0;
+    }
+  }
+  .site-anchor > span {
+    grid-area: 1 / 1;
+    display: inline-grid;
+    transition: opacity var(--damsko-duration-swap) var(--damsko-ease);
+  }
+  .site-anchor-done {
+    opacity: 0;
+  }
+  .site-anchor:focus-visible,
+  .site-anchor[data-action-state] {
+    opacity: 1;
+  }
+  .site-anchor[data-action-state="swap"] > span {
+    opacity: 0;
+  }
+  .site-anchor[data-action-state="done"] {
+    color: var(--damsko-mint-deep);
+  }
+  .site-anchor[data-action-state="done"] .site-anchor-rest {
+    opacity: 0;
+  }
+  .site-anchor[data-action-state="done"] .site-anchor-done {
+    opacity: 1;
+  }
+  .site-anchor[data-action-state="failed"] {
+    color: var(--damsko-destructive);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .site-heading:hover .site-anchor {
+      opacity: 1;
+    }
+    .site-anchor:hover {
+      color: var(--damsko-foreground);
+    }
+  }
+  @media (pointer: coarse) {
+    .site-anchor::before {
+      position: absolute;
+      inset: calc((var(--damsko-space-6) - var(--damsko-tap-target)) / 2);
+      content: "";
+    }
+  }
+
+  /* ---- Search ------------------------------------------------------------------------------------ */
+  /* A raised panel on lift-high (its soft edge is in the lift, never a border). The panel is the
+   field: the input inside has no box, no outline and no ring of its own, and the caret shows where
+   the keys go. One hairline under the input row, edge to edge, with space-2 clear on each side of
+   it: the row's words stand in the middle of its height, and the results start space-2 under it. */
+  .site-search-dialog {
+    box-sizing: border-box;
+    width: min(var(--frame-search-panel), 100% - 2 * var(--site-gutter));
+    max-width: none;
+    max-height: min(var(--frame-search-panel-height), 100dvh - 20vh);
+    margin: 12vh auto auto;
+    padding: 0;
+    overflow: hidden;
+    color: var(--damsko-body-foreground);
+    background: var(--damsko-card);
+    border: 0;
+    border-radius: var(--damsko-radius);
+    corner-shape: var(--damsko-radius-shape);
+    outline: 0;
+    box-shadow: var(--damsko-shadow-lg);
+  }
+  .site-search-dialog[open] {
+    display: flex;
+  }
+  .site-search-dialog::backdrop {
+    background: var(--frame-scrim);
+  }
+  /* In dark the frame's scrim, a dark green at 0.24, barely dims a dark page. There the backdrop takes
+   a dialog's veil (its dark value, black at 0.56), so the page steps back and the raised panel
+   stands clearly above it. No fade: the resting state is the finished state. */
+  :root[data-mode="dark"] .site-search-dialog::backdrop {
+    color-scheme: dark;
+    background: var(--damsko-dialog-scrim);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-mode]) .site-search-dialog::backdrop {
+      color-scheme: dark;
+      background: var(--damsko-dialog-scrim);
+    }
+  }
+  .site-search-panel {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+  }
+  /* The input row: the glyph, the words, Esc. The words and Esc share a baseline; the glyph is
+   centred on the row. Esc ends space-4 from the panel's edge, as the glyph starts. */
+  .site-search-field {
+    position: relative;
+    display: flex;
+    flex: none;
+    gap: var(--damsko-space-3);
+    align-items: baseline;
+    /* frame-header tall: the words' line and space-4 above and below it. */
+    padding: calc((var(--frame-header) - var(--damsko-text-base-line)) / 2)
+      var(--damsko-space-4);
+    color: var(--damsko-muted-foreground);
+    cursor: text;
+  }
+  .site-search-field > svg {
+    flex: none;
+    align-self: center;
+    width: var(--damsko-icon-sm) !important;
+    height: var(--damsko-icon-sm) !important;
+  }
+  .site-search-field::after {
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    height: var(--frame-hairline);
+    content: "";
+    background: var(--damsko-border);
+    pointer-events: none;
+  }
+  .site-search-field input,
+  .site-search-field input:focus,
+  .site-search-field input:focus-visible {
+    flex: 1;
+    min-width: 0;
+    height: var(--damsko-text-base-line);
+    margin: 0;
+    padding: 0;
+    font: inherit;
+    font-size: var(--damsko-text-base);
+    line-height: var(--damsko-text-base-line);
+    color: var(--damsko-foreground);
+    text-overflow: ellipsis;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    outline: 0;
+    box-shadow: none;
+    appearance: none;
+    caret-color: var(--damsko-foreground);
+  }
+  .site-search-field input::placeholder {
+    color: var(--damsko-muted-foreground);
+    opacity: 1;
+  }
+  .site-search-field input::-webkit-search-cancel-button,
+  .site-search-field input::-webkit-search-decoration {
+    display: none;
+    -webkit-appearance: none;
+  }
+  .site-search-field .site-kbd {
+    flex: none;
+  }
+  /* The results scroll inside the panel, under the input row and over the count line, which both
+   stay. The list ends on a whole row with a fade's room under it (site/behaviour/search.ts, fit),
+   and an edge fades while there is more beyond it, so no row is ever sliced by a hard line. The
+   bar is the house one (scrollbarHidden in lib/styles). A mask reads only alpha: ink stands for "shown". */
+  .site-search-results {
+    --site-search-fade: var(--damsko-space-8);
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: var(--damsko-space-2);
+    scroll-padding-block: var(--site-search-fade);
+  }
+  .site-search-results:empty {
+    display: none;
+  }
+  .site-search-results[data-more="end"] {
+    mask-image: linear-gradient(
+      to bottom,
+      var(--damsko-foreground) calc(100% - var(--site-search-fade)),
+      transparent
+    );
+  }
+  .site-search-results[data-more="start"] {
+    mask-image: linear-gradient(
+      to top,
+      var(--damsko-foreground) calc(100% - var(--site-search-fade)),
+      transparent
+    );
+  }
+  .site-search-results[data-more="both"] {
+    mask-image: linear-gradient(
+      to bottom,
+      transparent,
+      var(--damsko-foreground) var(--site-search-fade),
+      var(--damsko-foreground) calc(100% - var(--site-search-fade)),
+      transparent
+    );
+  }
+  /* A group's name: small and muted, on the words' edge, never a stop. */
+  .site-search-group + .site-search-group {
+    margin-top: var(--damsko-space-2);
+  }
+  .site-search-group-name {
+    padding: var(--damsko-space-2) var(--damsko-space-3) var(--damsko-space-1)
+      calc(var(--frame-mark) + var(--damsko-space-3));
+    font-size: var(--damsko-text-xs);
+    line-height: var(--damsko-text-xs-line);
+    color: var(--damsko-muted-foreground);
+  }
+  .site-search-results [role="option"] {
+    position: relative;
+    display: grid;
+    padding: var(--damsko-space-3) var(--damsko-space-3) var(--damsko-space-3)
+      calc(var(--frame-mark) + var(--damsko-space-3));
+    color: var(--damsko-body-foreground);
+    text-decoration: none;
+    border-radius: calc(var(--damsko-radius) - var(--damsko-space-1));
+    corner-shape: var(--damsko-radius-shape);
+  }
+  .site-search-results [role="option"][aria-selected="true"] {
+    background: var(--damsko-accent);
+    box-shadow: inset calc(var(--site-forward) * var(--frame-mark)) 0 0
+      var(--damsko-mint);
+  }
+  .site-search-place {
+    font-size: var(--damsko-text-sm);
+    font-weight: var(--damsko-font-weight-medium);
+    line-height: var(--damsko-text-sm-line);
+    color: var(--damsko-foreground);
+  }
+  .site-search-words {
+    font-size: var(--damsko-text-xs);
+    line-height: var(--damsko-text-xs-line);
+    color: var(--damsko-muted-foreground);
+    overflow-wrap: anywhere;
+  }
+  .site-search-words mark {
+    font-weight: var(--damsko-font-weight-medium);
+    color: var(--damsko-foreground);
+    background: none;
+  }
+  /* Nothing to say: no line, no band. With nothing to show either, the field is the dialog, its
+   hairline gone with what it divided. */
+  .site-search-panel:has(.site-search-results:empty):has(
+      .site-search-status:empty
+    )
+    .site-search-field::after {
+    display: none;
+  }
+  .site-search-status {
+    flex: none;
+    margin: 0;
+    padding: var(--damsko-space-3) var(--damsko-space-4);
+    font-size: var(--damsko-text-xs);
+    line-height: var(--damsko-text-xs-line);
+    color: var(--damsko-muted-foreground);
+  }
+  .site-search-status:empty {
+    padding-block: 0;
+  }
+  .site-search-results:not(:empty) + .site-search-status {
+    box-shadow: inset 0 var(--frame-hairline) 0 var(--damsko-border);
+  }
+
+  /* Arrival: the search dialog comes up a few pixels and is whole from its first
+   frame. No fade: wherever animation time is held back (a background tab, the app's browser pane) a
+   fade from 0 stopped part way and left the panel see-through, the page's words reading through its
+   results. A held slide leaves it whole and 4px low. Leaving is never slower than arriving. */
+  .site-search-dialog {
+    transition:
+      translate var(--damsko-duration-swap) var(--damsko-ease),
+      display var(--damsko-duration-swap) allow-discrete,
+      overlay var(--damsko-duration-swap) allow-discrete;
+    translate: 0 var(--damsko-space-1);
+  }
+  /* Between the states (the field alone, the starting points, results, "nothing found") the
+   panel's height eases rather than jumps; at once under reduced motion. */
+  .site-search-dialog {
+    interpolate-size: allow-keywords;
+  }
+  .site-search-dialog[open] {
+    transition:
+      translate var(--damsko-duration-hover) var(--damsko-ease),
+      height var(--damsko-duration-ui) var(--damsko-ease);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .site-search-dialog[open] {
+      transition: none;
+    }
+  }
+  .site-search-dialog[open] {
+    translate: none;
+    transition-duration: var(--damsko-duration-hover);
+  }
+  @starting-style {
+    .site-search-dialog[open] {
+      translate: 0 var(--damsko-space-1);
+    }
+  }
+
+  /* ---- The 404 ----------------------------------------------------------------------------------- */
+  /* The 404 page (site/pages/404.astro): Empty at page size fills the column; its two ways on sit
+   side by side, and wrap on a phone. */
+  .site-not-found {
+    display: grid;
+    min-block-size: 60vh;
+  }
+  .site-not-found-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--damsko-space-2);
+    justify-content: center;
+  }
+  /* ---- Forced colours: a mark drawn as a fill would vanish, so it is drawn as a line ------------- */
+  @media (forced-colors: active) {
+    .site-top-links a[aria-current="page"],
+    .site-search-results [role="option"][aria-selected="true"] {
+      outline: var(--frame-hairline) solid Highlight;
+      outline-offset: calc(-1 * var(--frame-hairline));
+    }
+    .site-search-dialog {
+      border: var(--frame-hairline) solid CanvasText;
+    }
+  }
+
+  /* ---- Fallback faces sized to Geist, so the text does not move when the font arrives ------------- */
+  @font-face {
+    font-family: "Geist Fallback";
+    src: local("Arial");
+    ascent-override: 95.94%;
+    descent-override: 28.16%;
+    line-gap-override: 0%;
+    size-adjust: 104.76%;
+  }
+
+  /* ---- Reduced motion: the chrome arrives at once; a component keeps its own reduced form -------- */
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :is(.site-search-dialog, .site-tools-list, .site-pager, .site-heading),
+    :is(.site-search-dialog, .site-tools-list, .site-pager, .site-heading)
+      :is(*, *::before, *::after) {
+      transition-duration: 1ms !important;
+      animation-duration: 1ms !important;
+    }
+    .site-pager-name,
+    .site-pager-name > svg {
+      translate: none !important;
+    }
+  }
+
+  /* ---- The edge of a preview --------------------------------------------------------------------- */
+  /* Where a live example starts (site/system/Island.astro). It draws no box of its own, and sets
+   every inherited property of text back to the product's base, the same as the body's (base.css),
+   so an example inherits nothing from the docs around it: not the stage's, not a cell's, not the
+   page's. */
+  .site-preview {
+    display: contents;
+    font-family: var(--damsko-font-sans);
+    font-size: var(--damsko-text-base);
+    font-style: normal;
+    font-weight: var(--damsko-font-weight-normal);
+    line-height: var(--damsko-text-base-line);
+    letter-spacing: normal;
+    word-spacing: normal;
+    color: var(--damsko-body-foreground);
+    text-align: start;
+    text-indent: 0;
+    text-transform: none;
+    white-space: normal;
+    overflow-wrap: normal;
+    word-break: normal;
+    hyphens: manual;
+    font-variant-numeric: normal;
+    font-feature-settings: normal;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* ---- Skip to the content ----------------------------------------------------------------------- */
+  /* Hidden by clipping, in its place at the start: an offset off screen stood past the page's edge
+   right to left, and the page could scroll sideways to it. */
+  .site-skip {
+    position: absolute;
+    inset-inline-start: 0;
+    top: 0;
+    z-index: 100;
+    padding: var(--damsko-space-2) var(--damsko-space-4);
+    color: var(--damsko-background);
+    white-space: nowrap;
+    background: var(--damsko-foreground);
+    clip-path: inset(50%);
+  }
+  .site-skip:focus {
+    clip-path: none;
+  }
+
+  /* ---- A page that could not be drawn ------------------------------------------------------------ */
+  /* site/system/Problem.astro: the file, the line and the message, in place of the page's body. */
+  .site-problem {
+    display: grid;
+    gap: var(--damsko-space-2);
+    margin-top: var(--damsko-space-6);
+    padding: var(--damsko-space-5);
+    color: var(--damsko-body-foreground);
+    background: var(--damsko-destructive-subtle);
+    border-radius: var(--damsko-radius);
+    corner-shape: var(--damsko-radius-shape);
+    box-shadow: var(--damsko-border-strong);
+  }
+  .site-problem .site-tag {
+    color: var(--damsko-destructive);
+  }
+  .site-problem-file {
+    margin: 0;
+    font-family: var(--damsko-font-mono);
+    font-size: var(--damsko-text-sm);
+    line-height: var(--damsko-text-sm-line);
+    color: var(--damsko-foreground);
+  }
+  .site-problem-message {
+    margin: 0;
+    font-family: var(--damsko-font-mono);
+    font-size: var(--damsko-text-sm);
+    line-height: var(--damsko-text-sm-line);
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+}
+
+/* ---- The shell ----------------------------------------------------------------------------------- */
+/* The library's Sidebar and its inset page (site/chrome/DocsShell.tsx) fill the window; the page
+   scrolls in its card, so the frame itself never does. Only layout here: the shell's look is its
+   own. */
+/* The page in the card: the column, and the rail beside it once the card has room for both. The
+   card is measured, not the window, since the sidebar takes part of the window. */
+.site-page {
+  container-type: inline-size;
+  display: grid;
+  grid-template-columns: minmax(0, var(--frame-column));
+  justify-content: center;
+  align-items: start;
+  column-gap: var(--damsko-space-12);
+}
+.site-page > .site-wide {
+  grid-column: 1 / -1;
+  min-width: 0;
+  padding-block-end: var(--damsko-space-12);
+}
+.site-page .site-rail-column {
+  display: none;
+}
+/* The rail stands beside the column only when the page's own room (.site-room, Docs.astro) holds the
+   whole column, the gap and the rail: 48 + 3 + 14 = 65rem. Measured on the nearest container (one
+   of the shell's boxes) at 60rem, it came at a width where the column then fell to 640px: the column
+   must never narrow as the window widens. */
+.site-room {
+  container: site-room / inline-size;
+}
+@container site-room (min-width: 65rem) {
+  .site-page {
+    grid-template-columns: minmax(0, var(--frame-column)) var(--frame-rail);
+  }
+  .site-page .site-rail-column {
+    position: sticky;
+    top: 0;
+    display: block;
+    max-height: calc(100dvh - var(--frame-header) - var(--damsko-space-12));
+    height: auto;
+    padding-block: 0;
+  }
+}
+.site-page > .site-main-column {
+  grid-column: 1;
+  grid-row: auto;
+}
+/* Full width (the components overview, Docs.astro `full`): one column as wide as the column and the
+   rail together, so its grid takes the card's room. */
+.site-page[data-full] {
+  grid-template-columns: minmax(
+    0,
+    calc(var(--frame-column) + var(--damsko-space-12) + var(--frame-rail))
+  );
+}
+
+/* The brand is the mark alone, in the sidebar's head beside its button: an unseen area would reach
+   into that, so on a touch screen the link itself is 44px each way. The mark keeps the link's start,
+   where the rows' words start. */
+@media (pointer: coarse) {
+  .site-shell-brand {
+    min-inline-size: var(--damsko-tap-target);
+    min-block-size: var(--damsko-tap-target);
+    justify-content: flex-start;
+  }
+}
+
+/* The text column is a size container, so a block in it (Colour's light strip) lays itself out by
+   the column's width, which the shell's sidebar narrows, not by the window's. */
+.site-prose {
+  container: prose / inline-size;
+}
+
+/* The brand, the site's own link in the sidebar's head, takes the chrome's ring, an outline, so it
+   stays in forced colours (where a shadow is dropped). */
+.site-shell-brand:focus-visible {
+  outline: var(--damsko-ring-width) solid var(--damsko-ring);
+  outline-offset: var(--damsko-ring-offset);
+}
+@media (forced-colors: active) {
+  .site-shell-brand:focus-visible {
+    outline-color: Highlight;
+  }
+}
+
+/* ---- Print --------------------------------------------------------------------------------------- */
+/* On paper the page alone: no header bar, sidebar, rail, skip link or page end. On screen the page
+   scrolls inside the shell's card, which is one window high and clips; printed, every box from the
+   frame down to the page is let out to its full height, so the words flow over as many sheets as
+   they need. !important because the shell's own styles sit in StyleX's later layers, and an
+   important rule in an earlier layer wins over them. */
+@media print {
+  [data-slot="sidebar-wrapper"] :is(header, aside, [popover]),
+  .site-rail-column,
+  .site-end,
+  .site-skip {
+    display: none !important;
+  }
+  [data-slot="sidebar-wrapper"],
+  [data-slot="sidebar-wrapper"] :has(#content),
+  .site-page {
+    display: block !important;
+    position: static !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+    inset: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+}
+
+/* A code view's sideways fade while there is more beyond an edge (site/behaviour/code-edges.ts
+   marks which; site/blocks/code.tsx and the install line in site/blocks/head.tsx read
+   --site-code-edge as their mask). A mask reads only alpha. Keyed on the frame's own class, so it
+   can never reach into a preview. */
+.site-code-scroll[data-more="end"] {
+  --site-code-edge: linear-gradient(
+    to right,
+    black calc(100% - var(--damsko-space-8)),
+    transparent
+  );
+}
+.site-code-scroll[data-more="start"] {
+  --site-code-edge: linear-gradient(
+    to left,
+    black calc(100% - var(--damsko-space-8)),
+    transparent
+  );
+}
+.site-code-scroll[data-more="both"] {
+  --site-code-edge: linear-gradient(
+    to right,
+    transparent,
+    black var(--damsko-space-8),
+    black calc(100% - var(--damsko-space-8)),
+    transparent
+  );
+}

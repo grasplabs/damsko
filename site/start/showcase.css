@@ -1,0 +1,388 @@
+/* The overview's pen (its drawings' look), bundled into this page's own sheet rather than loaded as
+ * a sheet of its own: one request fewer on a first visit. One source still: the file itself. */
+@import "../overview/pen.css";
+
+/* The home page's showcase (site/pages/index.astro): a field in flight.
+ *
+ * A tall field, a few screenfuls high, in which each piece stands at a place of its own (a share of
+ * the width, a number of screenfuls down) and a depth. Nothing is pinned: the page scrolls as ever,
+ * and with scroll-driven animations each piece drifts a little more or less than the page by its
+ * depth, so near pieces pass quickly and far ones slowly. Transforms and opacity only.
+ *
+ * At rest (no script, reduced motion, a browser without scroll-driven animations) the same pieces
+ * stand in the same places. The few sizes of the field's own are written once, as --sc-*. */
+
+.sc {
+  /* A screenful: the height of what scrolls, measured before the first paint (index.astro). The
+   * page is fullscreen (Docs.astro, fullscreen): the window is what scrolls. */
+  --sc-room: 100svh;
+  /* How far a piece of depth 1 drifts past the page, either way, over its time on screen. */
+  --sc-drift: calc(var(--sc-room) * 0.22);
+  position: relative;
+  isolation: isolate;
+  color: var(--damsko-foreground);
+  /* A showcase to look at, not to read: nothing in it selects or copies. */
+  -webkit-user-select: none;
+  user-select: none;
+  overflow: clip;
+}
+
+/* The way into the docs: one button, always in view at the bottom of the window, on its own band. */
+.sc-door {
+  /* The band's fade, once: the entrance draws it through the dither and keeps this shape. */
+  --sc-dome: linear-gradient(to top, black calc(100% - 24px), transparent);
+  position: fixed;
+  inset-block-end: max(var(--damsko-space-6), env(safe-area-inset-bottom));
+  inset-inline: 0;
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+.sc-door > * {
+  pointer-events: auto;
+  box-shadow: var(--damsko-shadow-lg);
+}
+/* The band the button stands on: the page's paper across the window's foot, solid,
+ * so what scrolls by passes under the band and never shows round or through the button, at any
+ * width. Only its top edge fades, 24px, back into the field, with no line. The entrance draws it
+ * through the dither as it did the dome (--sc-dome is now the band's own fade). */
+.sc-door::before {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: calc(
+    -1 * max(var(--damsko-space-6), env(safe-area-inset-bottom))
+  );
+  z-index: -1;
+  height: calc(100% + 2 * var(--damsko-space-6) + 24px);
+  background-color: var(--damsko-background);
+  mask-image: var(--sc-dome);
+  pointer-events: none;
+}
+
+/* The ground: the site's living dither (start/ground/), following the scroll (its progress), pinned
+ * behind the whole field. It breathes from the first moment, faint, and gathers over the first
+ * screenful. */
+.sc-ground {
+  position: sticky;
+  inset-block-start: 0;
+  z-index: -1;
+  height: var(--sc-room);
+  margin-block-end: calc(-1 * var(--sc-room));
+  overflow: clip;
+  pointer-events: none;
+}
+.sc-ground-fade,
+.sc-ground [data-slot="ground"] {
+  width: 100%;
+  height: 100%;
+}
+.sc-ground-fade {
+  position: relative;
+}
+/* The first picture (GroundStill): the system's dither in the ground's tone and mask, there from
+ * the first paint. The living canvas comes in over it when it has drawn its first picture, and the
+ * still leaves, both in one move: no frame of bare paper, no jump. */
+/* The light comes up slowly: the living picture crossfades in over the still across the entrance's
+ * seconds (index.astro starts its clock as the picture is first drawn), so nothing arrives in a step. */
+.sc-ground-still {
+  position: absolute;
+  inset: 0;
+  mask-image: var(--showcase-ground-mask);
+  transition: opacity 1600ms var(--damsko-ease);
+}
+/* data-lit: set once by index.astro when the canvas has drawn. Never a selector on the canvas's own
+ * count of pictures (data-drawn), which changes every frame and would restyle the page each time. */
+.sc-ground[data-lit] .sc-ground-still {
+  opacity: 0;
+}
+.sc-ground [data-slot="ground-canvas"] {
+  transition: opacity 1600ms var(--damsko-ease);
+}
+/* With reduced motion there is no entrance, and the living picture takes the still's place at once. */
+@media (prefers-reduced-motion: reduce) {
+  .sc-ground-still,
+  .sc-ground [data-slot="ground-canvas"] {
+    transition: none;
+  }
+  /* And nothing changes after load: the still stays, the living picture never
+   * comes in over it, however late it draws. */
+  .sc-ground[data-lit] .sc-ground-still {
+    opacity: 1;
+  }
+  .sc-ground[data-lit] [data-slot="ground-canvas"] {
+    opacity: 0;
+  }
+}
+.sc-ground:not([data-lit]) [data-slot="ground-canvas"] {
+  opacity: 0;
+}
+
+.sc-field {
+  position: relative;
+  /* It ends with the ending's screen in the middle of the last screenful. */
+  height: calc(var(--sc-room) * 6.02);
+}
+
+/* A piece stands where index.astro says (custom properties, written once there): --t screenfuls
+ * down, --l from the left, at depth --d, scale --s, width --w and height --h; on a phone the same
+ * with p added. A piece with no phone place and sc-wide-only is the wide window's alone. */
+.sc-piece {
+  --sc-depth: var(--d, 0.5);
+  position: absolute;
+  inset-block-start: calc(var(--sc-room) * var(--t, 0));
+  inset-inline-start: var(--l, 0);
+  width: var(--w, auto);
+  height: var(--h, auto);
+  margin: 0;
+  scale: var(--s, 1);
+  opacity: var(--o, 1);
+  transform-origin: left top;
+}
+/* A piece's own motion runs only while it is seen: the rest stand still (index.astro marks the
+ * pieces on screen, and pauses what scripts started). */
+.sc-piece:not([data-seen]) * {
+  animation-play-state: paused !important;
+}
+
+/* The drift: a piece moves by its depth as it crosses the window. */
+.sc[data-drift] .sc-piece {
+  animation: sc-drift linear both;
+  animation-timeline: view();
+  animation-range: cover 0% cover 100%;
+}
+@keyframes sc-drift {
+  from {
+    transform: translateY(calc(var(--sc-drift) * var(--sc-depth)));
+  }
+  to {
+    transform: translateY(calc(var(--sc-drift) * var(--sc-depth) * -1));
+  }
+}
+
+/* The name: as large as the width allows, and no taller than a third of a short window, so the
+ * pieces under it keep their room. */
+.sc-name {
+  font-family: var(--damsko-font-serif);
+  font-weight: var(--damsko-font-weight-normal);
+  font-size: clamp(5.5rem, min(17vw, 30svh), 16rem);
+  line-height: 0.9;
+  letter-spacing: -0.035em;
+}
+/* The name's words in a box of their own: the entrance draws them through the dither (index.astro). */
+.sc-name-words {
+  display: inline-block;
+}
+.sc-row {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: var(--damsko-space-2);
+}
+.sc-words {
+  font-size: var(--damsko-heading-lg);
+  line-height: var(--damsko-heading-lg-line);
+  white-space: nowrap;
+}
+/* Faces side by side, each a little over the last, ringed in the ground's paper. */
+.sc-faces {
+  gap: 0;
+}
+.sc-faces [data-slot="avatar"] + [data-slot="avatar"] {
+  margin-inline-start: calc(var(--damsko-space-3) * -1);
+}
+.sc-faces [data-slot="avatar"] {
+  box-shadow: 0 0 0 3px var(--damsko-background);
+}
+.sc-shimmer-rest {
+  color: var(--damsko-muted-foreground);
+}
+/* A box that a component fills (App building): the screen's surface. */
+.sc-box .sc-building {
+  width: 100%;
+  height: 100%;
+  border-radius: calc(var(--damsko-radius) * 1.2);
+  corner-shape: var(--damsko-radius-shape);
+  background-color: var(--damsko-background);
+  box-shadow: var(--damsko-shadow-lg);
+  overflow: clip;
+}
+/* The ending's screen, once handed over: a card and a table side by side (stacked on a phone). */
+.sc-screen {
+  display: grid;
+  grid-template-columns: minmax(0, 22rem) minmax(0, 1fr);
+  align-items: start;
+  gap: var(--damsko-space-6);
+  height: 100%;
+  box-sizing: border-box;
+  padding: var(--damsko-space-8);
+  overflow: hidden;
+}
+.sc-screen-form {
+  display: grid;
+  gap: var(--damsko-space-4);
+  margin-block-start: var(--damsko-space-4);
+}
+.sc-screen-table {
+  min-width: 0;
+}
+/* Below a wide window the table has no room beside the card (its Status column hid behind the
+ * scroller's fade at 768): the card alone. */
+@media (width < 64rem) {
+  .sc-screen {
+    grid-template-columns: minmax(0, 26rem);
+    justify-content: center;
+    padding: var(--damsko-space-4);
+  }
+  .sc-screen-table {
+    display: none;
+  }
+}
+
+.sc-panel {
+  padding: var(--damsko-space-2) var(--damsko-space-4);
+  border-radius: var(--damsko-radius);
+  corner-shape: var(--damsko-radius-shape);
+  background-color: var(--damsko-card);
+  box-shadow: var(--damsko-shadow-sm);
+}
+/* As tall as the thread ever gets, its answer whole (308px at its narrowest, while it streams too),
+ * with its padding under it: no empty band under the copy button. */
+.sc-thread {
+  height: min(21rem, calc(var(--sc-room) * 0.5));
+  border-radius: calc(var(--damsko-radius) * 1.2);
+  corner-shape: var(--damsko-radius-shape);
+  background-color: var(--damsko-card);
+  box-shadow: var(--damsko-shadow-lg);
+  overflow: hidden;
+}
+.sc-activity {
+  padding: var(--damsko-space-4);
+  border-radius: var(--damsko-radius);
+  corner-shape: var(--damsko-radius-shape);
+  background-color: var(--damsko-card);
+  box-shadow: var(--damsko-shadow-md);
+}
+
+/* The far field: the overview's own drawings, straight on the dither, small and slow: no card
+ * under them, so they read as distance, not as stickers. */
+.sc-far {
+  --o: 0.75;
+}
+.sc-sketch {
+  position: relative;
+  width: 240px;
+  height: 135px;
+}
+
+/* ---- A phone: its own composition, fewer pieces, the large ones larger for the width ------------ */
+
+@media (width < 40rem) {
+  /* At least room for the ending (5.7 screens down, 22.5rem tall) above the docs button's band
+   * (8.5rem), on a short phone too: the band never lies on its card. */
+  .sc-field {
+    height: max(
+      calc(var(--sc-room) * 6.3),
+      calc(var(--sc-room) * 5.7 + 22.5rem + 8.5rem)
+    );
+  }
+  .sc-piece {
+    inset-block-start: calc(var(--sc-room) * var(--tp, var(--t, 0)));
+    inset-inline-start: var(--lp, var(--l, 0));
+    width: var(--wp, var(--w, auto));
+    height: var(--hp, var(--h, auto));
+    scale: var(--sp, var(--s, 1));
+  }
+  .sc-name {
+    font-size: 24vw;
+  }
+  .sc-words {
+    font-size: var(--damsko-heading-md);
+    line-height: var(--damsko-heading-md-line);
+  }
+}
+
+/* ---- A tablet and a phone: the wide window's extra pieces stand down, so the rest have room --- */
+
+@media (width < 64rem) {
+  .sc-wide-only {
+    display: none;
+  }
+}
+
+/* ---- A tablet: the Data stretch's large calendar is too wide at its wide-window scale ------------ */
+
+@media (40rem <= width < 64rem) {
+  /* The blueprint under the name, whole, from 36% to 4% short of the window's side. */
+  .sc-blueprint {
+    inset-block-start: calc(var(--sc-room) * 0.4);
+    inset-inline-start: 36%;
+    width: 60%;
+  }
+  .sc-cal {
+    scale: 1.2;
+  }
+  .sc-weekly {
+    inset-block-start: calc(var(--sc-room) * 2.46);
+    inset-inline-start: calc(100% - 26rem);
+    scale: 1.6;
+  }
+  .sc-dialog {
+    scale: 1.1;
+  }
+  .sc-fit {
+    inset-inline-start: min(62%, calc(100% - 19rem));
+    scale: 1;
+  }
+  .sc-reports {
+    width: 42vw;
+  }
+  .sc-ring {
+    inset-block-start: calc(var(--sc-room) * 4.72);
+    inset-inline-start: 10%;
+  }
+  /* The ending's box as tall as its card, and the field ends soon after it: no long empty tail
+   * once the wide window's extra pieces have stood down. */
+  .sc-end {
+    height: 23rem;
+  }
+  .sc-field {
+    height: calc(var(--sc-room) * 5.72);
+  }
+}
+
+/* ---- A narrow wide window (1024 to 1343): the wide composition, its right-hand pieces pulled in -
+ * so none cuts its own words or controls at the window's edge. Placed for 1024 and 1280; from 1344 the wide places take over. */
+
+@media (64rem <= width < 84rem) {
+  /* The tags clear the blueprint card, which starts at 58%. */
+  .sc-tags {
+    inset-inline-start: 20%;
+  }
+  /* The dashboard a little narrower, so Weekly report fits whole beside it. */
+  .sc-dash {
+    width: 40vw;
+  }
+  .sc-weekly {
+    inset-inline-start: calc(26% + 40vw + 1.5rem);
+    scale: 1.5;
+  }
+  .sc-volume {
+    inset-inline-start: calc(100% - 27.5rem);
+  }
+  /* The dialog smaller and further left, Work email whole beside it. */
+  .sc-dialog {
+    inset-inline-start: 18%;
+    scale: 1.1;
+  }
+  .sc-email {
+    inset-inline-start: calc(100% - 22rem);
+  }
+  /* The faces clear the dialog's shade above them and the thread to their right. */
+  .sc-faces {
+    inset-block-start: calc(var(--sc-room) * 3.07);
+    inset-inline-start: 3%;
+    scale: 1.2;
+  }
+}

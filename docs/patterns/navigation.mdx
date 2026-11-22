@@ -1,0 +1,47 @@
+---
+title: Navigation
+description: A row to each part, a trail to where you are, and tabs for the views of one thing.
+---
+
+<Head lead={frontmatter.description} />
+
+## Across the product
+
+A few places in the top bar, the one you are on marked.
+
+<Stage path="patterns/navigation-across" label="Across the product" />
+
+## Where you are
+
+The trail above a title says where the page sits; each step leads back.
+
+<Stage path="patterns/navigation-where" label="Where you are" />
+
+## Within one thing
+
+Tabs switch the views of one thing without leaving it.
+
+<Stage path="patterns/navigation-within" label="Within one thing" />
+
+## Pages of results
+
+Each page is an address, so back, a reload and a new tab open it.
+
+<Stage path="patterns/navigation-pages" label="Pages of results" />
+
+## Rules
+
+<Rules
+  always={[
+    "Links for places and buttons for actions: anything with an address is a link.",
+    "Mark the page you are on, in the main row and as the last step of the trail.",
+    "Tabs only for views of the same thing, never to go somewhere else.",
+    "The same names for the same places everywhere: the trail, the row and the title agree.",
+  ]}
+  never={[
+    "A trail on a top-level page: it has nowhere to lead back to.",
+    "Tabs that hold a step of a task: a multi-step form has its own steps.",
+    "More than seven links in the main row.",
+    "A place you can only reach by a hover.",
+  ]}
+/>

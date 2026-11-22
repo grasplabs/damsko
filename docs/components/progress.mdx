@@ -1,0 +1,270 @@
+---
+title: Progress
+description: A bar or ring showing how far a task has come, or that it is running.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/progress"
+  use={
+    'import { Progress, ProgressCircle } from "@grasp-os/ui/components/progress";'
+  }
+/>
+
+## Basic usage
+
+What is under way in a few words, and how far it has come.
+
+<Stage path="progress/basic" label="Basic usage" />
+
+## Sizes
+
+4, 8 or 12px tall, for a row, a panel, or a bar that is the point of its panel.
+
+<Stage path="progress/sizes" label="Sizes" />
+
+## How far unknown
+
+`value={null}` while it is under way but how far is not known: fine dots on the track, and our light passing along them.
+
+<Stage path="progress/unknown" label="How far unknown" />
+
+## Variants
+
+`success` once it has worked, `warning` when it is slow, `destructive` when it stopped.
+
+<Stage path="progress/tones" label="Variants" />
+
+## Circle
+
+`ProgressCircle`, the same props drawn as a ring, beside words or in a button's place. A large ring holds its value.
+
+<Stage path="progress/rings" label="Circle" />
+
+## Every state
+
+From not started to done, how far unknown, each variant, as a bar and as a circle.
+
+<States
+  path="progress/states"
+  choose={{
+    prop: "part",
+    label: "Part",
+    options: [
+      { id: "bar", label: "Progress" },
+      { id: "circle", label: "ProgressCircle" },
+    ],
+  }}
+  cells={[
+    { label: "Not started", props: { value: 0 } },
+    { label: "Under way" },
+    { label: "Done", props: { value: 100 } },
+    { label: "How far unknown", props: { value: null } },
+    { label: "Worked", props: { value: 100, variant: "success" } },
+    { label: "Slow", props: { value: 70, variant: "warning" } },
+    { label: "Stopped", props: { value: 40, variant: "destructive" } },
+  ]}
+/>
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="progress"
+  always={["A label that says what is under way, not Loading."]}
+  never={["A bar that goes backwards.", "Colour alone to say it failed."]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Bar",
+      key: "Height",
+      value: "{progress-sm}, {progress-default} or {progress-lg}",
+    },
+    {
+      group: "Bar",
+      key: "Shape",
+      value: "{radius-full}, the width it stands in",
+    },
+    {
+      group: "Bar",
+      key: "Colour",
+      tokens: ["progress-track", "progress-bg"],
+    },
+    {
+      group: "Bar",
+      key: "Unknown",
+      value:
+        "Dots, 1px on a 3px pitch; a band of light a third of the track, {progress-sweep} across it",
+      note: "mint into pine; a variant in its own colour",
+      tokens: ["ease-in-out", "mint", "pine"],
+    },
+    {
+      group: "Ring",
+      key: "Size",
+      value:
+        "{progress-ring-sm}, {progress-ring-default} or {progress-ring-lg}",
+    },
+    {
+      group: "Ring",
+      key: "Line",
+      value: "{progress-ring-line}, {progress-ring-line-lg} when large",
+    },
+    {
+      group: "Ring",
+      key: "Unknown",
+      value: "A quarter turns once every {duration-spin}",
+    },
+    {
+      group: "Type",
+      key: "Label",
+      value: "{text-sm} / {text-sm-line}, {font-weight-medium}",
+      tokens: ["foreground"],
+    },
+    {
+      group: "Type",
+      key: "Value",
+      value: "{text-sm}, tabular figures",
+      note: "{text-xs} in a large ring",
+      tokens: ["muted"],
+    },
+    {
+      group: "Colour",
+      key: "Variants",
+      tokens: ["success", "warning", "destructive"],
+    },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    {
+      key: "A new value",
+      value: "The fill grows to it in {duration-ui}",
+      tokens: ["ease"],
+    },
+    {
+      key: "Bar, how far unknown",
+      value:
+        "The light, a third of the track, passes under the dots once every {progress-sweep}",
+      note: "the dots stand still; transform only",
+      tokens: ["ease-in-out"],
+    },
+    {
+      key: "Ring, how far unknown",
+      value: "One turn every {duration-spin}, linear",
+    },
+    {
+      key: "Reduced motion",
+      value:
+        "The fill jumps to its value; an unknown bar shows its dots at rest; an unknown ring stays still and breathes, every {progress-sweep}",
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Value",
+      key: "Changes",
+      value: "The bar grows over {duration-ui}; at once with reduced motion.",
+    },
+    { group: "Value", key: "Past the end", value: "Reads as done." },
+    {
+      group: "Content",
+      key: "Long label",
+      value: "Wraps; the value stays on the first line.",
+    },
+    {
+      group: "Settings",
+      key: "Reduced motion",
+      value:
+        "An unknown bar shows its dots at rest; an unknown ring stays still and breathes.",
+    },
+    {
+      group: "Settings",
+      key: "Forced colours",
+      value: "A line draws the track; what is done is in the text colour.",
+    },
+    {
+      group: "Settings",
+      key: "Without script",
+      value: "Drawn at its value from the server.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Role",
+      value:
+        "`progressbar`, named by `label`, with `aria-valuenow`, `aria-valuemin` and `aria-valuemax`",
+    },
+    {
+      key: "Unknown",
+      value: "No value: a screen reader hears it is under way",
+    },
+    {
+      key: "Value",
+      value:
+        "`aria-valuetext`: the percentage, or `getAriaValueText` when that says too little",
+    },
+    {
+      key: "Visible value",
+      value: "Hidden from screen readers, so it is not said twice",
+    },
+    {
+      key: "Contrast",
+      value: "What is done 3:1 on the track; the words 4.5:1",
+      note: "checked by `node tokens/generate.ts --check`",
+    },
+  ]}
+/>
+<Rows
+  title="From shadcn"
+  rows={[
+    {
+      group: "Parts",
+      key: "`Progress` with `value`",
+      value: "Kept",
+      note: "with `label`",
+    },
+    { group: "New", key: "`value={null}`", value: "How far unknown" },
+    {
+      group: "New",
+      key: "`size`, `variant`",
+      value: "Three heights, four colours",
+    },
+    { group: "New", key: "`ProgressCircle`", value: "A ring" },
+    {
+      group: "Elsewhere",
+      key: "`className`",
+      value: "`style`",
+      note: "layout and width only",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/progress.tsx"
+  type="ProgressProps"
+  label="Progress props"
+/>
+
+<Props
+  source="src/components/progress.tsx"
+  type="ProgressCircleProps"
+  label="ProgressCircle props"
+/>
+
+</Reference>

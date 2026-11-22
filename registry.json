@@ -1,0 +1,3066 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "damsko",
+  "homepage": "https://damsko.joingrasp.com",
+  "items": [
+    {
+      "name": "accordion",
+      "type": "registry:ui",
+      "title": "Accordion",
+      "description": "A list of sections that people open and close by pressing each heading.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/accordion",
+      "files": [
+        {
+          "path": "src/components/accordion.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/accordion.tsx"
+        }
+      ]
+    },
+    {
+      "name": "agent-indicator",
+      "type": "registry:ui",
+      "title": "Agent indicator",
+      "description": "A small moving mark that shows work in progress.",
+      "dependencies": [
+        "@stylexjs/stylex"
+      ],
+      "registryDependencies": [
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/agent-indicator",
+      "files": [
+        {
+          "path": "src/components/agent-indicator.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/agent-indicator.tsx"
+        }
+      ]
+    },
+    {
+      "name": "alert",
+      "type": "registry:ui",
+      "title": "Alert",
+      "description": "A short message in the page that tells people something is done, wrong or worth knowing.",
+      "dependencies": [
+        "@stylexjs/stylex"
+      ],
+      "registryDependencies": [
+        "@damsko/button",
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/alert",
+      "files": [
+        {
+          "path": "src/components/alert.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/alert.tsx"
+        }
+      ]
+    },
+    {
+      "name": "alert-dialog",
+      "type": "registry:ui",
+      "title": "Alert dialog",
+      "description": "A window that asks one question before a step that cannot be undone.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/button",
+        "@damsko/dialog",
+        "@damsko/hooks",
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/alert-dialog",
+      "files": [
+        {
+          "path": "src/components/alert-dialog.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/alert-dialog.tsx"
+        }
+      ]
+    },
+    {
+      "name": "app-shell-01",
+      "type": "registry:block",
+      "title": "App shell",
+      "description": "The frame every page of an app sits in, with its main navigation beside the page.",
+      "dependencies": [
+        "@stylexjs/stylex"
+      ],
+      "registryDependencies": [
+        "@damsko/breadcrumb",
+        "@damsko/button",
+        "@damsko/inline-edit",
+        "@damsko/lib",
+        "@damsko/page-header",
+        "@damsko/resizable",
+        "@damsko/sheet",
+        "@damsko/side-panel",
+        "@damsko/sidebar"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/app-shell-01",
+      "files": [
+        {
+          "path": "src/blocks/app-shell-01/app-shell-01.tsx",
+          "type": "registry:file",
+          "target": "~/src/blocks/app-shell-01/app-shell-01.tsx"
+        }
+      ]
+    },
+    {
+      "name": "aspect-ratio",
+      "type": "registry:ui",
+      "title": "Aspect ratio",
+      "description": "A box that keeps its width-to-height ratio, holding an image's space before it loads.",
+      "dependencies": [
+        "@stylexjs/stylex"
+      ],
+      "registryDependencies": [
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/aspect-ratio",
+      "files": [
+        {
+          "path": "src/components/aspect-ratio.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/aspect-ratio.tsx"
+        }
+      ]
+    },
+    {
+      "name": "attachment",
+      "type": "registry:ui",
+      "title": "Attachment",
+      "description": "A file or picture that goes with a message, with its picture or mark, its name and a line about it, its state on the way, and its actions.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/button",
+        "@damsko/hooks",
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/attachment",
+      "files": [
+        {
+          "path": "src/components/attachment.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/attachment.tsx"
+        }
+      ]
+    },
+    {
+      "name": "audio-player",
+      "type": "registry:ui",
+      "title": "Audio player",
+      "description": "A bar that plays a sound file, with a timeline, a playback rate button and mute.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/button",
+        "@damsko/lib",
+        "@damsko/spinner"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/audio-player",
+      "files": [
+        {
+          "path": "src/components/audio-player.stylex.ts",
+          "type": "registry:file",
+          "target": "~/src/components/audio-player.stylex.ts"
+        },
+        {
+          "path": "src/components/audio-player.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/audio-player.tsx"
+        }
+      ]
+    },
+    {
+      "name": "avatar",
+      "type": "registry:ui",
+      "title": "Avatar",
+      "description": "A small round picture of a person or team, showing initials when there is none.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/avatar",
+      "files": [
+        {
+          "path": "src/components/avatar.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/avatar.tsx"
+        }
+      ]
+    },
+    {
+      "name": "badge",
+      "type": "registry:ui",
+      "title": "Badge",
+      "description": "A small label of a word or two that shows the status of something.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/lib",
+        "@damsko/tooltip"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/badge",
+      "files": [
+        {
+          "path": "src/components/badge.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/badge.tsx"
+        }
+      ]
+    },
+    {
+      "name": "brand-icon",
+      "type": "registry:ui",
+      "title": "Brand icon",
+      "description": "Another company's logo, shown for an integration, a source or a way to sign in.",
+      "dependencies": [
+        "@stylexjs/stylex"
+      ],
+      "registryDependencies": [
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/brand-icon",
+      "files": [
+        {
+          "path": "src/components/brand-icon.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/brand-icon.tsx"
+        }
+      ]
+    },
+    {
+      "name": "breadcrumb",
+      "type": "registry:ui",
+      "title": "Breadcrumb",
+      "description": "A row of links showing the path to this page, so you can go back up.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/dropdown-menu",
+        "@damsko/lib",
+        "@damsko/tooltip"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/breadcrumb",
+      "files": [
+        {
+          "path": "src/components/breadcrumb.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/breadcrumb.tsx"
+        }
+      ]
+    },
+    {
+      "name": "bubble",
+      "type": "registry:ui",
+      "title": "Bubble",
+      "description": "The framed surface of a message in a conversation, with its look, its side and reactions over its edge.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/bubble",
+      "files": [
+        {
+          "path": "src/components/bubble.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/bubble.tsx"
+        }
+      ]
+    },
+    {
+      "name": "button",
+      "type": "registry:ui",
+      "title": "Button",
+      "description": "A button you press to do one thing now, like Save or Send.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/hooks",
+        "@damsko/lib",
+        "@damsko/spinner"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/button",
+      "files": [
+        {
+          "path": "src/components/button.stylex.ts",
+          "type": "registry:file",
+          "target": "~/src/components/button.stylex.ts"
+        },
+        {
+          "path": "src/components/button.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/button.tsx"
+        }
+      ]
+    },
+    {
+      "name": "button-group",
+      "type": "registry:ui",
+      "title": "Button group",
+      "description": "A row of buttons for actions on the same thing, like Archive and Delete.",
+      "dependencies": [
+        "@stylexjs/stylex"
+      ],
+      "registryDependencies": [
+        "@damsko/lib",
+        "@damsko/separator"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/button-group",
+      "files": [
+        {
+          "path": "src/components/button-group.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/button-group.tsx"
+        }
+      ]
+    },
+    {
+      "name": "calendar",
+      "type": "registry:ui",
+      "title": "Calendar",
+      "description": "A month of days on the page, for choosing a date, several dates or a range.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/button",
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/calendar",
+      "files": [
+        {
+          "path": "src/components/calendar.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/calendar.tsx"
+        }
+      ]
+    },
+    {
+      "name": "card",
+      "type": "registry:ui",
+      "title": "Card",
+      "description": "A box on the page that holds one thing and what belongs to it.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/card",
+      "files": [
+        {
+          "path": "src/components/card.stylex.ts",
+          "type": "registry:file",
+          "target": "~/src/components/card.stylex.ts"
+        },
+        {
+          "path": "src/components/card.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/card.tsx"
+        }
+      ]
+    },
+    {
+      "name": "carousel",
+      "type": "registry:ui",
+      "title": "Carousel",
+      "description": "A set of slides that people page through with buttons, a swipe or the arrow keys.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/button",
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/carousel",
+      "files": [
+        {
+          "path": "src/components/carousel.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/carousel.tsx"
+        }
+      ]
+    },
+    {
+      "name": "chain-of-thought",
+      "type": "registry:ui",
+      "title": "Chain of thought",
+      "description": "The steps of one answer as they happen, each with what it found, behind one line that opens.",
+      "dependencies": [
+        "@stylexjs/stylex"
+      ],
+      "registryDependencies": [
+        "@damsko/badge",
+        "@damsko/lib",
+        "@damsko/trace"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/chain-of-thought",
+      "files": [
+        {
+          "path": "src/components/chain-of-thought.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/chain-of-thought.tsx"
+        }
+      ]
+    },
+    {
+      "name": "chart",
+      "type": "registry:ui",
+      "title": "Chart",
+      "description": "Numbers across kinds, over time, as parts of a whole, as flows between stages, or as a spark beside a figure.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "react-is",
+        "recharts"
+      ],
+      "registryDependencies": [
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/chart",
+      "files": [
+        {
+          "path": "src/components/chart-math.ts",
+          "type": "registry:file",
+          "target": "~/src/components/chart-math.ts"
+        },
+        {
+          "path": "src/components/chart.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/chart.tsx"
+        }
+      ]
+    },
+    {
+      "name": "chat",
+      "type": "registry:ui",
+      "title": "Chat",
+      "description": "The whole thread, ready to use, with the messages in a Message scroller, an empty state before the first and the Prompt input under them.",
+      "dependencies": [
+        "@stylexjs/stylex"
+      ],
+      "registryDependencies": [
+        "@damsko/lib",
+        "@damsko/message",
+        "@damsko/message-scroller"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/chat",
+      "files": [
+        {
+          "path": "src/components/chat.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/chat.tsx"
+        }
+      ]
+    },
+    {
+      "name": "checkbox",
+      "type": "registry:ui",
+      "title": "Checkbox",
+      "description": "A box you tick to turn a choice on or off, alone or in a group.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/field",
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/checkbox",
+      "files": [
+        {
+          "path": "src/components/checkbox.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/checkbox.tsx"
+        }
+      ]
+    },
+    {
+      "name": "checkpoint",
+      "type": "registry:ui",
+      "title": "Checkpoint",
+      "description": "A point in the conversation the person can return to.",
+      "dependencies": [
+        "@stylexjs/stylex"
+      ],
+      "registryDependencies": [
+        "@damsko/button",
+        "@damsko/lib",
+        "@damsko/marker",
+        "@damsko/tooltip"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/checkpoint",
+      "files": [
+        {
+          "path": "src/components/checkpoint.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/checkpoint.tsx"
+        }
+      ]
+    },
+    {
+      "name": "code-block",
+      "type": "registry:ui",
+      "title": "Code block",
+      "description": "A box of highlighted code, with its language named, line numbers and a copy button.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "prismjs"
+      ],
+      "devDependencies": [
+        "@types/prismjs"
+      ],
+      "registryDependencies": [
+        "@damsko/button",
+        "@damsko/copy-button",
+        "@damsko/hooks",
+        "@damsko/lib",
+        "@damsko/spinner"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/code-block",
+      "files": [
+        {
+          "path": "src/components/code-block-grammars.d.ts",
+          "type": "registry:file",
+          "target": "~/src/components/code-block-grammars.d.ts"
+        },
+        {
+          "path": "src/components/code-block-prism.ts",
+          "type": "registry:file",
+          "target": "~/src/components/code-block-prism.ts"
+        },
+        {
+          "path": "src/components/code-block.stylex.ts",
+          "type": "registry:file",
+          "target": "~/src/components/code-block.stylex.ts"
+        },
+        {
+          "path": "src/components/code-block.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/code-block.tsx"
+        }
+      ]
+    },
+    {
+      "name": "collapsible",
+      "type": "registry:ui",
+      "title": "Collapsible",
+      "description": "A section that opens and closes from a button, for detail most people can skip.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/collapsible",
+      "files": [
+        {
+          "path": "src/components/collapsible.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/collapsible.tsx"
+        }
+      ]
+    },
+    {
+      "name": "combobox",
+      "type": "registry:ui",
+      "title": "Combobox",
+      "description": "A field you type into to find one value in a long list, then choose it.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/combobox",
+      "files": [
+        {
+          "path": "src/components/combobox.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/combobox.tsx"
+        }
+      ]
+    },
+    {
+      "name": "command",
+      "type": "registry:ui",
+      "title": "Command",
+      "description": "A search box over a list of actions, where you type to find and run one.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/button",
+        "@damsko/dialog",
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/command",
+      "files": [
+        {
+          "path": "src/components/command.stylex.ts",
+          "type": "registry:file",
+          "target": "~/src/components/command.stylex.ts"
+        },
+        {
+          "path": "src/components/command.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/command.tsx"
+        }
+      ]
+    },
+    {
+      "name": "confirmation",
+      "type": "registry:ui",
+      "title": "Confirmation",
+      "description": "A step that waits for the person's yes, with the request and its answers, then what was decided.",
+      "dependencies": [
+        "@stylexjs/stylex"
+      ],
+      "registryDependencies": [
+        "@damsko/button",
+        "@damsko/hold-button",
+        "@damsko/item",
+        "@damsko/lib",
+        "@damsko/tool"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/confirmation",
+      "files": [
+        {
+          "path": "src/components/confirmation.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/confirmation.tsx"
+        }
+      ]
+    },
+    {
+      "name": "connect-api-key-01",
+      "type": "registry:block",
+      "title": "Connect API key",
+      "description": "Choose a service, paste its key, and see it connect, in one card with no dialog.",
+      "dependencies": [
+        "@stylexjs/stylex"
+      ],
+      "registryDependencies": [
+        "@damsko/alert-dialog",
+        "@damsko/brand-icon",
+        "@damsko/button",
+        "@damsko/card",
+        "@damsko/dropdown-menu",
+        "@damsko/field",
+        "@damsko/form",
+        "@damsko/hooks",
+        "@damsko/input",
+        "@damsko/item",
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/connect-api-key-01",
+      "files": [
+        {
+          "path": "src/blocks/connect-api-key-01/connect-api-key-01.tsx",
+          "type": "registry:file",
+          "target": "~/src/blocks/connect-api-key-01/connect-api-key-01.tsx"
+        }
+      ]
+    },
+    {
+      "name": "container",
+      "type": "registry:ui",
+      "title": "Container",
+      "description": "A page's content in one column of a reading width in the page's middle, with room for a child that runs the whole width.",
+      "dependencies": [
+        "@stylexjs/stylex"
+      ],
+      "registryDependencies": [
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/container",
+      "files": [
+        {
+          "path": "src/components/container.stylex.ts",
+          "type": "registry:file",
+          "target": "~/src/components/container.stylex.ts"
+        },
+        {
+          "path": "src/components/container.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/container.tsx"
+        }
+      ]
+    },
+    {
+      "name": "context",
+      "type": "registry:ui",
+      "title": "Context",
+      "description": "How much of the model's context window the conversation has used, with its tokens by kind.",
+      "dependencies": [
+        "@stylexjs/stylex"
+      ],
+      "registryDependencies": [
+        "@damsko/button",
+        "@damsko/hover-card",
+        "@damsko/lib",
+        "@damsko/progress"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/context",
+      "files": [
+        {
+          "path": "src/components/context.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/context.tsx"
+        }
+      ]
+    },
+    {
+      "name": "context-menu",
+      "type": "registry:ui",
+      "title": "Context menu",
+      "description": "A menu of actions for a thing, opened by right-clicking or long-pressing it.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/context-menu",
+      "files": [
+        {
+          "path": "src/components/context-menu.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/context-menu.tsx"
+        }
+      ]
+    },
+    {
+      "name": "copy-button",
+      "type": "registry:ui",
+      "title": "Copy button",
+      "description": "A button that copies a value to the clipboard and shows that it did.",
+      "registryDependencies": [
+        "@damsko/button",
+        "@damsko/hooks",
+        "@damsko/lib",
+        "@damsko/tooltip"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/copy-button",
+      "files": [
+        {
+          "path": "src/components/copy-button.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/copy-button.tsx"
+        }
+      ]
+    },
+    {
+      "name": "data-grid",
+      "type": "registry:ui",
+      "title": "Data grid",
+      "description": "A spreadsheet in the page, where people edit cells in place and copy and paste.",
+      "dependencies": [
+        "@stylexjs/stylex"
+      ],
+      "registryDependencies": [
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/data-grid",
+      "files": [
+        {
+          "path": "src/components/data-grid/data-grid.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/data-grid/data-grid.tsx"
+        },
+        {
+          "path": "src/components/data-grid/index.ts",
+          "type": "registry:file",
+          "target": "~/src/components/data-grid/index.ts"
+        },
+        {
+          "path": "src/components/data-grid/model.ts",
+          "type": "registry:file",
+          "target": "~/src/components/data-grid/model.ts"
+        }
+      ]
+    },
+    {
+      "name": "data-table",
+      "type": "registry:ui",
+      "title": "Data table",
+      "description": "A table of rows that people can sort, search, select and page through.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@tanstack/react-table",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/alert-dialog",
+        "@damsko/badge",
+        "@damsko/button",
+        "@damsko/checkbox",
+        "@damsko/dropdown-menu",
+        "@damsko/empty",
+        "@damsko/field",
+        "@damsko/hold-button",
+        "@damsko/input-group",
+        "@damsko/lib",
+        "@damsko/pagination",
+        "@damsko/select",
+        "@damsko/skeleton",
+        "@damsko/table",
+        "@damsko/toast",
+        "@damsko/tooltip"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/data-table",
+      "files": [
+        {
+          "path": "src/components/data-table/data-table.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/data-table/data-table.tsx"
+        },
+        {
+          "path": "src/components/data-table/features.ts",
+          "type": "registry:file",
+          "target": "~/src/components/data-table/features.ts"
+        },
+        {
+          "path": "src/components/data-table/filters.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/data-table/filters.tsx"
+        },
+        {
+          "path": "src/components/data-table/index.ts",
+          "type": "registry:file",
+          "target": "~/src/components/data-table/index.ts"
+        }
+      ]
+    },
+    {
+      "name": "date-picker",
+      "type": "registry:ui",
+      "title": "Date picker",
+      "description": "A field for a date, typed in or chosen from a calendar it opens, or a range.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/button",
+        "@damsko/calendar",
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/date-picker",
+      "files": [
+        {
+          "path": "src/components/date-picker.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/date-picker.tsx"
+        }
+      ]
+    },
+    {
+      "name": "dialog",
+      "type": "registry:ui",
+      "title": "Dialog",
+      "description": "A window over the page for one short task, closed by its own buttons.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/button",
+        "@damsko/hooks",
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/dialog",
+      "files": [
+        {
+          "path": "src/components/dialog.stylex.ts",
+          "type": "registry:file",
+          "target": "~/src/components/dialog.stylex.ts"
+        },
+        {
+          "path": "src/components/dialog.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/dialog.tsx"
+        }
+      ]
+    },
+    {
+      "name": "diff-viewer",
+      "type": "registry:ui",
+      "title": "Diff viewer",
+      "description": "A before-and-after view of changes, marked by line for code and by word for prose, for one file or several.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/badge",
+        "@damsko/button",
+        "@damsko/collapsible",
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/diff-viewer",
+      "files": [
+        {
+          "path": "src/components/diff-viewer-diff.ts",
+          "type": "registry:file",
+          "target": "~/src/components/diff-viewer-diff.ts"
+        },
+        {
+          "path": "src/components/diff-viewer.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/diff-viewer.tsx"
+        }
+      ]
+    },
+    {
+      "name": "drawer",
+      "type": "registry:ui",
+      "title": "Drawer",
+      "description": "A panel that slides up from the bottom for a short task on a phone.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/button",
+        "@damsko/hooks",
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/drawer",
+      "files": [
+        {
+          "path": "src/components/drawer.stylex.ts",
+          "type": "registry:file",
+          "target": "~/src/components/drawer.stylex.ts"
+        },
+        {
+          "path": "src/components/drawer.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/drawer.tsx"
+        }
+      ]
+    },
+    {
+      "name": "dropdown-menu",
+      "type": "registry:ui",
+      "title": "Dropdown menu",
+      "description": "A list of actions on one thing, such as Rename or Move, opened from a button.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/button",
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/dropdown-menu",
+      "files": [
+        {
+          "path": "src/components/dropdown-menu.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/dropdown-menu.tsx"
+        }
+      ]
+    },
+    {
+      "name": "empty",
+      "type": "registry:ui",
+      "title": "Empty",
+      "description": "The message a list shows when it has nothing in it, or failed to load.",
+      "dependencies": [
+        "@stylexjs/stylex"
+      ],
+      "registryDependencies": [
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/empty",
+      "files": [
+        {
+          "path": "src/components/empty.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/empty.tsx"
+        }
+      ]
+    },
+    {
+      "name": "field",
+      "type": "registry:ui",
+      "title": "Field",
+      "description": "A control with its label, its description and the error it shows.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/button",
+        "@damsko/lib",
+        "@damsko/spinner"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/field",
+      "files": [
+        {
+          "path": "src/components/field.stylex.ts",
+          "type": "registry:file",
+          "target": "~/src/components/field.stylex.ts"
+        },
+        {
+          "path": "src/components/field.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/field.tsx"
+        }
+      ]
+    },
+    {
+      "name": "file-tree",
+      "type": "registry:ui",
+      "title": "File tree",
+      "description": "The files an assistant changed or made, as folders that open, one file chosen.",
+      "dependencies": [
+        "@stylexjs/stylex"
+      ],
+      "registryDependencies": [
+        "@damsko/lib",
+        "@damsko/tree-view"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/file-tree",
+      "files": [
+        {
+          "path": "src/components/file-tree-icon.ts",
+          "type": "registry:file",
+          "target": "~/src/components/file-tree-icon.ts"
+        },
+        {
+          "path": "src/components/file-tree.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/file-tree.tsx"
+        }
+      ]
+    },
+    {
+      "name": "file-upload",
+      "type": "registry:ui",
+      "title": "File upload",
+      "description": "An area in a form where you drop or choose files, then see them listed.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/button",
+        "@damsko/field",
+        "@damsko/lib",
+        "@damsko/progress",
+        "@damsko/spinner"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/file-upload",
+      "files": [
+        {
+          "path": "src/components/file-upload.stylex.ts",
+          "type": "registry:file",
+          "target": "~/src/components/file-upload.stylex.ts"
+        },
+        {
+          "path": "src/components/file-upload.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/file-upload.tsx"
+        }
+      ]
+    },
+    {
+      "name": "form",
+      "type": "registry:ui",
+      "title": "Form",
+      "description": "A layout that stacks a form's fields in one column, with its buttons at the end.",
+      "dependencies": [
+        "@stylexjs/stylex"
+      ],
+      "registryDependencies": [
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/form",
+      "files": [
+        {
+          "path": "src/components/form.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/form.tsx"
+        }
+      ]
+    },
+    {
+      "name": "heading",
+      "type": "registry:ui",
+      "title": "Heading",
+      "description": "A title for a page, section or card, with its outline level and size set separately.",
+      "dependencies": [
+        "@stylexjs/stylex"
+      ],
+      "registryDependencies": [
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/heading",
+      "files": [
+        {
+          "path": "src/components/heading.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/heading.tsx"
+        }
+      ]
+    },
+    {
+      "name": "hold-button",
+      "type": "registry:ui",
+      "title": "Hold button",
+      "description": "A button you press and hold to confirm what cannot be undone.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/button",
+        "@damsko/hooks",
+        "@damsko/lib",
+        "@damsko/popover"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/hold-button",
+      "files": [
+        {
+          "path": "src/components/hold-button.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/hold-button.tsx"
+        }
+      ]
+    },
+    {
+      "name": "hooks",
+      "type": "registry:hook",
+      "title": "Hooks",
+      "description": "The hooks the components share: an action's states, copying, a long run, focus going back, and which edges of a scroller have more beyond them.",
+      "registryDependencies": [
+        "@damsko/lib"
+      ],
+      "files": [
+        {
+          "path": "src/hooks/use-action.ts",
+          "type": "registry:file",
+          "target": "~/src/hooks/use-action.ts"
+        },
+        {
+          "path": "src/hooks/use-copy.ts",
+          "type": "registry:file",
+          "target": "~/src/hooks/use-copy.ts"
+        },
+        {
+          "path": "src/hooks/use-return-focus.ts",
+          "type": "registry:file",
+          "target": "~/src/hooks/use-return-focus.ts"
+        },
+        {
+          "path": "src/hooks/use-runs-long.ts",
+          "type": "registry:file",
+          "target": "~/src/hooks/use-runs-long.ts"
+        },
+        {
+          "path": "src/hooks/use-scroll-edges.ts",
+          "type": "registry:file",
+          "target": "~/src/hooks/use-scroll-edges.ts"
+        }
+      ]
+    },
+    {
+      "name": "hover-card",
+      "type": "registry:ui",
+      "title": "Hover card",
+      "description": "A small card that previews where a link goes, shown when you point at it.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/hover-card",
+      "files": [
+        {
+          "path": "src/components/hover-card.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/hover-card.tsx"
+        }
+      ]
+    },
+    {
+      "name": "icon-tile",
+      "type": "registry:ui",
+      "title": "Icon tile",
+      "description": "A small square with an object's icon, shown at the top of its details panel.",
+      "dependencies": [
+        "@stylexjs/stylex"
+      ],
+      "registryDependencies": [
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/icon-tile",
+      "files": [
+        {
+          "path": "src/components/icon-tile.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/icon-tile.tsx"
+        }
+      ]
+    },
+    {
+      "name": "image-upload",
+      "type": "registry:ui",
+      "title": "Image upload",
+      "description": "Image upload",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/field",
+        "@damsko/file-upload",
+        "@damsko/lib",
+        "@damsko/spinner",
+        "@damsko/tooltip"
+      ],
+      "files": [
+        {
+          "path": "src/components/image-upload.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/image-upload.tsx"
+        }
+      ]
+    },
+    {
+      "name": "inline-citation",
+      "type": "registry:ui",
+      "title": "Inline citation",
+      "description": "A source in the sentence it supports, opening on hover or focus to its title, a line about it and a link.",
+      "dependencies": [
+        "@stylexjs/stylex"
+      ],
+      "registryDependencies": [
+        "@damsko/button",
+        "@damsko/carousel",
+        "@damsko/hover-card",
+        "@damsko/lib",
+        "@damsko/link"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/inline-citation",
+      "files": [
+        {
+          "path": "src/components/inline-citation.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/inline-citation.tsx"
+        }
+      ]
+    },
+    {
+      "name": "inline-edit",
+      "type": "registry:ui",
+      "title": "Inline edit",
+      "description": "A value read as text that turns into a field where it stands, to change it in place.",
+      "dependencies": [
+        "@stylexjs/stylex"
+      ],
+      "registryDependencies": [
+        "@damsko/hooks",
+        "@damsko/input",
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/inline-edit",
+      "files": [
+        {
+          "path": "src/components/inline-edit.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/inline-edit.tsx"
+        }
+      ]
+    },
+    {
+      "name": "input",
+      "type": "registry:ui",
+      "title": "Input",
+      "description": "A box for typing one line of text, like a name or an email address.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/hooks",
+        "@damsko/input-group",
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/input",
+      "files": [
+        {
+          "path": "src/components/input.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/input.tsx"
+        }
+      ]
+    },
+    {
+      "name": "input-group",
+      "type": "registry:ui",
+      "title": "Input group",
+      "description": "A text box with a unit, an icon or a button inside, like a search field.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/button",
+        "@damsko/hooks",
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/input-group",
+      "files": [
+        {
+          "path": "src/components/input-group.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/input-group.tsx"
+        }
+      ]
+    },
+    {
+      "name": "input-otp",
+      "type": "registry:ui",
+      "title": "Input OTP",
+      "description": "A row of boxes for a one-time code or PIN, one character in each.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/input-otp",
+      "files": [
+        {
+          "path": "src/components/input-otp.stylex.ts",
+          "type": "registry:file",
+          "target": "~/src/components/input-otp.stylex.ts"
+        },
+        {
+          "path": "src/components/input-otp.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/input-otp.tsx"
+        }
+      ]
+    },
+    {
+      "name": "inspector-01",
+      "type": "registry:block",
+      "title": "Inspector",
+      "description": "A side panel, built from data, that inspects one record.",
+      "dependencies": [
+        "@stylexjs/stylex"
+      ],
+      "registryDependencies": [
+        "@damsko/button",
+        "@damsko/empty",
+        "@damsko/icon-tile",
+        "@damsko/item",
+        "@damsko/key-value",
+        "@damsko/lib",
+        "@damsko/side-panel"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/inspector-01",
+      "files": [
+        {
+          "path": "src/blocks/inspector-01/inspector-01.tsx",
+          "type": "registry:file",
+          "target": "~/src/blocks/inspector-01/inspector-01.tsx"
+        }
+      ]
+    },
+    {
+      "name": "item",
+      "type": "registry:ui",
+      "title": "Item",
+      "description": "A list row that names a thing and links to it or acts on it.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/lib",
+        "@damsko/separator",
+        "@damsko/skeleton"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/item",
+      "files": [
+        {
+          "path": "src/components/item.stylex.ts",
+          "type": "registry:file",
+          "target": "~/src/components/item.stylex.ts"
+        },
+        {
+          "path": "src/components/item.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/item.tsx"
+        }
+      ]
+    },
+    {
+      "name": "kbd",
+      "type": "registry:ui",
+      "title": "Kbd",
+      "description": "A key or shortcut to press, shown as it is printed on the keyboard.",
+      "dependencies": [
+        "@stylexjs/stylex"
+      ],
+      "registryDependencies": [
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/kbd",
+      "files": [
+        {
+          "path": "src/components/kbd.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/kbd.tsx"
+        }
+      ]
+    },
+    {
+      "name": "key-value",
+      "type": "registry:ui",
+      "title": "Key and value rows",
+      "description": "A list of facts about one thing, each a short name with its value.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/copy-button",
+        "@damsko/lib",
+        "@damsko/skeleton",
+        "@damsko/tooltip"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/key-value",
+      "files": [
+        {
+          "path": "src/components/key-value.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/key-value.tsx"
+        }
+      ]
+    },
+    {
+      "name": "label",
+      "type": "registry:ui",
+      "title": "Label",
+      "description": "The name of a control you can see, tied to it so a press on the name reaches the control.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/label",
+      "files": [
+        {
+          "path": "src/components/label.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/label.tsx"
+        }
+      ]
+    },
+    {
+      "name": "lib",
+      "type": "registry:lib",
+      "title": "Lib",
+      "description": "What every component builds on: the tokens' StyleX names, the shared styles and variables, icons, layers, words and small utilities.",
+      "dependencies": [
+        "@hugeicons/core-free-icons",
+        "@hugeicons/react",
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/tokens"
+      ],
+      "files": [
+        {
+          "path": "src/lib/i18n.tsx",
+          "type": "registry:file",
+          "target": "~/src/lib/i18n.tsx"
+        },
+        {
+          "path": "src/lib/icons.ts",
+          "type": "registry:file",
+          "target": "~/src/lib/icons.ts"
+        },
+        {
+          "path": "src/lib/layer.ts",
+          "type": "registry:file",
+          "target": "~/src/lib/layer.ts"
+        },
+        {
+          "path": "src/lib/menu.tsx",
+          "type": "registry:file",
+          "target": "~/src/lib/menu.tsx"
+        },
+        {
+          "path": "src/lib/styles.ts",
+          "type": "registry:file",
+          "target": "~/src/lib/styles.ts"
+        },
+        {
+          "path": "src/lib/tokens.stylex.ts",
+          "type": "registry:file",
+          "target": "~/src/lib/tokens.stylex.ts"
+        },
+        {
+          "path": "src/lib/tokens.values.ts",
+          "type": "registry:file",
+          "target": "~/src/lib/tokens.values.ts"
+        },
+        {
+          "path": "src/lib/utils.ts",
+          "type": "registry:file",
+          "target": "~/src/lib/utils.ts"
+        },
+        {
+          "path": "src/lib/vars.stylex.ts",
+          "type": "registry:file",
+          "target": "~/src/lib/vars.stylex.ts"
+        }
+      ]
+    },
+    {
+      "name": "link",
+      "type": "registry:ui",
+      "title": "Link",
+      "description": "Words you press to go to another page or address, in a sentence or alone.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/link",
+      "files": [
+        {
+          "path": "src/components/link.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/link.tsx"
+        }
+      ]
+    },
+    {
+      "name": "markdown",
+      "type": "registry:ui",
+      "title": "Markdown",
+      "description": "An agent's answer in Markdown, shown as formatted text, even while it is still arriving.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "mdast-util-from-markdown",
+        "mdast-util-gfm",
+        "micromark-extension-gfm"
+      ],
+      "registryDependencies": [
+        "@damsko/code-block",
+        "@damsko/lib",
+        "@damsko/link",
+        "@damsko/separator",
+        "@damsko/table"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/markdown",
+      "files": [
+        {
+          "path": "src/components/markdown/index.ts",
+          "type": "registry:file",
+          "target": "~/src/components/markdown/index.ts"
+        },
+        {
+          "path": "src/components/markdown/markdown.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/markdown/markdown.tsx"
+        },
+        {
+          "path": "src/components/markdown/parse.ts",
+          "type": "registry:file",
+          "target": "~/src/components/markdown/parse.ts"
+        }
+      ]
+    },
+    {
+      "name": "marker",
+      "type": "registry:ui",
+      "title": "Marker",
+      "description": "A line in a conversation that marks what happened, a status, a note, or a word between two rules.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/marker",
+      "files": [
+        {
+          "path": "src/components/marker.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/marker.tsx"
+        }
+      ]
+    },
+    {
+      "name": "menubar",
+      "type": "registry:ui",
+      "title": "Menubar",
+      "description": "A row of menus, like File, Edit and View, that hold an app's actions.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/menubar",
+      "files": [
+        {
+          "path": "src/components/menubar.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/menubar.tsx"
+        }
+      ]
+    },
+    {
+      "name": "message",
+      "type": "registry:ui",
+      "title": "Message",
+      "description": "One message in a conversation, the row round its surface, with its avatar, header, actions and footer.",
+      "dependencies": [
+        "@stylexjs/stylex"
+      ],
+      "registryDependencies": [
+        "@damsko/bubble",
+        "@damsko/button",
+        "@damsko/lib",
+        "@damsko/markdown",
+        "@damsko/skeleton",
+        "@damsko/tooltip"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/message",
+      "files": [
+        {
+          "path": "src/components/message.stylex.ts",
+          "type": "registry:file",
+          "target": "~/src/components/message.stylex.ts"
+        },
+        {
+          "path": "src/components/message.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/message.tsx"
+        }
+      ]
+    },
+    {
+      "name": "message-scroller",
+      "type": "registry:ui",
+      "title": "Message scroller",
+      "description": "The scrolling transcript of a chat, which follows the reply, settles a new turn near the top and keeps your place.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core"
+      ],
+      "registryDependencies": [
+        "@damsko/button",
+        "@damsko/hooks",
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/message-scroller",
+      "files": [
+        {
+          "path": "src/components/message-scroller.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/message-scroller.tsx"
+        }
+      ]
+    },
+    {
+      "name": "model-selector",
+      "type": "registry:ui",
+      "title": "Model selector",
+      "description": "The model an assistant answers with, picked from a searchable list beside its trigger.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/brand-icon",
+        "@damsko/button",
+        "@damsko/command",
+        "@damsko/lib",
+        "@damsko/popover"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/model-selector",
+      "files": [
+        {
+          "path": "src/components/model-selector.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/model-selector.tsx"
+        }
+      ]
+    },
+    {
+      "name": "navigation-menu",
+      "type": "registry:ui",
+      "title": "Navigation menu",
+      "description": "A row of a site's main links across the top, with groups that open as panels.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/navigation-menu",
+      "files": [
+        {
+          "path": "src/components/navigation-menu.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/navigation-menu.tsx"
+        }
+      ]
+    },
+    {
+      "name": "number-field",
+      "type": "registry:ui",
+      "title": "Number field",
+      "description": "A box for typing a number, with buttons to step it down and up.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/number-field",
+      "files": [
+        {
+          "path": "src/components/number-field.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/number-field.tsx"
+        }
+      ]
+    },
+    {
+      "name": "page-header",
+      "type": "registry:ui",
+      "title": "Page header",
+      "description": "The top of a page, with its title, a line about it, its actions and tabs.",
+      "dependencies": [
+        "@stylexjs/stylex"
+      ],
+      "registryDependencies": [
+        "@damsko/button",
+        "@damsko/dropdown-menu",
+        "@damsko/lib",
+        "@damsko/skeleton",
+        "@damsko/spinner"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/page-header",
+      "files": [
+        {
+          "path": "src/components/page-header.stylex.ts",
+          "type": "registry:file",
+          "target": "~/src/components/page-header.stylex.ts"
+        },
+        {
+          "path": "src/components/page-header.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/page-header.tsx"
+        }
+      ]
+    },
+    {
+      "name": "pagination",
+      "type": "registry:ui",
+      "title": "Pagination",
+      "description": "Previous and Next buttons that page through a long list and show where you are.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/button",
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/pagination",
+      "files": [
+        {
+          "path": "src/components/pagination.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/pagination.tsx"
+        }
+      ]
+    },
+    {
+      "name": "plan",
+      "type": "registry:ui",
+      "title": "Plan",
+      "description": "What the assistant proposes to do, every step shown before it starts, with an action to go ahead and how far it has got.",
+      "dependencies": [
+        "@stylexjs/stylex"
+      ],
+      "registryDependencies": [
+        "@damsko/lib",
+        "@damsko/trace"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/plan",
+      "files": [
+        {
+          "path": "src/components/plan.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/plan.tsx"
+        }
+      ]
+    },
+    {
+      "name": "popover",
+      "type": "registry:ui",
+      "title": "Popover",
+      "description": "A small panel beside the control that opened it, for a quick task.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/popover",
+      "files": [
+        {
+          "path": "src/components/popover.stylex.ts",
+          "type": "registry:file",
+          "target": "~/src/components/popover.stylex.ts"
+        },
+        {
+          "path": "src/components/popover.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/popover.tsx"
+        }
+      ]
+    },
+    {
+      "name": "progress",
+      "type": "registry:ui",
+      "title": "Progress",
+      "description": "A bar or ring showing how far a task has come, or that it is running.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/progress",
+      "files": [
+        {
+          "path": "src/components/progress.stylex.ts",
+          "type": "registry:file",
+          "target": "~/src/components/progress.stylex.ts"
+        },
+        {
+          "path": "src/components/progress.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/progress.tsx"
+        }
+      ]
+    },
+    {
+      "name": "prompt-input",
+      "type": "registry:ui",
+      "title": "Prompt input",
+      "description": "Where a person writes to an assistant, with mentions as real tokens in the text, files, dictation and Send that turns into Stop.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/attachment",
+        "@damsko/button",
+        "@damsko/dropdown-menu",
+        "@damsko/lib",
+        "@damsko/tooltip"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/prompt-input",
+      "files": [
+        {
+          "path": "src/components/prompt-input-limit.ts",
+          "type": "registry:file",
+          "target": "~/src/components/prompt-input-limit.ts"
+        },
+        {
+          "path": "src/components/prompt-input.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/prompt-input.tsx"
+        }
+      ]
+    },
+    {
+      "name": "questionnaire",
+      "type": "registry:ui",
+      "title": "Questionnaire",
+      "description": "The questions an assistant asks and waits on, one at a time, each answered with a choice, several, or the person's own words.",
+      "dependencies": [
+        "@stylexjs/stylex"
+      ],
+      "registryDependencies": [
+        "@damsko/button",
+        "@damsko/checkbox",
+        "@damsko/lib",
+        "@damsko/radio-group",
+        "@damsko/textarea"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/questionnaire",
+      "files": [
+        {
+          "path": "src/components/questionnaire.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/questionnaire.tsx"
+        }
+      ]
+    },
+    {
+      "name": "queue",
+      "type": "registry:ui",
+      "title": "Queue",
+      "description": "What waits to be sent or done while an answer streams, the messages sent ahead and the to-dos, in sections that fold.",
+      "dependencies": [
+        "@stylexjs/stylex"
+      ],
+      "registryDependencies": [
+        "@damsko/button",
+        "@damsko/lib",
+        "@damsko/trace"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/queue",
+      "files": [
+        {
+          "path": "src/components/queue.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/queue.tsx"
+        }
+      ]
+    },
+    {
+      "name": "radio-group",
+      "type": "registry:ui",
+      "title": "Radio group",
+      "description": "A short list of choices where you pick exactly one, all shown at once.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/field",
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/radio-group",
+      "files": [
+        {
+          "path": "src/components/radio-group.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/radio-group.tsx"
+        }
+      ]
+    },
+    {
+      "name": "reasoning",
+      "type": "registry:ui",
+      "title": "Reasoning",
+      "description": "The model's own thinking, as words, shown while it streams, then folded into one quiet line.",
+      "dependencies": [
+        "@stylexjs/stylex"
+      ],
+      "registryDependencies": [
+        "@damsko/lib",
+        "@damsko/markdown",
+        "@damsko/trace"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/reasoning",
+      "files": [
+        {
+          "path": "src/components/reasoning.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/reasoning.tsx"
+        }
+      ]
+    },
+    {
+      "name": "resizable",
+      "type": "registry:ui",
+      "title": "Resizable",
+      "description": "A set of panels people resize by dragging the handles between them or with arrow keys.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/resizable",
+      "files": [
+        {
+          "path": "src/components/resizable.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/resizable.tsx"
+        }
+      ]
+    },
+    {
+      "name": "scroll-area",
+      "type": "registry:ui",
+      "title": "Scroll area",
+      "description": "A box whose content scrolls inside it, with a thin bar that shows while in use.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/scroll-area",
+      "files": [
+        {
+          "path": "src/components/scroll-area.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/scroll-area.tsx"
+        }
+      ]
+    },
+    {
+      "name": "section-header",
+      "type": "registry:ui",
+      "title": "Section header",
+      "description": "A heading for one part of a page, with a sentence and that part's actions.",
+      "dependencies": [
+        "@stylexjs/stylex"
+      ],
+      "registryDependencies": [
+        "@damsko/lib",
+        "@damsko/skeleton"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/section-header",
+      "files": [
+        {
+          "path": "src/components/section-header.stylex.ts",
+          "type": "registry:file",
+          "target": "~/src/components/section-header.stylex.ts"
+        },
+        {
+          "path": "src/components/section-header.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/section-header.tsx"
+        }
+      ]
+    },
+    {
+      "name": "select",
+      "type": "registry:ui",
+      "title": "Select",
+      "description": "A field that opens a list below it, so you can choose one value.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/select",
+      "files": [
+        {
+          "path": "src/components/select.stylex.ts",
+          "type": "registry:file",
+          "target": "~/src/components/select.stylex.ts"
+        },
+        {
+          "path": "src/components/select.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/select.tsx"
+        }
+      ]
+    },
+    {
+      "name": "separator",
+      "type": "registry:ui",
+      "title": "Separator",
+      "description": "A thin line that sets apart groups of content on the page.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/separator",
+      "files": [
+        {
+          "path": "src/components/separator.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/separator.tsx"
+        }
+      ]
+    },
+    {
+      "name": "share-dialog-01",
+      "type": "registry:block",
+      "title": "Share dialog",
+      "description": "Share one thing with people at a level of access, in a dialog.",
+      "dependencies": [
+        "@stylexjs/stylex"
+      ],
+      "registryDependencies": [
+        "@damsko/avatar",
+        "@damsko/button",
+        "@damsko/dialog",
+        "@damsko/hooks",
+        "@damsko/item",
+        "@damsko/lib",
+        "@damsko/select",
+        "@damsko/snippet",
+        "@damsko/user-picker"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/share-dialog-01",
+      "files": [
+        {
+          "path": "src/blocks/share-dialog-01/share-dialog-01.tsx",
+          "type": "registry:file",
+          "target": "~/src/blocks/share-dialog-01/share-dialog-01.tsx"
+        }
+      ]
+    },
+    {
+      "name": "sheet",
+      "type": "registry:ui",
+      "title": "Sheet",
+      "description": "A panel along a side of the window, for details or a task beside the page.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/button",
+        "@damsko/dialog",
+        "@damsko/hooks",
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/sheet",
+      "files": [
+        {
+          "path": "src/components/sheet.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/sheet.tsx"
+        }
+      ]
+    },
+    {
+      "name": "shimmer",
+      "type": "registry:ui",
+      "title": "Shimmer",
+      "description": "A line of words that says something is working, with light passing across it.",
+      "dependencies": [
+        "@stylexjs/stylex"
+      ],
+      "registryDependencies": [
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/shimmer",
+      "files": [
+        {
+          "path": "src/components/shimmer.stylex.ts",
+          "type": "registry:file",
+          "target": "~/src/components/shimmer.stylex.ts"
+        },
+        {
+          "path": "src/components/shimmer.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/shimmer.tsx"
+        }
+      ]
+    },
+    {
+      "name": "side-panel",
+      "type": "registry:ui",
+      "title": "Side panel",
+      "description": "A panel beside a page that shows the details of one thing, in sections.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/button",
+        "@damsko/item",
+        "@damsko/lib",
+        "@damsko/skeleton",
+        "@damsko/tooltip"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/side-panel",
+      "files": [
+        {
+          "path": "src/components/side-panel.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/side-panel.tsx"
+        }
+      ]
+    },
+    {
+      "name": "sidebar",
+      "type": "registry:ui",
+      "title": "Sidebar",
+      "description": "A column of an app's main places down one side, which folds away or down to its icons.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/button",
+        "@damsko/input",
+        "@damsko/lib",
+        "@damsko/separator",
+        "@damsko/sheet",
+        "@damsko/skeleton",
+        "@damsko/tooltip"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/sidebar",
+      "files": [
+        {
+          "path": "src/components/sidebar.stylex.ts",
+          "type": "registry:file",
+          "target": "~/src/components/sidebar.stylex.ts"
+        },
+        {
+          "path": "src/components/sidebar.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/sidebar.tsx"
+        }
+      ]
+    },
+    {
+      "name": "skeleton",
+      "type": "registry:ui",
+      "title": "Skeleton",
+      "description": "Placeholder shapes that stand in for content while it loads, so the page does not jump.",
+      "dependencies": [
+        "@stylexjs/stylex"
+      ],
+      "registryDependencies": [
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/skeleton",
+      "files": [
+        {
+          "path": "src/components/skeleton.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/skeleton.tsx"
+        }
+      ]
+    },
+    {
+      "name": "slider",
+      "type": "registry:ui",
+      "title": "Slider",
+      "description": "A bar with a handle you drag to set a number, or two for a range.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/field",
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/slider",
+      "files": [
+        {
+          "path": "src/components/slider.stylex.ts",
+          "type": "registry:file",
+          "target": "~/src/components/slider.stylex.ts"
+        },
+        {
+          "path": "src/components/slider.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/slider.tsx"
+        }
+      ]
+    },
+    {
+      "name": "snippet",
+      "type": "registry:ui",
+      "title": "Snippet",
+      "description": "A value you can copy, whole on one line, with a copy button at its end.",
+      "dependencies": [
+        "@stylexjs/stylex"
+      ],
+      "registryDependencies": [
+        "@damsko/copy-button",
+        "@damsko/hooks",
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/snippet",
+      "files": [
+        {
+          "path": "src/components/snippet.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/snippet.tsx"
+        }
+      ]
+    },
+    {
+      "name": "sources",
+      "type": "registry:ui",
+      "title": "Sources",
+      "description": "What an answer drew on, folded under it as a count that opens to the list.",
+      "dependencies": [
+        "@stylexjs/stylex"
+      ],
+      "registryDependencies": [
+        "@damsko/lib",
+        "@damsko/trace"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/sources",
+      "files": [
+        {
+          "path": "src/components/sources.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/sources.tsx"
+        }
+      ]
+    },
+    {
+      "name": "spinner",
+      "type": "registry:ui",
+      "title": "Spinner",
+      "description": "A small turning icon that shows something is loading or working.",
+      "dependencies": [
+        "@stylexjs/stylex"
+      ],
+      "registryDependencies": [
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/spinner",
+      "files": [
+        {
+          "path": "src/components/spinner.stylex.ts",
+          "type": "registry:file",
+          "target": "~/src/components/spinner.stylex.ts"
+        },
+        {
+          "path": "src/components/spinner.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/spinner.tsx"
+        }
+      ]
+    },
+    {
+      "name": "stack-trace",
+      "type": "registry:ui",
+      "title": "Stack Trace",
+      "description": "An error and its stack frames, from a failed tool call or a command.",
+      "dependencies": [
+        "@stylexjs/stylex"
+      ],
+      "registryDependencies": [
+        "@damsko/copy-button",
+        "@damsko/lib",
+        "@damsko/trace"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/stack-trace",
+      "files": [
+        {
+          "path": "src/components/stack-trace-parse.ts",
+          "type": "registry:file",
+          "target": "~/src/components/stack-trace-parse.ts"
+        },
+        {
+          "path": "src/components/stack-trace.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/stack-trace.tsx"
+        }
+      ]
+    },
+    {
+      "name": "stat",
+      "type": "registry:ui",
+      "title": "Stat",
+      "description": "A key figure with its label and how much it changed, alone or in a row.",
+      "dependencies": [
+        "@stylexjs/stylex"
+      ],
+      "registryDependencies": [
+        "@damsko/lib",
+        "@damsko/skeleton"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/stat",
+      "files": [
+        {
+          "path": "src/components/stat.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/stat.tsx"
+        }
+      ]
+    },
+    {
+      "name": "stepper",
+      "type": "registry:ui",
+      "title": "Stepper",
+      "description": "A list of named steps that shows which are done, current, still to come or failed.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/button",
+        "@damsko/lib",
+        "@damsko/progress",
+        "@damsko/spinner",
+        "@damsko/tooltip"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/stepper",
+      "files": [
+        {
+          "path": "src/components/stepper.stylex.ts",
+          "type": "registry:file",
+          "target": "~/src/components/stepper.stylex.ts"
+        },
+        {
+          "path": "src/components/stepper.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/stepper.tsx"
+        }
+      ]
+    },
+    {
+      "name": "subagent",
+      "type": "registry:ui",
+      "title": "Subagent",
+      "description": "Work handed to another agent, shown as its own run, with what it was asked, its tool calls and what it found.",
+      "dependencies": [
+        "@stylexjs/stylex"
+      ],
+      "registryDependencies": [
+        "@damsko/badge",
+        "@damsko/code-block",
+        "@damsko/lib",
+        "@damsko/trace"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/subagent",
+      "files": [
+        {
+          "path": "src/components/subagent.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/subagent.tsx"
+        }
+      ]
+    },
+    {
+      "name": "suggestion",
+      "type": "registry:ui",
+      "title": "Suggestion",
+      "description": "Short prompts a person can send to the assistant with one press, in a row that scrolls sideways.",
+      "dependencies": [
+        "@stylexjs/stylex"
+      ],
+      "registryDependencies": [
+        "@damsko/button",
+        "@damsko/hooks",
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/suggestion",
+      "files": [
+        {
+          "path": "src/components/suggestion.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/suggestion.tsx"
+        }
+      ]
+    },
+    {
+      "name": "switch",
+      "type": "registry:ui",
+      "title": "Switch",
+      "description": "A control you press to turn a setting on or off, taking effect at once.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/field",
+        "@damsko/hooks",
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/switch",
+      "files": [
+        {
+          "path": "src/components/switch.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/switch.tsx"
+        }
+      ]
+    },
+    {
+      "name": "table",
+      "type": "registry:ui",
+      "title": "Table",
+      "description": "A table of facts in rows and columns, for people to compare at a glance.",
+      "dependencies": [
+        "@stylexjs/stylex"
+      ],
+      "registryDependencies": [
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/table",
+      "files": [
+        {
+          "path": "src/components/table.stylex.ts",
+          "type": "registry:file",
+          "target": "~/src/components/table.stylex.ts"
+        },
+        {
+          "path": "src/components/table.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/table.tsx"
+        }
+      ]
+    },
+    {
+      "name": "table-of-contents",
+      "type": "registry:ui",
+      "title": "Table of contents",
+      "description": "A long page's sections beside it, the one you are reading marked.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/table-of-contents",
+      "files": [
+        {
+          "path": "src/components/table-of-contents.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/table-of-contents.tsx"
+        }
+      ]
+    },
+    {
+      "name": "tabs",
+      "type": "registry:ui",
+      "title": "Tabs",
+      "description": "A row of tabs that switch between views of one thing, one at a time.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/button",
+        "@damsko/dropdown-menu",
+        "@damsko/lib",
+        "@damsko/tooltip"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/tabs",
+      "files": [
+        {
+          "path": "src/components/tabs.stylex.ts",
+          "type": "registry:file",
+          "target": "~/src/components/tabs.stylex.ts"
+        },
+        {
+          "path": "src/components/tabs.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/tabs.tsx"
+        }
+      ]
+    },
+    {
+      "name": "tag",
+      "type": "registry:ui",
+      "title": "Tag",
+      "description": "A short label that sorts or names something, in a word or two.",
+      "dependencies": [
+        "@stylexjs/stylex"
+      ],
+      "registryDependencies": [
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/tag",
+      "files": [
+        {
+          "path": "src/components/tag.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/tag.tsx"
+        }
+      ]
+    },
+    {
+      "name": "tags-input",
+      "type": "registry:ui",
+      "title": "Tags input",
+      "description": "A box where you type several values, like labels, each shown as a tag.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/input",
+        "@damsko/lib",
+        "@damsko/tag"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/tags-input",
+      "files": [
+        {
+          "path": "src/components/tags-input.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/tags-input.tsx"
+        }
+      ]
+    },
+    {
+      "name": "task",
+      "type": "registry:ui",
+      "title": "Task",
+      "description": "One piece of work being done, behind a line that opens on the steps it took and the files it touched.",
+      "dependencies": [
+        "@stylexjs/stylex"
+      ],
+      "registryDependencies": [
+        "@damsko/lib",
+        "@damsko/trace"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/task",
+      "files": [
+        {
+          "path": "src/components/task.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/task.tsx"
+        }
+      ]
+    },
+    {
+      "name": "terminal",
+      "type": "registry:ui",
+      "title": "Terminal",
+      "description": "The output of a shell command an assistant runs, as it streams.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core"
+      ],
+      "registryDependencies": [
+        "@damsko/button",
+        "@damsko/copy-button",
+        "@damsko/lib",
+        "@damsko/spinner",
+        "@damsko/tooltip",
+        "@damsko/trace"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/terminal",
+      "files": [
+        {
+          "path": "src/components/terminal-ansi.ts",
+          "type": "registry:file",
+          "target": "~/src/components/terminal-ansi.ts"
+        },
+        {
+          "path": "src/components/terminal.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/terminal.tsx"
+        }
+      ]
+    },
+    {
+      "name": "test-results",
+      "type": "registry:ui",
+      "title": "Test Results",
+      "description": "The results of a test run an assistant made, its counts, its suites, its tests and their failures.",
+      "dependencies": [
+        "@stylexjs/stylex"
+      ],
+      "registryDependencies": [
+        "@damsko/lib",
+        "@damsko/progress",
+        "@damsko/trace"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/test-results",
+      "files": [
+        {
+          "path": "src/components/test-results.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/test-results.tsx"
+        }
+      ]
+    },
+    {
+      "name": "text",
+      "type": "registry:ui",
+      "title": "Text",
+      "description": "Body text for paragraphs and labels, in one of four sizes and four colours.",
+      "dependencies": [
+        "@stylexjs/stylex"
+      ],
+      "registryDependencies": [
+        "@damsko/lib",
+        "@damsko/tooltip"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/text",
+      "files": [
+        {
+          "path": "src/components/text.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/text.tsx"
+        }
+      ]
+    },
+    {
+      "name": "textarea",
+      "type": "registry:ui",
+      "title": "Textarea",
+      "description": "A box for several lines of text that grows taller as you write.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/textarea",
+      "files": [
+        {
+          "path": "src/components/textarea.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/textarea.tsx"
+        }
+      ]
+    },
+    {
+      "name": "theme-toggle",
+      "type": "registry:ui",
+      "title": "Theme toggle",
+      "description": "A control for choosing light, dark or the system's look, and any themes the product offers.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/theme-toggle",
+      "files": [
+        {
+          "path": "src/components/theme-toggle.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/theme-toggle.tsx"
+        }
+      ]
+    },
+    {
+      "name": "toast",
+      "type": "registry:ui",
+      "title": "Toast",
+      "description": "A small message that pops up for a moment to say something happened.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/button",
+        "@damsko/lib",
+        "@damsko/spinner"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/toast",
+      "files": [
+        {
+          "path": "src/components/toast.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/toast.tsx"
+        }
+      ]
+    },
+    {
+      "name": "toggle",
+      "type": "registry:ui",
+      "title": "Toggle",
+      "description": "A button that stays pressed to keep a choice on, like a view or text style.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/toggle",
+      "files": [
+        {
+          "path": "src/components/toggle.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/toggle.tsx"
+        }
+      ]
+    },
+    {
+      "name": "toggle-group",
+      "type": "registry:ui",
+      "title": "Toggle group",
+      "description": "Toggle group",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/lib",
+        "@damsko/toggle"
+      ],
+      "files": [
+        {
+          "path": "src/components/toggle-group.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/toggle-group.tsx"
+        }
+      ]
+    },
+    {
+      "name": "tokens",
+      "type": "registry:lib",
+      "title": "Tokens",
+      "description": "Every colour, space, corner, edge, shadow, time and curve as CSS variables (tokens.css), and the modes and themes (themes.css). Import both once, at the root.",
+      "files": [
+        {
+          "path": "src/styles/themes.css",
+          "type": "registry:file",
+          "target": "~/src/styles/themes.css"
+        },
+        {
+          "path": "src/styles/tokens.css",
+          "type": "registry:file",
+          "target": "~/src/styles/tokens.css"
+        }
+      ]
+    },
+    {
+      "name": "tool",
+      "type": "registry:ui",
+      "title": "Tool",
+      "description": "One call to one tool, its state on its line, opening on what went in and what came back.",
+      "dependencies": [
+        "@stylexjs/stylex"
+      ],
+      "registryDependencies": [
+        "@damsko/code-block",
+        "@damsko/lib",
+        "@damsko/trace"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/tool",
+      "files": [
+        {
+          "path": "src/components/tool-code.ts",
+          "type": "registry:file",
+          "target": "~/src/components/tool-code.ts"
+        },
+        {
+          "path": "src/components/tool.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/tool.tsx"
+        }
+      ]
+    },
+    {
+      "name": "tooltip",
+      "type": "registry:ui",
+      "title": "Tooltip",
+      "description": "A short hint that shows when you point at a control or tab to it.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/tooltip",
+      "files": [
+        {
+          "path": "src/components/tooltip.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/tooltip.tsx"
+        }
+      ]
+    },
+    {
+      "name": "trace",
+      "type": "registry:ui",
+      "title": "Trace",
+      "description": "The building block for a line of an assistant's work, with a mark, a title and a body that opens, for a step no part built on it names.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/lib",
+        "@damsko/shimmer"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/trace",
+      "files": [
+        {
+          "path": "src/components/trace.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/trace.tsx"
+        }
+      ]
+    },
+    {
+      "name": "tree-view",
+      "type": "registry:ui",
+      "title": "Tree view",
+      "description": "A list of nested items, like folders and files, that open and close.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/input-group",
+        "@damsko/lib",
+        "@damsko/spinner"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/tree-view",
+      "files": [
+        {
+          "path": "src/components/tree-view.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/tree-view.tsx"
+        }
+      ]
+    },
+    {
+      "name": "user-picker",
+      "type": "registry:ui",
+      "title": "User picker",
+      "description": "A field for choosing a person, found by typing their name or role.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/avatar",
+        "@damsko/input-group",
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/user-picker",
+      "files": [
+        {
+          "path": "src/components/user-picker.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/user-picker.tsx"
+        }
+      ]
+    }
+  ]
+}

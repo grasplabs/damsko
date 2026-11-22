@@ -1,0 +1,71 @@
+---
+// Get started: how to install the library, as an ordinary docs page on the normal layout. Its words
+// and its Markdown twin are site/start/get-started.ts.
+import Head from "../blocks/Head.astro";
+import Ways from "../blocks/Ways.astro";
+import { CodeBlock } from "../blocks/code";
+import TopStep from "../chrome/TopStep.astro";
+import Docs from "../layouts/Docs.astro";
+import InstallPill from "../start/InstallPill";
+import { description, headings, install, next, route, sections, siteAddress, steps, title } from "../start/get-started";
+import { neighbours } from "../system/content";
+import { highlight } from "../system/highlight";
+import "../start/get-started.css";
+
+// Previous and Next as every docs page has them: the home page before, Colour after.
+const around = neighbours(route);
+
+// The registry's address in components.json is this site's own: the page writes its origin in place
+// of the placeholder, in the code itself, so the copy button copies a working file.
+const fill = `(() => {
+  const list = document.currentScript.previousElementSibling;
+  const walk = document.createTreeWalker(list, NodeFilter.SHOW_TEXT);
+  for (let node = walk.nextNode(); node; node = walk.nextNode()) {
+    if (node.data.includes(${JSON.stringify(siteAddress)})) node.data = node.data.replace(${JSON.stringify(siteAddress)}, location.origin);
+  }
+})();`;
+
+const drawn = await Promise.all(
+  steps.map(async (step) => ({
+    ...step,
+    html: await highlight(step.code, step.lang),
+    thenHtml: step.then ? await highlight(step.then.code, step.then.lang) : null,
+  })),
+);
+---
+
+<Docs
+  route={route}
+  title={title}
+  description={description}
+  headings={headings}
+  prev={around.prev && { route: around.prev.route, label: around.prev.title }}
+  next={around.next && { route: around.next.route, label: around.next.title }}
+>
+  {/* Previous and next beside the title, as on every other docs page (site/chrome/TopStep.astro). */}
+  <TopStep prev={around.prev && { route: around.prev.route, label: around.prev.title }} next={around.next && { route: around.next.route, label: around.next.title }} />
+  <h1>{title}</h1>
+  <Head lead={description} />
+  <InstallPill command={install} />
+
+  <h2 id={sections.install.slug}>{sections.install.title}</h2>
+  <p>{sections.install.lead}</p>
+  <ol class="gs-steps not-prose">
+    {
+      drawn.map((step) => (
+        <li>
+          <h3 id={step.slug}>{step.name}</h3>
+          <p class="gs-note">{step.note}</p>
+          <CodeBlock html={step.html} language={step.lang} />
+          {step.thenHtml && <CodeBlock html={step.thenHtml} language={step.then?.lang} />}
+        </li>
+      ))
+    }
+  </ol>
+  <script is:inline data-astro-rerun set:html={fill} />
+
+  <h2 id={sections.next.slug}>{sections.next.title}</h2>
+  <div class="not-prose">
+    <Ways items={next} />
+  </div>
+</Docs>

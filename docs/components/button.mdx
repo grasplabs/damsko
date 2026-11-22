@@ -1,0 +1,370 @@
+---
+title: Button
+description: A button you press to do one thing now, like Save or Send.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/button"
+/>
+
+## Variants
+
+Each variant has its own job and its own look, as in shadcn/ui. `default` is the one main step of a view, Save changes; never two in one view. `outline`, a hairline edge with no fill, is the lesser button beside a main one: Cancel beside Save, Decline beside Approve, Previous and Skip beside Next; and a quiet trigger or chip standing alone, as a suggestion or Change cover on a picture. `secondary`, a quiet fill, is an ordinary action standing on its own that is neither the main step nor a way out: Invite people or Export in a section's head, a filter. `ghost` is for toolbars, rows and icon buttons in a list, Edit. `destructive` is for what cannot be undone, Delete workspace. `link` is an action that reads as words, Read the guide.
+
+<Stage path="button/variants" live label="Variants" />
+
+## Beside the main step
+
+Cancel beside Save is `outline`, the lesser button; Save is `default`. Invite people in the section's head stands on its own, so it is `secondary`.
+
+<Stage path="button/beside" live label="Beside the main step" />
+
+## Sizes and icons
+
+`default` by default; `sm` in dense tables, `lg` for a main call on touch. An icon is a child, `<Icon />`, before or after the words. An icon-only button takes an `icon` size and its name from `aria-label`.
+
+<Stage path="button/sizes" label="Sizes and icons" />
+
+## As a link
+
+To go somewhere, `asChild` draws the link itself, `<a href>`, so it opens in a new tab on request. Never `onClick`.
+
+<Stage path="button/link" live label="As a link" />
+
+## A press that takes time
+
+It is automatic: when `onClick` returns a Promise, the Button is busy until it settles, takes no second press and shows a spinner over its words, then a tick or the alert for a moment, and the words stay in their place so the width never changes. `loadingLabel`, `successLabel` and `errorLabel` are said and shown in place of the words, all stacked so the widest sets the width (an icon-only button says them only). When the page runs the work itself, as a form's submit, it gives `status` instead.
+
+<Stage path="button/action" live label="A press that takes time" />
+
+## The same button on every row
+
+Keep the words; give `aria-label` the row's name after them, "Delete Spring launch", so a voice command still finds Delete.
+
+<Stage path="button/rows" label="The same button on every row" />
+
+## Out of use, and why
+
+Keep it focusable with `focusableWhenDisabled` and tie the reason to it by `aria-describedby`. Hide what the person can never use here.
+
+<Stage path="button/disabled-why" label="Out of use, and why" />
+
+## Every state
+
+Loading shows a Spinner before the words and keeps focus on the button.
+
+<States
+  path="button/states"
+  code="button/action"
+  choose={{
+    prop: "variant",
+    label: "Variant",
+    options: [
+      { id: "default", label: "Default" },
+      { id: "ghost", label: "Ghost" },
+    ],
+    checks: [
+      { id: "secondary", label: "Secondary" },
+      { id: "outline", label: "Outline" },
+      { id: "destructive", label: "Destructive" },
+    ],
+  }}
+  cells={[
+    { label: "Rest" },
+    { label: "Hover", force: "hover" },
+    { label: "Keyboard focus", force: "focus-visible" },
+    { label: "Pressed", force: "active" },
+    { label: "Loading", props: { loading: true } },
+    { label: "Disabled", props: { disabled: true } },
+  ]}
+/>
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="button"
+  always={[
+    "One `default` per view, on its main step: Save changes.",
+    "`outline` for the lesser button beside a main one: Cancel beside Save, Decline beside Approve, Previous and Skip beside Next; and for a quiet trigger or chip, as a suggestion.",
+    "`secondary` for an ordinary action standing on its own, neither the main step nor a way out: Invite people or Export in a section's head, a filter.",
+    "`ghost` in a toolbar, on a row or for an icon button in a list; `link` for an action that reads as words.",
+    "`destructive` for what cannot be undone: Delete workspace.",
+    "A verb first, in sentence case: Save changes, Invite people.",
+    "Say a failure plainly: Could not save, not Error.",
+    "Say why near a disabled button, tied to it by `aria-describedby`.",
+    "Disable what a step of theirs would make work; hide what they can never use here.",
+  ]}
+  never={[
+    "Two `default` buttons in one view, or `secondary` for Cancel beside the main step: it is `outline`.",
+    "A fixed width, or words cut by your own CSS: Text's `truncate` cuts, with its tooltip.",
+    "Colours, sizes or corners set from outside: `style` takes layout only.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Size",
+      key: "Height",
+      value: "{control-xs}, {control-sm}, {control-default}, {control-lg}",
+      note: "xs, sm, default, lg",
+    },
+    {
+      group: "Size",
+      key: "Padding",
+      value:
+        "{space-3} at the sides, {space-2} when extra small, {space-4} when large",
+    },
+    {
+      group: "Size",
+      key: "Icon only",
+      value: "A square of the same height",
+      note: "`icon-xs`, `icon-sm`, `icon`, `icon-lg`; no side padding",
+    },
+    { group: "Size", key: "Icon", value: "{icon-sm}, stroke {icon-stroke}" },
+    { group: "Size", key: "Icon to words", value: "{space-2}" },
+    {
+      group: "Size",
+      key: "Touch target",
+      value: "{tap-target}",
+      note: "on a touch screen, at every size",
+    },
+    {
+      group: "Type and shape",
+      key: "Type",
+      value: "{text-sm} / {text-sm-line}, {font-weight-medium}",
+    },
+    {
+      group: "Type and shape",
+      key: "Corner",
+      value: "{radius}, {radius-shape}",
+      note: "capped at half the height",
+    },
+    {
+      group: "Colour",
+      key: "Default",
+      note: "swap places on Night",
+      tokens: ["primary", "primary-foreground", "primary-active"],
+    },
+    {
+      group: "Colour",
+      key: "Secondary",
+      note: "a veil of white on Night",
+      tokens: ["secondary", "foreground"],
+    },
+    {
+      group: "Colour",
+      key: "Outline",
+      note: "a hairline edge, no fill at rest",
+      tokens: ["border-strong-color", "accent"],
+    },
+    {
+      group: "Colour",
+      key: "Ghost",
+      note: "no fill at rest",
+      tokens: ["accent", "accent-active"],
+    },
+    {
+      group: "Colour",
+      key: "Destructive",
+      note: "the same on every ground",
+      tokens: [
+        "destructive-fill",
+        "destructive-fill-foreground",
+        "destructive-fill-active",
+      ],
+    },
+    {
+      group: "Focus and disabled",
+      key: "Focus ring",
+      value: "{ring-width} on its edge, keyboard only",
+      note: "in its own corners",
+      tokens: ["ring"],
+    },
+    {
+      group: "Focus and disabled",
+      key: "Disabled",
+      value: "{opacity-disabled} opacity",
+      note: "default: its own quiet fill and ink instead, half strength on paper, a step off the ground at night",
+      tokens: ["primary-disabled", "primary-foreground-disabled"],
+    },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    {
+      group: "Pointer and keys",
+      key: "Press",
+      value: "Scale {button-press-scale}, {duration-press}",
+      note: "reduced: at once",
+      tokens: ["ease"],
+    },
+    {
+      group: "Pointer and keys",
+      key: "Hover, filled",
+      value: "Bevel brightens and the fill lightens a step, {duration-hover}",
+      note: "default, destructive",
+      tokens: ["ease"],
+    },
+    {
+      group: "Pointer and keys",
+      key: "Hover, secondary, outline and ghost",
+      value: "Fill one step deeper, {duration-hover}",
+      note: "one more pressed",
+      tokens: ["ease"],
+    },
+    {
+      group: "Pointer and keys",
+      key: "Keyboard focus",
+      value: "The ring, at once",
+      note: "no transition",
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Input",
+      key: "Keyboard",
+      value:
+        "Tab reaches it; Enter and Space press it. As a link, Enter follows it.",
+    },
+    {
+      group: "Input",
+      key: "Loading",
+      value:
+        "While a press's Promise runs it cannot be pressed again, and keeps focus.",
+    },
+    {
+      group: "Input",
+      key: "Touch",
+      value: "No hover, no tap flash, no double-tap delay.",
+    },
+    {
+      group: "Input",
+      key: "Agents",
+      value:
+        "A `destructive` button, or one with `agentConfirm`, waits for the person's yes before an agent's press runs.",
+    },
+    {
+      group: "Content",
+      key: "Long words",
+      value: 'Break inside the word, hyphenated under `lang="nl"`.',
+    },
+    {
+      group: "Content",
+      key: "Long labels",
+      value: "Wrap between words, balanced; the corner stays capped.",
+    },
+    {
+      group: "Content",
+      key: "One letter",
+      value: 'Never narrower than tall, so "B" stays square.',
+    },
+    {
+      group: "Settings",
+      key: "Text at 200%",
+      value: "Wraps sooner; the button, its target and its ring grow.",
+    },
+    {
+      group: "Settings",
+      key: "Right to left",
+      value: "Padding and icons follow the reading direction.",
+    },
+    {
+      group: "Settings",
+      key: "Forced colours",
+      value: "A 1px ButtonText border replaces the bevel",
+      note: "GrayText when disabled; the focus ring in Highlight",
+    },
+    {
+      group: "Settings",
+      key: "Dark grounds",
+      value: "Follows `color-scheme: dark` on a parent, without a prop.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    { key: "Role", value: "`button`, or a link when drawn as `<a href>`" },
+    {
+      key: "Name",
+      value: "Its words, or `aria-label` when it is only an icon",
+    },
+    {
+      key: "Loading",
+      value:
+        "`aria-busy` and `aria-disabled`; its labels, or the catalogue's words, said once",
+    },
+    {
+      key: "Disabled",
+      value: "`disabled`, or `focusableWhenDisabled` to keep focus",
+    },
+    { key: "Focus ring", value: "3:1 or more against every ground beside it" },
+  ]}
+/>
+<Rows
+  title="From shadcn"
+  rows={[
+    {
+      group: "variant",
+      key: "All six",
+      value: "Kept, each for the job shadcn gives it",
+      note: "`default`, `secondary`, `destructive`, `outline`, `ghost`, `link`",
+    },
+    {
+      group: "size",
+      key: "All of them",
+      value: "Kept",
+      note: "`xs` is 28px: 24px is too small to aim at",
+    },
+    {
+      group: "Elsewhere",
+      key: "`className`",
+      value: "`style`",
+      note: "layout only, never a width",
+    },
+    {
+      group: "Elsewhere",
+      key: "`[&_svg]:size-4`",
+      value: "The icon reads the size from the button",
+      note: "a parent cannot style its children",
+    },
+    {
+      group: "Elsewhere",
+      key: "`translate-y-px`",
+      value: "Scale {button-press-scale}",
+    },
+    {
+      group: "Elsewhere",
+      key: "`asChild`",
+      value: "Kept",
+      note: "onto UI SDK's `render`",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props source="src/components/button.tsx" type="ButtonProps" />
+
+A press whose `onClick` returns a Promise needs nothing more:
+
+```tsx
+<Button onClick={saveChanges} successLabel="Saved" errorLabel="Could not save">
+  Save changes
+</Button>
+```
+
+</Reference>

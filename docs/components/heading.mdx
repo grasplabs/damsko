@@ -1,0 +1,51 @@
+---
+title: Heading
+description: A title for a page, section or card, with its outline level and size set separately.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/heading"
+  use={'import { Heading } from "@grasp-os/ui/components/heading";'}
+/>
+
+## Sizes
+
+Four sizes in Geist Serif, from an opening title to a card's; two in the sans, a component's title and a section's inside it.
+
+<Stage path="heading/sizes" label="Sizes" />
+
+## Level and size
+
+The level keeps the outline whole; each has a size by default, and `size` changes only the look.
+
+<Stage path="heading/outline" label="Level and size" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="heading"
+  always={[
+    "A title in the page's outline, its level kept whole and its look chosen by `size`.",
+  ]}
+  never={[
+    "A smaller title by skipping a level: change `size` instead.",
+    "A page's title row, with its line, actions and tabs: use Page header.",
+    "A section's title, with a sentence and its actions: use Section header.",
+    "Running words: use Text.",
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/heading.tsx"
+  type="HeadingProps"
+  label="Heading props"
+/>
+
+</Reference>

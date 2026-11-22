@@ -1,0 +1,47 @@
+---
+title: Forms
+description: One column, labels above, errors on submit, and one action that says how it went.
+---
+
+<Head lead={frontmatter.description} />
+
+## A settings form
+
+Labels above their controls, one column, and the ink button last, after the quiet one.
+
+<Stage path="patterns/forms-settings" label="A settings form" />
+
+## Errors on submit
+
+Press Send invite empty: each field says what it needs and the first wrong one takes focus.
+
+<Stage path="patterns/forms-errors" label="Errors on submit" />
+
+## In one row
+
+A short task fits in one row; the controls share a height and the row wraps when narrow.
+
+<Stage path="patterns/forms-inline" label="In one row" />
+
+## What deletes it
+
+What deletes the thing a form is about stands under the form, last on the page, in a section of its own that says what is lost: never in the form's row of actions, beside Save. A grave loss asks in an [Alert dialog](/components/alert-dialog); a small one that cannot be undone, such as a draft, takes a hold on the button; what can be undone does not ask at all, as [Confirmations](/patterns/confirmations) shows.
+
+<Stage path="patterns/forms-danger" label="What deletes it" />
+
+## Rules
+
+<Rules
+  always={[
+    "A visible label on every field, or an `aria-label` when a row has no room for one.",
+    "Check on submit, and say under the field what is wrong and how to put it right.",
+    "One ink button per form, last in the row, its words a verb: Save changes, Send invite.",
+    "Run the save with `useAction` and give the submit button its `status`, so it says Saving, then Saved or Could not save.",
+  ]}
+  never={[
+    "A placeholder in place of a label.",
+    "An error while someone is still typing.",
+    "A disabled submit button as the only sign that something is missing.",
+    "Two columns of fields that are read one after the other.",
+  ]}
+/>

@@ -1,0 +1,15 @@
+---
+// MDX's `pre`: a fenced block of code, highlighted by Shiki, shown as a CodeBlock (copy
+// pill, cut at 400px with "Show all"). Its lines come from Code.astro.
+import "../system/styles/blocks.css";
+import { CodeBlock } from "./code";
+
+interface Props {
+  "data-language"?: string;
+  [key: string]: unknown;
+}
+const language = Astro.props["data-language"];
+const html = await Astro.slots.render("default");
+---
+
+<CodeBlock html={html} language={language} />

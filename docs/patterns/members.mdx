@@ -1,0 +1,55 @@
+---
+title: Members
+description: The people of a workspace on one page, each with a face, the role chosen in the row, and the email to copy.
+---
+
+<Head lead={frontmatter.description} />
+
+## People
+
+One list: a face, the email to copy, the role at the row's end with a line on what each may do, and a menu. Invited and removed are states, not tabs.
+
+<Stage path="patterns/members-people" live label="People" />
+
+## Invite
+
+A dialog from the list's Invite button. The addresses are tags, so many can be pasted at once; the role they get, with its line; a team if any. Send invites checks the addresses first and marks a wrong one, then sends. If only some went, those leave the field, the rest stay marked with why, and the dialog stays open to try again.
+
+Invite takes many addresses at once and checks them only when Send is pressed: each wrong one is marked, and said under the field. A send that went in part is never reported as done, or as failed: it says who was invited and who was not.
+
+<Stage path="patterns/members-invite" live label="Invite" />
+
+## Teams
+
+One row a team: its name, how many people, their faces as an Avatar group, and a menu with Rename and Delete. The team's name opens it. Delete happens at once, with Undo in a toast.
+
+<Stage path="patterns/members-teams" live label="Teams" />
+
+## A team
+
+The team's dialog, opened from the team's name: its name in a field, and one field to find people and tick them. Who is in the team shows ticked and first, so ticking never moves a row; unticking takes them out. The list scrolls inside the field, so the dialog keeps its size with forty people. Save changes keeps both, as Forms says.
+
+<Stage path="patterns/members-team-dialog" live label="A team" />
+
+## States
+
+One person; forty people, paged twenty at a time, the search running over all of them; the people loading, each row a face and two lines; a team with no one in it, which says how to add people; and a team's save that fails, keeping its changes in the dialog with Could not save on its button.
+
+<Stage path="patterns/members-states" live label="States" />
+
+## Rules
+
+<Rules
+  always={[
+    "A face beside every person, wherever people are listed.",
+    "The role chosen in the person's row, each role with a line on what it may do, and an info button comparing them.",
+    "The email as the quiet line, with a copy that shows on hover and focus and always on touch (ItemActions showOnHover).",
+    "Someone invited keeps their row with a badge; someone removed moves to the list's foot, muted, with Restore.",
+  ]}
+  never={[
+    "A tab for roles, for invitations or for removed people.",
+    "An email only to read, with no way to copy it.",
+    "A copy action that shows on hover alone: focus shows it too.",
+    "A person listed without their face.",
+  ]}
+/>

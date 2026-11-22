@@ -1,0 +1,194 @@
+---
+title: Tag
+description: A short label that sorts or names something, in a word or two.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/tag"
+  use={'import { Tag } from "@grasp-os/ui/components/tag";'}
+/>
+
+## Variants
+
+`soft` is the usual tag; `outline` is quieter, beside tags that are chosen.
+
+<Stage path="tag/variants" label="Variants" />
+
+## Sizes
+
+`default`, 24px, beside body text; `sm`, 20px, in a dense row or a table.
+
+<Stage path="tag/sizes" label="Sizes" />
+
+## With an icon
+
+An icon before the words says what kind of label it is.
+
+<Stage path="tag/icon" label="With an icon" />
+
+## Removable
+
+`onRemove` adds a small button after the words that takes the tag away.
+
+<Stage path="tag/removable" label="Removable" />
+
+## Every state
+
+A tag has nothing to press; its remove button's hover and keyboard focus are forced from its own CSS.
+
+<States
+  path="tag/states"
+  choose={{
+    prop: "variant",
+    label: "Variant",
+    options: [
+      { id: "soft", label: "Soft" },
+      { id: "outline", label: "Outline" },
+    ],
+  }}
+  cells={[
+    { label: "Rest" },
+    { label: "Small", props: { size: "sm" } },
+    { label: "With an icon", props: { icon: true } },
+    { label: "Removable", props: { removable: true } },
+    { label: "Remove, hover", force: "hover", props: { removable: true } },
+    {
+      label: "Remove, keyboard focus",
+      force: "focus-visible",
+      props: { removable: true },
+    },
+  ]}
+/>
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="tag"
+  always={["A word or two in sentence case: Design, Q3 plan."]}
+  never={["Words that a tag cuts off: say it shorter."]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Size",
+      key: "Height",
+      value: "{tag-height}, {tag-height-sm}",
+      note: "default, small",
+    },
+    {
+      group: "Size",
+      key: "Padding",
+      value: "{tag-padding} at each end",
+      note: "{space-1} after a remove button",
+    },
+    {
+      group: "Size",
+      key: "Icon",
+      value: "{tag-icon}, stroke {icon-stroke}, {space-1} before the words",
+    },
+    {
+      group: "Size",
+      key: "Remove button",
+      value: "{icon-sm}, its cross the same",
+      note: "{tap-target} to a finger on a touch screen",
+    },
+    {
+      group: "Type and shape",
+      key: "Words",
+      value: "{text-sm} / {text-sm-line}, {font-weight-medium}",
+      note: "{text-xs} / {text-xs-line} when small",
+    },
+    {
+      group: "Type and shape",
+      key: "Corner",
+      value: "{radius-full}",
+      note: "round ends",
+    },
+    { group: "Colour", key: "Words", tokens: ["foreground"] },
+    { group: "Colour", key: "Soft", note: "fill", tokens: ["tag-bg"] },
+    {
+      group: "Colour",
+      key: "Outline",
+      note: "the system's edge, no fill",
+      tokens: ["border-strong"],
+    },
+    {
+      group: "Colour",
+      key: "Remove",
+      note: "the cross; ink on the soft fill under a pointer",
+      tokens: ["muted"],
+    },
+    {
+      group: "Colour",
+      key: "Focus ring",
+      value: "{ring-width}, {ring-offset} out",
+      note: "on the remove button",
+      tokens: ["ring"],
+    },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    {
+      key: "Remove, hover",
+      value: "Cross and fill change, {duration-mark}",
+      note: "pointer only; reduced: at once",
+      tokens: ["ease"],
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      key: "Press",
+      value: "None on the tag: only its remove button does something.",
+    },
+    {
+      key: "Remove",
+      value:
+        "Runs `onRemove`; focus moves to the next tag's remove button, or the one before.",
+    },
+    {
+      key: "Last one",
+      value:
+        "When no tag is left, the caller moves focus, to the field that adds them.",
+    },
+    {
+      key: "Long words",
+      value: "One line; cut off with an ellipsis when the row is too narrow.",
+    },
+    {
+      key: "Forced colours",
+      value: "A 1px outline in the text colour draws the pill.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    { key: "Role", value: "None: its words are read with the text around it" },
+    { key: "Icon", value: "Hidden from screen readers; the words say it" },
+    {
+      key: "Remove",
+      value: "A `button` named Remove and the words",
+      note: "Remove alone when the words are not text; both from the I18nProvider (`tag.remove`, `tag.removeNamed`)",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props source="src/components/tag.tsx" type="TagProps" />
+
+</Reference>

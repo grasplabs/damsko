@@ -1,0 +1,216 @@
+---
+title: Theme toggle
+description: A control for choosing light, dark or the system's look, and any themes the product offers.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/theme-toggle"
+  use={'import { ThemeToggle } from "@grasp-os/ui/components/theme-toggle";'}
+/>
+
+## Basic usage
+
+Controlled: give it the `mode` and an `onModeChange` that applies it (`data-mode` where the product wants it) and keeps it. It reads and writes no storage itself.
+
+<Stage path="theme-toggle/basic" label="Basic usage" />
+
+## Icon button
+
+`variant="icon"` where there is no room: one button that cycles, at 32 or 28px.
+
+<Stage path="theme-toggle/icon" label="Icon button" />
+
+## Picker
+
+`variant="picker"` on a settings page. The themes under the modes are the product's, each with its name (`themes`), chosen with `theme` and `onThemeChange`; their ids are the stylesheet's (`themeIds`).
+
+<Stage path="theme-toggle/picker" label="Picker" />
+
+## Small tiles
+
+`tileSize="default"` keeps each tile at its own width, from the row's start, for a settings column.
+
+<Stage path="theme-toggle/picker-md" label="Small tiles" />
+
+## Every state
+
+Each mode chosen, then hover and keyboard focus, in both small forms.
+
+<States
+  path="theme-toggle/states"
+  choose={{
+    prop: "form",
+    label: "Form",
+    options: [
+      { id: "segmented", label: "Segmented" },
+      { id: "icon", label: "Icon" },
+    ],
+  }}
+  cells={[
+    { label: "Light" },
+    { label: "Dark", props: { mode: "dark" } },
+    { label: "System", props: { mode: "system" } },
+    { label: "Hover", force: "hover" },
+    { label: "Keyboard focus", force: "focus-visible" },
+  ]}
+/>
+
+<Part title="Using it" />
+
+## When to use it
+
+A person chooses light, dark or the system's look, kept with the product's settings: the product holds the choice, applies it, keeps it and sets it before the page paints. Not a look for only the part it sits in, and not any other setting that turns on or off: use a [Switch](/components/switch). Never a theme change with no way back to the system's setting.
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Segmented",
+      key: "Height",
+      value: "{control-xs}",
+      note: "{tap-target} on a touch screen",
+    },
+    {
+      group: "Segmented",
+      key: "Track",
+      value: "{space-1} round the pill, {radius-full}",
+      tokens: ["accent"],
+    },
+    {
+      group: "Segmented",
+      key: "Pill",
+      value: "A quiet control's fill and low lift",
+      tokens: ["card", "shadow-sm"],
+    },
+    {
+      group: "Segmented",
+      key: "Words",
+      value:
+        "{text-sm} / {text-sm-line}, {font-weight-medium}; the chosen in ink",
+      tokens: ["muted", "foreground"],
+    },
+    {
+      group: "Icon",
+      key: "Size",
+      value: "{control-sm} or {control-xs}",
+      note: "an unseen {tap-target} on a touch screen",
+    },
+    { group: "Icon", key: "Icon", value: "{icon-sm}, stroke {icon-stroke}" },
+    {
+      group: "Picker",
+      key: "Tile",
+      value: "A miniature at 16:10, {radius}, {radius-shape}",
+      note: "drawn in the tile's own theme",
+    },
+    {
+      group: "Picker",
+      key: "Chosen",
+      value: "A 2px ink ring and a tick",
+      tokens: ["foreground", "primary"],
+    },
+    {
+      group: "Picker",
+      key: "Between tiles",
+      value: "{space-4}",
+      note: "two to a row on a phone",
+    },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    {
+      key: "The pill",
+      value: "Moves a whole segment in {duration-mark}",
+      tokens: ["ease"],
+    },
+    {
+      key: "The icon",
+      value:
+        "Swaps through a {swap-blur} blur and {swap-scale} scale in {duration-swap}",
+    },
+    {
+      key: "The change of theme",
+      value:
+        "The product's: the toggle only calls `onModeChange` and `onThemeChange`",
+    },
+    { key: "Reduced motion", value: "The pill and the icon in one frame" },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Choosing",
+      key: "Segmented and picker",
+      value:
+        "Click, or arrow keys, which move and choose; Home and End go to the ends.",
+    },
+    {
+      group: "Choosing",
+      key: "Icon",
+      value: "Each press goes to the next: Light, Dark, System.",
+    },
+    {
+      group: "State",
+      key: "Where it lives",
+      value:
+        "With the caller: `mode` and `theme` in, `onModeChange` and `onThemeChange` out. No storage.",
+    },
+    {
+      group: "Settings",
+      key: "Right to left",
+      value: "Arrow keys and the pill follow the reading direction.",
+    },
+    {
+      group: "Settings",
+      key: "Forced colours",
+      value:
+        "The chosen segment and tile are ringed in the system's highlight; themes yield to the system's colours.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Segmented",
+      value: 'A radio group named by `label`: "Theme, Dark, 2 of 3"',
+    },
+    {
+      key: "Picker",
+      value:
+        "Two radio groups, modes and themes, each named; the miniatures are hidden, their names say it",
+    },
+    {
+      key: "Icon",
+      value:
+        'Its name says where it is and where it goes: "Theme, Dark. Switch to System"',
+    },
+    {
+      key: "Agent",
+      value:
+        "One `theme-toggle` on the bridge: its value is the mode; `setValue` and `setTheme`",
+    },
+    {
+      key: "Contrast",
+      value: "Every pair holds in every theme, light and dark",
+      note: "checked by `node tokens/generate.ts --check`",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/theme-toggle.tsx"
+  type="ThemeToggleProps"
+  label="Theme toggle props"
+/>
+
+</Reference>

@@ -1,0 +1,131 @@
+---
+title: Label
+description: The name of a control you can see, tied to it so a press on the name reaches the control.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/label"
+  use={'import { Label } from "@grasp-os/ui/components/label";'}
+/>
+
+## Basic usage
+
+`htmlFor` ties the name to its control by the control's `id`: a press on the name puts the caret in the field. Inside a [Field](/components/field), use FieldLabel, which is this label wired for you.
+
+<Stage path="label/basic" label="Basic usage" />
+
+## Required
+
+`required` adds a quiet mark after the words when the control it names is required. The mark is drawn by the label, never part of its text.
+
+<Stage path="label/required" label="Required" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="label"
+  always={[
+    "A visible name for a control outside a Field: an input, a radio group, a slider.",
+    "Words in sentence case that say what the control is: Team name.",
+    "`required` on the label and on its control together.",
+  ]}
+  never={[
+    "A question as a label, or a colon after it.",
+    "A Label inside a Field: FieldLabel shows the mark and wires the help by itself.",
+    "A row with no room for a visible name: give the control an `aria-label`.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Words",
+      key: "Type",
+      value: "{text-sm} / {text-sm-line}, {font-weight-medium}",
+      tokens: ["foreground"],
+    },
+    {
+      group: "Words",
+      key: "Required mark",
+      value:
+        "An asterisk after the words, {space-1} from them, {font-weight-normal}",
+      tokens: ["muted"],
+    },
+    {
+      group: "Words",
+      key: "Long words",
+      value:
+        "Break inside a word, hyphenated in the page's language; never cut off",
+    },
+    {
+      group: "State",
+      key: "Out of use",
+      value: "At {opacity-disabled} with its control",
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      key: "Press",
+      value:
+        "A press on the label reaches its control: an input, a radio group or a slider.",
+    },
+    {
+      key: "Required mark",
+      value:
+        "Drawn after the words (`::after`), so it is in no text, name or page search.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    { key: "Name", value: "The label's words are the control's name" },
+    {
+      key: "Required",
+      value: "Said by the control's own `required`, not by the mark",
+    },
+  ]}
+/>
+<Rows
+  title="From shadcn"
+  rows={[
+    {
+      group: "Element",
+      key: "Radix Label",
+      value: "UI SDK's Label",
+      note: "names any control by `htmlFor`",
+    },
+    {
+      group: "Required",
+      key: "An asterisk written in the text",
+      value: "`required`, drawn by the label",
+    },
+    {
+      group: "Elsewhere",
+      key: "`className`",
+      value: "Dropped",
+      note: "`style` for where it sits",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/label.tsx"
+  type="LabelProps"
+  label="Label props"
+/>
+
+</Reference>

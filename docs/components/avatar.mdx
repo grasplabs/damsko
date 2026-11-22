@@ -1,0 +1,233 @@
+---
+title: Avatar
+description: A small round picture of a person or team, showing initials when there is none.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/avatar"
+  use={
+    'import { Avatar, AvatarImage, AvatarFallback } from "@grasp-os/ui/components/avatar";'
+  }
+/>
+
+## Sizes
+
+40px unless the row is dense or a profile heads it. The initials stand at about half the size.
+
+<Stage path="avatar/sizes" label="Sizes" />
+
+## Picture or initials
+
+The picture once it loads; the initials until then, without one, and when it fails.
+
+<Stage path="avatar/image" label="Picture or initials" />
+
+## Beside a name
+
+Beside its own name it is decorative, so the name is said once.
+
+<Stage path="avatar/beside-a-name" label="Beside a name" />
+
+## A badge
+
+`AvatarBadge` puts a small mark on the avatar's lower end corner, a dot or a small icon. Say what it means in words beside it too.
+
+<Stage path="avatar/badge" label="A badge" />
+
+## A group
+
+`AvatarGroup`: a few people (`items`) as one stack of faces, up to four (`max`), then +N (`AvatarGroupCount`) for the rest. Each face is cut back where the next stands, so a gap of the ground shows between them on any ground. It is one picture to a screen reader, named once: "Anna de Vries, Ravi Menon, Sofia Laine, Tom Becker and 2 others", or its own `aria-label`. Both words come from the I18nProvider (`avatar.groupName`, `avatar.groupCount`).
+
+<Stage path="avatar/group" label="A group" />
+
+## Every state
+
+A picture, initials from a name of one or more words, and a picture that cannot be read.
+
+<States
+  path="avatar/states"
+  cells={[
+    { label: "Picture", props: { src: "/people/avatar-1.svg" } },
+    { label: "Initials", props: { name: "Anna de Vries" } },
+    { label: "One word", props: { name: "Northwind" } },
+    {
+      label: "Picture failed",
+      props: { name: "Koen Laan", src: "data:image/png;base64,AAAA" },
+    },
+  ]}
+/>
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="avatar"
+  always={[
+    "A person or a team, as their picture or their initials.",
+    "A name, even when there is a picture.",
+    "One size in one list.",
+  ]}
+  never={[
+    "Another company's mark, for an integration, a source or a way to sign in: use Brand icon.",
+    "The kind of object a view is about, at the head of its details: use Icon tile.",
+    "Initials typed by hand: give the name.",
+    "An empty name: the avatar then stands aside unnamed, and nothing warns of it.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Size",
+      key: "Sizes",
+      value:
+        "{avatar-2xs}, {avatar-xs}, {avatar-sm}, {avatar-default}, {avatar-lg}, {avatar-xl}",
+      note: "default unless set; 2xs only in a control's own line",
+    },
+    {
+      group: "Size",
+      key: "Initials",
+      value:
+        "{text-xs}, {text-base}, {heading-sm}, {heading-md}, {heading-lg}, {font-weight-medium}",
+      note: "about half the size, never under 13px; at 2xs one letter",
+    },
+    { group: "Shape", key: "Corner", value: "{radius-circle}" },
+    {
+      group: "Shape",
+      key: "Edge",
+      value: "1px, drawn over the picture too",
+      tokens: ["avatar-border"],
+    },
+    { group: "Colour", key: "Fill and initials", tokens: ["muted", "muted"] },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    {
+      key: "Picture arriving",
+      value: "None: it takes the initials' place at once",
+    },
+    { key: "Reduced motion", value: "The same; nothing moves" },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Picture",
+      key: "Loading",
+      value:
+        "The initials show until it has loaded; a cached picture shows at once.",
+    },
+    { group: "Picture", key: "Failing", value: "The initials stay." },
+    {
+      group: "Picture",
+      key: "Fit",
+      value: "Cropped to fill the circle, never stretched.",
+    },
+    {
+      group: "Initials",
+      key: "From the name",
+      value:
+        "The first letters of the first and last words: Anna de Vries is AV, an accent or emoji kept whole.",
+    },
+    {
+      group: "Settings",
+      key: "Without script",
+      value: "The initials show; the picture waits for the script.",
+    },
+    {
+      group: "Settings",
+      key: "Forced colours",
+      value: "A 1px line in the text colour draws the edge.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    { key: "Role", value: "`img`, named by `name`, in either state" },
+    {
+      key: "Decorative",
+      value: "Hidden from screen readers and agents beside its own name",
+    },
+    {
+      key: "Contrast",
+      value: "Initials 4.5:1 on the soft fill, light and dark",
+      note: "checked by `node tokens/generate.ts --check`",
+    },
+  ]}
+/>
+<Rows
+  title="From shadcn"
+  rows={[
+    {
+      group: "Parts",
+      key: "`AvatarImage`, `AvatarFallback`, `AvatarBadge`",
+      value: "The same parts",
+      note: "an empty AvatarFallback shows the initials of the Avatar's `name`",
+    },
+    {
+      group: "Parts",
+      key: "`AvatarGroup`, `AvatarGroupCount`",
+      value: "A group from `items`",
+      note: "the faces stack and cut back; one name for the whole group",
+    },
+    { group: "Look", key: "`size-8 rounded-full`", value: "`size`: six sizes" },
+    {
+      group: "Look",
+      key: "`bg-muted`",
+      value: "{muted}, with the system's edge",
+    },
+    { group: "New", key: "`decorative`", value: "Beside its own name" },
+    { group: "Elsewhere", key: "Base UI", value: "UI SDK" },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/avatar.tsx"
+  type="AvatarProps"
+  label="Avatar props"
+/>
+
+<Props
+  source="src/components/avatar.tsx"
+  type="AvatarImageProps"
+  label="AvatarImage props"
+/>
+
+<Props
+  source="src/components/avatar.tsx"
+  type="AvatarFallbackProps"
+  label="AvatarFallback props"
+/>
+
+<Props
+  source="src/components/avatar.tsx"
+  type="AvatarBadgeProps"
+  label="AvatarBadge props"
+/>
+
+<Props
+  source="src/components/avatar.tsx"
+  type="AvatarGroupProps"
+  label="AvatarGroup props"
+/>
+
+<Props
+  source="src/components/avatar.tsx"
+  type="AvatarGroupCountProps"
+  label="AvatarGroupCount props"
+/>
+
+</Reference>

@@ -1,0 +1,290 @@
+---
+title: Empty
+description: The message a list shows when it has nothing in it, or failed to load.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/empty"
+  use={
+    'import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription, EmptyContent } from "@grasp-os/ui/components/empty";'
+  }
+/>
+
+## Basic usage
+
+A short title, one sentence on what will appear and when, and an icon if it says it faster.
+
+<Stage path="empty/basic" label="Basic usage" />
+
+## Without a title
+
+In a card or one tab of a list, the sentence alone says it.
+
+<Stage path="empty/no-title" label="Without a title" />
+
+## Sizes
+
+`lg` stands for a whole list, `default` for a card or a tab, `sm` for a small box.
+
+<Stage path="empty/sizes" label="Sizes" />
+
+## A picture of the case
+
+EmptyMedia's `illustration` tells the cases apart before a word is read. The title still says it.
+
+<Stage path="empty/pictures" label="A picture of the case" />
+
+## At the head of the place
+
+`align="start"` stands the words where a list's first row will land.
+
+<Stage path="empty/top" label="At the head of the place" />
+
+## With an action
+
+`EmptyContent` puts the one way on under the sentence.
+
+<Stage path="empty/action" label="With an action" />
+
+## While it is set up
+
+EmptyMedia holds a part of its own, such as the Working mark, in the icon's place while the place is set up.
+
+<Stage path="empty/setting-up" label="While it is set up" />
+
+## When it did not load
+
+`variant="destructive"`, for when the request failed. Its words are said out loud, not its actions; `announce={false}` on a route's error page.
+
+<Stage path="empty/error" label="When it did not load" />
+
+## As the page's title
+
+EmptyTitle's `level` makes the title a heading, same look: `1` when the state is the whole page.
+
+<Stage path="empty/page-title" label="As the page's title" />
+
+## Every state
+
+A sentence or a title alone, at the `sm` size. Failed has its own section above, since its icon always shows.
+
+<States
+  path="empty/states"
+  cells={[
+    { label: "Sentence" },
+    { label: "Title only", props: { title: "No files", words: null } },
+  ]}
+/>
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="empty"
+  always={[
+    "A list with nothing in it yet: say what will appear, and when.",
+    "A list whose request failed.",
+    "A title only where the state stands alone: a page or a whole list.",
+  ]}
+  never={[
+    "A list that is still loading: use Skeleton.",
+    "One part of a loaded page failed: use Alert.",
+    "An action failed: the control says so itself.",
+    "Jokes or blame: Oops, nothing here!",
+    "The same words as the title in the sentence under it.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    { group: "Size", key: "`lg`", value: "{empty-page} tall at least" },
+    {
+      group: "Size",
+      key: "`default`",
+      value: "{empty-section} tall at least",
+      note: "the default",
+    },
+    {
+      group: "Size",
+      key: "`sm`",
+      value: "{space-4} round it, no height of its own",
+    },
+    {
+      group: "Size",
+      key: "Words",
+      value: "{empty-measure} wide at most, centred",
+    },
+    {
+      group: "Type",
+      key: "Title",
+      value: "{text-sm} / {text-sm-line}, {font-weight-medium}",
+      tokens: ["muted"],
+    },
+    {
+      group: "Type",
+      key: "Sentence",
+      value: "{text-xs} / {text-xs-line}, {space-2} under the title",
+      tokens: ["subtle-foreground"],
+    },
+    {
+      group: "Icon",
+      key: "Mark",
+      value: "{icon-default}, {space-3} above the title",
+      tokens: ["muted"],
+    },
+    {
+      group: "Icon",
+      key: "Destructive",
+      value:
+        "The alert icon unless you give another; always in the destructive colour",
+      tokens: ["destructive"],
+    },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    { key: "Arriving", value: "None: it takes the list's place at once" },
+    { key: "Reduced motion", value: "The same; nothing moves" },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Content",
+      key: "Long words",
+      value:
+        "A word longer than the measure breaks inside itself; nothing is cut off.",
+    },
+    {
+      group: "Content",
+      key: "Destructive title",
+      value:
+        '"This did not load" (`empty.error` in the I18nProvider) when you give none.',
+    },
+    {
+      group: "Content",
+      key: "Narrow",
+      value: "{space-4} at the sides, so the words never touch the edges.",
+    },
+    {
+      group: "Settings",
+      key: "Without script",
+      value: "The same; it has no behaviour.",
+    },
+    {
+      group: "Settings",
+      key: "Forced colours",
+      value: "The icon takes the text colour; the title carries the meaning.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    { key: "Empty", value: "Plain text, read where it stands" },
+    {
+      key: "Destructive",
+      value:
+        "The header's words are said through the page's one assertive live region when they appear or change; the actions are not. `announce={false}` on a route's error page",
+    },
+    {
+      key: "Title",
+      value:
+        "Plain text, as the page's own heading names the list; a heading of `level` where the state is the page or its section",
+    },
+    { key: "Icon", value: "Hidden from screen readers: the words say it" },
+    {
+      key: "Contrast",
+      value: "Title and sentence 4.5:1 on every ground, light and dark",
+      note: "checked by `node tokens/generate.ts --check`",
+    },
+  ]}
+/>
+<Rows
+  title="From shadcn"
+  rows={[
+    {
+      group: "Parts",
+      key: "`EmptyHeader`, `EmptyTitle`, `EmptyDescription`",
+      value: "The same parts",
+      note: "an error's empty EmptyTitle says it did not load",
+    },
+    {
+      group: "Parts",
+      key: "`EmptyMedia`",
+      value: "The same part",
+      note: "`icon` from lib/icons on its own or on a tile (`variant`), an `illustration`, or a part of its own",
+    },
+    {
+      group: "Parts",
+      key: "`EmptyContent`",
+      value: "The same part",
+      note: "the way on",
+    },
+    {
+      group: "New",
+      key: '`variant="destructive"`',
+      value: "Kept apart from empty",
+    },
+    { group: "New", key: "`size`", value: "lg, default, sm" },
+    {
+      group: "New",
+      key: "`align`",
+      value: "Where the words stand",
+    },
+    {
+      group: "New",
+      key: "EmptyTitle `level`",
+      value: "The title as h1 to h4, same look",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/empty.tsx"
+  type="EmptyProps"
+  label="Empty props"
+/>
+
+<Props
+  source="src/components/empty.tsx"
+  type="EmptyHeaderProps"
+  label="EmptyHeader props"
+/>
+
+<Props
+  source="src/components/empty.tsx"
+  type="EmptyMediaProps"
+  label="EmptyMedia props"
+/>
+
+<Props
+  source="src/components/empty.tsx"
+  type="EmptyTitleProps"
+  label="EmptyTitle props"
+/>
+
+<Props
+  source="src/components/empty.tsx"
+  type="EmptyDescriptionProps"
+  label="EmptyDescription props"
+/>
+
+<Props
+  source="src/components/empty.tsx"
+  type="EmptyContentProps"
+  label="EmptyContent props"
+/>
+
+</Reference>

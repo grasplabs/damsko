@@ -1,0 +1,193 @@
+---
+title: Bubble
+description: The framed surface of a message in a conversation, with its look, its side and reactions over its edge.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/bubble"
+/>
+
+## A conversation
+
+A Bubble is as wide as its words, up to most of the line. The person's own messages stand at the end (`align="end"`) in the `muted` look; consecutive messages from one sender go in a `BubbleGroup`, closer together. In a chat, put each Bubble in a Message, which lays out the row: avatar, header, footer and side.
+
+<Stage path="bubble/demo" label="A conversation" />
+
+## Looks
+
+`variant` sets the fill: `default` the action fill, `secondary` the quiet fill, `muted` the person's message, `tinted` a wash of the brand, `outline` the page with the one edge, `destructive` a failure, `ghost` no frame at all, across the whole row.
+
+<Stage path="bubble/variants" label="Looks" />
+
+## Sides
+
+`align="start"` by default; `end` for the person's own. In a Message, set `align` on both.
+
+<Stage path="bubble/alignment" label="Sides" />
+
+## A group
+
+<Stage path="bubble/group" label="A group" />
+
+## Replies as buttons
+
+With `asChild`, BubbleContent draws the one button or link it is given with the Bubble's look: reached by Tab, named by its words, its fill a step down under a pointer.
+
+<Stage path="bubble/buttons" label="Replies as buttons" />
+
+## Reactions
+
+`BubbleReactions` lays emoji or small buttons over the Bubble's edge: `side` the top or the foot, `align` the start or the end. A row of emoji is one picture (`role="img"`) with a name that reads it once. Leave room between rows for what overlaps.
+
+<Stage path="bubble/reactions" label="Reactions" />
+
+## Markdown
+
+A short message reads framed; an answer in Markdown reads unframed, `ghost`, across the row.
+
+<Stage path="bubble/markdown" label="Markdown" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="bubble"
+  always={[
+    "The surface of one message in a conversation, in a Message that lays out its row.",
+    "`muted` at the end for the person's own message; `ghost` for words that read as the page's.",
+    "A row of emoji as one picture with a name that reads it.",
+  ]}
+  never={[
+    "The row round a message (its avatar, its name, its time, its actions): use Message.",
+    "A line that marks an event in the conversation (a date, New messages): use Marker.",
+    "Meaning by colour alone: say a failure in the words too.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Bubble",
+      key: "Width",
+      value: "As wide as its words, up to {message-bubble-width} of the line",
+      note: "ghost: the whole row",
+    },
+    { group: "Bubble", key: "Padding", value: "{space-3} by {space-4}" },
+    { group: "Bubble", key: "Corner", value: "{radius}, {radius-shape}" },
+    {
+      group: "Bubble",
+      key: "Words",
+      value: "{message-text} / {message-text-line}",
+      tokens: ["foreground"],
+    },
+    {
+      group: "Looks",
+      key: "default",
+      value: "The action fill",
+      tokens: ["primary", "primary-foreground"],
+    },
+    {
+      group: "Looks",
+      key: "secondary",
+      value: "The quiet fill, the one edge",
+      tokens: ["secondary", "border-strong"],
+    },
+    {
+      group: "Looks",
+      key: "muted",
+      value: "The soft band, the one edge",
+      tokens: ["muted", "border-strong"],
+    },
+    { group: "Looks", key: "tinted", value: "A wash", tokens: ["accent"] },
+    {
+      group: "Looks",
+      key: "outline",
+      value: "The page, the one edge",
+      tokens: ["background", "border-strong"],
+    },
+    {
+      group: "Looks",
+      key: "destructive",
+      value: "The danger wash, its words in danger",
+      tokens: ["destructive-subtle", "destructive"],
+    },
+    { group: "Looks", key: "ghost", value: "No fill, no padding, no corner" },
+    { group: "Group", key: "Gap", value: "{space-2}" },
+    {
+      group: "Reactions",
+      key: "Pill",
+      value: "{text-sm}, {space-2} across, a full round corner, the one edge",
+      note: "three quarters over the Bubble's edge, {space-3} in from its end",
+      tokens: ["card", "border-strong"],
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      key: "Buttons",
+      value:
+        "With `asChild`, the element given is drawn with the Bubble's look; its fill a step down under a pointer, {duration-hover}.",
+    },
+    {
+      key: "Long words",
+      value: "Break anywhere rather than run out; line breaks are kept.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Bubble",
+      value:
+        "Presentational: the meaning is in its words and the Message round it",
+    },
+    {
+      key: "Buttons",
+      value:
+        "A real `button` or `a`, named by its words, with the keyboard's ring",
+    },
+    {
+      key: "Reactions",
+      value: '`role="img"` with an `aria-label` for a row of emoji',
+    },
+    { key: "Forced colours", value: "A framed Bubble keeps a real outline" },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/bubble.tsx"
+  type="BubbleGroupProps"
+  label="BubbleGroup props"
+/>
+
+<Props
+  source="src/components/bubble.tsx"
+  type="BubbleProps"
+  label="Bubble props"
+/>
+
+<Props
+  source="src/components/bubble.tsx"
+  type="BubbleContentProps"
+  label="BubbleContent props"
+/>
+
+<Props
+  source="src/components/bubble.tsx"
+  type="BubbleReactionsProps"
+  label="BubbleReactions props"
+/>
+
+</Reference>

@@ -1,0 +1,130 @@
+---
+title: File upload
+description: An area in a form where you drop or choose files, then see them listed.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/file-upload"
+  use={'import { FileUpload } from "@grasp-os/ui/components/file-upload";'}
+/>
+
+## Basic usage
+
+Given `onUpload`, each file is sent as it arrives and shows how far it is; a failed one has Try again. What it takes (`accept`, `maxFileSize`, `maxFiles`) is checked as each file arrives, and one it refuses is named with the reason, under the dropzone and to a screen reader. `description` says what it takes, in words, under the dropzone; without it, the kinds of file and the largest size are said in the I18nProvider's words (`fileUpload.limits`).
+
+<Stage path="file-upload/basic" label="Basic usage" />
+
+## One file, with the form
+
+Without `onUpload` the files go with the form. Without `multiple`, a new file takes the old one's place. Without script it is a plain file field.
+
+<Stage path="file-upload/single" label="One file, with the form" />
+
+## Rows that carry on, and a button form
+
+`getFileStatus` says on a file's row what the host is doing; `getFileActions` adds Open and Download. `variant="button"` and `listContainer` part the button from the list.
+
+<Stage
+  path="file-upload/documents"
+  label="Rows that carry on, and a button form"
+/>
+
+## Image upload
+
+`ImageUpload` is one picture, the picture itself the control: a square well with soft corners showing it, or its `fallback` (initials) while there is none. Press it or drop a picture on it to change it; the remove stands at its corner on hover, on focus and always on touch. What it takes is in its tooltip, not a line of text. Given `onUpload`, the well shows the save: the new picture dimmed with a spinner, then kept, or a destructive edge with Try again. A failed save keeps the new picture under Try again, so trying again is plain; remove puts the old one back. `default` sits in a setting's row, `lg` on a page of its own.
+
+A file it refuses is said with why, under the well; in a Field's row without the file's name, as the person has just picked it.
+
+<Stage
+  path="file-upload/image-upload-setting"
+  label="Image upload in a setting's row"
+/>
+
+<Stage path="file-upload/image-upload" label="Image upload, large" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="file-upload"
+  always={[
+    "Files that belong to a form, dropped or chosen.",
+    "`onUpload` when each file is sent as it arrives, with how far it is and Try again if it fails.",
+    "`multiple` for more than one file; without it a new file takes the old one's place.",
+  ]}
+  never={[
+    "Files added to a message to an assistant: use Prompt input with Attachment.",
+    "One picture someone sets (a logo, a face): use ImageUpload.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Choose",
+      value:
+        "A button that opens the picker, described by what it takes; Tab reaches it",
+    },
+    {
+      key: "List",
+      value:
+        "A list named Files; the arrow keys move through it, Delete or Backspace removes the file",
+    },
+    {
+      key: "Each file",
+      value:
+        "Remove named for its file; Try again after a failed send; its progress a named bar",
+    },
+    {
+      key: "Said",
+      value:
+        "Each file sent, not sent or refused, once, in its own live region",
+    },
+    {
+      key: "Without script",
+      value:
+        "The browser's own file input over the dropzone, sent with the form",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/file-upload.tsx"
+  type="FileUploadProps"
+  label="FileUpload props"
+/>
+
+### FileUploadStatus
+
+<Props
+  source="src/components/file-upload.tsx"
+  type="FileUploadStatus"
+  label="FileUploadStatus"
+/>
+
+### FileUploadAction
+
+<Props
+  source="src/components/file-upload.tsx"
+  type="FileUploadAction"
+  label="FileUploadAction"
+/>
+
+### ImageUpload
+
+<Props
+  source="src/components/image-upload.tsx"
+  type="ImageUploadProps"
+  label="ImageUpload props"
+/>
+
+</Reference>

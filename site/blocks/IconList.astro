@@ -1,0 +1,21 @@
+---
+// <IconList />: every icon of the system as a grid of cells (site/blocks/foundation.tsx), read from
+// src/lib/icons.ts, with a search that stays in view and one copy menu (name, import, JSX).
+// Markdown form: a table (site/markdown.ts).
+import "../system/styles/blocks.css";
+import * as icons from "@grasp-os/ui/lib/icons";
+import type { IconData } from "@grasp-os/ui/lib/icons";
+import { IconListView, IconMenuView } from "./foundation";
+import { readIcons } from "./icon-data";
+import { TokenEmptyView, TokenFilterView } from "./tokens";
+
+const drawings = icons as unknown as Record<string, IconData | undefined>;
+const list = readIcons()
+  .map((entry) => ({ ...entry, icon: drawings[entry.name] }))
+  .filter((entry): entry is typeof entry & { icon: IconData } => Array.isArray(entry.icon));
+---
+
+<TokenFilterView total={list.length} noun="icons" label="Search the icons" placeholder="Search by name or meaning" />
+<TokenEmptyView words="No icon matches. Try what it means, such as close or search." />
+<IconListView icons={list} />
+<IconMenuView />

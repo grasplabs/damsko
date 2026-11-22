@@ -1,0 +1,83 @@
+---
+title: Copy button
+description: A button that copies a value to the clipboard and shows that it did.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/copy-button"
+  use={'import { CopyButton } from "@grasp-os/ui/components/copy-button";'}
+/>
+
+## Copy
+
+Icon only by default, named by `aria-label` and with a tooltip that says it. With words as its children it shows them beside the icon. Once copied the check shows for a moment, and a screen reader hears it once.
+
+<Stage path="copy-button/basic" live label="Copy" />
+
+## When it copies
+
+A `value` that is a function is read at the press, so it copies what is there then. `onCopy` runs with what was copied, once it is on the clipboard: not when the copy failed, and not for a press while the result still shows.
+
+<Stage path="copy-button/on-copy" live label="When it copies" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="copy-button"
+  always={[
+    "Beside what it copies: code, a link, an id.",
+    "Name it by what it copies when there is more than one on the page: Copy code, Copy link.",
+  ]}
+  never={[
+    "A value to read and copy in one line: use Snippet.",
+    "Its own toast or message: the button shows and says the result.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      key: "Press",
+      value: "Copies the value, then shows the check for {duration-hold}.",
+    },
+    {
+      key: "Could not copy",
+      value: "Shows the alert mark for {duration-hold} instead.",
+    },
+    { key: "Again", value: "A press while it shows its result does nothing." },
+    {
+      key: "Words",
+      value:
+        "Copy, Copied and Not copied come from the I18nProvider (`copyButton`).",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Name",
+      value: "`aria-label`, else Copy",
+      note: "shown in the tooltip too",
+    },
+    { key: "Result", value: "Said once, through the page's one live region" },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/copy-button.tsx"
+  type="CopyButtonProps"
+  label="CopyButton props"
+/>
+
+</Reference>

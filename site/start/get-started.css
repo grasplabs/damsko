@@ -1,0 +1,50 @@
+/* Get started (site/pages/get-started.astro): the numbered install steps and the install pill.
+ * Every value a token. */
+
+.gs-steps {
+  display: grid;
+  gap: var(--damsko-space-8);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+.gs-steps > li {
+  display: grid;
+  gap: var(--damsko-space-3);
+  min-width: 0;
+}
+.gs-steps h3 {
+  margin: 0;
+  font-size: var(--damsko-text-sm);
+  line-height: var(--damsko-text-sm-line);
+  font-weight: var(--damsko-font-weight-medium);
+  color: var(--damsko-foreground);
+}
+.gs-steps h3::before {
+  counter-increment: step;
+  content: counter(step, decimal-leading-zero) "  ";
+  color: var(--damsko-muted-foreground);
+  font-family: var(--damsko-font-mono);
+  font-size: var(--damsko-text-xs);
+}
+.gs-note {
+  margin: 0;
+  font-size: var(--damsko-text-xs);
+  line-height: var(--damsko-text-xs-line);
+  color: var(--damsko-muted-foreground);
+}
+
+/* Install: the command as the page head's install line (InstallPill, the library's Copy field),
+ * on its own line with room around it. */
+.start-install {
+  display: flex;
+  max-width: 100%;
+  min-width: 0;
+  margin-block: var(--damsko-space-6);
+}
+/* The heading after the install line stands 48px under it, as a component page's first heading
+   stands under its install line (without this, the heading's own 64px top margin wins over the 24). */
+.start-install + h2 {
+  margin-top: var(--damsko-space-12);
+}

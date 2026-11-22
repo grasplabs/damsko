@@ -1,0 +1,155 @@
+---
+title: Tool
+description: One call to one tool, its state on its line, opening on what went in and what came back.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/tool"
+/>
+
+## A finished call
+
+Built as shadcn's Tool pattern is, on [Trace](/components/trace): `Tool` is a Trace with one row that opens, `ToolHeader` its line. `ToolHeader` names the tool and says where the call stands; a press opens `ToolContent` on its `ToolInput` and `ToolOutput`, each a Code block named Input and Output.
+
+<Stage path="tool/basic" label="A finished call" />
+
+## Every state
+
+`state` is the AI SDK tool part's: `input-streaming`, `input-available`, `approval-requested`, `approval-responded`, `output-available`, `output-error` and `output-denied`. Each sets the line's status, as shadcn's pattern maps it: running while the input comes and the call works, waiting on an approval, failed on an error; the title says the call in the tense of its state. Awaiting approval, Responded and Denied, which a status cannot say, follow the title in words. A state this version does not know is drawn neutral, its name after the title.
+
+<Stage path="tool/states" label="Every state" />
+
+## A call that failed
+
+With `errorText`, why it failed stands in the output's place, a small destructive CodeBlock named Error.
+
+<Stage path="tool/error" label="A call that failed" />
+
+## Input and output
+
+Text stays as it is; an object is shown as JSON. Long output folds under Show more.
+
+<Stage path="tool/detail" label="Input and output" />
+
+## While it runs
+
+The call is said once, when it finishes or fails. Press Next to move the call on.
+
+<Stage path="tool/live" live label="While it runs" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="tool"
+  always={[
+    "One call an assistant made to a tool: its name, its state, what went in and what came back.",
+    "The state from the AI SDK's tool part, or the product's own in the same words.",
+    "The product's own card for a tool's result, given as `output`.",
+  ]}
+  never={[
+    "A run of several steps: use Chain of thought, a Tool in a step where it helps.",
+    "Asking for a yes before the call: use Confirmation.",
+    "A shell command and what it printed: use Terminal.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Card",
+      key: "Edge",
+      value: "A hairline round it, the one corner",
+      tokens: ["border"],
+    },
+    {
+      group: "Header",
+      key: "Line",
+      value:
+        "A Trace line that opens: the tool's mark, its title or name in the line's status, the state in words where the status cannot say it",
+      tokens: ["muted", "foreground"],
+    },
+    {
+      group: "Content",
+      key: "Input and output",
+      value:
+        'Small code blocks (`size="sm"`), no line numbers, wrapping, folded past 12 lines; loaded the first time the call opens',
+    },
+    {
+      group: "Content",
+      key: "Error",
+      value: "A small destructive code block, named Error",
+      tokens: ["destructive"],
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      key: "Header",
+      value: "Click, Enter or Space opens and closes the input and output.",
+    },
+    {
+      key: "Output",
+      value:
+        "An object as JSON, text as it is, an element drawn as it is; `errorText` wins.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Header",
+      value: "A `button` with `aria-expanded`, named by the tool and its state",
+    },
+    {
+      key: "State",
+      value:
+        "In words in the header (Trace's Working, Failed, Waiting; Awaiting approval, Responded, Denied), not only by its mark and colour; the call is said once when it finishes or fails",
+    },
+    {
+      key: "Regions",
+      value:
+        "Input and Output are regions named so; a failure is a region named Error",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props source="src/components/tool.tsx" type="ToolProps" label="Tool props" />
+
+<Props
+  source="src/components/tool.tsx"
+  type="ToolHeaderProps"
+  label="ToolHeader props"
+/>
+
+<Props
+  source="src/components/tool.tsx"
+  type="ToolContentProps"
+  label="ToolContent props"
+/>
+
+<Props
+  source="src/components/tool.tsx"
+  type="ToolInputProps"
+  label="ToolInput props"
+/>
+
+<Props
+  source="src/components/tool.tsx"
+  type="ToolOutputProps"
+  label="ToolOutput props"
+/>
+
+</Reference>

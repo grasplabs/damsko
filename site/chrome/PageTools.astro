@@ -1,0 +1,67 @@
+---
+// "Copy as Markdown" and "Open in chat": the page handed to an assistant. Quiet 14px links with
+// 16px icons. Copying uses the site's one copy behaviour (site/behaviour/copy.ts) on the page's
+// Markdown twin: its icon turns into the tick (the failed mark when it could not) while its words
+// say Copied, as every copy action does; "Open in chat" opens in place to three assistants, without script too.
+// Used in the rail (./Toc.astro) and, where there is no rail, at the page's end (./PageEnd.astro).
+import {
+  ArrowRightIcon,
+  CheckIcon,
+  CircleAlertIcon,
+  CopyIcon,
+  Icon,
+  MessageCircleIcon,
+} from "@grasp-os/ui/lib/icons";
+import { href } from "./nav";
+
+interface Props {
+  route: string;
+}
+const { route } = Astro.props;
+const markdown = href(route === "/" ? "/index.md" : `${route.replace(/\/$/u, "")}.md`);
+// The address an assistant is asked to read: absolute, from the deployment's site when it has one.
+// With none set (astro.config.ts has no `site` until the design lead names the address), the build writes the
+// build machine's own origin; site/behaviour/chat-links.ts puts the page's real origin in on load,
+// and this stays as the fallback without script.
+const origin = Astro.site?.origin ?? Astro.url.origin;
+const prompt = encodeURIComponent(`Read ${new URL(markdown, origin).href} so I can ask you questions about this page.`);
+const chats = [
+  { label: "Claude", url: `https://claude.ai/new?q=${prompt}` },
+  { label: "ChatGPT", url: `https://chatgpt.com/?hints=search&prompt=${prompt}` },
+  { label: "Cursor", url: `https://cursor.com/link/prompt?text=${prompt}` },
+];
+---
+
+<div class="site-tools-list">
+  <button
+    type="button"
+    class="site-quiet-link"
+    data-copy-url={markdown}
+    data-copy-said="Copied the page as Markdown"
+  >
+    <span class="site-copy-mark" aria-hidden="true">
+      <span class="site-copy-rest"><Icon icon={CopyIcon} /></span>
+      <span class="site-copy-done"><Icon icon={CheckIcon} /></span>
+      <span class="site-copy-failed"><Icon icon={CircleAlertIcon} /></span>
+    </span>
+    <span data-action-label>Copy as Markdown</span>
+  </button>
+  <details class="site-chat" data-chat-origin={origin}>
+    <summary class="site-quiet-link">
+      <Icon icon={MessageCircleIcon} />
+      <span>Open in chat</span>
+    </summary>
+    <ul>
+      {
+        chats.map((chat) => (
+          <li>
+            <a class="site-quiet-link" href={chat.url} target="_blank" rel="noopener">
+              <span>{chat.label}</span>
+              <Icon icon={ArrowRightIcon} />
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </details>
+</div>

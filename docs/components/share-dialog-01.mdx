@@ -1,0 +1,108 @@
+---
+title: Share dialog
+description: Share one thing with people at a level of access, in a dialog.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/share-dialog-01"
+  use={
+    'import { ShareDialog } from "@grasp-os/ui/blocks/share-dialog-01/share-dialog-01";'
+  }
+/>
+
+## People and levels
+
+The add row picks someone the product knows (`people`) and the level to give; Add calls `onInvite`. Then everyone with access, the owner first, each with their level; Remove is the last choice of a level. The link in the foot copies. A block: it installs as source, to edit.
+
+<Stage path="share-dialog-01/basic" label="People and levels" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="share-dialog-01"
+  always={[
+    "The owner first, saying Owner, with no level to change.",
+    "Levels named for what they let people do: Can use, Can edit.",
+    "The whole company as one row, at No access until someone chooses otherwise.",
+  ]}
+  never={[
+    "A Save button: a level applies when it is chosen, so the dialog ends with Done.",
+    "Choosing the one person who owns something: use User picker.",
+    "A list of people with no levels to set: use Item.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Adding",
+      key: "Add",
+      value:
+        "Waits for a pick; calls `onInvite` with the id and the level, then clears the pick. Someone already in `members` is not offered",
+    },
+    {
+      group: "Adding",
+      key: "Failed",
+      value:
+        "A rejection says Could not invite under the row, and the pick stays to try again",
+    },
+    {
+      group: "Levels",
+      key: "A row's level",
+      value: "Select's ghost variant; a change calls `onLevelChange` at once",
+    },
+    {
+      group: "Levels",
+      key: "No access",
+      value:
+        "A level with the value `none`: offered on the rows, never to someone being added",
+    },
+    {
+      group: "Removing",
+      key: "Remove",
+      value:
+        "With `onRemove`, the last choice of each row's levels; the focus goes to the next row's level, or the add field when none is left",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    { key: "Dialog", value: "Named by its `title`" },
+    { key: "List", value: "A list named People with access" },
+    {
+      key: "Levels",
+      value: "Each named Access for its member: Access for Daan Mulder",
+    },
+    { key: "Faces", value: "Hidden from screen readers; the name says who" },
+    { key: "Link", value: "A Snippet, its button named Copy link" },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/blocks/share-dialog-01/share-dialog-01.tsx"
+  type="ShareDialogProps"
+  label="ShareDialog props"
+/>
+<Props
+  source="src/blocks/share-dialog-01/share-dialog-01.tsx"
+  type="ShareMember"
+  label="ShareMember"
+/>
+<Props
+  source="src/blocks/share-dialog-01/share-dialog-01.tsx"
+  type="ShareLevel"
+  label="ShareLevel"
+/>
+
+</Reference>

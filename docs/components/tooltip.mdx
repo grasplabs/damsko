@@ -1,0 +1,282 @@
+---
+title: Tooltip
+description: A short hint that shows when you point at a control or tab to it.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/tooltip"
+  use={
+    'import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@grasp-os/ui/components/tooltip";'
+  }
+/>
+
+## A hint for a button
+
+A few words that add to what the button says. The trigger is a plain wrapper: `asChild` hands its behaviour to the Button inside.
+
+<Stage path="tooltip/basic" label="A hint for a button" />
+
+## Placement
+
+`side` picks the side of the trigger it opens on.
+
+<Stage path="tooltip/placement" label="Placement" />
+
+## Alignment
+
+`align` lines up a tooltip wider than its trigger.
+
+<Stage path="tooltip/align" label="Alignment" />
+
+## With a shortcut
+
+`shortcut` names the keys on the trigger; a `Kbd` in the content shows them, written for the platform with `useShortcutHint`: ⌘S on a Mac, Ctrl+S elsewhere. The words never break to make room for the keys: when both do not fit on one line, the keys stand under the words, at the line's end.
+
+<Stage path="tooltip/shortcut" label="With a shortcut" />
+
+## Long text
+
+Longer words wrap onto more lines, and the corner stays round.
+
+<Stage path="tooltip/long" label="Long text" />
+
+## Delay
+
+`delay` sets how long the pointer rests before it opens; a `TooltipProvider` sets it for every tooltip inside.
+
+<Stage path="tooltip/delay" label="Delay" />
+
+## On an icon-only button
+
+The button keeps its `aria-label` as its name, and the tooltip adds to it.
+
+<Stage path="tooltip/icon" label="On an icon-only button" />
+
+## On a link or the host's own element
+
+With `asChild` the trigger is a router's own link, or any element the host draws (a face, a logo): it keeps its own look and name, and the tooltip is its description.
+
+<Stage path="tooltip/link" label="On a link or the host's own element" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="tooltip"
+  always={[
+    "A few words that add to the trigger, in sentence case and with no full stop: Download as a PDF.",
+    "An `aria-label` on an icon-only button, so it has a name without the tooltip.",
+  ]}
+  never={["The trigger's own words again."]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Size",
+      key: "Width",
+      value: "Its words, up to {tooltip-width}",
+      note: "never wider than the window less {popup-gutter} on each side",
+    },
+    { group: "Size", key: "Padding", value: "{tooltip-padding}" },
+    { group: "Size", key: "Gap to the trigger", value: "{tooltip-gap}" },
+    { group: "Size", key: "Before the shortcut", value: "{space-2}" },
+    {
+      group: "Type",
+      key: "Words",
+      value: "{text-xs} / {text-xs-line}, {font-weight-medium}",
+      tokens: ["tooltip-foreground"],
+    },
+    {
+      group: "Type",
+      key: "Shortcut",
+      value: "{text-xs} / {text-xs-line}, {font-weight-normal}",
+      note: "a Kbd, as Kbd draws it",
+    },
+    {
+      group: "Surface",
+      key: "Panel",
+      value: "{radius}, {radius-shape}",
+      note: "capped at half its height, so one line is a capsule",
+      tokens: ["tooltip", "tooltip-blur", "shadow-sm"],
+    },
+    {
+      group: "Surface",
+      key: "Arrow",
+      value: "None",
+      note: "the gap and the motion from the trigger's side say where it came from",
+    },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    {
+      key: "Waiting",
+      value: "{tooltip-delay} under a resting pointer",
+      note: "none for keyboard focus, or while another tooltip was just open",
+    },
+    {
+      key: "Opening",
+      value:
+        "A fade, rising {tooltip-rise} from {popup-from-scale}, in {duration-hover}",
+      note: "away from the side of the trigger it landed on",
+      tokens: ["ease"],
+    },
+    {
+      key: "Closing",
+      value: "The same way back, in {tooltip-leave}",
+      note: "faster than it came",
+    },
+    { key: "Reduced motion", value: "Only the fade" },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Input",
+      key: "Opening",
+      value: "A pointer resting on the trigger, or keyboard focus on it.",
+    },
+    {
+      group: "Input",
+      key: "Closing",
+      value:
+        "Escape, the pointer leaving the trigger and the tooltip, focus moving on, or a press on the trigger.",
+    },
+    {
+      group: "Input",
+      key: "Touch",
+      value:
+        "It does not open on a touch screen, so it never holds what a person needs.",
+    },
+    {
+      group: "Input",
+      key: "Inside",
+      value:
+        "Nothing to press or focus. The pointer can rest on it to read it.",
+    },
+    {
+      group: "Input",
+      key: "Placement",
+      value:
+        "It flips when there is no room, and shifts to stay {popup-gutter} inside the window.",
+    },
+    {
+      group: "Input",
+      key: "Agents",
+      value: "An agent reads its words as the trigger's description.",
+    },
+    {
+      group: "Content",
+      key: "Long words",
+      value:
+        "Break anywhere once wider than the line. Words are never hyphenated.",
+    },
+    {
+      group: "Settings",
+      key: "Right to left",
+      value:
+        "`start` and `end`, for `side` and for `align`, follow the reading direction.",
+    },
+    {
+      group: "Settings",
+      key: "Forced colours",
+      value: "A 1px border in the text colour draws its edge.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    { key: "Role", value: "`tooltip`" },
+    {
+      key: "Trigger",
+      value:
+        "Described by the tooltip, by `aria-describedby`, even while it is closed",
+    },
+    {
+      key: "Name",
+      value:
+        "The trigger's own words, or its `aria-label` when it is only an icon",
+    },
+    { key: "Shortcut", value: "`aria-keyshortcuts` on the trigger" },
+  ]}
+/>
+<Rows
+  title="From shadcn"
+  rows={[
+    {
+      group: "Parts",
+      key: "`TooltipProvider`",
+      value: "Kept",
+      note: "a shared delay; the next tooltip opens at once without one",
+    },
+    {
+      group: "Parts",
+      key: "`TooltipTrigger`",
+      value: "A plain wrapper",
+      note: "`asChild` onto the Button or link inside",
+    },
+    { group: "Props", key: "New", value: "`shortcut`, `handle`" },
+    {
+      group: "Look",
+      key: "`bg-foreground`",
+      value: "{tooltip}",
+      note: "dark in both themes",
+    },
+    { group: "Look", key: "Arrow", value: "Dropped" },
+    {
+      group: "Behaviour",
+      key: "Base UI's Tooltip",
+      value: "UI SDK's Tooltip",
+      note: "so an agent reads it on the trigger",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+Parts nest as the basic stage shows, and each takes the rest of its UI SDK part.
+
+### Tooltip
+
+<Props
+  source="src/components/tooltip.tsx"
+  type="TooltipProps"
+  label="Tooltip"
+/>
+
+### TooltipTrigger
+
+<Props
+  source="src/components/tooltip.tsx"
+  type="TooltipTriggerProps"
+  label="TooltipTrigger"
+/>
+
+### TooltipContent
+
+<Props
+  source="src/components/tooltip.tsx"
+  type="TooltipContentProps"
+  label="TooltipContent"
+/>
+
+### TooltipProvider
+
+<Props
+  source="src/components/tooltip.tsx"
+  type="TooltipProviderProps"
+  label="TooltipProvider"
+/>
+
+</Reference>

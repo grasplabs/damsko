@@ -1,0 +1,84 @@
+---
+title: User picker
+description: A field for choosing a person, found by typing their name or role.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/user-picker @damsko/field"
+  use={'import { UserPicker } from "@grasp-os/ui/components/user-picker";'}
+/>
+
+## Basic usage
+
+The chosen person's avatar at the start; a name or a role finds someone. Emptying the words clears the choice. The people come from the page, through `users`.
+
+<Stage path="user-picker/basic" live label="Basic usage" />
+
+## No one chosen yet
+
+A quiet icon stands where the person's avatar will be.
+
+<Stage path="user-picker/unassigned" label="No one chosen yet" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="user-picker"
+  always={[
+    "Choosing one person, found by their name or their role.",
+    "A placeholder that is a verb and the thing: Choose an assignee.",
+  ]}
+  never={[
+    "A long list of things that are not people, to search: a Combobox.",
+    "A handful of choices: a Select.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Accessibility"
+  rows={[
+    { key: "Role", value: "A `combobox` field over a `listbox` of `option`s" },
+    {
+      key: "Name",
+      value:
+        "Its FieldLabel, or `aria-label`; each option is named by the person's name",
+    },
+    {
+      key: "Avatars",
+      value:
+        "Decorative: hidden from screen readers, as the name is written beside them",
+    },
+    {
+      key: "Detail",
+      value:
+        "A person's line (a role, an email) is read after their name, not run into it",
+    },
+    {
+      key: "Agents",
+      value:
+        "Choose a person by name; anyone not in `users` is refused, in words",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/user-picker.tsx"
+  type="UserPickerProps"
+  label="UserPicker"
+/>
+<Props
+  source="src/components/user-picker.tsx"
+  type="UserPickerUser"
+  label="UserPickerUser"
+/>
+
+</Reference>

@@ -1,0 +1,101 @@
+---
+title: Shimmer
+description: A line of words that says something is working, with light passing across it.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/shimmer"
+  use={'import { Shimmer } from "@grasp-os/ui/components/shimmer";'}
+/>
+
+## While it works
+
+Muted words, and a narrow band of light crossing them. It runs only while the work does.
+
+<Stage path="shimmer/basic" label="While it works" />
+
+## Variants
+
+`soft`, `default` and `bright`, on a short line and a long one: they sweep at the same apparent speed.
+
+<Stage path="shimmer/strengths" label="Variants" />
+
+## Changing and settling
+
+Press Next step: new words come in place. With `active` off, the line is plain words.
+
+<Stage path="shimmer/settled" label="Changing and settling" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="shimmer"
+  always={[
+    "A line that says what is working, while that work is really running: Thinking.",
+    "Set `active={false}` the moment it ends, and say what happened in plain words: Thought for 12 seconds.",
+    "`wrap={false}` only where a place has room for one line and no more: the words are cut with an ellipsis and kept whole as the title.",
+  ]}
+  never={[
+    "A second shimmering line in the same view.",
+    "Content loading: use Skeleton, or Spinner where there is no shape to hold.",
+    "A mark without words, in an icon's room: use Agent indicator.",
+  ]}
+/>
+
+## shadcn's `shimmer` utility
+
+shadcn ships the shimmer as a CSS class, `shimmer`, put on any text element, and its Trace line shimmers its title while it runs. StyleX has no utility classes, and this light needs a second copy of the words to travel under, so in Damsko it is this component: wrap the words in `<Shimmer>` where shadcn adds `className="shimmer"`. TraceLine's `status="running"` does it for its title, as shadcn's does. There is one implementation: no part keeps a shimmer of its own.
+
+## Reduced motion and forced colours
+
+- With reduced motion there is no sweep: the words say it. In forced colours it is plain words.
+- A screen reader reads the words once: the light's copy of them is hidden from it.
+
+<Rows
+  title="From shadcn"
+  rows={[
+    {
+      group: "Form",
+      key: "The `shimmer` class",
+      value: "The Shimmer component",
+      note: "StyleX has no utility classes; the light travels on a copy of the words",
+    },
+    {
+      group: "Strength",
+      key: "`shimmer-color-*`, `shimmer-spread-*`",
+      value: "`variant`: `soft`, `default`, `bright`",
+      note: "tokens only: a colour and band per strength",
+    },
+    {
+      group: "Speed",
+      key: "`shimmer-duration-*`",
+      value: "Set by the line's length",
+      note: "short and long lines sweep at the same apparent speed",
+    },
+    {
+      group: "Off",
+      key: "`shimmer-none`",
+      value: "`active={false}`",
+    },
+    {
+      group: "Direction",
+      key: "`shimmer-reverse`, RTL",
+      value: "Follows the reading direction",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/shimmer.tsx"
+  type="ShimmerProps"
+  label="Shimmer"
+/>
+
+</Reference>

@@ -1,0 +1,95 @@
+---
+title: Choosing
+description: Which component for which job, where two could do it, in each one's own words.
+---
+
+<Head lead={frontmatter.description} />
+
+Every component says when to use it, when not, and what to use instead, on its page and in a file beside its code. Here the ones that could be taken for each other stand side by side. A line marked (proposed) is not yet confirmed.
+
+## Something over the page
+
+A task, a question, details or a hint that opens over or beside what someone was doing.
+
+<Choose group="Something over the page" />
+
+## Rows of things
+
+<Choose group="Rows of things" />
+
+## Saying that something happened
+
+<Choose group="Saying that something happened" />
+
+## How something stands
+
+<Choose group="How something stands" />
+
+## Waiting
+
+<Choose group="Waiting" />
+
+## Asking before a step
+
+<Choose group="Asking before a step" />
+
+## One of several
+
+<Choose group="One of several" />
+
+## A list of actions
+
+<Choose group="A list of actions" />
+
+## A date
+
+<Choose group="A date" />
+
+## Where an answer came from
+
+<Choose group="Where an answer came from" />
+
+## An assistant's work
+
+What an assistant does on the way to an answer, most of it drawn on Trace: each a line with a mark and a title that opens.
+
+<Choose group="An assistant's work" />
+
+## A conversation
+
+The thread, its messages and what stands round them: where the person writes, what goes with a message, and what an answer drew on.
+
+<Choose group="A conversation" />
+
+## Typing
+
+<Choose group="Typing" />
+
+## Steps and places
+
+<Choose group="Steps and places" />
+
+## A page's parts
+
+<Choose group="A page's parts" />
+
+## Actions at a bar's end
+
+Every top bar and head draws its actions the same way: small buttons a gap apart, close last, never a line between.
+
+<Stage path="patterns/bar-actions" label="Actions at a bar's end" />
+
+## Rules
+
+<Rules
+  always={[
+    "Choose by the job, from the component's own lines, before its look.",
+    "Read the Not when lines of the one you picked: they name what to use instead.",
+    'Actions at a bar\'s end through Bar actions: Button size="sm", quiet with words or ghost for an icon alone, close last.',
+  ]}
+  never={[
+    "Two components for the same job on one screen.",
+    "A component stretched to a job its page says it is not for.",
+    "A divider or a different size among a bar's actions: the top bar, a head and a sheet draw them alike.",
+  ]}
+/>

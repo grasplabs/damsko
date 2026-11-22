@@ -1,0 +1,15 @@
+---
+// The page's end, where there is no rail (below 84rem): the page tools in one row on a hairline.
+// Drawn by the layout (site/layouts/Docs.astro) under the page. Hidden where the rail shows them.
+import PageTools from "./PageTools.astro";
+
+interface Props {
+  route: string;
+  [key: string]: unknown;
+}
+const { route } = Astro.props;
+---
+
+<div class="site-page-end">
+  <PageTools route={route} />
+</div>

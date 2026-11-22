@@ -1,0 +1,240 @@
+---
+title: Combobox
+description: A field you type into to find one value in a long list, then choose it.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/combobox @damsko/field"
+/>
+
+## With a label
+
+Type a few letters to narrow the list; other words for an item find it too.
+
+<Stage path="combobox/field" live label="With a label" />
+
+## Groups
+
+A group hides while none of its items match, and an item out of use is skipped.
+
+<Stage path="combobox/groups" label="Groups" />
+
+## Sizes
+
+Input's heights: 36px, 32 in a dense table, 44 for the one choice that matters on a phone.
+
+<Stage path="combobox/sizes" label="Sizes" />
+
+## States
+
+Wrong, disabled with why, and read only, which shows its value but does not open.
+
+<Stage path="combobox/states" label="States" />
+
+## Every state
+
+Hover and keyboard focus are forced from the combobox's own CSS. The rest are props.
+
+<States
+  path="combobox/states"
+  cells={[
+    { label: "Placeholder" },
+    { label: "Hover", force: "hover" },
+    { label: "Keyboard focus", force: "focus-visible" },
+    { label: "Chosen", props: { value: "Germany" } },
+    { label: "Invalid", props: { invalid: true } },
+    {
+      label: "Invalid, focused",
+      force: "focus-visible",
+      props: { invalid: true },
+    },
+    { label: "Read only", props: { value: "Germany", readOnly: true } },
+    { label: "Disabled", props: { value: "Germany", disabled: true } },
+  ]}
+/>
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="combobox"
+  always={[
+    "A placeholder that is a verb and the thing: Search countries.",
+    "Keywords for the other names people use: Holland, UK.",
+  ]}
+  never={[
+    "Colours, heights or corners set from outside: `style` takes layout and width only.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Closed",
+      key: "Height",
+      value: "{control-sm}, {control-default}, {control-lg}",
+      note: "Input's and Button's",
+    },
+    {
+      group: "Closed",
+      key: "Look",
+      note: "Input's fill, hairline, lift and corner",
+      tokens: ["input-bg", "input", "input-shadow"],
+    },
+    {
+      group: "Closed",
+      key: "Chevron",
+      value: "{icon-sm} at the end, {space-2} in",
+      tokens: ["muted"],
+    },
+    {
+      group: "Closed",
+      key: "Touch target",
+      value: "{tap-target}",
+      note: "the field and the chevron, at every size",
+    },
+    {
+      group: "Open",
+      key: "Gap",
+      value: "{popup-gap}",
+      note: "below the field, or above when there is no room",
+    },
+    {
+      group: "Open",
+      key: "Width",
+      value: "At least the field's, up to {popup-width}",
+    },
+    {
+      group: "Open",
+      key: "Height",
+      value: "Up to {popup-height}",
+      note: "then it scrolls",
+    },
+    {
+      group: "Open",
+      key: "Surface",
+      value: "{popup-padding} in, {radius}",
+      tokens: ["popover", "popup-shadow"],
+    },
+    {
+      group: "Items",
+      key: "Height",
+      value: "{control-sm}",
+      note: "{tap-target} on a touch screen",
+    },
+    {
+      group: "Items",
+      key: "Words",
+      value: "{text-xs}, {font-weight-medium}",
+      note: "quiet until highlighted",
+      tokens: ["muted", "foreground"],
+    },
+    {
+      group: "Items",
+      key: "Matched letters",
+      value: "In ink",
+      note: "no fill",
+    },
+    { group: "Items", key: "Highlight", tokens: ["accent-highlight"] },
+    { group: "Items", key: "Chosen", value: "A tick at the end, {icon-sm}" },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    {
+      key: "Opening",
+      value: "From {popup-from-scale} and clear, {duration-ui}",
+      note: "reduced: at once",
+      tokens: ["ease"],
+    },
+    {
+      key: "Closing",
+      value: "Back the same way, {duration-leave}",
+      tokens: ["ease"],
+    },
+    {
+      key: "Chevron",
+      value: "Turns over while open",
+      note: "reduced: at once",
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Keyboard",
+      key: "Typing",
+      value:
+        "Filters the list and highlights the first match; Enter chooses it.",
+    },
+    {
+      group: "Keyboard",
+      key: "Arrows",
+      value: "Down opens the list on the chosen item; Up and Down move.",
+    },
+    {
+      group: "Keyboard",
+      key: "Escape",
+      value: "Closes the list and keeps the value.",
+    },
+    {
+      group: "Pointer",
+      key: "Chevron",
+      value: "Opens and closes the list; it is out of the Tab order.",
+    },
+    {
+      group: "Value",
+      key: "Always an item's",
+      value: "Words that match nothing are a search, never the value.",
+    },
+    {
+      group: "Value",
+      key: "Other words",
+      value: "An item's `keywords` find it too: Holland finds Netherlands.",
+    },
+    {
+      group: "Form",
+      key: "Sent",
+      value:
+        "The chosen value under its `name`; a reset returns to `defaultValue`.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    { key: "Role", value: "`combobox` that opens a `listbox` of `option`s" },
+    { key: "Name", value: "Its FieldLabel, or `aria-label`" },
+    { key: "Nothing matches", value: "The empty line is announced" },
+    {
+      key: "Agents",
+      value:
+        "Choose by an item's label; a value outside the list fails with words",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/combobox.tsx"
+  type="ComboboxProps"
+  label="Combobox"
+/>
+
+<Props
+  source="src/components/combobox.tsx"
+  type="ComboboxEmptyProps"
+  label="ComboboxEmpty"
+/>
+
+</Reference>

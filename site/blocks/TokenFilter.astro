@@ -1,0 +1,13 @@
+---
+// <TokenFilter sets={["grounds", "inks"]} />: the filter over a page's token rows; it stays in
+// view while they scroll. Invisible until its script runs, keeping its place.
+import "../system/styles/blocks.css";
+import { TokenEmptyView, TokenFilterView } from "./tokens";
+import { tokenSet } from "./token-data";
+
+const { sets } = Astro.props as { sets: string[] };
+const total = sets.reduce((sum, set) => sum + tokenSet(set).length, 0);
+---
+
+<TokenFilterView total={total} />
+<TokenEmptyView />

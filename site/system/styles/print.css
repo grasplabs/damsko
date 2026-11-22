@@ -1,0 +1,83 @@
+/* A docs page on paper: the page alone, at its full length. No shell (the bar, the sidebar, the
+   menu), no rail and no page tools; the page no longer scrolls inside the shell's card, so it
+   flows over as many sheets as it needs; a stage prints its preview at rest on white, without its
+   tabs or its ground picker; code wraps instead of running off the sheet. Light, whatever the
+   screen's theme. Unlayered and print only, so the screen is untouched. */
+@media print {
+  /* Paper is light: every light-dark() pair takes its light side, a dark page and a Night stage
+     included (site/behaviour/print.ts also sets the theme to light while it prints). */
+  :root,
+  :root *,
+  [data-mode] {
+    color-scheme: light !important;
+  }
+  html,
+  body {
+    background: white !important;
+  }
+
+  /* The shell and what is not the page. */
+  [data-slot="sidebar-inset"] header,
+  [data-slot="sidebar"],
+  .site-skip,
+  .site-rail-column,
+  .site-end,
+  dialog,
+  [data-stage] [role="tablist"],
+  [data-stage] [role="radiogroup"] {
+    display: none !important;
+  }
+
+  /* The page flows: none of the shell's boxes holds it to the window's height or scrolls it. */
+  [data-slot="sidebar-wrapper"],
+  [data-slot="sidebar-inset"],
+  [data-slot="sidebar-inset"] > div,
+  [data-site-scroller],
+  #content,
+  main {
+    display: block !important;
+    height: auto !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+    position: static !important;
+    inset: auto !important;
+    box-shadow: none !important;
+    border: 0 !important;
+    background: white !important;
+    padding-inline: 0 !important;
+    margin: 0 !important;
+    inline-size: auto !important;
+  }
+
+  /* A stage at rest, on white, kept whole on its sheet. */
+  [data-stage-box] {
+    background: white !important;
+    box-shadow: none !important;
+    outline: 1px solid #ddd;
+    break-inside: avoid;
+  }
+  [data-stage-box] *,
+  [data-stage-box] *::before,
+  [data-stage-box] *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  /* Code wraps. */
+  .site-codeblock pre,
+  .site-codeblock code,
+  pre,
+  code {
+    white-space: pre-wrap !important;
+    overflow-wrap: anywhere;
+    overflow: visible !important;
+    max-height: none !important;
+  }
+
+  h1,
+  h2,
+  h3 {
+    break-after: avoid;
+  }
+}

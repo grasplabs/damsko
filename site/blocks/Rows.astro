@@ -1,0 +1,17 @@
+---
+// <Rows title="Values" rows={[{ group, key, value, tokens, note }]} />: a closed row of exact
+// values, one line each. A value names its tokens in braces ("{control-default}") and shows their values
+// (site/rows-data.ts). Rows in a run stand under one another as one list. Markdown form: a table per
+// group with every token's CSS name and value (rowsMarkdown in site/rows-data.ts).
+import "../system/styles/blocks.css";
+import { RowsView } from "./rows";
+import type { Row } from "./rows";
+
+interface Props {
+  title: string;
+  rows: Row[];
+}
+const { title, rows } = Astro.props;
+---
+
+<RowsView title={title} rows={rows} />

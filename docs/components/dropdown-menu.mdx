@@ -1,0 +1,443 @@
+---
+title: Dropdown menu
+description: A list of actions on one thing, such as Rename or Move, opened from a button.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/dropdown-menu"
+/>
+
+## Basic
+
+Its items, a separator, and one item out of use. The trigger is any control, most often a Button given with `asChild`.
+
+<Stage path="dropdown-menu/basic" live label="Basic" />
+
+## With icons and shortcuts
+
+An icon before the words, and a DropdownMenuShortcut at the end with the keys that do the same.
+
+<Stage path="dropdown-menu/icons" label="With icons and shortcuts" />
+
+## Groups and labels
+
+A label names each group, and separators set them apart.
+
+<Stage path="dropdown-menu/groups" label="Groups and labels" />
+
+## With a chevron
+
+A chevron after the trigger's words says a menu opens from it.
+
+<Stage path="dropdown-menu/chevron" label="With a chevron" />
+
+## A long name on one line
+
+In a narrow head a long name would wrap and make the head taller. The trigger's words end in an ellipsis on one line, and its `aria-label` keeps the whole name.
+
+<Stage path="dropdown-menu/truncate" label="A long name on one line" />
+
+## Checkbox and radio items
+
+Options that stay set: a tick marks what is on, a dot the chosen one, and the menu stays open.
+
+<Stage path="dropdown-menu/choices" label="Checkbox and radio items" />
+
+Two items may say the same words: each is its own, told apart by its group's label, and turns over alone.
+
+<Stage path="dropdown-menu/same-words" label="The same words twice" />
+
+## A destructive item
+
+`variant="destructive"` draws it in red and an agent asks first; an `onSelect` that returns a Promise shows its work.
+
+<Stage path="dropdown-menu/danger" label="A destructive item" />
+
+## Submenus
+
+A DropdownMenuSub holds the actions that share one verb; Right opens it and Left closes it (the other way round in right-to-left text).
+
+<Stage path="dropdown-menu/submenu" label="Submenus" />
+
+## Items that are links
+
+With `asChild`, an item is the link it holds, an `<a href>` or a router's own link: a press, Enter, a middle click or a new tab opens it, and the menu closes as it goes.
+
+<Stage path="dropdown-menu/links" live label="Items that are links" />
+
+## Side and alignment
+
+`side` picks where it opens, and `align` lines it up with the trigger.
+
+<Stage path="dropdown-menu/placement" label="Side and alignment" />
+
+## Every state
+
+The trigger is a Button: hover, keyboard focus and pressed are forced from its own CSS; disabled is its prop.
+
+<States
+  path="dropdown-menu/states"
+  cells={[
+    { label: "Rest" },
+    { label: "Hover", force: "hover" },
+    { label: "Keyboard focus", force: "focus-visible" },
+    { label: "Pressed", force: "active" },
+    { label: "Disabled", props: { disabled: true } },
+  ]}
+/>
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="dropdown-menu"
+  always={[
+    "Actions that act on one object, behind a button.",
+    "Items that start with a verb: Rename, Duplicate, Move.",
+    "A trigger that names what the menu acts on, or an `aria-label` when it is only an icon.",
+    'An item that deletes or cannot be undone last, after a separator, with `variant="destructive"`.',
+    '`align="end"` for a trigger at the end of a row or a toolbar.',
+  ]}
+  never={[
+    "Choosing a value in a form: use Select.",
+    "A menu with one item: use a Button.",
+    "A task with fields: use Popover.",
+    "A menu that opens on hover.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Panel",
+      key: "Width",
+      value: "At least {menu-width}, up to {popup-width}",
+      note: "as wide as its longest item, and never wider than the window less {popup-gutter} each side",
+    },
+    {
+      group: "Panel",
+      key: "Height",
+      value: "Up to {popup-height}",
+      note: "less when the window has less room; then it scrolls",
+    },
+    { group: "Panel", key: "Padding", value: "{popup-padding}" },
+    { group: "Panel", key: "Gap to the trigger", value: "{menu-gap}" },
+    {
+      group: "Panel",
+      key: "Corner",
+      value: "{radius}, {radius-shape}",
+      note: "an item's nests inside it",
+    },
+    { group: "Panel", key: "Surface", tokens: ["popover", "menu-shadow"] },
+    {
+      group: "Items",
+      key: "Padding",
+      value: "{menu-item-padding}",
+      note: "round the icon, the words and the keys, {space-2} apart",
+    },
+    {
+      group: "Items",
+      key: "Touch target",
+      value: "{tap-target} tall",
+      note: "on a touch screen",
+    },
+    {
+      group: "Items",
+      key: "Words",
+      value: "{text-sm} / {text-sm-line}, {font-weight-medium}",
+      tokens: ["foreground"],
+    },
+    {
+      group: "Items",
+      key: "Icon",
+      value: "{icon-sm}, stroke {icon-stroke}",
+      note: "in the words' colour",
+    },
+    {
+      group: "Items",
+      key: "Keys",
+      value: "{text-xs} / {text-xs-line}, {font-weight-normal}",
+      note: "at the end",
+      tokens: ["muted"],
+    },
+    {
+      group: "Items",
+      key: "Highlight",
+      note: "where the keyboard or the pointer is",
+      tokens: ["accent-highlight"],
+    },
+    { group: "Items", key: "Checked", value: "A tick at the end, {icon-sm}" },
+    {
+      group: "Items",
+      key: "Destructive",
+      note: "its words and icon, highlighted too",
+      tokens: ["destructive"],
+    },
+    { group: "Items", key: "Disabled", value: "{opacity-disabled} opacity" },
+    {
+      group: "Groups",
+      key: "Label",
+      value: "{text-xs} / {text-xs-line}, {control-sm} tall",
+      tokens: ["muted"],
+    },
+    {
+      group: "Groups",
+      key: "Separator",
+      value: "{hairline}, {popup-padding} above and below",
+      note: "edge to edge of the panel",
+      tokens: ["border"],
+    },
+    {
+      group: "Trigger",
+      key: "Look",
+      value: "Any control given with `asChild`, most often a Button",
+      note: "a ChevronDown after its words says a menu opens",
+    },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    {
+      key: "Opening",
+      value: "From {popup-from-scale} and clear, {duration-ui}",
+      note: "from the trigger's side; reduced: a fade",
+      tokens: ["ease"],
+    },
+    {
+      key: "Closing",
+      value: "Back the same way, {duration-leave}",
+      note: "faster than it came",
+      tokens: ["ease"],
+    },
+    {
+      key: "Working",
+      value: "A spinner at the end of the item, one turn per {duration-spin}",
+      note: "reduced: it stands still",
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Keyboard",
+      key: "Opening",
+      value:
+        "Enter, Space or Down opens it on the first item; Up opens it on the last.",
+    },
+    {
+      group: "Keyboard",
+      key: "Moving",
+      value:
+        "Up and Down move and wrap round (`loop`); Home and End jump; typing finds an item by its words.",
+    },
+    {
+      group: "Keyboard",
+      key: "Closing",
+      value:
+        "Escape or a press outside closes it, and focus goes back to the trigger.",
+    },
+    {
+      group: "Items",
+      key: "Pressing",
+      value:
+        "An item runs and closes the menu; a checkbox or radio item turns over and leaves it open.",
+    },
+    {
+      group: "Items",
+      key: "Disabled",
+      value:
+        "Pressing it does nothing, but the keys still reach it, as the menu pattern asks.",
+    },
+    {
+      group: "Items",
+      key: "Working",
+      value:
+        "An `onSelect` that returns a Promise keeps the menu open, with a spinner; once it is done, the menu closes.",
+    },
+    {
+      group: "Items",
+      key: "Failed",
+      value:
+        "The item says `errorLabel` at its end, and the menu stays open to try again.",
+    },
+    {
+      group: "Placement",
+      key: "No room",
+      value:
+        "It flips to the other side, and shifts to stay {popup-gutter} inside the window.",
+    },
+    {
+      group: "Agents",
+      key: "Pressing",
+      value:
+        "Found by the trigger's name; an item is pressed by its words. A `destructive` item asks the person first.",
+    },
+    {
+      group: "Settings",
+      key: "Forced colours",
+      value:
+        "A 1px border in the text colour replaces the lift; the highlight is the system's.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Role",
+      value: "`menu`, with `menuitem`, `menuitemcheckbox` and `menuitemradio`",
+    },
+    {
+      key: "Trigger",
+      value: "`aria-haspopup` and `aria-expanded`",
+      note: "named by its words, or `aria-label` when it is only an icon",
+    },
+    {
+      key: "Keys",
+      value: "`aria-keyshortcuts` on an item with a DropdownMenuShortcut",
+    },
+    {
+      key: "Working",
+      value:
+        "`loadingLabel` said as the work starts; `errorLabel` said when it fails",
+    },
+    {
+      key: "Contrast",
+      value: "Items 4.5:1 on the popup and on the highlight, light and dark",
+      note: "checked by `node tokens/generate.ts --check`",
+    },
+  ]}
+/>
+<Rows
+  title="From shadcn"
+  rows={[
+    {
+      group: "Items",
+      key: '`variant="destructive"`',
+      value: "The same",
+      note: "an agent asks first",
+    },
+    {
+      group: "Items",
+      key: "New",
+      value: "`icon`, `loadingLabel` and `errorLabel`",
+      note: "work that keeps the menu open until it is done",
+    },
+    {
+      group: "Parts",
+      key: "New",
+      value: "`DropdownMenuMore`",
+      note: "a ghost icon Button with an ellipsis and its menu of actions",
+    },
+    {
+      group: "Look",
+      key: "`bg-popover`, `shadow-md`",
+      value: "{popover}, {menu-shadow}",
+    },
+    { group: "Look", key: "`focus:bg-accent`", value: "{accent-highlight}" },
+    { group: "Elsewhere", key: "Base UI", value: "UI SDK" },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/dropdown-menu.tsx"
+  type="DropdownMenuProps"
+  label="DropdownMenu"
+/>
+
+<Props
+  source="src/components/dropdown-menu.tsx"
+  type="DropdownMenuTriggerProps"
+  label="DropdownMenuTrigger"
+/>
+
+<Props
+  source="src/components/dropdown-menu.tsx"
+  type="DropdownMenuContentProps"
+  label="DropdownMenuContent"
+/>
+
+<Props
+  source="src/components/dropdown-menu.tsx"
+  type="DropdownMenuItemProps"
+  label="DropdownMenuItem"
+/>
+
+<Props
+  source="src/components/dropdown-menu.tsx"
+  type="DropdownMenuCheckboxItemProps"
+  label="DropdownMenuCheckboxItem"
+/>
+
+<Props
+  source="src/components/dropdown-menu.tsx"
+  type="DropdownMenuRadioGroupProps"
+  label="DropdownMenuRadioGroup"
+/>
+
+<Props
+  source="src/components/dropdown-menu.tsx"
+  type="DropdownMenuRadioItemProps"
+  label="DropdownMenuRadioItem"
+/>
+
+<Props
+  source="src/components/dropdown-menu.tsx"
+  type="DropdownMenuGroupProps"
+  label="DropdownMenuGroup"
+/>
+
+<Props
+  source="src/components/dropdown-menu.tsx"
+  type="DropdownMenuLabelProps"
+  label="DropdownMenuLabel"
+/>
+
+<Props
+  source="src/components/dropdown-menu.tsx"
+  type="DropdownMenuSeparatorProps"
+  label="DropdownMenuSeparator"
+/>
+
+<Props
+  source="src/components/dropdown-menu.tsx"
+  type="DropdownMenuShortcutProps"
+  label="DropdownMenuShortcut"
+/>
+
+<Props
+  source="src/components/dropdown-menu.tsx"
+  type="DropdownMenuSubProps"
+  label="DropdownMenuSub"
+/>
+
+<Props
+  source="src/components/dropdown-menu.tsx"
+  type="DropdownMenuSubTriggerProps"
+  label="DropdownMenuSubTrigger"
+/>
+
+<Props
+  source="src/components/dropdown-menu.tsx"
+  type="DropdownMenuSubContentProps"
+  label="DropdownMenuSubContent"
+/>
+
+<Props
+  source="src/components/dropdown-menu.tsx"
+  type="DropdownMenuMoreProps"
+  label="DropdownMenuMore"
+/>
+
+</Reference>

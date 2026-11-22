@@ -1,0 +1,477 @@
+---
+title: Input
+description: A box for typing one line of text, like a name or an email address.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/input @damsko/field @damsko/label"
+/>
+
+## Basic usage
+
+A FieldLabel above every field says what goes in. A placeholder only gives an example.
+
+<Stage path="input/basic" live label="Basic usage" />
+
+## Sizes
+
+Button's heights: 36px, 32 in a dense table or toolbar, 44 for the one field that matters on a phone.
+
+<Stage path="input/sizes" label="Sizes" />
+
+## States
+
+Disabled says why near it, and read only can still be copied. An error says how to put it right.
+
+<Stage path="input/field-states" label="States" />
+
+## With an icon
+
+An icon at the start when it says what goes in faster. A password shows and hides itself.
+
+<Stage path="input/icons" label="With an icon" />
+
+## Kinds of text
+
+The type brings the right keyboard on a phone and the browser's own check. A long value scrolls inside.
+
+<Stage path="input/kinds" label="Kinds of text" />
+
+## Words a machine reads
+
+`mono` sets the words in the system's mono face, a step smaller on the same lines, so the field keeps its height: a cron line in an Input, a JSON body in a Textarea. No colours; it is a field, not a code view.
+
+<Stage path="textarea/mono" label="Words a machine reads" />
+
+## A secret
+
+`SecretInput` holds a key pasted once: masked, never offered to a password manager. Once saved it shows only its last four.
+
+<Stage path="input/secret" label="A secret" />
+
+## Every state
+
+Hover and keyboard focus are forced from its own CSS; the rest are props.
+
+<States
+  path="input/states"
+  cells={[
+    { label: "Placeholder" },
+    { label: "Hover", force: "hover" },
+    { label: "Keyboard focus", force: "focus-visible" },
+    { label: "Filled", props: { value: "anna@acme.example" } },
+    { label: "Invalid", props: { value: "anna@example.com", invalid: true } },
+    {
+      label: "Invalid, focused",
+      force: "focus-visible",
+      props: { value: "anna@example.com", invalid: true },
+    },
+    {
+      label: "Read only",
+      props: { value: "anna@acme.example", readOnly: true },
+    },
+    {
+      label: "Disabled",
+      props: { value: "anna@acme.example", disabled: true },
+    },
+  ]}
+/>
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="input"
+  always={[
+    "A label that says what goes in, in sentence case: Work email, Project name.",
+    "An error that says how to put it right: Enter your work email, not Invalid input.",
+    "The type that fits, so a phone shows the right keyboard: `email`, `tel`, `url`.",
+    "`secret` for a value an agent may fill but must never read: a key, a token, a tax number.",
+    "`readOnly` for a value someone may want to copy but not change; never disabled for it.",
+  ]}
+  never={[
+    "A placeholder in place of a label: it goes when typing starts.",
+    "Colour alone to say it is wrong.",
+    "More than one sentence: use a Textarea.",
+    "Words, an icon or a button inside the field's edge: use an InputGroup.",
+    "A number stepped up and down: use a NumberField. A one-time code: use an InputOTP.",
+    "Colours, heights or corners set from outside: `style` takes layout and width only.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Size",
+      key: "Height",
+      value: "{control-sm}, {control-default}, {control-lg}",
+      note: "`sm`, `default`, `lg`: the same as Button's",
+    },
+    {
+      group: "Size",
+      key: "Padding",
+      value: "{space-3} at the sides, {space-4} when large",
+    },
+    {
+      group: "Size",
+      key: "Width",
+      value: "The column it stands in",
+      note: "`style` may narrow it",
+    },
+    {
+      group: "Size",
+      key: "Touch target",
+      value: "{tap-target}",
+      note: "on a touch screen, at every size",
+    },
+    {
+      group: "Size",
+      key: "Icon",
+      value: "{icon-sm} at the start, {space-2} from the words",
+      tokens: ["muted"],
+    },
+    {
+      group: "Type and shape",
+      key: "Value",
+      value: "{text-sm} / {text-sm-line}, {font-weight-normal}",
+      note: "{input-text-touch} on a touch screen",
+    },
+    {
+      group: "Type and shape",
+      key: "Corner",
+      value: "{radius}, {radius-shape}",
+      note: "capped at half the height",
+    },
+    {
+      group: "Type and shape",
+      key: "Label",
+      value: "{text-sm} / {text-sm-line}, {font-weight-medium}",
+      note: "{space-2} above the field",
+    },
+    {
+      group: "Type and shape",
+      key: "Description and error",
+      value: "{text-xs} / {text-xs-line}",
+      note: "{space-2} under the field",
+    },
+    {
+      group: "Colour",
+      key: "Fill",
+      note: "white, so it reads on a soft ground",
+      tokens: ["input-bg"],
+    },
+    {
+      group: "Colour",
+      key: "Hairline",
+      value: "1px, drawn inside, faint",
+      tokens: ["input", "input-border-hover"],
+    },
+    {
+      group: "Colour",
+      key: "Lift",
+      note: "a breath under the hairline; none when disabled",
+      tokens: ["input-shadow"],
+    },
+    {
+      group: "Colour",
+      key: "Words",
+      note: "value, then placeholder",
+      tokens: ["foreground", "muted"],
+    },
+    {
+      group: "Colour",
+      key: "Wrong",
+      note: "hairline and message",
+      tokens: ["input-border-invalid", "destructive"],
+    },
+    { group: "Colour", key: "Read only", tokens: ["input-bg-read"] },
+    {
+      group: "Focus and disabled",
+      key: "Focus",
+      value: "its own hairline edge, with a faint halo",
+      note: "no outer ring; shown while you type",
+      tokens: ["input-focus", "ring"],
+    },
+    {
+      group: "Focus and disabled",
+      key: "Disabled",
+      value: "{opacity-disabled} opacity",
+      note: "label and description too",
+    },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    {
+      key: "Hover",
+      value: "Hairline one step stronger, {duration-hover}",
+      note: "pointer only; not read only or disabled",
+      tokens: ["ease"],
+    },
+    {
+      key: "Keyboard focus",
+      value: "The ring, at once",
+      note: "no transition",
+    },
+    {
+      key: "Wrong",
+      value: "Hairline to danger, {duration-hover}",
+      note: "the message appears at once",
+      tokens: ["ease"],
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Input",
+      key: "Keyboard",
+      value:
+        "Tab reaches it; typing, selecting and pasting are the browser's own.",
+    },
+    {
+      group: "Input",
+      key: "The label",
+      value: "A press on it focuses the field.",
+    },
+    {
+      group: "Input",
+      key: "Read only",
+      value:
+        "Focusable, selectable and sent with the form; not changed. No caret, the default cursor and no focus ring: focus from the keys shows as the hairline one step stronger.",
+    },
+    { group: "Input", key: "Disabled", value: "Not focusable and not sent." },
+    {
+      group: "Checking",
+      key: "When",
+      value:
+        "After a submit, then as the value changes; at once with `data-invalid` on the Field.",
+    },
+    {
+      group: "Checking",
+      key: "Focus",
+      value: "The first wrong field takes focus on submit.",
+    },
+    {
+      group: "Content",
+      key: "Long value",
+      value:
+        "Scrolls inside the field, never past its edge or cut with an ellipsis.",
+    },
+    {
+      group: "Content",
+      key: "Long labels",
+      value:
+        'Label, description and error wrap; a long Dutch word breaks, hyphenated under `lang="nl"`.',
+    },
+    {
+      group: "Settings",
+      key: "Touch",
+      value: "No hover; iOS does not zoom in on focus.",
+    },
+    {
+      group: "Settings",
+      key: "Right to left",
+      value: "Words and padding follow the reading direction.",
+    },
+    {
+      group: "Settings",
+      key: "Forced colours",
+      value: "A 1px border in the text colour replaces the hairline.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    { key: "Role", value: "A native `<input>`, of its `type`" },
+    {
+      key: "Name",
+      value: "Its FieldLabel, or `aria-label` when nothing is seen",
+    },
+    {
+      key: "Description",
+      value: "FieldDescription and a shown FieldError, by `aria-describedby`",
+    },
+    { key: "Wrong", value: "`aria-invalid` while its error shows" },
+    {
+      key: "Required",
+      value:
+        "Native `required`; the label's mark is hidden from screen readers",
+    },
+    {
+      key: "Agents",
+      value:
+        "Read and set by its name; `password` and `secret` values are never read back",
+    },
+    {
+      key: "Contrast",
+      value:
+        "Value and placeholder 4.5:1, an error's hairline 3:1, light and dark",
+      note: "checked by `node tokens/generate.ts --check`",
+    },
+    {
+      key: "Finding it",
+      value: "Its label above it, a white fill, a faint hairline and lift",
+      note: "the hairline alone is under 3:1, on purpose",
+    },
+  ]}
+/>
+<Rows
+  title="From shadcn"
+  rows={[
+    {
+      group: "Input",
+      key: "`h-9`",
+      value: "`size`: {control-sm}, {control-default}, {control-lg}",
+      note: "Button's heights",
+    },
+    {
+      group: "Input",
+      key: "`border-input`",
+      value: "{input}",
+      note: "a faint hairline drawn inside, with a lift",
+    },
+    {
+      group: "Input",
+      key: "`dark:bg-input/30`",
+      value: "{input-bg}",
+      note: "the quiet button's fill",
+    },
+    {
+      group: "Input",
+      key: "`focus-visible:ring-[3px]`",
+      value: "The one ring",
+      note: "not a field's own",
+    },
+    {
+      group: "Input",
+      key: "`aria-invalid:ring-destructive`",
+      value: "{input-border-invalid}",
+      note: "the hairline, not a ring",
+    },
+    {
+      group: "Input",
+      key: "`md:text-sm`",
+      value: "{input-text-touch} on a touch screen",
+      note: "by pointer, not by width",
+    },
+    {
+      group: "Input",
+      key: "`file:` styles",
+      value: "Dropped",
+      note: "not a file picker",
+    },
+    {
+      group: "Field",
+      key: "`FieldError errors`",
+      value: "`match`",
+      note: "UI SDK's checks, in your words",
+    },
+    {
+      group: "Field",
+      key: "`orientation`",
+      value: "Dropped",
+      note: "a label above its field, for now",
+    },
+    {
+      group: "Field",
+      key: "New",
+      value: "The required mark",
+      note: "from the control's `required`",
+    },
+    {
+      group: "Elsewhere",
+      key: "`className`",
+      value: "`style`",
+      note: "layout and width only",
+    },
+    {
+      group: "Elsewhere",
+      key: "Base UI",
+      value: "UI SDK",
+      note: "an agent can read and fill it by name",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props source="src/components/input.tsx" type="InputProps" />
+
+### PasswordInput
+
+A password with a button that shows and hides it. An agent may fill it but never read it back.
+
+<Props
+  source="src/components/input.tsx"
+  type="PasswordInputProps"
+  label="PasswordInput props"
+/>
+
+### SecretInput
+
+A key pasted once: masked, never offered to a password manager, never read back by an agent, pasted whole. With `maskedValue` it shows only the saved key's last four, read only, with Replace.
+
+<Props
+  source="src/components/input.tsx"
+  type="SecretInputProps"
+  label="SecretInput props"
+/>
+
+### Field
+
+`Field` holds one control with its `FieldLabel`, `FieldDescription` and `FieldError`, and wires them to it. The label and description take their words.
+
+<Intent of="field" />
+
+<Props
+  source="src/components/field.tsx"
+  type="FieldProps"
+  label="Field props"
+/>
+
+<Props
+  source="src/components/field.tsx"
+  type="FieldLabelProps"
+  label="FieldLabel props"
+/>
+
+<Props
+  source="src/components/field.tsx"
+  type="FieldDescriptionProps"
+  label="FieldDescription props"
+/>
+
+### FieldError
+
+Shows under the control while the field is wrong, in your words. A validity `match` waits for a submit; `match` alone shows it now.
+
+<Props
+  source="src/components/field.tsx"
+  type="FieldErrorProps"
+  label="FieldError props"
+/>
+
+### Label
+
+`Label` names a control outside a Field, by `htmlFor`.
+
+<Intent of="label" />
+
+<Props
+  source="src/components/label.tsx"
+  type="LabelProps"
+  label="Label props"
+/>
+
+</Reference>

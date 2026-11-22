@@ -1,0 +1,68 @@
+# A pull request's title and description become the squash commit on main:
+# the title is a Conventional Commit, and nothing in them or in the commits
+# credits an AI tool. Apart from CI, so that editing the title or the
+# description runs only this, not the specs.
+#
+# Safe for pull requests from forks: `pull_request` (never
+# `pull_request_target`), a read-only token, no secrets, and the title and
+# description passed to scripts as environment variables, never written
+# into a command. In the merge queue it only reports, so the queue sees the
+# required check (the title was checked on the pull request).
+name: Pull request
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, edited, ready_for_review]
+  merge_group:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pull-request-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pull-request:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - if: github.event_name == 'pull_request'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          # The attribution check reads the pull request's commits.
+          fetch-depth: 0
+          filter: blob:none
+      - if: github.event_name == 'pull_request'
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+          package-manager-cache: false
+      - if: github.event_name == 'pull_request'
+        uses: voidzero-dev/setup-vp@3754dd7dbdb32bd8f6d28b6043de13ad3a75f21f # v1.21.1
+        with:
+          node-manager: false
+          cache: true
+          run-install: false
+      - if: github.event_name == 'pull_request'
+        run: vp install --frozen-lockfile
+      - if: github.event_name == 'pull_request'
+        run: printf '%s\n' "$PR_TITLE" | vp exec commitlint
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+      # The squash commit on main is the title, the description and a
+      # Co-authored-by trailer for each author of the pull request's commits:
+      # none may credit an AI tool (scripts/check-attribution.ts).
+      - if: github.event_name == 'pull_request'
+        run: |
+          { printf '%s\n' "$PR_TITLE" "$PR_BODY"; git log --format='%B%nCo-authored-by: %an <%ae>' "$BASE..$HEAD"; } |
+            node scripts/check-attribution.ts
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+      - if: github.event_name != 'pull_request'
+        run: echo "Checked on the pull request."

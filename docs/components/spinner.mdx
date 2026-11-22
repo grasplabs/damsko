@@ -1,0 +1,126 @@
+---
+title: Spinner
+description: A small turning icon that shows something is loading or working.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/spinner"
+  use={'import { Spinner } from "@grasp-os/ui/components/spinner";'}
+/>
+
+## Sizes
+
+`default` beside small text and in a button, `lg` beside body text, `xl` alone in a panel.
+
+<Stage path="spinner/sizes" label="Sizes" />
+
+## Beside words
+
+Words beside it say what is working and are the status; it takes their colour.
+
+<Stage path="spinner/with-words" label="Beside words" />
+
+## Alone
+
+Alone in a panel that is still loading, with an `aria-label` a screen reader says.
+
+<Stage path="spinner/alone" label="Alone" />
+
+## Every state
+
+Each size, and the colour of the words it stands beside.
+
+<States
+  path="spinner/states"
+  cells={[
+    { label: "Default" },
+    { label: "Large", props: { size: "lg" } },
+    { label: "Extra large", props: { size: "xl" } },
+    { label: "In muted words", props: { colour: "muted" } },
+  ]}
+/>
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="spinner"
+  always={["Then say how it went: show the result, or an error in words."]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      key: "Size",
+      value: "{icon-sm}, {icon-default}, {spinner-lg}",
+      note: "default, lg, xl",
+    },
+    {
+      key: "Stroke",
+      value: "{icon-stroke}",
+    },
+    { key: "Colour", value: "The words around it" },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    {
+      key: "Turn",
+      value:
+        "One turn per {duration-spin}, linear, its bars fading to {spinner-fade}",
+    },
+    {
+      key: "Reduced",
+      value: "Still, breathing to {spinner-faint} every {spinner-breath}",
+      tokens: ["spinner-ease"],
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      key: "In a button",
+      value:
+        "A child of the button, beside its words: it takes the words' colour, and the button may raise its floor and stroke through `spinnerVars`.",
+    },
+    { key: "Forced colours", value: "Drawn in the text colour." },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Alone",
+      value: "A `status` that says its `aria-label`, as hidden text",
+    },
+    { key: "Beside words", value: "Hidden; the words are the `status`" },
+  ]}
+/>
+<Rows
+  title="From shadcn"
+  rows={[
+    {
+      key: '`aria-label="Loading"`',
+      value: "`aria-label`",
+      note: "says what loads, when no words do",
+    },
+    { key: "`size-4`", value: "`size`", note: "default, lg, xl" },
+    { key: "`animate-spin`", value: "A turn, or a breath with reduced motion" },
+    { key: "`className`", value: "`style`", note: "layout only" },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props source="src/components/spinner.tsx" type="SpinnerProps" />
+
+</Reference>

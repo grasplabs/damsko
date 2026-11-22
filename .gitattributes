@@ -1,0 +1,25 @@
+# Keep text files stable across Windows, macOS and Linux.
+* text=auto eol=lf
+
+# Generated files: collapsed in pull request diffs. Regenerate them after a
+# conflict instead of merging by hand (`pnpm generate`).
+pnpm-lock.yaml linguist-generated=true
+registry.json linguist-generated=true
+src/styles/tokens.css linguist-generated=true
+src/styles/themes.css linguist-generated=true
+src/lib/tokens.stylex.ts linguist-generated=true
+src/lib/tokens.values.ts linguist-generated=true
+examples/streaming/streams/** linguist-generated=true
+
+# Binary assets are never line-ending normalized.
+*.gif binary
+*.ico binary
+*.jpg binary
+*.jpeg binary
+*.pdf binary
+*.png binary
+*.wav binary
+*.webp binary
+*.woff binary
+*.woff2 binary
+*.zip binary

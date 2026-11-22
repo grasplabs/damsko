@@ -1,0 +1,50 @@
+---
+// /brand/<room>: one room of the brand book. Only the open rooms are built (site/brand/content.ts,
+// `open`); the floor plan shows the rest closed. Each room is imported by name: an island needs a
+// static import to be hydrated.
+import "../../brand/brand.css";
+import Docs from "../../layouts/Docs.astro";
+import { roomOf,visualWords } from "../../brand/content";
+import type { RoomId } from "../../brand/content";
+import GraspRoom from "../../brand/rooms/grasp";
+import NamesRoom from "../../brand/rooms/names";
+import LogoRoom from "../../brand/rooms/logo";
+import ColourRoom from "../../brand/rooms/colour";
+import VoiceRoom from "../../brand/rooms/voice";
+import TypeRoom from "../../brand/rooms/type";
+import MotionRoom from "../../brand/rooms/motion";
+import IconsRoom from "../../brand/rooms/icons";
+import LayoutRoom from "../../brand/rooms/layout";
+import ProductRoom from "../../brand/rooms/product";
+import ApplicationsRoom from "../../brand/rooms/applications";
+import DownloadsRoom from "../../brand/rooms/downloads";
+import VisualRoom from "../../brand/rooms/visual-language";
+import "../../overview/pen.css";
+import { ditherDefs } from "../../overview/pen.ts";
+import { sketchOf } from "../../overview/sketches/index.ts";
+
+// getStaticPaths runs on its own, before the rest: it names the rooms itself.
+export const getStaticPaths = () => ["grasp", "names", "logo", "colour", "type", "voice", "visual-language", "motion", "icons", "layout", "product", "applications", "downloads"].map((room) => ({ params: { room } }));
+
+const id = Astro.params.room as RoomId;
+const room = roomOf(id);
+// The visual language hangs the library's own drawings: drawn here, at build, as the overview draws them.
+const sketches = id === "visual-language" ? visualWords.sketches.map((part) => sketchOf(part) ?? "") : [];
+---
+
+<Docs route={`/brand/${id}`} title={`${room.title} | Brand book`} description={`Room ${room.number} of Grasp's brand book: ${room.title.toLowerCase()}.`} fullscreen>
+  {id === "grasp" && <GraspRoom client:load />}
+  {id === "names" && <NamesRoom client:load />}
+  {id === "logo" && <LogoRoom client:load />}
+  {id === "colour" && <ColourRoom client:load />}
+  {id === "type" && <TypeRoom client:load />}
+  {id === "voice" && <VoiceRoom client:load />}
+  {id === "visual-language" && <Fragment set:html={ditherDefs()} />}
+  {id === "visual-language" && <VisualRoom client:load sketches={sketches} />}
+  {id === "motion" && <MotionRoom client:load />}
+  {id === "icons" && <IconsRoom client:load />}
+  {id === "layout" && <LayoutRoom client:load />}
+  {id === "product" && <ProductRoom client:load />}
+  {id === "applications" && <ApplicationsRoom client:load />}
+  {id === "downloads" && <DownloadsRoom client:load />}
+</Docs>

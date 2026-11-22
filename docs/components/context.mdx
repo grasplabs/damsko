@@ -1,0 +1,183 @@
+---
+title: Context
+description: How much of the model's context window the conversation has used, with its tokens by kind.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/context"
+/>
+
+## Tokens used
+
+`ContextTrigger` is an outline Button, a quiet trigger as shadcn draws it, with a ring of how full the window is and its share in words. Resting on it, or tabbing to it, opens `ContextContent`: `ContextContentHeader` with the tokens used of the most and a bar of the same, and `ContextContentBody` with a row per kind of token. A row with none of its kind draws nothing.
+
+<Stage path="context/basic" label="Tokens used" />
+
+## What it cost
+
+Context works out no price and knows no model. Give `cost` the amounts the product worked out, in their `currency`: each row shows its kind's, and `ContextContentFooter` the total.
+
+<Stage path="context/cost" label="What it cost" />
+
+## In the page's language
+
+Every number is formatted with `Intl.NumberFormat` in the I18nProvider's `locale`: tokens compact, the share whole, the cost in its currency.
+
+<Stage path="context/locale" label="In the page's language" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="context"
+  always={[
+    "Beside the prompt input, for how close the conversation is to the model's window.",
+    "`maxTokens` from the model the product uses: the AI SDK does not send it.",
+    "Costs worked out by the product, from its own prices, given as `cost`.",
+  ]}
+  never={[
+    "Progress of a task that will finish: use Progress.",
+    "A price list, or a price worked out in the browser: the product sends the cost.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Trigger",
+      key: "Button",
+      value: "An outline Button at `sm` (32px): a small ring, then the share",
+    },
+    {
+      group: "Card",
+      key: "Header",
+      value: "Context and the tokens used of the most, then a Progress bar",
+      tokens: ["foreground", "muted-foreground"],
+    },
+    {
+      group: "Card",
+      key: "Rows",
+      value:
+        "Kind at the start, muted; tokens and cost at the end, {space-1} apart",
+      tokens: ["space-1"],
+    },
+    {
+      group: "Card",
+      key: "Footer",
+      value: "The total cost under a hairline",
+      tokens: ["border"],
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      key: "Open",
+      value:
+        "Resting on the trigger or tabbing to it opens the card after 10ms; it closes 100ms after the pointer leaves, or on Escape.",
+    },
+    {
+      key: "Numbers",
+      value:
+        "Formatted in the provider's locale: tokens compact (10.7K), the share whole (8%), costs in `cost.currency`.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Trigger",
+      value:
+        "A `button` named by its share (8% context); the ring is a picture only",
+    },
+    {
+      key: "Bar",
+      value: "A `progressbar` named Context used",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/context.tsx"
+  type="ContextProps"
+  label="Context props"
+/>
+
+<Props
+  source="src/components/context.tsx"
+  type="ContextTriggerProps"
+  label="ContextTrigger props"
+/>
+
+<Props
+  source="src/components/context.tsx"
+  type="ContextContentProps"
+  label="ContextContent props"
+/>
+
+<Props
+  source="src/components/context.tsx"
+  type="ContextContentHeaderProps"
+  label="ContextContentHeader props"
+/>
+
+<Props
+  source="src/components/context.tsx"
+  type="ContextContentBodyProps"
+  label="ContextContentBody props"
+/>
+
+<Props
+  source="src/components/context.tsx"
+  type="ContextContentFooterProps"
+  label="ContextContentFooter props"
+/>
+
+<Props
+  source="src/components/context.tsx"
+  type="ContextInputUsageProps"
+  label="ContextInputUsage props"
+/>
+
+<Props
+  source="src/components/context.tsx"
+  type="ContextOutputUsageProps"
+  label="ContextOutputUsage props"
+/>
+
+<Props
+  source="src/components/context.tsx"
+  type="ContextReasoningUsageProps"
+  label="ContextReasoningUsage props"
+/>
+
+<Props
+  source="src/components/context.tsx"
+  type="ContextCacheUsageProps"
+  label="ContextCacheUsage props"
+/>
+
+<Props
+  source="src/components/context.tsx"
+  type="ContextUsage"
+  label="ContextUsage"
+/>
+
+<Props
+  source="src/components/context.tsx"
+  type="ContextCost"
+  label="ContextCost"
+/>
+
+</Reference>

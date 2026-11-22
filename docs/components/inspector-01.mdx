@@ -1,0 +1,74 @@
+---
+title: Inspector
+description: A side panel, built from data, that inspects one record.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/inspector-01"
+  use={
+    'import { Inspector } from "@grasp-os/ui/blocks/inspector-01/inspector-01";'
+  }
+/>
+
+## Basic usage
+
+A head, then sections of rows. Press Add in Tools, then the bin on the row it brought. A block: it installs as source, to edit; for a layout it cannot say, compose Side panel yourself.
+
+<Stage path="inspector-01/basic" label="Basic usage" />
+
+## Views
+
+`views` are tabs in the head; each section names its view. Scroll the panel and they fold into the bar as icons.
+
+<Stage path="inspector-01/views" label="Views" />
+
+## Facts
+
+A section's `facts` are a list of terms and values, a hairline between them. A missing value is a quiet dash, said Not set.
+
+<Stage path="inspector-01/facts" label="Facts" />
+
+## Empty
+
+With no sections, `empty` says in one quiet sentence what will stand there.
+
+<Stage path="inspector-01/empty" label="Empty" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="inspector-01"
+  always={[
+    "What a record is and what it is made of, beside its page, from data.",
+    "One section per part of the record, each a quiet title, one action and one card.",
+  ]}
+  never={[
+    "A layout the inspector cannot say: compose Side panel.",
+    "A phone, with no room beside the page: put it in a Sheet with `framed={false}`.",
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/blocks/inspector-01/inspector-01.tsx"
+  type="InspectorProps"
+  label="Inspector props"
+/>
+<Props
+  source="src/blocks/inspector-01/inspector-01.tsx"
+  type="InspectorSection"
+  label="A section"
+/>
+<Props
+  source="src/blocks/inspector-01/inspector-01.tsx"
+  type="InspectorRow"
+  label="A row"
+/>
+
+</Reference>

@@ -1,0 +1,67 @@
+---
+// <States path="button/states" code="button/action" cells={[...]} choose={{ prop, label, options }} />
+// Every state of a part side by side, from its real example (`path`); the Code view shows how a product gets those states
+// (`code`, default `path`). A cell with `force` shows a pseudo-state forced from the part's own CSS
+// (site/behaviour/force-states.ts); one with `props` passes them to the example. With `choose`,
+// one set of cells per option (passed to the example as `prop`), switched under the stage. A page
+// shows two representative variants (not every variant in every state); the
+// others go in `choose.checks`: drawn in the page but never offered by the switch, hidden for good,
+// so a spec that opens every set keeps every variant as its fixture. With `column`, a wide part (a header, a diff) has a line to itself, its caption above it at the start.
+import "../system/styles/blocks.css";
+import { innerCode } from "./code";
+import { StageView } from "./stage";
+import { StateCell, StateGrid, StatesFoot } from "./states";
+import { hasExample, loadSource } from "../system/examples";
+import { highlight } from "../system/highlight";
+import Island from "../system/Island.astro";
+
+interface Cell {
+  label: string;
+  force?: "hover" | "focus-visible" | "active";
+  props?: Record<string, unknown>;
+}
+
+interface Props {
+  path: string;
+  code?: string;
+  label?: string;
+  cells: Cell[];
+  choose?: {
+    prop: string;
+    label: string;
+    options: { id: string; label: string }[];
+    /** Variants drawn only for the checks: hidden, and not in the switch. */
+    checks?: { id: string; label: string }[];
+  };
+  column?: boolean;
+}
+
+const { path, code = path, label = "Every state", cells, choose, column = false } = Astro.props;
+if (!(hasExample(path) && hasExample(code))) {
+  throw new Error(`<States path="${path}" code="${code}">: no example at examples/${hasExample(path) ? code : path}.tsx.`);
+}
+const highlighted = await highlight(await loadSource(code), "tsx");
+const id = `states-${path.replaceAll(/[^a-z0-9]+/giu, "-")}`;
+const sets = choose
+  ? [...choose.options, ...(choose.checks ?? [])].map((option, index) => ({
+      id: option.id,
+      extra: { [choose.prop]: option.id },
+      check: index >= choose.options.length,
+    }))
+  : [{ id: undefined, extra: {}, check: false }];
+---
+
+<StageView id={id} label={label} codeHtml={innerCode(highlighted)} file={`${code}.tsx`} wide>
+  <StatesFoot slot="foot" choose={choose ? { label: choose.label, options: choose.options } : undefined} />
+  {
+    sets.map((set, index) => (
+      <StateGrid option={set.id} hidden={index > 0} check={set.check} column={column}>
+        {cells.map((cell) => (
+          <StateCell label={cell.label} force={cell.force} column={column}>
+            <Island path={path} props={{ ...set.extra, ...cell.props }} />
+          </StateCell>
+        ))}
+      </StateGrid>
+    ))
+  }
+</StageView>

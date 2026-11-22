@@ -1,0 +1,58 @@
+---
+// <TypeRows set="sizes" /> or <TypeRows set="weights" />: a row per size with its line height, or
+// per token, each with a live specimen set in exactly those tokens (site/blocks/type.tsx).
+// Markdown form: a table (site/markdown.ts).
+import "../system/styles/blocks.css";
+import { TypeRowsView } from './type';
+import type { TypeRow } from './type';
+import { tokenSet } from "./token-data";
+
+const { set } = Astro.props as { set: "sizes" | "weights" };
+const text = "Ink on paper, one light";
+const v = (name: string) => `var(--damsko-${name})`;
+
+const sizeRows = (): TypeRow[] => {
+  const tokens = tokenSet("sizes");
+  return tokens
+    .filter((entry) => !entry.name.endsWith("-line"))
+    .map((size) => {
+      const line = tokens.find((entry) => entry.name === `${size.name}-line`);
+      const title = size.name.startsWith("heading-");
+      return {
+        tokens: line ? [size, line] : [size],
+        style: {
+          fontFamily: v(title ? "font-serif" : "font-sans"),
+          fontSize: v(size.name),
+          lineHeight: line ? v(line.name) : undefined,
+          fontWeight: v("font-weight-normal"),
+          letterSpacing: title ? v("tracking-title") : undefined,
+        },
+        text,
+        use: size.use,
+      };
+    })
+    .reverse();
+};
+
+// Each weight and each tracking in the size it is made for.
+const weightStyle: Record<string, TypeRow["style"]> = {
+  "font-weight-normal": { fontFamily: v("font-sans"), fontSize: v("text-base"), lineHeight: v("text-base-line"), fontWeight: v("font-weight-normal") },
+  "font-weight-medium": { fontFamily: v("font-sans"), fontSize: v("text-base"), lineHeight: v("text-base-line"), fontWeight: v("font-weight-medium") },
+  "tracking-title": { fontFamily: v("font-serif"), fontSize: v("heading-md"), lineHeight: v("heading-md-line"), fontWeight: v("font-weight-normal"), letterSpacing: v("tracking-title") },
+  "tracking-ui-title": { fontFamily: v("font-sans"), fontSize: v("heading-xs"), lineHeight: v("heading-xs-line"), fontWeight: v("font-weight-medium"), letterSpacing: v("tracking-ui-title") },
+};
+// A sample shows its token: one with no row above is still drawn in its own value, a tracking
+// as letter-spacing and a weight as font-weight, on the interface's words.
+const shown = (name: string): TypeRow["style"] => {
+  const base = { fontFamily: v("font-sans"), fontSize: v("text-base"), lineHeight: v("text-base-line"), fontWeight: v("font-weight-normal") };
+  if (name.startsWith("tracking-")) {return { ...base, letterSpacing: v(name) };}
+  if (name.startsWith("font-weight-")) {return { ...base, fontWeight: v(name) };}
+  return base;
+};
+const weightRows = (): TypeRow[] =>
+  tokenSet("weights").map((entry) => ({ tokens: [entry], style: weightStyle[entry.name] ?? shown(entry.name), text, use: entry.use }));
+
+const rows = set === "sizes" ? sizeRows() : weightRows();
+---
+
+<TypeRowsView rows={rows} />

@@ -1,0 +1,10 @@
+/* Grasp's colours, as the site writes them (OKLCH) with their sRGB hex values. */
+:root {
+  --damsko-brand-paper: oklch(0.978 0.021 130.01); /* #f3fbec */
+  --damsko-brand-lime: oklch(0.941 0.104 126.84); /* #d9f9ad */
+  --damsko-brand-sea: oklch(0.882 0.094 160.99); /* #9fecc4 */
+  --damsko-brand-mint: oklch(0.8005 0.1625 165.25); /* #21dea4 */
+  --damsko-brand-pine: oklch(0.4321 0.0778 175.187); /* #0b5e4e */
+  --damsko-brand-ink: oklch(0.267 0.048 169.88); /* #062d22 */
+  --damsko-brand-night: oklch(0.173 0.028 169.36); /* #03140e */
+}

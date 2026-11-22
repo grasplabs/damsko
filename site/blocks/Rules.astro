@@ -1,0 +1,13 @@
+---
+// <Rules always={[...]} never={[...]} />: the rules of a part.
+import "../system/styles/blocks.css";
+import { RulesView } from "./rules";
+
+interface Props {
+  always?: string[];
+  never?: string[];
+}
+const { always, never } = Astro.props;
+---
+
+<RulesView always={always} never={never} />

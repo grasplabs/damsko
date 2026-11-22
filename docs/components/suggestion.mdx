@@ -1,0 +1,114 @@
+---
+title: Suggestion
+description: Short prompts a person can send to the assistant with one press, in a row that scrolls sideways.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/suggestion"
+/>
+
+## A row of suggestions
+
+`Suggestions` holds the row; each `Suggestion` is a button that hands its `suggestion` to `onClick`, to send it or to put it in the prompt.
+
+<Stage path="suggestion/basic" label="A row of suggestions" />
+
+## Above the prompt input
+
+Put the row above the Prompt input. The words are the message: send them as they are.
+
+<Stage path="suggestion/prompt" label="Above the prompt input" />
+
+## More than fit
+
+The row never wraps. What does not fit runs past its end and scrolls sideways by wheel, touch and Tab, with no bar; the side with more beyond it fades out.
+
+<Stage path="suggestion/overflow" label="More than fit" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="suggestion"
+  always={[
+    "A few short prompts the person might send next, above or beside the prompt input.",
+    "The words of each prompt as its `suggestion`, so `onClick` is handed exactly what it shows.",
+  ]}
+  never={[
+    "Choices the assistant waits on before it goes on: use Questionnaire.",
+    "Actions on a message (copy, retry): use the message's actions.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Row",
+      key: "Gap",
+      value: "{space-2} between suggestions, on one line",
+      tokens: ["space-2"],
+    },
+    {
+      group: "Row",
+      key: "Fade",
+      value: "{space-10} at a side with more beyond it",
+      tokens: ["space-10"],
+    },
+    {
+      group: "Suggestion",
+      key: "Button",
+      value: "An outline Button at `sm` (32px)",
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      key: "Press",
+      value:
+        "Click, Enter or Space runs `onClick` with the suggestion's words.",
+    },
+    {
+      key: "Scroll",
+      value:
+        "Sideways by wheel and touch, with no bar, the sideways wheel kept in the row; a button reached by Tab scrolls wholly into view, clear of the fade.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Row",
+      value: "A `group` named Suggestions, or by its `aria-label`",
+    },
+    {
+      key: "Suggestion",
+      value: "A `button` named by its words",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/suggestion.tsx"
+  type="SuggestionsProps"
+  label="Suggestions props"
+/>
+
+<Props
+  source="src/components/suggestion.tsx"
+  type="SuggestionProps"
+  label="Suggestion props"
+/>
+
+</Reference>

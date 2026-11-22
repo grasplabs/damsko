@@ -1,0 +1,67 @@
+---
+title: Form
+description: A layout that stacks a form's fields in one column, with its buttons at the end.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/form @damsko/field"
+/>
+
+## Basic usage
+
+Fields down one column, two in a row where they belong together, the buttons at the end.
+
+<Stage path="form/basic" label="Basic usage" />
+
+## Sections
+
+Fields under a title and a sentence, with a hairline between sections.
+
+<Stage path="form/groups" label="Sections" />
+
+<Part title="Using it" />
+
+## Required fields
+
+A required control's label shows a quiet mark, drawn beside its words: the control's name stays the label's words alone.
+
+<Stage path="form/required-names" label="Required fields" />
+
+## An error of your own
+
+Set `data-invalid` only when it is true; leave it out otherwise, since `data-invalid={false}` hides the browser's own check.
+
+## When to use it
+
+<Intent
+  of="form"
+  always={[
+    "Fields down one column, two in a row where they belong together, the buttons at the end.",
+    "Fields in sections, each under a title and a sentence.",
+  ]}
+  never={["One control with its label and its error: use a Field."]}
+/>
+
+<Reference>
+
+## API
+
+<Props source="src/components/form.tsx" type="FormProps" label="Form props" />
+<Props
+  source="src/components/form.tsx"
+  type="FormSectionProps"
+  label="FormSection props"
+/>
+<Props
+  source="src/components/form.tsx"
+  type="FormRowProps"
+  label="FormRow props"
+/>
+<Props
+  source="src/components/form.tsx"
+  type="FormFooterProps"
+  label="FormFooter props"
+/>
+
+</Reference>

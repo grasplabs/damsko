@@ -1,0 +1,476 @@
+---
+title: Accessibility
+description: Every part works by keyboard, screen reader, voice and agent, in every colour mode.
+---
+
+<Head lead={frontmatter.description} />
+
+## Keyboard
+
+Tab reaches each control once, and a group (tabs, a menu, a radio group) is one stop with arrows inside. Enter acts, Escape closes.
+
+<Rows
+  title="Keyboard: the system and yours"
+  rows={[
+    {
+      key: "The system",
+      value:
+        "Each part's keys follow its ARIA pattern: arrows, Home and End inside a group, Enter or Space to act, Escape to close the top layer.",
+    },
+    {
+      key: "One stop",
+      value:
+        "Tabs, menus and radio choices take one Tab stop; the arrows move inside.",
+    },
+    {
+      key: "Yours",
+      value:
+        "Order in the page follows reading order. No control that works by pointer or hover only. Try every part by keyboard alone before it ships.",
+    },
+  ]}
+/>
+
+## Focus
+
+One ring, the system's, for the keyboard only. Every layer takes focus when it opens and gives it back when it closes.
+
+<Rows
+  title="Focus: the system and yours"
+  rows={[
+    {
+      key: "The ring",
+      value:
+        "{ring-width} in the focus colour, on a control's edge. It stands {ring-offset-mark} off a checkbox's, radio's or switch's mark, and {ring-offset-text} off words.",
+      tokens: ["ring"],
+    },
+    {
+      key: "A field",
+      value:
+        "Takes the focus colour on its own edge, with a halo, whenever it has focus.",
+    },
+    {
+      key: "Forced colours",
+      value:
+        "The ring is twice as thick, in the system's Highlight, standing off the control's edge.",
+    },
+    {
+      key: "Layers",
+      value:
+        "Dialog, Alert dialog, Popover and menus: focus goes in, Tab stays inside a dialog, Escape closes, focus returns to the trigger.",
+    },
+    {
+      key: "Still open",
+      value:
+        "On a filled button the ring lies on the fill; how it should stand there is still being decided.",
+    },
+    {
+      key: "Yours",
+      value:
+        "Never a ring of your own, never `outline: none`. Draw a layer's panel only while there is something to ask.",
+    },
+  ]}
+/>
+
+<Stage
+  path="guidelines/accessibility-focus"
+  live
+  label="One ring, and focus given back"
+/>
+
+## Names
+
+Every control has a name a person can say and an agent can find; two of a kind differ. See [the accessibility of words](/guidelines/writing#accessible-words).
+
+<Rows
+  title="Names: the system and yours"
+  rows={[
+    {
+      key: "The system",
+      value: "An icon button needs its `label`, and that is its name.",
+    },
+    {
+      key: "Yours",
+      value:
+        "Words for every name, passed as props. Two of a kind on one page get two names: Delete Q3 report, Delete Q4 report.",
+    },
+  ]}
+/>
+
+<Stage
+  path="guidelines/accessibility-names"
+  live
+  label="Names a person can say"
+/>
+
+<Stage
+  path="guidelines/accessibility-names-apart"
+  label="Two of a kind, told apart"
+/>
+
+## Announcements
+
+What changes out of view is said once, politely, in a person's words. A failure is an alert; nothing is said per word.
+
+<Rows
+  title="Announcements: the system and yours"
+  rows={[
+    {
+      key: "A streamed answer",
+      value:
+        "Message says Writing once, each sentence when it is finished, and Answer ready when the stream ends; the last sentence may follow it. Markdown says each block when it is finished.",
+    },
+    { key: "A failure", value: "Could not answer is an alert, said at once." },
+    {
+      key: "One voice",
+      value:
+        "Every part that says what it did shares one polite region at the page's end, so two never talk over each other.",
+    },
+    {
+      key: "Yours",
+      value:
+        "Status in words, through the parts' own props. No live region of your own round ours. No time limit on reading a message that holds an action.",
+    },
+    {
+      key: "Words for a screen reader only",
+      value:
+        "One style, `visuallyHidden` from `lib/styles` (`@damsko/lib`): the words take no room and are still read, found and said. Never a copy of your own.",
+    },
+  ]}
+/>
+
+<Stage
+  path="guidelines/accessibility-announcements"
+  live
+  label="What a screen reader is told"
+/>
+
+## Colour and contrast
+
+Every pair the token check measures holds, 4.5:1 for words and 3:1 for marks, light and dark. Colour is never the only sign.
+
+<Rows
+  title="Colour: the system and yours"
+  rows={[
+    {
+      key: "Proved",
+      value:
+        "The token check measures 137 pairs in light and dark: 103 of words at 4.5:1, 34 of large words and marks at 3:1, such as the ring and a chosen tab's line.",
+    },
+    {
+      key: "Never colour alone",
+      value: "A status has its word.",
+    },
+    {
+      key: "Forced colours",
+      value:
+        "Parts drawn with a shadow take a real border, and the system's colours win over every token.",
+    },
+    {
+      key: "Still open",
+      value:
+        "Three of the app frame's grey words fall under their floor and are left out of the check until it is decided.",
+    },
+    {
+      key: "Yours",
+      value: "Colours from the tokens only, and a word with every status.",
+    },
+  ]}
+/>
+
+<Stage path="guidelines/accessibility-colour" label="Words with every status" />
+
+Every pair, measured, is on [Colour](/foundations/colour).
+
+## Motion
+
+Panels, popups and rows open in 300ms at most. With reduced motion every time becomes 0s and what would move is simply there.
+
+<Rows
+  title="Motion: the system and yours"
+  rows={[
+    {
+      key: "The system",
+      value:
+        "Every time a part moves, grows or fades by comes from `simply`, which is 0s under reduced motion.",
+    },
+    {
+      key: "Opening a height",
+      value:
+        "A Collapsible or an Accordion opens its height in exactly 300ms (`duration-open`).",
+    },
+    {
+      key: "Longer, by name",
+      value:
+        "Two motions take longer: the approve light leans in over 500ms (`duration-lean`), and a page arrives once over 600ms (`duration-arrive`).",
+    },
+    {
+      key: "Signs of life",
+      value:
+        "A spinner stops turning and breathes, a slow fade. The working mark, the text shimmer and a skeleton's light rest while out of view.",
+    },
+    {
+      key: "Yours",
+      value:
+        "Times from `simply`, never your own. A change of state stays when the movement goes.",
+    },
+  ]}
+/>
+
+<Stage path="guidelines/accessibility-motion" live label="Simply there" />
+
+## Touch
+
+On a touch screen every control takes a 44px press area, unseen round the one drawn.
+
+<Rows
+  title="Touch: the system and yours"
+  rows={[
+    {
+      key: "The system",
+      value:
+        "A control drawn smaller than {tap-target} reaches it on a touch screen, past its drawn edge.",
+    },
+    {
+      key: "Still open",
+      value:
+        "Text fields keep 36px on a touch screen, with no larger area; a choice not yet made.",
+    },
+    {
+      key: "Yours",
+      value:
+        "Never shrink a press area, and never two targets inside one. Neighbours stand a finger apart, so no two areas overlap.",
+    },
+  ]}
+/>
+
+<Stage path="guidelines/accessibility-touch" live label="44px to a finger" />
+
+## Zoom and long text
+
+The page reads at 320px wide. Text wraps before it is cut; see [long words and cut text](/guidelines/writing#long-words-and-cut-text).
+
+<Rows
+  title="Zoom: the system and yours"
+  rows={[
+    {
+      key: "The system",
+      value:
+        "Parts grow with their words: a card, a button and a field wrap rather than cut. Words cut short give their whole text in a title or a tooltip.",
+    },
+    {
+      key: "Dutch and German",
+      value:
+        "With `lang` set, long compounds hyphenate where the language breaks them; a title breaks a word only where it must.",
+    },
+    {
+      key: "Yours",
+      value:
+        "No fixed height round text, and no text under 13px. The page readable at 320px wide and at twice the text size.",
+    },
+  ]}
+/>
+
+<Stage path="guidelines/accessibility-zoom" label="A phone's width, in Dutch" />
+
+## Right to left
+
+Logical properties throughout, so a page mirrors by itself. Pointing icons turn, others stay; [open this page right to left](/guidelines/accessibility?dir=rtl).
+
+<Rows
+  title="Right to left: the system and yours"
+  rows={[
+    {
+      key: "The system",
+      value:
+        "Every part is laid out with start and end, never left and right. Arrows and chevrons turn; a search glass, a bell or a tick does not. A layer opens on the mirrored side of its trigger.",
+    },
+    {
+      key: "Yours",
+      value:
+        "Start and end in your own layout too. A number keeps its unit in the same order: 12 MB.",
+    },
+  ]}
+/>
+
+<Stage path="guidelines/accessibility-rtl" live label="Right to left" />
+
+## Forms and errors
+
+Every field has a label tied to it, and its error stands under it, tied to it and said. See [errors](/guidelines/writing#errors).
+
+<Rows
+  title="Forms: the system and yours"
+  rows={[
+    {
+      key: "The system",
+      value:
+        "Field ties its label, description and error to the control (`aria-labelledby`, `aria-describedby`) and marks it `aria-invalid` while it is wrong.",
+    },
+    {
+      key: "Said",
+      value:
+        "A failed send puts focus on the wrong field, and its error is read with it. An error that appears while the person stays put is said once, politely.",
+    },
+    {
+      key: "Required",
+      value:
+        "The control's own `required` is said by a screen reader; the label's star is hidden from it.",
+    },
+    {
+      key: "Yours",
+      value:
+        "A visible label for every field, never a placeholder alone; see labels and placeholders on Writing. What was typed stays when a step fails.",
+    },
+  ]}
+/>
+
+<Stage
+  path="guidelines/accessibility-forms"
+  live
+  label="A field and its error"
+/>
+
+## Agents
+
+An agent finds a part by the name a person says, and hears a failure in the words a person sees.
+
+<Rows
+  title="Agents: the system and yours"
+  rows={[
+    {
+      key: "The system",
+      value:
+        "The agent bridge finds parts by their names. A danger action asks the person first (`agentConfirm`), and a failing one says so.",
+    },
+    {
+      key: "Yours",
+      value:
+        "Names that say what a control does, so a person and an agent ask for it in the same words.",
+    },
+  ]}
+/>
+
+## What has been checked
+
+What a script proves, what a person has looked at, and what nobody has yet.
+
+<Rows
+  title="Checked, and not yet"
+  rows={[
+    {
+      group: "By a script",
+      key: "Widths",
+      value:
+        "Every page in the sidebar from 320 to 1600 wide, light, and at 390 and 1440 dark: no sideways scroll, nothing wider than its box, no text under 13px.",
+    },
+    {
+      group: "By a script",
+      key: "Touch",
+      value:
+        "Every page as a touch phone at 390 and 320: every control in a stage reaches 44px each way. Text fields are left out.",
+    },
+    {
+      group: "By a script",
+      key: "Right to left",
+      value:
+        "Every page at 1440 and 390: each part stands in its mirrored place, pointing icons turn and no other does, layers open on the mirrored side.",
+    },
+    {
+      group: "By a script",
+      key: "Forced colours",
+      value:
+        "Every page at 1440 and 390, with a light and a dark system theme: a bounded part keeps a real edge, states differ from rest, focus changes what is drawn.",
+    },
+    {
+      group: "By a script",
+      key: "Reduced motion",
+      value:
+        "Every page at 1440 and 390: nothing moves for longer than 0.1s, nothing loops but a spinner's or a bar's slow fade, every word is still seen.",
+    },
+    {
+      group: "By a script",
+      key: "Focus ring",
+      value:
+        "Every Tab stop in every stage of the component and pattern pages shows focus, at 3:1 on its ground, light and dark. Filled buttons are counted apart.",
+    },
+    {
+      group: "By a script",
+      key: "Contrast",
+      value: "137 token pairs, light and dark.",
+    },
+    {
+      group: "By a script",
+      key: "Keys and layers",
+      value:
+        "Parts with a check of their own (Dialog, Alert dialog, Popover, Dropdown menu and others): their keys, focus in and back, Escape.",
+    },
+    {
+      group: "By a script",
+      key: "No script",
+      value:
+        "Every page in the sidebar is styled and shows its examples with JavaScript off.",
+    },
+    {
+      group: "By a script",
+      key: "Names for agents",
+      value:
+        "On every component page with live stages, each button the agent bridge sees has a name and no two share one.",
+    },
+    {
+      group: "By a person's eye",
+      key: "Component pages",
+      value:
+        "Every component page at 390, 768 and 1440, light and dark: Tab through every stop, every control pressed, every layer opened and closed.",
+    },
+    {
+      group: "By a person's eye",
+      key: "Forced colours and right to left",
+      value:
+        "Chromium at 390 and 1440, each stage pictured: the film, the overview, the docs shell, Sidebar and App shell.",
+    },
+    {
+      group: "By a person's eye",
+      key: "WebKit and Firefox",
+      value:
+        "Playwright's engines at 390 and 1440, for a few areas only: the film, the overview's tiles, Sidebar and App shell.",
+    },
+    {
+      group: "Not yet",
+      key: "A screen reader",
+      value:
+        "No real screen reader has been listened to. What it hears is read from the page, as in the examples above.",
+    },
+    {
+      group: "Not yet",
+      key: "Safari and Firefox",
+      value: "Not throughout, and nobody has opened the site in a real Safari.",
+    },
+    {
+      group: "Not yet",
+      key: "A real phone",
+      value: "No real finger on a real touch screen.",
+    },
+    {
+      group: "Not yet",
+      key: "Text size",
+      value: "Text at twice its size, apart from zoom, has no check.",
+    },
+  ]}
+/>
+
+## Rules
+
+<Rules
+  always={[
+    "Say status in words as well as colour or icon.",
+    "One Tab stop for a group, with arrows inside, and focus given back to what opened a layer.",
+    "Two of a kind named apart: Delete Q3 report, Delete Q4 report.",
+    "Keep the page readable at 320px wide and at twice the text size.",
+  ]}
+  never={[
+    "A focus ring of your own, or focus hidden.",
+    "A control that only works on hover or with a pointer.",
+    "An icon as the only name of a control, or a placeholder as a field's only label.",
+    "A live region of your own round a part that speaks.",
+  ]}
+/>

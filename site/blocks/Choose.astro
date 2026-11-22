@@ -1,0 +1,21 @@
+---
+// <Choose of={["dialog", "sheet", "drawer"]} /> or <Choose group="A date" />: components that could do the same job, side by
+// side, each with its page's sentence (site/guidance.ts), so this never says something its page
+// does not. Markdown form: site/markdown.ts.
+import "../system/styles/blocks.css";
+import { chooseRows } from "../guidance";
+import { ChooseView } from "./intent";
+
+import { groupNamed } from "../choosing";
+
+// `group`: one of the Choosing groups by its title (site/choosing.ts), as the guideline draws them.
+interface Props {
+  of?: string[];
+  group?: string;
+}
+const names = Astro.props.of ?? groupNamed(Astro.props.group ?? "")?.of;
+if (names === undefined) {throw new Error(`Choose: no group named "${Astro.props.group}" in site/choosing.ts`);}
+const rows = chooseRows(names);
+---
+
+<ChooseView rows={rows} />

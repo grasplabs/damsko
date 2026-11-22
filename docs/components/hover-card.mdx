@@ -1,0 +1,268 @@
+---
+title: Hover card
+description: A small card that previews where a link goes, shown when you point at it.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/hover-card"
+/>
+
+## In a sentence
+
+Rest on the name, or Tab to it and wait; a press still follows the link.
+
+<Stage path="hover-card/person" label="In a sentence" />
+
+## In a list
+
+`align="start"` lines the card up with the list it opens from.
+
+<Stage path="hover-card/document" label="In a list" />
+
+## Through a router
+
+`asChild` puts the trigger on the router's own link (React Router's or TanStack's `Link`), as Tooltip's trigger takes it: one link, with the trigger's look and the card on it.
+
+<Stage path="hover-card/router" label="Through a router" />
+
+## On a control
+
+`variant="default"` with `asChild` leaves the trigger in the look of the element inside: a Button, a Badge, an avatar. It adds no underline, colour, weight or focus ring of its own.
+
+<Stage path="hover-card/control" label="On a control" />
+
+## Sized to its content
+
+`width="content"` makes the card as wide as what it holds, from hover-card-min-width to hover-card-max-width, and never wider than the window less the gutter.
+
+<Stage path="hover-card/fit" label="Sized to its content" />
+
+## Opened from outside
+
+Pass `open` with `onOpenChange` to open it from elsewhere: here a Button shows the card, and moving off it, Escape or a press outside close it as usual.
+
+<Stage path="hover-card/controlled" label="Opened from outside" />
+
+## Every state
+
+Hover and keyboard focus are forced from the link's own CSS; the card waits for its delay.
+
+<States
+  path="hover-card/states"
+  cells={[
+    { label: "Rest" },
+    { label: "Hover", force: "hover" },
+    { label: "Keyboard focus", force: "focus-visible" },
+  ]}
+/>
+
+## Open
+
+The card beside its link, held open and still.
+
+<Stage path="hover-card/open" label="Open" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="hover-card"
+  always={["A short card: a title, a line or two, and at most one quiet fact."]}
+  never={["A shorter delay: the card must not open as the pointer passes."]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Link",
+      key: "Words",
+      value: "The text around it, {font-weight-medium}",
+    },
+    {
+      group: "Card",
+      key: "Width",
+      value: "{popover-width}",
+      note: "the window less {popup-gutter} each side under 640px",
+    },
+    {
+      group: "Card",
+      key: "Gap",
+      value: "{popover-gap}",
+      note: "below the link, or the other side when there is no room",
+    },
+    { group: "Card", key: "Window edge", value: "{popup-gutter} at least" },
+    { group: "Card", key: "Padding", value: "{popover-padding}" },
+    { group: "Card", key: "Corner", value: "{radius}, {radius-shape}" },
+    {
+      group: "Card",
+      key: "Surface",
+      note: "the popup's, as Popover's",
+      tokens: ["popover", "popup-shadow"],
+    },
+    { group: "Card", key: "Between lines", value: "{space-1}" },
+    {
+      group: "Words",
+      key: "Title",
+      value: "{text-base} / {text-base-line}, {font-weight-medium}",
+      tokens: ["foreground"],
+    },
+    {
+      group: "Words",
+      key: "Description",
+      value: "{text-sm} / {text-sm-line}",
+      tokens: ["body-foreground"],
+    },
+    {
+      group: "Words",
+      key: "Quiet fact",
+      value: "{text-xs} / {text-xs-line}, {space-1} above",
+      note: '`variant="muted"`',
+      tokens: ["muted"],
+    },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    {
+      key: "Underline",
+      value: "To full strength, {duration-hover}",
+      note: "pointer only; reduced: at once",
+      tokens: ["ease"],
+    },
+    {
+      key: "Opening",
+      value: "From {popup-from-scale} and clear, {duration-ui}",
+      note: "from the link; reduced: at once",
+      tokens: ["ease"],
+    },
+    {
+      key: "Closing",
+      value: "Back the same way, {duration-leave}",
+      note: "faster than it came",
+      tokens: ["ease"],
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Opening",
+      key: "Pointer",
+      value:
+        "Rests on the link for `openDelay`, 600ms: passing over a page of links shows nothing.",
+    },
+    {
+      group: "Opening",
+      key: "Keyboard",
+      value: "Tab to the link and wait the same delay.",
+    },
+    {
+      group: "Closing",
+      key: "Pointer",
+      value:
+        "Stays `closeDelay`, 300ms, after the pointer leaves, so it can cross into the card.",
+    },
+    {
+      group: "Closing",
+      key: "Escape",
+      value: "Closes it; focus stays on the link.",
+    },
+    {
+      group: "Link",
+      key: "Press",
+      value: "A click, Enter or a tap follows the link, open or not.",
+    },
+    {
+      group: "Touch",
+      key: "No hover",
+      value:
+        "The card never opens; the link's page holds everything it would show.",
+    },
+    {
+      group: "Card",
+      key: "Contents",
+      value: "Words only: nothing to press, and it never scrolls.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Link",
+      value: "A plain `a` with its `href`: read and followed as any link",
+    },
+    {
+      key: "Card",
+      value: "Not focusable, and not announced: a preview for the eye",
+    },
+    {
+      key: "Same facts",
+      value:
+        "Everything in the card is on the link's page, for a screen reader, a phone and an agent",
+    },
+    {
+      key: "Focus",
+      value: "The shared ring on the link's words",
+      tokens: ["ring"],
+    },
+    {
+      key: "Contrast",
+      value: "Every line 4.5:1 on the card, light and dark",
+      note: "checked by `node tokens/generate.ts --check`",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+### HoverCard
+
+<Props
+  source="src/components/hover-card.tsx"
+  type="HoverCardProps"
+  label="HoverCard"
+/>
+
+### HoverCardTrigger
+
+<Props
+  source="src/components/hover-card.tsx"
+  type="HoverCardTriggerProps"
+  label="HoverCardTrigger"
+/>
+
+### HoverCardContent
+
+<Props
+  source="src/components/hover-card.tsx"
+  type="HoverCardContentProps"
+  label="HoverCardContent"
+/>
+
+### HoverCardTitle
+
+<Props
+  source="src/components/hover-card.tsx"
+  type="HoverCardTitleProps"
+  label="HoverCardTitle"
+/>
+
+### HoverCardDescription
+
+<Props
+  source="src/components/hover-card.tsx"
+  type="HoverCardDescriptionProps"
+  label="HoverCardDescription"
+/>
+
+</Reference>

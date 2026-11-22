@@ -1,0 +1,83 @@
+---
+// The rail: "On this page". Drawn twice by the layout (site/layouts/Docs.astro):
+//
+//   desktop  beside the column, where the page has room for it: the page's sections in its parts
+//            (the pictures, the guidance, the folded reference), the one being read in ink with a
+//            mint mark, and the page tools under them (./PageTools.astro).
+//   mobile   where there is no rail: one small bar at the top of the column that says which section
+//            is being read and opens the same list (a <details>, so it works without script).
+//
+// The rail is the library's TableOfContents: the sections on one start edge under the title, one
+// mark gliding to the section being read, a thin measure of what is read, the page tools at its
+// foot. It follows the shell's scrolling card and marks the section being read itself. The bar
+// where there is no rail: site/behaviour/chrome.ts.
+// Through the shell's own module: no request of its own on each page (./DocsShell.tsx).
+import { TableOfContents } from "./DocsShell";
+import { ChevronDownIcon, Icon } from "@grasp-os/ui/lib/icons";
+import PageTools from "./PageTools.astro";
+import RailList from "./RailList.astro";
+
+interface Props {
+  headings: { depth: number; slug: string; text: string; part?: string; folded?: boolean }[];
+  title: string;
+  variant: "mobile" | "desktop";
+  /** The words for a folded section, said after its name. */
+  foldedLabel?: string;
+}
+const { headings, title, variant, foldedLabel = "folded" } = Astro.props;
+const route = Astro.url.pathname.replace(/\.html$/u, "").replace(/(.)\/$/u, "$1");
+const base = import.meta.env.BASE_URL.replace(/\/$/u, "");
+const pageRoute = route.startsWith(base) ? route.slice(base.length) || "/" : route;
+
+// The rail's sections for the TableOfContents: a heading's slug, words, depth, part and fold.
+const items = headings.map((heading) => ({
+  id: heading.slug,
+  label: heading.text,
+  level: heading.depth === 3 ? (3 as const) : (2 as const),
+  group: heading.part === undefined || heading.part === "" ? undefined : heading.part,
+  collapsed: heading.folded === true ? true : undefined,
+}));
+
+// Runs of headings by part, in order. The pictures have no part of their own.
+const groups: { part: string; items: Props["headings"] }[] = [];
+for (const heading of headings) {
+  const part = heading.part ?? "";
+  const last = groups.at(-1);
+  if (last && last.part === part) {last.items.push(heading);}
+  else {groups.push({ part, items: [heading] });}
+}
+---
+
+{
+  variant === "desktop" && (
+    <div class="site-rail" data-site-rail>
+      {headings.length > 0 ? (
+        <TableOfContents client:load items={items} title={title} container="[data-site-scroller]">
+          <div class="site-rail-tools" slot="footer">
+            <PageTools route={pageRoute} />
+          </div>
+        </TableOfContents>
+      ) : (
+        <div class="site-rail-tools">
+          <PageTools route={pageRoute} />
+        </div>
+      )}
+    </div>
+  )
+}
+{
+  variant === "mobile" && headings.length > 1 && (
+    <details class="site-onpage" data-site-onpage>
+      <summary>
+        <span class="site-onpage-title">{title}</span>
+        <span class="site-onpage-current" data-site-onpage-current aria-hidden="true" />
+        <span class="site-onpage-chevron" aria-hidden="true">
+          <Icon icon={ChevronDownIcon} />
+        </span>
+      </summary>
+      <nav aria-label={title} class="site-onpage-list">
+        <RailList groups={groups} id="site-onpage" foldedLabel={foldedLabel} />
+      </nav>
+    </details>
+  )
+}

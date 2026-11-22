@@ -1,0 +1,107 @@
+---
+title: Icon tile
+description: A small square with an object's icon, shown at the top of its details panel.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/icon-tile"
+  use={'import { IconTile } from "@grasp-os/ui/components/icon-tile";'}
+/>
+
+## Variants
+
+`default` for a quiet head, `tint` for a wash of mint, `gradient` for the one object a view is about.
+
+<Stage path="icon-tile/looks" label="Variants" />
+
+## Loading
+
+With `loading`, while the object works, the light leans down once and stays until it stops. Say it in words too.
+
+<Stage path="icon-tile/running" label="Loading" />
+
+## In a table's row
+
+`size="sm"`: a 24px tile for an object in a dense row. Give its column `control`, and a compact row stays 32px, a default one 42px, as a row of words alone. That cell is one line tall: keep the name beside the tile on one line, ending in an ellipsis where it is narrow.
+
+<Stage path="icon-tile/row" label="In a table's row" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="icon-tile"
+  always={[
+    "The head of an inspector: one tile per view, for the object the view is about.",
+    "The object's kind as its icon: an agent, a report, a person.",
+  ]}
+  never={[
+    "Something people press: it is a mark, not a control.",
+    "A person or a team as a picture, or their initials: use Avatar.",
+    "Two gradient tiles in one view.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Tile",
+      key: "Size",
+      value: "{icon-tile} square, {icon-tile-radius} in the squircle",
+    },
+    { group: "Tile", key: "Icon", value: "{icon-tile-icon}" },
+    {
+      group: "Default",
+      key: "Ground",
+      value: "White on the medium lift, the icon in the one accent",
+      tokens: ["card", "shadow-md", "icon-tile-foreground"],
+    },
+    {
+      group: "Tint",
+      key: "Ground",
+      value: "A wash of the light's mint",
+      tokens: ["icon-tile-tint", "icon-tile-foreground"],
+    },
+    {
+      group: "Gradient",
+      key: "Ground",
+      value: "Approve's pane of light and its inner light",
+      tokens: ["success-light", "bevel-success", "success-fill-foreground"],
+    },
+    {
+      group: "Loading",
+      key: "Light",
+      value: "Leans to {success-light-lean}, once",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Role",
+      value:
+        "Hidden from screen readers under a title; `aria-label` makes it an image",
+    },
+    { key: "Loading", value: "Never the only sign: say it in words beside it" },
+    { key: "Reduced motion", value: "The light moves at once" },
+    { key: "Forced colours", value: "A 1px outline keeps the square" },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/icon-tile.tsx"
+  type="IconTileProps"
+  label="IconTile props"
+/>
+
+</Reference>

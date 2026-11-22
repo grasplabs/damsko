@@ -1,0 +1,180 @@
+---
+title: Toast
+description: A small message that pops up for a moment to say something happened.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/toast"
+  use={'import { Toaster, toast } from "@grasp-os/ui/components/toast";'}
+/>
+
+## Basic
+
+Place one `Toaster`, then call `toast()` when something finishes.
+
+<Stage path="toast/basic" label="Basic" />
+
+## One per page
+
+Put one `<Toaster />` at the page's root, outside every layer: it draws the shared `toast`, from anywhere on the page, a Data table's included. Two on the same toasts show each one twice, and a screen reader hears it twice, so a second one says so in the console. A part with a queue of its own (`createToaster()`) gives its own Toaster that queue.
+
+## Types
+
+Success, warning, error and info each have an icon in their colour; the default has none.
+
+<Stage path="toast/types" label="Types" />
+
+## Duration
+
+3.5 seconds, 8 with an action, or `duration` in milliseconds. A pointer, focus or a hidden tab pauses it.
+
+<Stage path="toast/duration" label="Duration" />
+
+## With actions
+
+An action such as Undo stands under the words. A Promise keeps the toast while it runs, and a Spinner shows in the action; if it fails, the action says `toast.error` (Could not finish), once to a screen reader, and the toast stays.
+
+<Stage path="toast/actions" label="With actions" />
+
+## How a toast goes
+
+A toast goes by time, swipe, Escape or its action, and fades as it goes. Only one that stays has a close button.
+
+<Stage path="toast/dismiss" label="How a toast goes" />
+
+## Over a dialog
+
+A toast stands over every layer: pressing it, or its action, while a Dialog, Alert dialog, Sheet, Drawer or Popover is open does not count as a press outside, so the layer stays and Undo runs. From the keyboard, F6 reaches the toast from inside the layer, and Tab its action.
+
+<Stage path="toast/in-dialog" live label="Over a dialog" />
+
+## In the middle
+
+`position="top-center"` for a message about the whole page. The default, `bottom-right`, stands beside the work; `left` and `right` follow the reading direction.
+
+<Stage path="toast/center" label="In the middle" />
+
+## Update by its id
+
+`toast.update(id, …)` changes a toast in place: a loading toast becomes its result. `data.icon` gives one toast its own icon.
+
+<Stage path="toast/update" label="Update by its id" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="toast"
+  always={[
+    "One action at most, such as Undo, at the bottom end.",
+    "A receipt: it says that something happened.",
+    "Something done that can be brought back, with Undo.",
+  ]}
+  never={[
+    "Anything a person must read or act on: use Alert or Dialog.",
+    "An error that needs fixing before going on.",
+    "The only sign that something failed.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Size",
+      key: "Width",
+      value: "{toast-width}",
+      note: "never closer than {dialog-gutter} to the window's edges",
+    },
+    { group: "Size", key: "Padding", value: "{space-4}" },
+    {
+      group: "Size",
+      key: "Stack",
+      value:
+        "{toast-peek} and {toast-peek-scale} per toast behind, {toast-gap} apart when open",
+    },
+    {
+      group: "Type",
+      key: "Title",
+      value: "{text-base} / {text-base-line}, {font-weight-medium}",
+      tokens: ["foreground"],
+    },
+    {
+      group: "Type",
+      key: "Description",
+      value: "{text-base} / {text-base-line}",
+      tokens: ["muted"],
+    },
+    {
+      group: "Surface",
+      key: "Toast",
+      value: "{radius}, {radius-shape}",
+      tokens: ["card", "shadow-md"],
+    },
+    {
+      group: "Surface",
+      key: "Icon",
+      value: "{icon-sm}, in the type's colour",
+      tokens: ["success", "warning", "destructive", "info"],
+    },
+    {
+      group: "Motion",
+      key: "Coming in",
+      value: "Fades in as it rises {space-3}, over {duration-open}",
+      note: "never a whole toast: its action is pressable from its first frame, where it comes to rest; reduced: simply there",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+`toast()` and its `.success`, `.warning`, `.error`, `.info`, `.loading` and `.promise` show a toast: 3.5 seconds, or 8 with an action. `toast.dismiss()` closes.
+
+<Rows
+  title="Each toast's options"
+  rows={[
+    {
+      key: "`id`",
+      value: "Names the toast; showing one with the same id again replaces it",
+    },
+    {
+      key: "`duration`",
+      value: "In milliseconds; `Infinity` keeps it until it is closed",
+    },
+    {
+      key: "`action`",
+      value:
+        "`{ label, onAction }`, or `href` to make it a link; a Promise keeps the toast while it runs",
+    },
+    {
+      key: "`cancel`",
+      value: "`{ label, onCancel }`: a second, quieter button that closes it",
+    },
+    {
+      key: "`priority`",
+      value:
+        "`assertive` is said at once, `polite` waits for a pause; errors are assertive",
+    },
+    {
+      key: "`onDismiss`",
+      value: "Runs when it closes, with why; `details.cancel()` keeps it",
+    },
+    {
+      key: "`data.icon`",
+      value:
+        "An icon from lib/icons in place of its type's, or `null` for none (`ToastIconData`)",
+    },
+  ]}
+/>
+
+### Toaster
+
+<Props source="src/components/toast.tsx" type="ToasterProps" label="Toaster" />
+
+</Reference>

@@ -1,0 +1,279 @@
+---
+title: Tree view
+description: A list of nested items, like folders and files, that open and close.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/tree-view"
+  use={'import { TreeView } from "@grasp-os/ui/components/tree-view";'}
+/>
+
+## Files
+
+Folders open and close; a press or Space chooses one item. A letter finds the next item.
+
+<Stage path="tree-view/files" label="Files" />
+
+## Several chosen
+
+`selectionMode="multiple"`: Shift with the arrows, or a press with Ctrl or Command, chooses several.
+
+<Stage path="tree-view/multiple" label="Several chosen" />
+
+## Loaded when opened
+
+`loadChildren` loads a branch the first time it opens; a spinner shows while it does.
+
+<Stage path="tree-view/lazy" label="Loaded when opened" />
+
+## Pages
+
+`current` marks the open page and opens its branch; `onAction` goes there.
+
+<Stage path="tree-view/pages" label="Pages" />
+
+## The tree guide
+
+`showIndentGuides` draws Sidebar's tree guide on nested items: a stem down from each open branch's chevron and a rounded elbow into each item, stopping at the last. Off unless given.
+
+<Stage path="tree-view/guides" label="The tree guide" />
+
+## Links, with counts and marks
+
+A node's `href`, or `render` for a router's own link, makes its row a link (`current` marks the open one); `actions` puts a count or a mark at the row's end. The keys and typeahead stay the tree's: Enter follows the link, as a press does.
+
+<Stage path="tree-view/links" live label="Links, with counts and marks" />
+
+## A count, and a mark in a tone
+
+`actions` is a node, so its tone is yours: a count stands as it is, in the row's muted tone, and a mark that asks for a look is wrapped in a span that gives it the warning colour. Wrapping it is the intended way; TreeView has no tone prop of its own.
+
+<Stage path="tree-view/end" label="A count, and a mark in a tone" />
+
+## A filter over it
+
+`filterable` puts a field over the tree. What is typed keeps the items whose words hold it, each with the folders above it opened, and marks the words as Command does; nothing matched says so. Escape empties it, and the folds come back as they were. Hold the words yourself with `filter` and `onFilterChange`.
+
+<Stage path="tree-view/filter" label="A filter over it" />
+
+## Every state
+
+One row in each state; hover and keyboard focus are forced from the tree's own CSS.
+
+<States
+  path="tree-view/states"
+  code="tree-view/files"
+  cells={[
+    { label: "Row" },
+    { label: "Hover", force: "hover" },
+    { label: "Keyboard focus", force: "focus-visible" },
+    { label: "Chosen", props: { chosen: true } },
+    { label: "Current page", props: { current: true } },
+    { label: "Branch, closed", props: { branch: true } },
+    { label: "Branch, open", props: { branch: true, open: true } },
+    { label: "Disabled", props: { disabled: true } },
+  ]}
+/>
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="tree-view"
+  always={[
+    "Nested items that open and close: folders and files, or the pages of a section.",
+    "A large tree, where only what is opened is fetched: `loadChildren`.",
+    "An icon that says what an item is, the same for every item of a kind.",
+    "Short labels: the tree is narrow, and typeahead finds by the first letters.",
+  ]}
+  never={[
+    "A flat list: use Item or Select.",
+    "More than a few levels: show the path instead, with Breadcrumb.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Row",
+      key: "Height",
+      value: "32px, 44px on a touch screen",
+      note: "{tree-view-row}, {tree-view-row-touch}",
+    },
+    {
+      group: "Row",
+      key: "Indent",
+      value: "16px per level",
+      note: "{tree-view-indent}",
+    },
+    {
+      group: "Row",
+      key: "Padding and corner",
+      value: "8px at each end, an 8px corner",
+      note: "{tree-view-row-padding}, {tree-view-row-radius}",
+    },
+    {
+      group: "Row",
+      key: "Words",
+      value: "14px / 20px",
+      note: "{text-sm}",
+      tokens: ["body-foreground"],
+    },
+    {
+      group: "Row",
+      key: "Chevron and icon",
+      value: "16px, quieter than the words, 8px apart",
+      note: "{icon-sm}, {space-2}",
+      tokens: ["muted"],
+    },
+    {
+      group: "Row",
+      key: "Fill",
+      value:
+        "Under a pointer; chosen, the mint wash; the current page, stronger, under heavier words",
+      tokens: [
+        "tree-view-bg-hover",
+        "tree-view-bg-selected",
+        "tree-view-bg-active",
+      ],
+    },
+    {
+      group: "Row",
+      key: "Disabled",
+      value: "Half strength",
+      note: "{opacity-disabled}",
+    },
+    {
+      group: "Loading",
+      key: "Children",
+      value:
+        "A small Spinner in the chevron's place; the Failed mark if they could not load",
+      tokens: ["destructive"],
+    },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    {
+      key: "Chevron",
+      value: "Turns a quarter as its branch opens, 250ms",
+      note: "{duration-ui}; reduced: at once",
+      tokens: ["ease"],
+    },
+    {
+      key: "Hover",
+      value: "The fill comes in over 150ms",
+      note: "{duration-hover}; pointer only",
+      tokens: ["ease"],
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Keyboard",
+      key: "Moving",
+      value:
+        "Up and Down move; Home and End jump; a letter finds the next item that starts with it.",
+    },
+    {
+      group: "Keyboard",
+      key: "Opening",
+      value:
+        "Right opens a branch or enters it; Left closes it or goes to its parent; `*` opens its siblings.",
+    },
+    {
+      group: "Keyboard",
+      key: "Choosing",
+      value:
+        "Space chooses; Enter chooses and runs `onAction`; Shift with the arrows adds to several.",
+    },
+    {
+      group: "Pointer",
+      key: "Pressing",
+      value:
+        "A press chooses an item and opens or closes a branch; the chevron always opens or closes.",
+    },
+    {
+      group: "Loading",
+      key: "Children",
+      value:
+        "`loadChildren` runs the first time a branch opens empty; a failure lets the next open try again.",
+    },
+    {
+      group: "Pages",
+      key: "Current",
+      value: "`current` marks the open page and opens the branches above it.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Role",
+      value: "`tree` of `treeitem`s, named by `aria-label`",
+      note: "WAI-ARIA's tree view",
+    },
+    { key: "Levels", value: "`aria-level`, and `aria-expanded` on a branch" },
+    {
+      key: "Chosen",
+      value: "`aria-selected`; `aria-multiselectable` with several",
+    },
+    { key: "Current", value: '`aria-current="page"` on the open page' },
+    {
+      key: "Tab stop",
+      value: "One: the current page, the chosen item, or the first",
+    },
+    {
+      key: "Contrast",
+      value: "Words 4.5:1 on the chosen fill, light and dark",
+      note: "checked by `node tokens/generate.ts --check`",
+    },
+  ]}
+/>
+<Rows
+  title="From shadcn"
+  rows={[
+    {
+      group: "Base",
+      key: "No shadcn tree",
+      value: "UI SDK's Tree",
+      note: "shadcn has none; its sidebar has nested items",
+    },
+    {
+      group: "Data",
+      key: "Nested parts",
+      value: "`items`",
+      note: "the whole shape known to the keys and typeahead",
+    },
+    {
+      group: "Icons",
+      key: "lucide's Folder and File",
+      value: "`FolderIcon` and `FileIcon` from lib/icons",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/tree-view.tsx"
+  type="TreeViewProps"
+  label="TreeView"
+/>
+
+### TreeNode
+
+<Props source="src/components/tree-view.tsx" type="TreeNode" label="TreeNode" />
+
+</Reference>

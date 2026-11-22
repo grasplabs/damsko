@@ -1,0 +1,123 @@
+---
+title: Page header
+description: The top of a page, with its title, a line about it, its actions and tabs.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/page-header"
+/>
+
+## Basic usage
+
+The page's name in the serif, one line under it, and the actions at the end, the main one last.
+
+<Stage path="page-header/basic" label="Basic usage" />
+
+## With tabs
+
+A page with views carries its tabs under the title.
+
+<Stage path="page-header/tabs" label="With tabs" />
+
+## A long description
+
+`descriptionLineClamp` cuts a description someone wrote short after one or two lines. Its title keeps the whole text.
+
+<Stage path="page-header/long-description" label="A long description" />
+
+## Loading
+
+`loading` puts placeholders where the words will be. `loadingLines` reserves the lines a wrapping description will take.
+
+<Stage path="page-header/loading" label="Loading" />
+
+## Without a shell
+
+In an app shell the crumbs stand in its page bar. A page without one may put a Breadcrumb above the title, and a Badge beside it (`badge`).
+
+<Stage path="page-header/breadcrumb" label="Without a shell" />
+
+## A settings page
+
+`size="sm"` for a settings page: the serif at the middle size, no lead, as dense as a sub-page.
+
+<Stage path="page-header/settings-page" label="A settings page" />
+
+## A sub-page
+
+`size="xs"` for a sub-page whose crumbs say where you are: the title a step down, in the sans, no lead.
+
+<Stage path="page-header/sub-page" label="A sub-page" />
+
+<Part title="Using it" />
+
+## Actions on a phone
+
+On a phone the last Button stays at the title's end; the others fold into More, a destructive one last. Narrowest, the main one is its icon alone, named by its words.
+
+<Stage path="page-header/actions" label="Actions on a phone" />
+
+## Every kind of action, folded
+
+A disabled, working (a Spinner in it) or link (`asChild` with an `<a href>`) Button folds as that same kind of item.
+
+<Stage path="page-header/actions-kinds" label="Every kind of action, folded" />
+
+## A banner
+
+`variant="banner"` heads a record's or a note's page: flush under the bar, a faint dither, and one line drawn along its foot. `accentColor` lights the dither in the colour of the page's object, and `media` puts its mark over the title.
+
+<Stage path="page-header/band" label="A banner" />
+
+Outside a shell it stays where it is, its own room round its words.
+
+<Stage path="page-header/band-long" label="A banner outside a shell" />
+
+## A toolbar
+
+`toolbar` takes a `PageHeaderToolbar`, the row under the title that changes the list below: the kinds to browse at its start, whose they are and a search at its end. When the row is narrow, the two stack.
+
+<Stage path="page-header/toolbar" label="A toolbar" />
+
+## A search and an action
+
+With nothing to browse, the search takes the toolbar's start and the page's action its end.
+
+<Stage path="page-header/toolbar-actions" label="A search and an action" />
+
+## When to use it
+
+<Intent
+  of="page-header"
+  always={[
+    "The top of a page: its title, the page's one h1, one line on what it holds, its actions and its tabs.",
+    "The page's own Buttons in `actions`, the main one last.",
+    "A list under the header to browse and narrow: its `toolbar`.",
+  ]}
+  never={[
+    "The title of a part of a page: use Section header.",
+    "Actions on the rows chosen in a table: use Data table.",
+    "A toolbar with nothing to browse or narrow yet.",
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/page-header.tsx"
+  type="PageHeaderProps"
+  label="PageHeader props"
+/>
+
+### PageHeaderToolbar
+
+<Props
+  source="src/components/page-header.tsx"
+  type="PageHeaderToolbarProps"
+  label="PageHeaderToolbar props"
+/>
+
+</Reference>

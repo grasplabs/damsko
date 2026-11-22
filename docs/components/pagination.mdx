@@ -1,0 +1,302 @@
+---
+title: Pagination
+description: Previous and Next buttons that page through a long list and show where you are.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/pagination"
+/>
+
+## Basic usage
+
+A PaginationRange, the items shown and the total, with the steps at the end of the row.
+
+<Stage path="pagination/range" label="Basic usage" />
+
+## The page
+
+A PaginationPage between the steps for the page and the count, where the range would say too much.
+
+<Stage path="pagination/page" label="The page" />
+
+## Steps only
+
+The steps alone where the list already says how much it holds.
+
+<Stage path="pagination/arrows" label="Steps only" />
+
+## Page numbers
+
+PaginationContent's children as a function of the pages to show: a PaginationLink for each page near the current one and at the ends, a PaginationEllipsis for each gap. The current page says so.
+
+<Stage path="pagination/numbers" label="Page numbers" />
+
+## Loading and empty
+
+`loading` while the next page comes. With no items, neither step moves. `unit` says what the items are called ("projects"); without it the range uses the I18nProvider's `pagination.unit` ("items").
+
+<Stage path="pagination/states" label="Loading and empty" />
+
+## As links
+
+`getPageUrl` gives each page an address; read the page back from it and pass it as `page`. For a router's own link, give it to PaginationLink, PaginationPrevious or PaginationNext with `asChild`.
+
+<Stage path="pagination/links" label="As links" />
+
+## Every state
+
+The steps' own states, then the ends, loading and an empty list.
+
+<States
+  path="pagination/state"
+  cells={[
+    { label: "Rest" },
+    { label: "Hover", force: "hover" },
+    { label: "Keyboard focus", force: "focus-visible" },
+    { label: "Pressed", force: "active" },
+    { label: "First page", props: { page: 1 } },
+    { label: "Last page", props: { page: 5 } },
+    { label: "Loading", props: { loading: true } },
+    { label: "Empty", props: { total: 0, page: 1 } },
+  ]}
+/>
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="pagination"
+  always={[
+    "A long list shown a page at a time, under the list and at its width.",
+    "A name with `aria-label` when a page has two.",
+    "A PaginationRange where people need to know how much there is; a PaginationPage where the range would say too much.",
+    "`getPageUrl` where each page is an address, so back, a reload and a new tab open it.",
+  ]}
+  never={[
+    "A list that never holds more than one page.",
+    "A table of many rows, which pages itself: use Data table.",
+    "The steps of a task, not the pages of a list: use Stepper.",
+    "Paging away from selected rows without saying they stay selected.",
+    "Loading without `loading`: a second press would skip a page.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Steps",
+      key: "Size",
+      value: "{pagination-step} square, {space-1} apart",
+    },
+    {
+      group: "Steps",
+      key: "Corner",
+      value: "{radius}, capped at half the step",
+    },
+    {
+      group: "Steps",
+      key: "Fill",
+      value:
+        "A ghost Button's: none until the pointer rests on it; bare at its end and while loading",
+      tokens: ["accent", "accent-active"],
+    },
+    {
+      group: "Steps",
+      key: "Icon",
+      value: "{icon-sm}",
+      tokens: ["foreground", "subtle-foreground"],
+    },
+    {
+      group: "Type",
+      key: "Range and page",
+      value:
+        "{text-xs} / {text-xs-line}, {font-weight-medium}, tabular figures",
+      tokens: ["muted", "foreground", "subtle-foreground"],
+    },
+    { group: "Shape", key: "Between range and steps", value: "{space-3}" },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    {
+      key: "Hover and press",
+      value:
+        "The step's fill, and a press to {button-press-scale}, in {duration-hover}",
+      tokens: ["ease"],
+    },
+    {
+      key: "A new page",
+      value: "None of its own: the range or the page changes in place",
+      note: "the list decides how its rows arrive",
+    },
+    {
+      key: "Reduced motion",
+      value: "Unchanged: the press still scales to {button-press-scale}",
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Steps",
+      key: "At an end",
+      value:
+        "Says it is disabled and does nothing; a button stays focusable, a link leaves the tab order.",
+    },
+    {
+      group: "Steps",
+      key: "Loading",
+      value: "Both do nothing; a plain press on a link is not followed.",
+    },
+    {
+      group: "Content",
+      key: "Narrow",
+      value: "The steps wrap under the range and stay at the end.",
+    },
+    {
+      group: "Settings",
+      key: "Touch",
+      value:
+        "Each step has a 44px target; the steps stand apart so the targets never overlap.",
+    },
+    {
+      group: "Settings",
+      key: "Without script",
+      value: "With `getPageUrl`, the steps and page links are links that work.",
+    },
+    {
+      group: "Settings",
+      key: "Forced colours",
+      value: "A 1px border draws each step; at an end it is grey.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Role",
+      value: "A `nav` named by `aria-label`, with the steps in a list",
+    },
+    {
+      key: "Steps",
+      value:
+        "Named Previous page and Next page; `aria-disabled` at an end and while loading",
+    },
+    {
+      key: "Right to left",
+      value: "The chevrons mirror; the page still reads 2 / 10",
+    },
+    { key: "Change", value: "The range, or the page, is said when it changes" },
+    { key: "Page", value: "Drawn as 2 / 10, read as Page 2 of 10" },
+    {
+      key: "Contrast",
+      value: "Range and page 4.5:1 on every ground, light and dark",
+      note: "checked by `node tokens/generate.ts --check`",
+    },
+  ]}
+/>
+<Rows
+  title="From shadcn"
+  rows={[
+    {
+      group: "Parts",
+      key: "`PaginationContent`, `PaginationItem`, `PaginationLink`, `PaginationPrevious`, `PaginationNext`, `PaginationEllipsis`",
+      value: "The same parts",
+    },
+    {
+      group: "Parts",
+      key: "`PaginationLink`",
+      value: "`page`, `isActive`, `asChild`",
+      note: "the current page by default; a router's link with `asChild`",
+    },
+    {
+      group: "New",
+      key: "`PaginationRange`, `PaginationPage`",
+      value: "The range, or the page and the count",
+    },
+    {
+      group: "New",
+      key: "`loading`",
+      value: "The pager waits while a page loads",
+    },
+    {
+      group: "Behaviour",
+      key: "The pages",
+      value: "`total`, `pageSize` and `page` on the root",
+      note: "buttons, or links with `getPageUrl`",
+    },
+    {
+      group: "Words",
+      key: "Previous, Next, the range",
+      value: "The I18nProvider's `pagination` words",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/pagination.tsx"
+  type="PaginationProps"
+  label="Pagination"
+/>
+
+<Props
+  source="src/components/pagination.tsx"
+  type="PaginationContentProps"
+  label="PaginationContent"
+/>
+
+<Props
+  source="src/components/pagination.tsx"
+  type="PaginationItemProps"
+  label="PaginationItem"
+/>
+
+<Props
+  source="src/components/pagination.tsx"
+  type="PaginationLinkProps"
+  label="PaginationLink"
+/>
+
+<Props
+  source="src/components/pagination.tsx"
+  type="PaginationPreviousProps"
+  label="PaginationPrevious"
+/>
+
+<Props
+  source="src/components/pagination.tsx"
+  type="PaginationNextProps"
+  label="PaginationNext"
+/>
+
+<Props
+  source="src/components/pagination.tsx"
+  type="PaginationEllipsisProps"
+  label="PaginationEllipsis"
+/>
+
+<Props
+  source="src/components/pagination.tsx"
+  type="PaginationRangeProps"
+  label="PaginationRange"
+/>
+
+<Props
+  source="src/components/pagination.tsx"
+  type="PaginationPageProps"
+  label="PaginationPage"
+/>
+
+</Reference>

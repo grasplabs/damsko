@@ -1,0 +1,176 @@
+---
+// Every page of the docs: one route for every file in docs/ (site/system/content.ts says which).
+// The page's MDX is found by import.meta.glob, so a new file is a new page with no list to edit,
+// and is drawn with the site's blocks, mapped below by the names the pages use.
+//
+// A page that does not compile, imports something missing, or has a block that throws is drawn
+// with the problem in place of its body (../system/Guard.astro, ../system/vite.ts guardPages); the
+// other pages are not affected, and a build names the broken ones at the end and fails.
+import { readFileSync } from "node:fs";
+
+import type { MarkdownHeading } from "astro";
+
+import AllTokens from "../blocks/AllTokens.astro";
+import Code from "../blocks/Code.astro";
+import H3 from "../blocks/H3.astro";
+import Head from "../blocks/Head.astro";
+import Heading from "../blocks/Heading.astro";
+import IconList from "../blocks/IconList.astro";
+import LightStrip from "../blocks/LightStrip.astro";
+import Pre from "../blocks/Pre.astro";
+import PropsTable from "../blocks/Props.astro";
+import Rows from "../blocks/Rows.astro";
+import Choose from "../blocks/Choose.astro";
+import Intent from "../blocks/Intent.astro";
+import Rules from "../blocks/Rules.astro";
+import Scene from "../blocks/Scene.astro";
+import SampleRows from "../blocks/SampleRows.astro";
+import Statement from "../blocks/Statement.astro";
+import TokenFilter from "../blocks/TokenFilter.astro";
+import Tokens from "../blocks/Tokens.astro";
+import TypeFaces from "../blocks/TypeFaces.astro";
+import TypeRows from "../blocks/TypeRows.astro";
+import Ways from "../blocks/Ways.astro";
+import Part from "../blocks/Part.astro";
+import Reference from "../blocks/Reference.astro";
+import Docs from "../layouts/Docs.astro";
+import Stage from "../blocks/Stage.astro";
+import States from "../blocks/States.astro";
+import Table from "../system/blocks/Table.astro";
+import { recordProblem } from "../system/broken";
+import type { Problem as PageProblem } from "../system/broken";
+import { findPage, listPages, neighbours } from "../system/content";
+import Guard from "../system/Guard.astro";
+import Problem from "../system/Problem.astro";
+import TopStep from "../chrome/TopStep.astro";
+import { wanted } from "../system/subset";
+
+// Every page in docs/. Get started ("/") is site/pages/index.astro.
+export const getStaticPaths = () =>
+  listPages()
+    .filter((page) => page.route !== "/" && wanted(page.route))
+    .map((page) => ({ params: { slug: page.route.slice(1) } }));
+
+interface PageModule {
+  Content?: (props: { components: Record<string, unknown> }) => unknown;
+  getHeadings?: () => MarkdownHeading[];
+  /** Set instead of the rest when the page did not compile (../system/vite.ts, guardPages). */
+  pageProblem?: PageProblem;
+}
+
+const modules = import.meta.glob<PageModule>("/docs/**/*.mdx");
+
+// The blocks a page is made of, by the names the pages use (the MDX components every page gets).
+const components = {
+  Stage,
+  States,
+  Rows,
+  Props: PropsTable,
+  Head,
+  Statement,
+  Ways,
+  Intent,
+  Choose,
+  Rules,
+  LightStrip,
+  Tokens,
+  TokenFilter,
+  TypeFaces,
+  TypeRows,
+  SampleRows,
+  IconList,
+  Scene,
+  AllTokens,
+  Part,
+  Reference,
+  pre: Pre,
+  code: Code,
+  h2: Heading,
+  h3: H3,
+  table: Table,
+};
+
+const route = `/${Astro.params.slug ?? ""}`;
+const page = findPage(route);
+if (!page) {return Astro.rewrite("/404");}
+
+let module: PageModule | null = null;
+let problem: PageProblem | null = null;
+try {
+  module = (await modules[`/${page.file}`]?.()) ?? null;
+  if (!module) {problem = { file: page.file, message: "The page's file was not found by the build." };}
+} catch (error) {
+  // In dev a file that fails to load lands here (a build stops at guardPages first).
+  problem = { file: page.file, message: error instanceof Error ? error.message.split("\n")[0] ?? "" : String(error) };
+}
+if (module?.pageProblem) {problem = module.pageProblem;}
+if (problem) {
+  recordProblem(problem);
+  console.error(`[grasp] ${problem.file}${problem.line ? `:${problem.line}` : ""}: ${problem.message}`);
+}
+const Content = module?.Content;
+const headings = problem ? [] : (module?.getHeadings?.() ?? []);
+const { prev, next } = neighbours(page.route);
+
+// The page's parts, for the rail: the pictures, then <Part title="…" /> (the guidance), then
+// <Reference> (the folds). Read from the page's source in order, heading by heading; a page with no
+// markers is one part, as before. A heading in the Reference is a fold (`folded`); its own h3s stay
+// inside the fold and out of the rail.
+interface RailHeading extends MarkdownHeading {
+  part?: string;
+  folded?: boolean;
+}
+const partsOf = (file: string, found: MarkdownHeading[]): RailHeading[] => {
+  let source = "";
+  try {
+    source = readFileSync(file, "utf-8").replace(/^---[\s\S]*?\n---\n/u, "");
+  } catch {
+    return found;
+  }
+  const marks: { part: string; reference: boolean }[] = [];
+  let part = "";
+  let reference = false;
+  let fence = false;
+  for (const line of source.split("\n")) {
+    if (/^\s*(`{3,}|~{3,})/u.test(line)) {fence = !fence;}
+    if (fence) {continue;}
+    const named = /^<Part\s+title="([^"]+)"/u.exec(line);
+    if (named) {part = named[1] ?? "";}
+    const opens = /^<Reference\b([^>]*)>/u.exec(line);
+    if (opens) {
+      reference = true;
+      part = /label="([^"]+)"/u.exec(opens[1] ?? "")?.[1] ?? "Reference";
+    }
+    if (/^#{2,6} /u.test(line)) {marks.push({ part, reference });}
+  }
+  const deep = found.filter((heading) => heading.depth >= 2);
+  if (marks.length !== deep.length || marks.every((mark) => mark.part === "")) {return found;}
+  const out: RailHeading[] = deep.map((heading, index) => {
+    const mark = marks[index];
+    return { ...heading, part: mark?.part || undefined, folded: mark?.reference === true && heading.depth === 2 };
+  });
+  return out.filter((heading) => !(marks[out.indexOf(heading)]?.reference && heading.depth > 2));
+};
+const railHeadings = problem ? [] : partsOf(page.file, headings);
+---
+
+<Docs
+  route={page.route}
+  title={page.title}
+  description={page.description}
+  headings={railHeadings}
+  prev={prev && { route: prev.route, label: prev.title }}
+  next={next && { route: next.route, label: next.title }}
+>
+  <TopStep prev={prev && { route: prev.route, label: prev.title }} next={next && { route: next.route, label: next.title }} />
+  <h1>{page.title}</h1>
+  {
+    problem || !Content ? (
+      <Problem {...(problem ?? { file: page.file, message: "The page has no content." })} />
+    ) : (
+      <Guard file={page.file}>
+        <Content components={components} />
+      </Guard>
+    )
+  }
+</Docs>

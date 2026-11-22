@@ -1,0 +1,374 @@
+---
+title: Checkbox
+description: A box you tick to turn a choice on or off, alone or in a group.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/checkbox"
+  use={
+    'import { Checkbox, CheckboxGroup } from "@grasp-os/ui/components/checkbox";'
+  }
+/>
+
+## With a label
+
+A checkbox always has its words beside it, saying what checking it does. The checkbox draws its box only; in a Field with `orientation="horizontal"`, the Checkbox first and its FieldLabel after it, a press on the box, its label or the space around them checks it.
+
+<Stage path="checkbox/label" live label="With a label" />
+
+## With a description
+
+Add one sentence under the label when the label alone leaves a question.
+
+<Stage path="checkbox/description" label="With a description" />
+
+## In a group
+
+Choices that make one answer share a `CheckboxGroup` in a Field, whose FieldLabel names the group; each box stands in its own horizontal Field. A `parent` box checks them all, and shows a dash while only some are; `nested` moves a box in under the parent's words.
+
+<Stage path="checkbox/group" live label="In a group" />
+
+## Disabled
+
+It keeps its state in view, and the sentence beside it says why it cannot change.
+
+<Stage path="checkbox/disabled" label="Disabled" />
+
+## When it is wrong
+
+The edge turns danger and the error says how to put it right, until the box is checked: `data-invalid` on the Field, or `aria-invalid` on the Checkbox itself, with a FieldError beside it.
+
+<Stage path="checkbox/invalid" label="When it is wrong" />
+
+## Every state
+
+Hover, keyboard focus and pressed are drawn by the checkbox's own CSS, forced; the others are its props.
+
+<States
+  path="checkbox/states"
+  choose={{
+    prop: "value",
+    label: "Value",
+    options: [
+      { id: "unchecked", label: "Unchecked" },
+      { id: "checked", label: "Checked" },
+      { id: "partly", label: "Partly checked" },
+    ],
+  }}
+  cells={[
+    { label: "Rest" },
+    { label: "Hover", force: "hover" },
+    { label: "Keyboard focus", force: "focus-visible" },
+    { label: "Pressed", force: "active" },
+    { label: "Disabled", props: { disabled: true } },
+    { label: "Invalid", props: { invalid: true } },
+  ]}
+/>
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="checkbox"
+  always={[
+    "One choice on or off, or several that make one answer, in a form that waits for a Save button; a group of them with a name above it.",
+    "Words that say what checking does: Send me a weekly summary, not Weekly summary?",
+    "A choice someone must accept, like terms, with an error that says how to put it right: Accept the terms to start the export.",
+    "Say why near a disabled checkbox.",
+  ]}
+  never={[
+    "A choice that does something at once: use a Switch, or a Button.",
+    "One answer from a few choices: use a Radio group.",
+    "A negative label, such as Do not send me emails.",
+    "A box without its words, or mint for a checked box: mint is for approving.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Size",
+      key: "Box",
+      value: "{checkbox-box}",
+      note: "on the first line of the label",
+    },
+    {
+      group: "Size",
+      key: "Tick and dash",
+      value: "{checkbox-mark}, stroke {checkbox-mark-stroke}",
+    },
+    { group: "Size", key: "Box to words", value: "{space-3}" },
+    {
+      group: "Size",
+      key: "Row",
+      value: "{tap-target} at least",
+      note: "the box, its words and the space between",
+    },
+    {
+      group: "Size",
+      key: "Nested",
+      value: "In by {checkbox-box} and {space-3}",
+      note: "under a parent's words",
+    },
+    {
+      group: "Type and shape",
+      key: "Label",
+      value: "{text-sm} / {text-sm-line}, {font-weight-medium}",
+    },
+    {
+      group: "Type and shape",
+      key: "Description and error",
+      value: "{text-xs} / {text-xs-line}",
+    },
+    {
+      group: "Type and shape",
+      key: "Corner",
+      value: "{radius-mark}, {radius-shape}",
+    },
+    {
+      group: "Colour",
+      key: "Empty",
+      value: "A {checkbox-border-width} edge inside",
+      note: "no fill, a soft line",
+      tokens: ["control-border"],
+    },
+    {
+      group: "Colour",
+      key: "Checked",
+      note: "the action's fill",
+      tokens: ["primary", "primary-foreground"],
+    },
+    {
+      group: "Colour",
+      key: "Invalid",
+      note: "the edge, or a line round a checked box",
+      tokens: ["input-border-invalid", "destructive"],
+    },
+    {
+      group: "Focus and disabled",
+      key: "Focus ring",
+      value: "{ring-width} on its edge, keyboard only",
+      tokens: ["ring"],
+    },
+    {
+      group: "Focus and disabled",
+      key: "Disabled",
+      value: "{opacity-disabled} opacity",
+      note: "box and words",
+    },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    {
+      key: "Check",
+      value:
+        "Tick grows from {checkbox-mark-from} and fades in, {duration-mark}",
+      note: "reduced: at once",
+      tokens: ["ease"],
+    },
+    {
+      key: "Uncheck",
+      value: "Tick fades out, {duration-hover}",
+      note: "faster than it came",
+    },
+    {
+      key: "Hover",
+      value:
+        "Edge stronger and a faint fill; checked, a lighter fill. {duration-hover}",
+      note: "anywhere on the row",
+      tokens: ["control-border-hover", "accent", "checkbox-bg-hover"],
+    },
+    {
+      key: "Press",
+      value: "Scale {button-press-scale}, {duration-press}",
+      note: "reduced: at once",
+      tokens: ["ease"],
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Input",
+      key: "Keyboard",
+      value:
+        "Tab reaches it; Space checks or unchecks it. Enter sends its form.",
+    },
+    {
+      group: "Input",
+      key: "Pointer",
+      value:
+        "A press on the box, its label or the space around them checks it; one on the description does not.",
+    },
+    {
+      group: "Input",
+      key: "Partly checked",
+      value:
+        "A press checks it. Only its group, or your code, puts the dash back.",
+    },
+    {
+      group: "Input",
+      key: "Read only",
+      value:
+        "Keeps focus and is sent with the form; a press does not change it.",
+    },
+    {
+      group: "Forms",
+      key: "Sent",
+      value: "Its `value` under its `name` while checked; nothing while empty.",
+    },
+    {
+      group: "Forms",
+      key: "Required",
+      value:
+        "The form will not send until it is checked; the box takes focus and `error` shows.",
+    },
+    {
+      group: "Content",
+      key: "Long labels",
+      value: "Wrap beside the box; the box stays on the first line.",
+    },
+    {
+      group: "Content",
+      key: "Long words",
+      value:
+        'Break inside the word, hyphenated under `lang="nl"`. Nothing is cut off.',
+    },
+    {
+      group: "Settings",
+      key: "Text at 200%",
+      value: "The words wrap sooner; the box keeps its size.",
+    },
+    {
+      group: "Settings",
+      key: "Right to left",
+      value: "The box stands at the right, the words to its left.",
+    },
+    {
+      group: "Settings",
+      key: "Forced colours",
+      value: "A 1px border in the text colour replaces the edge.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Role",
+      value: "`checkbox`, with `aria-checked` true, false or `mixed`",
+    },
+    { key: "Name", value: "Its label; a group is named by its own label" },
+    {
+      key: "Description",
+      value: "The description and the error, by `aria-describedby`",
+    },
+    {
+      key: "Invalid",
+      value: "`aria-invalid`, and the error in words, never colour alone",
+    },
+    { key: "Parent", value: "`aria-controls` names the checkboxes it checks" },
+    {
+      key: "Agents",
+      value:
+        "Found by its label; its state read and set through UI SDK's bridge",
+    },
+    {
+      key: "Contrast",
+      value:
+        "The checked fill 3:1 on every ground; the empty edge is soft on purpose",
+      note: "checked by `node tokens/generate.ts --check`",
+    },
+  ]}
+/>
+<Rows
+  title="From shadcn"
+  rows={[
+    {
+      group: "Parts",
+      key: '`Field orientation="horizontal"`, `FieldLabel`',
+      value: "The same parts",
+      note: "the row, at least 44px, is the Field's",
+    },
+    {
+      group: "Parts",
+      key: "`FieldContent`, `FieldDescription`, `FieldError`",
+      value: "The same parts",
+      note: "in a group, wired by id to the box",
+    },
+    {
+      group: "Parts",
+      key: "No group",
+      value: "`CheckboxGroup`, `parent`",
+      note: "one value, and Select all",
+    },
+    {
+      group: "Parts",
+      key: "No dash",
+      value: '`"indeterminate"`',
+      note: "a dash in place of the tick",
+    },
+    {
+      group: "Look",
+      key: "`size-4`, `rounded-[4px]`",
+      value: "{checkbox-box}, {radius-mark}",
+    },
+    { group: "Look", key: "`bg-primary`", value: "{primary}" },
+    {
+      group: "Look",
+      key: "`after:-inset-x-3 -inset-y-2`",
+      value: "The whole row",
+    },
+    { group: "Look", key: "`transition-none`", value: "The tick grows in" },
+    {
+      group: "Elsewhere",
+      key: "`className`",
+      value: "`style`",
+      note: "layout only",
+    },
+    {
+      group: "Elsewhere",
+      key: "Base UI",
+      value: "UI SDK",
+      note: "an agent can find and check it",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props source="src/components/checkbox.tsx" type="CheckboxProps" />
+
+The rest of UI SDK's Checkbox (`form`, `controller`) and of a `<button>` pass through.
+
+### Field, in a row
+
+`orientation="horizontal"` on a Field makes the row; its other props are on the Input page.
+
+<Props
+  source="src/components/field.tsx"
+  type="FieldContentProps"
+  label="FieldContent props"
+/>
+
+### CheckboxGroup
+
+<Props
+  source="src/components/checkbox.tsx"
+  type="CheckboxGroupProps"
+  label="CheckboxGroup props"
+/>
+
+Its `readOnly`, `form` and `controller` are UI SDK's, and pass through.
+
+</Reference>

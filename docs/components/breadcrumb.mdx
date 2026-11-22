@@ -1,0 +1,114 @@
+---
+title: Breadcrumb
+description: A row of links showing the path to this page, so you can go back up.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/breadcrumb"
+  use={
+    'import { Breadcrumb, BreadcrumbEllipsis, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@grasp-os/ui/components/breadcrumb";'
+  }
+/>
+
+## Basic
+
+Each step links up the path, a BreadcrumbSeparator between them; the last is the page you are on.
+
+<Stage path="breadcrumb/basic" label="Basic" />
+
+## Long path
+
+A BreadcrumbEllipsis holds the levels between the first and the parent: a "…" that opens them in a menu, as links, in the path's order.
+
+<Stage path="breadcrumb/long" label="Long path" />
+
+## Long page name
+
+When the line has no room left, the page's name is cut off, down to a few letters; it then takes keyboard focus, and its tooltip shows it whole.
+
+<Stage path="breadcrumb/long-page" label="Long page name" />
+
+## On a phone
+
+Under 640px only the parent stays, as a back link; `variant="back"` keeps that form at any width.
+
+<Stage path="breadcrumb/phone" label="On a phone" />
+
+<Part title="Using it" />
+
+## A path with no links
+
+A step without `href` is its name alone. Only a `BreadcrumbPage` is the page you are on; a file's path has none.
+
+<Stage path="breadcrumb/path" label="A path with no links" />
+
+## A trail that acts in place
+
+A step that reopens a folder in place is a button, given as the child with `asChild`; so is a router's link. It keeps a link's look, focus and hover. When the step pressed becomes the page, focus moves to the page.
+
+<Stage path="breadcrumb/folders" label="A trail that acts in place" />
+
+## When to use it
+
+<Intent
+  of="breadcrumb"
+  always={[
+    "The path from the top of a site down to the page you are on.",
+    "Above a page's title, in a page without an App shell.",
+    '`variant="back"` in a header as narrow as a phone\'s: always the back link.',
+  ]}
+  never={[
+    "A top-level page: there is nowhere to lead back to.",
+    "A page in an App shell: its crumbs stand in the page bar.",
+    "Views of one thing: use Tabs.",
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/breadcrumb.tsx"
+  type="BreadcrumbProps"
+  label="Breadcrumb props"
+/>
+
+<Props
+  source="src/components/breadcrumb.tsx"
+  type="BreadcrumbListProps"
+  label="BreadcrumbList props"
+/>
+
+<Props
+  source="src/components/breadcrumb.tsx"
+  type="BreadcrumbItemProps"
+  label="BreadcrumbItem props"
+/>
+
+<Props
+  source="src/components/breadcrumb.tsx"
+  type="BreadcrumbLinkProps"
+  label="BreadcrumbLink props"
+/>
+
+<Props
+  source="src/components/breadcrumb.tsx"
+  type="BreadcrumbPageProps"
+  label="BreadcrumbPage props"
+/>
+
+<Props
+  source="src/components/breadcrumb.tsx"
+  type="BreadcrumbSeparatorProps"
+  label="BreadcrumbSeparator props"
+/>
+
+<Props
+  source="src/components/breadcrumb.tsx"
+  type="BreadcrumbEllipsisProps"
+  label="BreadcrumbEllipsis props"
+/>
+
+</Reference>

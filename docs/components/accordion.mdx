@@ -1,0 +1,227 @@
+---
+title: Accordion
+description: A list of sections that people open and close by pressing each heading.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/accordion"
+/>
+
+## Basic usage
+
+One section open at a time: opening one closes the other.
+
+<Stage path="accordion/basic" label="Basic usage" />
+
+## Several open
+
+`multiple` lets sections stay open side by side. A section can be disabled.
+
+<Stage path="accordion/multiple" label="Several open" />
+
+## Every state
+
+One section's heading through its states, then open and disabled.
+
+<States
+  path="accordion/states"
+  cells={[
+    { label: "Closed" },
+    { label: "Hover", force: "hover" },
+    { label: "Keyboard focus", force: "focus-visible" },
+    { label: "Pressed", force: "active" },
+    { label: "Open", props: { open: true } },
+    { label: "Open, hover", force: "hover", props: { open: true } },
+    { label: "Disabled", props: { disabled: true } },
+    {
+      label: "Disabled, focused",
+      force: "focus-visible",
+      props: { disabled: true },
+    },
+  ]}
+/>
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="accordion"
+  always={[
+    "Write each heading as what a person looks for: a question, or the thing it is about.",
+    "Set `headingLevel` so the headings fit the page's outline.",
+  ]}
+  never={["An accordion inside a section."]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Heading",
+      key: "Look",
+      value: "Collapsible's ghost trigger",
+      note: "its height, padding, corner and chevron",
+    },
+    { group: "Heading", key: "Height", value: "{collapsible-trigger}" },
+    {
+      group: "Heading",
+      key: "Touch target",
+      value: "{tap-target}",
+      note: "on a touch screen, as an unseen area",
+    },
+    {
+      group: "Sections",
+      key: "Between",
+      value: "{space-2}",
+      note: "on a touch screen, enough that the 44px areas meet",
+    },
+    { group: "Panel", key: "Padding", value: "{space-2} above and below" },
+    {
+      group: "Type",
+      key: "Heading",
+      value: "{text-sm} / 18px, {font-weight-medium}",
+      tokens: ["foreground"],
+    },
+    {
+      group: "Type",
+      key: "Panel",
+      value: "{text-xs} / 18px",
+      tokens: ["foreground"],
+    },
+    {
+      group: "Disabled",
+      key: "Look",
+      value: "Words in quiet",
+      tokens: ["subtle-foreground"],
+    },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    {
+      key: "Hover",
+      value: "The fill, in {duration-hover}",
+      tokens: ["accent", "ease"],
+    },
+    {
+      key: "Press",
+      value: "Scales to {button-press-scale}, in {duration-hover}",
+      note: "not when disabled",
+    },
+    {
+      key: "Opening and closing",
+      value: "The panel's height, in {collapsible-open}, ease-out",
+      note: "one opens as the other closes",
+    },
+    {
+      key: "Reduced motion",
+      value: "Panels open and close at once; hover and press are unchanged",
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Opening",
+      key: "One at a time",
+      value:
+        "Opening a section closes the open one; `multiple` lets several stay open.",
+    },
+    {
+      group: "Opening",
+      key: "Keys",
+      value:
+        "Tab moves between headings; Enter or Space opens and closes one, and pressing an open heading closes it.",
+    },
+    {
+      group: "Opening",
+      key: "Find in page",
+      value:
+        "A closed section's words are found by the browser's find, which opens it.",
+    },
+    {
+      group: "Content",
+      key: "Long heading",
+      value: "Breaks onto more lines; the chevron stays at the end.",
+    },
+    {
+      group: "Settings",
+      key: "Disabled",
+      value:
+        "The heading stays focusable and does nothing; its words are not found by find.",
+    },
+    {
+      group: "Settings",
+      key: "Without script",
+      value: "Every section shows open.",
+    },
+    {
+      group: "Settings",
+      key: "Forced colours",
+      value: "A 1px border draws each heading; disabled words are GrayText.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Heading",
+      value:
+        "A real heading, h3 unless `headingLevel` says otherwise, holding a `button`",
+    },
+    {
+      key: "Button",
+      value: "`aria-expanded`; `aria-disabled` when the section is disabled",
+    },
+    {
+      key: "Panel",
+      value: "A `region` named by its heading, which `aria-controls` it",
+    },
+    {
+      key: "Chevron",
+      value: "Hidden from screen readers: `aria-expanded` says it",
+    },
+    {
+      key: "Contrast",
+      value: "Headings and panel words 4.5:1 on every ground, light and dark",
+      note: "checked by `node tokens/generate.ts --check`",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/accordion.tsx"
+  type="AccordionProps"
+  label="Accordion props"
+/>
+
+<Props
+  source="src/components/accordion.tsx"
+  type="AccordionItemProps"
+  label="AccordionItem props"
+/>
+
+<Props
+  source="src/components/accordion.tsx"
+  type="AccordionTriggerProps"
+  label="AccordionTrigger props"
+/>
+
+<Props
+  source="src/components/accordion.tsx"
+  type="AccordionContentProps"
+  label="AccordionContent props"
+/>
+
+</Reference>

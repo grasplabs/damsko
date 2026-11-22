@@ -1,0 +1,129 @@
+---
+title: Inline edit
+description: A value read as text that turns into a field where it stands, to change it in place.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/inline-edit"
+  use={'import { InlineEdit } from "@grasp-os/ui/components/inline-edit";'}
+/>
+
+## Basic usage
+
+A press on the words, Enter or F2 opens the field with the value chosen. Enter saves, Escape keeps the value as it was, and leaving the field saves too. The page keeps the value and changes it in `onSubmit`.
+
+<Stage path="inline-edit/basic" label="Basic usage" />
+
+## Saving takes a moment
+
+When `onSubmit` returns a promise, the field waits, read only, and says that it works. If the promise rejects, the field stays open with the words typed and says that it could not save.
+
+<Stage path="inline-edit/async" label="Saving takes a moment" />
+
+## A value that is refused
+
+`validate` returns the words that say why a value cannot be saved. The field stays open, marked wrong, and is described by them.
+
+<Stage path="inline-edit/validation" label="A value that is refused" />
+
+## Opened by the page
+
+`editing` and `onEditingChange` keep whether it is open, so a Rename button or a menu item can open it. `children` is the read view, when it is more than the words: here the heading's own text.
+
+<Stage path="inline-edit/controlled" label="Opened by the page" />
+
+## Kept open by the page
+
+A page that holds `editing` decides when the field closes: one that keeps it open, as here, has each Enter save and the field stay for the next value.
+
+<Stage path="inline-edit/kept-open" label="Kept open by the page" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="inline-edit"
+  always={[
+    "A short value changed where it is read: a title, a name, a label in a list.",
+    "Changing one value is quick and rare enough that a form would be too much.",
+  ]}
+  never={[
+    "Several values changed together, or a value that needs its rules read first: use a form with Fields.",
+    "A long text: use a Textarea in a form.",
+    "A value most people only read and never change: show it as text.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Keyboard",
+      key: "Enter, Space, F2",
+      value: "On the words: opens the field, the value chosen.",
+    },
+    {
+      group: "Keyboard",
+      key: "Enter",
+      value: "In the field: saves, and focus goes back to the words.",
+    },
+    {
+      group: "Keyboard",
+      key: "Escape",
+      value:
+        "Keeps the value as it was and closes the field only, not a dialog round it; focus goes back to the words.",
+    },
+    {
+      group: "Pointer",
+      key: "Leaving the field",
+      value: "Saves; focus stays where it went.",
+    },
+    {
+      group: "Content",
+      key: "Saving",
+      value:
+        "Trimmed; an empty or unchanged value closes the field and sends nothing.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Role",
+      value: "A `button` with the value's words, then a text `<input>`",
+    },
+    {
+      key: "Name",
+      value:
+        "The words; the field by `aria-label`, which names the words too while the value is empty",
+    },
+    {
+      key: "Description",
+      value:
+        "The words are described as Edit (`inlineEdit.edit`); the field by what it says while it saves or why it did not",
+    },
+    {
+      key: "Result",
+      value:
+        "Said once: Changed to the new value (`inlineEdit.saved`), or that it could not save (`inlineEdit.error`)",
+    },
+    { key: "Wrong", value: "`aria-invalid` while a value is refused" },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/inline-edit.tsx"
+  type="InlineEditProps"
+  label="InlineEdit props"
+/>
+
+</Reference>

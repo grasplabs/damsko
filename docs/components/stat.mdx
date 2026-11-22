@@ -1,0 +1,207 @@
+---
+title: Stat
+description: A key figure with its label and how much it changed, alone or in a row.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/stat"
+  use={'import { Stat, StatGroup } from "@grasp-os/ui/components/stat";'}
+/>
+
+## On their own
+
+The label is quiet, the value leads, and the change says in words and colour how it moved.
+
+<Stage path="stat/single" label="On their own" />
+
+## In a group
+
+`StatGroup` reads them as one row: one box, a hairline between each, at most two in a row on a tablet or a phone.
+
+<Stage path="stat/grid" label="In a group" />
+
+The group takes its figures as `items`, or as `Stat` children.
+
+<Stage path="stat/children" label="Stats as children" />
+
+## With its trend
+
+`chart` takes a small chart under the figures: a `ChartSparkline` at its tile size. With the spark's `onPoint`, the figure can follow the week under the pointer or the arrow keys.
+
+<Stage path="chart/spark-tile" label="With its trend" />
+
+## Loading
+
+Skeletons hold the value's room, so nothing moves when the figures arrive.
+
+<Stage path="stat/loading" label="Loading" />
+
+## Every state
+
+Nothing in it is pressed, so its states are its variants, no change, an icon, and loading.
+
+<Stage path="stat/states" label="Every state" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="stat"
+  always={[
+    "The figures a person checks first, at most four in a row.",
+    "A change that says over what: +12% since last month, in the label or a note.",
+  ]}
+  never={[
+    "A chart: put it on its own.",
+    "Something to press or follow.",
+    "Mint or a fill for a variant: the change's words carry it.",
+    "A figure rounded so far it hides the change.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    { group: "Card", key: "Padding", value: "{space-6}" },
+    { group: "Card", key: "Between lines", value: "{space-2}" },
+    {
+      group: "Card",
+      key: "Ground",
+      note: "raised and flat, no corner",
+      tokens: ["card"],
+    },
+    {
+      group: "Card",
+      key: "Rule",
+      value: "A {hairline} beneath it",
+      tokens: ["border"],
+    },
+    {
+      group: "Label",
+      key: "Words",
+      value: "{text-sm} / {text-sm-line}, {font-weight-medium}",
+      tokens: ["muted"],
+    },
+    {
+      group: "Label",
+      key: "Icon",
+      value: "{icon-sm} at the end, {space-3} from the words",
+      tokens: ["muted"],
+    },
+    {
+      group: "Value",
+      key: "Words",
+      value:
+        "{text-lg} / {text-base-line}, {font-weight-medium}, figures of one width",
+      tokens: ["foreground"],
+    },
+    {
+      group: "Change",
+      key: "Words",
+      value:
+        "{text-sm} / {text-sm-line}, {font-weight-medium}, {space-2} after the value",
+      note: "on the next line when there is no room",
+    },
+    { group: "Change", key: "Default", tokens: ["muted"] },
+    { group: "Change", key: "Success", tokens: ["success"] },
+    { group: "Change", key: "Destructive", tokens: ["destructive"] },
+    { group: "Change", key: "Warning", tokens: ["warning"] },
+    { group: "Change", key: "Info", tokens: ["info"] },
+    {
+      group: "Loading",
+      key: "Value",
+      value: "A block skeleton, 60% wide, {text-base-line} tall",
+    },
+    {
+      group: "Loading",
+      key: "Change",
+      value: "A line skeleton, 35% wide",
+      note: "only when the stat has a change",
+    },
+    {
+      group: "Group",
+      key: "Box",
+      value:
+        "One, with the medium lift and the corner; a {hairline} between cells",
+      tokens: ["shadow-md", "border"],
+    },
+    {
+      group: "Group",
+      key: "In a row",
+      value: "Up to 4; at most 2 under 768px",
+    },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    {
+      key: "Loading",
+      value: "The skeletons breathe, as Skeleton's",
+      note: "reduced: they stand still",
+    },
+    { key: "Figures", value: "None: a new figure replaces the old at once" },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      key: "Press",
+      value:
+        "None: a stat says, it does not do. A link to more goes beside it.",
+    },
+    {
+      key: "Long words",
+      value: "A label or value wraps inside the card; nothing is cut off.",
+    },
+    {
+      key: "Loading",
+      value:
+        "The card keeps its size, so nothing moves when the figures arrive.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    { key: "Alone", value: "A `section` named by its label" },
+    {
+      key: "In a group",
+      value: "A list named by `aria-label`, each item named by its label",
+    },
+    {
+      key: "Reading order",
+      value: "The label, then the value, then the change",
+    },
+    { key: "Loading", value: "`aria-busy` until the figures arrive" },
+    {
+      key: "Trend",
+      value:
+        "The change's own words say how it moved (+8.2%, −3 since Monday); colour only repeats them",
+    },
+    { key: "Icon", value: "Hidden from screen readers" },
+    {
+      key: "Contrast",
+      value: "Every variant's words on the raised ground 4.5:1, light and dark",
+      note: "checked by `node tokens/generate.ts --check`",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props source="src/components/stat.tsx" type="StatProps" label="Stat" />
+<Props
+  source="src/components/stat.tsx"
+  type="StatGroupProps"
+  label="StatGroup"
+/>
+
+</Reference>

@@ -1,0 +1,238 @@
+---
+title: Collapsible
+description: A section that opens and closes from a button, for detail most people can skip.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/collapsible"
+/>
+
+## Basic usage
+
+`CollapsibleTrigger` says what opens; `CollapsibleContent` holds the detail most people can skip.
+
+<Stage path="collapsible/basic" label="Basic usage" />
+
+## Several
+
+`variant="raised"` for panels that stand on their own; each opens apart from the others.
+
+<Stage path="collapsible/several" label="Several" />
+
+## Fit
+
+With `fitContent`, the trigger is only as wide as its words, the chevron beside them: one quiet line that opens.
+
+<Stage path="collapsible/fit" label="Fit" />
+
+## Disabled
+
+The trigger stays focusable and does nothing.
+
+<Stage path="collapsible/disabled" label="Disabled" />
+
+## Every state
+
+The trigger's states, then open and disabled, in either look.
+
+<States
+  path="collapsible/states"
+  choose={{
+    prop: "variant",
+    label: "Variant",
+    options: [
+      { id: "ghost", label: "Ghost" },
+      { id: "raised", label: "Raised" },
+    ],
+  }}
+  cells={[
+    { label: "Closed" },
+    { label: "Hover", force: "hover" },
+    { label: "Keyboard focus", force: "focus-visible" },
+    { label: "Pressed", force: "active" },
+    { label: "Open", props: { open: true } },
+    { label: "Open, hover", force: "hover", props: { open: true } },
+    { label: "Disabled", props: { disabled: true } },
+    {
+      label: "Disabled, focused",
+      force: "focus-visible",
+      props: { disabled: true },
+    },
+  ]}
+/>
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="collapsible"
+  always={["Name what opens on the trigger: Advanced settings, not More."]}
+  never={["Another collapsible inside the panel."]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    { group: "Trigger", key: "Height", value: "{collapsible-trigger}" },
+    {
+      group: "Trigger",
+      key: "Padding",
+      value: "{collapsible-padding} at the sides",
+      note: "it bleeds out by as much, so its words line up with the panel",
+    },
+    {
+      group: "Trigger",
+      key: "Corner",
+      value: "{radius}, capped at half the height, {radius-shape}",
+    },
+    {
+      group: "Trigger",
+      key: "Chevron",
+      value: "{icon-sm}, stroke {icon-stroke}, at the end",
+    },
+    {
+      group: "Trigger",
+      key: "Touch target",
+      value: "{tap-target}",
+      note: "on a touch screen, as an unseen area",
+    },
+    {
+      group: "Look",
+      key: "Ghost",
+      value: "No fill until hover",
+      tokens: ["accent", "accent-active"],
+    },
+    {
+      group: "Look",
+      key: "Raised",
+      value: "A quiet control's fill and low lift",
+      tokens: ["secondary", "secondary-hover", "secondary-active", "shadow-sm"],
+    },
+    {
+      group: "Type",
+      key: "Trigger",
+      value: "{text-sm} / 18px, {font-weight-medium}",
+      tokens: ["foreground"],
+    },
+    {
+      group: "Type",
+      key: "Panel",
+      value: "{text-xs} / 18px",
+      tokens: ["muted"],
+    },
+    {
+      group: "Disabled",
+      key: "Look",
+      value: "Words in quiet; raised drops to soft, with no lift",
+      tokens: ["subtle-foreground", "muted"],
+    },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    { key: "Hover", value: "The fill, in {duration-hover}", tokens: ["ease"] },
+    {
+      key: "Press",
+      value: "Scales to {button-press-scale}, in {duration-hover}",
+      note: "not when disabled",
+    },
+    {
+      key: "Opening and closing",
+      value: "The panel's height, in {collapsible-open}, ease-out",
+    },
+    {
+      key: "Reduced motion",
+      value:
+        "The panel opens and closes at once; hover and press are unchanged",
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Opening",
+      key: "Trigger",
+      value: "Click, Enter or Space opens and closes the panel.",
+    },
+    {
+      group: "Opening",
+      key: "Find in page",
+      value:
+        "A closed panel's words are found by the browser's find, which opens it.",
+    },
+    {
+      group: "Opening",
+      key: "Several",
+      value: "Each opens on its own; for one at a time, use Accordion.",
+    },
+    {
+      group: "Content",
+      key: "Long title",
+      value: "Breaks onto more lines; the chevron stays at the end.",
+    },
+    {
+      group: "Settings",
+      key: "Disabled",
+      value: "The trigger stays focusable and does nothing.",
+    },
+    {
+      group: "Settings",
+      key: "Without script",
+      value: "Every panel shows open.",
+    },
+    {
+      group: "Settings",
+      key: "Forced colours",
+      value: "A 1px border draws the trigger; disabled words are GrayText.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    { key: "Trigger", value: "A `button` with `aria-expanded`" },
+    {
+      key: "Disabled",
+      value: "`aria-disabled`, so it can still be reached and read",
+    },
+    {
+      key: "Chevron",
+      value: "Hidden from screen readers: `aria-expanded` says it",
+    },
+    {
+      key: "Contrast",
+      value: "Trigger words 4.5:1 on every ground and fill, light and dark",
+      note: "checked by `node tokens/generate.ts --check`",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/collapsible.tsx"
+  type="CollapsibleProps"
+  label="Collapsible props"
+/>
+
+<Props
+  source="src/components/collapsible.tsx"
+  type="CollapsibleTriggerProps"
+  label="CollapsibleTrigger props"
+/>
+
+<Props
+  source="src/components/collapsible.tsx"
+  type="CollapsibleContentProps"
+  label="CollapsibleContent props"
+/>
+
+</Reference>

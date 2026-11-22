@@ -1,0 +1,35 @@
+---
+// <SampleRows set="scale" kind="space" label="Scale" note="..." />: a group of tokens as compact
+// rows, each with a live sample drawn in the token's own variable (site/blocks/foundation.tsx).
+// `set` may name more than one set, separated by spaces. Markdown form: the label as a heading,
+// the note, and a table (site/markdown.ts).
+import "../system/styles/blocks.css";
+import { SampleRowsView } from './foundation';
+import type { SampleKind } from './foundation';
+import { tokenSet } from "./token-data";
+
+const { set, kind, label, note } = Astro.props as { set: string; kind: SampleKind; label?: string; note?: string };
+const tokens = set.split(/\s+/u).filter(Boolean).flatMap((id) => tokenSet(id));
+---
+
+<SampleRowsView kind={kind} label={label} note={note} tokens={tokens} />
+
+<script>
+  // The motion rows: every few seconds each dot crosses its track, in its own duration and curve,
+  // and comes back the next time. Nothing moves with reduced motion. Bound once on the document's
+  // timer, so pages reached through Astro's router keep moving without being bound again.
+  const flip = () => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {return;}
+    for (const mover of document.querySelectorAll<HTMLElement>("[data-motion-mover]")) {
+      const on = mover.dataset.on === undefined;
+      if (on) {mover.dataset.on = "";}
+      else {delete mover.dataset.on;}
+      mover.style.transform = on ? "translateX(calc(100% - 8px))" : "";
+    }
+  };
+  const key = "__damskoMotionRows";
+  const holder = window as unknown as Record<string, unknown>;
+  if (!holder[key]) {
+    holder[key] = window.setInterval(flip, 1600);
+  }
+</script>

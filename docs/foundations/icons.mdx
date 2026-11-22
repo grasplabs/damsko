@@ -1,0 +1,60 @@
+---
+title: Icons
+description: Hugeicons only, named by their shape, at two sizes and one stroke.
+---
+
+<Head lead={frontmatter.description} />
+
+<Scene
+  path="foundations/icons-set"
+  title="Find one, copy it"
+  note="Search by name or by what it does. A click copies the name to import."
+/>
+
+<Scene
+  path="foundations/icons-work"
+  title="Icons at work"
+  note="The part that holds an icon gives it its size and colour; open the menu to see."
+/>
+
+<Scene
+  path="foundations/icons-sizes"
+  title="Two sizes, one stroke"
+  note="Small beside small words, medium where there is room, and always a 1.5 line."
+/>
+
+<AllTokens>
+
+## Sizes and stroke
+
+<SampleRows
+  set="icons"
+  kind="icon"
+  note="The same icon at each size, and at the one stroke."
+/>
+
+## Every icon
+
+Import an icon by the name it has in Damsko, from `lib/icons`.
+
+Two that are easy to mix up: `PencilOffIcon` (the pencil, struck through) marks what may be opened and read but not changed; `LockIcon` marks what cannot be opened at all.
+
+<IconList />
+
+</AllTokens>
+
+## Rules
+
+<Rules
+  always={[
+    "Import icons from `lib/icons`, and add a missing one there first, named by its shape with an `Icon` suffix.",
+    "Give an icon that stands alone a label; one beside words that say the same needs none.",
+    "Size an icon from its holder, through `iconVars` in `lib/vars.stylex`.",
+    "Show another company with its own mark through BrandIcon: the marks are the product's, never drawn in Damsko.",
+  ]}
+  never={[
+    "A hand-drawn glyph: an inline `svg`, a path, or a CSS-drawn arrow, tick or cross.",
+    "An icon imported from Hugeicons directly.",
+    "A stroke or size of your own.",
+  ]}
+/>

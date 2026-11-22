@@ -1,0 +1,438 @@
+---
+title: Prompt input
+description: Where a person writes to an assistant, with mentions as real tokens in the text, files, dictation and Send that turns into Stop.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/prompt-input"
+/>
+
+## Writing and sending
+
+Enter sends and Shift+Enter starts a line; Enter while an input method composes, or while a menu is open, does neither. Once sent, `status` follows the answer: Submit turns into Stop while it streams, and `onStop` ends it.
+
+<Stage path="prompt-input/basic" label="Writing and sending" />
+
+## Send and Stop
+
+Submit by `status`: off while there is nothing to send, Send once there is, a spinner once `submitted`, Stop while `streaming`, Send again after an `error`.
+
+<Stage path="prompt-input/send" label="Send and Stop" />
+
+## Mentions and commands
+
+`PromptInputMention` takes the characters that open a menu, each with its items or a loader and the token a pick becomes. A pick is a token in the text: it moves, deletes and copies as one piece, and is said with its kind. A loader that fails says so in the menu; an answer that comes after a newer query is set aside.
+
+The mention part is generic: it takes `triggers`, a list of characters with what each one's menu holds, so `@` for people, `/` for commands and `#` for channels are one part with one API, and it knows none of them.
+
+<Stage path="prompt-input/mentions" label="Mentions and commands" />
+
+## Files
+
+The prompt input keeps the files: picked with Add files (or Cmd or Ctrl and /), pasted into the text or dropped on the card (with `globalDrop`, anywhere on the page), and only those `accept` takes. `PromptInputAttachments` in `PromptInputHeader` shows them with the `attachment` parts, each one's remove button taking it off; they go to `onSubmit` with the text as `files`, and are taken off the moment they are sent (put back if the send fails). `usePromptInputAttachments()` reads and changes them from a part of your own.
+
+<Stage path="prompt-input/attachments" label="Files" />
+
+## Model and effort
+
+As in shadcn's Prompt Input, a model and an effort menu stand among the tools, beside Submit: each a DropdownMenu of radio items behind a small ghost Button. The prompt input holds neither choice; the page keeps them and sends them with the message.
+
+<Stage path="prompt-input/model" label="Model and effort" />
+
+## Hidden and shown again
+
+Inside React's `<Activity>`, as in a tab that is left and come back to, a hidden prompt input keeps its words and its files; their pictures are made again as it is shown.
+
+<Stage path="prompt-input/hidden" label="Hidden and shown again" />
+
+## A limit
+
+With `maxLength`, a count shows from 90%; nearing and reaching the limit are said. What is added past it at once, a paste, a drop, an input method's phrase, a dictation or a mention, is cut there where it went (a mention whole or not at all), and that is said.
+
+<Stage path="prompt-input/limit" label="A limit" />
+
+## A send that fails
+
+The words and files clear the moment they are sent: the AI SDK's `sendMessage` settles only once the whole answer has come. A send whose Promise rejects puts them back (the words if nothing new has been typed), and the failure is said once. The page says it in words too, here with `PromptInputNote`. While a send is out, a second Enter sends nothing more, and words typed meanwhile stay.
+
+<Stage path="prompt-input/failed" label="A send that fails" />
+
+## One row
+
+`compact` sets the tools, the text and Submit side by side; on a narrow card the tools go under the text.
+
+<Stage path="prompt-input/compact" label="One row" />
+
+## Dictation
+
+`PromptInputSpeechButton` is the button only: a toggle, pressed while it listens, that says it has started listening. The product listens, with the recogniser it chooses (the browser's own, a service), and writes what it hears through the PromptInput's `controller`; the button holds no recognition of its own.
+
+```tsx
+const [controller] = useState(createTokenInputController);
+const [listening, setListening] = useState(false);
+// The product's own recogniser, writing each phrase it hears into the text.
+useDictation({ listening, onPhrase: (phrase) => controller.insert(phrase) });
+
+<PromptInput controller={controller} onSubmit={send}>
+  …
+  <PromptInputSpeechButton
+    listening={listening}
+    onListeningChange={setListening}
+  />
+</PromptInput>;
+```
+
+## With a message
+
+One chat state drives both. PromptInput's `status` is the AI SDK's own (`ready`, `submitted`, `streaming`, `error`), and Message's describes one answer (`thinking`, `streaming`, `done`, `stopped`, `error`), so the latest answer's is read from it: `submitted` is `thinking`, `streaming` is `streaming`, `ready` is `done` (or `stopped` once the person stopped it), `error` is `error`. Every earlier answer is `done`. AI Elements has a status on PromptInput's Submit only.
+
+```tsx
+const { messages, status, sendMessage, stop } = useChat();
+const [stopped, setStopped] = useState(false);
+const answer: Record<ChatStatus, MessageStatus> = {
+  submitted: "thinking",
+  streaming: "streaming",
+  ready: stopped ? "stopped" : "done",
+  error: "error",
+};
+
+{
+  messages.map((message, index) => (
+    <Message
+      key={message.id}
+      align={message.role === "user" ? "end" : "start"}
+      status={index === messages.length - 1 ? answer[status] : "done"}
+    >
+      …
+    </Message>
+  ));
+}
+<PromptInput
+  status={status}
+  onSubmit={({ text }) => {
+    setStopped(false);
+    return sendMessage({ text });
+  }}
+>
+  …
+  <PromptInputSubmit
+    onStop={() => {
+      setStopped(true);
+      void stop();
+    }}
+  />
+</PromptInput>;
+```
+
+## Something in the text's place
+
+`PromptInputBody` is a slot: a question or a dictation of the product's may stand in the text's place. Focus goes to its first control as it comes and back to the text as it goes; what was typed stays.
+
+<Stage path="prompt-input/takeover" label="Something in the text's place" />
+
+## Out of use
+
+<Stage path="prompt-input/disabled" label="Out of use" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="prompt-input"
+  always={[
+    "Where a person writes to an assistant: a message, with mentions, files and dictation.",
+    "Mentions the product supplies through triggers: the component knows nothing of what they are.",
+  ]}
+  never={[
+    "A form field of several lines: use Textarea.",
+    "Showing what was sent: the conversation's messages do that.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Card",
+      key: "Width",
+      value: "Up to {prompt-input-width}",
+    },
+    {
+      group: "Card",
+      key: "Corner",
+      value: "{prompt-input-radius}, {radius-shape}",
+      tokens: ["card", "shadow-md"],
+    },
+    {
+      group: "Text",
+      key: "Height",
+      value:
+        "Two lines at least, then grows to {prompt-input-height} and scrolls",
+    },
+    {
+      group: "Menu",
+      key: "Width",
+      value: "{prompt-input-mention-width}",
+      tokens: ["popover", "popup-shadow"],
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Keys",
+      key: "Enter",
+      value:
+        "Sends; never while an input method composes or a menu is open. Shift+Enter starts a line.",
+    },
+    {
+      group: "Keys",
+      key: "Escape",
+      value: "Closes the menu, and nothing else on the page hears it.",
+    },
+    {
+      group: "Keys",
+      key: "Cmd or Ctrl and /",
+      value: "Opens the file picker, while the form is in use.",
+    },
+    {
+      group: "Tokens",
+      key: "Backspace",
+      value: "Takes a token out whole; the arrows cross it in one step.",
+    },
+    {
+      group: "Submit",
+      key: "Press",
+      value:
+        "The text takes the focus first, so focus stays in the form as Send turns into Stop.",
+    },
+    {
+      group: "Card",
+      key: "Empty room",
+      value: "A press there puts the caret at the end of the text.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    { key: "Text", value: "A multi-line text box, named by `aria-label`" },
+    {
+      key: "Tokens",
+      value: "Read as their label and kind; going in and out is said",
+    },
+    {
+      key: "Menu",
+      value:
+        "A list box the text controls; how many it found, that it loads or failed, is said",
+    },
+    { key: "Speech", value: "A toggle button, pressed while it listens" },
+    {
+      key: "Limit",
+      value: "Said once near it and once at it; the count is hidden",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+### PromptInput
+
+<Props
+  source="src/components/prompt-input.tsx"
+  type="PromptInputProps"
+  label="PromptInput"
+/>
+
+### PromptInputMessage
+
+<Props
+  source="src/components/prompt-input.tsx"
+  type="PromptInputMessage"
+  label="PromptInputMessage"
+/>
+
+### PromptInputAttachments
+
+<Props
+  source="src/components/prompt-input.tsx"
+  type="PromptInputAttachmentsProps"
+  label="PromptInputAttachments"
+/>
+
+### PromptInputAttachment
+
+<Props
+  source="src/components/prompt-input.tsx"
+  type="PromptInputAttachmentProps"
+  label="PromptInputAttachment"
+/>
+
+### PromptInputFile
+
+<Props
+  source="src/components/prompt-input.tsx"
+  type="PromptInputFile"
+  label="PromptInputFile"
+/>
+
+### PromptInputHeader
+
+<Props
+  source="src/components/prompt-input.tsx"
+  type="PromptInputHeaderProps"
+  label="PromptInputHeader"
+/>
+
+### PromptInputBody
+
+<Props
+  source="src/components/prompt-input.tsx"
+  type="PromptInputBodyProps"
+  label="PromptInputBody"
+/>
+
+### PromptInputTextarea
+
+<Props
+  source="src/components/prompt-input.tsx"
+  type="PromptInputTextareaProps"
+  label="PromptInputTextarea"
+/>
+
+### PromptInputFooter
+
+<Props
+  source="src/components/prompt-input.tsx"
+  type="PromptInputFooterProps"
+  label="PromptInputFooter"
+/>
+
+### PromptInputTools
+
+<Props
+  source="src/components/prompt-input.tsx"
+  type="PromptInputToolsProps"
+  label="PromptInputTools"
+/>
+
+### PromptInputButton
+
+<Props
+  source="src/components/prompt-input.tsx"
+  type="PromptInputButtonProps"
+  label="PromptInputButton"
+/>
+
+### PromptInputSubmit
+
+<Props
+  source="src/components/prompt-input.tsx"
+  type="PromptInputSubmitProps"
+  label="PromptInputSubmit"
+/>
+
+### PromptInputActionMenu
+
+<Props
+  source="src/components/prompt-input.tsx"
+  type="PromptInputActionMenuProps"
+  label="PromptInputActionMenu"
+/>
+
+### PromptInputActionMenuTrigger
+
+<Props
+  source="src/components/prompt-input.tsx"
+  type="PromptInputActionMenuTriggerProps"
+  label="PromptInputActionMenuTrigger"
+/>
+
+### PromptInputActionMenuContent
+
+<Props
+  source="src/components/prompt-input.tsx"
+  type="PromptInputActionMenuContentProps"
+  label="PromptInputActionMenuContent"
+/>
+
+### PromptInputActionMenuItem
+
+<Props
+  source="src/components/prompt-input.tsx"
+  type="PromptInputActionMenuItemProps"
+  label="PromptInputActionMenuItem"
+/>
+
+### PromptInputActionAddAttachments
+
+<Props
+  source="src/components/prompt-input.tsx"
+  type="PromptInputActionAddAttachmentsProps"
+  label="PromptInputActionAddAttachments"
+/>
+
+### PromptInputNote
+
+<Props
+  source="src/components/prompt-input.tsx"
+  type="PromptInputNoteProps"
+  label="PromptInputNote"
+/>
+
+### PromptInputMention
+
+<Props
+  source="src/components/prompt-input.tsx"
+  type="PromptInputMentionProps"
+  label="PromptInputMention"
+/>
+
+### PromptInputMentionTrigger
+
+<Props
+  source="src/components/prompt-input.tsx"
+  type="PromptInputMentionTrigger"
+  label="PromptInputMentionTrigger"
+/>
+
+### PromptInputMentionData
+
+<Props
+  source="src/components/prompt-input.tsx"
+  type="PromptInputMentionData"
+  label="PromptInputMentionData"
+/>
+
+### PromptInputMentionContent
+
+<Props
+  source="src/components/prompt-input.tsx"
+  type="PromptInputMentionContentProps"
+  label="PromptInputMentionContent"
+/>
+
+### PromptInputMentionItem
+
+<Props
+  source="src/components/prompt-input.tsx"
+  type="PromptInputMentionItemProps"
+  label="PromptInputMentionItem"
+/>
+
+### PromptInputSpeechButton
+
+<Props
+  source="src/components/prompt-input.tsx"
+  type="PromptInputSpeechButtonProps"
+  label="PromptInputSpeechButton"
+/>
+
+</Reference>

@@ -1,0 +1,246 @@
+---
+title: Message scroller
+description: The scrolling transcript of a chat, which follows the reply, settles a new turn near the top and keeps your place.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/message-scroller"
+/>
+
+## While the assistant writes
+
+`MessageScrollerProvider` holds where the transcript stands; with `autoScroll` it stays at the end as the answer arrives. Scroll up, or press a key up, and it stays put, and `MessageScrollerButton` shows the way back to the latest. Wrap each row in a `MessageScrollerItem` with its `key` and `messageId`.
+
+<Stage path="message-scroller/live" label="While the assistant writes" />
+
+## Room for the answer
+
+Mark the person's own turns with `scrollAnchor`. A turn sent after it opened goes to the top, below the top's fade, and the answer grows into the room under it; once the answer is taller than that room, it follows the end. `scrollPreviousItemPeek` sets how much of the row before stays in view.
+
+<Stage path="message-scroller/answer" label="Room for the answer" />
+
+## Opening a saved chat
+
+With `defaultScrollPosition="last-anchor"` a saved chat reopens at its last question with the answer under it, rather than at the very bottom. `end`, the default, stands at the latest before scripts run; `start` opens at the first.
+
+<Stage path="message-scroller/opening" label="Opening a saved chat" />
+
+## Jumping to a message
+
+`useMessageScroller` drives the transcript from anywhere inside the provider: `scrollToMessage`, `scrollToEnd` and `scrollToStart`. `useMessageScrollerVisibility` says which turn is being read, and `useMessageScrollerScrollable` which ways there is more. `direction="start"` puts a way to the first message over the log.
+
+<Stage path="message-scroller/jump" label="Jumping to a message" />
+
+## Loading earlier messages
+
+Rows drawn above the ones you are reading leave what you read where it is (`preserveScrollOnPrepend`), and are not counted as new.
+
+<Stage path="message-scroller/history" label="Loading earlier messages" />
+
+## A long conversation
+
+Every row is drawn; the browser skips the ones out of view.
+
+<Stage path="message-scroller/long" label="A long conversation" />
+
+## Loading an old chat
+
+With `loading`, the log is busy and says so once; draw placeholder rows meanwhile. The turns then come in the same place, at the latest.
+
+<Stage path="message-scroller/loading" label="Loading an old chat" />
+
+## Named by its heading
+
+`aria-labelledby` points at the chat's own heading, so its name is written once. Given neither name, the log is called Messages.
+
+<Stage path="message-scroller/named" label="Named by its heading" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="message-scroller"
+  always={[
+    "A conversation's turns, the newest at the bottom, each in a MessageScrollerItem with its `key` and `messageId`.",
+    "The person's own turns marked `scrollAnchor`, so a sent question settles near the top.",
+    "`autoScroll` where an assistant writes while the person reads: it follows the latest and keeps their place when they scroll up.",
+  ]}
+  never={[
+    "A list of things that is not a conversation: use Item or Data table.",
+    "A row that jumps or slides in from the side: new ones fade in where they belong.",
+    "The whole chat with its field: use Chat, which composes this with Message and Prompt input.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      group: "Rows",
+      key: "Room",
+      value: "{space-4} at each side, {space-2} above and below a row",
+    },
+    {
+      group: "Edges",
+      key: "Fade",
+      value: "{space-16} at an edge with rows past it",
+    },
+    {
+      group: "Jump",
+      key: "Button",
+      value:
+        "The secondary Button, small, on the raised ground with the low lift, in its own row",
+      tokens: ["card"],
+    },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    {
+      key: "A row arriving",
+      value: "Fades in from {space-2} lower, {duration-ui}",
+      note: "reduced: simply there; only new rows, never ones there when it opened",
+      tokens: ["ease"],
+    },
+    {
+      key: "Jump to latest",
+      value: "Scrolls smoothly down",
+      note: "reduced: at once; the button fades in, {duration-ui}",
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Following",
+      key: "At the end",
+      value: "With `autoScroll`, stays at the bottom as rows arrive and grow.",
+    },
+    {
+      group: "Following",
+      key: "Scrolled up",
+      value:
+        "Wheel, touch, a key up or a jump let go: it stays put while rows arrive; Jump to latest appears, saying when there are new ones.",
+    },
+    {
+      group: "Following",
+      key: "Jump to latest",
+      value:
+        "Goes back to the end, follows again, and gives the log the focus.",
+    },
+    {
+      group: "Anchoring",
+      key: "A sent turn",
+      value:
+        "A `scrollAnchor` row appended after it opened goes to the top; the room under it is measured again when rows or the view change size.",
+    },
+    {
+      group: "Loading",
+      key: "An old chat",
+      value:
+        "`loading` makes the log busy; when it ends the turns stand at the opening position and are not counted as new.",
+    },
+    {
+      group: "Long conversations",
+      key: "Drawing",
+      value:
+        "Every row, with `content-visibility: auto`: the browser skips the ones out of view.",
+    },
+    {
+      group: "Scrolling",
+      key: "Bar",
+      value: "Hidden; the wheel, touch and the keys scroll it.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    {
+      key: "Role",
+      value: "A named `log` (Messages by default), which the keys can scroll",
+    },
+    {
+      key: "Live",
+      value:
+        'The log is quiet (`aria-live="off"`); new rows are said once each by count ("1 new message"), the person\'s own turns and streaming words never',
+    },
+    {
+      key: "Loading",
+      value: '`aria-busy` on the log, and "Loading the conversation" said once',
+    },
+    { key: "Jump to latest", value: "A button named by its words" },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/message-scroller.tsx"
+  type="MessageScrollerProviderProps"
+  label="MessageScrollerProvider props"
+/>
+
+<Props
+  source="src/components/message-scroller.tsx"
+  type="MessageScrollerProps"
+  label="MessageScroller props"
+/>
+
+<Props
+  source="src/components/message-scroller.tsx"
+  type="MessageScrollerViewportProps"
+  label="MessageScrollerViewport props"
+/>
+
+<Props
+  source="src/components/message-scroller.tsx"
+  type="MessageScrollerContentProps"
+  label="MessageScrollerContent props"
+/>
+
+<Props
+  source="src/components/message-scroller.tsx"
+  type="MessageScrollerItemProps"
+  label="MessageScrollerItem props"
+/>
+
+<Props
+  source="src/components/message-scroller.tsx"
+  type="MessageScrollerButtonProps"
+  label="MessageScrollerButton props"
+/>
+
+<Props
+  source="src/components/message-scroller.tsx"
+  type="MessageScrollerCommands"
+  label="useMessageScroller"
+/>
+
+<Props
+  source="src/components/message-scroller.tsx"
+  type="MessageScrollerScrollOptions"
+  label="Scroll options"
+/>
+
+<Props
+  source="src/components/message-scroller.tsx"
+  type="MessageScrollerScrollable"
+  label="useMessageScrollerScrollable"
+/>
+
+<Props
+  source="src/components/message-scroller.tsx"
+  type="MessageScrollerVisibility"
+  label="useMessageScrollerVisibility"
+/>
+
+</Reference>
