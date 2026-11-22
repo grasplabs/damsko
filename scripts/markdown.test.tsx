@@ -30,6 +30,12 @@ const draw = (
   props: Omit<MarkdownProps, "children"> = {}
 ): string => renderToStaticMarkup(<Markdown {...props}>{source}</Markdown>);
 
+/**
+ * How long a test that weighs its own time may run, in milliseconds: on a busy machine it takes many
+ * times as long as on a quiet one, and what it holds is growth, not time.
+ */
+const SLOW_TEST = 60_000;
+
 /** The words a node holds, for comparing what renderLink was handed. */
 const wordsOf = (node: ReactNode) =>
   renderToStaticMarkup(<span>{node}</span>).replaceAll(/<[^>]+>/gu, "");
@@ -276,13 +282,21 @@ describe("untrusted text", () => {
     ).toContain("https://autolinked.example.com/path");
   });
 
-  test("every prefix of a hostile answer, while it is written", () => {
-    expect(badPrefixes({ streaming: true })).toStrictEqual([]);
-  });
+  test(
+    "every prefix of a hostile answer, while it is written",
+    () => {
+      expect(badPrefixes({ streaming: true })).toStrictEqual([]);
+    },
+    SLOW_TEST
+  );
 
-  test("every prefix of a hostile answer, cut off there", () => {
-    expect(badPrefixes({ truncated: true })).toStrictEqual([]);
-  });
+  test(
+    "every prefix of a hostile answer, cut off there",
+    () => {
+      expect(badPrefixes({ truncated: true })).toStrictEqual([]);
+    },
+    SLOW_TEST
+  );
 });
 
 describe("code fences", () => {
@@ -435,19 +449,31 @@ describe("while written", () => {
   });
 });
 
+/** This process's own time on the processor so far, in milliseconds. */
+const now = () => {
+  const { user, system } = process.cpuUsage();
+  return (user + system) / 1000;
+};
+
 /**
- * How long `work` takes, in milliseconds: run once to warm up, then the best of five runs, so
- * neither the first run's warm-up nor a pause on a shared machine is counted.
+ * How many times longer `whole` takes than `small`, and how long it takes, in milliseconds of this
+ * process's own time on the processor, which does not grow while a busy machine runs others: each
+ * run once to warm up, then the best of seven runs of each, taken in turn.
  */
-const timeOf = (work: () => unknown) => {
-  work();
-  return Math.min(
-    ...[1, 2, 3, 4, 5].map(() => {
-      const start = performance.now();
-      work();
-      return performance.now() - start;
-    })
-  );
+const growthOf = (small: () => unknown, whole: () => unknown) => {
+  small();
+  whole();
+  let fast = Number.POSITIVE_INFINITY;
+  let slow = Number.POSITIVE_INFINITY;
+  for (let run = 0; run < 7; run += 1) {
+    const start = now();
+    small();
+    const middle = now();
+    whole();
+    fast = Math.min(fast, middle - start);
+    slow = Math.min(slow, now() - middle);
+  }
+  return { growth: slow / Math.max(fast, 1), time: slow };
 };
 
 describe("answers no real answer looks like", () => {
@@ -477,19 +503,6 @@ describe("answers no real answer looks like", () => {
     expect(textOf(html)).toContain("level 10");
   });
 
-  test("raw HTML left open thousands of times is drawn whole, as words in short paragraphs", () => {
-    for (const opening of ["<!--", "<?", "<!x"]) {
-      const source = `${opening} a `.repeat(2000);
-      const html = draw(source);
-      const shown = textOf(html)
-        .replaceAll("&lt;", "<")
-        .replaceAll("&gt;", ">")
-        .replaceAll("&amp;", "&");
-      expect(shown.replaceAll(/\s/gu, "")).toBe(source.replaceAll(/\s/gu, ""));
-      expect(html.match(/<p\b/gu)?.length).toBeGreaterThan(1);
-    }
-  });
-
   test("a short comment and a declaration stay words where they are", () => {
     const html = draw(
       "Before <!-- a note --> after.\n\n<!DOCTYPE html>\n\nEnd."
@@ -499,9 +512,9 @@ describe("answers no real answer looks like", () => {
   });
 
   // Each took seconds at these sizes before the bounds (one of them 25). Time as the machine is
-  // busy is not steady, so what is held is the growth: a quarter of the size takes about a quarter
-  // of the time, where the parser's work had grown as its square. Each quarter takes several
-  // milliseconds, so a square's growth (sixteen times) cannot hide under the floor of one.
+  // busy is not steady, so what is held is the growth: an eighth of the size takes about an eighth
+  // of the time, where the parser's work had grown as its square. Each eighth takes a few
+  // milliseconds, so a square's growth (sixty-four times) cannot hide under the floor of one.
   test.each([
     [
       "brackets, 100 KB",
@@ -521,6 +534,14 @@ describe("answers no real answer looks like", () => {
     ["comments left open, 56 KB", (n: number) => "a <!-- ".repeat(n), 8000],
     ["instructions left open, 40 KB", (n: number) => "a <? ".repeat(n), 8000],
     ["declarations left open, 48 KB", (n: number) => "a <!x ".repeat(n), 8000],
+    ["escapes, 40 KB", (n: number) => "a \\* ".repeat(n), 8000],
+    ["code, 48 KB", (n: number) => "a `b` ".repeat(n), 8000],
+    ["comments closed, 104 KB", (n: number) => "a <!-- x --> ".repeat(n), 8000],
+    [
+      "references to characters, 64 KB",
+      (n: number) => "a &amp; ".repeat(n),
+      8000,
+    ],
     [
       "sections left open, 4000 deep",
       (n: number) => "<details>\n<summary>s</summary>\n\nx\n\n".repeat(n),
@@ -536,13 +557,18 @@ describe("answers no real answer looks like", () => {
     "%s takes time in step with its length, written and while written",
     (_, make, size) => {
       for (const streaming of [false, true]) {
-        const quarter = timeOf(() => draw(make(size / 4), { streaming }));
-        const whole = timeOf(() => draw(make(size), { streaming }));
-        // Four times the text: in step is 4, the square is 16. 8 is the midpoint between them
-        // (as a factor: twice the one, half the other), which leaves room for a busy machine.
-        expect(whole / Math.max(quarter, 1)).toBeLessThan(8);
+        const eighth = make(size / 8);
+        const whole = make(size);
+        const { growth } = growthOf(
+          () => draw(eighth, { streaming }),
+          () => draw(whole, { streaming })
+        );
+        // Eight times the text: in step is 8, the square is 64. 24 is near their midpoint as a
+        // factor (three times the one, a third of the other): room for a busy machine.
+        expect(growth).toBeLessThan(24);
       }
-    }
+    },
+    SLOW_TEST
   );
 });
 

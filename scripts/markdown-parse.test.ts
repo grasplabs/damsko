@@ -6,6 +6,7 @@
 import { describe, expect, test } from "vitest";
 
 import {
+  bounded,
   groupSections,
   NOTHING,
   openFence,
@@ -246,14 +247,38 @@ describe("a link's address is its own, never marks", () => {
 });
 
 /** How long `work` takes, in milliseconds: the better of two runs, so the first's warm-up is not counted. */
-const timeOf = (work: () => unknown) =>
-  Math.min(
-    ...[1, 2].map(() => {
-      const start = performance.now();
-      work();
-      return performance.now() - start;
-    })
-  );
+/**
+ * How long a test that weighs its own time may run, in milliseconds: on a busy machine it takes many
+ * times as long as on a quiet one, and what it holds is growth, not time.
+ */
+const SLOW_TEST = 60_000;
+
+/** This process's own time on the processor so far, in milliseconds. */
+const now = () => {
+  const { user, system } = process.cpuUsage();
+  return (user + system) / 1000;
+};
+
+/**
+ * How many times longer `whole` takes than `small`, and how long it takes, in milliseconds of this
+ * process's own time on the processor, which does not grow while a busy machine runs others: each
+ * run once to warm up, then the best of seven runs of each, taken in turn.
+ */
+const growthOf = (small: () => unknown, whole: () => unknown) => {
+  small();
+  whole();
+  let fast = Number.POSITIVE_INFINITY;
+  let slow = Number.POSITIVE_INFINITY;
+  for (let run = 0; run < 7; run += 1) {
+    const start = now();
+    small();
+    const middle = now();
+    whole();
+    fast = Math.min(fast, middle - start);
+    slow = Math.min(slow, now() - middle);
+  }
+  return { growth: slow / Math.max(fast, 1), time: slow };
+};
 
 describe("the end of a long answer, read on every word that arrives", () => {
   // Each took half a second or more at 40 KB, for every few words, while its patterns weighed every
@@ -272,11 +297,235 @@ describe("the end of a long answer, read on every word that arrives", () => {
       "brackets and parentheses that open no link",
       (n: number) => `[a](b "${"](".repeat(n / 2)}" c`,
     ],
-  ])("%s", (_, make) => {
-    for (const read of [repair, tidy]) {
-      const quarter = timeOf(() => read(make(10_000)));
-      const whole = timeOf(() => read(make(40_000)));
-      expect(whole / Math.max(quarter, 1)).toBeLessThan(8);
+  ])(
+    "%s",
+    (_, make) => {
+      for (const read of [repair, tidy]) {
+        const quarter = make(10_000);
+        const whole = make(40_000);
+        expect(
+          growthOf(
+            () => read(quarter),
+            () => read(whole)
+          ).growth
+        ).toBeLessThan(8);
+      }
+    },
+    SLOW_TEST
+  );
+});
+
+/** `unit` again and again, to `length` characters at least. */
+const filled = (unit: string) => (length: number) =>
+  unit.repeat(Math.ceil(length / unit.length));
+
+/** `paragraph` again and again in paragraphs of their own, to `length` characters at least. */
+const paragraphs = (paragraph: string) => filled(`${paragraph}\n\n`);
+
+/** A node of a tree, as far as these tests read it. */
+interface Tree {
+  type: string;
+  value?: unknown;
+  children?: Tree[];
+}
+
+/** A node's words: its value, or its children's, run together. */
+const wordsOf = (node: Tree): string =>
+  typeof node.value === "string"
+    ? node.value
+    : (node.children ?? []).map(wordsOf).join("");
+
+/** The types of a tree's nodes, three levels down. */
+const shapeOf = (node: Tree, depth = 0): string =>
+  depth === 3 || node.children === undefined
+    ? node.type
+    : `${node.type}(${node.children
+        .map((child) => shapeOf(child, depth + 1))
+        .join(",")})`;
+
+/** The tree of an answer as Markdown draws it: within the bounds, then parsed. */
+const boundedTree = (source: string) => parseMarkdown(bounded(source));
+
+const noSpace = (text: string) => text.replaceAll(/\s/gu, "");
+
+describe("a paragraph longer than any answer's", () => {
+  // The parser's work on one paragraph grows as its square when it is full of escapes, code, tags,
+  // references or marks: a paragraph of 100 KB took seconds, of 500 KB a minute. A paragraph
+  // past the bound is not read for marks, so each takes time in step with its length. Eight times
+  // the text: in step is 8, the square is 64; 24 is near their midpoint as a factor (three times
+  // the one, a third of the other), room for a busy machine, and the budget for a slow one.
+  test.each([
+    [
+      "brackets",
+      (n: number) => `${"[".repeat(n / 5)}a${"](b)".repeat(n / 5)}`,
+      200_000,
+    ],
+    ["stars", filled("*a"), 200_000],
+    ["stray ends", filled("]("), 200_000],
+    ["closing stars", filled("a* "), 200_000],
+    [
+      "a bracket left open before words",
+      (n: number) => `[${filled("word ")(n)}`,
+      200_000,
+    ],
+    ["pictures left open", filled("![a"), 200_000],
+    ["references left open", filled("[x]["), 200_000],
+    ["comments left open", filled("a <!-- "), 200_000],
+    ["instructions left open", filled("a <? "), 200_000],
+    ["declarations left open", filled("a <!x "), 200_000],
+    ["escapes", filled("a \\* "), 200_000],
+    ["code", filled("a `b` "), 200_000],
+    ["comments closed", filled("a <!-- x --> "), 200_000],
+    ["references to characters", filled("a &amp; "), 200_000],
+    [
+      "stars, in paragraphs just short of the bound",
+      paragraphs("*a".repeat(995)),
+      64_000,
+    ],
+    [
+      "closing stars, in paragraphs just short of the bound",
+      paragraphs("a* ".repeat(663)),
+      64_000,
+    ],
+    [
+      "comments left open, in paragraphs just short of the bound",
+      paragraphs("a <!-- ".repeat(284)),
+      64_000,
+    ],
+  ])(
+    "%s takes time in step with its length",
+    (_, make, size) => {
+      const eighth = make(size / 8);
+      const whole = make(size);
+      const { growth, time } = growthOf(
+        () => boundedTree(eighth),
+        () => boundedTree(whole)
+      );
+      expect(growth).toBeLessThan(24);
+      expect(time).toBeLessThan(2000);
+    },
+    SLOW_TEST
+  );
+
+  test("a long one is its own characters, in its place in a list, a quote, a table, a heading and a note", () => {
+    const long = `words *not* \\* \`code\` [x](y) &amp; <!-- ${"word ".repeat(450)}end`;
+    const cases = [
+      [
+        `- one\n- ${long}\n- three`,
+        "list(listItem(paragraph(text)),listItem(paragraph(text)),listItem(paragraph(text)))",
+      ],
+      [`> ${long}\n> ${long}\n\nafter`, "root"],
+      [`| a | b |\n| - | - |\n| ${long} | x |\n| c | d |`, "root"],
+      [`# ${long}`, "heading(text)"],
+      [`x[^1]\n\n[^1]: ${long}`, "root"],
+    ] as const;
+    expect(
+      shapeOf(parseMarkdown(cases[0][0]).children[0] ?? { type: "none" })
+    ).toBe(cases[0][1]);
+    expect(
+      parseMarkdown(cases[1][0]).children.map((node) => shapeOf(node))
+    ).toStrictEqual(["blockquote(paragraph(text))", "paragraph(text)"]);
+    expect(
+      shapeOf(parseMarkdown(cases[2][0]).children[0] ?? { type: "none" })
+    ).toBe(
+      "table(tableRow(tableCell(text),tableCell(text)),tableRow(tableCell(text),tableCell(text)),tableRow(tableCell(text),tableCell(text)))"
+    );
+    expect(
+      shapeOf(parseMarkdown(cases[3][0]).children[0] ?? { type: "none" })
+    ).toBe(cases[3][1]);
+    expect(
+      parseMarkdown(cases[4][0]).children.map((node) => shapeOf(node))
+    ).toStrictEqual([
+      "paragraph(text,footnoteReference)",
+      "footnoteDefinition(paragraph(text))",
+    ]);
+    for (const [source] of cases) {
+      expect(wordsOf(parseMarkdown(source))).toContain(long);
+    }
+  });
+
+  test("a short one beside it is still read for its marks", () => {
+    const tree = parseMarkdown(
+      `Some **bold** and \`code\`.\n\n${"word ".repeat(500)}`
+    );
+    expect(shapeOf(tree.children[0] ?? { type: "none" })).toBe(
+      "paragraph(text,strong(text),text,inlineCode,text)"
+    );
+  });
+
+  // Text made at random in every place a paragraph can stand, each past the bound: whatever its
+  // characters (marks, escapes, tags, tabs, two-unit characters, the character that stands in for
+  // them while the blocks are read), it is drawn in its place, every character, in order.
+  test("a long one loses no character, wherever it stands and whatever it holds", () => {
+    // Park and Miller's: the same text on every run.
+    let seed = 7;
+    const random = (below: number) => {
+      seed = (seed * 16_807) % 2_147_483_647;
+      return Math.floor((seed / 2_147_483_647) * below);
+    };
+    const pieces = [
+      "word",
+      "*",
+      "**",
+      "_",
+      "~~",
+      "`",
+      "[",
+      "](",
+      "\\",
+      "&amp;",
+      "<!--",
+      "-->",
+      "<?",
+      "<b>",
+      "\u00A7",
+      "\t",
+      "\u{1F600}",
+      "www.example.com",
+      "  ",
+      "|",
+    ];
+    const contentOf = (cell: boolean) => {
+      const lines: string[] = [];
+      let line = "word";
+      while (lines.join("").length + line.length < 2200) {
+        const piece = pieces[random(pieces.length)] ?? "";
+        line += ` ${cell && (piece === "|" || piece === "\\") ? "x" : piece}`;
+        if (!cell && random(12) === 0) {
+          lines.push(line);
+          line = "word";
+        }
+      }
+      lines.push(line);
+      return lines;
+    };
+    const places = [
+      { first: "", next: "", shape: "paragraph" },
+      { first: "> ", next: "> ", shape: "blockquote(paragraph" },
+      { first: "- ", next: "  ", shape: "list(listItem(paragraph" },
+      { first: "1. ", next: "   ", shape: "list(listItem(paragraph" },
+      { first: "[^n]: ", next: "    ", shape: "footnoteDefinition(paragraph" },
+    ];
+    for (let round = 0; round < 60; round += 1) {
+      const place = places[round % places.length] ?? places[0];
+      const lines = contentOf(false);
+      const ending = round % 2 === 0 ? "\n" : "\r\n";
+      const source = lines
+        .map((line, index) => (index === 0 ? place?.first : place?.next) + line)
+        .join(ending);
+      const [node] = parseMarkdown(source).children;
+      expect(shapeOf(node ?? { type: "none" })).toMatch(
+        new RegExp(
+          `^${(place?.shape ?? "").replaceAll("(", "\\(")}\\((text|break)(,(text|break))*\\)`,
+          "u"
+        )
+      );
+      expect(noSpace(wordsOf(node ?? { type: "none" }))).toBe(
+        noSpace(lines.join(""))
+      );
+      const cell = contentOf(true).join(" ");
+      const table = parseMarkdown(`| a |\n| - |\n| ${cell} |`);
+      expect(noSpace(wordsOf(table))).toBe(noSpace(`a${cell}`));
     }
   });
 });
