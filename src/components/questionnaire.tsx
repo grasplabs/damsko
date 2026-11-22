@@ -369,10 +369,12 @@ const styles = stylex.create({
   },
   // A choice is a card: the whole card is the target, at least a finger tall. Under a pointer its
   // edge strengthens; chosen, it takes the quiet fill, so it never rests on the control alone.
+  // Every card is as tall as the tallest: a card of one line stands its words in the middle, so
+  // its height never reads as an empty second line.
   choice: {
     position: "relative",
     display: "flex",
-    alignItems: "flex-start",
+    alignItems: "center",
     columnGap: space["3"],
     boxSizing: "border-box",
     minWidth: 0,
@@ -407,7 +409,7 @@ const styles = stylex.create({
     opacity: size.opacityDisabled,
     cursor: "not-allowed",
   },
-  // The control's line stands level with the words' first line.
+  // The control's line, the height of the words' first line.
   control: {
     display: "flex",
     alignItems: "center",

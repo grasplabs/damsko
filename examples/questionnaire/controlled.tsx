@@ -29,7 +29,7 @@ export default function QuestionnaireControlled() {
   const [chosen, setChosen] = useState<string[]>([]);
   const [other, setOther] = useState("");
   return (
-    <div {...stylex.props(layout.column)}>
+    <div {...stylex.props(layout.stack)}>
       <Questionnaire onSubmit={() => undefined} style={layout.column}>
         <QuestionnaireItem name="sources" multiple>
           <QuestionnaireTitle>
