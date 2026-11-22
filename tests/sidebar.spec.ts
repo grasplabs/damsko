@@ -1,7 +1,12 @@
 import { expect, test } from "@playwright/test";
 import type { Locator, Page } from "@playwright/test";
 
-import { hasFocusRing, openExample } from "./example.ts";
+import {
+  hasFocusRing,
+  listenToLiveRegions,
+  openExample,
+  openExampleAsleep,
+} from "./example.ts";
 
 const TOGGLE = "Show or hide the sidebar";
 
@@ -810,4 +815,274 @@ test("the docs site's sidebar: the theme's ground, runs as labels, and the curre
     "background-color",
     "oklch(0.992 0.002 165.08)"
   );
+});
+
+// ---- Levels --------------------------------------------------------------------------------------
+
+/** The level a navigation stands in: what moves in when it is shown. */
+const levelOf = (nav: Locator) => nav.locator("xpath=..");
+
+/** How the level's move in starts, and how long it takes: its first keyframe and its time, in ms. */
+const moveOf = async (nav: Locator) =>
+  await levelOf(nav).evaluate((level) => {
+    const [move] = level.getAnimations();
+    if (move === undefined || !(move.effect instanceof KeyframeEffect)) {
+      return null;
+    }
+    const [from] = move.effect.getKeyframes();
+    return {
+      duration: move.effect.getComputedTiming().duration,
+      easing: getComputedStyle(level).animationTimingFunction,
+      opacity: from?.opacity,
+      transform: from?.transform,
+    };
+  });
+
+test("levels: a row shows another level in the main one's place, and the header and the footer stay", async ({
+  page,
+}) => {
+  await openExample(page, "sidebar", "levels");
+  const sidebar = sidebarOf(page);
+  const main = sidebar.getByRole("navigation", { name: "Main" });
+  const settings = sidebar.getByRole("navigation", { name: "Settings" });
+  await expect(main).toBeVisible();
+  await expect(settings).toBeHidden();
+  const where = await main.boundingBox();
+  await main.getByRole("link", { name: "Settings" }).click();
+  await expect(settings).toBeVisible();
+  await expect(main).toBeHidden();
+  await expect(
+    sidebar.getByRole("heading", { name: "Settings" })
+  ).toBeVisible();
+  await expect(sidebar.getByRole("link", { name: "Back" })).toBeVisible();
+  await expect(settings.getByRole("link", { name: "General" })).toHaveAttribute(
+    "aria-current",
+    "page"
+  );
+  await expect(sidebar.getByRole("button", { name: TOGGLE })).toBeVisible();
+  await expect(
+    sidebar.getByRole("button", { name: /Anna de Vries/u })
+  ).toBeVisible();
+  // Folded and opened again, it is still the level it was.
+  await pressKeys(page);
+  await expect(settings).toBeHidden();
+  await pressKeys(page);
+  await expect(settings).toBeVisible();
+  await sidebar.getByRole("link", { name: "Back" }).click();
+  await expect(main).toBeVisible();
+  await expect(settings).toBeHidden();
+  // Nothing round the levels moved: the main list stands where it stood.
+  expect(await main.boundingBox()).toEqual(where);
+});
+
+test("levels: by the keys, focus lands on the new level's current row, and Back gives it to the row that opened it", async ({
+  page,
+}) => {
+  const said = await listenToLiveRegions(page);
+  await openExample(page, "sidebar", "levels");
+  const sidebar = sidebarOf(page);
+  const opener = sidebar.getByRole("link", { name: "Settings" });
+  await sidebar.getByRole("link", { name: "Workflows" }).focus();
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Tab");
+  await expect(opener).toBeFocused();
+  await page.keyboard.press("Enter");
+  const current = sidebar.getByRole("link", { name: "General" });
+  await expect(current).toBeFocused();
+  expect(await hasFocusRing(current)).toBe(true);
+  // Up from the current row: the group's label, then the way back, the level's first stop.
+  await page.keyboard.press("Shift+Tab");
+  await page.keyboard.press("Shift+Tab");
+  await expect(sidebar.getByRole("link", { name: "Back" })).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(opener).toBeFocused();
+  expect(await hasFocusRing(opener)).toBe(true);
+  // Each level's name is said once as it is shown, never on the first paint.
+  await expect.poll(said).toEqual(["Settings", "Main"]);
+});
+
+test("levels: a level that is not shown is out of reach of Tab and of a screen reader", async ({
+  page,
+}) => {
+  await openExample(page, "sidebar", "levels");
+  const sidebar = sidebarOf(page);
+  const stops = async () => {
+    const names: string[] = [];
+    await sidebar.getByRole("button", { name: TOGGLE }).focus();
+    for (let step = 0; step < 30; step += 1) {
+      // oxlint-disable-next-line no-await-in-loop -- one key after the other
+      await page.keyboard.press("Tab");
+      // oxlint-disable-next-line no-await-in-loop -- see above
+      const inside = await sidebar.evaluate((node) =>
+        node.contains(document.activeElement)
+      );
+      if (!inside) {
+        break;
+      }
+      // oxlint-disable-next-line no-await-in-loop -- see above
+      names.push(await focusedName(page));
+    }
+    return names;
+  };
+  expect(await stops()).toEqual([
+    "Chat",
+    "Dashboard",
+    "Brain",
+    "Projects",
+    "Apps",
+    "Workflows",
+    "Expenses",
+    "Settings",
+    "Anna de VriesNorthwind Finance",
+  ]);
+  await expect(sidebar.getByRole("link", { name: "General" })).toHaveCount(0);
+  await expect(sidebar.getByRole("link", { name: "Back" })).toHaveCount(0);
+  await expect(sidebar.getByRole("heading", { name: "Settings" })).toHaveCount(
+    0
+  );
+  await sidebar.getByRole("link", { name: "Settings" }).click();
+  const inSettings = await stops();
+  expect(inSettings.slice(0, 3)).toEqual(["Back", "Workspace", "General"]);
+  expect(inSettings).not.toContain("Chat");
+  expect(inSettings.at(-1)).toBe("Anna de VriesNorthwind Finance");
+  await expect(sidebar.getByRole("link", { name: "Chat" })).toHaveCount(0);
+});
+
+test("levels: each level keeps its own scroll place", async ({ page }) => {
+  await openExample(page, "sidebar", "levels");
+  const sidebar = sidebarOf(page);
+  await sidebar.getByRole("link", { name: "Settings" }).click();
+  const settings = sidebar.getByRole("navigation", { name: "Settings" });
+  await settings.hover();
+  await page.mouse.wheel(0, 120);
+  await expect
+    .poll(async () => await settings.evaluate((node) => node.scrollTop))
+    .toBeGreaterThan(60);
+  const place = await settings.evaluate((node) => node.scrollTop);
+  await sidebar.getByRole("link", { name: "Back" }).click();
+  await expect(settings).toBeHidden();
+  await sidebar.getByRole("link", { name: "Settings" }).click();
+  await expect(settings).toBeVisible();
+  expect(await settings.evaluate((node) => node.scrollTop)).toBe(place);
+  // The rows under a label folded in one level stay folded while another is shown.
+  await settings.getByRole("button", { name: "Your account" }).click();
+  await expect(settings.getByRole("link", { name: "Profile" })).toBeHidden();
+  await sidebar.getByRole("link", { name: "Back" }).click();
+  await sidebar.getByRole("link", { name: "Settings" }).click();
+  await expect(settings.getByRole("link", { name: "Profile" })).toBeHidden();
+});
+
+test("levels: the new level moves in from the way the person went, 16px and a fade in 250ms", async ({
+  page,
+}) => {
+  await openExample(page, "sidebar", "levels");
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  const sidebar = sidebarOf(page);
+  const main = sidebar.getByRole("navigation", { name: "Main" });
+  const settings = sidebar.getByRole("navigation", { name: "Settings" });
+  // Nothing moves on the first paint.
+  expect(await moveOf(main)).toBeNull();
+  await sidebar.getByRole("link", { name: "Settings" }).click();
+  expect(await moveOf(settings)).toEqual({
+    duration: 250,
+    easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+    opacity: "0",
+    transform: "translateX(16px)",
+  });
+  // The level left is gone at once: the two never stand over each other.
+  await expect(main).toBeHidden();
+  await sidebar.getByRole("link", { name: "Back" }).click();
+  const back = await moveOf(main);
+  expect(back?.transform).toBe("translateX(-16px)");
+  // Once it has arrived nothing is left running, and it stands in its place.
+  await expect.poll(async () => await moveOf(main)).toBeNull();
+  await expect(levelOf(main)).toHaveCSS("opacity", "1");
+});
+
+test("levels: in right-to-left text the new level moves in from the other side", async ({
+  page,
+}) => {
+  await openExample(page, "sidebar", "levels");
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.evaluate(() => {
+    document.documentElement.dir = "rtl";
+  });
+  const sidebar = sidebarOf(page);
+  await sidebar.getByRole("link", { name: "Settings" }).click();
+  const forward = await moveOf(
+    sidebar.getByRole("navigation", { name: "Settings" })
+  );
+  expect(forward?.transform).toBe("translateX(-16px)");
+  await sidebar.getByRole("link", { name: "Back" }).click();
+  const back = await moveOf(sidebar.getByRole("navigation", { name: "Main" }));
+  expect(back?.transform).toBe("translateX(16px)");
+});
+
+test("levels: with reduced motion the new level is simply there", async ({
+  page,
+}) => {
+  await openExample(page, "sidebar", "levels");
+  const sidebar = sidebarOf(page);
+  await sidebar.getByRole("link", { name: "Settings" }).click();
+  const settings = sidebar.getByRole("navigation", { name: "Settings" });
+  await expect(settings).toBeVisible();
+  await expect(levelOf(settings)).toHaveCSS("animation-duration", "0s");
+  await expect(levelOf(settings)).toHaveCSS("opacity", "1");
+  expect(
+    await levelOf(settings).evaluate(
+      (level) => new DOMMatrix(getComputedStyle(level).transform).m41
+    )
+  ).toBe(0);
+});
+
+test("levels: a level shown from the person's menu leaves focus with the menu's button", async ({
+  page,
+}) => {
+  await openExample(page, "sidebar", "levels");
+  const sidebar = sidebarOf(page);
+  const person = sidebar.getByRole("button", { name: /Anna de Vries/u });
+  await person.focus();
+  await page.keyboard.press("Enter");
+  await page.getByRole("menuitem", { name: "Settings" }).press("Enter");
+  await expect(
+    sidebar.getByRole("navigation", { name: "Settings" })
+  ).toBeVisible();
+  await expect(person).toBeFocused();
+});
+
+test("levels: before the page wakes, the level shown is the only one drawn and in reach", async ({
+  page,
+}) => {
+  const wake = await openExampleAsleep(page, "sidebar", "levels");
+  const sidebar = sidebarOf(page);
+  await expect(sidebar.getByRole("link", { name: "Chat" })).toBeVisible();
+  await expect(sidebar.getByRole("link", { name: "General" })).toHaveCount(0);
+  // Its rows are in the page, kept for when it is shown, and unseen.
+  const kept = sidebar.getByText("Members and roles").first();
+  await expect(kept).toBeAttached();
+  await expect(kept).toBeHidden();
+  await wake();
+  await expect(sidebar.getByRole("link", { name: "Chat" })).toBeVisible();
+  await expect(kept).toBeHidden();
+});
+
+test("levels: on a phone the sheet shows the level, and Back and focus stay inside it", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openExample(page, "sidebar", "levels");
+  await page.getByRole("button", { name: TOGGLE }).click();
+  const sheet = page.getByRole("dialog", { name: "Sidebar" });
+  await expect(sheet).toBeVisible();
+  const opener = sheet.getByRole("link", { name: "Settings" });
+  await opener.focus();
+  await page.keyboard.press("Enter");
+  const settings = sheet.getByRole("navigation", { name: "Settings" });
+  await expect(settings).toBeVisible();
+  await expect(sheet.getByRole("link", { name: "Chat" })).toHaveCount(0);
+  await expect(settings.getByRole("link", { name: "General" })).toBeFocused();
+  await sheet.getByRole("link", { name: "Back" }).press("Enter");
+  await expect(sheet.getByRole("navigation", { name: "Main" })).toBeVisible();
+  await expect(opener).toBeFocused();
+  await expect(sheet).toBeVisible();
 });

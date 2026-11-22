@@ -212,3 +212,46 @@ for (const [theme, ground, card] of [
     expect(aside.width - (row?.width ?? 0)).toBe(16);
   });
 }
+
+test("under Settings' address the sidebar shows Settings' own level, and Back shows the main one", async ({
+  page,
+}) => {
+  await openExample(page, "app-shell-01", "levels");
+  const sidebar = page.getByRole("complementary", { name: "Sidebar" });
+  const opener = sidebar.getByRole("link", { name: "Settings" });
+  await opener.focus();
+  await page.keyboard.press("Enter");
+  const settings = sidebar.getByRole("navigation", { name: "Settings" });
+  await expect(settings).toBeVisible();
+  await expect(sidebar.getByRole("navigation", { name: "Main" })).toBeHidden();
+  await expect(settings.getByRole("link", { name: "General" })).toBeFocused();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("General");
+  await settings.getByRole("link", { name: "Members" }).click();
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Members");
+  await sidebar.getByRole("link", { name: "Back" }).focus();
+  await page.keyboard.press("Enter");
+  await expect(sidebar.getByRole("navigation", { name: "Main" })).toBeVisible();
+  await expect(opener).toBeFocused();
+  await expect(sidebar.getByRole("link", { name: "Projects" })).toHaveAttribute(
+    "aria-current",
+    "page"
+  );
+});
+
+test("on a phone a link into another level closes the sheet, which opens on that level", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openExample(page, "app-shell-01", "levels");
+  const trigger = page.getByRole("button", { name: TOGGLE });
+  await trigger.click();
+  const sheet = page.getByRole("dialog", { name: "Sidebar" });
+  await sheet.getByRole("link", { name: "Settings" }).click();
+  await expect(sheet).toBeHidden();
+  await trigger.click();
+  await expect(
+    sheet.getByRole("navigation", { name: "Settings" })
+  ).toBeVisible();
+  await expect(sheet.getByRole("link", { name: "Back" })).toBeVisible();
+  await expect(sheet.getByRole("link", { name: "Projects" })).toHaveCount(0);
+});
