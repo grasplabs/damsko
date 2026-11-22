@@ -1,5 +1,5 @@
-// Item: one row of a list, a thing with its name, a line about it, a mark and its actions, after
-// shadcn's: the system's edge and corner, words in ink and muted. Plain semantic HTML: UI SDK has
+// Item: one row of a list, a thing with its name, a line about it, a mark and its actions:
+// the system's edge and corner, words in ink and muted. Plain semantic HTML: UI SDK has
 // no primitive for it.
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
@@ -414,6 +414,7 @@ const styles = stylex.create({
       position: "absolute",
       inset: 0,
       borderRadius: "inherit",
+      cornerShape: "inherit",
     },
   },
   // Lists: a real list, the rows one under another, 8px apart, or 4px either side of a hairline.
@@ -462,6 +463,7 @@ const waits = stylex.create({
     height: sizes.controlDefault,
     overflow: "hidden",
     borderRadius: `min(${radius.base}, calc(${sizes.controlDefault} / 2))`,
+    cornerShape: radius.shape,
   },
   mediaSm: {
     width: sizes.controlSm,

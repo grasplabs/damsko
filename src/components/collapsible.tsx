@@ -1,6 +1,5 @@
-// Collapsible: one panel that opens and closes under its trigger, from shadcn's
-// (registry/bases/base/ui/collapsible.tsx, on Base UI), converted from Tailwind to StyleX and
-// rebuilt on UI SDK's Collapsible, with the reference's look: a full-width trigger with a chevron at
+// Collapsible: one panel that opens and closes under its trigger, in StyleX,
+// built on UI SDK's Collapsible: a full-width trigger with a chevron at
 // its end, and quiet words under it that open over 200ms.
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //

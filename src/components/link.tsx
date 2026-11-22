@@ -1,5 +1,4 @@
-// Link: words that go somewhere. shadcn has no link (it styles `a` in prose, and its Button has a
-// link variant); this draws links as plain words with a soft underline: the words in the colour
+// Link: words that go somewhere, drawn as plain words with a soft underline: the words in the colour
 // around them, an underline in ink at 30% that takes the words' colour under the pointer, the
 // shared focus style for words, and a mark after a link that leaves the product.
 //

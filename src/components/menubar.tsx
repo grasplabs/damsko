@@ -1,5 +1,5 @@
-// Menubar: an application's menus in a row, one tab stop for all of them, from shadcn's
-// (registry/bases/base/ui/menubar.tsx), converted from Tailwind to StyleX and rebuilt on UI SDK's
+// Menubar: an application's menus in a row, one tab stop for all of them,
+// in StyleX, built on UI SDK's
 // Menubar and Menu: a quiet bar with the system's edge, triggers drawn as a list's items, and its
 // menus in the raised panel the dropdown menu has, with items, checkbox and radio items, and
 // submenus of their own.

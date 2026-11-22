@@ -25,7 +25,7 @@ Add one sentence under the label when the label alone leaves a question.
 
 ## In a group
 
-Choices that make one answer share a `CheckboxGroup` in a Field, whose FieldLabel names the group; each box stands in its own horizontal Field. A `parent` box checks them all, and shows a dash while only some are; `nested` moves a box in under the parent's words.
+Choices that make one answer share a `CheckboxGroup` in a Field, whose FieldLabel names the group; each box stands in its own horizontal Field. A `parent` box checks them all, and shows a dash while only some are (`checked="indeterminate"` on a box your own code holds); `nested` moves a box in under the parent's words.
 
 <Stage path="checkbox/group" live label="In a group" />
 
@@ -286,59 +286,6 @@ Hover, keyboard focus and pressed are drawn by the checkbox's own CSS, forced; t
       value:
         "The checked fill 3:1 on every ground; the empty edge is soft on purpose",
       note: "checked by `node tokens/generate.ts --check`",
-    },
-  ]}
-/>
-<Rows
-  title="From shadcn"
-  rows={[
-    {
-      group: "Parts",
-      key: '`Field orientation="horizontal"`, `FieldLabel`',
-      value: "The same parts",
-      note: "the row, at least 44px, is the Field's",
-    },
-    {
-      group: "Parts",
-      key: "`FieldContent`, `FieldDescription`, `FieldError`",
-      value: "The same parts",
-      note: "in a group, wired by id to the box",
-    },
-    {
-      group: "Parts",
-      key: "No group",
-      value: "`CheckboxGroup`, `parent`",
-      note: "one value, and Select all",
-    },
-    {
-      group: "Parts",
-      key: "No dash",
-      value: '`"indeterminate"`',
-      note: "a dash in place of the tick",
-    },
-    {
-      group: "Look",
-      key: "`size-4`, `rounded-[4px]`",
-      value: "{checkbox-box}, {radius-mark}",
-    },
-    { group: "Look", key: "`bg-primary`", value: "{primary}" },
-    {
-      group: "Look",
-      key: "`after:-inset-x-3 -inset-y-2`",
-      value: "The whole row",
-    },
-    { group: "Look", key: "`transition-none`", value: "The tick grows in" },
-    {
-      group: "Elsewhere",
-      key: "`className`",
-      value: "`style`",
-      note: "layout only",
-    },
-    {
-      group: "Elsewhere",
-      key: "Base UI",
-      value: "UI SDK",
-      note: "an agent can find and check it",
     },
   ]}
 />

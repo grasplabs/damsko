@@ -8,7 +8,7 @@ description: The questions an assistant asks and waits on, one at a time, each a
   install="pnpm dlx shadcn@4.23.0 add @damsko/questionnaire"
 />
 
-Unlike shadcn's, it is a group, not a form, so it can stand inside a form of its own, a PromptInput's.
+It is a group, not a form, so it can stand inside a form of its own, a PromptInput's.
 
 ## One choice
 
@@ -48,7 +48,7 @@ When `onSubmit`'s Promise rejects, the questionnaire says it could not send, kee
 
 ## Held by the page
 
-`checked` on a `QuestionnaireChoice` and `value` on a `QuestionnaireInput` hold the answer in the page, as shadcn's do; `onCheckedChange` and `onValueChange` say each change.
+`checked` on a `QuestionnaireChoice` and `value` on a `QuestionnaireInput` hold the answer in the page; `onCheckedChange` and `onValueChange` say each change.
 
 <Stage path="questionnaire/controlled" label="Held by the page" />
 

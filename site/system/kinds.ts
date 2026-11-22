@@ -17,7 +17,30 @@ export interface Kind {
   label: string;
   /** Component file names, in the order the sidebar shows them. */
   members: string[];
+  /** One sentence under the kind's heading on the overview, where the kind needs saying. */
+  says?: string;
 }
+
+/** What a block is, in one sentence: the overview and each block's page say it. */
+export const blockSays =
+  "A block is a ready-made composition of components that a product installs, then owns and edits. It is not a primitive.";
+
+/** The blocks (src/blocks/<name>/): last in the sidebar, apart from the components. */
+export const blocksKind: Kind = {
+  id: "blocks",
+  label: "Blocks",
+  members: [
+    "app-shell-01",
+    "inspector-01",
+    "share-dialog-01",
+    "connect-api-key-01",
+  ],
+  says: blockSays,
+};
+
+/** Whether a page's file name is a block's. */
+export const isBlock = (name: string): boolean =>
+  blocksKind.members.includes(name);
 
 export const kinds: Kind[] = [
   {
@@ -31,7 +54,6 @@ export const kinds: Kind[] = [
       "link",
       "toggle",
       "theme-toggle",
-      "kbd",
       "snippet",
     ],
   },
@@ -50,7 +72,6 @@ export const kinds: Kind[] = [
       "field",
       "label",
       "form",
-      "connect-api-key-01",
     ],
   },
   {
@@ -93,7 +114,6 @@ export const kinds: Kind[] = [
       "pagination",
       "stepper",
       "sidebar",
-      "app-shell-01",
       "page-header",
       "navigation-menu",
       "menubar",
@@ -118,15 +138,7 @@ export const kinds: Kind[] = [
   {
     id: "tables-and-lists",
     label: "Tables and lists",
-    members: [
-      "table",
-      "data-table",
-      "data-grid",
-      "item",
-      "key-value",
-      "chart",
-      "share-dialog-01",
-    ],
+    members: ["table", "data-table", "data-grid", "item", "key-value"],
   },
   {
     id: "surfaces",
@@ -135,7 +147,6 @@ export const kinds: Kind[] = [
       "card",
       "section-header",
       "side-panel",
-      "inspector-01",
       "accordion",
       "collapsible",
       "carousel",
@@ -155,12 +166,14 @@ export const kinds: Kind[] = [
       "avatar",
       "audio-player",
       "tag",
+      "kbd",
       "icon-tile",
       "brand-icon",
       "code-block",
       "markdown",
       "diff-viewer",
       "stat",
+      "chart",
     ],
   },
   {
@@ -192,6 +205,7 @@ export const kinds: Kind[] = [
       "test-results",
     ],
   },
+  blocksKind,
 ];
 
 /** Where a component not named above goes. */

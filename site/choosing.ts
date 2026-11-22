@@ -54,6 +54,11 @@ export const choosingGroups: ChoosingGroup[] = [
     title: "A list of actions",
     of: ["dropdown-menu", "context-menu", "menubar", "command", "button-group"],
   },
+  {
+    title: "Something to press",
+    of: ["button", "link", "toggle", "hold-button", "copy-button"],
+  },
+  { title: "Sections that open", of: ["accordion", "collapsible"] },
   { title: "A date", of: ["date-picker", "calendar"] },
   { title: "Where an answer came from", of: ["sources", "inline-citation"] },
   {

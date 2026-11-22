@@ -1,5 +1,5 @@
-// InputOTP: a one-time code, one square per character, from shadcn's (registry/bases/base/ui/
-// input-otp.tsx, on input-otp), converted from Tailwind to StyleX and built on UI SDK's OTPInput.
+// InputOTP: a one-time code, one square per character,
+// in StyleX, built on UI SDK's OTPInput.
 // One native input holds the code, so paste, autofill from a text message, undo and the form all
 // work as they do for any field; the squares only draw it. Each square has Input's look, and the
 // one typing goes to takes the focus edge.

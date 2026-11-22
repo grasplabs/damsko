@@ -41,6 +41,12 @@ ToggleGroupItems on one track, one pressed at a time, raised out of it.
 
 <Stage path="toggle/multiple" label="Several at once" />
 
+## Full width
+
+`fullWidth` lays the track across the width it stands in, the items sharing it: each grows from its words' width, and where the width is short their words end in an ellipsis rather than run past the track.
+
+<Stage path="toggle/full-width" label="Full width" />
+
 ## Sizes
 
 Button's ladder: `xs` 28px alone or in a toolbar, and the default; `sm` 32, `default` 36 and `lg` 44 beside a field of that size.
@@ -84,7 +90,7 @@ Hover and keyboard focus are forced from the toggle's own CSS; the rest are its 
 <Intent
   of="toggle"
   always={[
-    "A choice that stays on, such as a view or a text style.",
+    "A choice that stays on, such as a view, a text style or a filter over a list.",
     "Words that say what it turns on, the same whether it is on or off.",
     "An `aria-label` on a toggle that shows only an icon.",
     "A group name that says what its toggles set: View, Text style.",
@@ -267,48 +273,6 @@ Hover and keyboard focus are forced from the toggle's own CSS; the rest are its 
       value: "Words 4.5:1 on paper, soft and raised, light and dark",
       note: "checked by `node tokens/generate.ts --check`",
     },
-  ]}
-/>
-<Rows
-  title="From shadcn"
-  rows={[
-    {
-      group: "Parts",
-      key: "`ToggleGroupItem`",
-      value: "`ToggleGroupItem`",
-      note: "raised out of the group's track when on",
-    },
-    {
-      group: "Look",
-      key: "`variant`: `default`, `outline`",
-      value: "The same, on Toggle",
-      note: "a group's items sit on its track",
-    },
-    {
-      group: "Look",
-      key: "`size`: `default`, `sm`, `lg`",
-      value: "`size`: `xs`, `sm`, `default`, `lg`",
-      note: "Button's ladder; `xs` is the default",
-    },
-    {
-      group: "Look",
-      key: "`spacing`",
-      value: "Dropped",
-      note: "the toggles sit on one track",
-    },
-    {
-      group: "Elsewhere",
-      key: "`[&_svg]`",
-      value: "`<Icon />` as a child",
-      note: "sized by the toggle through its icon variables",
-    },
-    {
-      group: "Elsewhere",
-      key: "`className`",
-      value: "`style`",
-      note: "layout only",
-    },
-    { group: "Elsewhere", key: "Base UI", value: "UI SDK" },
   ]}
 />
 

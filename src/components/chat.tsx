@@ -1,5 +1,4 @@
-// Chat: the thread of a conversation with an assistant, as shadcn's Chat pattern composes it
-// (content/docs/ai-elements/base/chat.mdx and examples/base/chat-demo.tsx): each turn a Message
+// Chat: the thread of a conversation with an assistant: each turn a Message
 // inside a MessageScroller that follows the reply while the person stays at the end, the person's
 // own turn its scroll anchor, so a new question settles near the top and the reply streams in under
 // it; an empty state before the first turn; and the PromptInput under the thread. It composes and

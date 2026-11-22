@@ -1,5 +1,5 @@
-// Toggle: a button that stays pressed, from shadcn's (registry/bases/base/ui/toggle.tsx, on Base
-// UI), converted from Tailwind to StyleX and built on UI SDK's Toggle. 28px tall at its default
+// Toggle: a button that stays pressed,
+// in StyleX, built on UI SDK's Toggle. 28px tall at its default
 // `xs` size, its words muted until pressed; pressed lays a veil of ink deeper than hover's. Its
 // icon is a child, as on Button; an icon alone makes it square and needs an `aria-label`. For a
 // name shown on hover, wrap it in a Tooltip.

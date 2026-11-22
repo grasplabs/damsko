@@ -59,7 +59,7 @@ export type Orientation = "horizontal" | "vertical";
 
 /**
  * `asChild` onto UI SDK's `render`: with `asChild` and one element as the child, that element is
- * drawn instead of the part's own, with the part's props merged onto it (shadcn's Slot); otherwise
+ * drawn instead of the part's own, with the part's props merged onto it; otherwise
  * the children stay the part's own.
  *
  *   <DialogTriggerPrimitive {...props} {...slotProps(asChild, children)} />

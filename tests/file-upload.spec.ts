@@ -1,7 +1,12 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
-import { hasFocusRing, openExample } from "./example.ts";
+import {
+  hasFocusRing,
+  openExample,
+  openExampleAsleep,
+  pickerFrom,
+} from "./example.ts";
 
 const file = (name: string, mimeType: string, size: number) => ({
   name,
@@ -15,10 +20,9 @@ const choose = async (
   name: RegExp | string,
   files: ReturnType<typeof file>[]
 ) => {
-  const [chooser] = await Promise.all([
-    page.waitForEvent("filechooser"),
-    page.getByRole("button", { name }).click(),
-  ]);
+  const chooser = await pickerFrom(page, async () => {
+    await page.getByRole("button", { name }).click();
+  });
   await chooser.setFiles(files);
 };
 
@@ -30,12 +34,33 @@ test("the keyboard reaches Choose files, and Enter opens the picker", async ({
   await page.keyboard.press("Tab");
   await expect(button).toBeFocused();
   expect(await hasFocusRing(button)).toBe(true);
-  const [chooser] = await Promise.all([
-    page.waitForEvent("filechooser"),
-    page.keyboard.press("Enter"),
-  ]);
+  const chooser = await pickerFrom(page, async () => {
+    await page.keyboard.press("Enter");
+  });
   expect(chooser.isMultiple()).toBe(true);
 });
+
+for (const [example, name] of [
+  ["basic", "Choose files"],
+  ["image-upload", /^Change/u],
+] as const) {
+  test(`${example}: focus taken before the page wakes stays on the control as it does`, async ({
+    page,
+  }) => {
+    const wake = await openExampleAsleep(page, "file-upload", example);
+    // Until the script runs, the control is the browser's own file input.
+    const control = page.getByRole("button", { name });
+    await expect(control).toBeAttached();
+    await page.keyboard.press("Tab");
+    await expect(control).toBeFocused();
+    await expect(control).toHaveJSProperty("type", "file");
+    await wake();
+    // The live button took its place, and the focus with it.
+    await expect(control).toHaveJSProperty("type", "button");
+    await expect(control).toBeFocused();
+    expect(await hasFocusRing(control)).toBe(true);
+  });
+}
 
 test("what it takes is said with its button", async ({ page }) => {
   await openExample(page, "file-upload", "basic");

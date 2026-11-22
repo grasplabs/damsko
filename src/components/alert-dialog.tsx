@@ -1,6 +1,5 @@
 // Alert dialog: one question before a grave step that cannot be undone, such as deleting a
-// workspace, from shadcn's (registry/bases/base/ui/alert-dialog.tsx), converted from Tailwind to
-// StyleX and built on UI SDK's AlertDialog (role="alertdialog"). It wears Dialog's look
+// workspace, in StyleX, built on UI SDK's AlertDialog (role="alertdialog"). It wears Dialog's look
 // (dialog.tsx's `dialogStyles`), so the two are one family: the raised panel, the shade, the motion
 // and the sheet along the bottom under 640px.
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
@@ -402,7 +401,7 @@ export const AlertDialogAction = ({
 /** Every prop an AlertDialogCancel takes. */
 export interface AlertDialogCancelProps extends AnswerProps {
   /**
-   * The Button's look: `outline`, the way out beside the action, as shadcn draws it.
+   * The Button's look: `outline`, the way out beside the action.
    * @default "outline"
    */
   variant?: ButtonVariant;

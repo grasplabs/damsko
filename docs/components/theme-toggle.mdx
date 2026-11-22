@@ -76,13 +76,14 @@ A person chooses light, dark or the system's look, kept with the product's setti
     {
       group: "Segmented",
       key: "Track",
-      value: "{space-1} round the pill, {radius-full}",
+      value: "{space-1} round the pill, {radius}, {radius-shape}",
       tokens: ["accent"],
     },
     {
       group: "Segmented",
       key: "Pill",
-      value: "A quiet control's fill and low lift",
+      value:
+        "A quiet control's fill and low lift; the track's corner less {space-1}",
       tokens: ["card", "shadow-sm"],
     },
     {
@@ -99,6 +100,11 @@ A person chooses light, dark or the system's look, kept with the product's setti
       note: "an unseen {tap-target} on a touch screen",
     },
     { group: "Icon", key: "Icon", value: "{icon-sm}, stroke {icon-stroke}" },
+    {
+      group: "Icon",
+      key: "Corner",
+      value: "{radius}, capped at half the height, {radius-shape}",
+    },
     {
       group: "Picker",
       key: "Tile",
