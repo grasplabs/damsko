@@ -31,8 +31,8 @@ import { createContext, use } from "react";
 import type { ReactNode } from "react";
 
 import { useI18n } from "../lib/i18n";
-import { focusRingText, tapTarget } from "../lib/styles";
-import { colors, font, media, radius, size, space } from "../lib/tokens.stylex";
+import { codeStyles, focusRingText, tapTarget } from "../lib/styles";
+import { colors, font, media, size, space } from "../lib/tokens.stylex";
 import type { LayoutStyle } from "../lib/utils";
 import { CopyButton } from "./copy-button";
 import { parseStackTrace } from "./stack-trace-parse";
@@ -190,25 +190,13 @@ const styles = stylex.create({
     // button's fill under the pointer reaches past it by the button's own padding.
     marginInlineEnd: `calc((${size.iconSm} - ${size.controlSm}) / 2)`,
   },
-  // The frames: a muted block of monospace lines, the dependencies' muted and the product's in ink.
+  // The frames, on the code surface (codeStyles): monospace lines, the dependencies' muted and the
+  // product's in ink.
   frames: {
-    boxSizing: "border-box",
-    minWidth: 0,
     overflowY: "auto",
     margin: 0,
-    paddingBlock: space["3"],
-    paddingInline: space["3"],
     listStyle: "none",
-    backgroundColor: colors.muted,
-    borderWidth: { default: 0, [media.forcedColors]: 1 },
-    borderStyle: "solid",
-    borderColor: "CanvasText",
-    borderRadius: radius.base,
-    cornerShape: radius.shape,
     color: colors.mutedForeground,
-    fontFamily: font.mono,
-    fontSize: font.textXs,
-    lineHeight: font.codeBlockLine,
   },
   frame: {
     overflowWrap: "anywhere",
@@ -414,7 +402,13 @@ export const StackTraceFrames = ({
     return (
       <p
         data-slot="stack-trace-frames"
-        {...stylex.props(styles.frames, styles.empty, style)}
+        {...stylex.props(
+          codeStyles.surface,
+          codeStyles.text,
+          styles.frames,
+          styles.empty,
+          style
+        )}
       >
         {words.noFrames}
       </p>
@@ -424,7 +418,12 @@ export const StackTraceFrames = ({
     <ol
       aria-label={words.frames}
       data-slot="stack-trace-frames"
-      {...stylex.props(styles.frames, style)}
+      {...stylex.props(
+        codeStyles.surface,
+        codeStyles.text,
+        styles.frames,
+        style
+      )}
     >
       {frames.map((frame, index) => (
         // Frames have no id and never reorder; the same line can come twice (recursion).

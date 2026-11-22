@@ -1104,6 +1104,39 @@ export const disclosureStyles = stylex.create({
   },
 });
 
+// ---- The code surface ----------------------------------------------------------------------------
+//
+// What code, a command's output and an error's text stand on: CodeBlock's box, Terminal's output,
+// a failed test's error and a stack trace's frames.
+//
+//   stylex.props(codeStyles.surface)                    a box with parts of its own (CodeBlock)
+//   stylex.props(codeStyles.surface, codeStyles.text)   words set straight on it
+
+export const codeStyles = stylex.create({
+  // The wash and the edge (drawn outside, so it adds no size): the box reads by both. Forced
+  // colours drop both, so a real border draws the edge there.
+  surface: {
+    backgroundColor: colors.codeBlockBg,
+    boxShadow: size.borderStrong,
+    borderWidth: { default: 0, [FORCED]: 1 },
+    borderStyle: "solid",
+    borderColor: "CanvasText",
+    borderRadius: radius.base,
+    cornerShape: radius.shape,
+    color: colors.bodyForeground,
+  },
+  // Small mono words, with the same room on every side.
+  text: {
+    boxSizing: "border-box",
+    minWidth: 0,
+    paddingBlock: space["3"],
+    paddingInline: space["3"],
+    fontFamily: font.mono,
+    fontSize: font.textXs,
+    lineHeight: font.codeBlockLine,
+  },
+});
+
 const tileStyles = stylex.create({
   edge: {
     boxShadow: size.borderStrong,
