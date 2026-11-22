@@ -142,6 +142,7 @@ const styles = stylex.create({
     minWidth: 0,
     minHeight: 0,
     borderRadius: "inherit",
+    cornerShape: "inherit",
   },
   // Its content scrolls, with no bar, when the panel is smaller than it.
   panel: {

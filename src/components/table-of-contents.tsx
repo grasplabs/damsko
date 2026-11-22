@@ -314,7 +314,7 @@ const styles = stylex.create({
     height: size.tableOfContentsMark,
     marginBlockEnd: space[4],
     overflow: "hidden",
-    borderRadius: size.tableOfContentsMark,
+    borderRadius: radius.full,
     backgroundImage: {
       default: `linear-gradient(${colors.border}, ${colors.border})`,
       [FORCED]: "linear-gradient(CanvasText, CanvasText)",
@@ -348,7 +348,7 @@ const styles = stylex.create({
     insetInlineStart: 0,
     width: size.tableOfContentsMark,
     height: 0,
-    borderRadius: size.tableOfContentsMark,
+    borderRadius: radius.full,
     backgroundColor: { default: colors.foreground, [FORCED]: "CanvasText" },
     forcedColorAdjust: "none",
     pointerEvents: "none",
@@ -476,7 +476,7 @@ const styles = stylex.create({
     display: "block",
     width: space.tableOfContentsTick,
     height: size.tableOfContentsMark,
-    borderRadius: size.tableOfContentsMark,
+    borderRadius: radius.full,
     // Muted, not the divider's colour: the ticks are the button, and must read as one.
     backgroundColor: { default: colors.mutedForeground, [FORCED]: "GrayText" },
     forcedColorAdjust: "none",

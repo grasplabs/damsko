@@ -305,6 +305,7 @@ const styles = stylex.create({
     overflowY: "auto",
     overscrollBehavior: "auto",
     borderRadius: "inherit",
+    cornerShape: "inherit",
     maskImage: {
       default: null,
       ":is([data-scrollable='start'])": `linear-gradient(to bottom, ${fadeTop}, black)`,
