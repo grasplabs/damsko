@@ -196,8 +196,6 @@ export const kinds: Kind[] = [
       "model-selector",
       "trace",
       "chain-of-thought",
-      "queue",
-      "subagent",
       "reasoning",
       "tool",
       "terminal",

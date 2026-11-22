@@ -32,8 +32,14 @@ import type { LayoutStyle } from "../lib/utils";
 
 /** Every prop a Collapsible takes. */
 export interface CollapsibleProps {
-  /** Its CollapsibleTrigger, then its CollapsibleContent. */
+  /** Its CollapsibleTrigger, then its CollapsibleContent. With `asChild`, the one element drawn as it, holding them. */
   children: ReactNode;
+  /**
+   * Draws its one child element as the Collapsible, with its behaviour and none of its layout: for
+   * a part that opens the same way inside a layout of its own (a row of a list).
+   * @default false
+   */
+  asChild?: boolean;
   /** Whether it is open. Pass it with `onOpenChange` to control it. */
   open?: boolean;
   /**
@@ -132,6 +138,7 @@ const FitContentContext = createContext(false);
 /** One panel that opens and closes under its trigger. */
 export const Collapsible = ({
   children,
+  asChild = false,
   open,
   defaultOpen,
   onOpenChange,
@@ -140,17 +147,18 @@ export const Collapsible = ({
   fitContent = false,
   style,
 }: CollapsibleProps) => (
-  <CollapsiblePrimitive
-    open={open}
-    defaultOpen={defaultOpen}
-    onOpenChange={onOpenChange}
-    disabled={disabled}
-    {...stylex.props(styles.root, style)}
-  >
-    <VariantContext value={variant}>
-      <FitContentContext value={fitContent}>{children}</FitContentContext>
-    </VariantContext>
-  </CollapsiblePrimitive>
+  <VariantContext value={variant}>
+    <FitContentContext value={fitContent}>
+      <CollapsiblePrimitive
+        open={open}
+        defaultOpen={defaultOpen}
+        onOpenChange={onOpenChange}
+        disabled={disabled}
+        {...slotProps(asChild, children)}
+        {...stylex.props(!asChild && styles.root, style)}
+      />
+    </FitContentContext>
+  </VariantContext>
 );
 
 /** The button that opens and closes the panel: its words, and a chevron that turns. */
