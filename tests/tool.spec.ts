@@ -1,6 +1,12 @@
 import { expect, test } from "@playwright/test";
 
-import { hasFocusRing, listenToLiveRegions, openExample } from "./example.ts";
+import {
+  drawnEdges,
+  hasFocusRing,
+  listenToLiveRegions,
+  openExample,
+  panelOf,
+} from "./example.ts";
 
 test("its header opens and closes the call, and says so with aria-expanded", async ({
   page,
@@ -128,4 +134,19 @@ test("a call opens to what went in and what came back, or why it failed", async 
   await expect(page.getByRole("region", { name: "Error" })).toContainText(
     "The CRM did not answer in 5 seconds. Nothing was changed."
   );
+});
+
+test("what opens under the line starts on the line's own start edge, its mark's", async ({
+  page,
+}) => {
+  await openExample(page, "tool", "basic");
+  const line = page.getByRole("button", { name: /Searched the web/u });
+  if ((await line.getAttribute("aria-expanded")) === "false") {
+    await line.press("Enter");
+  }
+  const panel = await panelOf(line);
+  await expect(panel).toBeVisible();
+  const header = await drawnEdges(line);
+  const body = await drawnEdges(panel);
+  expect(Math.abs(body.start - header.start)).toBeLessThanOrEqual(1);
 });

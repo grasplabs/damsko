@@ -1,5 +1,4 @@
-// Breadcrumb: the path from the top of a site to the page you are on, from shadcn's
-// (registry/bases/base/ui/breadcrumb.tsx), converted from Tailwind to StyleX. Small type in muted
+// Breadcrumb: the path from the top of a site to the page you are on, in StyleX. Small type in muted
 // words, each step a link, the page you are on in ink, a chevron between them that turns round in
 // right-to-left text.
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.

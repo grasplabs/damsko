@@ -1,5 +1,5 @@
-// Spinner: says that something is working, from shadcn's (registry/bases/base/ui/spinner.tsx),
-// converted from Tailwind to StyleX: Hugeicons' loader (through lib/icons), turning in the colour
+// Spinner: says that something is working,
+// in StyleX: Hugeicons' loader (through lib/icons), turning in the colour
 // of the words around it, so it works as a Button's child. With reduced motion it stands still and
 // breathes.
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.

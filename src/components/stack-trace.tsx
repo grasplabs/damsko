@@ -1,8 +1,7 @@
-// StackTrace: an error and its stack frames, after shadcn's Stack Trace pattern
-// (apps/v4/content/docs/ai-elements/base/stack-trace.mdx and its examples), built as it builds it:
+// StackTrace: an error and its stack frames:
 // a Trace with one TraceCollapsible, its line the error in red, the frames under it in a muted
-// monospace block, the product's own frames in ink and the dependencies' muted. The parts are the
-// ones shadcn's pattern has: StackTraceHeader the row's trigger, its TraceLine failed,
+// monospace block, the product's own frames in ink and the dependencies' muted. The parts:
+// StackTraceHeader the row's trigger, its TraceLine failed,
 // StackTraceError its TraceTitle, and StackTraceActions beside the trigger, not in it.
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
@@ -33,7 +32,7 @@ import type { ReactNode } from "react";
 
 import { useI18n } from "../lib/i18n";
 import { focusRingText, tapTarget } from "../lib/styles";
-import { colors, font, media, radius, space } from "../lib/tokens.stylex";
+import { colors, font, media, radius, size, space } from "../lib/tokens.stylex";
 import type { LayoutStyle } from "../lib/utils";
 import { CopyButton } from "./copy-button";
 import { parseStackTrace } from "./stack-trace-parse";
@@ -187,6 +186,9 @@ const styles = stylex.create({
     gridRow: 1,
     alignItems: "center",
     gap: space["1"],
+    // The last icon ends on the output's end edge, as the line's mark starts on its start edge; the
+    // button's fill under the pointer reaches past it by the button's own padding.
+    marginInlineEnd: `calc((${size.iconSm} - ${size.controlSm}) / 2)`,
   },
   // The frames: a muted block of monospace lines, the dependencies' muted and the product's in ink.
   frames: {

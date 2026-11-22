@@ -20,6 +20,7 @@ import * as docsOverview from "./start/docs-overview.ts";
 import * as getStarted from "./start/get-started.ts";
 import * as start from "./start/page.ts";
 import { listPages } from "./system/content.ts";
+import { isBlock } from "./system/kinds.ts";
 import { tokenSets } from "./system/token-file.ts";
 
 export interface SearchSection {
@@ -35,6 +36,8 @@ export interface SearchSection {
   slug: string;
   /** The section's words, plain. */
   text: string;
+  /** A block's page (site/system/kinds.ts): the search lists it under Blocks. */
+  block?: true;
 }
 
 const walk = (folder: string): string[] =>
@@ -134,6 +137,9 @@ export const buildSearchIndex = (root: string): SearchSection[] => {
         route,
         slug: "",
         text: fields.description ?? "",
+        ...(isBlock(route.replace(/^\/components\//u, ""))
+          ? { block: true as const }
+          : {}),
       },
     ];
     let inFence = false;

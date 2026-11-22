@@ -25,6 +25,7 @@ import {
   listMarker,
   menuMarker,
   motionVars,
+  traceCardMarker,
 } from "./vars.stylex";
 
 const COARSE = media.pointerCoarse;
@@ -332,7 +333,7 @@ const textStyles = stylex.create({
   },
 });
 
-/** Hides words from the eye and keeps them for a screen reader (shadcn's `sr-only`). */
+/** Hides words from the eye and keeps them for a screen reader. */
 export const { visuallyHidden } = textStyles;
 /** A scroller with no visible bar. Scroll area is the one part that draws bars of its own. */
 export const { scrollbarHidden } = textStyles;
@@ -989,7 +990,14 @@ export const disclosureStyles = stylex.create({
     marginInline: `calc(-1 * ${size.collapsiblePadding})`,
     paddingBlock: 0,
     paddingInline: size.collapsiblePadding,
-    borderWidth: { default: 0, [FORCED]: 1 },
+    // In forced colours a line round it, except in a card (Tool's), whose own edge is the line.
+    borderWidth: {
+      default: 0,
+      [FORCED]: {
+        default: 1,
+        [stylex.when.ancestor(":is(*)", traceCardMarker)]: 0,
+      },
+    },
     borderStyle: "solid",
     borderColor: "transparent",
     borderRadius: `min(${radius.base}, calc(${size.collapsibleTrigger} / 2))`,
@@ -1017,15 +1025,24 @@ export const disclosureStyles = stylex.create({
   },
   // On the page, filled only under the pointer and the press. A disabled trigger takes no hover and
   // no press: its rest wins under the pointer. Said inside :hover and :active, since a bare
-  // [data-disabled] sorts before them and lost.
+  // [data-disabled] sorts before them and lost. In a card that holds the row (Tool's,
+  // traceCardMarker) none: a fill would stand as a block of its own inside the card.
   ghost: {
     backgroundColor: {
       default: "transparent",
       ":hover": {
         default: null,
-        [HOVER]: { default: colors.accent, [OFF]: "transparent" },
+        [HOVER]: {
+          default: colors.accent,
+          [OFF]: "transparent",
+          [stylex.when.ancestor(":is(*)", traceCardMarker)]: "transparent",
+        },
       },
-      ":active": { default: colors.accentActive, [OFF]: "transparent" },
+      ":active": {
+        default: colors.accentActive,
+        [OFF]: "transparent",
+        [stylex.when.ancestor(":is(*)", traceCardMarker)]: "transparent",
+      },
       [OFF]: "transparent",
     },
   },

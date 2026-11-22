@@ -253,54 +253,6 @@ Under 640px it is a sheet along the bottom, and each Button in its footer takes 
     { key: "Working", value: "`aria-busy` and `aria-disabled` on the action" },
   ]}
 />
-<Rows
-  title="From shadcn"
-  rows={[
-    {
-      group: "Parts",
-      key: "`DialogContent`",
-      value: "Kept",
-      note: "with the shade and, by `showCloseButton`, the close button",
-    },
-    {
-      group: "Parts",
-      key: "`DialogOverlay`, `DialogPortal`",
-      value: "Inside `DialogContent`",
-      note: "the content brings its shade, in the top layer",
-    },
-    {
-      group: "Parts",
-      key: "`DialogTrigger`, `DialogClose`",
-      value: "Plain wrappers",
-      note: "`asChild` onto the element inside; DialogClose alone draws an outline Button, as shadcn's does",
-    },
-    {
-      group: "Parts",
-      key: "New",
-      value: "`DialogBody`",
-      note: "the one part that scrolls",
-    },
-    { group: "Look", key: "`rounded-xl`", value: "{radius}, {radius-shape}" },
-    { group: "Look", key: "`sm:max-w-md`", value: "{dialog-width}" },
-    {
-      group: "Look",
-      key: "`bg-black/10`, `backdrop-blur-xs`",
-      value: "{dialog-scrim}",
-      note: "no blur",
-    },
-    {
-      group: "Look",
-      key: "`zoom-in-95`, `duration-100`",
-      value: "{dialog-from-scale}, {duration-ui} in, {duration-leave} out",
-    },
-    {
-      group: "Behaviour",
-      key: "Base UI's Dialog",
-      value: "UI SDK's Dialog",
-      note: "so an agent can open it and press its actions",
-    },
-  ]}
-/>
 
 <Reference>
 

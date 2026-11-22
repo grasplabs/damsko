@@ -15,7 +15,7 @@ const layout = stylex.create({
   field: { width: "100%", maxWidth: 320 },
 });
 
-// The list written out as parts, as in shadcn: each item its own SelectItem, groups named by a
+// The list written out as parts: each item its own SelectItem, groups named by a
 // SelectLabel, a SelectSeparator before the last ones.
 export default function SelectParts() {
   return (

@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import type { Locator } from "@playwright/test";
 
 import { openExample } from "./example.ts";
 
@@ -109,4 +110,74 @@ test("the outline variant is a toggle like any other", async ({ page }) => {
   await expect(toggle).toHaveAttribute("aria-pressed", "false");
   await toggle.click();
   await expect(toggle).toHaveAttribute("aria-pressed", "true");
+});
+
+/** The items' boxes against their track's, in the page's pixels. */
+const fits = async (group: Locator) => {
+  const track = await group.boundingBox();
+  const boxes = [];
+  for (const item of await group.getByRole("button").all()) {
+    // oxlint-disable-next-line no-await-in-loop -- one item after the other
+    boxes.push(await item.boundingBox());
+  }
+  const start = Math.min(...boxes.map((box) => box?.x ?? 0));
+  const end = Math.max(
+    ...boxes.map((box) => (box?.x ?? 0) + (box?.width ?? 0))
+  );
+  return {
+    track,
+    inside:
+      start >= (track?.x ?? 0) - 0.5 &&
+      end <= (track?.x ?? 0) + (track?.width ?? 0) + 0.5,
+    // The room the items leave at the track's ends: its padding, and no more.
+    left: (track?.x ?? 0) + (track?.width ?? 0) - end,
+  };
+};
+
+test("full width, the track spans its box and the items fill it, each from its words", async ({
+  page,
+}) => {
+  await openExample(page, "toggle", "full-width");
+  const effort = page.getByRole("group", { name: "Effort" });
+  const { track, inside, left } = await fits(effort);
+  const box = await effort.locator("..").boundingBox();
+  expect(track?.width).toBeCloseTo(box?.width ?? 0, 0);
+  expect(inside).toBe(true);
+  expect(left).toBeLessThan(8);
+  const low = await effort.getByRole("button", { name: "Low" }).boundingBox();
+  const extra = await effort
+    .getByRole("button", { name: "Extra high" })
+    .boundingBox();
+  expect(extra?.width ?? 0).toBeGreaterThan(low?.width ?? 0);
+  await expect(effort.getByRole("button", { name: "Extra high" })).toHaveText(
+    "Extra high"
+  );
+});
+
+test.describe("full width on a 320px phone", () => {
+  test.use({ viewport: { width: 320, height: 640 } });
+
+  test("five items and long words stay inside the track, the words cut with an ellipsis", async ({
+    page,
+  }) => {
+    await openExample(page, "toggle", "full-width");
+    for (const name of ["Effort", "Answer length"]) {
+      // oxlint-disable-next-line no-await-in-loop -- one group after the other
+      const { inside } = await fits(page.getByRole("group", { name }));
+      expect(inside).toBe(true);
+    }
+    expect(
+      await page.evaluate(
+        () =>
+          document.documentElement.scrollWidth -
+          document.documentElement.clientWidth
+      )
+    ).toBe(0);
+    const long = page
+      .getByRole("group", { name: "Answer length" })
+      .getByRole("button", { name: "A long, detailed report" });
+    await expect(long).toBeVisible();
+    await long.click();
+    await expect(long).toHaveAttribute("aria-pressed", "true");
+  });
 });

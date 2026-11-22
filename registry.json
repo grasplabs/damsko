@@ -29,7 +29,7 @@
       "name": "agent-indicator",
       "type": "registry:ui",
       "title": "Agent indicator",
-      "description": "A small moving mark that shows work in progress.",
+      "description": "A small moving mark that shows an agent at work, one to a view.",
       "dependencies": [
         "@stylexjs/stylex"
       ],
@@ -1090,6 +1090,11 @@
       "docs": "https://damsko.joingrasp.com/components/file-upload",
       "files": [
         {
+          "path": "src/components/file-upload-handover.ts",
+          "type": "registry:file",
+          "target": "~/src/components/file-upload-handover.ts"
+        },
+        {
           "path": "src/components/file-upload.stylex.ts",
           "type": "registry:file",
           "target": "~/src/components/file-upload.stylex.ts"
@@ -1476,6 +1481,7 @@
         "@ui-sdk/react"
       ],
       "registryDependencies": [
+        "@damsko/collapsible",
         "@damsko/copy-button",
         "@damsko/lib",
         "@damsko/skeleton",
@@ -1735,7 +1741,7 @@
       "name": "model-selector",
       "type": "registry:ui",
       "title": "Model selector",
-      "description": "The model an assistant answers with, picked from a searchable list beside its trigger.",
+      "description": "The model an assistant answers with, and how hard it thinks, chosen from one chip that opens one panel.",
       "dependencies": [
         "@stylexjs/stylex",
         "@ui-sdk/core",
@@ -1744,9 +1750,10 @@
       "registryDependencies": [
         "@damsko/brand-icon",
         "@damsko/button",
-        "@damsko/command",
         "@damsko/lib",
-        "@damsko/popover"
+        "@damsko/popover",
+        "@damsko/toggle-group",
+        "@damsko/tooltip"
       ],
       "docs": "https://damsko.joingrasp.com/components/model-selector",
       "files": [
@@ -2883,6 +2890,7 @@
         "@stylexjs/stylex"
       ],
       "registryDependencies": [
+        "@damsko/badge",
         "@damsko/code-block",
         "@damsko/lib",
         "@damsko/trace"

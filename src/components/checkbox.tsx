@@ -1,5 +1,5 @@
-// Checkbox: a box you tick, from shadcn's (registry/bases/base/ui/checkbox.tsx, on Base UI),
-// converted from Tailwind to StyleX and built on UI SDK's Checkbox, which draws a button with the
+// Checkbox: a box you tick,
+// in StyleX, built on UI SDK's Checkbox, which draws a button with the
 // checkbox role beside a hidden native input, so a form sends it and an agent can check it by name.
 // The checkbox draws its box only; its words are Field's parts, on a row at least 44px tall that a
 // press on the box, its label or the space around them checks:

@@ -1,5 +1,4 @@
-// ButtonGroup: buttons that belong together on one surface, from shadcn's (registry/bases/base/ui/
-// button-group.tsx), converted from Tailwind to StyleX and drawn after the reference's Toggle Group:
+// ButtonGroup: buttons that belong together on one surface, in StyleX, drawn as ToggleGroup is:
 // one quiet surface with the system's bevel, and ghost Buttons of one size inside it. A plain
 // `role="group"`, named by `aria-label`: UI SDK has no primitive for it, and it is not a toolbar, so
 // Tab reaches every button.

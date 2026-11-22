@@ -1,5 +1,5 @@
-// DataTable: a Table that sorts, searches, selects rows and pages through them, on TanStack Table as
-// shadcn's data table is, given a data API: columns and rows as data, so the same table is known to
+// DataTable: a Table that sorts, searches, selects rows and pages through them, on TanStack Table,
+// given a data API: columns and rows as data, so the same table is known to
 // a server, an agent and a person. Sorting takes several columns (Shift and a column's name adds
 // it); selecting takes a range (Shift and a checkbox). The rest comes as features (features.ts),
 // each opt-in. Its words come from the I18nProvider (`dataTable`).
@@ -611,7 +611,7 @@ const styles = stylex.create({
     width: size.avatarSm,
     height: size.avatarSm,
     overflow: "hidden",
-    borderRadius: "50%",
+    borderRadius: radius.circle,
   },
   personName: { width: "8rem" },
   personDetail: { width: "11rem", maxWidth: "100%" },

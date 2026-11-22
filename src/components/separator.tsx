@@ -1,5 +1,5 @@
-// Separator: a hairline between groups of content, from shadcn's (registry/bases/base/ui/separator.tsx,
-// on Base UI), converted from Tailwind to StyleX and rebuilt on UI SDK's Separator, which says it
+// Separator: a hairline between groups of content,
+// in StyleX, built on UI SDK's Separator, which says it
 // to a screen reader as a separator, or not at all when it is only a line. One soft 1px line, the
 // page's own hairline colour, with no margin of its own.
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.

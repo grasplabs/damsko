@@ -1,5 +1,5 @@
-// NumberField: a field for a number, with a step down and a step up at its end, from Base UI's
-// Number Field as shadcn names it, built on UI SDK's Number Input. It keeps the number while it
+// NumberField: a field for a number, with a step down and a step up at its end,
+// built on UI SDK's Number Input. It keeps the number while it
 // shows it formatted for the page's language ("1,234.5" or "1.234,5"), and it stands level with
 // Input: the same field edge, fill, focus and three heights.
 //
