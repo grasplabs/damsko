@@ -47,7 +47,7 @@ export default function AccessibilityFocus() {
   return (
     <div {...stylex.props(styles.column)}>
       <div {...stylex.props(styles.row)}>
-        <Button variant="secondary">Rename project</Button>
+        <Button variant="outline">Rename project</Button>
         <Button variant="ghost" size="icon" aria-label="Project settings">
           <Icon icon={SettingsIcon} />
         </Button>
@@ -69,7 +69,7 @@ export default function AccessibilityFocus() {
       </Field>
       <AlertDialog>
         <AlertDialogTrigger asChild>
-          <Button variant="secondary">
+          <Button variant="outline">
             <Icon icon={ArchiveIcon} />
             Archive project
           </Button>

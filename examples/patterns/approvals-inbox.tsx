@@ -705,7 +705,7 @@ export default function ApprovalsInbox({
           // Data table has no row to choose, so each row ends in a button that opens its request.
           cell: (item) => (
             <Button
-              variant={item.id === openId ? "secondary" : "ghost"}
+              variant="ghost"
               size="icon-sm"
               aria-label={`Open: ${item.title}`}
               aria-pressed={item.id === openId}
@@ -759,7 +759,7 @@ export default function ApprovalsInbox({
     tab,
     retry: (
       <Button
-        variant="secondary"
+        variant="outline"
         status={retry.status}
         onClick={() => void tryAgain()}
         loadingLabel="Loading the requests"
@@ -811,7 +811,7 @@ export default function ApprovalsInbox({
                         {chosen.length} chosen
                       </span>
                       <Button
-                        variant="secondary"
+                        variant="outline"
                         onClick={() => {
                           declineAll(chosen);
                         }}

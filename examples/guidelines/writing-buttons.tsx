@@ -13,7 +13,7 @@ export default function WritingButtons() {
       <Write why="a verb and the thing">
         <div {...stylex.props(writing.row)}>
           <Button variant="default">Save changes</Button>
-          <Button variant="secondary">
+          <Button variant="outline">
             <Icon icon={SendIcon} />
             Send invite
           </Button>
@@ -26,7 +26,7 @@ export default function WritingButtons() {
       <Not why="says nothing alone">
         <div {...stylex.props(writing.row)}>
           <Button variant="default">OK</Button>
-          <Button variant="secondary">Yes</Button>
+          <Button variant="outline">Yes</Button>
           <Button variant="destructive">Submit</Button>
         </div>
       </Not>

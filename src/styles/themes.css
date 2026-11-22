@@ -58,6 +58,9 @@
   --damsko-secondary-active: light-dark(oklch(0.95 0.007 160), oklch(0.96 0.02 150 / 0.16));
   --damsko-accent: light-dark(oklch(0.29 0.05 162 / 0.06), oklch(0.96 0.02 150 / 0.08));
   --damsko-accent-active: light-dark(oklch(0.29 0.05 162 / 0.1), oklch(0.96 0.02 150 / 0.14));
+  --damsko-button-secondary: var(--damsko-accent-active);
+  --damsko-button-secondary-hover: var(--damsko-toggle-bg-pressed);
+  --damsko-button-secondary-active: var(--damsko-toggle-bg-pressed-hover);
   --damsko-destructive-fill: oklch(0.52 0.175 28);
   --damsko-destructive-fill-foreground: var(--damsko-primary-foreground-on-color);
   --damsko-success-fill: oklch(0.46 0.1 170);
@@ -331,6 +334,9 @@
   --damsko-secondary-active: light-dark(oklch(0.93 0.026 172), oklch(0.96 0.04 178 / 0.16));
   --damsko-accent: light-dark(oklch(0.29 0.1 178 / 0.06), oklch(0.96 0.04 178 / 0.08));
   --damsko-accent-active: light-dark(oklch(0.29 0.1 178 / 0.1), oklch(0.96 0.04 178 / 0.14));
+  --damsko-button-secondary: var(--damsko-accent-active);
+  --damsko-button-secondary-hover: var(--damsko-toggle-bg-pressed);
+  --damsko-button-secondary-active: var(--damsko-toggle-bg-pressed-hover);
   --damsko-destructive-fill: oklch(0.52 0.175 28);
   --damsko-destructive-fill-foreground: var(--damsko-primary-foreground-on-color);
   --damsko-success-fill: oklch(0.46 0.1 170);
@@ -604,6 +610,9 @@
   --damsko-secondary-active: light-dark(oklch(0.94 0.01 85), oklch(0.96 0.004 75 / 0.16));
   --damsko-accent: light-dark(oklch(0.29 0.011 75 / 0.06), oklch(0.96 0.004 75 / 0.08));
   --damsko-accent-active: light-dark(oklch(0.29 0.011 75 / 0.1), oklch(0.96 0.004 75 / 0.14));
+  --damsko-button-secondary: var(--damsko-accent-active);
+  --damsko-button-secondary-hover: var(--damsko-toggle-bg-pressed);
+  --damsko-button-secondary-active: var(--damsko-toggle-bg-pressed-hover);
   --damsko-destructive-fill: oklch(0.52 0.175 28);
   --damsko-destructive-fill-foreground: var(--damsko-primary-foreground-on-color);
   --damsko-success-fill: oklch(0.46 0.1 170);

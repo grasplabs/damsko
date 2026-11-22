@@ -434,7 +434,7 @@ const Trigger = ({
   <FileInputTrigger
     render={
       <Button
-        variant="secondary"
+        variant="outline"
         size="sm"
         aria-describedby={describedBy}
         aria-hidden={mounted ? undefined : true}

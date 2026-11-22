@@ -29,7 +29,7 @@ export default function PopoverCheckFailed() {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="secondary">Test the connection</Button>
+        <Button variant="outline">Test the connection</Button>
       </PopoverTrigger>
       <PopoverContent>
         <PopoverHeader>
@@ -40,9 +40,16 @@ export default function PopoverCheckFailed() {
         </PopoverHeader>
         <PopoverFooter>
           <PopoverClose asChild>
-            <Button variant="outline">Cancel</Button>
+            <Button size="sm" variant="outline">
+              Cancel
+            </Button>
           </PopoverClose>
-          <Button variant="default" onClick={test} loadingLabel="Testing">
+          <Button
+            size="sm"
+            variant="default"
+            onClick={test}
+            loadingLabel="Testing"
+          >
             Test
           </Button>
         </PopoverFooter>

@@ -34,7 +34,7 @@ export default function DrawerLongBody() {
   return (
     <Drawer>
       <DrawerTrigger asChild>
-        <Button variant="secondary">What is new</Button>
+        <Button variant="outline">What is new</Button>
       </DrawerTrigger>
       <DrawerContent>
         <DrawerHeader>

@@ -58,7 +58,7 @@ export default function TerminalLive() {
         <TerminalContent />
       </Terminal>
       <Button
-        variant="secondary"
+        variant="outline"
         size="sm"
         onClick={() => {
           setShown((now) => (now >= lines.length ? 0 : now + 3));

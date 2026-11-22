@@ -76,7 +76,7 @@ export default function SheetFull() {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="secondary">Open the year in full</Button>
+        <Button variant="outline">Open the year in full</Button>
       </SheetTrigger>
       <SheetContent size="full">
         <SheetHeader>

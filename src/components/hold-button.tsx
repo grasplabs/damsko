@@ -490,20 +490,21 @@ const styles = stylex.create({
   fillTime: (time: string) => ({ transitionDuration: time }),
 });
 
-// Each variant's look for the hold: outline, ghost and link are quiet, with no fill of their own.
+// Each variant's look for the hold: ghost and link are bare, with no fill of their own.
 const lookOf = (variant: ButtonVariant) =>
-  variant === "default" || variant === "secondary" || variant === "destructive"
-    ? variant
-    : "quiet";
+  variant === "ghost" || variant === "link" ? "bare" : variant;
 
 // While held, the button keeps its rest fill under the pointer and the press: the fill shows it.
 const heldStyles = stylex.create({
   default: { backgroundColor: { default: null, [HELD]: colors.primary } },
-  secondary: { backgroundColor: { default: null, [HELD]: colors.secondary } },
+  outline: { backgroundColor: { default: null, [HELD]: colors.secondary } },
+  secondary: {
+    backgroundColor: { default: null, [HELD]: colors.buttonSecondary },
+  },
   destructive: {
     backgroundColor: { default: null, [HELD]: colors.destructiveFill },
   },
-  quiet: { backgroundColor: { default: null, [HELD]: "transparent" } },
+  bare: { backgroundColor: { default: null, [HELD]: "transparent" } },
 });
 
 // The fill is the variant's own pressed colour.
@@ -511,13 +512,19 @@ const fillStyles = stylex.create({
   default: {
     backgroundColor: { default: colors.primaryActive, [FORCED]: "Highlight" },
   },
-  secondary: {
+  outline: {
     backgroundColor: { default: colors.secondaryActive, [FORCED]: "Highlight" },
+  },
+  secondary: {
+    backgroundColor: {
+      default: colors.buttonSecondaryActive,
+      [FORCED]: "Highlight",
+    },
   },
   destructive: {
     backgroundColor: { default: colors.destructiveHold, [FORCED]: "Highlight" },
   },
-  quiet: {
+  bare: {
     backgroundColor: { default: colors.accentActive, [FORCED]: "Highlight" },
   },
 });

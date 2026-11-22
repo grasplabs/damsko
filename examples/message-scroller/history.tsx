@@ -50,7 +50,7 @@ export default function MessageScrollerHistory() {
   return (
     <div {...stylex.props(layout.column)}>
       <Button
-        variant="secondary"
+        variant="outline"
         size="sm"
         disabled={first === 0}
         onClick={() => {

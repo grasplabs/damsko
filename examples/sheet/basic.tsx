@@ -49,7 +49,7 @@ export default function SheetBasic() {
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="secondary">Report details</Button>
+        <Button variant="outline">Report details</Button>
       </SheetTrigger>
       <SheetContent>
         <SheetHeader>

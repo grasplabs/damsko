@@ -30,7 +30,7 @@ export default function AudioPlayerSwitch() {
       />
       <Button
         size="sm"
-        variant="secondary"
+        variant="outline"
         onClick={() => {
           setSecond((now) => !now);
         }}

@@ -825,7 +825,7 @@ const ShowMore = ({
   return (
     <div {...stylex.props(styles.foot, styles.scripted)}>
       <Button
-        variant="secondary"
+        variant="outline"
         size="sm"
         aria-expanded={open}
         aria-controls={controls}

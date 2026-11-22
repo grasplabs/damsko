@@ -73,7 +73,7 @@ export default function SidePanelBasic() {
               >
                 Open
               </Button>
-              <Button size="sm" variant="secondary">
+              <Button size="sm" variant="outline">
                 <Icon icon={ShareIcon} />
                 Share
               </Button>

@@ -1288,7 +1288,7 @@ const BackButton = ({
   const arrow = (
     <WithTooltip tip={label}>
       <Button
-        variant={bar ? "ghost" : "secondary"}
+        variant={bar ? "ghost" : "outline"}
         size={bar ? "icon-sm" : "icon"}
         aria-label={label}
         disabled={first}
@@ -1309,7 +1309,7 @@ const BackButton = ({
       ) : (
         <>
           <span {...stylex.props(navStyles.wide)}>
-            <Button variant="secondary" disabled={first} onClick={go}>
+            <Button variant="outline" disabled={first} onClick={go}>
               <Icon icon={ArrowLeftIcon} />
               {label}
             </Button>

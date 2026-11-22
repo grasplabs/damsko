@@ -9,7 +9,7 @@ export default function TooltipBasic() {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <Button variant="secondary">Publish</Button>
+        <Button variant="outline">Publish</Button>
       </TooltipTrigger>
       <TooltipContent>Everyone in the workspace can read it</TooltipContent>
     </Tooltip>

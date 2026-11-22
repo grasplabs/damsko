@@ -86,7 +86,7 @@ export default function AccessibilityTouch() {
         </Area>
       </div>
       <Area>
-        <Button size="sm" variant="secondary">
+        <Button size="sm" variant="outline">
           Add a comment
         </Button>
       </Area>

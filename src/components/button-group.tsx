@@ -93,7 +93,7 @@ const styles = stylex.create({
     boxSizing: "border-box",
     maxWidth: "100%",
     padding: 0,
-    // The secondary button's surface and bevel, once, round all the buttons: its lift here, and its
+    // The outline button's surface and bevel, once, round all the buttons: its lift here, and its
     // edge drawn over the buttons (::after), so a chosen, open or pressed button's fill never covers
     // the group's edge. The buttons' corners follow the group's (Button, inGroup).
     position: "relative",
