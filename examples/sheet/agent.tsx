@@ -68,7 +68,7 @@ const Task = ({
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="secondary">{trigger}</Button>
+        <Button variant="outline">{trigger}</Button>
       </SheetTrigger>
       <SheetContent>
         <SheetHeader>

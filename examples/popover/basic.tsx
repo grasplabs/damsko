@@ -24,7 +24,7 @@ export default function PopoverBasic() {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="secondary">Publish report</Button>
+        <Button variant="outline">Publish report</Button>
       </PopoverTrigger>
       <PopoverContent>
         <PopoverHeader>
@@ -36,9 +36,12 @@ export default function PopoverBasic() {
         </PopoverHeader>
         <PopoverFooter>
           <PopoverClose asChild>
-            <Button variant="outline">Cancel</Button>
+            <Button size="sm" variant="outline">
+              Cancel
+            </Button>
           </PopoverClose>
           <Button
+            size="sm"
             variant="default"
             onClick={publish}
             loadingLabel="Publishing"

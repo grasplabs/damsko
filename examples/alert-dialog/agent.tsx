@@ -78,7 +78,7 @@ const Ask = ({
       }}
     >
       <AlertDialogTrigger asChild>
-        <Button variant={variant === "destructive" ? variant : "secondary"}>
+        <Button variant={variant === "destructive" ? variant : "outline"}>
           {trigger}
         </Button>
       </AlertDialogTrigger>

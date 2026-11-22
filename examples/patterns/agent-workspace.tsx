@@ -579,7 +579,7 @@ const AgentWorkspace = () => {
                   {phase === "asking" && decision === undefined && (
                     <MessageScrollerItem key="see">
                       <Button
-                        variant="secondary"
+                        variant="outline"
                         size="sm"
                         onClick={() => {
                           setPanelOpen(true);

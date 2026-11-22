@@ -20,7 +20,7 @@ export default function CopyButtonBasic() {
       <CopyButton value={code} aria-label="Copy code" />
       <CopyButton
         value={() => "https://example.com/reports/q3"}
-        variant="secondary"
+        variant="outline"
         size="sm"
       >
         Copy link

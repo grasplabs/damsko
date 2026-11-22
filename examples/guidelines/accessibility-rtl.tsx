@@ -91,7 +91,7 @@ export default function AccessibilityRtl() {
         </Breadcrumb>
         <div {...stylex.props(styles.row)}>
           <Button
-            variant="secondary"
+            variant="outline"
             size="icon-sm"
             aria-label="Search the reports"
           >

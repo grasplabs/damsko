@@ -16,7 +16,7 @@ export default function PageHeaderLoading() {
       loading
       actions={
         <>
-          <Button variant="secondary">Share</Button>
+          <Button variant="outline">Share</Button>
           <Button>New task</Button>
         </>
       }

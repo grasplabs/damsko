@@ -9,7 +9,7 @@
 //     <Suggestion suggestion="Draft a reply" onClick={send} />
 //   </Suggestions>
 //
-// The row is a group named Suggestions; each suggestion is a secondary Button named by its words,
+// The row is a group named Suggestions; each suggestion is an outline Button named by its words,
 // which hands them to `onClick`. Tab walks the buttons and the row scrolls each wholly into view,
 // clear of the fade, as it takes focus. The row leaves room round the buttons for the keyboard's
 // ring, so the scroller never clips it, and stands out by as much so the buttons keep the column's
@@ -131,7 +131,7 @@ export const Suggestions = ({
   );
 };
 
-/** One suggested prompt: a secondary Button that hands its words to `onClick`. */
+/** One suggested prompt: an outline Button that hands its words to `onClick`. */
 export const Suggestion = ({
   suggestion,
   onClick,

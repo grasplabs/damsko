@@ -29,20 +29,20 @@ export default function ButtonSizes() {
       </Button>
       <Button
         size="xs"
-        variant="secondary"
+        variant="outline"
         onClick={() => toast("The filters would open here")}
       >
         Filter
       </Button>
       <Button
         size="sm"
-        variant="secondary"
+        variant="outline"
         onClick={work}
         successLabel="Exported"
       >
         Export
       </Button>
-      <Button variant="secondary" onClick={work} successLabel="Invited">
+      <Button variant="outline" onClick={work} successLabel="Invited">
         <Icon icon={PlusIcon} />
         Invite people
       </Button>
@@ -52,7 +52,7 @@ export default function ButtonSizes() {
       </Button>
       <Button
         size="icon-lg"
-        variant="secondary"
+        variant="outline"
         aria-label="Settings"
         onClick={() => toast("Settings would open here")}
       >

@@ -956,21 +956,21 @@ export const groups: TokenGroup[] = [
             category: "colors",
             value: "oklch(1 0 none)",
             dark: "oklch(0.96 0.02 150 / 0.08)",
-            use: "The second action's fill: white on a light ground, a veil of white on a dark one.",
+            use: "The quiet fill of an outline Button and a field: white on a light ground, a veil of white on a dark one.",
           },
           {
             name: "secondary-hover",
             category: "colors",
             value: "{muted}",
             dark: "oklch(0.96 0.02 150 / 0.12)",
-            use: "quiet-fill under a pointer: one step down to soft.",
+            use: "The quiet fill under a pointer: one step down to soft.",
           },
           {
             name: "secondary-active",
             category: "colors",
             value: "oklch(0.95 0.007 160)",
             dark: "oklch(0.96 0.02 150 / 0.16)",
-            use: "quiet-fill while pressed: one step past hover.",
+            use: "The quiet fill while pressed: one step past hover.",
           },
           {
             name: "accent",
@@ -985,6 +985,24 @@ export const groups: TokenGroup[] = [
             value: "oklch(0.29 0.05 162 / 0.1)",
             dark: "oklch(0.96 0.02 150 / 0.14)",
             use: "A ghost control's fill while pressed.",
+          },
+          {
+            name: "button-secondary",
+            category: "colors",
+            value: "{accent-active}",
+            use: "A secondary Button's flat fill: a veil of ink with no edge and no lift, so it reads on the page, a card and a soft band alike, a step quieter than an outline Button and a step firmer than a ghost one.",
+          },
+          {
+            name: "button-secondary-hover",
+            category: "colors",
+            value: "{toggle-bg-pressed}",
+            use: "button-secondary under a pointer: the veil one step deeper.",
+          },
+          {
+            name: "button-secondary-active",
+            category: "colors",
+            value: "{toggle-bg-pressed-hover}",
+            use: "button-secondary while pressed: one step past hover.",
           },
           {
             name: "destructive-fill",
@@ -4549,6 +4567,8 @@ export const contrastPairs: ContrastPair[] = [
   // The words on each filled button, the labels the Button page's proof row reads.
   { kind: "text", on: "primary", text: "primary-foreground" },
   { kind: "text", on: "secondary", text: "foreground" },
+  { kind: "text", on: "button-secondary", text: "foreground" },
+  { kind: "text", on: "button-secondary-active", text: "foreground" },
   { kind: "text", on: "destructive-fill", text: "destructive-fill-foreground" },
   { kind: "text", on: "success-fill", text: "success-fill-foreground" },
   // A pressed button's words.

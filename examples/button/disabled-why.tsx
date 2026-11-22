@@ -30,7 +30,7 @@ export default function ButtonDisabledWhy() {
       <Popover>
         <PopoverTrigger asChild>
           <Button
-            variant="secondary"
+            variant="outline"
             disabled
             focusableWhenDisabled
             aria-describedby={why}

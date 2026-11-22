@@ -33,7 +33,7 @@ export default function ItemWithActions() {
         <ItemActions>
           <Button
             size="sm"
-            variant="secondary"
+            variant="outline"
             onClick={() => {
               setTwoStep(!twoStep);
             }}
@@ -52,7 +52,7 @@ export default function ItemWithActions() {
             <Button size="sm" variant="ghost">
               Pause
             </Button>
-            <Button size="sm" variant="secondary">
+            <Button size="sm" variant="outline">
               Edit
             </Button>
           </>

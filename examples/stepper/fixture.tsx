@@ -77,7 +77,7 @@ export const StepperLookFixture = () => {
           <Button
             size="sm"
             focusableWhenDisabled
-            variant="secondary"
+            variant="outline"
             disabled={at === 0}
             onClick={() => {
               setFailed(false);
@@ -89,7 +89,7 @@ export const StepperLookFixture = () => {
           <Button
             size="sm"
             focusableWhenDisabled
-            variant="secondary"
+            variant="outline"
             disabled={at >= steps.length}
             onClick={() => {
               setFailed(false);
@@ -101,7 +101,7 @@ export const StepperLookFixture = () => {
           <Button
             size="sm"
             focusableWhenDisabled
-            variant="secondary"
+            variant="outline"
             disabled={at >= steps.length}
             onClick={() => {
               setFailed((was) => !was);
@@ -112,7 +112,7 @@ export const StepperLookFixture = () => {
           <Button
             size="sm"
             focusableWhenDisabled
-            variant="secondary"
+            variant="outline"
             disabled={at >= steps.length || failed}
             onClick={() => {
               setWorking((was) => !was);

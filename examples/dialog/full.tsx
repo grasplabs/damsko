@@ -76,7 +76,7 @@ export default function DialogFull() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="secondary">Open the year in full</Button>
+        <Button variant="outline">Open the year in full</Button>
       </DialogTrigger>
       <DialogContent size="full">
         <DialogHeader>

@@ -17,11 +17,11 @@ export default function PageHeaderActions() {
       description="Everything the team ships in March, and who owns each part."
       actions={
         <>
-          <Button variant="secondary">
+          <Button variant="outline">
             <Icon icon={DownloadIcon} />
             Export
           </Button>
-          <Button variant="secondary">
+          <Button variant="outline">
             <Icon icon={LinkIcon} />
             Share
           </Button>

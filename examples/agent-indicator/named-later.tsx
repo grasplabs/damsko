@@ -18,7 +18,7 @@ const AgentIndicatorNamedLater = () => {
     <div {...stylex.props(layout.column)}>
       <AgentIndicator aria-label={label} />
       <Button
-        variant="secondary"
+        variant="outline"
         size="sm"
         onClick={() => {
           setLabel("Filling the column");

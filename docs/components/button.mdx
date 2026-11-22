@@ -10,15 +10,21 @@ description: A button you press to do one thing now, like Save or Send.
 
 ## Variants
 
-Each variant has its own job and its own look, as in shadcn/ui. `default` is the one main step of a view, Save changes; never two in one view. `outline`, a hairline edge with no fill, is the lesser button beside a main one: Cancel beside Save, Decline beside Approve, Previous and Skip beside Next; and a quiet trigger or chip standing alone, as a suggestion or Change cover on a picture. `secondary`, a quiet fill, is an ordinary action standing on its own that is neither the main step nor a way out: Invite people or Export in a section's head, a filter. `ghost` is for toolbars, rows and icon buttons in a list, Edit. `destructive` is for what cannot be undone, Delete workspace. `link` is an action that reads as words, Read the guide.
+Each variant has its own job and its own look; shadcn/ui gives the names and where each is used. `default` is the one main step of a view, Save changes; never two in one view. `outline`, the quiet fill with a field's edge and lift, is the ordinary button: the lesser action beside a main one, Cancel beside Save, Previous beside Next; and a standalone action or trigger, Invite people, Export, the button that opens a dialog or a menu. `outline` stands anywhere, on a card too. `secondary`, a flat veil with no edge, is for a repeated or dense action, where a row of edged, lifted buttons would be too heavy: the same action on every row of a list, a toolbar of several equal actions. A filter, or anything that is on or off, is a Toggle, not a `secondary` Button: at rest `secondary` wears a pressed toggle's fill. `ghost` is for toolbars, rows and icon buttons, Edit. `destructive` is for what cannot be undone, Delete workspace. `link` is an action that reads as words, Read the guide.
 
 <Stage path="button/variants" live label="Variants" />
 
 ## Beside the main step
 
-Cancel beside Save is `outline`, the lesser button; Save is `default`. Invite people in the section's head stands on its own, so it is `secondary`.
+Cancel beside Save is `outline`, the lesser button; Save is `default`. Invite people in the section's head stands on its own, an ordinary action, so it is `outline` too.
 
 <Stage path="button/beside" live label="Beside the main step" />
+
+## The same action on every row
+
+Where the same action repeats down a list, a column of outlined buttons would be too heavy: `secondary` keeps them flat, Duplicate on each row.
+
+<Stage path="button/dense" live label="The same action on every row" />
 
 ## Sizes and icons
 
@@ -88,9 +94,9 @@ Loading shows a Spinner before the words and keeps focus on the button.
   of="button"
   always={[
     "One `default` per view, on its main step: Save changes.",
-    "`outline` for the lesser button beside a main one: Cancel beside Save, Decline beside Approve, Previous and Skip beside Next; and for a quiet trigger or chip, as a suggestion.",
-    "`secondary` for an ordinary action standing on its own, neither the main step nor a way out: Invite people or Export in a section's head, a filter.",
-    "`ghost` in a toolbar, on a row or for an icon button in a list; `link` for an action that reads as words.",
+    "`outline` for the ordinary button, anywhere, on a card too: the lesser action beside a main one, Cancel beside Save, Previous beside Next; and a standalone action or trigger, Invite people, Export, what opens a dialog or a menu.",
+    "`secondary` for a repeated or dense action, where a row of edged, lifted buttons would be too heavy: the same action on every row of a list, a toolbar of several equal actions.",
+    "`ghost` in a toolbar, on a row or for an icon button; `link` for an action that reads as words.",
     "`destructive` for what cannot be undone: Delete workspace.",
     "A verb first, in sentence case: Save changes, Invite people.",
     "Say a failure plainly: Could not save, not Error.",
@@ -98,7 +104,8 @@ Loading shows a Spinner before the words and keeps focus on the button.
     "Disable what a step of theirs would make work; hide what they can never use here.",
   ]}
   never={[
-    "Two `default` buttons in one view, or `secondary` for Cancel beside the main step: it is `outline`.",
+    "Two `default` buttons in one view, or `secondary` for Cancel beside the main step or a lone action: it is `outline`.",
+    "A `secondary` Button for a filter or anything on or off: it is a Toggle, since `secondary` at rest wears a pressed toggle's fill; a variant never shows a chosen state (a ghost Button takes `aria-pressed`).",
     "A fixed width, or words cut by your own CSS: Text's `truncate` cuts, with its tooltip.",
     "Colours, sizes or corners set from outside: `style` takes layout only.",
   ]}
@@ -154,15 +161,24 @@ Loading shows a Spinner before the words and keeps focus on the button.
     },
     {
       group: "Colour",
-      key: "Secondary",
-      note: "a veil of white on Night",
-      tokens: ["secondary", "foreground"],
+      key: "Outline",
+      note: "a field's edge and lift; a veil of white on Night",
+      tokens: [
+        "secondary",
+        "secondary-hover",
+        "secondary-active",
+        "bevel-muted",
+      ],
     },
     {
       group: "Colour",
-      key: "Outline",
-      note: "a hairline edge, no fill at rest",
-      tokens: ["border-strong-color", "accent"],
+      key: "Secondary",
+      note: "a flat veil of ink, no edge, no lift",
+      tokens: [
+        "button-secondary",
+        "button-secondary-hover",
+        "button-secondary-active",
+      ],
     },
     {
       group: "Colour",
@@ -215,7 +231,7 @@ Loading shows a Spinner before the words and keeps focus on the button.
     },
     {
       group: "Pointer and keys",
-      key: "Hover, secondary, outline and ghost",
+      key: "Hover, outline, secondary and ghost",
       value: "Fill one step deeper, {duration-hover}",
       note: "one more pressed",
       tokens: ["ease"],

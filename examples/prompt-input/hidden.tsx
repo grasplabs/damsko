@@ -22,7 +22,7 @@ export default function PromptInputHidden() {
   return (
     <div {...stylex.props(layout.column)}>
       <Button
-        variant="secondary"
+        variant="outline"
         size="sm"
         onClick={() => {
           setShown(!shown);

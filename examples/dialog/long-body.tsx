@@ -28,7 +28,7 @@ export default function DialogLongBody() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="secondary">Review changes</Button>
+        <Button variant="outline">Review changes</Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

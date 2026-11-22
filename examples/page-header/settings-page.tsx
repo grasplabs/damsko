@@ -14,7 +14,7 @@ export default function PageHeaderSettingsPage() {
       size="sm"
       title="Profile"
       actions={
-        <Button size="sm" variant="secondary">
+        <Button size="sm" variant="outline">
           Save changes
         </Button>
       }

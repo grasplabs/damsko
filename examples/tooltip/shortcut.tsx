@@ -23,7 +23,7 @@ export default function TooltipWithShortcut() {
       <Tooltip shortcut="mod+s">
         <TooltipTrigger asChild ref={save}>
           <Button
-            variant="secondary"
+            variant="outline"
             onClick={() => {
               setSaved(true);
             }}

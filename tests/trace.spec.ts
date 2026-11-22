@@ -225,3 +225,18 @@ test("a row's title and a step's start at one edge, in one weight, a step's room
   expect(rowBox?.height ?? 0).toBeGreaterThan(30);
   expect((rowBox?.y ?? 0) - (buttonBox?.y ?? 0)).toBe(6);
 });
+
+test("a plan's line names the goal and the progress, says it is working, and opens on steps still waiting", async ({
+  page,
+}) => {
+  await openExample(page, "trace", "plan");
+  const row = page.getByRole("button", {
+    name: /^Plan: move the dialogs to the new primitives\s*, 2 of 5 done.*Working$/u,
+  });
+  const step = page.getByText("Run the type checker", { exact: true });
+  await expect(row).toHaveAttribute("aria-expanded", "true");
+  await expect(step.locator("..")).toContainText("Waiting");
+  await row.click();
+  await expect(row).toHaveAttribute("aria-expanded", "false");
+  await expect(step).toBeHidden();
+});

@@ -1055,16 +1055,6 @@
     ],
     "src/components/diff-viewer-diff.ts": null
   },
-  "file-tree": {
-    "src/components/file-tree.tsx": [
-      "FileTree",
-      "FileTreeActions",
-      "FileTreeProps",
-      "FileTreeActionsProps",
-      "FileTreeNode"
-    ],
-    "src/components/file-tree-icon.ts": ["fileTreeIcon"]
-  },
   "file-upload": {
     "src/components/file-upload.tsx": [
       "FileUpload",
@@ -1517,20 +1507,6 @@
       "TraceCollapsibleContentProps"
     ]
   },
-  "task": {
-    "src/components/task.tsx": [
-      "Task",
-      "TaskTrigger",
-      "TaskContent",
-      "TaskItem",
-      "TaskItemFile",
-      "TaskProps",
-      "TaskTriggerProps",
-      "TaskContentProps",
-      "TaskItemProps",
-      "TaskItemFileProps"
-    ]
-  },
   "queue": {
     "src/components/queue.tsx": [
       "Queue",
@@ -1581,24 +1557,6 @@
       "SubagentToolsProps",
       "SubagentToolProps",
       "SubagentOutputProps"
-    ]
-  },
-  "plan": {
-    "src/components/plan.tsx": [
-      "Plan",
-      "PlanHeader",
-      "PlanTitle",
-      "PlanDescription",
-      "PlanAction",
-      "PlanContent",
-      "PlanFooter",
-      "PlanProps",
-      "PlanHeaderProps",
-      "PlanTitleProps",
-      "PlanDescriptionProps",
-      "PlanActionProps",
-      "PlanContentProps",
-      "PlanFooterProps"
     ]
   },
   "app-shell-01": {

@@ -38,7 +38,7 @@ export default function CardFlush() {
             <CardTitle level={2}>Members</CardTitle>
             <CardDescription>Who can open this workspace.</CardDescription>
             <CardAction>
-              <Button size="sm" variant="secondary">
+              <Button size="sm" variant="outline">
                 Invite
               </Button>
             </CardAction>

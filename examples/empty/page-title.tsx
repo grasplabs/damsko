@@ -42,7 +42,7 @@ export default function EmptyPageTitle() {
             </EmptyDescription>
           </EmptyHeader>
           <EmptyContent>
-            <Button variant="secondary">Go to your projects</Button>
+            <Button variant="outline">Go to your projects</Button>
           </EmptyContent>
         </Empty>
       </div>
@@ -56,7 +56,7 @@ export default function EmptyPageTitle() {
             </EmptyDescription>
           </EmptyHeader>
           <EmptyContent>
-            <Button variant="secondary">Try again</Button>
+            <Button variant="outline">Try again</Button>
           </EmptyContent>
         </Empty>
       </div>

@@ -8,7 +8,7 @@ import { Toaster, toast } from "@grasp-os/ui/components/toast";
 export default function ToastTwoToasters() {
   return (
     <>
-      <Button variant="secondary" onClick={() => toast("Report archived")}>
+      <Button variant="outline" onClick={() => toast("Report archived")}>
         Archive report
       </Button>
       <Toaster />
