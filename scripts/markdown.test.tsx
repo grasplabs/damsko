@@ -435,15 +435,20 @@ describe("while written", () => {
   });
 });
 
-/** How long `work` takes, in milliseconds: the better of two runs, so the first's warm-up is not counted. */
-const timeOf = (work: () => unknown) =>
-  Math.min(
-    ...[1, 2, 3].map(() => {
+/**
+ * How long `work` takes, in milliseconds: run once to warm up, then the best of five runs, so
+ * neither the first run's warm-up nor a pause on a shared machine is counted.
+ */
+const timeOf = (work: () => unknown) => {
+  work();
+  return Math.min(
+    ...[1, 2, 3, 4, 5].map(() => {
       const start = performance.now();
       work();
       return performance.now() - start;
     })
   );
+};
 
 describe("answers no real answer looks like", () => {
   test("nesting thousands deep is drawn, as words past the depth a real answer has", () => {
@@ -470,6 +475,27 @@ describe("answers no real answer looks like", () => {
     const html = draw(source);
     expect(html.match(/<ul\b/gu)).toHaveLength(10);
     expect(textOf(html)).toContain("level 10");
+  });
+
+  test("raw HTML left open thousands of times is drawn whole, as words in short paragraphs", () => {
+    for (const opening of ["<!--", "<?", "<!x"]) {
+      const source = `${opening} a `.repeat(2000);
+      const html = draw(source);
+      const shown = textOf(html)
+        .replaceAll("&lt;", "<")
+        .replaceAll("&gt;", ">")
+        .replaceAll("&amp;", "&");
+      expect(shown.replaceAll(/\s/gu, "")).toBe(source.replaceAll(/\s/gu, ""));
+      expect(html.match(/<p\b/gu)?.length).toBeGreaterThan(1);
+    }
+  });
+
+  test("a short comment and a declaration stay words where they are", () => {
+    const html = draw(
+      "Before <!-- a note --> after.\n\n<!DOCTYPE html>\n\nEnd."
+    );
+    expect(textOf(html)).toContain("Before &lt;!-- a note --&gt; after.");
+    expect(textOf(html)).toContain("&lt;!DOCTYPE html&gt;");
   });
 
   // Each took seconds at these sizes before the bounds (one of them 25). Time as the machine is
@@ -512,8 +538,9 @@ describe("answers no real answer looks like", () => {
       for (const streaming of [false, true]) {
         const quarter = timeOf(() => draw(make(size / 4), { streaming }));
         const whole = timeOf(() => draw(make(size), { streaming }));
-        // Four times the text: in step is 4, the square is 16. 12 leaves room for a busy machine.
-        expect(whole / Math.max(quarter, 1)).toBeLessThan(12);
+        // Four times the text: in step is 4, the square is 16. 8 is the midpoint between them
+        // (as a factor: twice the one, half the other), which leaves room for a busy machine.
+        expect(whole / Math.max(quarter, 1)).toBeLessThan(8);
       }
     }
   );

@@ -590,8 +590,11 @@ export const tidy = (source: string): string => {
 // paragraphs of at most MAX_PARAGRAPH characters. A `[` nothing closes within MAX_LABEL characters,
 // with more than that after it, is words anyway: it is escaped, which changes nothing that shows.
 // So is a `<!--`, `<?` or `<!` (a declaration) whose end nothing brings within MAX_LABEL: the
-// parser looks for that end from each one to the end of the paragraph. Code in a fence is left as
-// it is.
+// parser looks for that end from each one to the end of the paragraph. Past MAX_STRAY of those in
+// a stretch, it went past the bounds too: each backslash parts the paragraph's words, which GitHub's
+// bare web addresses cut into runs, and the parser joins each backslash's runs again by moving the
+// rest of the paragraph (micromark's resolveAllText), so thousands in a paragraph cost as their
+// square. Code in a fence is left as it is.
 
 /** The deepest quote or list a line opens. */
 const MAX_DEPTH = 32;
@@ -599,7 +602,7 @@ const MAX_DEPTH = 32;
 const MAX_EMPHASIS = 500;
 /** The most brackets open at once. */
 const MAX_OPEN = 16;
-/** The most brackets in one stretch that close nothing. */
+/** The most brackets in one stretch that close nothing, and the most raw HTML openings that do not end. */
 const MAX_STRAY = 32;
 /** The most characters between a bracket and the one that closes it: a link's words, at most. */
 const MAX_LABEL = 1000;
@@ -719,6 +722,7 @@ const escapesIn = (text: string): { escapes: Set<number>; over: boolean } => {
   const open: number[] = [];
   let emphasis = 0;
   let stray = 0;
+  let unended = 0;
   let over = false;
   // Where each end of raw HTML next stands, as the openings move on: one search for each, at most.
   const ends = new Map<string, number>();
@@ -765,6 +769,10 @@ const escapesIn = (text: string): { escapes: Set<number>; over: boolean } => {
       const end = htmlEndAt(text, at);
       if (end !== null && !endsNear(end, at + 2)) {
         escapes.add(at);
+        unended += 1;
+        if (unended > MAX_STRAY) {
+          over = true;
+        }
       }
     } else if (char === "]") {
       const from = open.pop();
