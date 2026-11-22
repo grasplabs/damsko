@@ -4,7 +4,7 @@
 import { readdirSync } from "node:fs";
 import nodePath from "node:path";
 
-import type { Locator, Page } from "@playwright/test";
+import type { FileChooser, Locator, Page } from "@playwright/test";
 
 const root = nodePath.join(import.meta.dirname, "..");
 
@@ -51,6 +51,32 @@ export interface ExampleOptions {
   time?: Date;
 }
 
+/** Where the site serves examples/<component>/<name>.tsx alone, in a theme. */
+const addressOf = (
+  component: string,
+  name: string,
+  theme: "light" | "dark"
+): string => {
+  const url = new URL(`/examples/${component}/${name}`, process.env.BASE_URL);
+  url.searchParams.set("mode", theme);
+  return url.href;
+};
+
+/**
+ * Waits until the example is live: the island has dropped `ssr` (site/system/island.ts) and React
+ * has hydrated what it drew, so its handlers are on the elements. A picture's preload link React
+ * puts first carries no handlers: skipped.
+ */
+const live = async (page: Page): Promise<void> => {
+  await page.waitForFunction(() => {
+    const drawn = document.querySelector("damsko-island:not([ssr]) :not(link)");
+    return (
+      drawn !== null &&
+      Object.keys(drawn).some((key) => key.startsWith("__reactProps"))
+    );
+  });
+};
+
 /**
  * Opens examples/<component>/<name>.tsx as the site serves it alone
  * (/examples/<component>/<name>) and waits until it is live, not only drawn
@@ -66,22 +92,54 @@ export const openExample = async (
     await page.clock.install({ time });
   }
   await page.emulateMedia({ colorScheme: theme });
-  const at = (path: string): string => {
-    const url = new URL(`/examples/${path}`, process.env.BASE_URL);
-    url.searchParams.set("mode", theme);
-    return url.href;
-  };
-  await page.goto(at(`${component}/${name}`));
-  // Live: the island has dropped `ssr` (site/system/island.ts) and React
-  // has hydrated what it drew, so its handlers are on the elements. A
-  // picture's preload link React puts first carries no handlers: skipped.
-  await page.waitForFunction(() => {
-    const drawn = document.querySelector("damsko-island:not([ssr]) :not(link)");
-    return (
-      drawn !== null &&
-      Object.keys(drawn).some((key) => key.startsWith("__reactProps"))
-    );
+  await page.goto(addressOf(component, name, theme));
+  await live(page);
+};
+
+/**
+ * Opens an example as the server drew it, its scripts held back, and returns what lets them run
+ * and waits until the example is live: for what a person does before the page wakes.
+ */
+export const openExampleAsleep = async (
+  page: Page,
+  component: string,
+  name: string
+): Promise<() => Promise<void>> => {
+  const held = Promise.withResolvers<null>();
+  await page.route("**/*.{js,mjs}", async (route) => {
+    await held.promise;
+    await route.continue();
   });
+  await page.emulateMedia({ colorScheme: "light" });
+  // The page's load waits on its scripts: only its arrival is waited for here.
+  await page.goto(addressOf(component, name, "light"), { waitUntil: "commit" });
+  return async () => {
+    held.resolve(null);
+    await live(page);
+  };
+};
+
+/**
+ * The file picker that `open` opens (a press, a key), caught so its files can be set.
+ *
+ * Listening for the picker is what tells the browser to hand it over, and Playwright sends that
+ * word without waiting for the answer. A key goes to the page by another road and can overtake
+ * it on a busy machine: the picker then opens for nobody, is cancelled at once, and the wait
+ * never ends. So the page is asked something first, on the road the word took: its answer comes
+ * only after the word has arrived.
+ */
+export const pickerFrom = async (
+  page: Page,
+  open: () => Promise<void>
+): Promise<FileChooser> => {
+  const [picker] = await Promise.all([
+    page.waitForEvent("filechooser"),
+    (async () => {
+      await page.evaluate(() => document.readyState);
+      await open();
+    })(),
+  ]);
+  return picker;
 };
 
 declare global {
@@ -151,6 +209,113 @@ export const settled = async (page: Page): Promise<void> => {
       });
     });
   });
+};
+
+/** One thing drawn: pixels that touch, of another colour than the ground, in CSS pixels. */
+export interface DrawnPart {
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+  /** It touches the edge of what was looked at: it goes on past it. */
+  cut: boolean;
+}
+
+/**
+ * What is drawn in a part of the page, read from its pixels: each run of touching pixels whose
+ * colour is not the ground's (the colour at that part's first corner), with the box round it.
+ * Where a shape stands as the screen shows it, which its layout box does not say: a browser sets
+ * every box's edges on whole device pixels by itself.
+ */
+export const drawnParts = async (
+  page: Page,
+  clip: { x: number; y: number; width: number; height: number }
+): Promise<DrawnPart[]> => {
+  const shot = await page.screenshot({ clip, fullPage: true, scale: "device" });
+  return await page.evaluate(
+    async ({ png, across }) => {
+      const bytes = Uint8Array.from(
+        atob(png),
+        (char) => char.codePointAt(0) ?? 0
+      );
+      const bitmap = await createImageBitmap(
+        new Blob([bytes], { type: "image/png" })
+      );
+      const { width, height } = bitmap;
+      const context = new OffscreenCanvas(width, height).getContext("2d");
+      if (context === null) {
+        throw new Error("No canvas to read the picture with.");
+      }
+      context.drawImage(bitmap, 0, 0);
+      const { data } = context.getImageData(0, 0, width, height);
+      const channel = (pixel: number, at: number): number =>
+        data[pixel * 4 + at] ?? 0;
+      // Far enough from the ground's colour to be drawn, not an edge's faint blend into it.
+      const drawn = (pixel: number): boolean =>
+        Math.abs(channel(pixel, 0) - channel(0, 0)) +
+          Math.abs(channel(pixel, 1) - channel(0, 1)) +
+          Math.abs(channel(pixel, 2) - channel(0, 2)) >
+        12;
+      const seen = new Set<number>();
+      const parts: DrawnPart[] = [];
+      for (let first = 0; first < width * height; first += 1) {
+        if (drawn(first) && !seen.has(first)) {
+          const part = { left: width, top: height, right: 0, bottom: 0 };
+          const todo = [first];
+          seen.add(first);
+          for (
+            let pixel = todo.pop();
+            pixel !== undefined;
+            pixel = todo.pop()
+          ) {
+            const x = pixel % width;
+            const y = (pixel - x) / width;
+            part.left = Math.min(part.left, x);
+            part.top = Math.min(part.top, y);
+            part.right = Math.max(part.right, x + 1);
+            part.bottom = Math.max(part.bottom, y + 1);
+            for (const [dx, dy] of [
+              [-1, -1],
+              [0, -1],
+              [1, -1],
+              [-1, 0],
+              [1, 0],
+              [-1, 1],
+              [0, 1],
+              [1, 1],
+            ] as const) {
+              const next = (y + dy) * width + x + dx;
+              if (
+                x + dx >= 0 &&
+                x + dx < width &&
+                y + dy >= 0 &&
+                y + dy < height &&
+                drawn(next) &&
+                !seen.has(next)
+              ) {
+                seen.add(next);
+                todo.push(next);
+              }
+            }
+          }
+          const scale = width / across;
+          parts.push({
+            left: part.left / scale,
+            top: part.top / scale,
+            right: part.right / scale,
+            bottom: part.bottom / scale,
+            cut:
+              part.left === 0 ||
+              part.top === 0 ||
+              part.right === width ||
+              part.bottom === height,
+          });
+        }
+      }
+      return parts;
+    },
+    { png: shot.toString("base64"), across: clip.width }
+  );
 };
 
 /**

@@ -1,5 +1,5 @@
 // TreeView: nested items that open and close, such as folders and files or the pages of a section,
-// on UI SDK's Tree. shadcn has none; the rows follow Select's items and Sidebar's rows: the height of
+// on UI SDK's Tree. The rows follow Select's items and Sidebar's rows: the height of
 // a small control, each level a step in, a chevron that turns as a branch opens, an icon per item,
 // the words. One item or several can be chosen, a branch's children can load when it first opens,
 // and Enter runs an item's action.

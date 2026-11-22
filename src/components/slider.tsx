@@ -1,5 +1,5 @@
-// Slider: a number or a range along a scale, from shadcn's (registry/bases/base/ui/slider.tsx, on
-// Base UI), converted from Tailwind to StyleX and built on UI SDK's Slider: a native range input in
+// Slider: a number or a range along a scale,
+// in StyleX, built on UI SDK's Slider: a native range input in
 // each thumb, so the keys, a screen reader's gestures and an agent all move it. A soft track, the
 // ink range, a white thumb with the low lift; its label and the value stand on one line above it.
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
@@ -892,7 +892,7 @@ const levelStyles = stylex.create({
       default: "none",
       ":has(:focus-visible)": {
         default: `${size.ringWidth} solid ${colors.ring}`,
-        [FORCED]: `calc(2 * ${size.ringWidth}) solid Highlight`,
+        [FORCED]: `calc(2 * ${size.lineStrong}) solid Highlight`,
       },
     },
     outlineOffset: size.ringOffsetMark,

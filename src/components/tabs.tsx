@@ -1,6 +1,6 @@
-// Tabs: views of one thing, one shown at a time, from shadcn's (registry/bases/base/ui/tabs.tsx, on
-// Base UI), converted from Tailwind to StyleX and rebuilt on UI SDK's Tabs. Two looks, on the list:
-// `default`, the tabs on a soft track with the chosen one raised, as shadcn's; `line`, words in muted
+// Tabs: views of one thing, one shown at a time,
+// in StyleX, built on UI SDK's Tabs. Two looks, on the list:
+// `default`, the tabs on a soft track with the chosen one raised; `line`, words in muted
 // on one hairline that turn ink, a line under the chosen one that glides to the next.
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
@@ -971,7 +971,8 @@ export const TabsTrigger = ({
             {...stylex.props(
               styles.close,
               segmented && styles.closeSegment,
-              focusRing
+              // Beside the tab's words and inside its box: the ring inside the button.
+              focusRingInset
             )}
           >
             <Icon icon={XIcon} />

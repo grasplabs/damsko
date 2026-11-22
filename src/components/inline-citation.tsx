@@ -1,5 +1,5 @@
-// InlineCitation: a source in the sentence it supports, after shadcn's AI Elements pattern
-// (content/docs/ai-elements/base/inline-citation.md), built on HoverCard, Button, Carousel and Link.
+// InlineCitation: a source in the sentence it supports,
+// built on HoverCard, Button, Carousel and Link.
 // The chip is a small secondary Button naming where the source lives ("example.com +2"); resting
 // on it, or tabbing to it, opens a card with the source's title, a line about it and a link to it,
 // and pages through several sources when there are more.
@@ -37,7 +37,7 @@ import {
 } from "../lib/tokens.stylex";
 import { citedSource, listOf } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
-import { motionVars } from "../lib/vars.stylex";
+import { motionVars, ringInsetMarker } from "../lib/vars.stylex";
 import { Button } from "./button";
 import {
   Carousel,
@@ -319,7 +319,7 @@ export const InlineCitationCardTrigger = ({
   const words = useI18n().inlineCitation;
   const first = citedSource(sources[0]);
   return (
-    <span {...stylex.props(styles.chip, style)}>
+    <span {...stylex.props(styles.chip, ringInsetMarker, style)}>
       <HoverCardTrigger variant="default" asChild>
         <Button variant="secondary" size="xs">
           {words.trigger(

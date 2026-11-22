@@ -228,42 +228,6 @@ An icon-only trigger can say what its popover is for with a Tooltip round it. Th
     { key: "Working", value: "`aria-busy` and `aria-disabled` on the action" },
   ]}
 />
-<Rows
-  title="From shadcn"
-  rows={[
-    {
-      group: "Parts",
-      key: "`PopoverContent`",
-      value: "Kept",
-      note: "placed beside its trigger and kept inside the window",
-    },
-    {
-      group: "Parts",
-      key: "`PopoverTrigger`, `PopoverAnchor`",
-      value: "Plain wrappers",
-      note: "`asChild` onto the element inside",
-    },
-    {
-      group: "Parts",
-      key: "New",
-      value: "`PopoverFooter` and `PopoverClose`",
-      note: "the actions' row, and a wrapper that closes",
-    },
-    { group: "Look", key: "`w-72`", value: "{popover-width}" },
-    {
-      group: "Look",
-      key: "`origin-(--transform-origin)`",
-      value: "Kept",
-      note: "it grows from the trigger",
-    },
-    {
-      group: "Behaviour",
-      key: "Base UI's Popover",
-      value: "UI SDK's Popover",
-      note: "so an agent can open it and press its actions",
-    },
-  ]}
-/>
 
 <Reference>
 

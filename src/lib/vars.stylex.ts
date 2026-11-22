@@ -8,7 +8,7 @@ const REDUCED = "@media (prefers-reduced-motion: reduce)";
 
 /**
  * The two values an icon reads from whoever holds it. StyleX does not let a parent style its
- * children (shadcn's `[&_svg]:size-4`), so a component that holds an icon sets these on itself and
+ * children, so a component that holds an icon sets these on itself and
  * every Icon inside follows: `{ [iconVars.size]: size.iconSm }`. Never size an icon from outside.
  */
 export const iconVars = stylex.defineVars({
@@ -70,6 +70,13 @@ export const motionVars = stylex.defineVars({
 
 /** The marker a control carries when its focus ring is drawn on a part inside it (`focusLabel`). */
 export const focusMarker = stylex.defineMarker();
+
+/**
+ * The marker of a part that packs its controls edge to edge or clips them (a button group, a field's
+ * box, a code view): the ring of every control inside is drawn just inside that control's own edge
+ * (`focusRing`), where no neighbour covers it and nothing cuts it.
+ */
+export const ringInsetMarker = stylex.defineMarker();
 
 /** The marker of a list popup, so a part inside it can answer the popup's state (`listStyles`). */
 export const listMarker = stylex.defineMarker();

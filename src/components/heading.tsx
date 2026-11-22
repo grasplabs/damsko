@@ -1,5 +1,5 @@
-// Heading: a title from the type scale. shadcn has none (it styles h1 to h4 on its typography
-// page). Its level is the outline (h1 to h4) and its size is the look, so a page never skips a
+// Heading: a title from the type scale.
+// Its level is the outline (h1 to h4) and its size is the look, so a page never skips a
 // level to get a smaller title, and never restyles one by hand.
 //
 //   <Heading level={1} size="lg">Reports</Heading>

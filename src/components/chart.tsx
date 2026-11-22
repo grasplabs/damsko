@@ -1,4 +1,4 @@
-// Chart: numbers drawn, after shadcn's Chart (ChartContainer and its parts on Recharts 3), in
+// Chart: numbers drawn, ChartContainer and its parts on Recharts 3, in
 // StyleX. Bars, an area and lines on a shared drawing, plus four figures of their own: bars across
 // (ChartBarList), parts of a whole (ChartPie), flows between stages (ChartSankey) and a trend beside
 // its number (ChartSparkline).
@@ -2147,7 +2147,7 @@ const pieStyles = stylex.create({
     transitionDuration: motionVars.hover,
     transitionTimingFunction: duration.ease,
     stroke: { default: "transparent", ":focus-visible": colors.ring },
-    strokeWidth: 2,
+    strokeWidth: size.ringWidth,
   },
   lift: (x: number, y: number) => ({ transform: `translate(${x}px, ${y}px)` }),
   // The row of the part under the pointer or the keys: its name in ink. Nothing else dims.
@@ -2620,7 +2620,7 @@ const sankeyStyles = stylex.create({
   flow: {
     outline: "none",
     stroke: { default: "transparent", ":focus-visible": colors.ring },
-    strokeWidth: 2,
+    strokeWidth: size.ringWidth,
     transitionProperty: "opacity",
     transitionDuration: motionVars.hover,
   },
@@ -2702,7 +2702,7 @@ const sankeyStyles = stylex.create({
     display: "block",
     gridColumn: "1 / -1",
     height: space[1],
-    borderRadius: 2,
+    borderRadius: radius.full,
     backgroundColor: colors.chart5,
     overflow: "hidden",
   },
@@ -2710,7 +2710,7 @@ const sankeyStyles = stylex.create({
     display: "block",
     width: `${Math.round(share * 1000) / 10}%`,
     height: "100%",
-    borderRadius: 2,
+    borderRadius: radius.full,
   }),
   barTone: {
     backgroundColor: { default: colors.chartPlain, [FORCED]: "CanvasText" },
@@ -3278,6 +3278,7 @@ const sparkStyles = stylex.create({
   live: {
     position: "relative",
     borderRadius: radius.base,
+    cornerShape: radius.shape,
     paddingInline: LIVE_PAD,
     paddingBlock: space[1],
   },

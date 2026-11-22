@@ -1,5 +1,5 @@
-// Tooltip: a short hint for a control, from shadcn's (registry/bases/base/ui/tooltip.tsx), converted
-// from Tailwind to StyleX and built on UI SDK's Tooltip: a dark capsule with the one corner, a
+// Tooltip: a short hint for a control,
+// in StyleX, built on UI SDK's Tooltip: a dark capsule with the one corner, a
 // little off its trigger, with no arrow. It opens when the pointer rests on the trigger for
 // tooltip-delay, and at once when keyboard focus reaches it. It closes on Escape, when the pointer
 // leaves and when focus moves on. It describes its trigger, and holds nothing to press.
@@ -70,7 +70,7 @@ export interface TooltipProviderProps {
 
 const DelayContext = createContext<number>(durations.tooltipDelay);
 
-/** Sets one delay for the tooltips inside it, as shadcn's provider does. Renders nothing of its own. */
+/** Sets one delay for the tooltips inside it. Renders nothing of its own. */
 export const TooltipProvider = ({
   children,
   delay = durations.tooltipDelay,

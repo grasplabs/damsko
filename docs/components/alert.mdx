@@ -37,7 +37,7 @@ Every part is optional: an `AlertDescription` alone, an `AlertTitle` alone, or n
 
 ## Every state
 
-An alert is read, not pressed: its states are its four variants and its parts.
+An alert is read, not pressed: its states are its five variants and its parts.
 
 <States
   path="alert/states"
@@ -194,39 +194,6 @@ An alert is read, not pressed: its states are its four variants and its parts.
       key: "Contrast",
       value: "Title and words 4.5:1, icons 3:1, on every tint, light and dark",
       note: "checked by `node tokens/generate.ts --check`",
-    },
-  ]}
-/>
-<Rows
-  title="From shadcn"
-  rows={[
-    {
-      group: "Parts",
-      key: "`AlertTitle`, `AlertDescription`, `AlertAction`",
-      value: "The same",
-    },
-    {
-      group: "Behaviour",
-      key: '`role="alert"` always',
-      value: "By variant",
-      note: "status for neutral and success",
-    },
-    {
-      group: "New",
-      key: "`success`, `warning`, `info`",
-      value: "Three more variants",
-    },
-    {
-      group: "New",
-      key: "`appearance`",
-      value: "`inline`, `subtle`, `banner`",
-    },
-    { group: "Look", key: "`border`", value: "A tint instead" },
-    {
-      group: "Elsewhere",
-      key: "`className`",
-      value: "`style`",
-      note: "layout and width only",
     },
   ]}
 />

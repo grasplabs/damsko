@@ -1,5 +1,5 @@
-// Form: the layout of a form, the room between its fields, its sections and its buttons. shadcn's
-// form is a react-hook-form recipe, which Field already answers with UI SDK's own checks, so this is
+// Form: the layout of a form, the room between its fields, its sections and its buttons.
+// Field does the checking, with UI SDK's own checks, so this is
 // only the layout. A plain <form>: the browser sends it, checks it and resets it; each Field shows
 // its own error. Give every Field that can be wrong a FieldError with its words: a Field without one
 // falls back to the browser's bubble.

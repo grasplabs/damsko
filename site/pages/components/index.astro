@@ -1,6 +1,6 @@
 ---
 // The components overview: every component as a tile with its preview, its name and its page's
-// sentence, after the reference's cards, in Grasp's tokens. The tiles come from docs/components
+// sentence, in Grasp's tokens. The tiles come from docs/components
 // (../../overview/tiles.ts), so a new page has a tile with no list to edit.
 //
 // Each preview is the component's drawing (../../overview/sketches/<name>.ts, drawn by the pen at
@@ -48,6 +48,7 @@ const dither = ditherDefs();
           <h2 class="overview-heading" id={group.id}>
             {group.label}
           </h2>
+          {group.says && <p class="overview-says">{group.says}</p>}
           <ul class="overview-grid">
             {
               group.tiles.map((tile) => (

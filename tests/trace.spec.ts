@@ -1,7 +1,12 @@
 import { expect, test } from "@playwright/test";
 import type { Locator, Page } from "@playwright/test";
 
-import { hasFocusRing, listenToLiveRegions, openExample } from "./example.ts";
+import {
+  drawnParts,
+  hasFocusRing,
+  listenToLiveRegions,
+  openExample,
+} from "./example.ts";
 
 test("each step says its status in words, not only by its mark", async ({
   page,
@@ -239,4 +244,87 @@ test("a plan's line names the goal and the progress, says it is working, and ope
   await row.click();
   await expect(row).toHaveAttribute("aria-expanded", "false");
   await expect(step).toBeHidden();
+});
+
+for (const scale of [1, 2]) {
+  test(`a step's dot stands on the middle of the line that joins the steps, at ${scale}x`, async ({
+    browser,
+  }) => {
+    const page = await browser.newPage({
+      deviceScaleFactor: scale,
+      reducedMotion: "reduce",
+    });
+    await openExample(page, "trace", "steps");
+    const box = await page
+      .getByText("Share the brief with the team", { exact: true })
+      .locator("..")
+      .boundingBox();
+    if (box === null) {
+      throw new Error("The step is not drawn.");
+    }
+    // The step's seat, clear of its words: its dot, and above it the fine dots of the line.
+    const parts = await drawnParts(page, {
+      x: box.x - 2,
+      y: box.y - 8,
+      width: 20,
+      height: box.height + 8,
+    });
+    const [dot, ...line] = parts.toSorted(
+      (a, b) => b.right - b.left - (a.right - a.left)
+    );
+    if (dot === undefined) {
+      throw new Error("No dot is drawn.");
+    }
+    expect(line.length).toBeGreaterThan(0);
+    for (const fine of line) {
+      expect(
+        Math.abs((fine.left + fine.right - dot.left - dot.right) / 2)
+      ).toBeLessThan(0.5);
+    }
+    await page.close();
+  });
+}
+
+test("a queue's rows are named by their count and open on their lists; a waiting item and a done one say so in words", async ({
+  page,
+}) => {
+  await openExample(page, "trace", "queue");
+  const left = page.getByRole("button", { name: "3 to do" });
+  const completed = page.getByRole("button", { name: "2 completed" });
+  const line = (title: string) =>
+    page.getByText(title, { exact: true }).locator("..");
+  await expect(left).toHaveAttribute("aria-expanded", "true");
+  await expect(line("Add tests for the combobox")).toContainText("Waiting");
+  await expect(completed).toHaveAttribute("aria-expanded", "false");
+  await expect(page.getByText("Add a changeset", { exact: true })).toBeHidden();
+  await completed.click();
+  await expect(line("Add a changeset")).toContainText("Done, Add a changeset");
+  await left.click();
+  await expect(left).toHaveAttribute("aria-expanded", "false");
+  await expect(
+    page.getByText("Add tests for the combobox", { exact: true })
+  ).toBeHidden();
+});
+
+test("a subagent's row names the run and its model, and opens on its tool calls, its output and what it found", async ({
+  page,
+}) => {
+  await openExample(page, "trace", "subagent");
+  const run = page.getByRole("button", {
+    name: /^Ran the research agent\s*, research-model-2$/u,
+  });
+  const found = page.getByText("The cache is keyed on the commit SHA.", {
+    exact: true,
+  });
+  await expect(run).toHaveAttribute("aria-expanded", "true");
+  await expect(
+    page.getByText("Ran grep -rn cacheKey scripts", { exact: true })
+  ).toBeVisible();
+  await expect(page.getByRole("region", { name: "Output" })).toContainText(
+    "scripts/optimize-images.ts"
+  );
+  await expect(found).toBeVisible();
+  await run.click();
+  await expect(run).toHaveAttribute("aria-expanded", "false");
+  await expect(found).toBeHidden();
 });

@@ -1,4 +1,4 @@
-/* The components overview (/components): grids of tiles, after the reference's cards. Every value is a
+/* The components overview (/components): grids of tiles. Every value is a
    token, but for the type steps the brief names that have none (weight 600, 13/18 and 18/24).
    The tiles share their hairlines: each draws a half-hairline ring outside itself, and two
    neighbours' rings meet as one line, so there is no doubled edge, no gap and no frame.
@@ -99,7 +99,7 @@
   /* The name and the page's sentence under it: 14/20 weight 600 in the main text colour, whole,
      on two lines where the card is narrow; then the sentence in 13/18 in the secondary colour,
      whole, on at most two lines from a tablet up (the sentences are written to fit), never cut. On a phone the tile is its name and its
-     sketch. The reference's 24 all round, 16 on a phone. */
+     sketch. 24 all round, 16 on a phone. */
   .overview-text {
     display: flex;
     flex-direction: column;
@@ -143,6 +143,17 @@
     position: absolute;
     inset: 0;
     z-index: 1;
+  }
+
+  /* A kind's sentence under its heading (Blocks): the tiles' quiet words, at reading size. */
+  .overview .overview-says {
+    margin: calc(-1 * var(--damsko-space-2)) 0 var(--damsko-space-4);
+    max-width: 40rem;
+    font-family: var(--damsko-font-sans);
+    font-size: var(--damsko-text-sm);
+    line-height: var(--damsko-text-sm-line);
+    color: var(--damsko-muted-foreground);
+    text-wrap: pretty;
   }
 
   .overview-description {

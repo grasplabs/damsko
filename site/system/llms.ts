@@ -5,7 +5,7 @@
 import { guidanceOf } from "../guidance.ts";
 import { markdownComponents } from "../markdown.ts";
 import { groups, listPages, pageSource } from "./content.ts";
-import { kindOf, kinds, otherKind } from "./kinds.ts";
+import { blockSays, isBlock, kindOf, kinds, otherKind } from "./kinds.ts";
 import { markdownBody, markdownTwin } from "./markdown-twin.ts";
 import type { ComponentMarkdown } from "./markdown-twin.ts";
 import { libraryName } from "./name.ts";
@@ -22,20 +22,32 @@ export const pageTwin = (route: string): string | null => {
   return page ? markdownTwin(pageSource(page), forms) : null;
 };
 
+const nameOf = (route: string) => route.replace(/^\/components\//u, "");
+
 export const llmsIndex = () => {
   const pages = listPages();
+  const line = (page: (typeof pages)[number]) =>
+    `- [${page.title}](${page.route}): ${oneLine(page.description)}`;
+  const blockPages = pages.filter(
+    (page) => page.group === "Components" && isBlock(nameOf(page.route))
+  );
   const blocks = groups.flatMap((group) => {
     const lines = pages
-      .filter((page) => page.group === group.label)
-      .map(
-        (page) =>
-          `- [${page.title}](${page.route}): ${oneLine(page.description)}`
-      );
+      .filter(
+        (page) => page.group === group.label && !blockPages.includes(page)
+      )
+      .map(line);
     // The top of the docs is listed as "Docs", as the previous docs system listed it.
     return lines.length
       ? [`## ${group.folder === "" ? "Docs" : group.label}`, lines.join("\n")]
       : [];
   });
+  if (blockPages.length > 0) {
+    blocks.push(
+      "## Blocks",
+      `${blockSays}\n\n${blockPages.map(line).join("\n")}`
+    );
+  }
   blocks.push(
     "## Agent resources",
     [
@@ -78,7 +90,6 @@ export interface LlmsCut {
   says: string;
 }
 
-const nameOf = (route: string) => route.replace(/^\/components\//u, "");
 const family = (id: string) =>
   listPages().filter(
     (page) =>

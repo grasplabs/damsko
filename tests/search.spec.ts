@@ -29,3 +29,16 @@ test("each query puts the page it means first", async ({ page }) => {
     await expect(page.getByRole("option").first()).toContainText(first);
   }
 });
+
+test("a block is listed under Blocks, apart from the components", async ({
+  page,
+}) => {
+  await page.goto(new URL("/foundations/colour", process.env.BASE_URL).href);
+  await page.keyboard.press("ControlOrMeta+k");
+  const search = page.getByRole("dialog").getByRole("combobox");
+  await expect(search).toBeFocused();
+  await search.fill("share dialog");
+  await expect(
+    page.getByRole("group", { name: "Blocks" }).getByRole("option").first()
+  ).toContainText("Share dialog");
+});

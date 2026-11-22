@@ -138,6 +138,7 @@
       scrollbar-width: none;
       margin: var(--damsko-space-6) 0;
       border-radius: var(--damsko-radius);
+      corner-shape: var(--damsko-radius-shape);
       box-shadow: var(--damsko-border-strong);
     }
     .site-table-scroll > table {
@@ -197,6 +198,7 @@
       height: var(--damsko-control-sm);
       padding: 0;
       border-radius: var(--damsko-radius);
+      corner-shape: var(--damsko-radius-shape);
       font-size: var(--damsko-text-sm);
       line-height: var(--damsko-text-sm-line);
       color: var(--damsko-muted-foreground);

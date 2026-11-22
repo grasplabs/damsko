@@ -1,8 +1,7 @@
-// ScrollArea: a box whose content scrolls behind a thin bar, from shadcn's
-// (registry/bases/base/ui/scroll-area.tsx, on Base UI), converted from Tailwind to StyleX and
-// rebuilt on UI SDK's ScrollArea: the browser's own scroller inside, so keys, wheel, touch, find in
+// ScrollArea: a box whose content scrolls behind a thin bar, in StyleX,
+// built on UI SDK's ScrollArea: the browser's own scroller inside, so keys, wheel, touch, find in
 // page and screen readers all scroll it. The browser's bar never shows (the shared scrollbarHidden);
-// in its place, the reference's 10px bar with a pill thumb that shows while the pointer is over it
+// in its place, a 10px bar with a pill thumb that shows while the pointer is over it
 // or it scrolls. The wheel scrolls it while it can, then passes on to the page.
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
@@ -70,7 +69,7 @@ export interface ScrollAreaProps {
 
 // The shared ring's line, drawn here on the area round the viewport that has focus.
 const ring = `${size.ringWidth} solid ${colors.ring}`;
-const forcedRing = `calc(2 * ${size.ringWidth}) solid Highlight`;
+const forcedRing = `calc(2 * ${size.lineStrong}) solid Highlight`;
 const FORCED = media.forcedColors;
 
 const styles = stylex.create({
@@ -98,6 +97,7 @@ const styles = stylex.create({
     minHeight: 0,
     width: "100%",
     borderRadius: "inherit",
+    cornerShape: "inherit",
   },
   bar: {
     display: "flex",
@@ -108,7 +108,7 @@ const styles = stylex.create({
     transitionDuration: motionVars.mark,
     transitionTimingFunction: duration.ease,
   },
-  // The thumb keeps a step of room from the content's side, as the reference's. At each end the bar
+  // The thumb keeps a step of room from the content's side. At each end the bar
   // stops space-3 short: past the curve of the frame's corner (20px, round where a browser draws no
   // squircle), so the thumb's end is never cut by it. At space-2 it was, by about a pixel.
   vertical: {

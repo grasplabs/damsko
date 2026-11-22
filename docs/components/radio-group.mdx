@@ -130,7 +130,7 @@ Hover, focus and pressed are forced from the radio's own CSS; the rest are its p
     {
       group: "Focus and disabled",
       key: "Focus ring",
-      value: "{ring-width} on its edge, keyboard only",
+      value: "{ring-width}, {ring-offset-mark} off its edge, keyboard only",
       tokens: ["ring"],
     },
     {
@@ -248,51 +248,6 @@ Hover, focus and pressed are forced from the radio's own CSS; the rest are its p
       value:
         "The chosen fill 3:1 on every ground; the empty edge is soft on purpose",
       note: "checked by `node tokens/generate.ts --check`",
-    },
-  ]}
-/>
-<Rows
-  title="From shadcn"
-  rows={[
-    {
-      group: "Parts",
-      key: "`RadioGroupItem`",
-      value: "The same part",
-    },
-    {
-      group: "Parts",
-      key: '`Field orientation="horizontal"`, `FieldLabel`',
-      value: "The same parts",
-      note: "the row, at least 44px, is the Field's",
-    },
-    {
-      group: "Parts",
-      key: "`Field`, `FieldLabel`, `FieldError` round the group",
-      value: "The same parts",
-      note: "the group's name and its error",
-    },
-    {
-      group: "Look",
-      key: "`after:-inset-x-3 -inset-y-2`",
-      value: "The whole row",
-    },
-    {
-      group: "Look",
-      key: "An outlined circle",
-      value: "{primary} with a dot",
-      note: "as a checked box",
-    },
-    {
-      group: "Elsewhere",
-      key: "`className`",
-      value: "`style`",
-      note: "layout only",
-    },
-    {
-      group: "Elsewhere",
-      key: "Base UI",
-      value: "UI SDK",
-      note: "an agent can find and choose",
     },
   ]}
 />

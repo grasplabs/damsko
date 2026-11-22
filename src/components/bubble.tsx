@@ -1,5 +1,4 @@
-// Bubble: the framed surface of a message in a conversation, after shadcn/ui's Bubble, in Damsko's
-// look. A Message lays out the row (avatar, header, footer, which side); a Bubble is the surface
+// Bubble: the framed surface of a message in a conversation. A Message lays out the row (avatar, header, footer, which side); a Bubble is the surface
 // inside it. The person's message is a `muted` Bubble at the end of the line: the soft bubble with
 // the one edge. Reactions overlap its edge.
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
@@ -18,7 +17,7 @@ import { renderElement } from "@ui-sdk/react/primitive";
 import { createContext, isValidElement, use } from "react";
 import type { ReactNode } from "react";
 
-import { focusRing } from "../lib/styles";
+import { focusOnColor, focusRing } from "../lib/styles";
 import {
   colors,
   duration,
@@ -315,6 +314,8 @@ export const BubbleContent = ({
       element !== undefined && pressed[variant],
       align === "end" && styles.contentEnd,
       element !== undefined && focusRing,
+      // Words on the filled Bubble: a link among them shows its ring in the ink seen on the fill.
+      element === undefined && variant === "default" && focusOnColor,
       style
     ),
   };

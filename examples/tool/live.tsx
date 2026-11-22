@@ -47,7 +47,7 @@ export default function ToolLive() {
       </Tool>
       <div>
         <Button
-          variant="secondary"
+          variant="outline"
           size="sm"
           onClick={() => {
             setAt((now) => (now + 1) % order.length);

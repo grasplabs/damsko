@@ -63,8 +63,10 @@
   /* The ground of an info message. */
   --damsko-info-subtle: light-dark(oklch(0.96 0.025 255), oklch(0.26 0.05 255));
   /* Colour: focus. */
-  /* The keyboard focus ring on a control: a neutral ink, fine, never colour. 3:1 on every ground, so the keyboard can find it. */
+  /* The keyboard focus ring on a control: a neutral ink, never colour. 3:1 on every ground, so the keyboard can find it. */
   --damsko-ring: light-dark(oklch(0.45 0.03 165), oklch(0.78 0.02 155));
+  /* The focus ring of what stands on action-fill (a link in a filled bubble): the other mode's ring, since that ground is the other mode's. 3:1 on action-fill. */
+  --damsko-ring-on-color: light-dark(oklch(0.78 0.02 155), oklch(0.45 0.03 165));
   /* The halo round a wrong field in focus: the same faint halo, tinted danger. */
   --damsko-ring-halo-invalid: light-dark(oklch(0.52 0.175 28 / 0.08), oklch(0.7 0.16 28 / 0.16));
   /* The edge of something wrong: the 1px ring tinted red, never a heavier line. Its message says what is wrong. */
@@ -171,7 +173,7 @@
   --damsko-prompt-input-radius: 24px;
   /* Marks under 24px tall: a key, inline code. */
   --damsko-radius-mark: 6px;
-  /* A pill: a chip, a tag, a toggle track. */
+  /* A pill: a chip, a tag, the track of a switch or a slider. Never a control that holds buttons. */
   --damsko-radius-full: 999px;
   /* A circle: an avatar, a dot. */
   --damsko-radius-circle: 50%;
@@ -205,10 +207,12 @@
   --damsko-chip: 24px;
   /* The weight of every rule and line in the system: a separator, a row's divider, the docs frame. */
   --damsko-hairline: 1px;
-  /* The width of the focus ring on a control: fine, so focus is clear without a heavy frame. */
-  --damsko-ring-width: 1.5px;
-  /* Where the focus ring sits on a control: on its edge, following its shape, never a second frame. */
-  --damsko-ring-offset: 0px;
+  /* A line one step heavier than the hairline, for a mark that must be found: today's underline in a calendar, the active cell's edge in a grid, where a dragged column will land, and the system's focus line in forced colours (doubled for the keyboard). */
+  --damsko-line-strong: 1.5px;
+  /* The width of the focus ring: as thick as WCAG 2.4.13 asks, so focus is found at a glance. */
+  --damsko-ring-width: 2px;
+  /* How far the focus ring stands off a control's edge, the ground showing between them, so it reads as a ring round the control and never as its border. It follows the control's shape. */
+  --damsko-ring-offset: 2px;
   /* How far the focus ring stands off a small mark whose own edge is a line (a checkbox, a radio, a switch), so focus is told from rest at a glance. */
   --damsko-ring-offset-mark: 2px;
   /* How far the focus ring stands off words (a link, a row's name), so it never touches the letters. */
@@ -1161,7 +1165,7 @@
   /* The soft mint edge round a selected range, one of the looks on trial. */
   --damsko-data-grid-range-ring: var(--damsko-brand-mint);
   /* Side panel: side panel. */
-  /* The width of an inspector panel beside a page, as the reference's 421px. */
+  /* The width of an inspector panel beside a page. */
   --damsko-side-panel-width: 420px;
   /* The height of an inspector's top bar: its actions, and its views once the head has scrolled away. */
   --damsko-side-panel-bar: 48px;
@@ -1177,7 +1181,7 @@
   --damsko-side-panel-label-gap: var(--damsko-space-3);
   /* How far a label and a row's words sit in from the card's edge: one line for both. */
   --damsko-side-panel-padding: var(--damsko-space-3);
-  /* A row's name, a label and a view: a step under text-sm, as the reference's. */
+  /* A row's name, a label and a view: a step under text-sm. */
   --damsko-side-panel-text: 0.8125rem;
   /* The line height of side-panel-text. */
   --damsko-side-panel-text-line: 1.125rem;

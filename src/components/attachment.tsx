@@ -1,4 +1,4 @@
-// Attachment: a file or picture that goes with a message, after shadcn's (attachment.tsx), in
+// Attachment: a file or picture that goes with a message, in
 // StyleX on our Button: a small card with its picture or a mark for its kind, its name and a line
 // about it, and its actions. A prompt input shows them above its text and a message under its
 // words; neither is known here.
@@ -76,7 +76,7 @@ import {
 } from "../lib/tokens.stylex";
 import { safeMediaSrc } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
-import { iconVars } from "../lib/vars.stylex";
+import { iconVars, ringInsetMarker } from "../lib/vars.stylex";
 import { Button } from "./button";
 import type { ButtonSize, ButtonVariant } from "./button";
 
@@ -429,6 +429,7 @@ const styles = stylex.create({
     padding: 0,
     borderWidth: 0,
     borderRadius: "inherit",
+    cornerShape: "inherit",
     backgroundColor: "transparent",
     cursor: "pointer",
   },
@@ -690,6 +691,7 @@ export const AttachmentActions = ({
       {...stylex.props(
         styles.actions,
         vertical && styles.actionsVertical,
+        ringInsetMarker,
         style
       )}
     >

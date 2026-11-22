@@ -1,6 +1,5 @@
-// Resizable: panels side by side or stacked, with a handle between each two that drags, from
-// shadcn's (registry/bases/base/ui/resizable.tsx, on react-resizable-panels), converted from
-// Tailwind to StyleX and rebuilt on UI SDK's Resizable.
+// Resizable: panels side by side or stacked, with a handle between each two that drags,
+// in StyleX, built on UI SDK's Resizable.
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
 //   <ResizablePanelGroup aria-label="Editor">
@@ -132,7 +131,7 @@ export interface ResizableHandleProps {
 
 // The shared ring's line, drawn here on a part inside the handle.
 const ring = `${size.ringWidth} solid ${colors.ring}`;
-const forcedRing = `calc(2 * ${size.ringWidth}) solid Highlight`;
+const forcedRing = `calc(2 * ${size.lineStrong}) solid Highlight`;
 const FORCED = media.forcedColors;
 
 const styles = stylex.create({
@@ -142,6 +141,7 @@ const styles = stylex.create({
     minWidth: 0,
     minHeight: 0,
     borderRadius: "inherit",
+    cornerShape: "inherit",
   },
   // Its content scrolls, with no bar, when the panel is smaller than it.
   panel: {

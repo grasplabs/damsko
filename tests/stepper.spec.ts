@@ -1,6 +1,8 @@
 import { expect, test } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 
-import { openExample } from "./example.ts";
+import { drawnParts, openExample } from "./example.ts";
+import type { DrawnPart } from "./example.ts";
 
 /** A step's name and its status, as a screen reader hears them: "Details, done". */
 const said = (name: string, status: string) =>
@@ -220,3 +222,97 @@ test("in a form, Next submits it: Enter in the field goes on", async ({
   await page.keyboard.press("Alt+ArrowLeft");
   await expect(page.getByLabel("Your team")).toBeVisible();
 });
+
+const middle = (part: DrawnPart) => ({
+  x: (part.left + part.right) / 2,
+  y: (part.top + part.bottom) / 2,
+});
+
+/**
+ * A step's mark as the screen draws it, read from the pixels at the step's corner, clear of its
+ * words: what the mark is made of (a dot, and round the current one its ring), and the line that
+ * runs on from it to the step before and the step after.
+ */
+const markOf = async (page: Page, step: Locator, down: boolean) => {
+  const box = await step.boundingBox();
+  if (box === null) {
+    throw new Error("The step is not drawn.");
+  }
+  const parts = await drawnParts(
+    page,
+    down
+      ? { x: box.x - 4, y: box.y - 6, width: 32, height: 42 }
+      : { x: box.x - 12, y: box.y - 4, width: 44, height: 28 }
+  );
+  return {
+    mark: parts.filter((part) => !part.cut),
+    line: parts.filter((part) => part.cut),
+  };
+};
+
+/** The mark's parts stand about one middle, and the line runs through it. */
+const expectOneMiddle = (
+  { mark, line }: { mark: DrawnPart[]; line: DrawnPart[] },
+  parts: number,
+  down: boolean
+) => {
+  expect(mark).toHaveLength(parts);
+  expect(line.length).toBeGreaterThan(0);
+  const [dot] = mark.toSorted((a, b) => a.right - a.left - (b.right - b.left));
+  if (dot === undefined) {
+    throw new Error("No mark is drawn.");
+  }
+  for (const part of mark) {
+    expect(Math.abs(middle(part).x - middle(dot).x)).toBeLessThan(0.5);
+    expect(Math.abs(middle(part).y - middle(dot).y)).toBeLessThan(0.5);
+  }
+  for (const stretch of line) {
+    expect(
+      Math.abs(
+        down
+          ? middle(stretch).x - middle(dot).x
+          : middle(stretch).y - middle(dot).y
+      )
+    ).toBeLessThan(0.5);
+  }
+};
+
+for (const scale of [1, 2]) {
+  for (const down of [false, true]) {
+    test(`a mark's dot, its ring and the line share one middle in every state, ${down ? "down" : "across"} at ${scale}x`, async ({
+      browser,
+    }) => {
+      const page = await browser.newPage({
+        deviceScaleFactor: scale,
+        reducedMotion: "reduce",
+      });
+      await openExample(page, "stepper", "fixture");
+      const steps = page
+        .getByRole("list", { name: "Setting up the workspace" })
+        .nth(down ? 1 : 0)
+        .getByRole("listitem");
+      /** How many shapes the second step's mark is made of: two while its ring shows. */
+      const shapes = async () => {
+        const { mark } = await markOf(page, steps.nth(1), down);
+        return mark.length;
+      };
+      // Done and still to come: a dot and an open ring, each one shape.
+      expectOneMiddle(await markOf(page, steps.nth(0), down), 1, down);
+      expectOneMiddle(await markOf(page, steps.nth(2), down), 1, down);
+      // The current step: its dot and the ring round it.
+      await expect(steps.nth(1)).toHaveAttribute("aria-current", "step");
+      expectOneMiddle(await markOf(page, steps.nth(1), down), 2, down);
+      // Failed: a square, no ring.
+      await page.getByRole("button", { name: "Fail this step" }).click();
+      await expect(steps.nth(1)).toContainText("failed");
+      await expect.poll(shapes).toBe(1);
+      expectOneMiddle(await markOf(page, steps.nth(1), down), 1, down);
+      // In progress: the ring gives way to the light on the line.
+      await page.getByRole("button", { name: "Clear failure" }).click();
+      await page.getByRole("button", { name: "In progress" }).click();
+      await expect.poll(shapes).toBe(1);
+      expectOneMiddle(await markOf(page, steps.nth(1), down), 1, down);
+      await page.close();
+    });
+  }
+}

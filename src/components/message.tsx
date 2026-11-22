@@ -1,4 +1,4 @@
-// Message: one message in a conversation, after shadcn/ui's Message, in Damsko's look. A Message
+// Message: one message in a conversation. A Message
 // is the row: an avatar, and a column of a header, the surface and a footer, at the start of the
 // line or, with `align="end"`, at its end. The surface is a Bubble for the person's words, or the
 // assistant's answer drawn from Markdown across the column (MessageResponse).
@@ -22,7 +22,7 @@
 //     </MessageContent>
 //   </Message>
 //
-// What Damsko adds to shadcn's parts, each where shadcn's pattern leaves it to the product: the
+// Beside the row's parts, each for what a product would otherwise build itself: the
 // answer drawn through Markdown at a steady pace while it streams (MessageResponse), a named row of
 // actions (MessageActions, MessageAction), a failure with Try again (MessageError), a message's
 // shape while it loads (MessageSkeleton), the assistant's `status` said once, and a name for each

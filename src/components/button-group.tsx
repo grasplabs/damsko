@@ -1,5 +1,4 @@
-// ButtonGroup: buttons that belong together on one surface, from shadcn's (registry/bases/base/ui/
-// button-group.tsx), converted from Tailwind to StyleX and drawn after the reference's Toggle Group:
+// ButtonGroup: buttons that belong together on one surface, in StyleX, drawn as ToggleGroup is:
 // one quiet surface with the system's bevel, and ghost Buttons of one size inside it. A plain
 // `role="group"`, named by `aria-label`: UI SDK has no primitive for it, and it is not a toolbar, so
 // Tab reaches every button.
@@ -34,6 +33,7 @@ import {
 } from "../lib/tokens.stylex";
 import { slotProps } from "../lib/utils";
 import type { LayoutStyle, Orientation } from "../lib/utils";
+import { ringInsetMarker } from "../lib/vars.stylex";
 import { Separator } from "./separator";
 
 /** Every prop a ButtonGroup takes. */
@@ -169,7 +169,12 @@ export const ButtonGroup = ({
       // oxlint-disable-next-line jsx-a11y/role-supports-aria-props -- screen readers read the direction of a group of buttons
       aria-orientation={orientation === "vertical" ? "vertical" : undefined}
       data-slot="button-group"
-      {...stylex.props(styles.group, styles[orientation], style)}
+      {...stylex.props(
+        styles.group,
+        styles[orientation],
+        ringInsetMarker,
+        style
+      )}
     >
       {children}
     </div>
