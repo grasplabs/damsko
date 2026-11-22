@@ -37,8 +37,9 @@ import {
   size as sizes,
   space,
 } from "../lib/tokens.stylex";
-import { DITHER_GEOMETRY, isBlank } from "../lib/utils";
+import { isBlank } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
+import { pixel } from "../lib/vars.stylex";
 import { Button } from "./button";
 import type { ButtonProps, ButtonSize } from "./button";
 import {
@@ -343,7 +344,7 @@ const styles = stylex.create({
 
   // ---- The banner's texture ----
   // A very faint dither of the light behind the title: mint light from the top corner at the
-  // start, seen through the system's dither of dots. Decoration: hidden from assistive tech, takes
+  // start, seen through the system's dither of pixels. Decoration: hidden from assistive tech, takes
   // no pointer, never moves. In right to left the light comes from the start there, the right. In
   // forced colours it is not drawn.
   texture: {
@@ -356,14 +357,11 @@ const styles = stylex.create({
       default: `radial-gradient(120% 90% at 0% 0%, ${colors.mint}, transparent 70%)`,
       ":dir(rtl)": `radial-gradient(120% 90% at 100% 0%, ${colors.mint}, transparent 70%)`,
     },
-    maskRepeat: "repeat",
+    // The dither: lib's one pixel, a 2px square in every 3px.
+    maskImage: pixel.mask,
+    maskSize: "3px 3px",
     display: { default: "block", [media.forcedColors]: "none" },
   },
-  // The dither's dots: lib/utils' one geometry for a dither of dots (a dot on every pitch).
-  dots: (dot: string, pitch: string) => ({
-    maskImage: `radial-gradient(circle, black ${dot}, transparent calc(${dot} + ${sizes.hairline}))`,
-    maskSize: `${pitch} ${pitch}`,
-  }),
   // In the object's own colour: from the top, down, the same in either direction. In the dark the
   // colour's own hue and strength at a lightness that shows on a dark ground.
   tinted: (tint: string) => ({
@@ -447,21 +445,13 @@ const sizeLooks = {
 
 type Look = (typeof sizeLooks)[keyof typeof sizeLooks];
 
-/** The banner's dots, from the system's one dither geometry: a dot of `square` on every `pitch`. */
-const DOT = `${String(DITHER_GEOMETRY.dots.square / 2)}px`;
-const PITCH = `${String(DITHER_GEOMETRY.dots.pitch)}px`;
-
 /** The faint dither of light behind a banner's title. */
 const Texture = ({ tint }: { tint: string | undefined }) => (
   <span
     aria-hidden="true"
     data-slot="page-header-texture"
     data-tinted={tint === undefined ? undefined : ""}
-    {...stylex.props(
-      styles.texture,
-      styles.dots(DOT, PITCH),
-      tint !== undefined && styles.tinted(tint)
-    )}
+    {...stylex.props(styles.texture, tint !== undefined && styles.tinted(tint))}
   />
 );
 

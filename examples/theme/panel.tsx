@@ -16,6 +16,7 @@ import {
   size,
   space,
 } from "@grasp-os/ui/lib/tokens.stylex";
+import { pixel, pixelVars } from "@grasp-os/ui/lib/vars.stylex";
 // The board a theme is judged on: real components, standing on a theme and a mode set on their own
 // subtree (`data-theme`, `data-mode`), so six of them can stand side by side on one page.
 // Its default export is one panel; the theme examples use `ThemePanel`.
@@ -79,15 +80,14 @@ const styles = stylex.create({
   mint: { backgroundColor: colors.mint },
   lime: { backgroundColor: colors.brandLime },
   pine: { backgroundColor: colors.pine },
-  // Pine taken further (a proposal): an ordered dither on the ground, two offset 4px grids of soft
-  // dots in the light's colour, densest at the top and fading down the way the light falls. CSS
+  // Pine taken further (a proposal): an ordered dither on the ground, two offset 4px grids of the
+  // system's pixel in the light's colour, densest at the top and fading down the way the light falls. CSS
   // only: no canvas, nothing moves, nothing redrawn while the page scrolls. Never under words, only
   // on the grounds: the cards and fields stand on it with their own fills.
   dither: {
-    backgroundImage: [
-      "radial-gradient(circle at 1px 1px, light-dark(oklch(0.4321 0.0778 175.187 / 0.16), oklch(0.8005 0.1625 165.25 / 0.11)) 0.75px, transparent 1px)",
-      "radial-gradient(circle at 1px 1px, light-dark(oklch(0.4321 0.0778 175.187 / 0.16), oklch(0.8005 0.1625 165.25 / 0.11)) 0.75px, transparent 1px)",
-    ].join(", "),
+    [pixelVars.color]:
+      "light-dark(oklch(0.4321 0.0778 175.187 / 0.16), oklch(0.8005 0.1625 165.25 / 0.11))",
+    backgroundImage: `${pixel.fineFill}, ${pixel.fineFill}`,
     backgroundSize: "4px 4px, 4px 4px",
     backgroundPosition: "0 0, 2px 2px",
   },

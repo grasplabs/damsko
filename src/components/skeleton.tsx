@@ -7,7 +7,7 @@
 //   <Skeleton variant="rectangular" style={chart} />   a rectangle, sized by the layout
 //   <Skeleton variant="circular" />                    an avatar
 //
-// `animation` picks how it waits. `wave`, the default: a fine dot field, almost still, with a wave
+// `animation` picks how it waits. `wave`, the default: a fine field of pixels, almost still, with a wave
 // of light (mint into pine) crossing it, one wave for the whole page. `pulse`: the soft fill,
 // breathing slowly. `false`: the soft fill, still, for a long list. With reduced motion every one
 // is still.
@@ -50,7 +50,7 @@ export interface SkeletonProps {
    */
   size?: SkeletonSize;
   /**
-   * How it waits: `wave` a dot field a wave of light crosses; `pulse` the soft fill, breathing;
+   * How it waits: `wave` a field of pixels a wave of light crosses; `pulse` the soft fill, breathing;
    * `false` the soft fill, still, for a long list, where many breathing at once is noise.
    * @default "wave"
    */
@@ -235,10 +235,59 @@ const breathe = stylex.keyframes({
   "50%": { opacity: size.skeletonLow },
 });
 
-/** The dots: 1px on a 4px pitch, in a quiet foreground. */
-const DOTS = `radial-gradient(circle at center, color-mix(in oklab, ${colors.foreground} 20%, transparent) 0.7px, transparent 1px)`;
-/** Where the light shows: the same pitch, a little larger, so a lit dot grows. */
-const LIT = `radial-gradient(circle at center, ${colors.foreground} 1px, transparent 1.4px)`;
+// ---- Where the field's pixels stand ----
+//
+// A pixel is a 2px square, as wide as the dot it is drawn for, and stands one in every 4px. As many
+// whole 4px tiles as fit stand along each side of the field, the first against one edge and the last
+// against the other, and the room left over is shared out between them: a 14px line holds three
+// rows, 1px clear above and below, and a circle's five by five stand in its middle. The room left
+// over is under a tile, so it is shared out in whole pixels, at up to three places a quarter, a half
+// and three quarters along: a square on part of a pixel is a smear, which is what sharing it out
+// evenly between every pair (`background-repeat: space`) draws.
+//
+// So a side is four runs of tiles, each a layer of its own that repeats inside its run and nowhere
+// else. The rows are the field's background and the columns its mask: where they cross is a pixel.
+// The sides are read from the field itself (`cqw`, `cqh`). Where a browser lacks the maths the
+// pixels stand in every 4px from the corner.
+
+// Along a side of `side`: the whole tiles that fit, and the pixels left over (none to three).
+const tiles = (side: string) => `round(down, ${side}, 4px)`;
+const over = (side: string) => `round(down, mod(${side}, 4px), 1px)`;
+// Of the pixels left over: one at the half when odd, one at each quarter from two.
+const quarter = (side: string) => `round(down, ${over(side)} / 2, 1px)`;
+const half = (side: string) => `mod(${over(side)}, 2px)`;
+// Where a run ends: after whole tiles, never before the first nor after the last but one.
+const end = (side: string) => `(${tiles(side)} - 4px)`;
+const first = (side: string) => `max(4px, round(down, ${side} / 4, 4px))`;
+const second = (side: string) =>
+  `clamp(4px, round(down, ${side} / 2, 4px), ${end(side)})`;
+const third = (side: string) =>
+  `min(round(down, ${side} * 3 / 4, 4px), ${end(side)})`;
+// How long each of the four runs is, and where it starts: a pixel stands in the middle of its
+// tile, 1px in.
+const run1 = (side: string) => first(side);
+const run2 = (side: string) => `calc(${second(side)} - ${first(side)})`;
+const run3 = (side: string) => `calc(${third(side)} - ${second(side)})`;
+const run4 = (side: string) => `calc(${tiles(side)} - ${third(side)})`;
+const start2 = (side: string) =>
+  `calc(${first(side)} + ${quarter(side)} + 1px)`;
+const start3 = (side: string) =>
+  `calc(${second(side)} + ${quarter(side)} + ${half(side)} + 1px)`;
+const start4 = (side: string) => `calc(${third(side)} + ${over(side)} + 1px)`;
+const ACROSS = "100cqw";
+const DOWN = "100cqh";
+
+/** A run's rows, and its columns: a 2px line in every 4px. */
+const rowsIn = (colour: string) =>
+  `repeating-linear-gradient(${colour} 0 2px, transparent 0 4px)`;
+const COLUMNS =
+  "repeating-linear-gradient(90deg, #000 0 2px, transparent 0 4px)";
+const four = (layer: string) => `${layer}, ${layer}, ${layer}, ${layer}`;
+const REST = `color-mix(in oklab, ${colors.foreground} 20%, transparent)`;
+const ROW_SIZES = `100% ${run1(DOWN)}, 100% ${run2(DOWN)}, 100% ${run3(DOWN)}, 100% ${run4(DOWN)}`;
+const ROW_STARTS = `0 1px, 0 ${start2(DOWN)}, 0 ${start3(DOWN)}, 0 ${start4(DOWN)}`;
+const COLUMN_SIZES = `${run1(ACROSS)} 100%, ${run2(ACROSS)} 100%, ${run3(ACROSS)} 100%, ${run4(ACROSS)} 100%`;
+const COLUMN_STARTS = `1px 0, ${start2(ACROSS)} 0, ${start3(ACROSS)} 0, ${start4(ACROSS)} 0`;
 
 const styles = stylex.create({
   skeleton: {
@@ -296,7 +345,7 @@ const styles = stylex.create({
     height: size.controlDefault,
     borderRadius: radius.circle,
   },
-  // ---- The dot field ----
+  // ---- The pixel field ----
   // No fill of its own: the field inside it draws, in the content box (a line's letters' height).
   bare: {
     backgroundColor: "transparent",
@@ -307,34 +356,51 @@ const styles = stylex.create({
     boxSizing: "border-box",
     height: "100%",
     overflow: "hidden",
-    // Square: a line's dots are its shape, and a rounded corner would cut the dots at its ends.
+    // Square: a line's pixels are its shape, and a rounded corner would cut them at its ends.
     borderRadius: 0,
-    backgroundImage: { default: DOTS, [media.forcedColors]: "none" },
-    backgroundSize: "4px 4px",
-    // Only whole dots: as many as fit, the room left over shared out between them, so no row of
-    // half dots is cut at a line's foot (a 14px line held three and a half rows).
-    backgroundRepeat: "space",
+    // What its pixels are placed by: its own content box.
+    containerType: "size",
+    // The pixels at rest, in a quiet foreground, in the content box.
+    "::before": {
+      content: '""',
+      position: "absolute",
+      inset: 0,
+      backgroundImage: {
+        default: four(rowsIn(REST)),
+        [media.forcedColors]: "none",
+      },
+      backgroundSize: ROW_SIZES,
+      backgroundPosition: ROW_STARTS,
+      backgroundRepeat: "no-repeat",
+      maskImage: four(COLUMNS),
+      maskSize: COLUMN_SIZES,
+      maskPosition: COLUMN_STARTS,
+      maskRepeat: "no-repeat",
+    },
     outlineWidth: { default: 0, [media.forcedColors]: 1 },
     outlineStyle: "solid",
     outlineColor: "GrayText",
     outlineOffset: -1,
   },
   // A picture or an avatar stands on the soft ground; text does not. The ground is the outer
-  // shape's, with its corner; the dots stand space-1 inside it, where no corner reaches them.
+  // shape's, with its corner; the pixels stand space-1 inside it, where no corner reaches them.
   groundOuter: {
     backgroundColor: colors.muted,
   },
   ground: {
     padding: space["1"],
-    backgroundOrigin: "content-box",
-    backgroundClip: "content-box",
+    "::before": { inset: space["1"] },
   },
   litInset: { inset: space["1"] },
-  // A circle's dots keep to the square inside it, clear of its curve: from a space-1 inset the
-  // square grid's corner dots stood on the rim.
-  groundCircle: { padding: space["2"] },
+  // A circle's pixels keep to the square inside it, clear of its curve: from a space-1 inset the
+  // square grid's corner pixels stood on the rim.
+  groundCircle: {
+    padding: space["2"],
+    "::before": { inset: space["2"] },
+  },
   litCircle: { inset: space["2"] },
-  // Where the light can show: the dots, a little larger.
+  // Where the light can show: the same pixels, so a lit one is its pixel at rest in the light's
+  // colour. Its columns here, its rows on the box inside.
   lit: {
     position: "absolute",
     inset: 0,
@@ -343,10 +409,18 @@ const styles = stylex.create({
       [media.forcedColors]: "none",
       [media.reducedMotion]: "none",
     },
-    maskImage: LIT,
-    maskSize: "4px 4px",
-    // As the dots: whole ones, laid out as theirs, so a lit dot stands on its dot.
-    maskRepeat: "space",
+    maskImage: four(COLUMNS),
+    maskSize: COLUMN_SIZES,
+    maskPosition: COLUMN_STARTS,
+    maskRepeat: "no-repeat",
+  },
+  litRows: {
+    position: "absolute",
+    inset: 0,
+    maskImage: four(rowsIn("#000")),
+    maskSize: ROW_SIZES,
+    maskPosition: ROW_STARTS,
+    maskRepeat: "no-repeat",
   },
   // The light: a soft band of mint into pine, slanted, moved by lightUp.
   band: {
@@ -369,7 +443,7 @@ const shapes = {
 const lines = { sm: styles.sm, default: styles.default, lg: styles.lg };
 
 /**
- * The dot field inside a Skeleton, and the light that crosses it. A line's dots are its shape; a
+ * The pixel field inside a Skeleton, and the light that crosses it. A line's pixels are its shape; a
  * rectangle's or a circle's stand inside its ground.
  */
 const Field = ({
@@ -399,7 +473,9 @@ const Field = ({
           round && styles.litCircle
         )}
       >
-        <span ref={band} {...stylex.props(styles.band)} />
+        <span {...stylex.props(styles.litRows)}>
+          <span ref={band} {...stylex.props(styles.band)} />
+        </span>
       </span>
     </span>
   );
