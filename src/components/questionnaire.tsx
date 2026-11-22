@@ -1,5 +1,5 @@
 // Questionnaire: an assistant asks the person one question or several in turn and waits,
-// built on RadioGroup, Checkbox, Textarea and
+// built on RadioGroup, Checkbox, Textarea, InputGroup's input and
 // Button. Each item is one choice, several, or the person's own words; a choice item may take
 // words of the person's own as well (QuestionnaireInput, "Other").
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
@@ -78,6 +78,7 @@ import { iconVars, motionVars } from "../lib/vars.stylex";
 import { Button } from "./button";
 import type { ButtonVariant } from "./button";
 import { Checkbox, CheckboxGroup } from "./checkbox";
+import { InputGroupInput } from "./input-group";
 import { RadioGroup, RadioGroupItem } from "./radio-group";
 import { Textarea } from "./textarea";
 
@@ -299,7 +300,6 @@ export interface QuestionnaireNavigationProps {
   onClick?: (event: MouseEvent<HTMLElement>) => void;
 }
 
-const COARSE = media.pointerCoarse;
 const FORCED = media.forcedColors;
 const HOVER = media.hover;
 
@@ -380,6 +380,9 @@ const styles = stylex.create({
     color: colors.mutedForeground,
     overflowWrap: "anywhere",
   },
+  // The box round the group gives back the step a RadioGroup or CheckboxGroup named by a label
+  // above it reaches up by, so the cards stand at the item's own gap under the question.
+  group: { display: "grid", marginBlockStart: `calc(-1 * ${space["1"]})` },
   // The choices, every card as tall as the tallest; numbered or lettered for their keys.
   choices: {
     display: "grid",
@@ -438,10 +441,9 @@ const styles = stylex.create({
     opacity: size.opacityDisabled,
     cursor: "not-allowed",
   },
-  // The words of one's own, beside choices: one more card, a small step under them, not the
-  // item's whole gap; filled like a chosen one while it holds words.
+  // The words of one's own, beside choices: one more card of their grid, as tall as they are;
+  // filled like a chosen one while it holds words.
   own: {
-    marginBlockStart: `calc(${space["2"]} - ${space["4"]})`,
     backgroundColor: {
       default: colors.card,
       ":has(input[type=text]:not(:placeholder-shown))": colors.accent,
@@ -594,27 +596,21 @@ const styles = stylex.create({
     },
   },
   // The words of one's own, written in their card: bare, as the choices' words are.
-  ownInput: {
+  // InputGroup's bare input takes its words' look from here, the choices' own (16px on a phone or
+  // a touch screen, or Safari zooms the page in when the field takes focus), and gives back its
+  // inset, so its words start where a choice's do.
+  ownWords: {
+    display: "flex",
     flexGrow: 1,
     minWidth: 0,
-    minHeight: { default: 0, [COARSE]: size.tapTarget },
-    margin: 0,
-    padding: 0,
-    appearance: "none",
-    borderWidth: 0,
-    backgroundColor: "transparent",
-    outline: "none",
-    color: colors.foreground,
-    caretColor: colors.foreground,
+    marginInline: `calc(-1 * ${space["3"]})`,
     fontFamily: font.sans,
-    // 16px on a phone or a touch screen, or Safari zooms the page in when the field takes focus.
     fontSize: {
       default: font.textSm,
       [media.maxSmOrCoarse]: size.inputTextTouch,
     },
     lineHeight: font.textSmLine,
     fontWeight: font.weightMedium,
-    "::placeholder": { color: colors.mutedForeground, opacity: 1 },
   },
   actions: {
     display: "flex",
@@ -719,12 +715,16 @@ interface ItemState {
   hasDescription: boolean;
   setHasDescription: (has: boolean) => void;
   invalid: boolean;
+  /** The item's QuestionnaireInput, when it stands beside choices: drawn as the last of their cards. */
+  own: ReactNode;
 }
 
 const QuestionnaireContext = createContext<QuestionnaireState | null>(null);
 const ItemContext = createContext<ItemState | null>(null);
 // A choice's description's id, while its choice draws it.
 const ChoiceDescriptionContext = createContext<string | undefined>(undefined);
+// Whether a QuestionnaireInput is drawn among the choices' cards.
+const AmongChoices = createContext(false);
 
 const useQuestionnaire = (part: string): QuestionnaireState => {
   const state = use(QuestionnaireContext);
@@ -1261,84 +1261,6 @@ export const QuestionnaireProgress = ({
   );
 };
 
-/** One question of the run: a fieldset named by its title, shown while it is the current one. */
-export const QuestionnaireItem = ({
-  children,
-  name,
-  required = false,
-  multiple = false,
-  disabled = false,
-  invalid = false,
-  onStatusChange,
-}: QuestionnaireItemProps) => {
-  const { active, register, flagged, statusOf, sent } =
-    useQuestionnaire("QuestionnaireItem");
-  const element = useRef<HTMLFieldSetElement | null>(null);
-  const [hasChoices, setHasChoices] = useState(false);
-  const [hasDescription, setHasDescription] = useState(false);
-  const titleId = useId();
-  const errorId = useId();
-  const descriptionId = useId();
-  useEffect(() => {
-    const node = element.current;
-    return node === null
-      ? undefined
-      : register(name, { required, disabled, invalid, element: node });
-  }, [register, name, required, disabled, invalid]);
-  const status = statusOf(name);
-  const told = useRef<QuestionnaireItemStatus>("unanswered");
-  useEffect(() => {
-    if (told.current !== status) {
-      told.current = status;
-      onStatusChange?.(status);
-    }
-  }, [status, onStatusChange]);
-  const wrong = invalid || flagged.has(name);
-  const shown = !disabled && active === name;
-  const described = [hasDescription && descriptionId, wrong && errorId]
-    .filter(Boolean)
-    .join(" ");
-  return (
-    <fieldset
-      ref={element}
-      // A fieldset's own name is its legend; the title stands as a line of the grid instead.
-      aria-labelledby={titleId}
-      aria-describedby={described === "" ? undefined : described}
-      aria-invalid={wrong || undefined}
-      hidden={disabled || (active !== null && !shown)}
-      inert={!shown && active !== null}
-      tabIndex={-1}
-      data-slot="questionnaire-item"
-      data-status={status}
-      data-active={shown || undefined}
-      data-sent={sent || undefined}
-      {...stylex.props(
-        styles.item,
-        active === null && styles.itemPending,
-        (disabled || (active !== null && !shown)) && styles.itemHidden
-      )}
-    >
-      <ItemContext
-        // oxlint-disable-next-line react/jsx-no-constructed-context-values -- compiled
-        value={{
-          name,
-          multiple,
-          titleId,
-          descriptionId,
-          errorId,
-          hasChoices,
-          setHasChoices,
-          hasDescription,
-          setHasDescription,
-          invalid: wrong,
-        }}
-      >
-        {children}
-      </ItemContext>
-    </fieldset>
-  );
-};
-
 /** The question. It names its item. */
 export const QuestionnaireTitle = ({ children }: QuestionnaireTitleProps) => {
   const { titleId } = useItem("QuestionnaireTitle");
@@ -1383,7 +1305,7 @@ export const QuestionnaireChoices = ({
   columns = 1,
 }: QuestionnaireChoicesProps) => {
   const { answerOf, answer, sent } = useQuestionnaire("QuestionnaireChoices");
-  const { name, multiple, titleId, setHasChoices } = useItem(
+  const { name, multiple, titleId, setHasChoices, own } = useItem(
     "QuestionnaireChoices"
   );
   useEffect(() => {
@@ -1400,10 +1322,11 @@ export const QuestionnaireChoices = ({
   const grid = (
     <div {...stylex.props(styles.choices, columns === 2 && styles.twoColumns)}>
       {children}
+      <AmongChoices value>{own}</AmongChoices>
     </div>
   );
   return (
-    <div data-slot="questionnaire-choices">
+    <div data-slot="questionnaire-choices" {...stylex.props(styles.group)}>
       {multiple ? (
         <CheckboxGroup
           aria-labelledby={titleId}
@@ -1585,6 +1508,8 @@ export const QuestionnaireInput = ({
     useQuestionnaire("QuestionnaireInput");
   const { name, multiple, titleId, hasChoices } = useItem("QuestionnaireInput");
   const words = useI18n().questionnaire;
+  const among = use(AmongChoices);
+  const ownId = useId();
   // Written once, as it is first drawn.
   const seeded = useRef(false);
   useEffect(() => {
@@ -1617,9 +1542,10 @@ export const QuestionnaireInput = ({
       ...(clear ? { values: [] } : {}),
     });
   };
-  if (hasChoices) {
+  if (among || hasChoices) {
     return (
       <label
+        htmlFor={ownId}
         data-slot="questionnaire-input"
         {...stylex.props(
           stylex.defaultMarker(),
@@ -1633,25 +1559,24 @@ export const QuestionnaireInput = ({
             <Icon icon={PlusIcon} />
           </span>
         </span>
-        <input
-          type="text"
-          aria-label={named ?? words.other}
-          // A space when there is none: the card reads its placeholder to know it is empty.
-          placeholder={placeholder ?? words.other}
-          value={text}
-          onChange={(event) => {
-            write(event.currentTarget.value);
-          }}
-          onKeyDown={(event) => {
-            if (event.key === "Enter" && !event.nativeEvent.isComposing) {
-              // Not also the form round it (a PromptInput's).
-              event.preventDefault();
-              event.stopPropagation();
-              forward();
-            }
-          }}
-          {...stylex.props(styles.ownInput)}
-        />
+        <span {...stylex.props(styles.ownWords)}>
+          <InputGroupInput
+            id={ownId}
+            aria-label={named ?? words.other}
+            // Always some: the card reads its placeholder to know it is empty.
+            placeholder={placeholder ?? words.other}
+            value={text}
+            onValueChange={write}
+            onKeyDown={(event: KeyboardEvent<HTMLInputElement>) => {
+              if (event.key === "Enter" && !event.nativeEvent.isComposing) {
+                // Not also the form round it (a PromptInput's).
+                event.preventDefault();
+                event.stopPropagation();
+                forward();
+              }
+            }}
+          />
+        </span>
       </label>
     );
   }
@@ -1668,6 +1593,105 @@ export const QuestionnaireInput = ({
         onSubmit={forward}
       />
     </div>
+  );
+};
+
+/** Whether a child is this part. */
+const isPart = (part: ReactNode, type: unknown) =>
+  isValidElement(part) && part.type === type;
+
+/**
+ * A QuestionnaireInput beside QuestionnaireChoices is the last of their cards: the choices draw it
+ * in their grid, as tall as the rest, and it leaves its own place among the item's parts.
+ */
+const ownAmong = (children: ReactNode) => {
+  const parts = listOf(children);
+  const own = parts.some((part) => isPart(part, QuestionnaireChoices))
+    ? parts.find((part) => isPart(part, QuestionnaireInput))
+    : undefined;
+  return {
+    own,
+    rest: own === undefined ? children : parts.filter((part) => part !== own),
+  };
+};
+
+/** One question of the run: a fieldset named by its title, shown while it is the current one. */
+export const QuestionnaireItem = ({
+  children,
+  name,
+  required = false,
+  multiple = false,
+  disabled = false,
+  invalid = false,
+  onStatusChange,
+}: QuestionnaireItemProps) => {
+  const { active, register, flagged, statusOf, sent } =
+    useQuestionnaire("QuestionnaireItem");
+  const element = useRef<HTMLFieldSetElement | null>(null);
+  const [hasChoices, setHasChoices] = useState(false);
+  const [hasDescription, setHasDescription] = useState(false);
+  const titleId = useId();
+  const errorId = useId();
+  const descriptionId = useId();
+  useEffect(() => {
+    const node = element.current;
+    return node === null
+      ? undefined
+      : register(name, { required, disabled, invalid, element: node });
+  }, [register, name, required, disabled, invalid]);
+  const status = statusOf(name);
+  const told = useRef<QuestionnaireItemStatus>("unanswered");
+  useEffect(() => {
+    if (told.current !== status) {
+      told.current = status;
+      onStatusChange?.(status);
+    }
+  }, [status, onStatusChange]);
+  const wrong = invalid || flagged.has(name);
+  const shown = !disabled && active === name;
+  const described = [hasDescription && descriptionId, wrong && errorId]
+    .filter(Boolean)
+    .join(" ");
+  const { own, rest } = ownAmong(children);
+  return (
+    <fieldset
+      ref={element}
+      // A fieldset's own name is its legend; the title stands as a line of the grid instead.
+      aria-labelledby={titleId}
+      aria-describedby={described === "" ? undefined : described}
+      aria-invalid={wrong || undefined}
+      hidden={disabled || (active !== null && !shown)}
+      inert={!shown && active !== null}
+      tabIndex={-1}
+      data-slot="questionnaire-item"
+      data-status={status}
+      data-active={shown || undefined}
+      data-sent={sent || undefined}
+      {...stylex.props(
+        styles.item,
+        active === null && styles.itemPending,
+        (disabled || (active !== null && !shown)) && styles.itemHidden
+      )}
+    >
+      <ItemContext
+        // oxlint-disable-next-line react/jsx-no-constructed-context-values -- compiled
+        value={{
+          name,
+          multiple,
+          titleId,
+          descriptionId,
+          errorId,
+          hasChoices,
+          setHasChoices,
+          hasDescription,
+          setHasDescription,
+          invalid: wrong,
+          own,
+        }}
+      >
+        {rest}
+      </ItemContext>
+    </fieldset>
   );
 };
 

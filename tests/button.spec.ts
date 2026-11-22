@@ -90,6 +90,89 @@ test("an icon-only button shows its name under a pointer and on keyboard focus, 
   ).toBeVisible();
 });
 
+test("an icon-only button in a paragraph draws nothing beside itself at rest, and the page wakes without a fault", async ({
+  page,
+}) => {
+  const faults: string[] = [];
+  page.on("console", (message) => {
+    if (message.type() === "error") {
+      faults.push(message.text());
+    }
+  });
+  page.on("pageerror", (error) => {
+    faults.push(error.message);
+  });
+  await openExample(page, "button", "tooltips");
+  // Nothing in the paragraph but its words and the button: a tooltip's element there, even
+  // unseen, is a <div> in a <p>, which the browser moves out of it.
+  const words = page.getByText("The report is ready.");
+  await expect(words.getByRole("tooltip", { includeHidden: true })).toHaveCount(
+    0
+  );
+  await expect(words.getByRole("button")).toHaveCount(1);
+  const download = page.getByRole("button", { name: "Download the report" });
+  await download.hover();
+  await expect(
+    page.getByRole("tooltip", { name: "Download the report" })
+  ).toBeVisible();
+  await page.mouse.move(0, 0);
+  await expect(
+    page.getByRole("tooltip", { name: "Download the report" })
+  ).toHaveCount(0);
+  expect(faults).toEqual([]);
+});
+
+test("`tooltip` gives other words, which describe the button; `false` gives none", async ({
+  page,
+}) => {
+  await openExample(page, "button", "tooltips");
+  const exported = page.getByRole("button", { name: "Export" });
+  await exported.hover();
+  await expect(page.getByRole("tooltip")).toHaveText("Export as a spreadsheet");
+  await expect(exported).toHaveAccessibleDescription("Export as a spreadsheet");
+  await page.getByRole("button", { name: "Save a copy" }).hover();
+  await expect(page.getByRole("tooltip")).toHaveText(
+    "Saves a copy to your files"
+  );
+  await page.getByRole("button", { name: "Quiet" }).focus();
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Shift+Tab");
+  await expect(page.getByRole("button", { name: "Quiet" })).toBeFocused();
+  await expect(page.getByRole("tooltip")).toHaveCount(0);
+});
+
+test("out of use but kept in focus, an icon-only button still shows its name to the keyboard", async ({
+  page,
+}) => {
+  await openExample(page, "button", "tooltips");
+  await page.getByRole("button", { name: "Save a copy" }).focus();
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("button", { name: "Archive" })).toBeFocused();
+  await expect(page.getByRole("tooltip")).toHaveText("Archive");
+});
+
+test("inside a Tooltip of the caller's, however deep, the button shows that one and never its name", async ({
+  page,
+}) => {
+  await openExample(page, "button", "tooltips");
+  await page.getByRole("button", { name: "Delete" }).hover({ force: true });
+  await expect(page.getByRole("tooltip")).toHaveText(
+    "Only an owner can delete this"
+  );
+});
+
+test("a menu's icon-only trigger shows its name, and not while its menu is open", async ({
+  page,
+}) => {
+  await openExample(page, "dropdown-menu", "danger");
+  const trigger = page.getByRole("button", { name: "Actions for Q3 report" });
+  await trigger.hover();
+  await expect(page.getByRole("tooltip")).toHaveText("Actions for Q3 report");
+  await trigger.click();
+  await expect(page.getByRole("menu")).toBeVisible();
+  await expect(page.getByRole("tooltip")).toHaveCount(0);
+});
+
 test("a Tooltip of the caller's stands in place of the button's own", async ({
   page,
 }) => {

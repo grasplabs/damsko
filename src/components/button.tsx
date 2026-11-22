@@ -20,8 +20,9 @@
 // destructive words and edge, whatever its variant. A page that runs the work elsewhere (a form's
 // submit) gives `status` instead.
 //
-// An icon-only button shows its name (`aria-label`) in a Tooltip of its own under a resting pointer
-// and on keyboard focus, unless it already is a TooltipTrigger's child.
+// `tooltip` gives it a Tooltip of its own, as SidebarMenuButton's: an icon-only button shows its
+// name (`aria-label`) by default, `tooltip={false}` shows none, and words show those. Inside a
+// Tooltip of the caller's it shows none.
 //
 // Drawn by another UI SDK part (`<DialogTrigger asChild><Button /></DialogTrigger>`), it takes that
 // part's props and is only its face: one element is never two UI SDK buttons, which an agent would
@@ -60,7 +61,7 @@ import type { LayoutStyle } from "../lib/utils";
 import { iconVars, layerFooterMarker, motionVars } from "../lib/vars.stylex";
 import { buttonMarker, ghostVars } from "./button.stylex";
 import { Spinner } from "./spinner";
-import { NameTooltip } from "./tooltip";
+import { ControlTooltip } from "./tooltip";
 
 export type ButtonVariant =
   | "default"
@@ -138,6 +139,12 @@ interface ButtonBase extends Omit<
    * `onClick` alone. Whoever runs the work says how it went.
    */
   status?: ActionStatus;
+  /**
+   * Its tooltip, under a resting pointer and on keyboard focus. Left out, a control that is only an
+   * icon shows its `aria-label`; `false` shows none; words or a node show those in its place, on a
+   * control with words too. Inside a Tooltip of your own it shows none.
+   */
+  tooltip?: ReactNode;
   /** Layout only: where it sits and how much room it takes. Its look belongs to `variant` and `size`. */
   style?: LayoutStyle;
 }
@@ -346,6 +353,11 @@ const styles = stylex.create({
       default: ghostVars.ring,
       [FORCED]: { default: null, ":focus-visible": "Highlight" },
     },
+  },
+  // Failed, a `link`: words with no box stay words. The destructive ink, and no underline to press.
+  failedWords: {
+    color: { default: colors.destructive, [FORCED]: "LinkText" },
+    textDecorationLine: "none",
   },
   // The light over a filled button: white at the top, fading to nothing; brighter under a pointer.
   sheen: {
@@ -713,7 +725,8 @@ const ownOf = (
       disabled && !busy && styles.disabled,
       disabled && !busy && variant === "default" && styles.defaultDisabled,
       busy && styles.busy,
-      hasFailed(extra) && styles.failed,
+      hasFailed(extra) &&
+        (variant === "link" ? styles.failedWords : styles.failed),
       style
     ),
     "data-slot": part ?? "button",
@@ -1050,6 +1063,7 @@ const Pressable = ({
   successLabel,
   errorLabel,
   status: held,
+  tooltip: _tooltip,
   onClick,
   style,
   children,
@@ -1155,7 +1169,10 @@ const Pressable = ({
 };
 
 export const Button = (props: ButtonProps) => (
-  <NameTooltip iconOnly={isIconSize(props.size ?? "default")}>
+  <ControlTooltip
+    tooltip={props.tooltip}
+    iconOnly={isIconSize(props.size ?? "default")}
+  >
     <Pressable {...props} />
-  </NameTooltip>
+  </ControlTooltip>
 );

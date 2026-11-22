@@ -363,9 +363,10 @@ test("words of one's own are one more card under the choices, reached by the key
     other.locator("xpath=ancestor::label").boundingBox(),
     last.boundingBox(),
   ]);
-  // The same card, the choices' gap under the last one.
+  // The same card, as tall as the choices, their gap under the last one.
   expect(card?.x).toBe(choice?.x);
   expect(card?.width).toBe(choice?.width);
+  expect(card?.height).toBe(choice?.height);
   expect((card?.y ?? 0) - ((choice?.y ?? 0) + (choice?.height ?? 0))).toBe(8);
   await page.getByRole("radio", { name: /Supplier review/u }).focus();
   await page.keyboard.press("3");

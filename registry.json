@@ -1934,6 +1934,7 @@
       "registryDependencies": [
         "@damsko/button",
         "@damsko/checkbox",
+        "@damsko/input-group",
         "@damsko/lib",
         "@damsko/radio-group",
         "@damsko/textarea"

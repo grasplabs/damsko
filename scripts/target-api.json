@@ -509,7 +509,7 @@
       "TooltipTrigger",
       "TooltipContent",
       "TooltipProvider",
-      "NameTooltip",
+      "ControlTooltip",
       "createTooltipHandle",
       "TooltipHandle",
       "TooltipProps",

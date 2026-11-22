@@ -30,7 +30,7 @@ import {
 } from "../lib/tokens.stylex";
 import type { LayoutStyle } from "../lib/utils";
 import { iconVars, motionVars } from "../lib/vars.stylex";
-import { NameTooltip } from "./tooltip";
+import { ControlTooltip } from "./tooltip";
 
 /**
  * Button's ladder: `xs` 28 alone or in a toolbar; `sm` 32, `default` 36 and `lg` 44 level with a
@@ -51,6 +51,12 @@ interface ToggleOwnProps {
   children?: ReactNode;
   /** Its name when it shows only an icon ("Bold"), shown in a tooltip on hover and keyboard focus. */
   "aria-label"?: string;
+  /**
+   * Its tooltip, under a resting pointer and on keyboard focus. Left out, one that is only an icon
+   * shows its `aria-label`; `false` shows none; words or a node show those in its place. Inside a
+   * Tooltip of your own it shows none.
+   */
+  tooltip?: ReactNode;
   /** Whether it is pressed now, for a toggle your code holds. */
   pressed?: boolean;
   /**
@@ -219,6 +225,7 @@ const Pressable = ({
   children,
   size = "xs",
   variant = "default",
+  tooltip: _tooltip,
   style,
   ...rest
 }: ToggleProps) => (
@@ -243,7 +250,7 @@ const Pressable = ({
 );
 
 export const Toggle = (props: ToggleProps) => (
-  <NameTooltip iconOnly={iconOnly(props.children)}>
+  <ControlTooltip tooltip={props.tooltip} iconOnly={iconOnly(props.children)}>
     <Pressable {...props} />
-  </NameTooltip>
+  </ControlTooltip>
 );
