@@ -6,6 +6,7 @@ import * as stylex from "@stylexjs/stylex";
 import { duration, size } from "./tokens.stylex";
 
 const REDUCED = "@media (prefers-reduced-motion: reduce)";
+const DENSE = "@media (min-resolution: 2dppx)";
 
 /**
  * The two values an icon reads from whoever holds it. StyleX does not let a parent style its
@@ -97,12 +98,18 @@ export const toastRegionMarker = stylex.defineMarker();
  */
 export const layerFooterMarker = stylex.defineMarker();
 
-/**
- * The colour a pixel grid is drawn in as a background: a part sets it where it draws the grid,
- * `{ [pixelVars.color]: colors.foreground }`. A mask needs none.
- */
+/** What a pixel grid reads from the part that draws it. */
 export const pixelVars = stylex.defineVars({
+  /**
+   * The colour a grid is drawn in as a background: a part sets it where it draws the grid,
+   * `{ [pixelVars.color]: colors.foreground }`. A mask needs none.
+   */
   color: "currentColor",
+  /**
+   * The side of a fine pixel, drawn for a dot a pixel and a half across: that, where it is whole
+   * device pixels (a screen of two to a pixel or more), and 1px where it is not.
+   */
+  fine: { default: "1px", [DENSE]: "1.5px" },
 });
 
 /** One square of `side` at the start corner of a tile, with hard edges. */
@@ -110,21 +117,22 @@ const square = (side: string, colour: string) =>
   `conic-gradient(from 270deg at ${side} ${side}, ${colour} 90deg, transparent 0)`;
 
 /**
- * The system's pixel: one square at the start corner of every tile, with hard edges on whole
- * pixels, so a grid of them is sharp at 1x and 2x. Every dither a part draws in CSS is this one
- * (Skeleton's field, Progress's track how far unknown, Page header's banner, a Data grid's range):
- * as a background in `pixelVars.color`, or as a mask over what shows through it. The pitch is the
- * part's own `backgroundSize` or `maskSize`, in whole pixels, repeated from the corner: a tile
- * stretched or spaced to fit would blur the squares.
+ * The system's pixel: a square at the start corner of every tile, as wide as the dot it is drawn
+ * for, with hard edges on whole device pixels, so a grid of them is sharp at 1x and 2x. Every
+ * dither a part draws in CSS as one grid from a corner is this one (Progress's track how far
+ * unknown, Page header's banner, a Data grid's range): as a background in `pixelVars.color`, or as a
+ * mask over what shows through it. The pitch is the part's own `backgroundSize` or `maskSize`, in
+ * whole pixels, and so is where the grid starts: a tile stretched, spaced or centred onto part of a
+ * pixel would blur the squares.
  *
- *   backgroundImage: pixel.fine, backgroundSize: "4px 4px", [pixelVars.color]: colors.foreground
- *   maskImage: pixel.fullMask, maskSize: "4px 4px"
+ *   backgroundImage: pixel.fill, backgroundSize: "4px 4px", [pixelVars.color]: colors.foreground
+ *   maskImage: pixel.mask, maskSize: "3px 3px"
  */
 export const pixel = stylex.defineConsts({
-  /** A 1px square, as a background in `pixelVars.color`: a field at rest. */
-  fine: square("1px", pixelVars.color),
-  /** A 2px square from the same corner, so it stands on the 1px one: a dither that is seen. */
-  full: square("2px", pixelVars.color),
+  /** A 2px square as a background in `pixelVars.color`. */
+  fill: square("2px", pixelVars.color),
   /** The 2px square as a mask: where a light shows, or a ground seen through the dither. */
-  fullMask: square("2px", "#000"),
+  mask: square("2px", "#000"),
+  /** A fine square (`pixelVars.fine`) as a background: a faint field at rest. */
+  fineFill: square(pixelVars.fine, pixelVars.color),
 });

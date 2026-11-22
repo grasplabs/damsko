@@ -484,8 +484,10 @@ const styles = stylex.create({
   // The dither over the wash: lib's one pixel, a 2px square in every space-1.
   inRangeDither: {
     [pixelVars.color]: colors.dataGridRangeDot,
-    backgroundImage: pixel.full,
+    backgroundImage: pixel.fill,
     backgroundSize: `${space[1]} ${space[1]}`,
+    // In the middle of its tile, as the dot it is drawn for.
+    backgroundPosition: "1px 1px",
   },
   edgeEndPine: {
     borderInlineEndColor: {

@@ -360,7 +360,8 @@ export const looks = {
       backgroundColor: { default: siteColors.buildBlock, [FORCED]: "Canvas" },
       // The dither: the system's pixel in every square of the grid, a still background.
       [pixelVars.color]: siteColors.buildDot,
-      backgroundImage: { default: pixel.full, [FORCED]: "none" },
+      backgroundImage: { default: pixel.fill, [FORCED]: "none" },
+      backgroundPosition: "1px 1px",
       backgroundSize: `${siteBuild.dither} ${siteBuild.dither}`,
       outline: {
         default: "none",
@@ -399,7 +400,8 @@ export const looks = {
       },
       // The dither: the system's pixel in every square of the grid, a still background.
       [pixelVars.color]: siteColors.buildGrid,
-      backgroundImage: { default: pixel.full, [FORCED]: "none" },
+      backgroundImage: { default: pixel.fill, [FORCED]: "none" },
+      backgroundPosition: "1px 1px",
       backgroundSize: `${siteBuild.dither} ${siteBuild.dither}`,
     },
     part: {
@@ -421,7 +423,8 @@ export const looks = {
       },
       // The dither: the system's pixel in every square of the grid, a still background.
       [pixelVars.color]: siteColors.buildOutline,
-      backgroundImage: { default: pixel.full, [FORCED]: "none" },
+      backgroundImage: { default: pixel.fill, [FORCED]: "none" },
+      backgroundPosition: "1px 1px",
       backgroundSize: `${siteBuild.dither} ${siteBuild.dither}`,
     },
   }),

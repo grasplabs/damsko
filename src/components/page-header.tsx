@@ -359,7 +359,7 @@ const styles = stylex.create({
       ":dir(rtl)": `radial-gradient(120% 90% at 100% 0%, ${colors.mint}, transparent 70%)`,
     },
     // The dither: lib's one pixel, a 2px square in every 3px.
-    maskImage: pixel.fullMask,
+    maskImage: pixel.mask,
     maskSize: "3px 3px",
     display: { default: "block", [media.forcedColors]: "none" },
   },

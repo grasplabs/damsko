@@ -254,7 +254,7 @@ const styles = stylex.create({
     top: `calc(${space["2"]} + 1lh - ${LEADING} + ${space["1"]})`,
     bottom: `calc(${space["1"]} - ${space["2"]} - ${LEADING})`,
     width: `calc(${size.hairline} * 2)`,
-    backgroundImage: `linear-gradient(currentColor calc(${size.hairline} * 2), transparent 0)`,
+    backgroundImage: `linear-gradient(transparent ${size.hairline}, currentColor ${size.hairline} calc(${size.hairline} * 3), transparent 0)`,
     backgroundSize: `100% ${space["1"]}`,
     color: { default: colors.agentIndicatorRest, [FORCED]: "GrayText" },
     forcedColorAdjust: "none",

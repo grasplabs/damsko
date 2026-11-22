@@ -87,7 +87,7 @@ const styles = stylex.create({
   dither: {
     [pixelVars.color]:
       "light-dark(oklch(0.4321 0.0778 175.187 / 0.16), oklch(0.8005 0.1625 165.25 / 0.11))",
-    backgroundImage: `${pixel.fine}, ${pixel.fine}`,
+    backgroundImage: `${pixel.fineFill}, ${pixel.fineFill}`,
     backgroundSize: "4px 4px, 4px 4px",
     backgroundPosition: "0 0, 2px 2px",
   },

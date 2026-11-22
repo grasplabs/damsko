@@ -50,8 +50,12 @@ for (const [example, status] of [
   });
 }
 
-/** How many colours a picture holds: its PNG, read back in the page. */
-const colours = async (page: Page, png: Buffer) =>
+/**
+ * What a picture of a placeholder at rest holds, its PNG read back in the page: its pixels, the
+ * colour furthest from the commonest one (the ground), the columns and rows they stand in and how
+ * far they are from each of the picture's four edges; and how many colours lie between the two.
+ */
+const field = async (page: Page, png: Buffer) =>
   await page.evaluate(async (base64) => {
     const bytes = Uint8Array.from(
       atob(base64),
@@ -60,14 +64,66 @@ const colours = async (page: Page, png: Buffer) =>
     const bitmap = await createImageBitmap(
       new Blob([bytes], { type: "image/png" })
     );
-    const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
-    const context = canvas.getContext("2d");
+    const { width, height } = bitmap;
+    const context = new OffscreenCanvas(width, height).getContext("2d");
     context?.drawImage(bitmap, 0, 0);
-    const pixels = new Uint32Array(
-      context?.getImageData(0, 0, bitmap.width, bitmap.height).data.buffer ?? []
+    const data = context?.getImageData(0, 0, width, height).data ?? [];
+    const counts = new Map<number, number>();
+    const at = (index: number) =>
+      (data[index * 4] ?? 0) * 65_536 +
+      (data[index * 4 + 1] ?? 0) * 256 +
+      (data[index * 4 + 2] ?? 0);
+    for (let index = 0; index < width * height; index += 1) {
+      counts.set(at(index), (counts.get(at(index)) ?? 0) + 1);
+    }
+    const [ground = 0] =
+      [...counts].toSorted((one, other) => other[1] - one[1])[0] ?? [];
+    const far = (colour: number) =>
+      Math.abs(Math.floor(colour / 65_536) - Math.floor(ground / 65_536)) +
+      Math.abs(
+        (Math.floor(colour / 256) % 256) - (Math.floor(ground / 256) % 256)
+      ) +
+      Math.abs((colour % 256) - (ground % 256));
+    // A pixel is as far from the ground as any colour in the picture, give or take the grain a
+    // browser draws a see-through colour with; a colour part of the way there is a soft edge.
+    const most = Math.max(...[...counts.keys()].map(far));
+    const grain = 6;
+    const lit = (index: number) => far(at(index)) >= most - grain;
+    const soft = [...counts.keys()].filter(
+      (colour) => far(colour) > grain && far(colour) < most - grain
+    ).length;
+    const columns = Array.from({ length: width }, (_, x) =>
+      Array.from({ length: height }, (__, y) => lit(y * width + x)).includes(
+        true
+      )
     );
-    return new Set(pixels).size;
+    const rows = Array.from({ length: height }, (_, y) =>
+      Array.from({ length: width }, (__, x) => lit(y * width + x)).includes(
+        true
+      )
+    );
+    return {
+      bottom: height - 1 - rows.lastIndexOf(true),
+      columns,
+      left: columns.indexOf(true),
+      right: width - 1 - columns.lastIndexOf(true),
+      rows,
+      soft,
+      top: rows.indexOf(true),
+    };
   }, png.toString("base64"));
+
+/** How long the runs of lit columns or rows are: how wide or tall the pixels are. */
+const sides = (lit: boolean[]) => [
+  ...new Set(
+    lit
+      .map((on) => (on ? "1" : " "))
+      .join("")
+      .split(" ")
+      .filter((run) => run !== "")
+      .map((run) => run.length)
+  ),
+];
 
 for (const theme of ["light", "dark"] as const) {
   test(`the field's texture is square pixels, each sharp on the ground (${theme})`, async ({
@@ -75,9 +131,46 @@ for (const theme of ["light", "dark"] as const) {
   }) => {
     await openExample(page, "skeleton", "text", { theme });
     // At rest, lines of text are the ground and their pixels only: a square on whole pixels has
-    // no soft edge, so the picture holds exactly two colours. A round dot shades into the ground.
+    // no soft edge, so the picture holds no colour between the two. A round dot shades into the
+    // ground.
     const lines = page.getByRole("status").locator("xpath=..");
-    expect(await colours(page, await lines.screenshot())).toBe(2);
+    const drawn = await field(page, await lines.screenshot());
+    expect(drawn.soft).toBe(0);
+  });
+}
+
+for (const [example, shape, at] of [
+  ["shapes", "a line", 0],
+  ["shapes", "a rectangle", 1],
+  ["shapes", "a circle", 2],
+  ["text", "a line of a title, 60% wide", 0],
+  ["text", "a line 75% wide", 3],
+  ["layout", "a chart", 3],
+] as const) {
+  test(`the field stands in the middle of its box, in pixels 2px a side (${shape})`, async ({
+    page,
+  }) => {
+    await openExample(page, "skeleton", example);
+    // The field: the box inside the placeholder that its pixels are laid out in.
+    const box = page
+      .getByRole("status")
+      .locator("xpath=following::span[@aria-hidden='true']")
+      .nth(at)
+      .locator("xpath=*[1]");
+    const drawn = await field(page, await box.screenshot());
+    // Every pixel is as wide and as tall as the dot it is drawn for.
+    expect(sides(drawn.columns)).toEqual([2]);
+    expect(sides(drawn.rows)).toEqual([2]);
+    // The field as a whole is as far from the start as from the end, and from the top as from
+    // the foot: its tiles fill the box, the room left over shared out between them.
+    expect(Math.abs(drawn.left - drawn.right)).toBeLessThanOrEqual(0.5);
+    // A box that starts on part of a pixel (a line whose padding is half a pixel) is pictured a
+    // pixel taller than it is.
+    const place = await box.boundingBox();
+    const whole = Number.isInteger(place?.y) && Number.isInteger(place?.height);
+    expect(Math.abs(drawn.top - drawn.bottom)).toBeLessThanOrEqual(
+      whole ? 0.5 : 1
+    );
   });
 }
 

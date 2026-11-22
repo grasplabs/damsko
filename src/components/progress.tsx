@@ -124,12 +124,20 @@ const breathe = stylex.keyframes({
   "50%": { opacity: 0.4 },
 });
 
-// How far unknown, the bar waits as Skeleton's wave does: fine pixels on the track (lib's one
-// pixel, a 1px square in every 3px), and a soft band of light, mint into pine, passing along them.
+// How far unknown, the bar waits as Skeleton's wave does: fine pixels on the track (lib's
+// fine pixel, in every 3px), and a soft band of light, mint into pine, passing along them.
 // Transform only. In dark the pixels take more of the foreground: at 22% they all but vanished on
 // the night ground.
 const UNKNOWN_PIXEL = `light-dark(color-mix(in oklab, ${colors.foreground} 22%, transparent), color-mix(in oklab, ${colors.foreground} 48%, transparent))`;
 const UNKNOWN_PITCH = "3px 3px";
+/**
+ * Where the grid starts, along each side: a pixel stands in the track's middle, as the dots it is
+ * drawn for did (their 3px tiles were centred), on a whole pixel. Centring the tiles themselves puts
+ * a track of an even height on half pixels, a smear. Where a browser lacks the maths the grid starts
+ * at the corner.
+ */
+const MIDDLE = `round(down, calc(50% + 1.5px - ${pixelVars.fine} / 2), 1px)`;
+const UNKNOWN_START = `${MIDDLE} ${MIDDLE}`;
 const UNKNOWN_BAND = `linear-gradient(90deg, transparent 0%, ${colors.mint} 40%, ${colors.pine} 70%, transparent 100%)`;
 
 const styles = stylex.create({
@@ -180,10 +188,10 @@ const styles = stylex.create({
     [pixelVars.color]: UNKNOWN_PIXEL,
     backgroundImage: {
       default: "none",
-      [UNKNOWN]: { default: pixel.fine, [FORCED]: "none" },
+      [UNKNOWN]: { default: pixel.fineFill, [FORCED]: "none" },
     },
-    // From the track's corner, on whole pixels: centred, a track of an even height would blur them.
     backgroundSize: UNKNOWN_PITCH,
+    backgroundPosition: UNKNOWN_START,
     // In forced colours the ground is dropped, so a line draws the track.
     outlineWidth: { default: 0, [FORCED]: 1 },
     outlineStyle: "solid",
@@ -228,8 +236,9 @@ const styles = stylex.create({
     position: "absolute",
     inset: 0,
     display: { default: "block", [FORCED]: "none", [REDUCED]: "none" },
-    maskImage: pixel.fullMask,
+    maskImage: pixel.mask,
     maskSize: UNKNOWN_PITCH,
+    maskPosition: UNKNOWN_START,
   },
   unknownBand: {
     "--progress-line-sign": { default: "1", ":dir(rtl)": "-1" },
