@@ -30,6 +30,7 @@ import {
   size,
   space,
 } from "../lib/tokens.stylex";
+import { className } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { motionVars, pixel, pixelVars } from "../lib/vars.stylex";
 import { progressVars } from "./progress.stylex";
@@ -353,7 +354,7 @@ export const Progress = ({
     )}
     <ProgressTrack {...stylex.props(styles.track, bars[sized])}>
       {/* The class only: UI SDK sets the indicator's width as its own inline style. */}
-      <ProgressIndicator className={stylex.props(styles.indicator).className} />
+      <ProgressIndicator className={className(styles.indicator)} />
       {value === null ? (
         <span aria-hidden="true" {...stylex.props(styles.unknownLit)}>
           <span
@@ -391,7 +392,7 @@ export const ProgressCircle = ({
     )}
     {/* The track is the ring; the indicator part is kept, unseen, so the value stays wired. */}
     <ProgressTrack {...stylex.props(styles.ring, rings[sized])}>
-      <ProgressIndicator className={stylex.props(visuallyHidden).className} />
+      <ProgressIndicator className={className(visuallyHidden)} />
     </ProgressTrack>
     {showLabel && sized === "lg" && value !== null && (
       <ProgressValue aria-hidden="true" {...stylex.props(styles.ringValue)} />

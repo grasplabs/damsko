@@ -58,7 +58,7 @@ import {
   size as sizes,
   space,
 } from "../lib/tokens.stylex";
-import { slotProps } from "../lib/utils";
+import { className, slotProps } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { layerFooterMarker } from "../lib/vars.stylex";
 import { Button } from "./button";
@@ -164,7 +164,7 @@ export const DrawerTrigger = ({
 }: DrawerTriggerProps) => (
   <TriggerPrimitive
     {...rest}
-    className={stylex.props(style).className}
+    className={className(style)}
     {...slotProps(asChild, children)}
   />
 );
@@ -521,7 +521,7 @@ export const DrawerClose = ({
   asChild === true ? (
     <ClosePrimitive
       {...rest}
-      className={stylex.props(style).className}
+      className={className(style)}
       {...slotProps(asChild, children)}
     />
   ) : (

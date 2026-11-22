@@ -61,7 +61,7 @@ import {
 } from "../lib/tokens.stylex";
 // UI SDK places a popup in pixels: popup-gap and popup-gutter, as the generator writes them.
 import { popup } from "../lib/tokens.values";
-import { isInvalid, warnUnnamed } from "../lib/utils";
+import { className, isInvalid, warnUnnamed } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { iconVars, motionVars } from "../lib/vars.stylex";
 import { selectPopupMarker } from "./select.stylex";
@@ -639,9 +639,6 @@ const variantLook = (variant: SelectVariant, state: SelectTriggerState) =>
       ]
     : [];
 const variantFocus = { default: focusField.default, ghost: focusRing } as const;
-
-const className = (...parts: (stylex.StyleXStyles | LayoutStyle)[]) =>
-  stylex.props(...parts).className;
 
 /** An item's quiet line, when the data gives one (`{ value, label, description }`). */
 const descriptionOf = (item: ListItem) =>

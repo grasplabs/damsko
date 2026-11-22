@@ -130,7 +130,7 @@ import {
   space,
 } from "../lib/tokens.stylex";
 import { popup } from "../lib/tokens.values";
-import { announce, assignRef, isThenable } from "../lib/utils";
+import { announce, assignRef, className, isThenable } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { iconVars, menuMarker } from "../lib/vars.stylex";
 import {
@@ -2131,12 +2131,12 @@ export const PromptInputMentionItem = ({
     label={label}
     disabled={disabled}
     className={(state: TriggerMenuItemState) =>
-      stylex.props(
+      className(
         menuStyles.item,
         state.highlighted && menuStyles.highlighted,
         state.disabled && menuStyles.disabled,
         style
-      ).className
+      )
     }
   >
     {icon !== undefined && (

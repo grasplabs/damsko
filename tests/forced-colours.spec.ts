@@ -7,7 +7,7 @@
 // The controls below lose their bound today, each waiting on a design decision; one that comes to
 // keep it may leave the list.
 import { expect, test } from "@playwright/test";
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 
 import { componentExamples, openExample, settled } from "./example.ts";
 
@@ -213,5 +213,67 @@ for (const { example, open } of lists) {
     expect(new Set(colours.inside)).toStrictEqual(
       new Set(colours.inside.length === 0 ? [] : [colours.wanted.words])
     );
+  });
+}
+
+const segmented: {
+  example: string;
+  chosen: (page: Page) => Locator;
+}[] = [
+  {
+    example: "tabs/segmented",
+    chosen: (page) => page.getByRole("tab", { selected: true }).first(),
+  },
+  {
+    example: "toggle/group",
+    chosen: (page) => page.getByRole("button", { pressed: true }).first(),
+  },
+  {
+    example: "theme-toggle/basic",
+    // The radio is unseen: its label draws the chosen segment's words.
+    chosen: (page) =>
+      page
+        .getByRole("radiogroup")
+        .locator("label")
+        .filter({
+          has: page.getByRole("radio", { checked: true }),
+        }),
+  },
+];
+
+for (const { example, chosen } of segmented) {
+  test(`${example}: the chosen segment's words are drawn in the system's highlight text, with no backplate over them`, async ({
+    page,
+  }) => {
+    const [component = "", name = ""] = example.split("/");
+    await openExample(page, component, name);
+    await page.emulateMedia({ forcedColors: "active" });
+    const segment = chosen(page);
+    await expect(segment).toHaveCount(1);
+    await expect(segment).toHaveCSS("forced-color-adjust", "none");
+    const system = await segment.evaluate((node) => {
+      const probe = document.createElement("div");
+      probe.style.backgroundColor = "Highlight";
+      probe.style.color = "HighlightText";
+      node.append(probe);
+      const drawn = getComputedStyle(probe);
+      const wanted = { fill: drawn.backgroundColor, words: drawn.color };
+      probe.remove();
+      return wanted;
+    });
+    // The words turn over a moment: waited for.
+    await expect(segment).toHaveCSS("color", system.words);
+    await expect(segment).toHaveCSS("box-shadow", "none");
+    // The fill is the segment's own, or the pill's that lies under it on the track.
+    await expect
+      .poll(
+        async () =>
+          await segment.evaluate((node) =>
+            [node, node.parentElement?.querySelector(":scope > [aria-hidden]")]
+              .filter((each) => each !== null && each !== undefined)
+              .map((each) => getComputedStyle(each).backgroundColor)
+          )
+      )
+      .toContain(system.fill);
   });
 }

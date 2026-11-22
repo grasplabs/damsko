@@ -40,7 +40,7 @@ import {
   space,
 } from "../lib/tokens.stylex";
 import { durations, popup } from "../lib/tokens.values";
-import { assignRef, slotProps } from "../lib/utils";
+import { assignRef, className, slotProps } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { motionVars } from "../lib/vars.stylex";
 
@@ -224,7 +224,7 @@ export const TooltipTrigger = ({
       {...rest}
       ref={both}
       controller={handle}
-      className={stylex.props(style).className}
+      className={className(style)}
       {...slotProps(asChild, children)}
     />
   );

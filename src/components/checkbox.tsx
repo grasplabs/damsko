@@ -41,7 +41,12 @@ import type { ComponentProps, ReactNode } from "react";
 import { CheckIcon, Icon, MinusIcon } from "../lib/icons";
 import { choiceBoxStyles, choiceHitArea, focusRingOffset } from "../lib/styles";
 import { font, radius, size, space } from "../lib/tokens.stylex";
-import { ChoiceGroupContext, isInvalid, rowWiring } from "../lib/utils";
+import {
+  ChoiceGroupContext,
+  className,
+  isInvalid,
+  rowWiring,
+} from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { iconVars } from "../lib/vars.stylex";
 import { useFieldControl } from "./field";
@@ -170,7 +175,7 @@ const controlClass = (
   nested: boolean,
   style: LayoutStyle | undefined
 ) =>
-  stylex.props(
+  className(
     choiceBoxStyles.control,
     styles.box,
     state.disabled && choiceBoxStyles.disabled,
@@ -178,7 +183,7 @@ const controlClass = (
     nested && styles.nested,
     focusRingOffset,
     style
-  ).className ?? "";
+  ) ?? "";
 
 // The face's look from its state, and whether its own `aria-invalid` makes it wrong.
 const faceProps = (state: CheckboxState, invalid: boolean) => {

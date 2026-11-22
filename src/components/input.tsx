@@ -48,7 +48,7 @@ import {
   size as sizes,
   space,
 } from "../lib/tokens.stylex";
-import { assignRef, isInvalid, warnUnnamed } from "../lib/utils";
+import { assignRef, className, isInvalid, warnUnnamed } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { iconVars } from "../lib/vars.stylex";
 import { InputGroup, InputGroupButton, InputGroupInput } from "./input-group";
@@ -511,12 +511,12 @@ export const PasswordInput = ({
       />
       <PasswordInputToggle
         className={(state: PasswordInputState) =>
-          stylex.props(
+          className(
             passwordStyles.toggle,
             squareStyles[size],
             focusRing,
             state.disabled && inputStyles.disabled
-          ).className
+          )
         }
       >
         {(state: PasswordInputState) => (

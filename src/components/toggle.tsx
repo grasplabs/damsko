@@ -28,6 +28,7 @@ import {
   size as sizes,
   space,
 } from "../lib/tokens.stylex";
+import { className } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { iconVars, motionVars } from "../lib/vars.stylex";
 import { ControlTooltip } from "./tooltip";
@@ -233,7 +234,7 @@ const Pressable = ({
     {...rest}
     data-slot="toggle"
     className={(state: ToggleState) =>
-      stylex.props(
+      className(
         toggleVariants({ variant, size }),
         iconOnly(children) && styles.square,
         !state.disabled && !state.pressed && styles.live,
@@ -241,7 +242,7 @@ const Pressable = ({
         state.disabled && styles.disabled,
         style,
         focusRing
-      ).className
+      )
     }
   >
     <span aria-hidden="true" {...stylex.props(styles.target)} />

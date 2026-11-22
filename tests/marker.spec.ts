@@ -2,19 +2,15 @@ import { expect, test } from "@playwright/test";
 
 import { hasFocusRing, openExample } from "./example.ts";
 
-test("work under way is a status, its icon hidden and its words read", async ({
+test("a status is a status, its icon hidden and its words read", async ({
   page,
 }) => {
   await openExample(page, "marker", "status");
   await expect(
-    page.getByRole("status").filter({ hasText: "Summarising the conversation" })
+    page.getByRole("status").filter({ hasText: "Reconnecting" })
   ).toHaveCount(1);
-  const status = page
-    .getByRole("status")
-    .filter({ hasText: "Summarising the conversation" });
-  expect(await status.ariaSnapshot()).toBe(
-    "- status: Summarising the conversation"
-  );
+  const status = page.getByRole("status").filter({ hasText: "Reconnecting" });
+  expect(await status.ariaSnapshot()).toBe("- status: Reconnecting");
 });
 
 test("a separator's words are read, its rules drawn either side of them", async ({
