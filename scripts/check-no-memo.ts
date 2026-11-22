@@ -3,7 +3,7 @@
 // count: each file is read as code, its comments taken out, before it is searched. Needs no server.
 //
 //   node scripts/check-no-memo.ts
-//   node scripts/check-no-memo.ts -- --only owner-picker            one item (a comma-separated list)
+//   node scripts/check-no-memo.ts -- --only date-picker            one item (a comma-separated list)
 //   node scripts/check-no-memo.ts -- --only sheet --with-deps       and every item of ours it installs with it
 import { parseArgs } from "node:util";
 

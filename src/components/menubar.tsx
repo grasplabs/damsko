@@ -378,7 +378,10 @@ const styles = stylex.create({
       [COARSE]: `calc((${size.controlSm} - ${size.tapTarget}) / 2)`,
     },
   },
+  // In forced colours the trigger draws the system's highlight itself, so the browser puts no
+  // backplate over its words.
   open: {
+    forcedColorAdjust: { default: null, [FORCED]: "none" },
     backgroundColor: {
       default: colors.accentHighlight,
       [FORCED]: "Highlight",
