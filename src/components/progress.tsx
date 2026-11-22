@@ -31,7 +31,7 @@ import {
   space,
 } from "../lib/tokens.stylex";
 import type { LayoutStyle } from "../lib/utils";
-import { motionVars } from "../lib/vars.stylex";
+import { motionVars, pixel, pixelVars } from "../lib/vars.stylex";
 import { progressVars } from "./progress.stylex";
 
 export type ProgressSize = "sm" | "default" | "lg";
@@ -124,11 +124,20 @@ const breathe = stylex.keyframes({
   "50%": { opacity: 0.4 },
 });
 
-// How far unknown, the bar waits as Skeleton's wave does: fine dots on the track, and a soft band
-// of light, mint into pine, passing along them. Transform only. In dark the dots take more of the
-// foreground: at 22% they all but vanished on the night ground.
-const UNKNOWN_DOTS = `radial-gradient(circle at center, light-dark(color-mix(in oklab, ${colors.foreground} 22%, transparent), color-mix(in oklab, ${colors.foreground} 48%, transparent)) 0.6px, transparent 0.9px)`;
-const UNKNOWN_LIT = `radial-gradient(circle at center, ${colors.foreground} 0.9px, transparent 1.3px)`;
+// How far unknown, the bar waits as Skeleton's wave does: fine pixels on the track (lib's
+// fine pixel, in every 3px), and a soft band of light, mint into pine, passing along them.
+// Transform only. In dark the pixels take more of the foreground: at 22% they all but vanished on
+// the night ground.
+const UNKNOWN_PIXEL = `light-dark(color-mix(in oklab, ${colors.foreground} 22%, transparent), color-mix(in oklab, ${colors.foreground} 48%, transparent))`;
+const UNKNOWN_PITCH = "3px 3px";
+/**
+ * Where the grid starts, along each side: a pixel stands in the track's middle, as the dots it is
+ * drawn for did (their 3px tiles were centred), on a whole pixel. Centring the tiles themselves puts
+ * a track of an even height on half pixels, a smear. Where a browser lacks the maths the grid starts
+ * at the corner.
+ */
+const MIDDLE = `round(down, calc(50% + 1.5px - ${pixelVars.fine} / 2), 1px)`;
+const UNKNOWN_START = `${MIDDLE} ${MIDDLE}`;
 const UNKNOWN_BAND = `linear-gradient(90deg, transparent 0%, ${colors.mint} 40%, ${colors.pine} 70%, transparent 100%)`;
 
 const styles = stylex.create({
@@ -176,12 +185,13 @@ const styles = stylex.create({
       default: colors.progressTrack,
       [UNKNOWN]: { default: "transparent", [FORCED]: colors.progressTrack },
     },
+    [pixelVars.color]: UNKNOWN_PIXEL,
     backgroundImage: {
       default: "none",
-      [UNKNOWN]: { default: UNKNOWN_DOTS, [FORCED]: "none" },
+      [UNKNOWN]: { default: pixel.fineFill, [FORCED]: "none" },
     },
-    backgroundSize: "3px 3px",
-    backgroundPosition: "center",
+    backgroundSize: UNKNOWN_PITCH,
+    backgroundPosition: UNKNOWN_START,
     // In forced colours the ground is dropped, so a line draws the track.
     outlineWidth: { default: 0, [FORCED]: 1 },
     outlineStyle: "solid",
@@ -220,15 +230,15 @@ const styles = stylex.create({
     animationTimingFunction: duration.easeInOut,
     animationIterationCount: "infinite",
   },
-  // How far unknown: where the light shows, the track's dots a little larger, standing still while
-  // the band moves under them, so the dots light up rather than slide.
+  // How far unknown: where the light shows, the track's pixels at 2px, standing still while the
+  // band moves under them, so the pixels light up rather than slide.
   unknownLit: {
     position: "absolute",
     inset: 0,
     display: { default: "block", [FORCED]: "none", [REDUCED]: "none" },
-    maskImage: UNKNOWN_LIT,
-    maskSize: "3px 3px",
-    maskPosition: "center",
+    maskImage: pixel.mask,
+    maskSize: UNKNOWN_PITCH,
+    maskPosition: UNKNOWN_START,
   },
   unknownBand: {
     "--progress-line-sign": { default: "1", ":dir(rtl)": "-1" },

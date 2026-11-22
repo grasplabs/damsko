@@ -213,6 +213,9 @@ export interface InlineCitationQuoteProps {
 
 const HOVER = media.hover;
 
+// How far a link's focus ring reaches past its words (focusRingText).
+const RING = `calc(${size.ringOffsetText} - 1px + ${size.ringWidth})`;
+
 const styles = stylex.create({
   citation: { display: "inline" },
   // The chip stands in a line of words: it gives back what it is taller than its own words' line,
@@ -239,7 +242,14 @@ const styles = stylex.create({
   },
   // The empty row Carousel keeps under the slides (its marks are off, its buttons in the header)
   // is taken back, so the card ends at the slide.
-  carousel: { display: "grid", marginBlockEnd: `calc(-1 * ${space["4"]})` },
+  // It reaches RING past the card's column at each side, and its header and its slides stand RING
+  // in: the slides' window clips at its edge, and a link at a slide's start keeps its whole ring.
+  carousel: {
+    display: "grid",
+    marginBlockEnd: `calc(-1 * ${space["4"]})`,
+    marginInline: `calc(-1 * ${RING})`,
+  },
+  inCarousel: { paddingInline: RING },
   header: {
     display: "flex",
     alignItems: "center",
@@ -355,7 +365,7 @@ export const InlineCitationCarouselItem = ({
 }: InlineCitationCarouselItemProps) => (
   <div
     data-slot="inline-citation-carousel-item"
-    {...stylex.props(styles.stack, style)}
+    {...stylex.props(styles.stack, styles.inCarousel, style)}
   >
     {children}
   </div>
@@ -431,7 +441,7 @@ export const InlineCitationCarouselHeader = ({
 }: InlineCitationCarouselHeaderProps) => (
   <div
     data-slot="inline-citation-carousel-header"
-    {...stylex.props(styles.header, style)}
+    {...stylex.props(styles.header, styles.inCarousel, style)}
   >
     {children}
   </div>

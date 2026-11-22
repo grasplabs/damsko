@@ -1,10 +1,12 @@
-// The variables and markers every component shares. StyleX resolves a variable or a marker only
-// when it is imported straight from a .stylex.ts file, so they live here, not in styles.ts.
+// The variables, markers and the pixel every component shares. StyleX resolves a variable or a
+// marker only when it is imported straight from a .stylex.ts file, so they live here, not in
+// styles.ts.
 import * as stylex from "@stylexjs/stylex";
 
 import { duration, size } from "./tokens.stylex";
 
 const REDUCED = "@media (prefers-reduced-motion: reduce)";
+const DENSE = "@media (min-resolution: 2dppx)";
 
 /**
  * The two values an icon reads from whoever holds it. StyleX does not let a parent style its
@@ -102,6 +104,45 @@ export const toastRegionMarker = stylex.defineMarker();
  * every Button in it takes an equal part of the line (button.tsx).
  */
 export const layerFooterMarker = stylex.defineMarker();
+
+/** What a pixel grid reads from the part that draws it. */
+export const pixelVars = stylex.defineVars({
+  /**
+   * The colour a grid is drawn in as a background: a part sets it where it draws the grid,
+   * `{ [pixelVars.color]: colors.foreground }`. A mask needs none.
+   */
+  color: "currentColor",
+  /**
+   * The side of a fine pixel, drawn for a dot a pixel and a half across: that, where it is whole
+   * device pixels (a screen of two to a pixel or more), and 1px where it is not.
+   */
+  fine: { default: "1px", [DENSE]: "1.5px" },
+});
+
+/** One square of `side` at the start corner of a tile, with hard edges. */
+const square = (side: string, colour: string) =>
+  `conic-gradient(from 270deg at ${side} ${side}, ${colour} 90deg, transparent 0)`;
+
+/**
+ * The system's pixel: a square at the start corner of every tile, as wide as the dot it is drawn
+ * for, with hard edges on whole device pixels, so a grid of them is sharp at 1x and 2x. Every
+ * dither a part draws in CSS as one grid from a corner is this one (Progress's track how far
+ * unknown, Page header's banner, a Data grid's range): as a background in `pixelVars.color`, or as a
+ * mask over what shows through it. The pitch is the part's own `backgroundSize` or `maskSize`, in
+ * whole pixels, and so is where the grid starts: a tile stretched, spaced or centred onto part of a
+ * pixel would blur the squares.
+ *
+ *   backgroundImage: pixel.fill, backgroundSize: "4px 4px", [pixelVars.color]: colors.foreground
+ *   maskImage: pixel.mask, maskSize: "3px 3px"
+ */
+export const pixel = stylex.defineConsts({
+  /** A 2px square as a background in `pixelVars.color`. */
+  fill: square("2px", pixelVars.color),
+  /** The 2px square as a mask: where a light shows, or a ground seen through the dither. */
+  mask: square("2px", "#000"),
+  /** A fine square (`pixelVars.fine`) as a background: a faint field at rest. */
+  fineFill: square(pixelVars.fine, pixelVars.color),
+});
 
 /**
  * The marker of a card that holds a Trace row (Tool's): the row's trigger runs the card's width and

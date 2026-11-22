@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { openExample } from "./example.ts";
+import { hasFocusRing, openExample, ringCut } from "./example.ts";
 
 test("it is a region named by its label, with Previous, Next and a mark per page", async ({
   page,
@@ -160,4 +160,22 @@ test("running down, the up and down arrows page it", async ({ page }) => {
     "aria-selected",
     "true"
   );
+});
+
+test("a slide that is a link keeps its whole focus ring inside the slides' window, on the first page and the last", async ({
+  page,
+}) => {
+  await openExample(page, "carousel", "links");
+  const first = page.getByRole("link", { name: "Studio A" });
+  await page.keyboard.press("Tab");
+  await expect(first).toBeFocused();
+  expect(await hasFocusRing(first)).toBe(true);
+  expect(await ringCut(first)).toBeLessThanOrEqual(0);
+  await page.getByRole("tab", { name: "Page 2" }).click();
+  const last = page.getByRole("link", { name: "Workshop" });
+  await expect(last).toBeInViewport({ ratio: 1 });
+  await page.getByRole("tab", { name: "Page 2" }).press("Shift+Tab");
+  await expect(last).toBeFocused();
+  expect(await hasFocusRing(last)).toBe(true);
+  expect(await ringCut(last)).toBeLessThanOrEqual(0);
 });
