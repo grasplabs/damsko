@@ -33,6 +33,7 @@ import {
 } from "../lib/tokens.stylex";
 import { slotProps } from "../lib/utils";
 import type { LayoutStyle, Orientation } from "../lib/utils";
+import { ringInsetMarker } from "../lib/vars.stylex";
 import { Separator } from "./separator";
 
 /** Every prop a ButtonGroup takes. */
@@ -168,7 +169,12 @@ export const ButtonGroup = ({
       // oxlint-disable-next-line jsx-a11y/role-supports-aria-props -- screen readers read the direction of a group of buttons
       aria-orientation={orientation === "vertical" ? "vertical" : undefined}
       data-slot="button-group"
-      {...stylex.props(styles.group, styles[orientation], style)}
+      {...stylex.props(
+        styles.group,
+        styles[orientation],
+        ringInsetMarker,
+        style
+      )}
     >
       {children}
     </div>

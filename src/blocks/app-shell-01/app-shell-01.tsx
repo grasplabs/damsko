@@ -145,6 +145,9 @@ const styles = stylex.create({
     alignItems: "center",
     gap: space["2"],
     minWidth: 0,
+    // Room at the end for the renamable name's own padding, which reaches a step past its words:
+    // clipped, the keyboard's ring lost its end.
+    paddingInlineEnd: space["1"],
     overflow: "hidden",
   },
   actions: {

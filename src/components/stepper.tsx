@@ -137,12 +137,15 @@ const travelDown = stylex.keyframes({
 /** How far a line between two steps stops short of each step's middle: past the current step's
  * ring, and the line's own gap. */
 const LINE_OFF = `(${size.stepperDotActive} / 2 + ${size.stepperRingGap} + ${size.stepperRing} + ${space.stepperLineGap})`;
-/** The current step's ring, across: the mark is as tall as it. */
-const RING = `(${size.stepperDotActive} + 2 * (${size.stepperRingGap} + ${size.stepperRing}))`;
+/** The room the current step's ring is given, across: the mark is as tall as it. The ring is 19px
+ * (the dot, and its gap and stroke on both sides); its room is a pixel more, an even number as the
+ * dot (8 or 10px) and the line (2px) are, so each stands on whole pixels about one middle: an odd
+ * room would put that middle half a pixel off the dot's and the line's. */
+const ROOM = `(${size.stepperDotActive} + 2 * (${size.stepperRingGap} + ${size.stepperRing}) + 1px)`;
 /** Across, where the dots stand in their column: the start edge, the name under it from the same
  * edge; the middle of the dot, from the column's start and top. */
 const DOT_X = `(${size.stepperDotActive} / 2)`;
-const DOT_Y = `(${RING} / 2)`;
+const DOT_Y = `(${ROOM} / 2)`;
 const MARK = size.stepperMark;
 
 // Down, the room between one step and the next: a gap between equal rows, not padding under each
@@ -171,7 +174,7 @@ const styles = stylex.create({
   // start edge to the last one's end edge; a phone keeps the whole width.
   pitch: (count: number) => ({
     width: {
-      default: `calc(${count - 1} * ${size.stepperPitch} + ${RING})`,
+      default: `calc(${count - 1} * ${size.stepperPitch} + ${ROOM})`,
       [PHONE]: "100%",
     },
     maxWidth: "100%",
@@ -181,7 +184,7 @@ const styles = stylex.create({
   // the whole width, each dot on its column's start edge.
   pitchRoot: {
     marginInline: {
-      default: `calc((${RING} - ${size.stepperPitch}) / 2)`,
+      default: `calc((${ROOM} - ${size.stepperPitch}) / 2)`,
       [PHONE]: 0,
     },
   },
@@ -252,15 +255,16 @@ const styles = stylex.create({
     justifyItems: "start",
     textAlign: "start",
   },
-  // The mark across: as wide as the current dot and as tall as its ring, at the start of the column.
+  // The mark across: as wide as the current dot and as tall as its ring's room, at the start of the
+  // column.
   markAcross: {
     width: size.stepperDotActive,
-    height: RING,
+    height: `calc${ROOM}`,
   },
-  // The marks alone: as wide as the ring too, so the dot stands in the middle of its pitch and the
-  // line as far from the step before as from the step after. On a phone, as with names.
+  // The marks alone: as wide as the ring's room too, so the dot stands in the middle of its pitch
+  // and the line as far from the step before as from the step after. On a phone, as with names.
   markPitched: {
-    width: { default: RING, [PHONE]: size.stepperDotActive },
+    width: { default: `calc${ROOM}`, [PHONE]: size.stepperDotActive },
   },
   // A finger needs 44px: an unseen area round the press makes up what it is shorter, without making
   // the row taller than what it shows.
@@ -399,15 +403,9 @@ const styles = stylex.create({
     width: MARK,
     height: MARK,
   },
-  // Something stacked in the mark: all its layers share one cell.
-  layer: {
-    gridArea: "1 / 1",
-    display: "grid",
-    placeItems: "center",
-  },
-  // A small dot in the mark's box, the same box in every state. In forced colours the marks keep
-  // their own system colours and their shapes (filled, open, ringed, square) tell the states apart
-  // without colour.
+  // A small dot in the middle of the mark's box, the same box in every state. In forced colours the
+  // marks keep their own system colours and their shapes (filled, open, ringed, square) tell the
+  // states apart without colour.
   dot: {
     boxSizing: "border-box",
     width: size.stepperDot,
@@ -417,9 +415,18 @@ const styles = stylex.create({
     // is a change of colour and size and nothing blinks out on the way.
     borderWidth: size.stepperRing,
     borderStyle: "solid",
+    // The current step's one quiet ring is the dot's own outline, not a second box: a browser sets
+    // each box's edges on whole device pixels by itself, so two boxes of unlike size (a 19px ring
+    // round a 10px dot) land half a pixel apart, while an outline is drawn from the dot's own edges
+    // and is about its middle at every pixel density and zoom. It takes no room, so the mark's box
+    // is the same in every state.
+    outlineWidth: size.stepperRing,
+    outlineStyle: "solid",
+    outlineColor: "transparent",
+    outlineOffset: size.stepperRingGap,
     forcedColorAdjust: "none",
     transitionProperty:
-      "width, height, background-color, border-color, border-radius",
+      "width, height, background-color, border-color, border-radius, outline-color",
     transitionDuration: motionVars.ui,
     transitionTimingFunction: duration.ease,
   },
@@ -444,25 +451,13 @@ const styles = stylex.create({
     backgroundColor: { default: colors.destructive, [FORCED]: "CanvasText" },
     borderColor: { default: colors.destructive, [FORCED]: "CanvasText" },
   },
-  // The current step's one quiet ring, round its dot; it gives way to the working light.
-  ring: {
-    boxSizing: "border-box",
-    width: `calc${RING}`,
-    height: `calc${RING}`,
-    borderRadius: radius.circle,
-    borderWidth: size.stepperRing,
-    borderStyle: "solid",
-    borderColor: {
+  // The current step's ring shows; it gives way to the working light.
+  dotRinged: {
+    outlineColor: {
       default: `color-mix(in oklch, ${colors.mintDeep} 55%, transparent)`,
       [FORCED]: "Highlight",
     },
-    forcedColorAdjust: "none",
-    opacity: 0,
-    transitionProperty: "opacity",
-    transitionDuration: motionVars.ui,
-    transitionTimingFunction: duration.ease,
   },
-  ringOn: { opacity: 1 },
   // ---- What lies behind the steps: the line, its fill, the light ----
   behind: {
     position: "absolute",
@@ -638,7 +633,7 @@ const ringOf = (ring: Ring) => {
   return ring === "focus" && styles.markFocus;
 };
 
-/** A step's mark: the dot, and round the current one its ring while it is not at work. */
+/** A step's mark: the dot, round the current one its ring while it is not at work. */
 const Mark = ({
   status,
   ring,
@@ -664,12 +659,11 @@ const Mark = ({
   >
     <span
       {...stylex.props(
-        styles.layer,
-        styles.ring,
-        status === "active" && !loading && styles.ringOn
+        styles.dot,
+        dotStyles[status],
+        status === "active" && !loading && styles.dotRinged
       )}
     />
-    <span {...stylex.props(styles.layer, styles.dot, dotStyles[status])} />
   </span>
 );
 

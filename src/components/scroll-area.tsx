@@ -69,7 +69,7 @@ export interface ScrollAreaProps {
 
 // The shared ring's line, drawn here on the area round the viewport that has focus.
 const ring = `${size.ringWidth} solid ${colors.ring}`;
-const forcedRing = `calc(2 * ${size.ringWidth}) solid Highlight`;
+const forcedRing = `calc(2 * ${size.lineStrong}) solid Highlight`;
 const FORCED = media.forcedColors;
 
 const styles = stylex.create({

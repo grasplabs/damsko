@@ -235,6 +235,113 @@ export const settled = async (page: Page): Promise<void> => {
   });
 };
 
+/** One thing drawn: pixels that touch, of another colour than the ground, in CSS pixels. */
+export interface DrawnPart {
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+  /** It touches the edge of what was looked at: it goes on past it. */
+  cut: boolean;
+}
+
+/**
+ * What is drawn in a part of the page, read from its pixels: each run of touching pixels whose
+ * colour is not the ground's (the colour at that part's first corner), with the box round it.
+ * Where a shape stands as the screen shows it, which its layout box does not say: a browser sets
+ * every box's edges on whole device pixels by itself.
+ */
+export const drawnParts = async (
+  page: Page,
+  clip: { x: number; y: number; width: number; height: number }
+): Promise<DrawnPart[]> => {
+  const shot = await page.screenshot({ clip, fullPage: true, scale: "device" });
+  return await page.evaluate(
+    async ({ png, across }) => {
+      const bytes = Uint8Array.from(
+        atob(png),
+        (char) => char.codePointAt(0) ?? 0
+      );
+      const bitmap = await createImageBitmap(
+        new Blob([bytes], { type: "image/png" })
+      );
+      const { width, height } = bitmap;
+      const context = new OffscreenCanvas(width, height).getContext("2d");
+      if (context === null) {
+        throw new Error("No canvas to read the picture with.");
+      }
+      context.drawImage(bitmap, 0, 0);
+      const { data } = context.getImageData(0, 0, width, height);
+      const channel = (pixel: number, at: number): number =>
+        data[pixel * 4 + at] ?? 0;
+      // Far enough from the ground's colour to be drawn, not an edge's faint blend into it.
+      const drawn = (pixel: number): boolean =>
+        Math.abs(channel(pixel, 0) - channel(0, 0)) +
+          Math.abs(channel(pixel, 1) - channel(0, 1)) +
+          Math.abs(channel(pixel, 2) - channel(0, 2)) >
+        12;
+      const seen = new Set<number>();
+      const parts: DrawnPart[] = [];
+      for (let first = 0; first < width * height; first += 1) {
+        if (drawn(first) && !seen.has(first)) {
+          const part = { left: width, top: height, right: 0, bottom: 0 };
+          const todo = [first];
+          seen.add(first);
+          for (
+            let pixel = todo.pop();
+            pixel !== undefined;
+            pixel = todo.pop()
+          ) {
+            const x = pixel % width;
+            const y = (pixel - x) / width;
+            part.left = Math.min(part.left, x);
+            part.top = Math.min(part.top, y);
+            part.right = Math.max(part.right, x + 1);
+            part.bottom = Math.max(part.bottom, y + 1);
+            for (const [dx, dy] of [
+              [-1, -1],
+              [0, -1],
+              [1, -1],
+              [-1, 0],
+              [1, 0],
+              [-1, 1],
+              [0, 1],
+              [1, 1],
+            ] as const) {
+              const next = (y + dy) * width + x + dx;
+              if (
+                x + dx >= 0 &&
+                x + dx < width &&
+                y + dy >= 0 &&
+                y + dy < height &&
+                drawn(next) &&
+                !seen.has(next)
+              ) {
+                seen.add(next);
+                todo.push(next);
+              }
+            }
+          }
+          const scale = width / across;
+          parts.push({
+            left: part.left / scale,
+            top: part.top / scale,
+            right: part.right / scale,
+            bottom: part.bottom / scale,
+            cut:
+              part.left === 0 ||
+              part.top === 0 ||
+              part.right === width ||
+              part.bottom === height,
+          });
+        }
+      }
+      return parts;
+    },
+    { png: shot.toString("base64"), across: clip.width }
+  );
+};
+
 /**
  * Where what an element draws starts and ends across the page: its words, its marks and any box
  * inside it with a fill, an edge or a shadow, not the element's own box (a trigger's fill under the

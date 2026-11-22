@@ -1,7 +1,12 @@
 import { expect, test } from "@playwright/test";
 import type { Locator, Page } from "@playwright/test";
 
-import { hasFocusRing, listenToLiveRegions, openExample } from "./example.ts";
+import {
+  drawnParts,
+  hasFocusRing,
+  listenToLiveRegions,
+  openExample,
+} from "./example.ts";
 
 test("each step says its status in words, not only by its mark", async ({
   page,
@@ -240,6 +245,45 @@ test("a plan's line names the goal and the progress, says it is working, and ope
   await expect(row).toHaveAttribute("aria-expanded", "false");
   await expect(step).toBeHidden();
 });
+
+for (const scale of [1, 2]) {
+  test(`a step's dot stands on the middle of the line that joins the steps, at ${scale}x`, async ({
+    browser,
+  }) => {
+    const page = await browser.newPage({
+      deviceScaleFactor: scale,
+      reducedMotion: "reduce",
+    });
+    await openExample(page, "trace", "steps");
+    const box = await page
+      .getByText("Share the brief with the team", { exact: true })
+      .locator("..")
+      .boundingBox();
+    if (box === null) {
+      throw new Error("The step is not drawn.");
+    }
+    // The step's seat, clear of its words: its dot, and above it the fine dots of the line.
+    const parts = await drawnParts(page, {
+      x: box.x - 2,
+      y: box.y - 8,
+      width: 20,
+      height: box.height + 8,
+    });
+    const [dot, ...line] = parts.toSorted(
+      (a, b) => b.right - b.left - (a.right - a.left)
+    );
+    if (dot === undefined) {
+      throw new Error("No dot is drawn.");
+    }
+    expect(line.length).toBeGreaterThan(0);
+    for (const fine of line) {
+      expect(
+        Math.abs((fine.left + fine.right - dot.left - dot.right) / 2)
+      ).toBeLessThan(0.5);
+    }
+    await page.close();
+  });
+}
 
 test("a queue's rows are named by their count and open on their lists; a waiting item and a done one say so in words", async ({
   page,

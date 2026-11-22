@@ -892,7 +892,7 @@ const levelStyles = stylex.create({
       default: "none",
       ":has(:focus-visible)": {
         default: `${size.ringWidth} solid ${colors.ring}`,
-        [FORCED]: `calc(2 * ${size.ringWidth}) solid Highlight`,
+        [FORCED]: `calc(2 * ${size.lineStrong}) solid Highlight`,
       },
     },
     outlineOffset: size.ringOffsetMark,

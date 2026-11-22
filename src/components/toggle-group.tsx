@@ -28,6 +28,7 @@ import {
   space,
 } from "../lib/tokens.stylex";
 import type { LayoutStyle } from "../lib/utils";
+import { ringInsetMarker } from "../lib/vars.stylex";
 import { iconOnly, toggleVariants } from "./toggle";
 import type { ToggleSize } from "./toggle";
 
@@ -245,6 +246,7 @@ export const ToggleGroup = ({
             styles.group,
             fullWidth && styles.fullWidth,
             upright && styles.vertical,
+            ringInsetMarker,
             style
           )}
         >
