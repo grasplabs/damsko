@@ -1761,7 +1761,7 @@
       "name": "model-selector",
       "type": "registry:ui",
       "title": "Model selector",
-      "description": "The model an assistant answers with, picked from a searchable list beside its trigger.",
+      "description": "The model an assistant answers with, and how hard it thinks, chosen from one chip that opens one panel.",
       "dependencies": [
         "@stylexjs/stylex",
         "@ui-sdk/core",
@@ -1770,9 +1770,10 @@
       "registryDependencies": [
         "@damsko/brand-icon",
         "@damsko/button",
-        "@damsko/command",
         "@damsko/lib",
-        "@damsko/popover"
+        "@damsko/popover",
+        "@damsko/toggle-group",
+        "@damsko/tooltip"
       ],
       "docs": "https://damsko.joingrasp.com/components/model-selector",
       "files": [
