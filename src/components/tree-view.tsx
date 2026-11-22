@@ -44,6 +44,7 @@ import {
   size,
   space,
 } from "../lib/tokens.stylex";
+import { className } from "../lib/utils";
 import { iconVars, motionVars } from "../lib/vars.stylex";
 import {
   InputGroup,
@@ -536,7 +537,7 @@ const RowInside = ({
       tabIndex: -1,
       "data-tree-view-link": "",
       "aria-current": current ? "page" : undefined,
-      className: stylex.props(styles.link).className,
+      className: className(styles.link),
       children: inside,
     },
     node.render

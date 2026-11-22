@@ -18,15 +18,15 @@ import type { ToggleState } from "@ui-sdk/react/toggle";
 import { createContext, useContext } from "react";
 import type { ComponentProps, ReactNode } from "react";
 
-import { focusRing } from "../lib/styles";
+import { focusRing, segmentedStyles } from "../lib/styles";
 import {
   colors,
   media,
   radius,
-  shadow,
   size as sizes,
   space,
 } from "../lib/tokens.stylex";
+import { className } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { ringInsetMarker } from "../lib/vars.stylex";
 import { iconOnly, toggleVariants } from "./toggle";
@@ -120,7 +120,6 @@ export type ToggleGroupItemProps = ToggleGroupItemOwnProps &
   >;
 
 const HOVER = media.hover;
-const FORCED = media.forcedColors;
 
 const styles = stylex.create({
   group: {
@@ -129,14 +128,6 @@ const styles = stylex.create({
     gap: sizes.toggleGap,
     boxSizing: "border-box",
     maxWidth: "100%",
-    // The same room on every side, so the pressed item stands evenly inside the track.
-    padding: space.toggleTrackPadding,
-    borderRadius: radius.base,
-    cornerShape: radius.shape,
-    backgroundColor: colors.muted,
-    // Forced colours drop the fill: a line keeps the track.
-    outline: { default: "none", [FORCED]: "1px solid CanvasText" },
-    outlineOffset: "-1px",
   },
   vertical: {
     flexDirection: "column",
@@ -185,19 +176,6 @@ const styles = stylex.create({
       ":hover": { default: null, [HOVER]: colors.foreground },
     },
     backgroundColor: "transparent",
-  },
-  // Pressed: raised out of the track with the low lift, so the choice is a shape and not a colour
-  // alone.
-  raised: {
-    color: { default: colors.foreground, [FORCED]: "HighlightText" },
-    backgroundColor: { default: colors.tabBgSelected, [FORCED]: "Highlight" },
-    // In dark the chosen fill is barely off the track; the veil a chosen segmented tab wears there
-    // lifts it as clearly.
-    backgroundImage: {
-      default: `linear-gradient(light-dark(transparent, ${colors.accentActive}), light-dark(transparent, ${colors.accentActive}))`,
-      [FORCED]: "none",
-    },
-    boxShadow: shadow.sm,
   },
   disabled: {
     opacity: sizes.opacityDisabled,
@@ -250,6 +228,7 @@ export const ToggleGroup = ({
           {...rest}
           data-slot="toggle-group"
           {...stylex.props(
+            segmentedStyles.track,
             styles.group,
             fullWidth && styles.fullWidth,
             upright && styles.vertical,
@@ -279,18 +258,18 @@ const Item = ({
       {...rest}
       data-slot="toggle-group-item"
       className={(state: ToggleState) =>
-        stylex.props(
+        className(
           toggleVariants({ size }),
           sizeStyle(size),
           styles.item,
           icon && styles.square,
           shared && styles.shared,
           !state.disabled && !state.pressed && styles.live,
-          state.pressed && styles.raised,
+          state.pressed && segmentedStyles.chosen,
           state.disabled && styles.disabled,
           style,
           focusRing
-        ).className
+        )
       }
     >
       <span aria-hidden="true" {...stylex.props(styles.target)} />

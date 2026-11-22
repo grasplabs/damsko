@@ -56,7 +56,7 @@ import {
   space,
 } from "../lib/tokens.stylex";
 import { popup } from "../lib/tokens.values";
-import { listOf, slotProps, slotWords } from "../lib/utils";
+import { className, listOf, slotProps, slotWords } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { iconVars, motionVars } from "../lib/vars.stylex";
 
@@ -577,14 +577,14 @@ export const NavigationMenuTrigger = ({
       disabled={disabled}
       render={render}
       className={(state: NavigationMenuTriggerState) =>
-        stylex.props(
+        className(
           styles.trigger,
           here && styles.active,
           state.open && styles.open,
           state.disabled && styles.disabled,
           focusRing,
           style
-        ).className
+        )
       }
     >
       {(state: NavigationMenuTriggerState) => (

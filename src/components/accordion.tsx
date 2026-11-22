@@ -32,6 +32,7 @@ import type { ReactNode } from "react";
 import { ChevronDownIcon, Icon } from "../lib/icons";
 import { disclosureStyles, focusRing, tapTarget } from "../lib/styles";
 import { colors, font, media, size, space } from "../lib/tokens.stylex";
+import { className } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 
 /** Every prop an Accordion takes. */
@@ -118,13 +119,6 @@ const styles = stylex.create({
     margin: 0,
     fontSize: "inherit",
     fontWeight: "inherit",
-  },
-  height: {
-    height: {
-      default: "var(--accordion-panel-height)",
-      ":is([data-starting-style], [data-ending-style])": 0,
-      [media.noScript]: "auto",
-    },
   },
   // The words in an open panel. No frame: the heading above is enough to hold them. They start
   // where its title does, and stop where its chevron does.
@@ -238,9 +232,11 @@ export const AccordionContent = ({
     <AccordionPanel
       render={<div data-slot="accordion-content" />}
       hiddenUntilFound={!disabled}
-      className={
-        stylex.props(disclosureStyles.panel, styles.height, style).className
-      }
+      className={className(
+        disclosureStyles.panel,
+        disclosureStyles.quiet,
+        style
+      )}
     >
       <div {...stylex.props(disclosureStyles.body, styles.body)}>
         {children}

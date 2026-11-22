@@ -39,6 +39,7 @@ import {
   size as sizes,
   space,
 } from "../lib/tokens.stylex";
+import { className } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { focusMarker, iconVars } from "../lib/vars.stylex";
 import { otpMarker } from "./input-otp.stylex";
@@ -295,13 +296,13 @@ export const InputOTP = ({
     }
     // Disabled by its own prop, its Field or a <fieldset>: UI SDK's state knows which.
     className={(state: OTPInputState) =>
-      stylex.props(
+      className(
         otpMarker,
         focusMarker,
         styles.root,
         state.disabled && styles.rootDisabled,
         style
-      ).className ?? ""
+      ) ?? ""
     }
   >
     <SlotSize value={size}>
@@ -327,14 +328,14 @@ const slotClass = (
   state: OTPInputSlotState,
   style: LayoutStyle | undefined
 ) =>
-  stylex.props(
+  className(
     styles.slot,
     size === "lg" ? styles.lg : styles.default,
     readOnly && !state.disabled && styles.readOnly,
     state.active && styles.active,
     state.active && focusField.slot,
     style
-  ).className ?? "";
+  ) ?? "";
 
 /** One square: the character at `index`, and the focus edge when typing goes there. */
 export const InputOTPSlot = ({ index, style }: InputOTPSlotProps) => {

@@ -56,7 +56,7 @@ import {
   size,
   space,
 } from "../lib/tokens.stylex";
-import { announce } from "../lib/utils";
+import { announce, className } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { fieldControlMarker, iconVars, motionVars } from "../lib/vars.stylex";
 import { FieldError, useFieldControl } from "./field";
@@ -809,7 +809,7 @@ const controlClass = (
   life: ActionStatus,
   style: LayoutStyle | undefined
 ) =>
-  stylex.props(
+  className(
     styles.control,
     state.disabled && styles.disabled,
     state.readOnly && !state.disabled && styles.still,
@@ -817,7 +817,7 @@ const controlClass = (
     focusRingOffset,
     styles.inRow,
     style
-  ).className ?? "";
+  ) ?? "";
 
 export const Switch = (allProps: SwitchProps) => {
   // SAFETY: SwitchProps is this shape in each of its two branches; the cast lets one destructure

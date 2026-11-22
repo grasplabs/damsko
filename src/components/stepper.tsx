@@ -315,7 +315,7 @@ const styles = stylex.create({
       default: "none",
       [stylex.when.ancestor(":focus-visible", stepMarker)]: {
         default: `${size.ringWidth} solid ${colors.ring}`,
-        [FORCED]: `calc(2 * ${size.ringWidth}) solid Highlight`,
+        [FORCED]: `calc(2 * ${size.lineStrong}) solid Highlight`,
       },
     },
     outlineOffset: size.ringOffset,
@@ -337,7 +337,7 @@ const styles = stylex.create({
       default: "none",
       [stylex.when.ancestor(":focus-visible", stepMarker)]: {
         default: `${size.ringWidth} solid ${colors.ring}`,
-        [FORCED]: `calc(2 * ${size.ringWidth}) solid Highlight`,
+        [FORCED]: `calc(2 * ${size.lineStrong}) solid Highlight`,
       },
     },
     outlineOffset: size.ringOffset,
