@@ -16,7 +16,7 @@ Built as shadcn's Tool pattern is, on [Trace](/components/trace): `Tool` is a Tr
 
 ## Every state
 
-`state` is the AI SDK tool part's: `input-streaming`, `input-available`, `approval-requested`, `approval-responded`, `output-available`, `output-error` and `output-denied`. Each sets the line's status, as shadcn's pattern maps it: running while the input comes and the call works, waiting on an approval, failed on an error; the title says the call in the tense of its state. Awaiting approval, Responded and Denied, which a status cannot say, follow the title in words. A state this version does not know is drawn neutral, its name after the title.
+`state` is the AI SDK tool part's: `input-streaming`, `input-available`, `approval-requested`, `approval-responded`, `output-available`, `output-error` and `output-denied`. Each sets the line's status, as shadcn's pattern maps it: running while the input comes and the call works, waiting on an approval, failed on an error; the title says the call in the tense of its state. Every state shows as a Badge after the title, in its colour and with its mark: Pending, Running, Awaiting approval, Responded, Completed, Error and Denied. A screen reader hears the line's status, and the Badge's words for the states a status cannot say (Awaiting approval, Responded, Denied). A state this version does not know is a neutral Badge with its own name.
 
 <Stage path="tool/states" label="Every state" />
 
@@ -71,19 +71,19 @@ The call is said once, when it finishes or fails. Press Next to move the call on
       group: "Header",
       key: "Line",
       value:
-        "A Trace line that opens: the tool's mark, its title or name in the line's status, the state in words where the status cannot say it",
+        "A Trace line that opens, the card's width with no fill under the pointer: the tool's mark, its title or name in the line's status, the state's Badge (`sm`) after it",
       tokens: ["muted", "foreground"],
     },
     {
       group: "Content",
       key: "Input and output",
       value:
-        'Small code blocks (`size="sm"`), no line numbers, wrapping, folded past 12 lines; loaded the first time the call opens',
+        "Code blocks at their default size, no line numbers, wrapping, folded past 12 lines; loaded the first time the call opens",
     },
     {
       group: "Content",
       key: "Error",
-      value: "A small destructive code block, named Error",
+      value: "A destructive code block, named Error",
       tokens: ["destructive"],
     },
   ]}

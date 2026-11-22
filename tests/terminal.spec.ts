@@ -1,6 +1,12 @@
 import { expect, test } from "@playwright/test";
 
-import { hasFocusRing, listenToLiveRegions, openExample } from "./example.ts";
+import {
+  drawnEdges,
+  hasFocusRing,
+  listenToLiveRegions,
+  openExample,
+  panelOf,
+} from "./example.ts";
 
 test("the command's line opens and closes its output, and says so with aria-expanded", async ({
   page,
@@ -99,4 +105,23 @@ test("while it runs the line opens on its output, follows its end, and is said o
   const ran = page.getByRole("button", { name: "Ran pnpm test" });
   await expect(ran).toHaveAttribute("aria-expanded", "true");
   await expect.poll(said).toStrictEqual(["Ran pnpm test"]);
+});
+
+test("what opens under the line starts on the line's own start edge, its mark's, and ends where the header's last button does", async ({
+  page,
+}) => {
+  await openExample(page, "terminal", "colours");
+  const line = page.getByRole("button", { name: "Terminal" });
+  if ((await line.getAttribute("aria-expanded")) === "false") {
+    await line.press("Enter");
+  }
+  const panel = await panelOf(line);
+  await expect(panel).toBeVisible();
+  const header = await drawnEdges(line);
+  const body = await drawnEdges(panel);
+  expect(Math.abs(body.start - header.start)).toBeLessThanOrEqual(1);
+  const last = await drawnEdges(
+    page.getByRole("button", { name: "Clear the output" })
+  );
+  expect(Math.abs(body.end - last.end)).toBeLessThanOrEqual(1);
 });

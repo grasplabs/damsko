@@ -1,8 +1,8 @@
 // Confirmation: a step that waits for a person's yes, from shadcn's Confirmation pattern
-// (content/docs/ai-elements/base/confirmation.mdx), built as it builds it: an outlined small Item,
-// the title its ItemTitle, the answers its ItemActions and each answer a small Button. The title and
-// the answers share a row while there is room, the answers at its end; what the step touches
-// (ConfirmationDetails) takes a line of its own between them. It knows only the state it is given,
+// (content/docs/ai-elements/base/confirmation.mdx), with its parts: the title, the answers and each
+// answer a small Button. shadcn draws it as an outlined Item; Damsko keeps the original's look, the
+// quiet tint of an Alert, in one column: the title, what the step touches (ConfirmationDetails),
+// then the answers at the column's end. It knows only the state it is given,
 // the AI SDK's tool state and its approval:
 // while approval is requested it says the request and offers the answers; once answered it says what
 // was decided, and the answers go.
@@ -41,10 +41,10 @@ import { colors, font, size, space } from "../lib/tokens.stylex";
 import { announce } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { iconVars } from "../lib/vars.stylex";
+import { Alert } from "./alert";
 import { Button } from "./button";
 import type { ButtonVariant } from "./button";
 import { HoldButton } from "./hold-button";
-import { Item, ItemActions, ItemContent, ItemTitle } from "./item";
 import type { ToolState } from "./tool";
 
 /** The approval the step waits on: its id, and once answered whether it was approved, and why. */
@@ -170,19 +170,19 @@ const styles = stylex.create({
     maxWidth: size.confirmationWidth,
     minWidth: 0,
   },
-  // The title and the answers on one row while there is room, the answers at its end; the
-  // details on a line of their own.
+  // The title, the details and the answers: one column, the answers at its end.
   stack: {
-    display: "flex",
-    flexWrap: "wrap",
-    alignItems: "center",
+    display: "grid",
     gap: space["3"],
     minWidth: 0,
   },
   title: {
-    flexGrow: 1,
-    flexBasis: "10rem",
-    minWidth: 0,
+    margin: 0,
+    color: colors.foreground,
+    fontFamily: font.sans,
+    fontSize: font.textSm,
+    lineHeight: font.textSmLine,
+    fontWeight: font.weightMedium,
     textWrap: "pretty",
     overflowWrap: "anywhere",
   },
@@ -190,7 +190,6 @@ const styles = stylex.create({
     [iconVars.size]: size.iconSm,
     [iconVars.stroke]: size.iconStroke,
     display: "grid",
-    flexBasis: "100%",
     gap: space["1"],
     margin: 0,
     padding: 0,
@@ -217,7 +216,11 @@ const styles = stylex.create({
     overflowWrap: "anywhere",
   },
   actions: {
-    display: "contents",
+    display: "flex",
+    flexWrap: "wrap",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    gap: space["2"],
   },
 });
 
@@ -308,11 +311,9 @@ export const Confirmation = ({
         // oxlint-disable-next-line react/jsx-no-constructed-context-values -- compiled
         value={{ state, approval, titleId, requestId }}
       >
-        <Item variant="outline" size="sm">
-          <ItemContent>
-            <span {...stylex.props(styles.stack)}>{children}</span>
-          </ItemContent>
-        </Item>
+        <Alert live="off" icon={false}>
+          <div {...stylex.props(styles.stack)}>{children}</div>
+        </Alert>
       </ConfirmationContext>
     </div>
   );
@@ -325,18 +326,14 @@ export const ConfirmationTitle = ({
 }: ConfirmationTitleProps) => {
   const context = use(ConfirmationContext);
   return (
-    <span {...stylex.props(styles.title, style)}>
-      <ItemTitle>
-        <span
-          id={context?.titleId}
-          tabIndex={-1}
-          data-slot="confirmation-title"
-          {...stylex.props(focusRingText)}
-        >
-          {children}
-        </span>
-      </ItemTitle>
-    </span>
+    <p
+      id={context?.titleId}
+      tabIndex={-1}
+      data-slot="confirmation-title"
+      {...stylex.props(styles.title, focusRingText, style)}
+    >
+      {children}
+    </p>
   );
 };
 
@@ -412,7 +409,7 @@ export const ConfirmationDetails = ({
   </ul>
 );
 
-/** The answers, at the end of the row: shown while the approval is requested. */
+/** The answers, at the end of the column: shown while the approval is requested. */
 export const ConfirmationActions = ({
   children,
   style,
@@ -422,9 +419,12 @@ export const ConfirmationActions = ({
     return null;
   }
   return (
-    <span data-slot="confirmation-actions" {...stylex.props(styles.actions)}>
-      <ItemActions style={style}>{children}</ItemActions>
-    </span>
+    <div
+      data-slot="confirmation-actions"
+      {...stylex.props(styles.actions, style)}
+    >
+      {children}
+    </div>
   );
 };
 

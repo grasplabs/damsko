@@ -1,6 +1,12 @@
 import { expect, test } from "@playwright/test";
 
-import { hasFocusRing, listenToLiveRegions, openExample } from "./example.ts";
+import {
+  drawnEdges,
+  hasFocusRing,
+  listenToLiveRegions,
+  openExample,
+  panelOf,
+} from "./example.ts";
 
 test("its line names the goal and the progress, says it is working while it streams, and opens on the steps", async ({
   page,
@@ -71,4 +77,19 @@ test("each step that finishes is said once, and the line stops running when the 
       "Rename asChild to render",
       "Plan: move the dialogs to the new primitives, 4 of 4 done. Run the type checker",
     ]);
+});
+
+test("what opens under the line starts on the line's own start edge, its mark's", async ({
+  page,
+}) => {
+  await openExample(page, "plan", "basic");
+  const line = page.getByRole("button", { name: /^Plan: move the dialogs/u });
+  if ((await line.getAttribute("aria-expanded")) === "false") {
+    await line.press("Enter");
+  }
+  const panel = await panelOf(line);
+  await expect(panel).toBeVisible();
+  const header = await drawnEdges(line);
+  const body = await drawnEdges(panel);
+  expect(Math.abs(body.start - header.start)).toBeLessThanOrEqual(1);
 });

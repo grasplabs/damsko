@@ -668,9 +668,9 @@
         "@stylexjs/stylex"
       ],
       "registryDependencies": [
+        "@damsko/alert",
         "@damsko/button",
         "@damsko/hold-button",
-        "@damsko/item",
         "@damsko/lib",
         "@damsko/tool"
       ],
@@ -2951,6 +2951,7 @@
         "@stylexjs/stylex"
       ],
       "registryDependencies": [
+        "@damsko/badge",
         "@damsko/code-block",
         "@damsko/lib",
         "@damsko/trace"

@@ -25,12 +25,18 @@
 //     </TraceCollapsible>
 //   </Trace>
 //
-// A line straight inside a Trace is a step: a step apart from the next, the dots running down from
-// its mark to the next step's mark. In every line, a first TraceIcon sits in a seat at the line's
-// start, so the titles of steps and of trigger lines start at one edge and words that wrap stay
-// clear of the mark. A TraceIcon with nothing in it is the status mark: a dot, the alert when the
-// step failed. A running title shimmers (Shimmer). Each status is said in words after the line, not
-// only by its mark and colour.
+// A line straight inside a Trace is a step: a step apart from the next, its first TraceIcon in a
+// seat at its start (the mark's width and space-3), so words that wrap stay clear of it, and the
+// dots running down from its mark to the next step's mark. A line inside a TraceCollapsibleTrigger
+// is the trigger's words, the original's activity line: its mark beside its title, a space-2 apart,
+// at the text's own weight and line, muted until the pointer is on it or it is open, as tall as a
+// small control. The trigger's words stand on the column's edge, where the panel's lines and
+// surfaces start; its fill under the pointer reaches past them by its own padding. In a card that
+// carries traceCardMarker (Tool's) the trigger runs the card's width and takes no fill: its words
+// turn to ink, as a step that opens did in the original. A TraceIcon with nothing in it is the
+// status mark: a dot, the alert when the step failed. A running title shimmers (Shimmer) in ink, a
+// failed one stands in the body's ink beside its red mark. Each status is said in words after the
+// line, not only by its mark and colour.
 //
 // What is said aloud, through the page's live region: a line is said once, when its status changes
 // after it was drawn, to done (no status) from running or pending, or to error from anything else.
@@ -76,7 +82,7 @@ import {
 } from "../lib/tokens.stylex";
 import { announce } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
-import { iconVars } from "../lib/vars.stylex";
+import { iconVars, traceCardMarker } from "../lib/vars.stylex";
 import { Shimmer } from "./shimmer";
 
 /** Where the work a line reports stands: `running` under way, `error` failed, `pending` not begun. Without one it is done. */
@@ -174,8 +180,10 @@ const HOVER = media.hover;
 const OPEN = ":is([aria-expanded=true])";
 const OFF = ":is([data-disabled])";
 
-// The seat a line's first mark sits in, and the room after it before the words.
+// The seat a step's first mark sits in, and the room after it before the words.
 const SEAT = `calc(${size.iconSm} + ${space["3"]})`;
+// A trigger's line: its mark a space-2 before the words, as the original's activity line had it.
+const BESIDE = `calc(${size.iconSm} + ${space["2"]})`;
 // Half the line's leading: how far a mark's drawing stands inside its one-line-high seat.
 const LEADING = `(1lh - ${size.iconSm}) / 2`;
 
@@ -194,8 +202,9 @@ const styles = stylex.create({
     lineHeight: font.textSmLine,
     color: colors.mutedForeground,
   },
-  // A line: its mark in its seat, its words and whatever stands beside them, wrapping where there
-  // is no room.
+  // A line: its mark, its words and whatever stands beside them, wrapping where there is no room.
+  // A first mark stands a space-2 before the words, in a seat of its own, so a long title wraps
+  // beside it rather than under it.
   line: {
     position: "relative",
     display: "flex",
@@ -206,12 +215,16 @@ const styles = stylex.create({
     minWidth: 0,
     paddingInlineStart: {
       default: 0,
-      ":has(> [data-slot=trace-icon]:first-child)": SEAT,
+      ":has(> [data-slot=trace-icon]:first-child)": BESIDE,
     },
   },
-  // A step: a step apart from the next.
+  // A step: a step apart from the next, its first mark in the wider seat of the steps.
   step: {
     rowGap: 0,
+    paddingInlineStart: {
+      default: 0,
+      ":has(> [data-slot=trace-icon]:first-child)": SEAT,
+    },
     paddingBlock: space["2"],
     animationName: { default: arrive, [REDUCED]: "none" },
     animationDuration: duration.ui,
@@ -283,7 +296,8 @@ const styles = stylex.create({
     overflowWrap: "anywhere",
   },
   titleRunning: { color: colors.foreground },
-  titleError: { color: colors.destructive },
+  // Failed: the body's ink, the red is its mark's.
+  titleError: { color: colors.bodyForeground },
   description: {
     color: colors.mutedForeground,
     overflowWrap: "anywhere",
@@ -293,11 +307,19 @@ const styles = stylex.create({
     width: "100%",
     minWidth: 0,
   },
-  // The trigger: a line among words, only as wide as its line and chevron, at the text's own weight
-  // and line, muted until the pointer is on it or it is open, as tall as a small control.
+  // The trigger: the original's activity line, only as wide as its line and chevron (a card's width
+  // in a card), at the text's own weight and line, muted until the pointer is on it or it is open,
+  // as tall as a small control. Its fill under the pointer reaches past its words by its padding;
+  // in a card it takes none.
   trigger: {
-    justifySelf: "start",
-    maxWidth: "100%",
+    justifySelf: {
+      default: "start",
+      [stylex.when.ancestor(":is(*)", traceCardMarker)]: "stretch",
+    },
+    maxWidth: {
+      default: "100%",
+      [stylex.when.ancestor(":is(*)", traceCardMarker)]: "none",
+    },
     minHeight: size.controlSm,
     columnGap: space["2"],
     borderRadius: `min(${radius.base}, calc(${size.controlSm} / 2))`,
@@ -308,6 +330,23 @@ const styles = stylex.create({
       ":hover": { default: null, [HOVER]: colors.foreground },
       [OPEN]: colors.foreground,
       [OFF]: { default: colors.subtleForeground, [FORCED]: "GrayText" },
+    },
+    backgroundColor: {
+      default: "transparent",
+      ":hover": {
+        default: null,
+        [HOVER]: {
+          default: colors.accent,
+          [OFF]: "transparent",
+          [stylex.when.ancestor(":is(*)", traceCardMarker)]: "transparent",
+        },
+      },
+      ":active": {
+        default: colors.accentActive,
+        [OFF]: "transparent",
+        [stylex.when.ancestor(":is(*)", traceCardMarker)]: "transparent",
+      },
+      [OFF]: "transparent",
     },
   },
   // Points down while closed and turns up as it opens.
@@ -543,7 +582,6 @@ export const TraceCollapsibleTrigger = ({
       render={<button type="button" data-slot="trace-collapsible-trigger" />}
       {...stylex.props(
         disclosureStyles.trigger,
-        disclosureStyles.ghost,
         styles.trigger,
         focusRing,
         style

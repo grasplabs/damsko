@@ -10,7 +10,7 @@ description: The model's own thinking, as words, shown while it streams, then fo
 
 ## When it is done
 
-Built as shadcn's Reasoning pattern is, on [Trace](/components/trace): `Reasoning` is a Trace with one row that opens, `ReasoningTrigger` its line. `ReasoningTrigger` says how long the assistant thought, from `duration` in seconds. A press opens `ReasoningContent`, the thoughts in Markdown, loaded the first time they show. The chevron after the line says it opens.
+Built as shadcn's Reasoning pattern is, on [Trace](/components/trace): `Reasoning` is a Trace with one row that opens, `ReasoningTrigger` its line. `ReasoningTrigger` says how long the assistant thought, from `duration` in seconds. A press opens `ReasoningContent`, the thoughts in Markdown, loaded the first time they show. The line is the original's thinking line: its words alone, no chevron and no mark; pass one as `ReasoningTrigger`'s children to show it.
 
 <Stage path="reasoning/basic" label="When it is done" />
 
@@ -52,7 +52,7 @@ Thinking, then thought for a second, or for longer.
       group: "Line",
       key: "Trigger",
       value:
-        "Trace's row: a brain mark, the words and the chevron, as wide as they are, muted until hovered or open; the words in the shimmer while it runs",
+        "The words alone, no chevron and no mark, as wide as they are, {collapsible-trigger} tall, {font-weight-normal} on {text-sm-line}, muted until hovered or open, the ghost fill under the pointer; the words in the shimmer while it runs",
       tokens: ["muted", "text-sm", "text-sm-line", "font-weight-normal"],
     },
     {

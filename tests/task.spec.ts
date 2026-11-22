@@ -1,6 +1,12 @@
 import { expect, test } from "@playwright/test";
 
-import { hasFocusRing, listenToLiveRegions, openExample } from "./example.ts";
+import {
+  drawnEdges,
+  hasFocusRing,
+  listenToLiveRegions,
+  openExample,
+  panelOf,
+} from "./example.ts";
 
 test("it starts open on its steps, a file named as a chip, and its line folds it", async ({
   page,
@@ -55,4 +61,19 @@ test("a running task says it is working; once done its title turns, it closes, a
       "Read app/layout.tsx",
       "Found the project files. Read app/page.tsx",
     ]);
+});
+
+test("what opens under the line starts on the line's own start edge, its mark's", async ({
+  page,
+}) => {
+  await openExample(page, "task", "basic");
+  const line = page.getByRole("button", { name: "Found the project files" });
+  if ((await line.getAttribute("aria-expanded")) === "false") {
+    await line.press("Enter");
+  }
+  const panel = await panelOf(line);
+  await expect(panel).toBeVisible();
+  const header = await drawnEdges(line);
+  const body = await drawnEdges(panel);
+  expect(Math.abs(body.start - header.start)).toBeLessThanOrEqual(1);
 });

@@ -21,34 +21,31 @@ test("each step says its status in words, not only by its mark", async ({
 test("a row's line opens and closes it, and says so with aria-expanded", async ({
   page,
 }) => {
-  await openExample(page, "trace", "chain-of-thought");
-  const row = page.getByRole("button", {
-    name: /read 2 files and changed 1 file/u,
-  });
-  const step = page.getByText("Searched the drive", { exact: true });
+  await openExample(page, "trace", "commit");
+  const row = page.getByRole("button", { name: /Committed a1b2c3/u });
+  const file = page.getByRole("button", { name: /redirect\.ts/u });
+  await expect(row).toHaveAttribute("aria-expanded", "true");
+  await expect(file).toBeVisible();
+  await row.click();
   await expect(row).toHaveAttribute("aria-expanded", "false");
-  await expect(step).toBeHidden();
+  await expect(file).toBeHidden();
   await row.click();
   await expect(row).toHaveAttribute("aria-expanded", "true");
-  await expect(step).toBeVisible();
-  await row.click();
-  await expect(row).toHaveAttribute("aria-expanded", "false");
-  await expect(step).toBeHidden();
+  await expect(file).toBeVisible();
 });
 
-test("the keyboard reaches a row with a ring; Enter opens and Space closes", async ({
+test("the keyboard reaches a row with a ring; Enter closes and Space opens", async ({
   page,
 }) => {
-  await openExample(page, "trace", "tool");
-  const row = page.getByRole("button", { name: "Searched the web Completed" });
+  await openExample(page, "trace", "commit");
+  const row = page.getByRole("button", { name: /Committed a1b2c3/u });
   await page.keyboard.press("Tab");
   await expect(row).toBeFocused();
   expect(await hasFocusRing(row)).toBe(true);
   await page.keyboard.press("Enter");
-  await expect(row).toHaveAttribute("aria-expanded", "true");
-  await expect(page.getByRole("region", { name: "Input" })).toBeVisible();
-  await page.keyboard.press("Space");
   await expect(row).toHaveAttribute("aria-expanded", "false");
+  await page.keyboard.press("Space");
+  await expect(row).toHaveAttribute("aria-expanded", "true");
 });
 
 test("rows open inside rows: a commit opens on its files, and a file on its diff", async ({
@@ -204,22 +201,26 @@ test("a line that fails is said once; lines that change together are said togeth
 const weight = async (locator: Locator) =>
   await locator.evaluate((element) => getComputedStyle(element).fontWeight);
 
-test("a row's title and a step's start at one edge, in one weight, and a long one wraps beside its mark", async ({
+test("a row's words stand on the steps' edge, its title a step after its mark, in the steps' weight, and a long one wraps beside it", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 800 });
   await openExample(page, "trace", "script");
   const step = page.getByText("Read the brief", { exact: true });
   const row = page.getByText(/^Read 2 files on pricing/u);
-  const [stepBox, rowBox] = await Promise.all([
+  const button = page.getByRole("button", { name: /Read 2 files/u });
+  const [stepBox, rowBox, buttonBox] = await Promise.all([
     step.boundingBox(),
     row.boundingBox(),
+    button.boundingBox(),
   ]);
-  expect(rowBox?.x).toBe(stepBox?.x);
+  // The row's mark on the column's edge, where the steps' marks stand: its fill reaches 8px past
+  // it; its title 24px in (the 16px mark and 8px), the steps' 28px in (their seat).
+  const edge = (stepBox?.x ?? 0) - 28;
+  expect(buttonBox?.x).toBe(edge - 8);
+  expect(rowBox?.x).toBe(edge + 24);
   expect(await weight(row)).toBe(await weight(step));
-  // Wrapped over two lines, its first still level with the mark.
-  const button = page.getByRole("button", { name: /Read 2 files/u });
-  const buttonBox = await button.boundingBox();
+  // Wrapped over two lines, beside its mark.
   expect(rowBox?.height ?? 0).toBeGreaterThan(30);
   expect((rowBox?.y ?? 0) - (buttonBox?.y ?? 0)).toBeLessThan(8);
 });

@@ -1,8 +1,8 @@
 // Tool: one call an assistant made to a tool, from shadcn's Tool pattern (content/docs/ai-elements/
 // base/tool.mdx), built as it builds it: a Trace with a TraceCollapsible, its header a TraceLine with
 // a TraceIcon and a TraceTitle in the tense of its state, the line's status from the call's state
-// (running while it works or waits on its answer, error when it failed), its input and output small
-// CodeBlocks. In Damsko's look, a card round it.
+// (running while it works or waits on its answer, error when it failed), its input and output
+// CodeBlocks. In Damsko's look: a card round it, the state a Badge beside the title.
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
 //   <Tool>
@@ -14,11 +14,13 @@
 //   </Tool>
 //
 // `state` is the AI SDK tool part's (`input-streaming` … `output-denied`), declared here, so there is
-// no AI SDK dependency. A state the line's status cannot say (waiting on approval, answered,
-// denied) is said in words after the title; a state this file does not know (a newer AI SDK's) is
-// drawn neutral, its name after the title. Trace draws the row that opens, the chevron and the
-// panel, and says the call once when it finishes or fails. Input, output and the error are small
-// CodeBlocks named Input, Output and Error; an output may instead be the product's own card (any
+// no AI SDK dependency. Every state shows as a Badge after the title, in its colour and with its
+// mark; a screen reader hears the line's status, and the Badge's words only for a state the status
+// cannot say (waiting on approval, answered, denied). A state this file does not know (a newer AI
+// SDK's) is a neutral Badge with its own name. Trace draws the row that opens (the card's width,
+// no fill: the card carries traceCardMarker), the chevron and the panel, and says the call once
+// when it finishes or fails. Input, output and the error are CodeBlocks named Input, Output and
+// Error; an output may instead be the product's own card (any
 // element). CodeBlock is loaded the first time the call opens: the server draws it as before, and
 // the browser keeps that until then. Every value is a token. A caller may set layout only (the
 // `style` prop).
@@ -29,11 +31,23 @@ import { Suspense, createContext, isValidElement, use, useState } from "react";
 import type { ReactNode } from "react";
 
 import { useI18n } from "../lib/i18n";
-import { Icon, WrenchIcon } from "../lib/icons";
+import {
+  CheckIcon,
+  CircleAlertIcon,
+  CircleCheckIcon,
+  ClockIcon,
+  Icon,
+  LoaderIcon,
+  WrenchIcon,
+  XIcon,
+} from "../lib/icons";
 import type { IconData } from "../lib/icons";
 import { colors, font, media, radius, size, space } from "../lib/tokens.stylex";
 import { lazyPart, NotYetShown, ownValue } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
+import { traceCardMarker } from "../lib/vars.stylex";
+import { Badge } from "./badge";
+import type { BadgeVariant } from "./badge";
 import { codeOf } from "./tool-code";
 import {
   Trace,
@@ -84,7 +98,7 @@ export interface ToolHeaderProps {
   name: string;
   /** What the call does, in a few words, in the tense of its state ("Searched the web"). */
   title?: string;
-  /** Where the call stands: said in words beside its mark. */
+  /** Where the call stands: a Badge after the title, in its words and colour. */
   state: ToolState;
   /** A mark of the tool's own, in place of the wrench. */
   icon?: IconData;
@@ -146,10 +160,10 @@ const styles = stylex.create({
     borderRadius: radius.base,
     cornerShape: radius.shape,
   },
-  // The header's row in the card: as tall as it was beside its Badge, the trigger as wide as its line.
+  // The header's row in the card: its line a step clear of the card's edge above and below.
   header: {
     display: "grid",
-    paddingBlock: `calc(${space["2"]} - (${size.controlSm} - ${font.textSmLine}) / 2 - ${size.hairline})`,
+    paddingBlock: `calc(${space["2"]} - (${size.controlSm} - ${font.textSmLine}) / 2)`,
   },
   // Its input and output, under the header, a step apart.
   content: {
@@ -167,6 +181,8 @@ const styles = stylex.create({
     whiteSpace: "pre-wrap",
     overflowWrap: "anywhere",
   },
+  // The Badge beside the title, as the line's other parts stand: in the run of the line.
+  badge: { display: "inline-flex", minWidth: 0 },
   // A product's own card for the output: named Output, drawn as it is.
   custom: {
     display: "grid",
@@ -175,18 +191,61 @@ const styles = stylex.create({
 });
 
 /**
- * A state as the header's line says it: its status, and whether its words follow the title (the
- * states a status cannot say).
+ * A state as the header shows it: the line's status, whether a screen reader hears the Badge's
+ * words too (the states a status cannot say), and the Badge's colour and mark.
  */
-const looks: Record<ToolState, { status?: TraceLineStatus; said: boolean }> = {
-  "input-streaming": { status: "running", said: false },
-  "input-available": { status: "running", said: false },
-  "approval-requested": { status: "pending", said: true },
-  "approval-responded": { status: "running", said: true },
-  "output-available": { said: false },
-  "output-error": { status: "error", said: false },
-  "output-denied": { said: true },
+interface Look {
+  status?: TraceLineStatus;
+  said: boolean;
+  variant: BadgeVariant;
+  icon?: IconData;
+}
+
+const looks: Record<ToolState, Look> = {
+  "input-streaming": {
+    status: "running",
+    said: false,
+    variant: "default",
+    icon: ClockIcon,
+  },
+  "input-available": {
+    status: "running",
+    said: false,
+    variant: "default",
+    icon: LoaderIcon,
+  },
+  "approval-requested": {
+    status: "pending",
+    said: true,
+    variant: "warning",
+    icon: ClockIcon,
+  },
+  "approval-responded": {
+    status: "running",
+    said: true,
+    variant: "info",
+    icon: CheckIcon,
+  },
+  "output-available": {
+    said: false,
+    variant: "success",
+    icon: CircleCheckIcon,
+  },
+  "output-error": {
+    status: "error",
+    said: false,
+    variant: "destructive",
+    icon: CircleAlertIcon,
+  },
+  "output-denied": { said: true, variant: "warning", icon: XIcon },
 };
+
+/** The state's Badge: its words, colour and mark. */
+const ToolBadge = ({ look, word }: { look: Look; word: string }) => (
+  <Badge size="sm" variant={look.variant} icon={look.icon}>
+    {word}
+  </Badge>
+);
 
 // Whether the call has been open, for its code to load.
 const ShownContext = createContext(false);
@@ -207,7 +266,10 @@ export const Tool = ({
     setShown(true);
   }
   return (
-    <div data-slot="tool" {...stylex.props(styles.root, style)}>
+    <div
+      data-slot="tool"
+      {...stylex.props(styles.root, traceCardMarker, style)}
+    >
       <Trace>
         <TraceCollapsible
           open={isOpen}
@@ -225,11 +287,11 @@ export const Tool = ({
   );
 };
 
-/** The header: the tool's mark, what the call does and where it stands; Trace adds the chevron. */
+/** The header: the tool's mark, what the call does and its state's Badge; Trace adds the chevron. */
 export const ToolHeader = ({ name, title, state, icon }: ToolHeaderProps) => {
   const words = useI18n().tool;
-  // A state this file does not know is drawn neutral, its own name after the title.
-  const look = ownValue(looks, state) ?? { said: true };
+  // A state this file does not know is a neutral Badge, its own name said after the title.
+  const look = ownValue(looks, state) ?? { said: true, variant: "default" };
   const word = ownValue(words.states, state) ?? state;
   const shown = title === undefined || title === "" ? name : title;
   return (
@@ -240,7 +302,16 @@ export const ToolHeader = ({ name, title, state, icon }: ToolHeaderProps) => {
             <Icon icon={icon ?? WrenchIcon} />
           </TraceIcon>
           <TraceTitle>{shown}</TraceTitle>
-          {look.said && <TraceDescription>{word}</TraceDescription>}
+          {look.said ? (
+            <TraceDescription>
+              <ToolBadge look={look} word={word} />
+            </TraceDescription>
+          ) : (
+            // The line's status says it to a screen reader; the Badge, to the eye.
+            <span aria-hidden="true" {...stylex.props(styles.badge)}>
+              <ToolBadge look={look} word={word} />
+            </span>
+          )}
         </TraceLine>
       </TraceCollapsibleTrigger>
     </div>
@@ -272,7 +343,7 @@ const ToolCode = ({
   return (
     <Suspense fallback={<pre {...stylex.props(styles.plain)}>{code}</pre>}>
       {shown ? (
-        <CodeBlock size="sm" language={language} variant={variant}>
+        <CodeBlock language={language} variant={variant}>
           <CodeBlockHeader>
             <CodeBlockTitle>{title}</CodeBlockTitle>
             <CodeBlockActions>
