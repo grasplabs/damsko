@@ -46,7 +46,12 @@ import {
 import type { ReactNode } from "react";
 
 import { useI18n } from "../lib/i18n";
-import { CircleAlertIcon, Icon, RefreshCwIcon, SquareIcon } from "../lib/icons";
+import {
+  Icon,
+  RefreshCwIcon,
+  SquareIcon,
+  TriangleAlertIcon,
+} from "../lib/icons";
 import { focusRingText, scrollbarHidden } from "../lib/styles";
 import {
   colors,
@@ -746,11 +751,11 @@ export const MessageError = ({
       {...stylex.props(styles.error, style)}
     >
       <p role="alert" {...stylex.props(styles.errorWords)}>
-        <Icon icon={CircleAlertIcon} />
+        <Icon icon={TriangleAlertIcon} />
         {children ?? words.error}
       </p>
       {onRetry !== undefined && (
-        <Button variant="ghost" size="sm" onClick={() => onRetry()}>
+        <Button variant="outline" size="sm" onClick={() => onRetry()}>
           <Icon icon={RefreshCwIcon} />
           {words.retry}
         </Button>

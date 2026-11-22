@@ -28,7 +28,7 @@ Where the same action repeats down a list, a column of outlined buttons would be
 
 ## Sizes and icons
 
-`default` by default; `sm` in dense tables, `lg` for a main call on touch. `xs`, 28px, is the smallest: a compact button in a card's footer or a prompt input. An icon is a child, `<Icon />`, before or after the words. An icon-only button takes an `icon` size and its name from `aria-label`.
+`default` by default; `sm` in dense tables, `lg` for a main call on touch. `xs`, 28px, is the smallest: a compact button in a card's footer or a prompt input. An icon is a child, `<Icon />`, before or after the words. An icon-only button takes an `icon` size and its name from `aria-label`, which it shows in a tooltip of its own under a resting pointer and on keyboard focus. `tooltip` gives other words (on a button with words too), `tooltip={false}` none; inside a Tooltip of your own the button shows that one. Failed, a `link` turns to the destructive ink alone, with no box.
 
 <Stage path="button/sizes" label="Sizes and icons" />
 
@@ -40,7 +40,7 @@ To go somewhere, `asChild` draws the link itself, `<a href>`, so it opens in a n
 
 ## A press that takes time
 
-It is automatic: when `onClick` returns a Promise, the Button is busy until it settles, takes no second press and shows a spinner over its words, then a tick or the alert for a moment, and the words stay in their place so the width never changes. `loadingLabel`, `successLabel` and `errorLabel` are said and shown in place of the words, all stacked so the widest sets the width (an icon-only button says them only). When the page runs the work itself, as a form's submit, it gives `status` instead.
+It is automatic: when `onClick` returns a Promise, the Button is busy until it settles, takes no second press and shows a spinner, in its icon's place or over its words when it has none, then a tick or the alert for a moment, and the words stay in their place so the width never changes. Failed, it draws the quiet fill with destructive words and edge, whatever its variant. `loadingLabel`, `successLabel` and `errorLabel` are said and shown in place of the words, all stacked so the widest sets the width (an icon-only button says them only). When the page runs the work itself, as a form's submit, it gives `status` instead.
 
 <Stage path="button/action" live label="A press that takes time" />
 
@@ -64,7 +64,7 @@ A label wraps when its room is short. `truncate` keeps it on one line and cuts i
 
 ## Every state
 
-Loading shows a Spinner before the words and keeps focus on the button.
+Loading keeps focus on the button; success and failure show for a moment, then it rests. The button keeps the width of its widest state, so its results are one or two words ("Saved", "Not sent").
 
 <States
   path="button/states"
@@ -87,7 +87,9 @@ Loading shows a Spinner before the words and keeps focus on the button.
     { label: "Hover", force: "hover" },
     { label: "Keyboard focus", force: "focus-visible" },
     { label: "Pressed", force: "active" },
-    { label: "Loading", props: { loading: true } },
+    { label: "Loading", props: { status: "loading" } },
+    { label: "Success", props: { status: "success" } },
+    { label: "Failed", props: { status: "error" } },
     { label: "Disabled", props: { disabled: true } },
   ]}
 />

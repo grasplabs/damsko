@@ -72,6 +72,167 @@ test("an icon-only button is named by its label", async ({ page }) => {
   await expect(page.getByRole("button", { name: "Settings" })).toBeVisible();
 });
 
+test("an icon-only button shows its name under a pointer and on keyboard focus, and is not described by it", async ({
+  page,
+}) => {
+  await openExample(page, "button", "sizes");
+  const settings = page.getByRole("button", { name: "Settings" });
+  await settings.hover();
+  await expect(page.getByRole("tooltip", { name: "Settings" })).toBeVisible();
+  await expect(settings).not.toHaveAttribute("aria-describedby");
+  await page.mouse.move(0, 0);
+  await expect(page.getByRole("tooltip", { name: "Settings" })).toBeHidden();
+  await page.getByRole("button", { name: "Download the report" }).focus();
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Shift+Tab");
+  await expect(
+    page.getByRole("tooltip", { name: "Download the report" })
+  ).toBeVisible();
+});
+
+test("an icon-only button in a paragraph draws nothing beside itself at rest, and the page wakes without a fault", async ({
+  page,
+}) => {
+  const faults: string[] = [];
+  page.on("console", (message) => {
+    if (message.type() === "error") {
+      faults.push(message.text());
+    }
+  });
+  page.on("pageerror", (error) => {
+    faults.push(error.message);
+  });
+  await openExample(page, "button", "tooltips");
+  // Nothing in the paragraph but its words and the button: a tooltip's element there, even
+  // unseen, is a <div> in a <p>, which the browser moves out of it.
+  const words = page.getByText("The report is ready.");
+  await expect(words.getByRole("tooltip", { includeHidden: true })).toHaveCount(
+    0
+  );
+  await expect(words.getByRole("button")).toHaveCount(1);
+  const download = page.getByRole("button", { name: "Download the report" });
+  await download.hover();
+  await expect(
+    page.getByRole("tooltip", { name: "Download the report" })
+  ).toBeVisible();
+  await page.mouse.move(0, 0);
+  await expect(
+    page.getByRole("tooltip", { name: "Download the report" })
+  ).toHaveCount(0);
+  expect(faults).toEqual([]);
+});
+
+test("`tooltip` gives other words, which describe the button; `false` gives none", async ({
+  page,
+}) => {
+  await openExample(page, "button", "tooltips");
+  const exported = page.getByRole("button", { name: "Export" });
+  await exported.hover();
+  await expect(page.getByRole("tooltip")).toHaveText("Export as a spreadsheet");
+  await expect(exported).toHaveAccessibleDescription("Export as a spreadsheet");
+  await page.getByRole("button", { name: "Save a copy" }).hover();
+  await expect(page.getByRole("tooltip")).toHaveText(
+    "Saves a copy to your files"
+  );
+  await page.getByRole("button", { name: "Quiet" }).focus();
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Shift+Tab");
+  await expect(page.getByRole("button", { name: "Quiet" })).toBeFocused();
+  await expect(page.getByRole("tooltip")).toHaveCount(0);
+});
+
+test("out of use but kept in focus, an icon-only button still shows its name to the keyboard", async ({
+  page,
+}) => {
+  await openExample(page, "button", "tooltips");
+  await page.getByRole("button", { name: "Save a copy" }).focus();
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("button", { name: "Archive" })).toBeFocused();
+  await expect(page.getByRole("tooltip")).toHaveText("Archive");
+});
+
+test("inside a Tooltip of the caller's, however deep, the button shows that one and never its name", async ({
+  page,
+}) => {
+  await openExample(page, "button", "tooltips");
+  await page.getByRole("button", { name: "Delete" }).hover({ force: true });
+  await expect(page.getByRole("tooltip")).toHaveText(
+    "Only an owner can delete this"
+  );
+});
+
+test("a menu's icon-only trigger shows its name, and not while its menu is open", async ({
+  page,
+}) => {
+  await openExample(page, "dropdown-menu", "danger");
+  const trigger = page.getByRole("button", { name: "Actions for Q3 report" });
+  await trigger.hover();
+  await expect(page.getByRole("tooltip")).toHaveText("Actions for Q3 report");
+  await trigger.click();
+  await expect(page.getByRole("menu")).toBeVisible();
+  await expect(page.getByRole("tooltip")).toHaveCount(0);
+});
+
+test("a Tooltip of the caller's stands in place of the button's own", async ({
+  page,
+}) => {
+  await openExample(page, "tooltip", "icon");
+  await page.getByRole("button", { name: "Download" }).hover();
+  await expect(page.getByRole("tooltip")).toHaveText(
+    "Saves a PDF of this report"
+  );
+});
+
+test("while it works the spinner stands in its icon's place, at the width of its widest state and full strength", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await openExample(page, "page-header", "actions-kinds");
+  const working = page.getByRole("button", { name: "Export" });
+  await expect(working).toHaveAttribute("aria-busy", "true");
+  await expect(working).toHaveCSS("opacity", "1");
+  await expect(working.getByText("Export", { exact: true })).toBeVisible();
+  const [width, widest] = await working.evaluate((element) => {
+    const failed = [...element.querySelectorAll("span")].find(
+      (span) => span.textContent === "Could not export"
+    );
+    return [
+      element.getBoundingClientRect().width,
+      failed?.getBoundingClientRect().width ?? 0,
+    ];
+  });
+  // 12px of padding either side of the widest words and their mark.
+  expect(width).toBe(widest + 24);
+});
+
+for (const theme of ["light", "dark"] as const) {
+  test(`a failed button draws the quiet fill with destructive words and edge, ${theme}`, async ({
+    page,
+  }) => {
+    await openExample(page, "empty-and-error", "action-failed-still", {
+      theme,
+    });
+    const failed = page.getByRole("button", { name: "Not archived" });
+    await expect(failed).toBeVisible();
+    const look = await failed.evaluate((element) => {
+      const probe = document.createElement("span");
+      probe.style.color = "var(--damsko-destructive)";
+      probe.style.backgroundColor = "var(--damsko-secondary)";
+      probe.style.boxShadow = "var(--damsko-error-border)";
+      element.after(probe);
+      const want = getComputedStyle(probe);
+      const got = getComputedStyle(element);
+      const same =
+        got.color === want.color &&
+        got.backgroundColor === want.backgroundColor &&
+        got.boxShadow === want.boxShadow;
+      probe.remove();
+      return same;
+    });
+    expect(look).toBe(true);
+  });
+}
+
 test("a click runs it", async ({ page }) => {
   await openExample(page, "button", "variants");
   await page.getByRole("button", { name: "Edit" }).click();

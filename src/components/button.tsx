@@ -12,11 +12,17 @@
 //
 // A press whose `onClick` returns a Promise is followed by the Button itself (hooks/use-action):
 // while it works the button is busy, takes no second press and shows a spinner; once it settles, a
-// tick or the alert for a moment, then it rests. The mark stands over the words, which keep their
-// place unseen (and their name for a screen reader), so the button never changes width. Words for a
+// tick or the alert for a moment, then it rests. While it works the spinner takes the place of its
+// icon and the words stay; with no icon the mark stands over the words, which keep their place
+// unseen (and their name for a screen reader), so the button never changes width. Words for a
 // state (`loadingLabel`, `successLabel`, `errorLabel`) are said, and shown in the words' place, every
-// one stacked in the same cell so the widest sets the width. A page that runs the work elsewhere (a
-// form's submit) gives `status` instead.
+// one stacked in the same cell so the widest sets the width. Failed, it draws the quiet fill with
+// destructive words and edge, whatever its variant. A page that runs the work elsewhere (a form's
+// submit) gives `status` instead.
+//
+// `tooltip` gives it a Tooltip of its own, as SidebarMenuButton's: an icon-only button shows its
+// name (`aria-label`) by default, `tooltip={false}` shows none, and words show those. Inside a
+// Tooltip of the caller's it shows none.
 //
 // Drawn by another UI SDK part (`<DialogTrigger asChild><Button /></DialogTrigger>`), it takes that
 // part's props and is only its face: one element is never two UI SDK buttons, which an agent would
@@ -55,6 +61,7 @@ import type { LayoutStyle } from "../lib/utils";
 import { iconVars, layerFooterMarker, motionVars } from "../lib/vars.stylex";
 import { buttonMarker, ghostVars } from "./button.stylex";
 import { Spinner } from "./spinner";
+import { ControlTooltip } from "./tooltip";
 
 export type ButtonVariant =
   | "default"
@@ -134,11 +141,18 @@ interface ButtonBase extends Omit<
   status?: ActionStatus;
   /**
    * Squeezed, the words stay on one line and end in an ellipsis instead of wrapping, and the button
-   * may shrink to its square. They stay its name whole. An icon-only button has no words to cut. For a name in a narrow head, where a second
-   * line would push the next control off.
+   * may shrink to its square. They stay its name whole; give `tooltip` to show them whole to the
+   * pointer. For a name in a narrow head, where a second line would push the next control off. An
+   * icon-only button has no words to cut.
    * @default false
    */
   truncate?: boolean;
+  /**
+   * Its tooltip, under a resting pointer and on keyboard focus. Left out, a control that is only an
+   * icon shows its `aria-label`; `false` shows none; words or a node show those in its place, on a
+   * control with words too. Inside a Tooltip of your own it shows none.
+   */
+  tooltip?: ReactNode;
   /** Layout only: where it sits and how much room it takes. Its look belongs to `variant` and `size`. */
   style?: LayoutStyle;
 }
@@ -168,7 +182,10 @@ interface WithWords extends ButtonBase {
  */
 interface IconOnly extends ButtonBase {
   size: IconSize;
-  /** Its name, for a screen reader, a voice command and an agent ("More actions"). */
+  /**
+   * Its name, for a screen reader, a voice command and an agent ("More actions"). It shows in a
+   * tooltip under a resting pointer and on keyboard focus.
+   */
   "aria-label": string;
   children: ReactNode;
 }
@@ -316,6 +333,25 @@ const styles = stylex.create({
     flexShrink: 1,
     whiteSpace: "nowrap",
   },
+  // Failed, on every variant: calm. The quiet fill, destructive words, a field's edge tinted
+  // destructive, and one small shake. The alert and the words say it too, so it is never colour alone.
+  failed: {
+    color: { default: colors.destructive, [FORCED]: "ButtonText" },
+    backgroundColor: colors.secondary,
+    boxShadow: sizes.errorBorder,
+    animationName: {
+      default: stylex.keyframes({
+        "0%, 100%": { transform: "none" },
+        "25%": { transform: `translateX(calc(-1 * ${sizes.resultShake}))` },
+        "50%": { transform: `translateX(${sizes.resultShake})` },
+        "75%": { transform: `translateX(calc(-0.5 * ${sizes.resultShake}))` },
+      }),
+      [media.reducedMotion]: "none",
+    },
+    animationDuration: duration.ui,
+    animationTimingFunction: duration.easeInOut,
+    animationIterationCount: 1,
+  },
   // In forced colours the focus ring is the system's highlight, apart from the border's ButtonText.
   forcedFocus: {
     outlineColor: {
@@ -330,6 +366,11 @@ const styles = stylex.create({
       default: ghostVars.ring,
       [FORCED]: { default: null, ":focus-visible": "Highlight" },
     },
+  },
+  // Failed, a `link`: words with no box stay words. The destructive ink, and no underline to press.
+  failedWords: {
+    color: { default: colors.destructive, [FORCED]: "LinkText" },
+    textDecorationLine: "none",
   },
   // The light over a filled button: white at the top, fading to nothing; brighter under a pointer.
   sheen: {
@@ -609,6 +650,10 @@ const liveStyles = stylex.create({
 const filled = (variant: ButtonVariant) =>
   variant === "default" || variant === "destructive";
 
+/** Whether the element's props say its press failed (`data-status`, from `withStatus`). */
+const hasFailed = (extra: Record<string, unknown>) =>
+  extra["data-status"] === "error";
+
 const lookOf = (
   variant: ButtonVariant,
   size: ButtonSize,
@@ -695,6 +740,8 @@ const ownOf = (
       disabled && !busy && styles.disabled,
       disabled && !busy && variant === "default" && styles.defaultDisabled,
       busy && styles.busy,
+      hasFailed(extra) &&
+        (variant === "link" ? styles.failedWords : styles.failed),
       style
     ),
     "data-slot": part ?? "button",
@@ -716,13 +763,15 @@ const Inside = ({
   variant,
   size,
   pressable,
+  failed,
 }: {
   variant: ButtonVariant;
   size: ButtonSize;
   pressable: boolean;
+  failed: boolean;
 }) => (
   <>
-    {filled(variant) && (
+    {filled(variant) && !failed && (
       <span
         aria-hidden="true"
         {...stylex.props(styles.sheen, pressable && styles.sheenLive)}
@@ -864,8 +913,12 @@ const statusStyles = stylex.create({
     opacity: 0,
     whiteSpace: "nowrap",
   },
-  // The room a state's mark takes beside its words, while another state shows.
+  // The room a state's mark takes beside its words, while another state shows; and the spinner
+  // where the button's icon stood, centred in the icon's own box so the words do not move.
   place: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
     flexShrink: 0,
     width: iconVars.size,
     height: iconVars.size,
@@ -880,6 +933,29 @@ const Mark = ({ status }: { status: Exclude<ActionStatus, "idle"> }) => {
     return <Spinner />;
   }
   return <Icon icon={status === "success" ? CheckIcon : CircleAlertIcon} />;
+};
+
+/**
+ * The button's content while it works, when it has an icon: the spinner in the icon's place, the
+ * words as they were. Without an icon, nothing: the mark stands over the words instead.
+ */
+const spinning = (children: ReactNode) => {
+  const parts = listOf(children);
+  const at = parts.findIndex(
+    (part) => isValidElement(part) && part.type === Icon
+  );
+  return at === -1
+    ? undefined
+    : parts.with(
+        at,
+        <span
+          key="spinner"
+          data-slot="button-spinner"
+          {...stylex.props(statusStyles.place)}
+        >
+          <Spinner />
+        </span>
+      );
 };
 
 /**
@@ -910,9 +986,13 @@ const Status = ({
   truncate: boolean;
   children: ReactNode;
 }) => {
-  const children = truncate ? cutWords(given) : given;
-  const resting = status === "idle";
-  const label = resting ? undefined : labels[status];
+  const label = status === "idle" ? undefined : labels[status];
+  // While it works with no words of its own, the spinner stands where the icon stood.
+  const inPlace =
+    status === "loading" && label === undefined ? spinning(given) : undefined;
+  const resting = status === "idle" || inPlace !== undefined;
+  const content = inPlace ?? given;
+  const children = truncate ? cutWords(content) : content;
   const mark =
     resting || label !== undefined ? null : (
       <span aria-hidden="true" {...stylex.props(statusStyles.mark)}>
@@ -1015,7 +1095,7 @@ const usePress = (
   return { status: action.status, press };
 };
 
-export const Button = ({
+const Pressable = ({
   variant = "default",
   size = "default",
   asChild = false,
@@ -1027,6 +1107,7 @@ export const Button = ({
   successLabel,
   errorLabel,
   status: held,
+  tooltip: _tooltip,
   onClick,
   style,
   truncate = false,
@@ -1049,7 +1130,14 @@ export const Button = ({
     textOf(children) || extra["aria-label"],
     { agentAsks, agentPresses }
   );
-  const inside = <Inside variant={variant} size={size} pressable={!off} />;
+  const inside = (
+    <Inside
+      variant={variant}
+      size={size}
+      pressable={!off}
+      failed={hasFailed(extra)}
+    />
+  );
   const element =
     asChild && isValidElement<{ children?: ReactNode }>(children)
       ? children
@@ -1125,3 +1213,12 @@ export const Button = ({
     </ButtonPrimitive>
   );
 };
+
+export const Button = (props: ButtonProps) => (
+  <ControlTooltip
+    tooltip={props.tooltip}
+    iconOnly={isIconSize(props.size ?? "default")}
+  >
+    <Pressable {...props} />
+  </ControlTooltip>
+);

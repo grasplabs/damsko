@@ -51,6 +51,7 @@
     "acorn": "catalog:",
     "astro": "catalog:",
     "babel-plugin-react-compiler": "catalog:",
+    "country-flag-icons": "catalog:",
     "github-slugger": "catalog:",
     "lightningcss": "catalog:",
     "oxc-transform-react": "catalog:",
