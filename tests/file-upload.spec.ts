@@ -243,3 +243,20 @@ test("in a setting's row, a refusal is one short line without the file's name", 
     page.getByText("Not a kind of picture this takes.").first()
   ).toBeVisible();
 });
+
+test("a file's row wears the mark of its kind", async ({ page }) => {
+  await openExample(page, "file-upload", "basic");
+  await choose(page, "Choose files", [
+    file("contract.pdf", "application/pdf", 2000),
+    file("scan.png", "image/png", 2000),
+  ]);
+  const markOf = async (name: string) =>
+    await page
+      .getByRole("listitem")
+      .filter({ hasText: name })
+      .locator("svg")
+      .first()
+      .innerHTML();
+  await expect(page.getByRole("listitem")).toHaveCount(2);
+  expect(await markOf("contract.pdf")).not.toBe(await markOf("scan.png"));
+});

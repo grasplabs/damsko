@@ -39,7 +39,7 @@ import type { ComponentProps, ReactNode } from "react";
 
 import { choiceBoxStyles, choiceHitArea, focusRingOffset } from "../lib/styles";
 import { font, media, radius, size, space } from "../lib/tokens.stylex";
-import { ChoiceGroupContext, rowWiring } from "../lib/utils";
+import { ChoiceGroupContext, className, rowWiring } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { useFieldControl } from "./field";
 
@@ -176,14 +176,14 @@ export interface RadioGroupItemProps extends Omit<
 // The circle's class from its state. Out here, not inline: the React Compiler cannot lower the
 // chained conditions inside a render prop.
 const controlClass = (state: RadioState, style: LayoutStyle | undefined) =>
-  stylex.props(
+  className(
     choiceBoxStyles.control,
     styles.circle,
     state.disabled && choiceBoxStyles.disabled,
     state.readOnly && !state.disabled && choiceBoxStyles.readOnly,
     focusRingOffset,
     style
-  ).className ?? "";
+  ) ?? "";
 
 // The face's look from its state.
 const faceProps = (state: RadioState) => {

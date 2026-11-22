@@ -74,9 +74,18 @@ export const slotProps = (
     ? { render: children }
     : { children };
 
-/** The class of a part whose look follows its state (UI SDK's `className` as a function). */
+/**
+ * The class of some styles, where a part takes a class and not props: UI SDK's `className` (a
+ * string, or a function of the part's state) and an element measured by its class.
+ */
 export const className = (
-  ...parts: (stylex.StyleXStyles | LayoutStyle | false | undefined)[]
+  ...parts: stylex.StyleXArray<
+    | stylex.CompiledStyles
+    | readonly [stylex.CompiledStyles, stylex.InlineStyles]
+    | boolean
+    | null
+    | undefined
+  >[]
 ) => stylex.props(...parts).className;
 
 /**

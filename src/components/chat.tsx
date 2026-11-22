@@ -27,10 +27,11 @@ import * as stylex from "@stylexjs/stylex";
 import type { ReactNode } from "react";
 
 import type { IconData } from "../lib/icons";
+import { space } from "../lib/tokens.stylex";
+import { isBlank } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import {
   Empty,
-  EmptyContent,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
@@ -147,7 +148,21 @@ const styles = stylex.create({
     cornerShape: "inherit",
   },
   // Before the first turn: an Empty, centred in the room the thread leaves.
-  empty: { display: "grid", flexGrow: 1 },
+  empty: {
+    display: "flex",
+    flexGrow: 1,
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    boxSizing: "border-box",
+    padding: space["4"],
+  },
+  // What stands under the words, at its own width: a step under the sentence, inside the room the
+  // Empty keeps at its foot.
+  more: {
+    maxWidth: "100%",
+    marginBlockStart: `calc(${space["2"]} - ${space["4"]})`,
+  },
 });
 
 /** The chat: a MessageScrollerProvider that follows the reply, round the thread and the field under it. */
@@ -217,7 +232,7 @@ export const ChatEmptyState = ({
   style,
 }: ChatEmptyStateProps) => (
   <div data-slot="chat-empty-state" {...stylex.props(styles.empty, style)}>
-    <Empty>
+    <Empty size="sm">
       <EmptyHeader>
         <EmptyMedia icon={icon} />
         <EmptyTitle>{title}</EmptyTitle>
@@ -225,7 +240,7 @@ export const ChatEmptyState = ({
           <EmptyDescription>{description}</EmptyDescription>
         )}
       </EmptyHeader>
-      <EmptyContent>{children}</EmptyContent>
     </Empty>
+    {!isBlank(children) && <div {...stylex.props(styles.more)}>{children}</div>}
   </div>
 );

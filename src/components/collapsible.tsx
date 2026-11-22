@@ -27,7 +27,7 @@ import type { ReactNode } from "react";
 import { ChevronDownIcon, Icon } from "../lib/icons";
 import { disclosureStyles, focusRing, tapTarget } from "../lib/styles";
 import { colors, font, media, shadow, space } from "../lib/tokens.stylex";
-import { slotProps } from "../lib/utils";
+import { className, slotProps } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 
 /** Every prop a Collapsible takes. */
@@ -129,13 +129,6 @@ const styles = stylex.create({
   fitWords: {
     flexGrow: 0,
   },
-  height: {
-    height: {
-      default: "var(--collapsible-panel-height)",
-      ":is([data-starting-style], [data-ending-style])": 0,
-      [media.noScript]: "auto",
-    },
-  },
 });
 
 // The root's look, for its trigger: two plain values, so neither is a new object each render.
@@ -233,14 +226,11 @@ export const CollapsibleContent = ({
     <CollapsiblePanel
       render={slot.render ?? <div data-slot="collapsible-content" />}
       hiddenUntilFound
-      className={
-        stylex.props(
-          disclosureStyles.panel,
-          slot.render === undefined && disclosureStyles.quiet,
-          styles.height,
-          style
-        ).className
-      }
+      className={className(
+        disclosureStyles.panel,
+        slot.render === undefined && disclosureStyles.quiet,
+        style
+      )}
     >
       {slot.render === undefined ? (
         <div {...stylex.props(disclosureStyles.body)}>{children}</div>

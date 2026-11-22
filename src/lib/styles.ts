@@ -997,8 +997,7 @@ export const tapTarget = tapStyles.target;
 // chevron at its end that turns as it opens, and the panel under it that opens over its height.
 //
 //   stylex.props(disclosureStyles.trigger, disclosureStyles.ghost, focusRing)
-//   stylex.props(disclosureStyles.panel, disclosureStyles.quiet, panelHeight)
-//                                          with the part's own --…-panel-height
+//   className(disclosureStyles.panel, disclosureStyles.quiet)
 //
 // A part marks itself disabled with data-disabled, as UI SDK does.
 
@@ -1090,12 +1089,17 @@ export const disclosureStyles = stylex.create({
   chevronOpen: {
     transform: "rotate(0.5turn)",
   },
-  // The panel's height is the part's own variable, which UI SDK writes as it measures.
   panel: {
     // A base stylesheet that hides [hidden] with !important (the docs' own) still wins over this.
     // Without script nothing opens a panel, so every panel shows open.
     display: { default: null, [media.noScript]: "block" },
     overflow: "hidden",
+    // The height UI SDK measures and writes, as a Collapsible's panel or an Accordion's.
+    height: {
+      default: "var(--collapsible-panel-height, var(--accordion-panel-height))",
+      ":is([data-starting-style], [data-ending-style])": 0,
+      [media.noScript]: "auto",
+    },
     transitionProperty: "height",
     transitionDuration: motionVars.collapsibleOpen,
     transitionTimingFunction: "ease-out",
@@ -1136,14 +1140,23 @@ export const segmentedStyles = stylex.create({
   // Raised out of the track with the low lift, so the choice is a shape and not a colour alone. In
   // dark a lift's shadow is lost on the dark ground and the fill is barely off the track, so there
   // it also takes the pressed veil. Light is untouched.
+  // In forced colours, the system's own highlight, drawn by the part itself: left to the browser,
+  // each run of words gets a backplate in the page's colour, which hides words in HighlightText.
   chosen: {
+    forcedColorAdjust: { default: null, [FORCED]: "none" },
     color: { default: colors.foreground, [FORCED]: "HighlightText" },
     backgroundColor: { default: colors.tabBgSelected, [FORCED]: "Highlight" },
     backgroundImage: {
       default: `linear-gradient(light-dark(transparent, ${colors.accentActive}), light-dark(transparent, ${colors.accentActive}))`,
       [FORCED]: "none",
     },
-    boxShadow: shadow.sm,
+    boxShadow: { default: shadow.sm, [FORCED]: "none" },
+  },
+  // The chosen one's words where they are a part of their own, over a pill that wears `chosen`
+  // (ThemeToggle): in ink, and in forced colours the highlight's text with no backplate.
+  chosenWords: {
+    forcedColorAdjust: { default: null, [FORCED]: "none" },
+    color: { default: colors.foreground, [FORCED]: "HighlightText" },
   },
 });
 

@@ -60,6 +60,7 @@ import {
 } from "../lib/tokens.stylex";
 // UI SDK places a popup in pixels: popup-gap and popup-gutter, as the generator writes them.
 import { popup } from "../lib/tokens.values";
+import { className } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { listMarker } from "../lib/vars.stylex";
 import type { InputSize } from "./input";
@@ -592,12 +593,12 @@ export const TagsInput = ({
                   value={word}
                   label={word}
                   className={(state: ComboboxItemState) =>
-                    stylex.props(
+                    className(
                       listStyles.item,
                       listStyles.menuItem,
                       styles.option,
                       state.highlighted && listStyles.itemHighlighted
-                    ).className
+                    )
                   }
                 >
                   <span {...stylex.props(listStyles.itemText)}>{word}</span>

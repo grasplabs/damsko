@@ -80,7 +80,7 @@ import {
   size,
   space,
 } from "../lib/tokens.stylex";
-import { announce } from "../lib/utils";
+import { announce, className } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { iconVars, ringInsetMarker, traceCardMarker } from "../lib/vars.stylex";
 import { Shimmer } from "./shimmer";
@@ -366,13 +366,6 @@ const styles = stylex.create({
       ":is([aria-expanded=true] > *)": "rotate(0.5turn)",
     },
   },
-  height: {
-    height: {
-      default: "var(--collapsible-panel-height)",
-      ":is([data-starting-style], [data-ending-style])": 0,
-      [media.noScript]: "auto",
-    },
-  },
 });
 
 // Lines whose status changed in one render: their effects run one after another, then this list
@@ -628,14 +621,7 @@ export const TraceCollapsibleContent = ({
   <CollapsiblePanel
     render={<div data-slot="trace-collapsible-content" />}
     hiddenUntilFound
-    className={
-      stylex.props(
-        disclosureStyles.panel,
-        disclosureStyles.quiet,
-        styles.height,
-        style
-      ).className
-    }
+    className={className(disclosureStyles.panel, disclosureStyles.quiet, style)}
   >
     <div
       data-slot="trace-collapsible-content-inner"

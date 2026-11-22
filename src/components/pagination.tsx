@@ -60,7 +60,7 @@ import {
   size,
   space,
 } from "../lib/tokens.stylex";
-import { listOf, slotted } from "../lib/utils";
+import { className, listOf, slotted } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { iconVars, motionVars } from "../lib/vars.stylex";
 import { buttonVariants } from "./button";
@@ -480,13 +480,13 @@ export const PaginationLink = ({
         element
       )}
       className={(state: PaginationLinkState) =>
-        stylex.props(
+        className(
           buttonVariants({
             variant: (isActive ?? state.current) ? "outline" : "ghost",
             size: "icon-xs",
           }),
           style
-        ).className
+        )
       }
     >
       {element === undefined ? children : undefined}

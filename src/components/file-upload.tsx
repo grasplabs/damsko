@@ -46,6 +46,7 @@ import {
   size,
   space,
 } from "../lib/tokens.stylex";
+import { className } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { iconVars, motionVars } from "../lib/vars.stylex";
 import { Button } from "./button";
@@ -783,7 +784,7 @@ export const FileUpload = ({
             ) : null}
           </span>
         ) : (
-          <FileInputDropzone className={stylex.props(styles.zone).className}>
+          <FileInputDropzone className={className(styles.zone)}>
             {fallback}
             <span aria-hidden="true" {...stylex.props(styles.zoneIcon)}>
               <Icon icon={UploadIcon} />

@@ -71,6 +71,7 @@ import {
   space,
 } from "../lib/tokens.stylex";
 import { durations } from "../lib/tokens.values";
+import { className } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { focusMarker, iconVars, motionVars } from "../lib/vars.stylex";
 import { Button } from "./button";
@@ -877,7 +878,7 @@ const closeTab = (tab: HTMLElement | null, onClose: () => void) => {
 
 const tabClass =
   (segmented: boolean, closable: boolean) => (state: TabsTabState) =>
-    stylex.props(
+    className(
       styles.tab,
       segmented && styles.segment,
       !state.disabled && !state.selected && styles.live,
@@ -889,7 +890,7 @@ const tabClass =
       // outside would be cut. A line tab runs edge to edge with no corner, so its ring goes
       // round its words instead, never as a square box round the whole tab.
       segmented ? focusRingInset : [focusMarker, focusCarrier]
-    ).className;
+    );
 
 /** One tab: a short noun for its view ("Activity"). */
 export const TabsTrigger = ({
@@ -986,7 +987,7 @@ export const TabsContent = ({
       render={(props: Record<string, unknown>) =>
         renderElement("div", { ...props, "data-slot": "tabs-content" })
       }
-      className={stylex.props(styles.panel, focusRing, style).className}
+      className={className(styles.panel, focusRing, style)}
     />
   );
 };

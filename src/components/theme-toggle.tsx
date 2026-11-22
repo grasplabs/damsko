@@ -605,7 +605,7 @@ const Segmented = ({
               key={each}
               {...stylex.props(
                 styles.segment,
-                each === mode && styles.segmentOn,
+                each === mode && segmentedStyles.chosenWords,
                 focusWithin
               )}
             >

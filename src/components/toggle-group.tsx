@@ -26,6 +26,7 @@ import {
   size as sizes,
   space,
 } from "../lib/tokens.stylex";
+import { className } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { ringInsetMarker } from "../lib/vars.stylex";
 import { iconOnly, toggleVariants } from "./toggle";
@@ -257,7 +258,7 @@ const Item = ({
       {...rest}
       data-slot="toggle-group-item"
       className={(state: ToggleState) =>
-        stylex.props(
+        className(
           toggleVariants({ size }),
           sizeStyle(size),
           styles.item,
@@ -268,7 +269,7 @@ const Item = ({
           state.disabled && styles.disabled,
           style,
           focusRing
-        ).className
+        )
       }
     >
       <span aria-hidden="true" {...stylex.props(styles.target)} />
