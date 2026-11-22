@@ -77,7 +77,7 @@ export default function PromptInputDictation() {
             }}
             muted={muted}
             onMutedChange={setMuted}
-            level={hearing ? 0.4 + 0.2 * (words % 3) : 0}
+            level={hearing ? 0.25 + 0.25 * (words % 3) : 0}
             interim={hearing ? heard[words] : undefined}
           />
         </PromptInputTools>

@@ -95,7 +95,12 @@ const componentFolder = (id: string) => {
 // first example. The Model selector's stack (Command, Popover, Toggle group, the makers' marks) and
 // the working line's (Agent indicator, Shimmer) were eight requests and 32KB of a first visit to
 // the prompt input's page.
-const examplesApart = new Set(["prompt-input/model", "prompt-input/working"]);
+const examplesApart = new Set([
+  "prompt-input/compact",
+  "prompt-input/glass",
+  "prompt-input/model",
+  "prompt-input/working",
+]);
 
 /**
  * "examples/button/states.tsx" → "examples-button": one chunk per example folder, with what lies in

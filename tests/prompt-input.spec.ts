@@ -581,6 +581,21 @@ test("while it listens Enter in the text sends nothing, and Escape there cancels
   await expect(text).toBeFocused();
 });
 
+test("while it listens the words step back to the quiet colour, and come back as it ends", async ({
+  page,
+}) => {
+  await openExample(page, "prompt-input", "dictation", { time: fixedTime });
+  const text = page.getByRole("textbox", { name: "Message" });
+  const colour = async () =>
+    await text.evaluate((element) => getComputedStyle(element).color);
+  const ink = await colour();
+  await page.getByRole("button", { name: "Dictate" }).click();
+  await expect(page.getByRole("group", { name: "Listening" })).toBeVisible();
+  await expect.poll(colour).not.toBe(ink);
+  await page.getByRole("button", { name: "Done" }).click();
+  await expect.poll(colour).toBe(ink);
+});
+
 test("a word heard but not yet final shows lighter after the text, and is no part of it", async ({
   page,
 }) => {
@@ -596,7 +611,7 @@ test("a word heard but not yet final shows lighter after the text, and is no par
       const heard = element.dataset.interim ?? "";
       return {
         shown: heard !== "" && after.content === `" ${heard}"`,
-        lighter: after.color !== getComputedStyle(element).color,
+        lighter: Number(after.opacity) < 1,
         written: (element.textContent ?? "").trimEnd().endsWith(heard),
       };
     });
@@ -1195,4 +1210,28 @@ test("on a phone, files with long names keep their Remove clear of the row's fad
   await remove.focus();
   expect(await files.evaluate((element) => element.scrollLeft)).toBe(0);
   await clear();
+});
+
+test("a line started with Shift+Enter in a full text is brought into view at once", async ({
+  page,
+}) => {
+  await openExample(page, "prompt-input", "basic");
+  const text = page.getByRole("textbox", { name: "Message" });
+  await text.click();
+  for (let line = 0; line < 12; line += 1) {
+    // oxlint-disable-next-line no-await-in-loop -- one key after the other, as a person types
+    await page.keyboard.type(`line ${line}`);
+    // oxlint-disable-next-line no-await-in-loop -- one key after the other, as a person types
+    await page.keyboard.press("Shift+Enter");
+  }
+  // The caret's empty line is the last: nothing of the text is left under the fold.
+  await expect
+    .poll(
+      async () =>
+        await text.evaluate(
+          (element) =>
+            element.scrollHeight - element.clientHeight - element.scrollTop
+        )
+    )
+    .toBeLessThanOrEqual(1);
 });

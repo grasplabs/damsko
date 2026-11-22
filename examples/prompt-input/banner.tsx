@@ -14,7 +14,7 @@ import {
   PromptInputTextarea,
   PromptInputTools,
 } from "@grasp-os/ui/components/prompt-input";
-import { LinkIcon, MicIcon } from "@grasp-os/ui/lib/icons";
+import { Icon, LinkIcon, MicIcon, RefreshCwIcon } from "@grasp-os/ui/lib/icons";
 import * as stylex from "@stylexjs/stylex";
 import { useState } from "react";
 
@@ -67,6 +67,7 @@ export default function PromptInputBannerExample() {
             variant="destructive"
             action={
               <Button variant="outline" size="sm">
+                <Icon icon={RefreshCwIcon} />
                 Try again
               </Button>
             }

@@ -119,6 +119,7 @@ import {
   CheckIcon,
   ChevronRightIcon,
   Icon,
+  InfoIcon,
   LoaderIcon,
   MicIcon,
   PaperclipIcon,
@@ -154,6 +155,7 @@ import {
   iconVars,
   menuMarker,
   pixel,
+  pixelVars,
   ringInsetMarker,
 } from "../lib/vars.stylex";
 import { Alert, AlertAction, AlertTitle } from "./alert";
@@ -514,8 +516,9 @@ export interface PromptInputBannerProps {
    */
   icon?: IconData | false;
   /**
-   * What it means, as an Alert's: `default` a plain note, read where it stands; `warning` or
-   * `destructive` when it stops work, said at once as it appears.
+   * What it means: `default` a plain note, read where it stands; `warning` or `destructive` when
+   * it stops work, said at once as it appears. The strip is the same quiet one for each: the
+   * mark takes the colour.
    * @default "default"
    */
   variant?: "default" | "warning" | "destructive";
@@ -523,7 +526,7 @@ export interface PromptInputBannerProps {
   action?: ReactNode;
   /**
    * Shows a close button at the end, named by the I18nProvider (`alert.close`), and runs as it
-   * is pressed: the banner goes, and focus goes to the text.
+   * is pressed: the product takes the banner away, and focus goes to the text.
    */
   onClose?: () => void;
   /** Layout only. */
@@ -757,6 +760,10 @@ const COARSE = media.pointerCoarse;
 // A footer too narrow to keep the count beside Submit: under 30rem. A container query cannot read
 // a variable, so the width is written here.
 const NARROW = "@container prompt-input (width < 30rem)";
+// Inside an Alert, where its action stands beside its words: its body 24rem wide or more. For the
+// banner's own box that is the form at 26.5rem (the body and the strip's insets).
+const WIDE = "@container (width >= 24rem)";
+const BANNER_WIDE = "@container prompt-input (width >= 26.5rem)";
 // Which way the working light travels: with the reading direction.
 const WAY = "--prompt-input-light-way";
 
@@ -1096,12 +1103,15 @@ const styles = stylex.create({
       pointerEvents: "none",
     },
   },
-  // What a dictation has heard but not yet settled on: lighter, after the words, never part of
-  // them.
+  // While a dictation listens the words step back: the voice has the card.
+  editorListening: { color: colors.mutedForeground },
+  // What a dictation has heard but not yet settled on: lighter still, after the words, never part
+  // of them.
   interim: {
     "::after": {
       content: "' ' attr(data-interim)",
       color: colors.mutedForeground,
+      opacity: size.opacityDisabled,
     },
   },
   // The resting row is one line at every width: a placeholder too long for it ends in an ellipsis.
@@ -1227,27 +1237,71 @@ const styles = stylex.create({
     overflowWrap: "anywhere",
   },
   noteFailed: { color: colors.destructive },
-  // A banner above the card: an Alert in from the card's sides, so its side lies inside the
-  // card's rounded corner, its foot behind the card's top so the two read as one piece.
+  // A banner above the card: the quiet strip, in from the card's sides so its side lies inside the
+  // card's rounded corner, its foot behind the card's top so the two read as one piece. An Alert
+  // stands in it without a fill of its own: what the notice means is in its mark's colour, and in
+  // how the Alert says it.
   banner: {
     position: "relative",
     zIndex: 1,
     marginInline: space["2"],
     marginBlockEnd: `calc(-1 * ${radius.base})`,
+    padding: space["3"],
+    // Room for the card's corner to lie over its foot.
+    paddingBlockEnd: `calc(${space["3"]} + ${radius.base})`,
+    borderStartStartRadius: radius.base,
+    borderStartEndRadius: radius.base,
+    cornerShape: radius.shape,
+    backgroundColor: colors.muted,
+    boxShadow: size.borderStrong,
+    // Forced colours drop the fill and the shadow: a real line draws the strip.
+    outline: { default: "none", [FORCED]: `${size.hairline} solid CanvasText` },
   },
-  // The action, level with the words' first line beside them, as under them.
+  // The mark and the words: level with the action's button where it stands beside them.
+  bannerLine: {
+    display: "flex",
+    alignItems: "flex-start",
+    gap: space["1"],
+    minWidth: 0,
+    marginBlockStart: {
+      default: 0,
+      [WIDE]: `calc((${size.controlSm} - ${font.textSmLine}) / 2)`,
+    },
+  },
+  // Room at the words' end for the close button, which stands in the strip's corner.
+  bannerLineClosable: {
+    paddingInlineEnd: { default: size.controlXs, [WIDE]: 0 },
+  },
+  bannerMark: {
+    [iconVars.size]: size.iconSm,
+    [iconVars.stroke]: size.iconStroke,
+    display: "flex",
+    flexShrink: 0,
+    marginBlockStart: `calc((${font.textSmLine} - ${size.iconSm}) / 2)`,
+    color: colors.mutedForeground,
+  },
+  bannerWords: { minWidth: 0 },
+  // The action: at the row's top beside the words, and under them where they start, past the mark.
   bannerAction: {
     display: "flex",
     flexWrap: "wrap",
     alignItems: "center",
     alignSelf: "flex-start",
     gap: space["2"],
+    marginInlineStart: {
+      default: `calc(${size.iconSm} + ${space["1"]})`,
+      [WIDE]: 0,
+    },
   },
-  // Room at the end of the words for the part of the Alert the card lies over (less the gap the
-  // Alert keeps between its rows).
-  bannerFoot: {
-    gridColumn: "1",
-    height: `calc(${radius.base} - ${space["1"]})`,
+  bannerActionClosable: {
+    marginInlineEnd: { default: 0, [WIDE]: size.controlXs },
+  },
+  // The close button, in the strip's end corner.
+  bannerClose: {
+    position: "absolute",
+    top: { default: space["2"], [BANNER_WIDE]: `calc(${space["3"]} + 2px)` },
+    insetInlineEnd: space["1"],
+    display: "flex",
   },
   // The queue's panel above the card: raised as the card is, its rows starting where the card's
   // words do, their actions ending where Submit ends, its foot behind the card.
@@ -1340,25 +1394,36 @@ const styles = stylex.create({
     fontVariantNumeric: "tabular-nums",
     whiteSpace: "nowrap",
   },
-  // The voice's field, on the bar's centre line: one body of the system's pixels, widest and
-  // densest at its middle, that stands low at rest and grows taller with the voice. Nothing
-  // travels sideways.
+  // The voice's field, on the bar's centre line: a fine line of the system's pixels from end to
+  // end, and round its middle a body of the same pixels that stands a row or two taller with the
+  // voice. Nothing travels sideways. Every height is a whole number of the grid's rows, so the
+  // line and the body share one grid.
   level: {
+    [pixelVars.color]: "currentColor",
+    position: "relative",
     display: "grid",
     alignItems: "center",
     flexGrow: 1,
     minWidth: 0,
-    height: size.controlSm,
+    height: "27px",
     color: { default: colors.mint, [FORCED]: "CanvasText" },
+    "::before": {
+      content: "''",
+      gridArea: "1 / 1",
+      height: "3px",
+      backgroundImage: pixel.fineFill,
+      backgroundSize: "3px 3px",
+      maskImage:
+        "linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent)",
+      opacity: size.opacityDisabled,
+    },
   },
-  // The body: the pixel grid, cut by a soft oval that fades to its ends. Its height steps by two
-  // pixels of the grid, so the grid stays where it is as the body grows from its middle.
   voice: {
-    backgroundColor: "currentColor",
-    maskImage: `${pixel.mask}, radial-gradient(closest-side, #000 25%, transparent)`,
-    maskSize: "3px 3px, 100% 100%",
-    maskRepeat: "repeat, no-repeat",
-    maskComposite: "intersect",
+    gridArea: "1 / 1",
+    backgroundImage: pixel.fineFill,
+    backgroundSize: "3px 3px",
+    maskImage:
+      "linear-gradient(90deg, transparent 12%, #000 38%, #000 62%, transparent 88%)",
   },
   voiceMuted: { opacity: size.opacityDisabled },
   loud: (height: string) => ({ height }),
@@ -1393,7 +1458,10 @@ const styles = stylex.create({
     color: colors.mutedForeground,
     transform: { default: null, ":dir(rtl)": "scaleX(-1)" },
   },
+  // The menu's words when it has no rows. It stays in the menu, wordless, while there are rows,
+  // and takes no room then.
   mentionEmpty: {
+    display: { default: "block", ":empty": "none" },
     paddingBlock: space["2"],
     paddingInline: space.menuItemPadding,
     color: colors.mutedForeground,
@@ -1856,6 +1924,36 @@ const listenForFileDrags = (
   };
 };
 
+/**
+ * Once a change has drawn: when the caret stands at the end of a text that scrolls, the text
+ * scrolls to its end. A line started with Shift+Enter in a full text is empty, and the browser
+ * brings no caret into view until a letter is typed there.
+ */
+const keepCaretInView = (card: HTMLElement | null) => {
+  requestAnimationFrame(() => {
+    const editor = card?.querySelector<HTMLElement>(
+      '[data-slot="prompt-input-textarea"]'
+    );
+    const caret = getSelection();
+    if (
+      editor === null ||
+      editor === undefined ||
+      caret === null ||
+      !caret.isCollapsed ||
+      caret.focusNode === null ||
+      !editor.contains(caret.focusNode)
+    ) {
+      return;
+    }
+    const rest = document.createRange();
+    rest.selectNodeContents(editor);
+    rest.setStart(caret.focusNode, caret.focusOffset);
+    if (rest.toString().trim() === "") {
+      editor.scrollTop = editor.scrollHeight;
+    }
+  });
+};
+
 /** A length as computed ("8px"), in pixels; 0 for one that is not ("normal"). */
 // oxlint-disable-next-line unicorn/prefer-number-coercion -- a length reads "8px", which Number() makes NaN
 const px = (value: string) => Number.parseFloat(value) || 0;
@@ -1879,13 +1977,17 @@ const outgrown = (card: HTMLElement) => {
   }
   const look = getComputedStyle(card);
   const own = getComputedStyle(editor);
-  const sides = ["prompt-input-tools", "prompt-input-end"]
-    .map(
-      (slot) =>
-        card
-          .querySelector<HTMLElement>(`[data-slot="${slot}"]`)
-          ?.getBoundingClientRect().width ?? 0
+  // Every group of tools, and Submit where it stands apart from them.
+  const sides = [
+    ...card.querySelectorAll<HTMLElement>(
+      '[data-slot="prompt-input-tools"], [data-slot="prompt-input-end"]'
+    ),
+  ]
+    .filter(
+      (side) =>
+        side.parentElement?.closest('[data-slot="prompt-input-tools"]') === null
     )
+    .map((side) => side.getBoundingClientRect().width)
     .reduce((sum, width) => sum + width, 0);
   const room =
     card.clientWidth -
@@ -2201,10 +2303,17 @@ export const PromptInputNote = ({ children, style }: PromptInputNoteProps) => {
   );
 };
 
+// The mark a banner wears when none is given: what the notice means.
+const bannerIcons = {
+  default: InfoIcon,
+  warning: TriangleAlertIcon,
+  destructive: TriangleAlertIcon,
+} as const;
+
 /**
  * A notice above the card that belongs to the prompt input (a limit reached, something to
- * connect first), tucked under the card's top: an Alert as a banner, with one short line and one
- * action, so it is said as an Alert is. Written straight in the PromptInput.
+ * connect first), tucked under the card's top: the quiet strip with an Alert in it, one short line
+ * and one action, so it is said as an Alert is. Written straight in the PromptInput.
  */
 export const PromptInputBanner = ({
   children,
@@ -2214,45 +2323,81 @@ export const PromptInputBanner = ({
   onClose,
   style,
 }: PromptInputBannerProps) => {
+  const words = useI18n().alert;
   const form = usePromptInput();
-  // Whether the banner held the focus as its close button was pressed: the text takes it then.
-  const held = useRef(false);
-  const [closed, setClosed] = useState(false);
-  if (!useOutside() || closed) {
+  if (!useOutside()) {
     return null;
   }
+  const mark = icon === false ? undefined : (icon ?? bannerIcons[variant]);
+  const closable = onClose !== undefined;
   return (
     <div
       data-slot="prompt-input-banner"
-      onClickCapture={(event) => {
-        held.current = event.currentTarget.contains(document.activeElement);
-      }}
       {...stylex.props(styles.banner, style)}
     >
       <Alert
-        appearance="banner"
-        variant={variant}
-        icon={icon}
-        onClose={
-          onClose === undefined
-            ? undefined
-            : () => {
-                setClosed(true);
-                onClose();
-                if (held.current) {
-                  form?.controller.focus({ at: "end" });
-                }
-              }
-        }
+        appearance="subtle"
+        // Said at once when it warns or stops work, else read where it stands.
+        live={variant === "default" ? "polite" : "assertive"}
+        icon={false}
       >
-        <AlertTitle>{children}</AlertTitle>
+        <AlertTitle>
+          <span
+            {...stylex.props(
+              styles.bannerLine,
+              closable && styles.bannerLineClosable
+            )}
+          >
+            {mark !== undefined && (
+              <span
+                aria-hidden="true"
+                {...stylex.props(
+                  styles.bannerMark,
+                  variant === "warning" && styles.warning,
+                  variant === "destructive" && styles.destructive
+                )}
+              >
+                <Icon icon={mark} />
+              </span>
+            )}
+            <span {...stylex.props(styles.bannerWords)}>{children}</span>
+          </span>
+        </AlertTitle>
         {!isBlank(action) && (
           <AlertAction>
-            <span {...stylex.props(styles.bannerAction)}>{action}</span>
+            <span
+              {...stylex.props(
+                styles.bannerAction,
+                closable && styles.bannerActionClosable
+              )}
+            >
+              {action}
+            </span>
           </AlertAction>
         )}
-        <span aria-hidden="true" {...stylex.props(styles.bannerFoot)} />
       </Alert>
+      {closable && (
+        <span {...stylex.props(styles.bannerClose)}>
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            aria-label={words.close}
+            onClick={(event) => {
+              // The banner goes, and its button with it: the text takes the focus it held.
+              const held =
+                event.currentTarget.parentElement?.parentElement?.contains(
+                  document.activeElement
+                ) === true;
+              onClose();
+              if (held) {
+                form?.controller.focus({ at: "end" });
+              }
+            }}
+          >
+            <Icon icon={XIcon} />
+          </Button>
+        </span>
+      )}
     </div>
   );
 };
@@ -2484,6 +2629,7 @@ export const PromptInput = ({
       setCut(refitting.current);
       failure.typed();
     });
+    keepCaretInView(card.current);
     onValueChange?.(next, details);
   };
 
@@ -2918,6 +3064,7 @@ export const PromptInputTextarea = ({
             compact && styles.compactEditor,
             state.empty && interim === "" && styles.placeholder,
             state.empty && compact && styles.compactPlaceholder,
+            form?.dictating === true && styles.editorListening,
             interim !== "" && styles.interim,
             scrollbarHidden,
             style
@@ -3284,11 +3431,11 @@ export const PromptInputActionAddAttachments = ({
 };
 
 /**
- * How tall the voice's field stands for a level from 0 to 1: 6px at rest, 30px at its loudest, in
- * steps of 6px, two pixels of its grid, so it grows evenly from its middle.
+ * How tall the voice's field stands for a level from 0 to 1: one row of its grid at rest, three for
+ * ordinary speech, five at its loudest. Two rows a step, so it grows evenly from its middle.
  */
 const fieldHeight = (level: number) =>
-  `${6 + 6 * Math.round(4 * Math.min(Math.max(level, 0), 1))}px`;
+  `${3 + 6 * Math.round(2 * Math.min(Math.max(level, 0), 1))}px`;
 
 /** The time a dictation has run, as a clock reads it ("0:12"). */
 const clock = (seconds: number) =>

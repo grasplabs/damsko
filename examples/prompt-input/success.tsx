@@ -14,7 +14,8 @@ import { useState } from "react";
 import { layout } from "./layout";
 
 // Success is a moment the product marks: one halo round the card, said once, and Submit as at
-// rest. The button plays it again; with reduced motion there is no halo, only the words.
+// rest. The button plays it again; with reduced motion the halo stands still for that moment and
+// goes, with no movement.
 export default function PromptInputSuccess() {
   const [done, setDone] = useState(true);
   return (

@@ -232,6 +232,7 @@ export interface AttachmentTriggerProps extends Omit<
 
 const HOVER = media.hover;
 const FORCED = media.forcedColors;
+const COARSE = media.pointerCoarse;
 
 const styles = stylex.create({
   group: {
@@ -251,15 +252,16 @@ const styles = stylex.create({
     containerType: "inline-size",
     fontFamily: font.sans,
   },
-  // With more than one file, a card leaves the room of a fade at each side, so a long name never
-  // puts its card's actions under the fade nor scrolls them out from under it; alone, it takes the
-  // whole row and nothing fades. (The fade's reach is edgeFade's, space-10.)
+  // A card is at most as wide as the row. With more than one file the first leaves the room of a
+  // fade at each side, so at rest a long name never puts its actions under the fade at the row's
+  // end; the cards after it come into view by scrolling, where the row's scroll padding keeps a
+  // focused action clear. (The fade's reach is edgeFade's, space-10.)
   item: {
     display: "flex",
     flexShrink: 0,
     maxWidth: {
-      default: `calc(100% - 2 * ${space["10"]})`,
-      ":only-child": "100%",
+      default: "100%",
+      ":first-child:not(:only-child)": `calc(100% - 2 * ${space["10"]})`,
     },
   },
   card: {
@@ -395,8 +397,12 @@ const styles = stylex.create({
     zIndex: 1,
     display: "flex",
     alignItems: "center",
-    // Two small actions keep a finger's least distance between them.
-    gap: space["1"],
+    // Two small actions keep a finger's room each: on a touch screen their targets, wider than
+    // the circles, stand side by side and never over one another.
+    gap: {
+      default: space["1"],
+      [COARSE]: `calc(${sizes.tapTarget} - ${sizes.badgeHeight})`,
+    },
     flexShrink: 0,
     opacity: {
       default: 1,
