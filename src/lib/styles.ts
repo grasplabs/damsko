@@ -600,8 +600,11 @@ export const listStyles = stylex.create({
     },
     lineHeight: font.textSmLine,
   },
-  // Where the keyboard or the pointer is. In forced colours, the system's own highlight.
+  // Where the keyboard or the pointer is. In forced colours, the system's own highlight, drawn by
+  // the item itself: left to the browser, each run of words gets a backplate in the page's colour,
+  // which hides words in HighlightText.
   itemHighlighted: {
+    forcedColorAdjust: { default: null, [FORCED]: "none" },
     backgroundColor: {
       default: colors.accentHighlight,
       [FORCED]: "Highlight",
@@ -629,14 +632,15 @@ export const listStyles = stylex.create({
     display: "inline-flex",
     flexShrink: 0,
     marginInlineStart: "auto",
-    color: colors.mutedForeground,
+    // In forced colours it takes its row's colour, the highlighted row's too.
+    color: { default: colors.mutedForeground, [FORCED]: "inherit" },
     fontSize: font.textXs,
     lineHeight: font.textXsLine,
   },
   check: {
     display: "inline-flex",
     flexShrink: 0,
-    color: colors.foreground,
+    color: { default: colors.foreground, [FORCED]: "inherit" },
   },
   // The letters the typed words matched: in the foreground colour, never a fill.
   match: {
@@ -763,8 +767,10 @@ export const menuStyles = stylex.create({
     WebkitTapHighlightColor: "transparent",
     touchAction: "manipulation",
   },
-  // Where the keyboard or the pointer is: the highlight is the focus mark.
+  // Where the keyboard or the pointer is: the highlight is the focus mark. In forced colours the
+  // item draws the system's highlight itself, so the browser puts no backplate over its words.
   highlighted: {
+    forcedColorAdjust: { default: null, [FORCED]: "none" },
     backgroundColor: {
       default: colors.accentHighlight,
       [FORCED]: "Highlight",

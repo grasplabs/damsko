@@ -246,3 +246,48 @@ test("an item whose value holds a space is still described by its line", async (
     options(page).filter({ hasText: "Jonas Weber" })
   ).toHaveAccessibleDescription("Finance");
 });
+
+test("the chosen item's media stands in the field, steps aside while the words are a search, and gives way to the quiet icon when empty", async ({
+  page,
+}) => {
+  await openExample(page, "combobox", "people");
+  const field = page.getByRole("combobox");
+  // The avatar is decorative, so it is found by the initials it draws.
+  const avatar = page.getByText("AO", { exact: true });
+  await expect(avatar).toBeVisible();
+  const start = await field.evaluate(
+    (input) => getComputedStyle(input).paddingInlineStart
+  );
+  await field.fill("des");
+  await expect(options(page)).toHaveCount(1);
+  await expect(avatar).toHaveCount(0);
+  await page.keyboard.press("Escape");
+  await expect(field).toHaveValue("Amara Okafor");
+  await expect(avatar).toBeVisible();
+  await field.fill("");
+  await field.blur();
+  await expect(avatar).toHaveCount(0);
+  // The quiet icon holds the avatar's place: the words start where they did.
+  await expect(field).toHaveCSS("padding-inline-start", start);
+});
+
+test("without media of its own, the field shows the chosen item's, and words only while nothing is chosen", async ({
+  page,
+}) => {
+  await openExample(page, "combobox", "media");
+  const field = page.getByRole("combobox");
+  const avatar = page.getByText("SP", { exact: true });
+  const empty = await field.evaluate(
+    (input) => getComputedStyle(input).paddingInlineStart
+  );
+  await field.fill("Sam");
+  await page.keyboard.press("Enter");
+  await expect(field).toHaveValue("Sam Patel");
+  await expect(options(page)).toHaveCount(0);
+  await expect(avatar).toBeVisible();
+  await expect(field).not.toHaveCSS("padding-inline-start", empty);
+  await field.fill("");
+  await field.blur();
+  await expect(avatar).toHaveCount(0);
+  await expect(field).toHaveCSS("padding-inline-start", empty);
+});

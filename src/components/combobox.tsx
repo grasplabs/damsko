@@ -2,8 +2,8 @@
 // converted from Tailwind to StyleX and rebuilt on UI SDK's Combobox: closed, it is an Input (the
 // same fill, hairline, heights and corner) with a chevron at the end; open, it is the list popup
 // Select shares, and the letters that matched are drawn in the text colour. An item can carry
-// `media` (an avatar, a logo) and a `description` line under its words, as a person does; with
-// `media` on the field, the chosen item's stands at the field's start.
+// `media` (an avatar, a logo) and a `description` line under its words, as a person does; the
+// chosen item's media stands at the field's start, and the field's own `media` while there is none.
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
 //   <Field>
@@ -121,9 +121,10 @@ export interface ComboboxProps {
    */
   items: ComboboxItems;
   /**
-   * What stands at the field's start while nothing is chosen: a quiet icon. Once an item is chosen
-   * its own `media` takes this place, and steps aside again while the words typed are a search.
-   * Leave it out and the field shows words only.
+   * What stands at the field's start while nothing is chosen, or the chosen item has no `media`: a
+   * quiet icon. A chosen item's own `media` always stands there, with or without this, and steps
+   * aside while the words typed are a search. Give it when the items have media, so the words keep
+   * their place as a choice is made and cleared.
    */
   media?: ReactNode;
   /** A ComboboxEmpty, for the words the list says when nothing matches. Without one, the catalogue's. */
@@ -321,9 +322,13 @@ const styles = stylex.create({
   option: {
     fontWeight: font.weightNormal,
   },
-  // With media at its start, the words begin after it.
+  // With media at its start (the element before it), the words begin after it.
   inputStart: {
-    paddingInlineStart: `calc(${space[3]} + ${size.avatarXs} + ${space[2]})`,
+    paddingInlineStart: {
+      default: space[3],
+      [stylex.when.siblingBefore(":not(:empty)")]:
+        `calc(${space[3]} + ${size.avatarXs} + ${space[2]})`,
+    },
   },
   // The field's media: the chosen item's, or the quiet icon, as wide as an xs Avatar. A press on it
   // lands on the field under it; out of use, it is at half strength with the field.
@@ -341,7 +346,7 @@ const styles = stylex.create({
     color: colors.mutedForeground,
     opacity: {
       default: 1,
-      [stylex.when.siblingBefore(":disabled")]: size.opacityDisabled,
+      [stylex.when.siblingAfter(":disabled")]: size.opacityDisabled,
     },
     pointerEvents: "none",
   },
@@ -693,6 +698,27 @@ export const Combobox = ({
           aria-hidden="true"
           {...stylex.props(inputStyles.target, targetStyles[scale])}
         />
+        {/* Before the input, so the input's words begin after it while it is there. */}
+        <ComboboxValue>
+          {(state: ComboboxValueState): ReactNode => {
+            const chosen =
+              typeof state.value === "string"
+                ? byValue.get(state.value)?.media
+                : undefined;
+            const shown =
+              typed !== "" && typed !== state.label
+                ? resting
+                : (chosen ?? resting);
+            return shown === undefined ? null : (
+              <span
+                aria-hidden="true"
+                {...stylex.props(stylex.defaultMarker(), styles.start)}
+              >
+                {shown}
+              </span>
+            );
+          }}
+        </ComboboxValue>
         <ComboboxInput
           ref={input}
           id={id}
@@ -709,7 +735,7 @@ export const Combobox = ({
                 stylex.defaultMarker(),
                 styles.input,
                 sizeStyles[scale],
-                resting !== undefined && styles.inputStart,
+                styles.inputStart,
                 styles.inputEnd,
                 !(state.disabled || state.readOnly) && inputStyles.enabled,
                 state.readOnly && styles.readOnly,
@@ -720,21 +746,6 @@ export const Combobox = ({
             />
           )}
         />
-        {resting !== undefined && (
-          <span aria-hidden="true" {...stylex.props(styles.start)}>
-            <ComboboxValue>
-              {(state: ComboboxValueState): ReactNode => {
-                const chosen =
-                  typeof state.value === "string"
-                    ? byValue.get(state.value)?.media
-                    : undefined;
-                return typed !== "" && typed !== state.label
-                  ? resting
-                  : (chosen ?? resting);
-              }}
-            </ComboboxValue>
-          </span>
-        )}
         <ComboboxTrigger
           ref={chevron}
           onPointerDown={(event) => {

@@ -24,7 +24,7 @@ import type { ReactNode } from "react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "../../components/avatar";
 import { Button } from "../../components/button";
-import { Combobox } from "../../components/combobox";
+import { Combobox, ComboboxEmpty } from "../../components/combobox";
 import {
   Dialog,
   DialogBody,
@@ -71,6 +71,8 @@ export interface ShareDialogLabels {
   copyLink: string;
   /** The close button. */
   done: string;
+  /** Said in the add field's list when no one matches the words typed. */
+  empty: string;
   /** Said when an invite failed. */
   failedInvite: string;
   /** The add field's name and placeholder. */
@@ -95,6 +97,7 @@ const LABELS: ShareDialogLabels = {
   adding: "Adding",
   copyLink: "Copy link",
   done: "Done",
+  empty: "No one has that name",
   failedInvite: "Could not invite",
   find: "Add people or groups",
   inviteLevel: "Access for who you add",
@@ -285,7 +288,9 @@ const AddRow = ({
           onValueChange={setPicked}
           aria-label={words.find}
           placeholder={words.find}
-        />
+        >
+          <ComboboxEmpty>{words.empty}</ComboboxEmpty>
+        </Combobox>
       </div>
       <div {...stylex.props(styles.level)}>
         <Select

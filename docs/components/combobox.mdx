@@ -22,7 +22,7 @@ A group hides while none of its items match, and an item out of use is skipped.
 
 ## People
 
-An item can carry `media` and a `description`: here each person's avatar and role, and a role finds someone too. With `media` on the combobox, the chosen person's avatar stands at the field's start, and a quiet icon while no one is chosen.
+An item can carry `media` and a `description`: here each person's avatar and role, and a role finds someone too. The chosen person's avatar stands at the field's start; `media` on the combobox is the quiet icon that holds its place while no one is chosen.
 
 <Stage path="combobox/people" live label="People" />
 
@@ -104,7 +104,7 @@ Hover and keyboard focus are forced from the combobox's own CSS. The rest are pr
       group: "Closed",
       key: "Media",
       value: "{avatar-xs} wide at the start, {space-3} in",
-      note: "the chosen item's, or the quiet icon; only with `media`",
+      note: "the chosen item's, or the combobox's own `media` while nothing is chosen",
     },
     {
       group: "Closed",
