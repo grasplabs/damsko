@@ -828,6 +828,7 @@ export const TabsList = ({
       {...stylex.props(
         tabsRowMarker,
         styles.list,
+        !line && segmentedStyles.track,
         !line && styles.listDefault,
         style
       )}

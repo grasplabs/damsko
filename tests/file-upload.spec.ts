@@ -40,14 +40,14 @@ test("the keyboard reaches Choose files, and Enter opens the picker", async ({
   expect(chooser.isMultiple()).toBe(true);
 });
 
-for (const [example, name] of [
-  ["basic", "Choose files"],
+for (const [component, name] of [
+  ["file-upload", "Choose files"],
   ["image-upload", /^Change/u],
 ] as const) {
-  test(`${example}: focus taken before the page wakes stays on the control as it does`, async ({
+  test(`${component}: focus taken before the page wakes stays on the control as it does`, async ({
     page,
   }) => {
-    const wake = await openExampleAsleep(page, "file-upload", example);
+    const wake = await openExampleAsleep(page, component, "basic");
     // Until the script runs, the control is the browser's own file input.
     const control = page.getByRole("button", { name });
     await expect(control).toBeAttached();
@@ -206,7 +206,7 @@ test("the button form lists its files in the card, and once sent the host's word
 test("an image upload is the well itself: pressing it opens the picker, and it refuses with why", async ({
   page,
 }) => {
-  await openExample(page, "file-upload", "image-upload");
+  await openExample(page, "image-upload", "basic");
   await choose(page, /^Change/u, [file("notes.txt", "text/plain", 2000)]);
   await expect(
     page.getByText("notes.txt is not a kind of picture this takes.").first()
@@ -221,7 +221,7 @@ test("an image upload is the well itself: pressing it opens the picker, and it r
 test("an image upload saves a new picture, and remove puts the old one back", async ({
   page,
 }) => {
-  await openExample(page, "file-upload", "image-upload");
+  await openExample(page, "image-upload", "basic");
   await choose(page, /^Change/u, [file("face.png", "image/png", 2000)]);
   await expect(
     page.getByRole("status").filter({ hasText: /^Saving$/u })
@@ -237,7 +237,7 @@ test("an image upload saves a new picture, and remove puts the old one back", as
 test("in a setting's row, a refusal is one short line without the file's name", async ({
   page,
 }) => {
-  await openExample(page, "file-upload", "image-upload-setting");
+  await openExample(page, "image-upload", "setting");
   await choose(page, /^Change/u, [file("notes.txt", "text/plain", 2000)]);
   await expect(
     page.getByText("Not a kind of picture this takes.").first()

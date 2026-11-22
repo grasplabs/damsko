@@ -1,6 +1,6 @@
 ---
 title: Drawer
-description: A panel that slides up from the bottom for a short task on a phone.
+description: A panel dragged up from the bottom of a phone, which rests at more than one height or is pulled away.
 ---
 
 <Head
@@ -37,11 +37,12 @@ When the body holds more than the drawer, only the body scrolls.
   of="drawer"
   always={[
     "A title that names the task, a verb first.",
-    "A short task on a phone.",
+    "A panel on a phone that rests at more than one height, or that a person drags: results under a map, a player, a list to pull up.",
     "`snapPoints` when the lower height is useful on its own, as a list of results.",
     "`dismissible={false}` while a drag would lose unsaved work: ask in `onDismissAttempt`.",
   ]}
   never={[
+    "A short task on a phone with nothing to drag: use Dialog, which becomes a sheet along the bottom under 640px by itself.",
     "A task on a wide screen: use Dialog or Sheet.",
     "A second task over an open drawer: finish one first.",
   ]}
