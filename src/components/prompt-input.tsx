@@ -639,16 +639,33 @@ const styles = stylex.create({
   },
   // One row: the tools, the text and Submit; the text's column grows, and a narrow card folds the
   // tools and Submit under the text.
+  // A note (a failed send, a hint) is a line of words: in the tools' column it would take the
+  // text's width, so with one the card folds as a narrow one does, the note under the text.
   compact: {
     gridTemplateColumns: {
-      default: "minmax(0, 1fr)",
-      [ROW]: "auto minmax(0, 1fr) auto",
+      default: "minmax(0, 1fr) auto",
+      [ROW]: {
+        default: "auto minmax(0, 1fr) auto",
+        ":has([data-slot=prompt-input-note])": "minmax(0, 1fr) auto",
+      },
     },
     gridTemplateAreas: {
       default: '"header header" "field field" "start end"',
-      [ROW]: '"header header header" "start field end"',
+      [ROW]: {
+        default: '"header header header" "start field end"',
+        ":has([data-slot=prompt-input-note])":
+          '"header header" "field field" "start end"',
+      },
     },
-    alignItems: "end",
+    // In one row the tools and Submit stand at the foot of the growing text; folded, a row of
+    // their own, its items on one centre line (a note's one line level with Submit).
+    alignItems: {
+      default: "center",
+      [ROW]: {
+        default: "end",
+        ":has([data-slot=prompt-input-note])": "center",
+      },
+    },
     columnGap: space["1"],
   },
   // Files dragged over the card: tinted, its words say what a drop does.

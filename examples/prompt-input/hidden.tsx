@@ -24,6 +24,7 @@ export default function PromptInputHidden() {
       <Button
         variant="outline"
         size="sm"
+        style={layout.start}
         onClick={() => {
           setShown(!shown);
         }}

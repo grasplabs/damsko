@@ -5,6 +5,14 @@ import * as stylex from "@stylexjs/stylex";
 // its place once it is skipped.
 export const layout = stylex.create({
   column: { width: "100%", maxWidth: size.promptInputWidth },
+  // A question with what it reports under it, a step apart.
+  stack: {
+    display: "grid",
+    justifyItems: "start",
+    gap: space["3"],
+    width: "100%",
+    maxWidth: size.promptInputWidth,
+  },
   skipped: {
     display: "flex",
     flexWrap: "wrap",

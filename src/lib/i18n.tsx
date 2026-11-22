@@ -814,10 +814,14 @@ export interface I18nCatalog {
     error: string;
     input: string;
     output: string;
-    /** Where the call stands, after its title, for the AI SDK's tool states its line's status cannot say. */
+    /** Where the call stands, in its Badge after the title, by the AI SDK's tool state. */
     states: {
+      "input-streaming": string;
+      "input-available": string;
       "approval-requested": string;
       "approval-responded": string;
+      "output-available": string;
+      "output-error": string;
       "output-denied": string;
     };
   };
@@ -850,16 +854,6 @@ export interface I18nCatalog {
     /** Said to a screen reader while it works, when no `loadingLabel` is given. */
     loading: string;
     success: string;
-  };
-  userPicker: {
-    /** Said in the list when no one matches. */
-    empty: string;
-    /** Why an agent's choice is refused: the value is no one in the list. */
-    notInList: (value: string) => string;
-    /** What the field says while no one is chosen. */
-    placeholder: string;
-    /** The name of the button that opens the list of people. */
-    trigger: string;
   };
 }
 
@@ -1459,8 +1453,12 @@ const english: I18nCatalog = {
     input: "Input",
     output: "Output",
     states: {
+      "input-streaming": "Pending",
+      "input-available": "Running",
       "approval-requested": "Awaiting approval",
       "approval-responded": "Responded",
+      "output-available": "Completed",
+      "output-error": "Error",
       "output-denied": "Denied",
     },
   },
@@ -1482,12 +1480,6 @@ const english: I18nCatalog = {
     error: "Could not finish",
     loading: "Working",
     success: "Done",
-  },
-  userPicker: {
-    empty: "No one has that name",
-    notInList: (value: string) => `${value} is not one of the people listed`,
-    placeholder: "Choose a person",
-    trigger: "Show the people",
   },
 };
 

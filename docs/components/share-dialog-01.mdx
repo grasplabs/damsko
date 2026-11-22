@@ -30,7 +30,7 @@ The add row picks someone the product knows (`people`) and the level to give; Ad
   ]}
   never={[
     "A Save button: a level applies when it is chosen, so the dialog ends with Done.",
-    "Choosing the one person who owns something: use User picker.",
+    "Choosing the one person who owns something: use Combobox, with each person as an item.",
     "A list of people with no levels to set: use Item.",
   ]}
 />
@@ -98,6 +98,11 @@ The add row picks someone the product knows (`people`) and the level to give; Ad
   source="src/blocks/share-dialog-01/share-dialog-01.tsx"
   type="ShareMember"
   label="ShareMember"
+/>
+<Props
+  source="src/blocks/share-dialog-01/share-dialog-01.tsx"
+  type="SharePerson"
+  label="SharePerson"
 />
 <Props
   source="src/blocks/share-dialog-01/share-dialog-01.tsx"

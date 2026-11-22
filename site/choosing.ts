@@ -43,6 +43,7 @@ export const choosingGroups: ChoosingGroup[] = [
       "radio-group",
       "select",
       "combobox",
+      "model-selector",
       "checkbox",
       "switch",
       "toggle",

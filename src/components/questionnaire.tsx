@@ -291,6 +291,10 @@ const COARSE = media.pointerCoarse;
 const FORCED = media.forcedColors;
 const HOVER = media.hover;
 
+// Two columns of choices from this width of the question's own box. A container query cannot read
+// a variable, so the width is written here.
+const TWO = "@container questionnaire (width >= 24rem)";
+
 const styles = stylex.create({
   root: {
     [iconVars.size]: size.iconSm,
@@ -299,6 +303,8 @@ const styles = stylex.create({
     rowGap: space["4"],
     boxSizing: "border-box",
     width: "100%",
+    containerType: "inline-size",
+    containerName: "questionnaire",
     minWidth: 0,
     margin: 0,
     paddingBlock: space["3"],
@@ -361,18 +367,21 @@ const styles = stylex.create({
     minWidth: 0,
     counterReset: "questionnaire-choice",
   },
+  // Two columns while the question itself is wide enough for two, whatever the page's width.
   twoColumns: {
     gridTemplateColumns: {
-      default: "1fr",
-      [media.sm]: "repeat(2, minmax(0, 1fr))",
+      default: "minmax(0, 1fr)",
+      [TWO]: "repeat(2, minmax(0, 1fr))",
     },
   },
   // A choice is a card: the whole card is the target, at least a finger tall. Under a pointer its
   // edge strengthens; chosen, it takes the quiet fill, so it never rests on the control alone.
+  // Every card is as tall as the tallest: a card of one line stands its words in the middle, so
+  // its height never reads as an empty second line.
   choice: {
     position: "relative",
     display: "flex",
-    alignItems: "flex-start",
+    alignItems: "center",
     columnGap: space["3"],
     boxSizing: "border-box",
     minWidth: 0,
@@ -407,7 +416,7 @@ const styles = stylex.create({
     opacity: size.opacityDisabled,
     cursor: "not-allowed",
   },
-  // The control's line stands level with the words' first line.
+  // The control's line, the height of the words' first line.
   control: {
     display: "flex",
     alignItems: "center",

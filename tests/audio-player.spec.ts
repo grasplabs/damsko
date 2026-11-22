@@ -240,3 +240,19 @@ test("a remote sound from a chat is never requested, and what is not sound never
   await page.waitForLoadState("networkidle");
   expect(requested).toStrictEqual([]);
 });
+
+for (const example of ["switch", "untrusted"]) {
+  test(`on a phone the ${example} column of players fits the page, with no sideways scroll`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await openExample(page, "audio-player", example);
+    expect(
+      await page.evaluate(
+        () =>
+          document.documentElement.scrollWidth <=
+          document.documentElement.clientWidth
+      )
+    ).toBe(true);
+  });
+}

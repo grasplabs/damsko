@@ -571,6 +571,45 @@ test("a send that fails puts the words back and says so", async ({ page }) => {
   );
 });
 
+for (const width of [1440, 390]) {
+  test(`at ${width}, a note in one row takes a line of its own and the words keep the width`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 800 });
+    await openExample(page, "prompt-input", "failed", { time: fixedTime });
+    const text = page.getByRole("textbox", { name: "Message" });
+    await text.click();
+    await page.keyboard.press("Enter");
+    await page.clock.runFor(1000);
+    const note = page.getByText("Could not send. Your message is kept.");
+    await expect(note).toBeVisible();
+    const card = page.getByRole("group").filter({ has: text });
+    const [textBox, cardInner, noteBox] = await Promise.all([
+      text.boundingBox(),
+      card.evaluate((element) => element.clientWidth),
+      note.boundingBox(),
+    ]);
+    expect(textBox).not.toBeNull();
+    expect(noteBox).not.toBeNull();
+    if (textBox !== null && noteBox !== null) {
+      expect(textBox.width).toBeGreaterThanOrEqual(cardInner * 0.8);
+      expect(noteBox.y).toBeGreaterThanOrEqual(textBox.y + textBox.height - 1);
+    }
+    // The note's line stands level with Submit, centre to centre.
+    const submit = await page
+      .getByRole("button", { name: "Send", exact: true })
+      .boundingBox();
+    expect(submit).not.toBeNull();
+    if (noteBox !== null && submit !== null) {
+      expect(
+        Math.abs(
+          noteBox.y + noteBox.height / 2 - (submit.y + submit.height / 2)
+        )
+      ).toBeLessThanOrEqual(1);
+    }
+  });
+}
+
 test("a question in the text's place takes the focus, and the text takes it back", async ({
   page,
 }) => {
@@ -597,4 +636,40 @@ test("a press on the card's empty room puts the caret in the text", async ({
     await page.mouse.click(box.x - 4, box.y + box.height / 2);
   }
   await expect(text).toBeFocused();
+});
+
+test("on a phone, files with long names keep their Remove clear of the row's fade, and Remove takes focus without scrolling the name away", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await openExample(page, "prompt-input", "attachments");
+  const names = [
+    "annual-supplier-contract-renewal-2027-signed-final-version.pdf",
+    "second-quarter-figures-for-the-board-meeting-in-november.pdf",
+  ];
+  for (const name of names) {
+    // oxlint-disable-next-line no-await-in-loop -- one file after the other, as a person drops them
+    await giveFile(page, "drop", name);
+  }
+  const files = page.getByRole("list", { name: "Files to send" });
+  await expect(files.getByRole("listitem")).toHaveCount(2);
+  const remove = page.getByRole("button", { name: `Remove ${names[0]}` });
+  const fade = 40;
+  const clear = async () => {
+    const [row, button] = await Promise.all([
+      files.boundingBox(),
+      remove.boundingBox(),
+    ]);
+    expect(row).not.toBeNull();
+    expect(button).not.toBeNull();
+    if (row !== null && button !== null) {
+      expect(button.x + button.width).toBeLessThanOrEqual(
+        row.x + row.width - fade
+      );
+    }
+  };
+  await clear();
+  await remove.focus();
+  expect(await files.evaluate((element) => element.scrollLeft)).toBe(0);
+  await clear();
 });

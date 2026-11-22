@@ -55,8 +55,10 @@ const layout = stylex.create({
     alignItems: "center",
     justifyContent: "space-between",
     gap: space["4"],
-    paddingBlock: space["3"],
-    paddingInline: space["4"],
+    // The ghost button's own padding stands in for the edge's: its words line up with the field's.
+    paddingBlock: space["2"],
+    paddingInlineStart: space["4"],
+    paddingInlineEnd: space["2"],
   },
   heading: {
     margin: 0,

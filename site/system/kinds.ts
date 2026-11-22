@@ -65,7 +65,6 @@ export const kinds: Kind[] = [
       "slider",
       "calendar",
       "date-picker",
-      "user-picker",
     ],
   },
   {
@@ -154,6 +153,7 @@ export const kinds: Kind[] = [
       "text",
       "heading",
       "avatar",
+      "audio-player",
       "tag",
       "icon-tile",
       "brand-icon",
@@ -190,7 +190,6 @@ export const kinds: Kind[] = [
       "terminal",
       "stack-trace",
       "test-results",
-      "audio-player",
     ],
   },
 ];
