@@ -217,9 +217,7 @@ test("a row's buttons run on a press or a key and leave the row as it was; Tab f
   await expect(page.getByText("Deleted notes.md")).toBeVisible();
   await expect(notes).toHaveAttribute("aria-selected", "true");
   await page.keyboard.press("Tab");
-  await expect(
-    page.getByRole("button", { name: "After the tree" })
-  ).toBeFocused();
+  await expect(page.getByRole("button", { name: "Clear" })).toBeFocused();
 });
 
 test("a folder that cannot be chosen opens and closes, and the chosen file stays", async ({

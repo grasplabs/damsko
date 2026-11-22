@@ -85,8 +85,15 @@ export default function TreeActions() {
         defaultExpandedValue={["reports"]}
       />
       <output {...stylex.props(layout.said)}>{said}</output>
-      <Button variant="secondary" size="sm" style={layout.after}>
-        After the tree
+      <Button
+        variant="secondary"
+        size="sm"
+        style={layout.after}
+        onClick={() => {
+          setSaid("Nothing yet");
+        }}
+      >
+        Clear
       </Button>
     </div>
   );
