@@ -68,8 +68,6 @@ export const choosingGroups: ChoosingGroup[] = [
       "reasoning",
       "chain-of-thought",
       "tool",
-      "queue",
-      "subagent",
       "confirmation",
       "terminal",
       "stack-trace",
