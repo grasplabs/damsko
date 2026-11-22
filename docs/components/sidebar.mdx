@@ -87,11 +87,11 @@ SidebarMenuSkeleton draws quiet bars in the rows' own boxes, the same shapes eve
 
 ## Levels
 
-An area of the product that has a navigation of its own, such as its settings or one project, takes the sidebar while the person is in it. SidebarLevels stands between the header and the footer, which stay, and holds a SidebarLevel for each: the main list first, each deeper one after it. `value` says which is shown; keep it where the address is kept, so a link straight into the area opens on its level. A deeper level starts with a SidebarLevelHeader: a SidebarMenuButton that leads back, then the SidebarLevelTitle, the level's name as a heading. Each level has its own SidebarContent, named by `aria-label`.
+An area with a navigation of its own, such as settings or one project, takes the sidebar while the person is in it. SidebarLevels stands between the header and the footer, which stay, and holds a SidebarLevel for each area, the main list first. `value` says which is shown: keep it where the address is kept, and the rows are plain links. A deeper level starts with a SidebarLevelHeader, a SidebarMenuButton that leads back and the SidebarLevelTitle, and each level has its own SidebarContent, named by `aria-label`. A sidebar that keeps the level itself takes `defaultValue`, and a SidebarLevelTrigger, a SidebarMenuButton that also shows a level, changes it.
 
-A SidebarLevelTrigger is a SidebarMenuButton that also shows a level, for a sidebar that keeps the level itself (`defaultValue`, `onValueChange`); where a router keeps it, the rows are plain links. The new level moves in from the way the person went, and the one left stays in the page, unseen and out of reach, with its scroll place and its folded groups. A level that is not shown is still drawn, so keep a level's rows cheap, or leave a level out until its area is first opened.
+The level left stays in the page, unseen and out of reach, with its scroll place and its folded groups, so keep a level's rows cheap. The sheet on a narrow window is drawn anew each time it opens, on the level shown. Folded to its icons, the title is its icon alone.
 
-Use a level for a different area with its own navigation. The pages within one place are a SidebarMenuSub under its row, not a level.
+Use a level for a different area with its own navigation; the pages within one place are a SidebarMenuSub under its row.
 
 <Stage path="sidebar/levels" label="Levels" />
 
@@ -182,7 +182,7 @@ Use a level for a different area with its own navigation. The pages within one p
     {
       key: "A new level",
       value:
-        "Moves in 16px with a fade in {duration-ui}: from the end going deeper, from the start going back, the other way round right to left. The level left is gone at once, and nothing moves on the first paint",
+        "Moves in 16px with a fade in {duration-ui}, from the end going deeper and from the start going back; the level left is gone at once",
       note: "reduced motion: simply there",
     },
   ]}
@@ -216,21 +216,9 @@ Use a level for a different area with its own navigation. The pages within one p
     },
     {
       group: "Levels",
-      key: "Which is shown",
-      value:
-        "The one `value` names. The others stay in the page, unseen, so each keeps its scroll place and its folded groups.",
-    },
-    {
-      group: "Levels",
       key: "Focus",
       value:
-        "When focus was in the level left, it goes to the new level's current row, else its first stop; on the way back, to the row that opened the level. Focus anywhere else (the page, the footer's menu) stays where it is. A row the keys land on out of sight is brought into view; a pointer's press leaves the scroll place alone.",
-    },
-    {
-      group: "Levels",
-      key: "Folded, and on a phone",
-      value:
-        "Folded and opened again, and in the sheet, it shows the level it was on. Folded to its icons, a level's title is its icon.",
+        "When focus was in the level left, it goes to the new level's current row, else its first stop in sight; on the way back, to the row that opened the level. Focus elsewhere stays where it is.",
     },
     {
       group: "Kept",
@@ -251,7 +239,7 @@ Use a level for a different area with its own navigation. The pages within one p
     {
       key: "Levels",
       value:
-        "A level that is not shown is `inert`: out of reach of Tab and of a screen reader. Each level's SidebarContent is a `navigation` of its own name, which is said once, politely, as the level is shown; its title is a heading.",
+        "A level that is not shown is `inert`. The level shown is a `navigation` of its own name, said once, politely, when it has changed; its title is a heading.",
     },
     {
       key: "Trigger",

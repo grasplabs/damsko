@@ -94,7 +94,7 @@ import {
   size,
   space,
 } from "../lib/tokens.stylex";
-import { px } from "../lib/tokens.values";
+import { durations, px } from "../lib/tokens.values";
 import { announce, listOf, slotProps, slotWords } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { iconVars, motionVars } from "../lib/vars.stylex";
@@ -811,8 +811,9 @@ const styles = stylex.create({
   },
   // A level's name in a row's box, in the ink read first: a heading, so nothing answers the pointer.
   levelTitle: {
-    // Never pressed, so a row's height on a touch screen too.
+    // Never pressed, so a row's height on a touch screen too, and no edge in forced colours.
     height: ROW,
+    borderWidth: 0,
     color: colors.sidebarText,
     backgroundColor: "transparent",
     cursor: "default",
@@ -1964,6 +1965,8 @@ interface LevelsState {
   /** The level shown. */
   value: string;
   setValue: (value: string) => void;
+  /** A SidebarLevel's element, kept under its value while it is in the page. */
+  register: (value: string, element: HTMLElement) => () => void;
 }
 
 const LevelsContext = createContext<LevelsState | null>(null);
@@ -1976,15 +1979,23 @@ const useLevels = (name: string): LevelsState => {
   return levels;
 };
 
-/** The levels a SidebarLevels holds, in order: the main one first, each deeper one after it. */
-const levelsIn = (root: HTMLElement) => [
-  ...root.querySelectorAll<HTMLElement>(':scope > [data-slot="sidebar-level"]'),
-];
+/** Whether focus can go to it now: drawn (not in a folded group), and not out of reach. */
+const inReach = (element: HTMLElement) =>
+  element.isConnected &&
+  element.checkVisibility({ visibilityProperty: true }) &&
+  element.closest("[inert]") === null;
 
-/** Where focus lands in a level it is moved into: the page you are on, else its first stop. */
-const landingIn = (level: HTMLElement) =>
-  level.querySelector<HTMLElement>('[aria-current="page"]') ??
-  level.querySelector<HTMLElement>("a[href], button:not(:disabled)");
+/**
+ * Where focus lands in a level it is moved into: what held it there before, on the way back; else
+ * the page you are on; else its first stop. One that cannot take focus now (its group folded,
+ * its row gone) is passed over.
+ */
+const landingIn = (level: HTMLElement, opener: HTMLElement | undefined) =>
+  [
+    opener !== undefined && level.contains(opener) ? opener : null,
+    level.querySelector<HTMLElement>('[aria-current="page"]'),
+    ...level.querySelectorAll<HTMLElement>("a[href], button:not(:disabled)"),
+  ].find((stop) => stop !== null && inReach(stop));
 
 /** Every prop a SidebarLevels takes. */
 export interface SidebarLevelsProps {
@@ -2007,7 +2018,7 @@ export interface SidebarLevelsProps {
  * The levels of a sidebar, between its header and its footer, which stay: the main list, and one
  * for each area that has a navigation of its own. One is shown at a time, the one `value` names;
  * the rest stay in the page, unseen and out of reach, each with its scroll place. A level moves in
- * from the way the person went, by the order the levels are written in. When focus was in the
+ * from the way the person went, by the order the levels stand in the page. When focus was in the
  * level left, it goes to the new one's current row, and on the way back to what held it there
  * before; the new level's name (its SidebarContent's) is said once.
  */
@@ -2028,27 +2039,36 @@ export const SidebarLevels = ({
     onValueChange?.(next);
   };
 
-  const root = useRef<HTMLDivElement | null>(null);
+  // Each level's element, by its value: wherever it stands under here, a wrapper round it or not.
+  const elements = useRef(new Map<string, HTMLElement>());
+  const register = (name: string, element: HTMLElement) => {
+    elements.current.set(name, element);
+    return () => {
+      if (elements.current.get(name) === element) {
+        elements.current.delete(name);
+      }
+    };
+  };
   const shown = useRef(value);
   // What held focus in each level as it was left, for the way back to it.
   const held = useRef(new Map<string, HTMLElement>());
+  // The name waiting to be said: a level left again before it was said is never said.
+  const saying = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Before the browser paints the new level, and before it takes focus off what is now out of
   // reach: whether focus was in the level left is read while it still says so.
   useLayoutEffect(() => {
     const before = shown.current;
     shown.current = value;
-    const node = root.current;
-    if (before === value || node === null) {
-      return;
-    }
-    const levels = levelsIn(node);
-    const from = levels.find((level) => level.dataset.value === before);
-    const to = levels.find((level) => level.dataset.value === value);
-    if (to === undefined) {
+    const from = elements.current.get(before);
+    const to = elements.current.get(value);
+    if (before === value || to === undefined) {
       return;
     }
     const back =
-      from !== undefined && levels.indexOf(to) < levels.indexOf(from);
+      from !== undefined &&
+      // oxlint-disable-next-line no-bitwise -- the DOM's own flags
+      (from.compareDocumentPosition(to) & Node.DOCUMENT_POSITION_PRECEDING) !==
+        0;
     if (from !== undefined) {
       delete from.dataset.entering;
     }
@@ -2056,8 +2076,12 @@ export const SidebarLevels = ({
     const name = to
       .querySelector('[data-slot="sidebar-content"]')
       ?.getAttribute("aria-label");
+    clearTimeout(saying.current ?? undefined);
+    saying.current = null;
     if (name !== null && name !== undefined) {
-      announce(name);
+      saying.current = setTimeout(() => {
+        announce(name);
+      }, durations.ui);
     }
     const active = document.activeElement;
     if (!(active instanceof HTMLElement) || from?.contains(active) !== true) {
@@ -2065,10 +2089,8 @@ export const SidebarLevels = ({
       return;
     }
     held.current.set(before, active);
-    const opener = back ? held.current.get(value) : undefined;
+    const target = landingIn(to, back ? held.current.get(value) : undefined);
     held.current.delete(value);
-    const target =
-      opener !== undefined && to.contains(opener) ? opener : landingIn(to);
     // The level keeps the scroll place it was left with; only a ring the keys would show out of
     // sight brings its row into view.
     target?.focus({ preventScroll: true });
@@ -2076,15 +2098,17 @@ export const SidebarLevels = ({
       target.scrollIntoView({ block: "nearest" });
     }
   }, [value]);
+  useEffect(
+    () => () => {
+      clearTimeout(saying.current ?? undefined);
+    },
+    []
+  );
 
   return (
     // oxlint-disable-next-line react/jsx-no-constructed-context-values -- compiled
-    <LevelsContext value={{ value, setValue }}>
-      <div
-        ref={root}
-        data-slot="sidebar-levels"
-        {...stylex.props(styles.levels, style)}
-      >
+    <LevelsContext value={{ value, setValue, register }}>
+      <div data-slot="sidebar-levels" {...stylex.props(styles.levels, style)}>
         {children}
       </div>
     </LevelsContext>
@@ -2101,11 +2125,14 @@ export interface SidebarLevelProps extends PartProps {
 
 /** One level: a navigation of its own between the header and the footer, shown while it is the SidebarLevels' `value`. */
 export const SidebarLevel = ({ children, value, style }: SidebarLevelProps) => {
-  const shown = useLevels("SidebarLevel").value === value;
+  const levels = useLevels("SidebarLevel");
+  const shown = levels.value === value;
   return (
     <div
+      ref={(element) =>
+        element === null ? undefined : levels.register(value, element)
+      }
       data-slot="sidebar-level"
-      data-value={value}
       data-state={shown ? "active" : "inactive"}
       inert={!shown}
       onAnimationEnd={(event) => {
@@ -2166,9 +2193,9 @@ export interface SidebarLevelTriggerProps extends Omit<
 }
 
 /**
- * A row that shows another level: a SidebarMenuButton, a link with `asChild`. The row into a level
- * and the row that leads back are both one. Where the router's address says which level is shown,
- * a plain SidebarMenuButton link does.
+ * A row that shows another level, in a sidebar that keeps the level itself: a SidebarMenuButton, a
+ * link with `asChild`. The row into a level and the row that leads back are both one. Where the
+ * address says which level is shown, a plain SidebarMenuButton link does.
  */
 export const SidebarLevelTrigger = ({
   value,
