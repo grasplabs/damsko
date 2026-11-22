@@ -606,7 +606,7 @@ export interface I18nCatalog {
     cut: (max: number) => string;
     /** Over the card while files are dragged onto it. */
     drop: string;
-    /** Said when a send failed. */
+    /** Said when a send failed, and shown on the band under the card. */
     failed: string;
     /** In the mention menu when nothing matches. */
     mentionEmpty: string;
@@ -620,12 +620,23 @@ export interface I18nCatalog {
     near: (max: number) => string;
     /** Said once at the limit. */
     reached: (max: number) => string;
-    /** The speech button: its name, and what it says while it listens. */
-    speechButton: { label: string; listening: string };
+    /**
+     * The speech button: its name, and what it says while it listens, which names the bar that
+     * stands in the footer then; the bar's Cancel, Done and microphone.
+     */
+    speechButton: {
+      cancel: string;
+      done: string;
+      label: string;
+      listening: string;
+      mute: string;
+    };
     /** Submit's name while the answer comes. */
     stop: string;
     /** Submit's name. */
     submit: string;
+    /** Said once as the status comes to `success`. */
+    succeeded: string;
   };
   questionnaire: {
     /** Under the card when the answers could not be sent, and given to an agent. */
@@ -1278,7 +1289,7 @@ const english: I18nCatalog = {
         ? "What was added was left out: no more can be written"
         : `What was added was cut at the limit of ${englishCharacters(max)}`,
     drop: "Drop to add",
-    failed: "Could not send",
+    failed: "Could not send. Your message is kept.",
     mentionEmpty: "No matches",
     mentionsError: "Could not load suggestions",
     mentionsFound: (count: number) =>
@@ -1294,9 +1305,16 @@ const english: I18nCatalog = {
       max === 0
         ? "No more can be written"
         : `The limit of ${englishCharacters(max)} is reached`,
-    speechButton: { label: "Dictate", listening: "Listening" },
+    speechButton: {
+      cancel: "Cancel dictation",
+      done: "Done",
+      label: "Dictate",
+      listening: "Listening",
+      mute: "Mute",
+    },
     stop: "Stop",
     submit: "Send",
+    succeeded: "Done",
   },
   questionnaire: {
     error: "Could not send the answer",

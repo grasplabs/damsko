@@ -1922,6 +1922,7 @@
         "@damsko/button",
         "@damsko/dropdown-menu",
         "@damsko/lib",
+        "@damsko/skeleton",
         "@damsko/tooltip"
       ],
       "docs": "https://damsko.joingrasp.com/components/prompt-input",

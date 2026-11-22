@@ -16,9 +16,27 @@ Enter sends and Shift+Enter starts a line; Enter while an input method composes,
 
 ## Send and Stop
 
-Submit by `status`: off while there is nothing to send, Send once there is, a spinner once `submitted`, Stop while `streaming`, Send again after an `error`.
+Submit by `status`: off while there is nothing to send, Send once there is, a spinner once `submitted`, Stop while `streaming`, and Send again, its arrow unchanged, after an `error`, which the band under the card says.
 
 <Stage path="prompt-input/send" label="Send and Stop" />
+
+## While the answer comes
+
+While `status` is `submitted` or `streaming` a soft light travels along the card's top edge: three beams at three speeds, still with reduced motion and absent in forced colours. `PromptInputNote` is the band tucked under the card's foot; give it what the assistant is doing now, an `AgentIndicator` and a `Shimmer` of the product's words. With nothing to say there is no band.
+
+<Stage path="prompt-input/working" label="While the answer comes" />
+
+## An accent
+
+`accent` colours the working light and the success halo: the brand's light by default, or one colour, such as an assistant's own.
+
+<Stage path="prompt-input/accents" label="An accent" />
+
+## Success
+
+`status="success"` is a moment the product marks: one halo round the card, in the accent, said once ("Done"), and Submit as at `ready`. Set it again to play it again. With reduced motion and in forced colours there is no halo, only the words.
+
+<Stage path="prompt-input/success" label="Success" />
 
 ## Mentions and commands
 
@@ -30,9 +48,18 @@ The mention part is generic: it takes `triggers`, a list of characters with what
 
 ## Files
 
-The prompt input keeps the files: picked with Add files (or Cmd or Ctrl and /), pasted into the text or dropped on the card (with `globalDrop`, anywhere on the page), and only those `accept` takes. `PromptInputAttachments` in `PromptInputHeader` shows them with the `attachment` parts, each one's remove button taking it off; they go to `onSubmit` with the text as `files`, and are taken off the moment they are sent (put back if the send fails). `usePromptInputAttachments()` reads and changes them from a part of your own.
+The prompt input keeps the files: picked with Add files (or Cmd or Ctrl and /), pasted into the text or dropped on the card (with `globalDrop`, anywhere on the page), and only those `accept` takes. As soon as a file is dragged over the page the card is tinted and says "Drop to add"; over the card the tint deepens. A paste that holds a file and words keeps both. `PromptInputAttachments` in `PromptInputHeader` shows them with the `attachment` parts, each one's remove button taking it off; they go to `onSubmit` with the text as `files`, and are taken off once the send succeeds. Files alone are nothing to send: Submit stays off until there are words. `usePromptInputAttachments()` reads and changes them from a part of your own.
 
 <Stage path="prompt-input/attachments" label="Files" />
+
+### Files that upload as they are attached
+
+A product that uploads each file as it is attached draws it with `PromptInputAttachment` and Attachment's own `state`: `uploading` (quiet and busy, how far in its line) or `error` (in the destructive colour, with the reason).
+
+<Stage
+  path="prompt-input/uploads"
+  label="Files that upload as they are attached"
+/>
 
 ## Model and effort
 
@@ -54,19 +81,45 @@ With `maxLength`, a count shows from 90%; nearing and reaching the limit are sai
 
 ## A send that fails
 
-The words and files clear the moment they are sent: the AI SDK's `sendMessage` settles only once the whole answer has come. A send whose Promise rejects puts them back (the words if nothing new has been typed), and the failure is said once. The page says it in words too, here with `PromptInputNote`. While a send is out, a second Enter sends nothing more, and words typed meanwhile stay.
+Return a Promise from `onSubmit` that settles when the message is taken, and the words and files stay where they are until it resolves; then what was sent clears, and words typed meanwhile stay. (The AI SDK's `sendMessage` settles only once the whole answer has come: do not return that one, or return nothing, and they clear at once.) When the Promise rejects, or `status` is `error`, nothing was lost: the failure is said once, `PromptInputNote` shows it on the band under the card, in the catalogue's words (`promptInput.failed`), and the text is described by it. The band goes as the person types on, or sends again. While a send is out, a second Enter sends nothing more.
 
 <Stage path="prompt-input/failed" label="A send that fails" />
 
 ## One row
 
-`compact` sets the tools, the text and Submit side by side; on a narrow card the tools go under the text.
+`compact` sets the tools, the text and Submit side by side, 56px tall at every width. Once the words no longer fit their line, or the room beside the tools is under `prompt-input-field-min`, the text takes the card's whole width and the tools and Submit go under it; shorter again, it is one row again.
 
 <Stage path="prompt-input/compact" label="One row" />
 
+## On glass
+
+`variant="glass"` is for a card the page scrolls behind, as at a chat's foot: the card's colour most of the way, over a blur of what is behind it.
+
+<Stage path="prompt-input/glass" label="On glass" />
+
+## A banner above the card
+
+`PromptInputBanner` is a notice that belongs to the prompt input, tucked under the card's top: a mark, one short line, one `action` at its end (under the words on a narrow card) and, with `onClose`, a close button. Use it for what stops or limits writing here: a limit reached, something to connect first, a microphone that is blocked.
+
+<Stage path="prompt-input/banner" label="A banner above the card" />
+
+## Queued messages
+
+`PromptInputQueue` is the panel above the card, its foot behind the card, that a `Queue` of the messages written while an answer was still coming stands in. The product keeps the queue and what each action does.
+
+<Stage path="prompt-input/queue" label="Queued messages" />
+
+## While the page loads
+
+With `loading` the prompt input stands still in the box it will have: the plus, a quiet line where the text goes and Submit off; its other tools keep their room, not drawn. Nothing in it is focused or read out, so the page says that it loads.
+
+<Stage path="prompt-input/loading" label="While the page loads" />
+
 ## Dictation
 
-`PromptInputSpeechButton` is the button only: a toggle, pressed while it listens, that says it has started listening. The product listens, with the recogniser it chooses (the browser's own, a service), and writes what it hears through the PromptInput's `controller`; the button holds no recognition of its own.
+`PromptInputSpeechButton` starts a dictation, and while it listens the footer gives way to its bar: Cancel, the time it has run, the voice's `level` along a dotted line, the microphone (off for a moment with `muted`, when the time waits) and Done where Submit stood. Escape in the bar cancels. Started from the keyboard, focus goes to Done and comes back to the button as the bar goes; a pointer's press leaves it in the text. The product listens, with the recogniser it chooses (the browser's own, a service), writes what it hears through the PromptInput's `controller`, and takes it out again in `onCancel`; the button holds no recognition of its own.
+
+<Stage path="prompt-input/dictation" label="Dictation" />
 
 ```tsx
 const [controller] = useState(createTokenInputController);
@@ -79,13 +132,15 @@ useDictation({ listening, onPhrase: (phrase) => controller.insert(phrase) });
   <PromptInputSpeechButton
     listening={listening}
     onListeningChange={setListening}
+    onCancel={takeOutWhatWasHeard}
+    level={level}
   />
 </PromptInput>;
 ```
 
 ## With a message
 
-One chat state drives both. PromptInput's `status` is the AI SDK's own (`ready`, `submitted`, `streaming`, `error`), and Message's describes one answer (`thinking`, `streaming`, `done`, `stopped`, `error`), so the latest answer's is read from it: `submitted` is `thinking`, `streaming` is `streaming`, `ready` is `done` (or `stopped` once the person stopped it), `error` is `error`. Every earlier answer is `done`. AI Elements has a status on PromptInput's Submit only.
+One chat state drives both. PromptInput's `status` takes the AI SDK's own (`ready`, `submitted`, `streaming`, `error`), and Message's describes one answer (`thinking`, `streaming`, `done`, `stopped`, `error`), so the latest answer's is read from it: `submitted` is `thinking`, `streaming` is `streaming`, `ready` is `done` (or `stopped` once the person stopped it), `error` is `error`. Every earlier answer is `done`. AI Elements has a status on PromptInput's Submit only.
 
 ```tsx
 const { messages, status, sendMessage, stop } = useChat();
@@ -112,7 +167,8 @@ const answer: Record<ChatStatus, MessageStatus> = {
   status={status}
   onSubmit={({ text }) => {
     setStopped(false);
-    return sendMessage({ text });
+    // Not returned: it settles only once the whole answer has come.
+    void sendMessage({ text });
   }}
 >
   …
@@ -171,7 +227,36 @@ const answer: Record<ChatStatus, MessageStatus> = {
       group: "Text",
       key: "Height",
       value:
-        "Two lines at least, then grows to {prompt-input-height} and scrolls",
+        "One line of {message-text-line} at rest (the card 102px), grows from the second line to {prompt-input-height} (the card 256px) and scrolls",
+    },
+    {
+      group: "Card",
+      key: "One row",
+      value:
+        "56px: 32px controls {space-3} in; the text never under {prompt-input-field-min}",
+    },
+    {
+      group: "Band",
+      key: "Under the card",
+      value:
+        "{space-2} in from the card's sides, 36px below its foot, its words in text-xs",
+      tokens: ["muted", "border-strong", "destructive"],
+    },
+    {
+      group: "Light",
+      key: "Working",
+      value:
+        "{prompt-input-light} at {prompt-input-light-opacity}, in {prompt-input-light-in}; beams of {prompt-input-beam-fast}, {prompt-input-beam} and {prompt-input-beam-slow}",
+    },
+    {
+      group: "Light",
+      key: "Success",
+      value: "{prompt-input-halo} over {prompt-input-halo-time}, once",
+    },
+    {
+      group: "Card",
+      key: "Glass",
+      value: "{prompt-input-glass} over {prompt-input-glass-blur}",
     },
     {
       group: "Menu",
@@ -231,7 +316,25 @@ const answer: Record<ChatStatus, MessageStatus> = {
       value:
         "A list box the text controls; how many it found, that it loads or failed, is said",
     },
-    { key: "Speech", value: "A toggle button, pressed while it listens" },
+    {
+      key: "Speech",
+      value:
+        "A toggle button; while it listens, a group named Listening with Cancel, a timer, Mute (pressed while off) and Done",
+    },
+    {
+      key: "Failure",
+      value:
+        "Said once; its line under the card describes the text until the person types",
+    },
+    {
+      key: "Loading",
+      value: "The card is inert and hidden from a screen reader",
+    },
+    {
+      key: "Light",
+      value:
+        "Decoration only: still with reduced motion, absent in forced colours; Stop says the answer comes",
+    },
     {
       key: "Limit",
       value: "Said once near it and once at it; the count is hidden",
@@ -385,6 +488,22 @@ const answer: Record<ChatStatus, MessageStatus> = {
   source="src/components/prompt-input.tsx"
   type="PromptInputNoteProps"
   label="PromptInputNote"
+/>
+
+### PromptInputBanner
+
+<Props
+  source="src/components/prompt-input.tsx"
+  type="PromptInputBannerProps"
+  label="PromptInputBanner"
+/>
+
+### PromptInputQueue
+
+<Props
+  source="src/components/prompt-input.tsx"
+  type="PromptInputQueueProps"
+  label="PromptInputQueue"
 />
 
 ### PromptInputMention

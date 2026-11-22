@@ -14,8 +14,8 @@ import {
   PromptInputTools,
 } from "@grasp-os/ui/components/prompt-input";
 
-// One row: the plus, the text and Submit side by side; the text grows in its own column, and on a
-// narrow card the tools go under it.
+// One row: the plus, the text and Submit side by side. Once the words no longer fit their line the
+// text takes the card's whole width and the tools go under it.
 export default function PromptInputCompact() {
   return (
     <PromptInput compact onSubmit={() => undefined}>

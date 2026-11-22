@@ -3226,6 +3226,81 @@ export const groups: TokenGroup[] = [
             value: "18rem",
             use: "The width of the menu that opens at the caret when @ or / is typed.",
           },
+          {
+            name: "prompt-input-field-min",
+            category: "size",
+            value: "8rem",
+            use: "The least width of a one-row prompt input's text: with less room beside the tools, the text takes the row and the tools go under it. The text never gives.",
+          },
+          {
+            name: "prompt-input-light",
+            category: "colors",
+            value:
+              "linear-gradient(90deg, {brand-mint} 0%, {brand-sea} 12%, transparent 22%, {brand-lime} 34%, {brand-mint} 44%, transparent 54%, {brand-sea} 64%, {brand-lime} 76%, transparent 88%, {brand-mint} 100%)",
+            use: "The working light over a prompt input's top edge: lime, sea and mint in beams with gaps between, ending as it starts so it loops without a seam.",
+          },
+          {
+            name: "prompt-input-tint",
+            category: "colors",
+            value:
+              "linear-gradient(90deg, currentColor 0%, color-mix(in oklch, currentColor 55%, transparent) 14%, transparent 24%, currentColor 36%, color-mix(in oklch, currentColor 30%, transparent) 50%, transparent 58%, currentColor 68%, color-mix(in oklch, currentColor 45%, transparent) 82%, currentColor 100%)",
+            use: "The working light in one accent colour, the colour set on the light's layer.",
+          },
+          {
+            name: "prompt-input-halo",
+            category: "shadow",
+            value:
+              "0 0 10px 2px color-mix(in oklch, currentColor 45%, transparent), 0 3px 18px 3px color-mix(in oklch, currentColor 25%, transparent)",
+            use: "Success: a soft glow round a prompt input's card in the colour set on it, mint by default. It fades out; it never draws a line.",
+          },
+          {
+            name: "prompt-input-halo-time",
+            category: "duration",
+            value: "1.2s",
+            use: "The success halo, from nothing to full and out again: a moment, played once.",
+          },
+          {
+            name: "prompt-input-glass",
+            category: "colors",
+            value: "color-mix(in oklch, {card} 86%, transparent)",
+            use: "A prompt input's card over what scrolls behind it (variant=\"glass\"): the card's colour most of the way, over a blur.",
+          },
+          {
+            name: "prompt-input-glass-blur",
+            category: "size",
+            value: "blur(14px) saturate(1.5)",
+            use: "The backdrop filter that goes with prompt-input-glass.",
+          },
+          {
+            name: "prompt-input-light-opacity",
+            category: "size",
+            value: "0.9",
+            use: "How strongly the working light shows round the card: soft, never a hard ring.",
+          },
+          {
+            name: "prompt-input-light-in",
+            category: "duration",
+            value: "280ms",
+            use: "How long the working light takes to come up or go.",
+          },
+          {
+            name: "prompt-input-beam",
+            category: "duration",
+            value: "6s",
+            use: "The widest beam of the working light, once along the edge. A continuous sign of life: it may loop longer than a transition.",
+          },
+          {
+            name: "prompt-input-beam-fast",
+            category: "duration",
+            value: "4.4s",
+            use: "The quickest beam of the working light.",
+          },
+          {
+            name: "prompt-input-beam-slow",
+            category: "duration",
+            value: "7s",
+            use: "The slowest beam of the working light: it breathes, it does not race.",
+          },
         ],
       },
     ],
