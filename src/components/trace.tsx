@@ -180,10 +180,11 @@ const HOVER = media.hover;
 const OPEN = ":is([aria-expanded=true])";
 const OFF = ":is([data-disabled])";
 
-// The seat a step's first mark sits in, and the room after it before the words.
+// The seat a line's first mark sits in, and the room after it before the words: one for steps and
+// trigger lines alike, so every title in a column starts at one edge.
 const SEAT = `calc(${size.iconSm} + ${space["3"]})`;
-// A trigger's line: its mark a space-2 before the words, as the original's activity line had it.
-const BESIDE = `calc(${size.iconSm} + ${space["2"]})`;
+// How far a small control's height stands past a line of words, on each side.
+const ROOM = `(${size.controlSm} - ${font.textSmLine}) / 2`;
 // Half the line's leading: how far a mark's drawing stands inside its one-line-high seat.
 const LEADING = `(1lh - ${size.iconSm}) / 2`;
 
@@ -202,9 +203,8 @@ const styles = stylex.create({
     lineHeight: font.textSmLine,
     color: colors.mutedForeground,
   },
-  // A line: its mark, its words and whatever stands beside them, wrapping where there is no room.
-  // A first mark stands a space-2 before the words, in a seat of its own, so a long title wraps
-  // beside it rather than under it.
+  // A line: its mark in its seat, its words and whatever stands beside them, wrapping where there
+  // is no room; a long title wraps beside its mark rather than under it.
   line: {
     position: "relative",
     display: "flex",
@@ -215,16 +215,12 @@ const styles = stylex.create({
     minWidth: 0,
     paddingInlineStart: {
       default: 0,
-      ":has(> [data-slot=trace-icon]:first-child)": BESIDE,
-    },
-  },
-  // A step: a step apart from the next, its first mark in the wider seat of the steps.
-  step: {
-    rowGap: 0,
-    paddingInlineStart: {
-      default: 0,
       ":has(> [data-slot=trace-icon]:first-child)": SEAT,
     },
+  },
+  // A step: a step apart from the next.
+  step: {
+    rowGap: 0,
     paddingBlock: space["2"],
     animationName: { default: arrive, [REDUCED]: "none" },
     animationDuration: duration.ui,
@@ -307,6 +303,14 @@ const styles = stylex.create({
     width: "100%",
     minWidth: 0,
   },
+  // A row that opens among steps: as tall as a step, its mark where a step's stands, so the dots
+  // from the step before reach it.
+  collapsibleStep: {
+    paddingBlock: {
+      default: 0,
+      ":not(:only-child)": `calc(${space["2"]} - ${ROOM})`,
+    },
+  },
   // The trigger: the original's activity line, only as wide as its line and chevron (a card's width
   // in a card), at the text's own weight and line, muted until the pointer is on it or it is open,
   // as tall as a small control. Its fill under the pointer reaches past its words by its padding;
@@ -320,9 +324,30 @@ const styles = stylex.create({
       default: "100%",
       [stylex.when.ancestor(":is(*)", traceCardMarker)]: "none",
     },
-    minHeight: size.controlSm,
+    // In a card: the whole row, over the card's edge on three sides when closed, with its corner, a
+    // step of room above and below its line, so its ring lies on the card's edge.
+    marginInline: {
+      default: `calc(-1 * ${size.collapsiblePadding})`,
+      [stylex.when.ancestor(":is(*)", traceCardMarker)]:
+        `calc(-1 * (${size.collapsiblePadding} + ${size.hairline}))`,
+    },
+    marginBlock: {
+      default: 0,
+      [stylex.when.ancestor(":is(*)", traceCardMarker)]:
+        `calc(-1 * ${size.hairline})`,
+    },
+    minHeight: {
+      default: size.controlSm,
+      [stylex.when.ancestor(":is(*)", traceCardMarker)]:
+        `calc(${space["2"]} * 2 + ${font.textSmLine} + 2 * ${size.hairline})`,
+    },
+    // A title that wraps keeps a little room above and below; one line stays a small control tall.
+    paddingBlock: `calc(${ROOM})`,
     columnGap: space["2"],
-    borderRadius: `min(${radius.base}, calc(${size.controlSm} / 2))`,
+    borderRadius: {
+      default: `min(${radius.base}, calc(${size.controlSm} / 2))`,
+      [stylex.when.ancestor(":is(*)", traceCardMarker)]: radius.base,
+    },
     lineHeight: font.textSmLine,
     fontWeight: font.weightNormal,
     color: {
@@ -331,22 +356,15 @@ const styles = stylex.create({
       [OPEN]: colors.foreground,
       [OFF]: { default: colors.subtleForeground, [FORCED]: "GrayText" },
     },
-    backgroundColor: {
-      default: "transparent",
-      ":hover": {
-        default: null,
-        [HOVER]: {
-          default: colors.accent,
-          [OFF]: "transparent",
-          [stylex.when.ancestor(":is(*)", traceCardMarker)]: "transparent",
-        },
-      },
-      ":active": {
-        default: colors.accentActive,
-        [OFF]: "transparent",
-        [stylex.when.ancestor(":is(*)", traceCardMarker)]: "transparent",
-      },
-      [OFF]: "transparent",
+  },
+  // In a card the ring lies on the card's own edge, inside the trigger's box, so it reads as the
+  // card's edge turning to the ring rather than a second line beside it.
+  ringInCard: {
+    outlineOffset: {
+      default: size.ringOffset,
+      [stylex.when.ancestor(":is(*)", traceCardMarker)]:
+        `calc(-1 * ${size.ringWidth})`,
+      [FORCED]: size.ringOffsetMark,
     },
   },
   // Points down while closed and turns up as it opens.
@@ -545,19 +563,26 @@ export const TraceCollapsible = ({
   onOpenChange,
   disabled,
   style,
-}: TraceCollapsibleProps) => (
-  // The slot is set on the element drawn: UI SDK keeps a part's own data-slot over a prop.
-  <CollapsiblePrimitive
-    render={<div data-slot="trace-collapsible" />}
-    open={open}
-    defaultOpen={defaultOpen}
-    onOpenChange={onOpenChange}
-    disabled={disabled}
-    {...stylex.props(styles.collapsible, style)}
-  >
-    <StepContext value={false}>{children}</StepContext>
-  </CollapsiblePrimitive>
-);
+}: TraceCollapsibleProps) => {
+  const step = use(StepContext);
+  return (
+    // The slot is set on the element drawn: UI SDK keeps a part's own data-slot over a prop.
+    <CollapsiblePrimitive
+      render={<div data-slot="trace-collapsible" />}
+      open={open}
+      defaultOpen={defaultOpen}
+      onOpenChange={onOpenChange}
+      disabled={disabled}
+      {...stylex.props(
+        styles.collapsible,
+        step && styles.collapsibleStep,
+        style
+      )}
+    >
+      <StepContext value={false}>{children}</StepContext>
+    </CollapsiblePrimitive>
+  );
+};
 
 /** The button that opens and closes the row: its TraceLine, and the chevron that turns. */
 export const TraceCollapsibleTrigger = ({
@@ -582,8 +607,10 @@ export const TraceCollapsibleTrigger = ({
       render={<button type="button" data-slot="trace-collapsible-trigger" />}
       {...stylex.props(
         disclosureStyles.trigger,
+        disclosureStyles.ghost,
         styles.trigger,
         focusRing,
+        styles.ringInCard,
         style
       )}
     >

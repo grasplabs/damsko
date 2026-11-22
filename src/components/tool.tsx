@@ -160,11 +160,8 @@ const styles = stylex.create({
     borderRadius: radius.base,
     cornerShape: radius.shape,
   },
-  // The header's row in the card: its line a step clear of the card's edge above and below.
-  header: {
-    display: "grid",
-    paddingBlock: `calc(${space["2"]} - (${size.controlSm} - ${font.textSmLine}) / 2)`,
-  },
+  // The header's row in the card: Trace's row runs over the card's edge, a step of room round its line.
+  header: { display: "grid" },
   // Its input and output, under the header, a step apart.
   content: {
     display: "grid",
