@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { hasFocusRing, openExample } from "./example.ts";
+import { openExample } from "./example.ts";
 
 test("a card's title is a heading, h3 unless set", async ({ page }) => {
   await openExample(page, "card", "basic");
@@ -46,18 +46,6 @@ test("with forced colours, every card draws a 1px border", async ({ page }) => {
       )
     );
   expect(widths).toEqual(["1px", "1px"]);
-});
-
-test("a card that is one link goes where it says and shows the keyboard's ring", async ({
-  page,
-}) => {
-  await openExample(page, "card", "link");
-  const link = page.getByRole("link", { name: /^Pricing/u });
-  await expect(link).toHaveAttribute("href", "#pricing");
-  await expect(link.getByRole("heading", { name: "Pricing" })).toBeVisible();
-  await page.keyboard.press("Tab");
-  await expect(link).toBeFocused();
-  expect(await hasFocusRing(link)).toBe(true);
 });
 
 test("the header's action stands at its end, beside the title", async ({

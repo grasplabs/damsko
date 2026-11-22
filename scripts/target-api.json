@@ -59,17 +59,13 @@
       "CardAction",
       "CardContent",
       "CardFooter",
-      "CardMedia",
-      "CardLink",
       "CardProps",
       "CardHeaderProps",
       "CardTitleProps",
       "CardDescriptionProps",
       "CardActionProps",
       "CardContentProps",
-      "CardFooterProps",
-      "CardMediaProps",
-      "CardLinkProps"
+      "CardFooterProps"
     ],
     "src/components/card.stylex.ts": null
   },

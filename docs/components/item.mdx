@@ -92,6 +92,12 @@ Before the data, `loading` keeps every row's boxes: each part given empty waits 
 
 <Stage path="item/grid" label="As tiles" />
 
+## Tiles with a picture
+
+A picture stands over a tile's words in an `ItemHeader`, as an `ItemMedia` at the tile's width. The whole tile is still one link, named by its title.
+
+<Stage path="item/picture" label="Tiles with a picture" />
+
 ## Sizes
 
 16px of room by default, 12px above and below in a dense list.
@@ -136,6 +142,7 @@ Only a row with a press (`href`, `onClick`, `asChild`) has states: hover, keyboa
   always={[
     "A title that names the thing: Spring launch, Billing.",
     "`href` when the whole row goes somewhere; actions when things are done to it.",
+    "A linked tile, with a picture or without: an Item with `href` in an ItemGrid, never a Card.",
   ]}
   never={[
     "More than two actions on a row: put the rest in a menu.",

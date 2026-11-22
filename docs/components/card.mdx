@@ -35,12 +35,6 @@ Each card an `li` in a `ul` (`asChild`), its title a heading. A long name wraps 
 
 <Stage path="card/list" label="In a list" />
 
-## A card that is one link
-
-`CardLink` makes the whole card one link; hovered or focused, its media dims and its title is underlined. Put no other control inside.
-
-<Stage path="card/link" label="A card that is one link" />
-
 ## Header, action and footer
 
 shadcn's parts: `CardHeader` holds the `CardTitle` and `CardDescription`, with a `CardAction` at its end beside both; `CardFooter` puts its buttons or a total in a row at the foot (`justify` to stand them at the end or apart). A card made of parts stands them 16px apart.
@@ -110,6 +104,7 @@ Each ground, and without padding, holding one word. Large padding is in Padding 
   ]}
   never={[
     "Inside another card.",
+    "A tile that is one link, or a grid of them: use Item with `href` in an ItemGrid. A Card is never a link.",
     "Rows of like things to compare: use Table or Data table.",
     "More than two actions in the header: put the rest in a menu.",
     "Colours, corners or shadows set from outside: `style` takes layout and width only.",
@@ -133,12 +128,6 @@ Each ground, and without padding, holding one word. Large padding is in Padding 
       group: "Shape",
       key: "Padding",
       value: "{space-4}, {space-6} when large, or none",
-    },
-    {
-      group: "Shape",
-      key: "Media's corner",
-      value: "{radius} less the padding, never under {radius-mark}",
-      note: "concentric with the card",
     },
     { group: "Colour", key: "Grounds", tokens: ["card", "muted"] },
     {
@@ -376,26 +365,6 @@ Buttons, a total or a link, in a row at the card's foot.
   source="src/components/card.tsx"
   type="CardFooterProps"
   label="CardFooter props"
-/>
-
-### CardLink
-
-The whole card as one link.
-
-<Props
-  source="src/components/card.tsx"
-  type="CardLinkProps"
-  label="CardLink props"
-/>
-
-### CardMedia
-
-A drawing or picture at a linked card's top.
-
-<Props
-  source="src/components/card.tsx"
-  type="CardMediaProps"
-  label="CardMedia props"
 />
 
 </Reference>

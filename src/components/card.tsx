@@ -24,11 +24,6 @@
 //     </section>
 //   </Card>
 //
-//   <CardLink href="/knowledge/pricing">                 the whole card one link
-//     <CardMedia><img src={drawing} alt="" /></CardMedia>  dims to 0.85 on hover and focus
-//     <CardTitle>Pricing</CardTitle>                    underlined on hover and focus
-//   </CardLink>
-//
 // A title over a group of cards is the page's: `<section><SectionHeader /><Card>…</Card></section>`.
 // A card has no behaviour of its own: it is a box, so it needs no primitive. Every value is a
 // token. A caller may set layout and width only (the `style` prop).
@@ -44,10 +39,9 @@ import {
 } from "react";
 import type { Dispatch, ReactNode, SetStateAction } from "react";
 
-import { focusRing, hyphenate } from "../lib/styles";
+import { hyphenate } from "../lib/styles";
 import {
   colors,
-  duration,
   font,
   media,
   radius,
@@ -57,8 +51,7 @@ import {
 } from "../lib/tokens.stylex";
 import { slotProps } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
-import { motionVars } from "../lib/vars.stylex";
-import { cardLinkMarker, cardVars } from "./card.stylex";
+import { cardVars } from "./card.stylex";
 
 /** Every prop a Card takes. */
 export interface CardProps {
@@ -168,44 +161,6 @@ export interface CardFooterProps {
   style?: LayoutStyle;
 }
 
-/** Every prop a CardMedia takes. */
-export interface CardMediaProps {
-  /** A drawing or a picture: an `<img alt="">` or an inline SVG, at the card's width. */
-  children: ReactNode;
-  /** Layout only: margins, alignment and width. */
-  style?: LayoutStyle;
-}
-
-/** Every prop a CardLink takes. */
-export interface CardLinkProps {
-  /** A CardMedia, a CardTitle and a CardDescription. Hold no other link or button in it. */
-  children: ReactNode;
-  /** Where it goes: the whole card is this one link. */
-  href?: string;
-  /**
-   * Draw the link as its one child element, the link a router draws (`<Link to="…">`), which
-   * takes the card's look and its children.
-   * @default false
-   */
-  asChild?: boolean;
-  /**
-   * The surface, as a Card's.
-   * @default "default"
-   */
-  variant?: "default" | "outline";
-  /**
-   * The room inside, as a Card's.
-   * @default "default"
-   */
-  padding?: "none" | "default" | "lg";
-  /** Its name, when its title and words do not say where it goes. */
-  "aria-label"?: string;
-  /** The ids of what describes it beyond its name, said after the name. */
-  "aria-describedby"?: string;
-  /** Layout only: margins, alignment and width. */
-  style?: LayoutStyle;
-}
-
 // A card of parts: one that holds a CardContent. Its parts then carry the room themselves.
 const PARTS = ":has(> [data-slot=card-content])";
 // A header or a footer in a card of parts, and in one whose CardContent runs edge to edge.
@@ -257,14 +212,12 @@ const styles = stylex.create({
     overflow: "hidden",
     alignContent: { default: "start", ":has(> :only-child)": "stretch" },
   },
-  none: { padding: 0, [cardVars.inset]: "0px" },
+  none: { padding: 0 },
   paddingDefault: {
     padding: { default: space[4], [PARTS]: 0 },
-    [cardVars.inset]: space[4],
   },
   lg: {
     padding: { default: space[6], [PARTS]: 0 },
-    [cardVars.inset]: space[6],
   },
   // The title and body: their type is the card's, or a section's in a card of parts (the header
   // sets it). Its own tracking, so a host page's heading rules never reach it.
@@ -280,19 +233,6 @@ const styles = stylex.create({
     letterSpacing: cardVars.titleTracking,
     color: colors.foreground,
   },
-  // The title of a linked card: underlined while the card is hovered or focused by the keys.
-  titleLinked: {
-    textDecorationLine: {
-      default: "none",
-      [stylex.when.ancestor(":hover", cardLinkMarker)]: {
-        default: "none",
-        [media.hover]: "underline",
-      },
-      [stylex.when.ancestor(":focus-visible", cardLinkMarker)]: "underline",
-    },
-    textUnderlineOffset: "0.2em",
-    textDecorationThickness: sizes.hairline,
-  },
   description: {
     margin: 0,
     fontSize: cardVars.descriptionSize,
@@ -300,35 +240,6 @@ const styles = stylex.create({
     letterSpacing: font.trackingUi,
     color: colors.mutedForeground,
     textWrap: "pretty",
-  },
-  // A card that is one link: the card's own look, no underline of its own, the card's focus ring.
-  // It answers a pointer through its parts (the media dims, the title is underlined): no lift, no
-  // movement.
-  link: {
-    color: colors.bodyForeground,
-    textDecorationLine: "none",
-    cursor: "pointer",
-  },
-  // A drawing or picture at the card's top: on the linked card's hover or keyboard focus it dims to
-  // 0.85 on the house curve; with reduced motion at once.
-  media: {
-    display: "block",
-    overflow: "hidden",
-    // Concentric with the card: the card's corner less its padding, and never under the smallest
-    // corner.
-    borderRadius: `max(${radius.mark}, calc(${radius.base} - ${cardVars.inset}))`,
-    cornerShape: radius.shape,
-    opacity: {
-      default: 1,
-      [stylex.when.ancestor(":hover", cardLinkMarker)]: {
-        default: 1,
-        [media.hover]: 0.85,
-      },
-      [stylex.when.ancestor(":focus-visible", cardLinkMarker)]: 0.85,
-    },
-    transitionProperty: "opacity",
-    transitionDuration: motionVars.hover,
-    transitionTimingFunction: duration.ease,
   },
   // The header: the title and the line under it in one column, the action at its end beside both;
   // when the card is too narrow for both, the action goes under the words. In a card of parts it
@@ -571,7 +482,7 @@ export const CardTitle = ({ children, level = 3, style }: CardTitleProps) => {
     <Heading
       id={use(CardTitleId)}
       data-slot="card-title"
-      {...stylex.props(styles.title, styles.titleLinked, style)}
+      {...stylex.props(styles.title, style)}
     >
       {children}
     </Heading>
@@ -668,51 +579,5 @@ export const CardFooter = ({
     >
       {children}
     </div>
-  );
-};
-
-/** A drawing or picture at the top of a card; in a CardLink it dims on hover and focus. */
-export const CardMedia = ({ children, style }: CardMediaProps) => (
-  <span data-slot="card-media" {...stylex.props(styles.media, style)}>
-    {children}
-  </span>
-);
-
-/**
- * A card that is one link: the whole card goes where `href` (or its child link) goes, with the
- * card's focus ring. Hovered or focused by the keys, a CardMedia in it dims to 0.85 and its
- * CardTitle is underlined; nothing lifts or moves. Hold no other link or button in it.
- */
-export const CardLink = ({
-  children,
-  href,
-  asChild = false,
-  variant = "default",
-  padding = "default",
-  style,
-  "aria-label": ariaLabel,
-  "aria-describedby": describedBy,
-}: CardLinkProps) => {
-  const slot = slotProps(asChild, children);
-  return renderElement(
-    "a",
-    {
-      href,
-      "data-slot": "card-link",
-      "aria-label": ariaLabel,
-      "aria-describedby": describedBy,
-      className: stylex.props(
-        cardLinkMarker,
-        styles.card,
-        hyphenate,
-        variant === "outline" ? styles.outline : styles.default,
-        paddingOf(padding),
-        styles.link,
-        focusRing,
-        style
-      ).className,
-      children: slot.children,
-    },
-    slot.render
   );
 };

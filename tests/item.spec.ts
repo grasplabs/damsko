@@ -123,6 +123,24 @@ test("tiles are a list of links, read row by row", async ({ page }) => {
   ]);
 });
 
+test("a tile with a picture is one link, named by its title and described by its line", async ({
+  page,
+}) => {
+  await openExample(page, "item", "picture");
+  const tiles = page.getByRole("list", { name: "Collections" });
+  await expect(tiles.getByRole("link")).toHaveText([
+    "Pricing",
+    "People and teams",
+  ]);
+  const link = tiles.getByRole("link", { name: "Pricing" });
+  await expect(link).toHaveAttribute("href", "#pricing");
+  await expect(link).toHaveAccessibleDescription(
+    "How we price each plan, and what changed this year."
+  );
+  await page.keyboard.press("Tab");
+  await expect(link).toBeFocused();
+});
+
 test("a link or a button row keeps its actions reachable: each a stop of its own", async ({
   page,
 }) => {
