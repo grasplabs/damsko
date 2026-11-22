@@ -49,6 +49,7 @@ import type {
 } from "react";
 
 import { placeNear } from "../hooks/use-return-focus";
+import { useScrollEdges } from "../hooks/use-scroll-edges";
 import {
   AudioWaveformIcon,
   FileIcon,
@@ -236,6 +237,13 @@ export interface AttachmentTriggerProps extends Omit<
 
 const HOVER = media.hover;
 
+// The side with more files beyond it fades out, as Suggestions' row does, clear of the room the
+// group keeps for a card's ring at its very edge.
+const RING_ROOM = space["1"];
+const FADE = space["10"];
+const fadeStart = `transparent ${RING_ROOM}, black ${FADE}`;
+const fadeEnd = `black calc(100% - ${FADE}), transparent calc(100% - ${RING_ROOM})`;
+
 const styles = stylex.create({
   group: {
     display: "flex",
@@ -247,6 +255,18 @@ const styles = stylex.create({
     listStyle: "none",
     overflowX: "auto",
     overflowY: "hidden",
+    overscrollBehaviorX: "contain",
+    // A card reached by Tab stops clear of the fade.
+    scrollPaddingInline: FADE,
+    maskImage: {
+      default: null,
+      ":is([data-under-end]:not([data-under-start]))": `linear-gradient(to right, ${fadeEnd})`,
+      ":is([data-under-start]:not([data-under-end]))": `linear-gradient(to right, ${fadeStart}, black)`,
+      ":is([data-under-start][data-under-end])": `linear-gradient(to right, ${fadeStart}, ${fadeEnd})`,
+      ":is([dir=rtl] *):is([data-under-end]:not([data-under-start]))": `linear-gradient(to left, ${fadeEnd})`,
+      ":is([dir=rtl] *):is([data-under-start]:not([data-under-end]))": `linear-gradient(to left, ${fadeStart}, black)`,
+      ":is([dir=rtl] *):is([data-under-start][data-under-end])": `linear-gradient(to left, ${fadeStart}, ${fadeEnd})`,
+    },
     // A card's widest is the row's own width, so a long name never runs past it. A size container
     // takes no width from its cards: in a row it is given a width (a prompt input gives it the
     // header's whole line).
@@ -467,23 +487,28 @@ export const AttachmentGroup = ({
   children,
   "aria-label": label,
   style,
-}: AttachmentGroupProps) => (
-  // Out of the tab order: Firefox makes a box that scrolls a Tab stop of its own, with no ring;
-  // each file's actions take the keys and scroll it into view. Focus comes to the list itself when
-  // its last file is taken off.
-  <InGroup value>
-    <ul
-      // oxlint-disable-next-line jsx-a11y/no-redundant-roles -- Safari drops a list's role once its markers are hidden
-      role="list"
-      aria-label={label}
-      tabIndex={-1}
-      data-slot="attachment-group"
-      {...stylex.props(styles.group, scrollbarHidden, style)}
-    >
-      {children}
-    </ul>
-  </InGroup>
-);
+}: AttachmentGroupProps) => {
+  // The sides with files beyond them are marked for the fade there.
+  const edges = useScrollEdges();
+  return (
+    // Out of the tab order: Firefox makes a box that scrolls a Tab stop of its own, with no ring;
+    // each file's actions take the keys and scroll it into view. Focus comes to the list itself when
+    // its last file is taken off.
+    <InGroup value>
+      <ul
+        // oxlint-disable-next-line jsx-a11y/no-redundant-roles -- Safari drops a list's role once its markers are hidden
+        role="list"
+        aria-label={label}
+        ref={edges}
+        tabIndex={-1}
+        data-slot="attachment-group"
+        {...stylex.props(styles.group, scrollbarHidden, style)}
+      >
+        {children}
+      </ul>
+    </InGroup>
+  );
+};
 
 /** One file: its picture or mark, its name and a line about it, and its actions. */
 export const Attachment = ({
