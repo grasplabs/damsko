@@ -1,7 +1,7 @@
 // What the three menus share (dropdown menu, context menu and menubar), on UI SDK's Menu: an item
 // with an icon, words, keys and work that can fail, checkbox and radio items, groups, labels,
-// separators and submenus. Each menu draws them under its own shadcn names (its kind starts every
-// part's slot, dropdown-menu-item), in the one look all three share, shadcn's: the raised panel
+// separators and submenus. Each menu draws them under its own names (its kind starts every
+// part's slot, dropdown-menu-item), in the one look all three share: the raised panel
 // (menuStyles).
 //
 //   const kind: MenuKind = "context-menu";
@@ -52,7 +52,7 @@ import { announce, isThenable, listOf, slotWords, wordsOf } from "./utils";
 import type { LayoutStyle } from "./utils";
 import { menuMarker } from "./vars.stylex";
 
-/** Which menu a part is drawn for: its shadcn name, which starts each slot. */
+/** Which menu a part is drawn for: its name, which starts each slot. */
 export type MenuKind = "dropdown-menu" | "context-menu" | "menubar";
 
 const styles = stylex.create({
@@ -80,7 +80,7 @@ export const className = (...parts: (stylex.StyleXStyles | LayoutStyle)[]) =>
   stylex.props(...parts).className;
 
 /**
- * Renders a part as `tag` with shadcn's slot (`dropdown-menu-item`): UI SDK names its parts after
+ * Renders a part as `tag` with the menu's own slot (`dropdown-menu-item`): UI SDK names its parts after
  * its own primitive (menu-item), and overwrites a slot given as a prop.
  */
 export const slotted =

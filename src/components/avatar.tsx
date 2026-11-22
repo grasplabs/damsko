@@ -1,4 +1,4 @@
-// Avatar: a person or a team as a picture, or their initials until it loads, after shadcn's, on
+// Avatar: a person or a team as a picture, or their initials until it loads, on
 // UI SDK's Avatar, which keeps the image a real <img> and shows the initials until it has loaded,
 // and for good if it fails. The circle and the soft fill with the system's edge are the system's.
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.

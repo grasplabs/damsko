@@ -50,6 +50,7 @@ import type { LayoutStyle } from "../lib/utils";
 import { iconVars, motionVars } from "../lib/vars.stylex";
 import { Button } from "./button";
 import { useFieldControl } from "./field";
+import { useHandover } from "./file-upload-handover";
 import { Progress } from "./progress";
 import { Spinner } from "./spinner";
 
@@ -643,11 +644,13 @@ export const FileUpload = ({
   // One quiet place for what a screen reader hears: each file sent or not, and each refusal.
   const [said, setSaid] = useState("");
   const { sending, send, drop } = useSending(onUpload, words, setSaid);
-  // Until the page runs its script, the browser's own file input does the work.
-  const [mounted, setMounted] = useState(false);
   // oxlint-disable-next-line react/hook-use-state -- a controller made once, never replaced
   const [files] = useState(createFileInputController);
   const native = useRef<HTMLInputElement>(null);
+  // Until the page runs its script, the browser's own file input does the work.
+  const mounted = useHandover(native, () => {
+    files.focus();
+  });
   const descriptionId = useId();
   // The name it is sent under: its own, or its Field's.
   const field = useFieldControl();
@@ -656,8 +659,6 @@ export const FileUpload = ({
   useEffect(() => {
     // Files chosen before the script ran move over to the live field.
     const early = native.current?.files;
-    // oxlint-disable-next-line react/set-state-in-effect -- the browser's own input hands over only once the page runs its script
-    setMounted(true);
     if (early && early.length > 0) {
       files.addFiles(early);
     }

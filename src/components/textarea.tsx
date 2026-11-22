@@ -1,5 +1,5 @@
-// Textarea: several lines of text, from shadcn's (registry/bases/base/ui/textarea.tsx, on Base UI),
-// converted from Tailwind to StyleX and built on UI SDK's Textarea, with Input's fill, hairline,
+// Textarea: several lines of text,
+// in StyleX, built on UI SDK's Textarea, with Input's fill, hairline,
 // focus edge and words, so a form's fields are one family. It grows with its text up to
 // textarea-height, then its text scrolls inside it.
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.

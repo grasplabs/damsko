@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import type { Locator, Page } from "@playwright/test";
 
-import { fixedTime, openExample } from "./example.ts";
+import { fixedTime, openExample, pickerFrom } from "./example.ts";
 
 /** One prompt input of the Send example, by its name. */
 const form = (page: Page, name: string) =>
@@ -322,9 +322,9 @@ test("files pasted into the text, dropped on it, or picked with Add files, are a
   await expect(files).toContainText("dropped.txt");
 
   await page.getByRole("button", { name: "Add to message" }).click();
-  const chooser = page.waitForEvent("filechooser");
-  await page.getByRole("menuitem", { name: "Add files" }).click();
-  const picker = await chooser;
+  const picker = await pickerFrom(page, async () => {
+    await page.getByRole("menuitem", { name: "Add files" }).click();
+  });
   await picker.setFiles({
     name: "plan.pdf",
     mimeType: "application/pdf",

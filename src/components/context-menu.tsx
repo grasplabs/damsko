@@ -1,6 +1,5 @@
-// ContextMenu: the actions for a thing, opened where it is right-clicked or long-pressed, from
-// shadcn's (registry/bases/base/ui/context-menu.tsx), converted from Tailwind to StyleX and rebuilt
-// on UI SDK's Menu with its context trigger: the raised panel the dropdown menu has, items with an
+// ContextMenu: the actions for a thing, opened where it is right-clicked or long-pressed,
+// in StyleX, built on UI SDK's Menu with its context trigger: the raised panel the dropdown menu has, items with an
 // icon, words and keys, checkbox and radio items, submenus, and an item whose work can fail.
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //

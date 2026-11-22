@@ -97,6 +97,7 @@ Hover and keyboard focus are forced from its own CSS; the rest are props.
     "More than one sentence: use a Textarea.",
     "Words, an icon or a button inside the field's edge: use an InputGroup.",
     "A number stepped up and down: use a NumberField. A one-time code: use an InputOTP.",
+    "A file to choose: use File upload.",
     "Colours, heights or corners set from outside: `style` takes layout and width only.",
   ]}
 />
@@ -321,83 +322,6 @@ Hover and keyboard focus are forced from its own CSS; the rest are props.
       key: "Finding it",
       value: "Its label above it, a white fill, a faint hairline and lift",
       note: "the hairline alone is under 3:1, on purpose",
-    },
-  ]}
-/>
-<Rows
-  title="From shadcn"
-  rows={[
-    {
-      group: "Input",
-      key: "`h-9`",
-      value: "`size`: {control-sm}, {control-default}, {control-lg}",
-      note: "Button's heights",
-    },
-    {
-      group: "Input",
-      key: "`border-input`",
-      value: "{input}",
-      note: "a faint hairline drawn inside, with a lift",
-    },
-    {
-      group: "Input",
-      key: "`dark:bg-input/30`",
-      value: "{input-bg}",
-      note: "an outline button's fill",
-    },
-    {
-      group: "Input",
-      key: "`focus-visible:ring-[3px]`",
-      value: "The one ring",
-      note: "not a field's own",
-    },
-    {
-      group: "Input",
-      key: "`aria-invalid:ring-destructive`",
-      value: "{input-border-invalid}",
-      note: "the hairline, not a ring",
-    },
-    {
-      group: "Input",
-      key: "`md:text-sm`",
-      value: "{input-text-touch} on a touch screen",
-      note: "by pointer, not by width",
-    },
-    {
-      group: "Input",
-      key: "`file:` styles",
-      value: "Dropped",
-      note: "not a file picker",
-    },
-    {
-      group: "Field",
-      key: "`FieldError errors`",
-      value: "`match`",
-      note: "UI SDK's checks, in your words",
-    },
-    {
-      group: "Field",
-      key: "`orientation`",
-      value: "Dropped",
-      note: "a label above its field, for now",
-    },
-    {
-      group: "Field",
-      key: "New",
-      value: "The required mark",
-      note: "from the control's `required`",
-    },
-    {
-      group: "Elsewhere",
-      key: "`className`",
-      value: "`style`",
-      note: "layout and width only",
-    },
-    {
-      group: "Elsewhere",
-      key: "Base UI",
-      value: "UI SDK",
-      note: "an agent can read and fill it by name",
     },
   ]}
 />

@@ -11,7 +11,7 @@
    site's and the base's.
 
    The resets are the box model the components were written and checked against (Tailwind's
-   preflight, which the product and shadcn assume, and three of the previous docs system's base rules: nothing refuses
+   preflight, which the product assumes, and three of the previous docs system's base rules: nothing refuses
    to shrink below its content, a pointer on what can be pressed, legible text rendering), restated
    here in our words. Three of the previous docs system's base rules are left out on purpose, because they reached into
    every preview: headings set in the display face with tight tracking (here a heading inherits, as

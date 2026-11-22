@@ -1,6 +1,6 @@
 // Stat: one figure that matters, with its label and how it moved: the label small and quiet over
 // the value, the change beside it in its variant's colour, and an icon at the end of the label when
-// it helps. There is no shadcn original; it is plain HTML.
+// it helps. It is plain HTML.
 //
 //   <Stat label="Revenue" value="€45,678" change="+8.2%" variant="success" />
 //   <Stat label="Open tickets" value="12" loading />

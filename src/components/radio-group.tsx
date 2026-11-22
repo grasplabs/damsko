@@ -1,5 +1,4 @@
-// RadioGroup: one answer from a few choices, under one name, from shadcn's
-// (registry/bases/base/ui/radio-group.tsx, on Base UI), converted from Tailwind to StyleX and built
+// RadioGroup: one answer from a few choices, under one name, in StyleX, built
 // on UI SDK's RadioGroup and Radio: one value, one tab stop, arrow keys between its radios (the
 // other way round in right to left), a hidden native radio under each so a form sends the value,
 // and an agent can choose by name. In a Field, its FieldLabel names the group and its FieldError
@@ -212,7 +211,7 @@ const Face = ({ state }: { state: RadioState }) => (
   </>
 );
 
-// UI SDK names the button after its own part (radio); it carries shadcn's name.
+// UI SDK names the button after its own part (radio); here it is RadioGroupItem.
 const radioButton = (props: Record<string, unknown>) =>
   renderElement("button", { ...props, "data-slot": "radio-group-item" });
 

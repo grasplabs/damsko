@@ -1,5 +1,5 @@
-// Questionnaire: an assistant asks the person one question or several in turn and waits, after
-// shadcn's (questionnaire.tsx), in Damsko's look and built on RadioGroup, Checkbox, Textarea and
+// Questionnaire: an assistant asks the person one question or several in turn and waits,
+// built on RadioGroup, Checkbox, Textarea and
 // Button. Each item is one choice, several, or the person's own words; a choice item may take
 // words of the person's own as well (QuestionnaireInput, "Other").
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.

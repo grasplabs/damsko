@@ -1,6 +1,5 @@
-// Message scroller: the scrolling transcript of a chat, from shadcn's
-// (registry/bases/base/ui/message-scroller.tsx, on @shadcn/react's MessageScroller), converted from
-// Tailwind to StyleX and rebuilt on UI SDK's createStickToBottom, in Damsko's look. With
+// Message scroller: the scrolling transcript of a chat,
+// in StyleX, built on UI SDK's createStickToBottom. With
 // `autoScroll` it stays at the end while an answer streams, unless the person scrolls up or presses
 // a key up; then it stays put, and "Jump to latest" appears under it. A newly sent turn
 // (`scrollAnchor`) goes to the top with room kept under it for the answer. New rows fade in, once;
@@ -305,6 +304,7 @@ const styles = stylex.create({
     overflowY: "auto",
     overscrollBehavior: "auto",
     borderRadius: "inherit",
+    cornerShape: "inherit",
     maskImage: {
       default: null,
       ":is([data-scrollable='start'])": `linear-gradient(to bottom, ${fadeTop}, black)`,

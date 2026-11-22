@@ -62,7 +62,7 @@ export default function TraceLive() {
         })}
       </Trace>
       <Button
-        variant="secondary"
+        variant="outline"
         size="sm"
         onClick={() => {
           setCurrent((was) => (was > steps.length - 1 ? 0 : was + 1));

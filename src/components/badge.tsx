@@ -1,4 +1,4 @@
-// Badge: a short status in a pill, after shadcn's: a soft tinted fill, the system's edge, and words
+// Badge: a short status in a pill: a soft tinted fill, the system's edge, and words
 // in the variant's colour. It says how something stands; it does nothing when pressed, unless it is
 // drawn as a link (`asChild`).
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
