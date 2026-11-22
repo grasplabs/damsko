@@ -30,6 +30,7 @@ import {
 import type { LayoutStyle } from "../lib/utils";
 import { iconOnly, toggleVariants } from "./toggle";
 import type { ToggleSize } from "./toggle";
+import { NameTooltip } from "./tooltip";
 
 type ToggleGroupPrimitiveProps = ComponentProps<
   typeof ToggleGroupPrimitive<string>
@@ -256,11 +257,7 @@ export const ToggleGroup = ({
 };
 
 /** One toggle in a ToggleGroup: pressed when the group's value lists it. */
-export const ToggleGroupItem = ({
-  children,
-  style,
-  ...rest
-}: ToggleGroupItemProps) => {
+const Item = ({ children, style, ...rest }: ToggleGroupItemProps) => {
   const size = useContext(GroupSize);
   const shared = useContext(GroupShared);
   const icon = iconOnly(children);
@@ -292,3 +289,9 @@ export const ToggleGroupItem = ({
     </TogglePrimitive>
   );
 };
+
+export const ToggleGroupItem = (props: ToggleGroupItemProps) => (
+  <NameTooltip iconOnly={iconOnly(props.children)}>
+    <Item {...props} />
+  </NameTooltip>
+);

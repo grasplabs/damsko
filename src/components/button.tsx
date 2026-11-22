@@ -12,11 +12,16 @@
 //
 // A press whose `onClick` returns a Promise is followed by the Button itself (hooks/use-action):
 // while it works the button is busy, takes no second press and shows a spinner; once it settles, a
-// tick or the alert for a moment, then it rests. The mark stands over the words, which keep their
-// place unseen (and their name for a screen reader), so the button never changes width. Words for a
+// tick or the alert for a moment, then it rests. While it works the spinner takes the place of its
+// icon and the words stay; with no icon the mark stands over the words, which keep their place
+// unseen (and their name for a screen reader), so the button never changes width. Words for a
 // state (`loadingLabel`, `successLabel`, `errorLabel`) are said, and shown in the words' place, every
-// one stacked in the same cell so the widest sets the width. A page that runs the work elsewhere (a
-// form's submit) gives `status` instead.
+// one stacked in the same cell so the widest sets the width. Failed, it draws the quiet fill with
+// destructive words and edge, whatever its variant. A page that runs the work elsewhere (a form's
+// submit) gives `status` instead.
+//
+// An icon-only button shows its name (`aria-label`) in a Tooltip of its own under a resting pointer
+// and on keyboard focus, unless it already is a TooltipTrigger's child.
 //
 // Drawn by another UI SDK part (`<DialogTrigger asChild><Button /></DialogTrigger>`), it takes that
 // part's props and is only its face: one element is never two UI SDK buttons, which an agent would
@@ -44,11 +49,18 @@ import {
   size as sizes,
   space,
 } from "../lib/tokens.stylex";
-import { isIconSize, isInvalid, isThenable, textOf } from "../lib/utils";
+import {
+  isIconSize,
+  isInvalid,
+  isThenable,
+  listOf,
+  textOf,
+} from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { iconVars, layerFooterMarker, motionVars } from "../lib/vars.stylex";
 import { buttonMarker } from "./button.stylex";
 import { Spinner } from "./spinner";
+import { NameTooltip } from "./tooltip";
 
 export type ButtonVariant =
   | "default"
@@ -155,7 +167,10 @@ interface WithWords extends ButtonBase {
  */
 interface IconOnly extends ButtonBase {
   size: IconSize;
-  /** Its name, for a screen reader, a voice command and an agent ("More actions"). */
+  /**
+   * Its name, for a screen reader, a voice command and an agent ("More actions"). It shows in a
+   * tooltip under a resting pointer and on keyboard focus.
+   */
   "aria-label": string;
   children: ReactNode;
 }
@@ -297,6 +312,25 @@ const styles = stylex.create({
   // Loading: it looks like itself, and the pointer says it is busy.
   busy: {
     cursor: "progress",
+  },
+  // Failed, on every variant: calm. The quiet fill, destructive words, a field's edge tinted
+  // destructive, and one small shake. The alert and the words say it too, so it is never colour alone.
+  failed: {
+    color: { default: colors.destructive, [FORCED]: "ButtonText" },
+    backgroundColor: colors.secondary,
+    boxShadow: sizes.errorBorder,
+    animationName: {
+      default: stylex.keyframes({
+        "0%, 100%": { transform: "none" },
+        "25%": { transform: `translateX(calc(-1 * ${sizes.resultShake}))` },
+        "50%": { transform: `translateX(${sizes.resultShake})` },
+        "75%": { transform: `translateX(calc(-0.5 * ${sizes.resultShake}))` },
+      }),
+      [media.reducedMotion]: "none",
+    },
+    animationDuration: duration.ui,
+    animationTimingFunction: duration.easeInOut,
+    animationIterationCount: 1,
   },
   // In forced colours the focus ring is the system's highlight, apart from the border's ButtonText.
   forcedFocus: {
@@ -582,6 +616,10 @@ const liveStyles = stylex.create({
 const filled = (variant: ButtonVariant) =>
   variant === "default" || variant === "destructive";
 
+/** Whether the element's props say its press failed (`data-status`, from `withStatus`). */
+const hasFailed = (extra: Record<string, unknown>) =>
+  extra["data-status"] === "error";
+
 const lookOf = (
   variant: ButtonVariant,
   size: ButtonSize,
@@ -666,6 +704,7 @@ const ownOf = (
       disabled && !busy && styles.disabled,
       disabled && !busy && variant === "default" && styles.defaultDisabled,
       busy && styles.busy,
+      hasFailed(extra) && styles.failed,
       style
     ),
     "data-slot": part ?? "button",
@@ -687,13 +726,15 @@ const Inside = ({
   variant,
   size,
   pressable,
+  failed,
 }: {
   variant: ButtonVariant;
   size: ButtonSize;
   pressable: boolean;
+  failed: boolean;
 }) => (
   <>
-    {filled(variant) && (
+    {filled(variant) && !failed && (
       <span
         aria-hidden="true"
         {...stylex.props(styles.sheen, pressable && styles.sheenLive)}
@@ -821,8 +862,12 @@ const statusStyles = stylex.create({
     opacity: 0,
     whiteSpace: "nowrap",
   },
-  // The room a state's mark takes beside its words, while another state shows.
+  // The room a state's mark takes beside its words, while another state shows; and the spinner
+  // where the button's icon stood, centred in the icon's own box so the words do not move.
   place: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
     flexShrink: 0,
     width: iconVars.size,
     height: iconVars.size,
@@ -840,6 +885,29 @@ const Mark = ({ status }: { status: Exclude<ActionStatus, "idle"> }) => {
 };
 
 /**
+ * The button's content while it works, when it has an icon: the spinner in the icon's place, the
+ * words as they were. Without an icon, nothing: the mark stands over the words instead.
+ */
+const spinning = (children: ReactNode) => {
+  const parts = listOf(children);
+  const at = parts.findIndex(
+    (part) => isValidElement(part) && part.type === Icon
+  );
+  return at === -1
+    ? undefined
+    : parts.with(
+        at,
+        <span
+          key="spinner"
+          data-slot="button-spinner"
+          {...stylex.props(statusStyles.place)}
+        >
+          <Spinner />
+        </span>
+      );
+};
+
+/**
  * The words, and over them the state's mark; with words for a state, every state stacked in one
  * cell. Mounted only while it shows, a mark never turns unseen.
  */
@@ -852,8 +920,13 @@ const Status = ({
   labels: Labels;
   children: ReactNode;
 }) => {
-  const resting = status === "idle";
-  const label = resting ? undefined : labels[status];
+  const label = status === "idle" ? undefined : labels[status];
+  // While it works with no words of its own, the spinner stands where the icon stood.
+  const inPlace =
+    status === "loading" && label === undefined
+      ? spinning(children)
+      : undefined;
+  const resting = status === "idle" || inPlace !== undefined;
   const mark =
     resting || label !== undefined ? null : (
       <span aria-hidden="true" {...stylex.props(statusStyles.mark)}>
@@ -871,7 +944,7 @@ const Status = ({
             !resting && statusStyles.unseen
           )}
         >
-          {children}
+          {inPlace ?? children}
         </span>
         {mark}
       </>
@@ -888,7 +961,7 @@ const Status = ({
               (label === undefined ? statusStyles.faded : statusStyles.gone)
           )}
         >
-          {children}
+          {inPlace ?? children}
         </span>
         {(["loading", "success", "error"] as const).map((each) =>
           labels[each] === undefined ? null : (
@@ -956,7 +1029,7 @@ const usePress = (
   return { status: action.status, press };
 };
 
-export const Button = ({
+const Pressable = ({
   variant = "default",
   size = "default",
   asChild = false,
@@ -989,7 +1062,14 @@ export const Button = ({
     textOf(children) || extra["aria-label"],
     { agentAsks, agentPresses }
   );
-  const inside = <Inside variant={variant} size={size} pressable={!off} />;
+  const inside = (
+    <Inside
+      variant={variant}
+      size={size}
+      pressable={!off}
+      failed={hasFailed(extra)}
+    />
+  );
   const element =
     asChild && isValidElement<{ children?: ReactNode }>(children)
       ? children
@@ -1064,3 +1144,9 @@ export const Button = ({
     </ButtonPrimitive>
   );
 };
+
+export const Button = (props: ButtonProps) => (
+  <NameTooltip iconOnly={isIconSize(props.size ?? "default")}>
+    <Pressable {...props} />
+  </NameTooltip>
+);

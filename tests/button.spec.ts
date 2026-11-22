@@ -72,6 +72,84 @@ test("an icon-only button is named by its label", async ({ page }) => {
   await expect(page.getByRole("button", { name: "Settings" })).toBeVisible();
 });
 
+test("an icon-only button shows its name under a pointer and on keyboard focus, and is not described by it", async ({
+  page,
+}) => {
+  await openExample(page, "button", "sizes");
+  const settings = page.getByRole("button", { name: "Settings" });
+  await settings.hover();
+  await expect(page.getByRole("tooltip", { name: "Settings" })).toBeVisible();
+  await expect(settings).not.toHaveAttribute("aria-describedby");
+  await page.mouse.move(0, 0);
+  await expect(page.getByRole("tooltip", { name: "Settings" })).toBeHidden();
+  await page.getByRole("button", { name: "Download the report" }).focus();
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Shift+Tab");
+  await expect(
+    page.getByRole("tooltip", { name: "Download the report" })
+  ).toBeVisible();
+});
+
+test("a Tooltip of the caller's stands in place of the button's own", async ({
+  page,
+}) => {
+  await openExample(page, "tooltip", "icon");
+  await page.getByRole("button", { name: "Download" }).hover();
+  await expect(page.getByRole("tooltip")).toHaveText(
+    "Saves a PDF of this report"
+  );
+});
+
+test("while it works the spinner stands in its icon's place, at the width of its widest state and full strength", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await openExample(page, "page-header", "actions-kinds");
+  const working = page.getByRole("button", { name: "Export" });
+  await expect(working).toHaveAttribute("aria-busy", "true");
+  await expect(working).toHaveCSS("opacity", "1");
+  await expect(working.getByText("Export", { exact: true })).toBeVisible();
+  const [width, widest] = await working.evaluate((element) => {
+    const failed = [...element.querySelectorAll("span")].find(
+      (span) => span.textContent === "Could not export"
+    );
+    return [
+      element.getBoundingClientRect().width,
+      failed?.getBoundingClientRect().width ?? 0,
+    ];
+  });
+  // 12px of padding either side of the widest words and their mark.
+  expect(width).toBe(widest + 24);
+});
+
+for (const theme of ["light", "dark"] as const) {
+  test(`a failed button draws the quiet fill with destructive words and edge, ${theme}`, async ({
+    page,
+  }) => {
+    await openExample(page, "empty-and-error", "action-failed-still", {
+      theme,
+    });
+    const failed = page.getByRole("button", { name: "Not archived" });
+    await expect(failed).toBeVisible();
+    const look = await failed.evaluate((element) => {
+      const probe = document.createElement("span");
+      probe.style.color = "var(--damsko-destructive)";
+      probe.style.backgroundColor = "var(--damsko-secondary)";
+      probe.style.boxShadow = "var(--damsko-error-border)";
+      element.after(probe);
+      const want = getComputedStyle(probe);
+      const got = getComputedStyle(element);
+      const same =
+        got.color === want.color &&
+        got.backgroundColor === want.backgroundColor &&
+        got.boxShadow === want.boxShadow;
+      probe.remove();
+      return same;
+    });
+    expect(look).toBe(true);
+  });
+}
+
 test("a click runs it", async ({ page }) => {
   await openExample(page, "button", "variants");
   await page.getByRole("button", { name: "Edit" }).click();

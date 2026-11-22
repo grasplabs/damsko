@@ -1,8 +1,8 @@
 // Toggle: a button that stays pressed, from shadcn's (registry/bases/base/ui/toggle.tsx, on Base
 // UI), converted from Tailwind to StyleX and built on UI SDK's Toggle. 28px tall at its default
 // `xs` size, its words muted until pressed; pressed lays a veil of ink deeper than hover's. Its
-// icon is a child, as on Button; an icon alone makes it square and needs an `aria-label`. For a
-// name shown on hover, wrap it in a Tooltip.
+// icon is a child, as on Button; an icon alone makes it square and needs an `aria-label`, which it
+// shows in a Tooltip of its own under a resting pointer and on keyboard focus.
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
 //   <Toggle aria-label="Bold"><Icon icon={TextBoldIcon} /></Toggle>
@@ -30,6 +30,7 @@ import {
 } from "../lib/tokens.stylex";
 import type { LayoutStyle } from "../lib/utils";
 import { iconVars, motionVars } from "../lib/vars.stylex";
+import { NameTooltip } from "./tooltip";
 
 /**
  * Button's ladder: `xs` 28 alone or in a toolbar; `sm` 32, `default` 36 and `lg` 44 level with a
@@ -48,7 +49,7 @@ type TogglePrimitiveProps = ComponentProps<typeof TogglePrimitive>;
 interface ToggleOwnProps {
   /** Its words, its icon (`<Icon icon={…} />`), or both. An icon alone needs an `aria-label`. */
   children?: ReactNode;
-  /** Its name when it shows only an icon ("Bold"). */
+  /** Its name when it shows only an icon ("Bold"), shown in a tooltip on hover and keyboard focus. */
   "aria-label"?: string;
   /** Whether it is pressed now, for a toggle your code holds. */
   pressed?: boolean;
@@ -214,7 +215,7 @@ export const iconOnly = (children: ReactNode) =>
   children === null ||
   (isValidElement(children) && children.type === Icon);
 
-export const Toggle = ({
+const Pressable = ({
   children,
   size = "xs",
   variant = "default",
@@ -239,4 +240,10 @@ export const Toggle = ({
     <span aria-hidden="true" {...stylex.props(styles.target)} />
     {children}
   </TogglePrimitive>
+);
+
+export const Toggle = (props: ToggleProps) => (
+  <NameTooltip iconOnly={iconOnly(props.children)}>
+    <Pressable {...props} />
+  </NameTooltip>
 );

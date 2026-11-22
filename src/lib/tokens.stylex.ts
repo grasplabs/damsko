@@ -480,6 +480,7 @@ export const size = stylex.defineConsts({
   swapScale: "var(--damsko-swap-scale)",
   resultMarkFrom: "var(--damsko-result-mark-from)",
   resultShift: "var(--damsko-result-shift)",
+  resultShake: "var(--damsko-result-shake)",
   // Fields: fields.
   inputInvalid: "var(--damsko-input-invalid)",
   inputFocus: "var(--damsko-input-focus)",

@@ -350,6 +350,8 @@
   --damsko-result-mark-from: 0.6;
   /* How far a result's words slide in beside their mark. Dropped with reduced motion. */
   --damsko-result-shift: 4px;
+  /* How far a failed button shakes, once. None with reduced motion. */
+  --damsko-result-shake: 4px;
   /* How long a result's words wait after their mark appears, so the mark comes first. */
   --damsko-result-follow: 80ms;
   /* How long a demo of working lasts before it says how it went. */

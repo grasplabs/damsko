@@ -1336,6 +1336,12 @@ export const groups: TokenGroup[] = [
             use: "How far a result's words slide in beside their mark. Dropped with reduced motion.",
           },
           {
+            name: "result-shake",
+            category: "size",
+            value: "4px",
+            use: "How far a failed button shakes, once. None with reduced motion.",
+          },
+          {
             name: "result-follow",
             category: "duration",
             value: "80ms",

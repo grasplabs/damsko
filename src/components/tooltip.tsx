@@ -11,6 +11,9 @@
 //     </TooltipTrigger>
 //     <TooltipContent>Download as PDF <Kbd>⌘D</Kbd></TooltipContent>
 //   </Tooltip>
+//
+// NameTooltip shows a control's own name: an icon-only Button, Toggle and ToggleGroupItem draw
+// themselves in one, so no caller wraps them by hand.
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
@@ -24,7 +27,7 @@ import type {
   TooltipOpenChangeReason,
 } from "@ui-sdk/react/tooltip";
 import { createContext, use, useRef } from "react";
-import type { ComponentProps, ReactNode } from "react";
+import type { ComponentProps, ReactElement, ReactNode, Ref } from "react";
 
 import {
   colors,
@@ -213,6 +216,8 @@ export const TooltipTrigger = ({
   };
   return (
     <TriggerPrimitive
+      // Says a Tooltip has this control: an icon-only Button then adds no tooltip of its own.
+      data-tooltip-trigger=""
       {...rest}
       ref={both}
       controller={handle}
@@ -353,3 +358,80 @@ export const TooltipContent = ({
     <span {...stylex.props(styles.words)}>{children}</span>
   </ContentPrimitive>
 );
+
+// ---- A control's own name --------------------------------------------------------------------------
+
+type Control = ReactElement<
+  Record<string, unknown> & { ref?: Ref<HTMLElement> }
+>;
+
+const isHandler = (value: unknown): value is (...args: unknown[]) => unknown =>
+  typeof value === "function";
+
+/**
+ * The control with the trigger's props on it. Its own props win, and of the trigger's it never
+ * takes the slot or the description: the tooltip repeats its name, which a screen reader has
+ * already said. Where both handle an event the trigger's runs first and the control's answer comes
+ * back: a press's Promise, which a Button follows.
+ */
+const NamedControl = ({
+  control,
+  ref,
+  ...trigger
+}: { control: Control; ref?: Ref<HTMLElement> } & Record<string, unknown>) => {
+  const { type: Element, props: own } = control;
+  const merged: Record<string, unknown> = {
+    ...trigger,
+    "aria-describedby": own["aria-describedby"],
+    "data-slot": own["data-slot"],
+  };
+  for (const [key, value] of Object.entries(own)) {
+    const theirs = trigger[key];
+    if (isHandler(value) && isHandler(theirs)) {
+      merged[key] = (...args: unknown[]) => {
+        theirs(...args);
+        return value(...args);
+      };
+    } else if (value !== undefined) {
+      merged[key] = value;
+    }
+  }
+  const both = (element: HTMLElement | null) => {
+    assignRef(ref, element);
+    assignRef(own.ref, element);
+  };
+  return <Element {...merged} ref={both} />;
+};
+
+/**
+ * A control's own name, shown under a resting pointer and on keyboard focus: what a Button, Toggle
+ * or ToggleGroupItem draws itself in. It shows the `aria-label` of a control that is an icon alone,
+ * unless a Tooltip already has that control as its trigger, which says more than the name. The
+ * control is marked `data-tooltip-trigger="name"`, and an agent reads the name from it, not from here.
+ */
+export const NameTooltip = ({
+  iconOnly,
+  children,
+}: {
+  /** Whether the control shows only an icon, so its name is not on it. */
+  iconOnly: boolean;
+  /** The one control it names. */
+  children: Control;
+}) => {
+  const name = iconOnly ? children.props["aria-label"] : undefined;
+  if (
+    typeof name !== "string" ||
+    name === "" ||
+    "data-tooltip-trigger" in children.props
+  ) {
+    return children;
+  }
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild data-tooltip-trigger="name">
+        <NamedControl control={children} />
+      </TooltipTrigger>
+      <TooltipContent data-agent-hidden="">{name}</TooltipContent>
+    </Tooltip>
+  );
+};

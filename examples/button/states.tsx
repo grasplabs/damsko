@@ -1,26 +1,26 @@
 import { Button } from "@grasp-os/ui/components/button";
 import type { ButtonVariant } from "@grasp-os/ui/components/button";
-import { Spinner } from "@grasp-os/ui/components/spinner";
+import type { ActionStatus } from "@grasp-os/ui/hooks/use-action";
 
 // One button in one state. The docs draw it once per state; hover, keyboard focus and pressed are
 // forced from the button's own CSS. In a product a Button whose press returns a Promise shows it by itself.
 export default function ButtonState({
   variant = "default",
-  loading = false,
+  status = "idle",
   disabled = false,
 }: {
   variant?: ButtonVariant;
-  loading?: boolean;
+  status?: ActionStatus;
   disabled?: boolean;
 }) {
   return (
     <Button
       variant={variant}
-      disabled={disabled || loading}
-      focusableWhenDisabled={loading}
-      aria-busy={loading || undefined}
+      status={status}
+      successLabel="Saved"
+      errorLabel="Not saved"
+      disabled={disabled}
     >
-      {loading && <Spinner />}
       Save changes
     </Button>
   );

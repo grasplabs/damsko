@@ -316,7 +316,8 @@
       "registryDependencies": [
         "@damsko/hooks",
         "@damsko/lib",
-        "@damsko/spinner"
+        "@damsko/spinner",
+        "@damsko/tooltip"
       ],
       "docs": "https://damsko.joingrasp.com/components/button",
       "files": [
@@ -2824,7 +2825,8 @@
         "@ui-sdk/react"
       ],
       "registryDependencies": [
-        "@damsko/lib"
+        "@damsko/lib",
+        "@damsko/tooltip"
       ],
       "docs": "https://damsko.joingrasp.com/components/toggle",
       "files": [
@@ -2847,7 +2849,8 @@
       ],
       "registryDependencies": [
         "@damsko/lib",
-        "@damsko/toggle"
+        "@damsko/toggle",
+        "@damsko/tooltip"
       ],
       "files": [
         {
