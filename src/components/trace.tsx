@@ -1,7 +1,7 @@
 // Trace: a list of lines for the steps an assistant takes, from shadcn's (registry/bases/base/ui/
 // trace.tsx), converted from Tailwind to StyleX and built on UI SDK's Collapsible with the shared
 // disclosure styles, in the look Damsko's AI parts share: a step's mark in its seat, a quiet line of
-// fine dots joining the marks, the title and a muted description, and a quiet trigger row that opens.
+// fine pixels joining the marks, the title and a muted description, and a quiet trigger row that opens.
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
 //   <Trace>
@@ -250,8 +250,8 @@ const styles = stylex.create({
     top: { default: null, ":first-child": space["2"] },
   },
   // The joining line, from under a step's first mark to the next step's, clear of both by
-  // space-1: a line of fine dots, faint ahead of the work and drawn in muted ink once the step is
-  // done. None under the last row.
+  // space-1: a line of square pixels, as wide as they are tall, one in every space-1, faint ahead
+  // of the work and drawn in muted ink once the step is done. None under the last row.
   join: {
     position: "absolute",
     display: {
@@ -263,9 +263,8 @@ const styles = stylex.create({
     top: `calc(${space["2"]} + 1lh - ${LEADING} + ${space["1"]})`,
     bottom: `calc(${space["1"]} - ${space["2"]} - ${LEADING})`,
     width: `calc(${size.hairline} * 2)`,
-    backgroundImage: `radial-gradient(circle, currentColor calc(${size.hairline} * 0.75), transparent calc(${size.hairline} * 1.1))`,
+    backgroundImage: `linear-gradient(transparent ${size.hairline}, currentColor ${size.hairline} calc(${size.hairline} * 3), transparent 0)`,
     backgroundSize: `100% ${space["1"]}`,
-    backgroundRepeat: "repeat-y",
     color: { default: colors.agentIndicatorRest, [FORCED]: "GrayText" },
     forcedColorAdjust: "none",
   },
