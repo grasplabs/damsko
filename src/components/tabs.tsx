@@ -971,7 +971,8 @@ export const TabsTrigger = ({
             {...stylex.props(
               styles.close,
               segmented && styles.closeSegment,
-              focusRing
+              // Beside the tab's words and inside its box: the ring inside the button.
+              focusRingInset
             )}
           >
             <Icon icon={XIcon} />

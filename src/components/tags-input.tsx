@@ -195,7 +195,7 @@ const styles = stylex.create({
       [FORCED]: "1px dashed CanvasText",
       ":focus-visible": {
         default: `${sizes.ringWidth} solid ${colors.ring}`,
-        [FORCED]: `calc(2 * ${sizes.ringWidth}) solid Highlight`,
+        [FORCED]: `calc(2 * ${sizes.lineStrong}) solid Highlight`,
       },
     },
     outlineOffset: {

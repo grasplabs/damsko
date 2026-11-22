@@ -335,7 +335,7 @@ const styles = stylex.create({
     margin: 0,
     padding: 0,
     borderWidth: 0,
-    borderInlineEndWidth: size.ringWidth,
+    borderInlineEndWidth: size.lineStrong,
     borderStyle: "solid",
     borderColor: {
       default: "transparent",
@@ -466,7 +466,7 @@ const styles = stylex.create({
   editorEnd: { textAlign: "end" },
   editing: { backgroundColor: colors.card, cursor: "text" },
   wrong: {
-    boxShadow: `inset 0 0 0 ${size.ringWidth} ${colors.inputBorderInvalid}, 0 0 0 3px ${colors.ringHaloInvalid}`,
+    boxShadow: `inset 0 0 0 ${size.lineStrong} ${colors.inputBorderInvalid}, 0 0 0 3px ${colors.ringHaloInvalid}`,
   },
   // ---- A chosen range: the wash, quiet mint lines inside, and its edge on the hairlines ----
   inRange: {
@@ -535,7 +535,7 @@ const styles = stylex.create({
     zIndex: 1,
     outline: {
       default: "none",
-      [media.forcedColors]: `${size.ringWidth} solid Highlight`,
+      [media.forcedColors]: `${size.lineStrong} solid Highlight`,
     },
     outlineOffset: `calc(-1 * ${size.ringWidth})`,
   },
@@ -556,12 +556,12 @@ const styles = stylex.create({
     borderBlockEndColor: { default: null, ":focus-visible": "transparent" },
     boxShadow: {
       default: `inset 0 calc(-1 * ${size.hairline}) 0 ${colors.dataGridActiveBorder}`,
-      ":focus-visible": `inset 0 0 0 ${size.ringWidth} ${colors.dataGridActiveBorder}`,
+      ":focus-visible": `inset 0 0 0 ${size.lineStrong} ${colors.dataGridActiveBorder}`,
     },
   },
   // In a range the underline's cell needs more than the wash its neighbours share: a line all round.
   activeUnderlineInRange: {
-    boxShadow: `inset 0 0 0 ${size.ringWidth} ${colors.dataGridActiveBorder}`,
+    boxShadow: `inset 0 0 0 ${size.lineStrong} ${colors.dataGridActiveBorder}`,
   },
   // ---- What scrolls under the edges ----
   fade: {

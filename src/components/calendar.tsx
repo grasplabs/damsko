@@ -165,7 +165,7 @@ const styles = stylex.create({
       ":is([data-today]):is([data-range-middle], [data-preview]:not([data-range-start], [data-range-end]))":
         "underline",
     },
-    textDecorationThickness: size.ringWidth,
+    textDecorationThickness: size.lineStrong,
     textUnderlineOffset: space[1],
     backgroundColor: {
       default: "transparent",

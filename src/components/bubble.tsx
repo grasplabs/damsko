@@ -17,7 +17,7 @@ import { renderElement } from "@ui-sdk/react/primitive";
 import { createContext, isValidElement, use } from "react";
 import type { ReactNode } from "react";
 
-import { focusRing } from "../lib/styles";
+import { focusOnColor, focusRing } from "../lib/styles";
 import {
   colors,
   duration,
@@ -314,6 +314,8 @@ export const BubbleContent = ({
       element !== undefined && pressed[variant],
       align === "end" && styles.contentEnd,
       element !== undefined && focusRing,
+      // Words on the filled Bubble: a link among them shows its ring in the ink seen on the fill.
+      element === undefined && variant === "default" && focusOnColor,
       style
     ),
   };

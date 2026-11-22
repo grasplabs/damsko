@@ -49,7 +49,7 @@ import {
 } from "../lib/tokens.stylex";
 import { listOf, nothing, ownValue } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
-import { iconVars } from "../lib/vars.stylex";
+import { iconVars, ringInsetMarker } from "../lib/vars.stylex";
 import { Button } from "./button";
 import { grammarOrNull, languageNames, linesOf } from "./code-block-prism";
 import type { Highlight } from "./code-block-prism";
@@ -345,13 +345,13 @@ const styles = stylex.create({
     pointerEvents: "none",
     outlineWidth: {
       default: size.ringWidth,
-      [FORCED]: `calc(2 * ${size.ringWidth})`,
+      [FORCED]: `calc(2 * ${size.lineStrong})`,
     },
     outlineColor: { default: colors.ring, [FORCED]: "Highlight" },
     outlineStyle: { default: "none", ":is(:focus-visible + *)": "solid" },
     outlineOffset: {
       default: `calc(-1 * ${size.ringWidth})`,
-      [FORCED]: `calc(-2 * ${size.ringWidth})`,
+      [FORCED]: `calc(-2 * ${size.lineStrong})`,
     },
   },
   code: {
@@ -679,6 +679,7 @@ export const CodeBlock = ({
         styles.box,
         variant === "destructive" && styles.destructive,
         stylex.defaultMarker(),
+        ringInsetMarker,
         style
       )}
     >
