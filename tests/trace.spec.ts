@@ -284,3 +284,47 @@ for (const scale of [1, 2]) {
     await page.close();
   });
 }
+
+test("a queue's rows are named by their count and open on their lists; a waiting item and a done one say so in words", async ({
+  page,
+}) => {
+  await openExample(page, "trace", "queue");
+  const left = page.getByRole("button", { name: "3 to do" });
+  const completed = page.getByRole("button", { name: "2 completed" });
+  const line = (title: string) =>
+    page.getByText(title, { exact: true }).locator("..");
+  await expect(left).toHaveAttribute("aria-expanded", "true");
+  await expect(line("Add tests for the combobox")).toContainText("Waiting");
+  await expect(completed).toHaveAttribute("aria-expanded", "false");
+  await expect(page.getByText("Add a changeset", { exact: true })).toBeHidden();
+  await completed.click();
+  await expect(line("Add a changeset")).toContainText("Done, Add a changeset");
+  await left.click();
+  await expect(left).toHaveAttribute("aria-expanded", "false");
+  await expect(
+    page.getByText("Add tests for the combobox", { exact: true })
+  ).toBeHidden();
+});
+
+test("a subagent's row names the run and its model, and opens on its tool calls, its output and what it found", async ({
+  page,
+}) => {
+  await openExample(page, "trace", "subagent");
+  const run = page.getByRole("button", {
+    name: /^Ran the research agent\s*, research-model-2$/u,
+  });
+  const found = page.getByText("The cache is keyed on the commit SHA.", {
+    exact: true,
+  });
+  await expect(run).toHaveAttribute("aria-expanded", "true");
+  await expect(
+    page.getByText("Ran grep -rn cacheKey scripts", { exact: true })
+  ).toBeVisible();
+  await expect(page.getByRole("region", { name: "Output" })).toContainText(
+    "scripts/optimize-images.ts"
+  );
+  await expect(found).toBeVisible();
+  await run.click();
+  await expect(run).toHaveAttribute("aria-expanded", "false");
+  await expect(found).toBeHidden();
+});

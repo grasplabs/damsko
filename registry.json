@@ -1970,28 +1970,6 @@
       ]
     },
     {
-      "name": "queue",
-      "type": "registry:ui",
-      "title": "Queue",
-      "description": "What waits to be sent or done while an answer streams, the messages sent ahead and the to-dos, in sections that fold.",
-      "dependencies": [
-        "@stylexjs/stylex"
-      ],
-      "registryDependencies": [
-        "@damsko/button",
-        "@damsko/lib",
-        "@damsko/trace"
-      ],
-      "docs": "https://damsko.joingrasp.com/components/queue",
-      "files": [
-        {
-          "path": "src/components/queue.tsx",
-          "type": "registry:file",
-          "target": "~/src/components/queue.tsx"
-        }
-      ]
-    },
-    {
       "name": "radio-group",
       "type": "registry:ui",
       "title": "Radio group",
@@ -2484,29 +2462,6 @@
           "path": "src/components/stepper.tsx",
           "type": "registry:file",
           "target": "~/src/components/stepper.tsx"
-        }
-      ]
-    },
-    {
-      "name": "subagent",
-      "type": "registry:ui",
-      "title": "Subagent",
-      "description": "Work handed to another agent, shown as its own run, with what it was asked, its tool calls and what it found.",
-      "dependencies": [
-        "@stylexjs/stylex"
-      ],
-      "registryDependencies": [
-        "@damsko/badge",
-        "@damsko/code-block",
-        "@damsko/lib",
-        "@damsko/trace"
-      ],
-      "docs": "https://damsko.joingrasp.com/components/subagent",
-      "files": [
-        {
-          "path": "src/components/subagent.tsx",
-          "type": "registry:file",
-          "target": "~/src/components/subagent.tsx"
         }
       ]
     },
