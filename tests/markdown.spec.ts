@@ -313,3 +313,27 @@ test("the host draws links: out asks first, a path goes through its router, a ci
   await dialog.getByRole("button", { name: "Cancel" }).click();
   await expect(dialog).toBeHidden();
 });
+
+test("a task's box is round at the corner, its tick the icon's own size", async ({
+  page,
+}) => {
+  await openExample(page, "markdown", "tasks");
+  const done = page.getByRole("listitem").filter({ hasText: "Done" }).first();
+  const box = await done.evaluate((item) => {
+    const mark = item.querySelector("svg");
+    const face = mark?.parentElement;
+    if (mark === null || face === null || face === undefined) {
+      return null;
+    }
+    const look = getComputedStyle(face);
+    return {
+      // Where the browser draws corner shapes, the plain round one.
+      round:
+        !CSS.supports("corner-shape", "round") ||
+        look.getPropertyValue("corner-shape") === "round",
+      radius: look.borderTopLeftRadius,
+      tick: mark.getBoundingClientRect().width,
+    };
+  });
+  expect(box).toEqual({ round: true, radius: "6px", tick: 16 });
+});
