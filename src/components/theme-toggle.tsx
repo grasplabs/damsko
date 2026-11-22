@@ -34,7 +34,7 @@ import {
   space,
 } from "../lib/tokens.stylex";
 import type { LayoutStyle } from "../lib/utils";
-import { iconVars, motionVars } from "../lib/vars.stylex";
+import { iconVars, motionVars, ringInsetMarker } from "../lib/vars.stylex";
 
 /** How a person chose to see it: light, dark, or whatever the system says. */
 export const themeModes = ["light", "dark", "system"] as const;
@@ -586,7 +586,8 @@ const Segmented = ({
     {
       role: "radiogroup",
       "aria-label": label,
-      ...stylex.props(segmentedStyles.track, styles.segments),
+      // The segments touch: each one's ring is drawn just inside it (ringInsetMarker).
+      ...stylex.props(segmentedStyles.track, styles.segments, ringInsetMarker),
       children: (
         <>
           {chosen !== -1 && (

@@ -173,9 +173,14 @@ const focusStyles = stylex.create({
     },
     outlineOffset: size.ringOffsetMark,
   },
+  // Inside a part that packs or clips its controls (ringInsetMarker), just inside, as ring is.
   within: {
     outline: { default: "none", ":has(:focus-visible)": line },
-    outlineOffset: size.ringOffset,
+    outlineOffset: {
+      default: size.ringOffset,
+      [stylex.when.ancestor(":is(*)", ringInsetMarker)]:
+        `calc(-1 * ${size.ringWidth})`,
+    },
   },
   ringText: {
     outline: { default: "none", [KEY]: line },
