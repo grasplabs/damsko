@@ -9,6 +9,7 @@ import { useState } from "react";
 const styles = stylex.create({
   column: {
     display: "grid",
+    gridTemplateColumns: "minmax(0, 1fr)",
     gap: space["4"],
     width: "100%",
     maxWidth: size.promptInputWidth,

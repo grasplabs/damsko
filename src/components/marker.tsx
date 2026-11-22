@@ -153,9 +153,11 @@ const styles = stylex.create({
     minWidth: 0,
     overflowWrap: "break-word",
   },
+  // Its words wrap before they reach the edge: the hairlines on each side go to nothing, the gaps
+  // beside them stay, so the row never runs past its box.
   contentSeparator: {
     flexShrink: 0,
-    maxWidth: "100%",
+    maxWidth: `calc(100% - 2 * ${space["3"]})`,
     textAlign: "center",
   },
 });

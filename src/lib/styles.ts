@@ -363,6 +363,59 @@ const fadeStyles = stylex.create({
 /** What replaces a placeholder fades in, where the placeholder stood. */
 export const fadeIn = fadeStyles.in;
 
+// ---- Edge fade ----------------------------------------------------------------------------------
+//
+// A row that scrolls sideways (Suggestions, a row of Attachments) fades out at the side with more
+// beyond it, clear of the room a control's ring takes at its very edge. The side is marked by
+// useScrollEdges (`data-under-start`, `data-under-end`). A control reached by Tab stops clear of the
+// fade (scroll padding); a part keeps its controls out of it at rest by keeping room for it. In forced
+// colours the fade goes, as it would dissolve the edges inside it.
+//
+//   const edges = useScrollEdges();   <div ref={edges} {...stylex.props(styles.row, edgeFade)}>
+
+// How far the fade reaches in from a side with more beyond it (Attachment keeps its cards this far
+// clear of each side).
+const EDGE_FADE = space["10"];
+const FADE_ROOM = space["1"];
+const fadeFrom = `transparent ${FADE_ROOM}, black ${EDGE_FADE}`;
+const fadeTo = `black calc(100% - ${EDGE_FADE}), transparent calc(100% - ${FADE_ROOM})`;
+
+const edgeFadeStyles = stylex.create({
+  edges: {
+    scrollPaddingInline: EDGE_FADE,
+    maskImage: {
+      default: null,
+      ":is([data-under-end]:not([data-under-start]))": {
+        default: `linear-gradient(to right, ${fadeTo})`,
+        [FORCED]: "none",
+      },
+      ":is([data-under-start]:not([data-under-end]))": {
+        default: `linear-gradient(to right, ${fadeFrom}, black)`,
+        [FORCED]: "none",
+      },
+      ":is([data-under-start][data-under-end])": {
+        default: `linear-gradient(to right, ${fadeFrom}, ${fadeTo})`,
+        [FORCED]: "none",
+      },
+      ":is([dir=rtl] *):is([data-under-end]:not([data-under-start]))": {
+        default: `linear-gradient(to left, ${fadeTo})`,
+        [FORCED]: "none",
+      },
+      ":is([dir=rtl] *):is([data-under-start]:not([data-under-end]))": {
+        default: `linear-gradient(to left, ${fadeFrom}, black)`,
+        [FORCED]: "none",
+      },
+      ":is([dir=rtl] *):is([data-under-start][data-under-end])": {
+        default: `linear-gradient(to left, ${fadeFrom}, ${fadeTo})`,
+        [FORCED]: "none",
+      },
+    },
+  },
+});
+
+/** The fade at the sides of a sideways row with more beyond them. */
+export const edgeFade = edgeFadeStyles.edges;
+
 // ---- Input --------------------------------------------------------------------------------------
 
 /**

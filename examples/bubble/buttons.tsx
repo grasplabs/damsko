@@ -1,6 +1,10 @@
 "use client";
 
-import { Bubble, BubbleContent } from "@grasp-os/ui/components/bubble";
+import {
+  Bubble,
+  BubbleContent,
+  BubbleGroup,
+} from "@grasp-os/ui/components/bubble";
 import * as stylex from "@stylexjs/stylex";
 import { useState } from "react";
 
@@ -23,20 +27,22 @@ export default function BubbleButtons() {
           {chosen === null ? "How can I help?" : `You chose: ${chosen}.`}
         </BubbleContent>
       </Bubble>
-      {replies.map((reply) => (
-        <Bubble key={reply} variant="tinted" align="end">
-          <BubbleContent asChild>
-            <button
-              type="button"
-              onClick={() => {
-                setChosen(reply);
-              }}
-            >
-              {reply}
-            </button>
-          </BubbleContent>
-        </Bubble>
-      ))}
+      <BubbleGroup>
+        {replies.map((reply) => (
+          <Bubble key={reply} variant="tinted" align="end">
+            <BubbleContent asChild>
+              <button
+                type="button"
+                onClick={() => {
+                  setChosen(reply);
+                }}
+              >
+                {reply}
+              </button>
+            </BubbleContent>
+          </Bubble>
+        ))}
+      </BubbleGroup>
     </div>
   );
 }
