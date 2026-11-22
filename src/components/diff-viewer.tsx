@@ -64,7 +64,7 @@ import {
 } from "../lib/tokens.stylex";
 import { announce } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
-import { iconVars, motionVars } from "../lib/vars.stylex";
+import { iconVars, motionVars, ringInsetMarker } from "../lib/vars.stylex";
 import { Badge } from "./badge";
 import { Button } from "./button";
 import { Collapsible, CollapsibleTrigger } from "./collapsible";
@@ -1785,7 +1785,11 @@ const LineDiff = (props: Settled) => {
       aria-label={named && showHeader ? undefined : said}
       data-slot="diff-viewer"
       data-mode={drawn}
-      {...stylex.props(framed ? styles.diff : styles.bare, style)}
+      {...stylex.props(
+        framed ? styles.diff : styles.bare,
+        ringInsetMarker,
+        style
+      )}
     >
       {showHeader && (
         <Header
@@ -1841,7 +1845,7 @@ const ProseDiff = ({
       aria-label={(named ? title : label) ?? words.name}
       data-slot="diff-viewer"
       data-mode="inline"
-      {...stylex.props(styles.diff, style)}
+      {...stylex.props(styles.diff, ringInsetMarker, style)}
     >
       {named && showHeader && (
         <Header

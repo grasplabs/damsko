@@ -955,6 +955,14 @@
   .site-skip:focus {
     clip-path: none;
   }
+  /* It stands in the window's corner, filled: its ring is drawn inside it, in the ink seen on a
+   fill, where the corner cannot cut it. */
+  .site-skip:focus-visible {
+    outline-color: var(--damsko-ring-on-color);
+    outline-offset: calc(
+      -1 * var(--damsko-ring-width) - var(--damsko-ring-offset)
+    );
+  }
 
   /* ---- A page that could not be drawn ------------------------------------------------------------ */
   /* site/system/Problem.astro: the file, the line and the message, in place of the page's body. */

@@ -353,7 +353,7 @@ const styles = stylex.create({
       default: "none",
       ":focus-visible": {
         default: "none",
-        [FORCED]: `${size.ringWidth} solid Highlight`,
+        [FORCED]: `${size.lineStrong} solid Highlight`,
       },
     },
     outlineOffset: `calc(-1 * ${size.ringWidth})`,

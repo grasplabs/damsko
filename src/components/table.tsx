@@ -531,7 +531,7 @@ const styles = stylex.create({
     outlineStyle: { default: "none", [ROW_FOCUS]: "solid", [FORCED]: "solid" },
     outlineWidth: {
       default: size.ringWidth,
-      [FORCED]: { default: size.hairline, [ROW_FOCUS]: size.ringWidth },
+      [FORCED]: { default: size.hairline, [ROW_FOCUS]: size.lineStrong },
     },
     outlineColor: {
       default: colors.ring,
@@ -541,7 +541,7 @@ const styles = stylex.create({
       default: `calc(-1 * ${size.ringWidth})`,
       [FORCED]: {
         default: `calc(-1 * ${size.hairline})`,
-        [ROW_FOCUS]: `calc(-1 * ${size.ringWidth})`,
+        [ROW_FOCUS]: `calc(-1 * ${size.lineStrong})`,
       },
     },
   },
@@ -587,14 +587,14 @@ const styles = stylex.create({
   // Where a dragged column will land: a pine line on that side of the head.
   dropBefore: {
     boxShadow: {
-      default: `inset ${size.ringWidth} 0 0 ${colors.pine}`,
-      ":is([dir=rtl] *)": `inset calc(-1 * ${size.ringWidth}) 0 0 ${colors.pine}`,
+      default: `inset ${size.lineStrong} 0 0 ${colors.pine}`,
+      ":is([dir=rtl] *)": `inset calc(-1 * ${size.lineStrong}) 0 0 ${colors.pine}`,
     },
   },
   dropAfter: {
     boxShadow: {
-      default: `inset calc(-1 * ${size.ringWidth}) 0 0 ${colors.pine}`,
-      ":is([dir=rtl] *)": `inset ${size.ringWidth} 0 0 ${colors.pine}`,
+      default: `inset calc(-1 * ${size.lineStrong}) 0 0 ${colors.pine}`,
+      ":is([dir=rtl] *)": `inset ${size.lineStrong} 0 0 ${colors.pine}`,
     },
   },
   // A column that can be sorted: its name is a button, with the sort's icon after it.

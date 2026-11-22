@@ -76,7 +76,7 @@ import {
 } from "../lib/tokens.stylex";
 import { safeMediaSrc } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
-import { iconVars } from "../lib/vars.stylex";
+import { iconVars, ringInsetMarker } from "../lib/vars.stylex";
 import { Button } from "./button";
 import type { ButtonSize, ButtonVariant } from "./button";
 
@@ -691,6 +691,7 @@ export const AttachmentActions = ({
       {...stylex.props(
         styles.actions,
         vertical && styles.actionsVertical,
+        ringInsetMarker,
         style
       )}
     >

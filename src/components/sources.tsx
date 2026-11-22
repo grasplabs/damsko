@@ -40,7 +40,12 @@ import type { ReactNode } from "react";
 
 import { useI18n } from "../lib/i18n";
 import { ChevronDownIcon, Icon, LockIcon } from "../lib/icons";
-import { focusRing, tileEdge, visuallyHidden } from "../lib/styles";
+import {
+  focusRing,
+  focusRingInset,
+  tileEdge,
+  visuallyHidden,
+} from "../lib/styles";
 import {
   colors,
   duration,
@@ -485,7 +490,7 @@ export const Source = ({
         rel="noreferrer"
         data-slot="source-link"
         onClick={onOpen}
-        {...stylex.props(styles.row, styles.rowLive, focusRing, style)}
+        {...stylex.props(styles.row, styles.rowLive, focusRingInset, style)}
       >
         {line}
       </a>
@@ -496,7 +501,7 @@ export const Source = ({
         type="button"
         data-slot="source-link"
         onClick={onOpen}
-        {...stylex.props(styles.row, styles.rowLive, focusRing, style)}
+        {...stylex.props(styles.row, styles.rowLive, focusRingInset, style)}
       >
         {line}
       </button>

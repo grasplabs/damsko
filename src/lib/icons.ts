@@ -32,7 +32,6 @@ import {
   ArrowUpRight01Icon,
   Attachment01Icon,
   AudioWave01Icon,
-  Bookmark01Icon,
   BubbleChatIcon,
   Building03Icon,
   Calendar03Icon,
@@ -320,8 +319,6 @@ export const AudioWaveformIcon: IconData = AudioWave01Icon;
 export const BellIcon: IconData = Notification03Icon;
 /** Bold text. TextBoldIcon. */
 export const BoldIcon: IconData = TextBoldIcon;
-/** A bookmark: a place kept to come back to. Bookmark01Icon. */
-export const BookmarkIcon: IconData = Bookmark01Icon;
 /** A brain: knowledge, memory. AiBrain01Icon. */
 export const BrainIcon: IconData = AiBrain01Icon;
 /** A company or an organisation. Building03Icon. */

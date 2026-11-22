@@ -82,7 +82,6 @@ export const choosingGroups: ChoosingGroup[] = [
       "message",
       "bubble",
       "marker",
-      "checkpoint",
       "sources",
       "inline-citation",
       "suggestion",

@@ -40,7 +40,7 @@ One ring, the system's, for the keyboard only. Every layer takes focus when it o
     {
       key: "The ring",
       value:
-        "{ring-width} in the focus colour, on a control's edge. It stands {ring-offset-mark} off a checkbox's, radio's or switch's mark, and {ring-offset-text} off words.",
+        "{ring-width} in the focus colour, standing {ring-offset} off a control's edge with the ground between them: a ring round the control, never its border. It stands {ring-offset-mark} off a checkbox's, radio's or switch's mark and {ring-offset-text} off words, and is drawn just inside a control whose neighbours touch it or whose box is clipped (a button in a group, a segment, a row).",
       tokens: ["ring"],
     },
     {
@@ -59,9 +59,10 @@ One ring, the system's, for the keyboard only. Every layer takes focus when it o
         "Dialog, Alert dialog, Popover and menus: focus goes in, Tab stays inside a dialog, Escape closes, focus returns to the trigger.",
     },
     {
-      key: "Still open",
+      key: "On a fill",
       value:
-        "On a filled button the ring lies on the fill; how it should stand there is still being decided.",
+        "A filled button's ring stands off it, on the ground. What stands on the action fill itself (a link in a filled bubble) takes the other mode's ring, 3:1 on that fill.",
+      tokens: ["ring-on-color"],
     },
     {
       key: "Yours",

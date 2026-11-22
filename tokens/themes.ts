@@ -52,6 +52,10 @@ export const themes: readonly Theme[] = [
         dark: "oklch(0.74 0.04 168)",
       },
       ring: { light: "oklch(0.42 0.06 176)", dark: "oklch(0.8 0.05 168)" },
+      "ring-on-color": {
+        light: "oklch(0.8 0.05 168)",
+        dark: "oklch(0.42 0.06 176)",
+      },
       primary: { light: "oklch(0.36 0.075 177)" },
       "primary-active": {
         light: "oklch(0.3 0.068 177)",
@@ -85,6 +89,10 @@ export const themes: readonly Theme[] = [
         dark: "oklch(0.72 0.01 80)",
       },
       ring: { light: "oklch(0.44 0.01 70)", dark: "oklch(0.78 0.01 80)" },
+      "ring-on-color": {
+        light: "oklch(0.78 0.01 80)",
+        dark: "oklch(0.44 0.01 70)",
+      },
       primary: { light: "oklch(0.27 0.01 70)" },
       "primary-active": {
         light: "oklch(0.22 0.01 70)",

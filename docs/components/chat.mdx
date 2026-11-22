@@ -20,6 +20,12 @@ Chat is the thread of a conversation with the assistant. Each turn is a `ChatMes
 
 <Stage path="chat/empty" label="Before the first turn" />
 
+## A checkpoint
+
+A checkpoint is a point the person can take the conversation back to, after a turn that changed files or settings. It is not a component: put a separator Marker at the end of that turn, with its words and a small outline Button in the middle of the hairline, and a Tooltip on the button for what restoring drops. Restore keeps that turn and drops every turn after it; with nothing after it, hold the button out of use (`focusableWhenDisabled`) so its tooltip can say why.
+
+<Stage path="chat/checkpoint" label="A checkpoint" />
+
 <Part title="Using it" />
 
 ## When to use it
