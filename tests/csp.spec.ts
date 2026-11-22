@@ -6,7 +6,7 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
-import { componentExamples, openExample } from "./example.ts";
+import { componentExamples, openExample, pickerFrom } from "./example.ts";
 
 const policy = "img-src 'self' data:; worker-src 'none'";
 
@@ -69,10 +69,9 @@ test("an image upload's new picture shows under the product's policy", async ({
 }) => {
   await underPolicy(page);
   await openExample(page, "file-upload", "image-upload");
-  const [chooser] = await Promise.all([
-    page.waitForEvent("filechooser"),
-    page.getByRole("button", { name: /^Change/u }).click(),
-  ]);
+  const chooser = await pickerFrom(page, async () => {
+    await page.getByRole("button", { name: /^Change/u }).click();
+  });
   // A 1px PNG.
   await chooser.setFiles({
     name: "face.png",

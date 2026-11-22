@@ -1063,6 +1063,7 @@
       "FileUploadAction"
     ],
     "src/components/file-upload.stylex.ts": null,
+    "src/components/file-upload-handover.ts": null,
     "src/components/image-upload.tsx": ["ImageUpload", "ImageUploadProps"]
   },
   "input": {

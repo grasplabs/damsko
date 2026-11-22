@@ -1090,6 +1090,11 @@
       "docs": "https://damsko.joingrasp.com/components/file-upload",
       "files": [
         {
+          "path": "src/components/file-upload-handover.ts",
+          "type": "registry:file",
+          "target": "~/src/components/file-upload-handover.ts"
+        },
+        {
           "path": "src/components/file-upload.stylex.ts",
           "type": "registry:file",
           "target": "~/src/components/file-upload.stylex.ts"
