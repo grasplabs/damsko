@@ -17,6 +17,21 @@ test("alone, it is a status that says the caller's name", async ({ page }) => {
   await expect(page.getByRole("status")).toHaveText("Filling the column");
 });
 
+test("the grid's cells are square pixels, never dots", async ({ page }) => {
+  await openExample(page, "agent-indicator", "alone");
+  const status = page.getByRole("status");
+  await expect(status).toHaveText("Filling the column");
+  // Every part of the mark that draws a fill: the nine cells at rest, and the light on them.
+  const corners = await status.evaluate((node) =>
+    [...node.querySelectorAll("*")]
+      .map((part) => getComputedStyle(part))
+      .filter((style) => style.backgroundColor !== "rgba(0, 0, 0, 0)")
+      .map((style) => style.borderTopLeftRadius)
+  );
+  expect(corners.length).toBeGreaterThanOrEqual(9);
+  expect(new Set(corners)).toEqual(new Set(["0px"]));
+});
+
 test("beside words, the words are the status and the mark says nothing", async ({
   page,
 }) => {

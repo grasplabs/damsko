@@ -11,7 +11,12 @@ import {
   size,
   space,
 } from "@grasp-os/ui/lib/tokens.stylex";
-import { iconVars, motionVars } from "@grasp-os/ui/lib/vars.stylex";
+import {
+  iconVars,
+  motionVars,
+  pixel,
+  pixelVars,
+} from "@grasp-os/ui/lib/vars.stylex";
 import * as stylex from "@stylexjs/stylex";
 
 import { siteBuild, siteColors } from "../../system/site-tokens.stylex";
@@ -25,10 +30,6 @@ const SIGN = "var(--build-sign, 1)";
 const PRESS = `calc(${siteBuild.beat} * 0.42)`;
 const after = (beats: number) =>
   `calc(${PRESS} + ${duration.stagger} * ${beats})`;
-
-// The dither: one dot in every square of the grid, a still background.
-const dither = (colour: string) =>
-  `radial-gradient(circle at center, ${colour} 0.9px, transparent 1.2px)`;
 
 // The clock: nothing moves; each of its rounds is one step of the build (app-building.tsx).
 const tick = stylex.keyframes({
@@ -357,10 +358,9 @@ export const looks = {
     },
     piece: {
       backgroundColor: { default: siteColors.buildBlock, [FORCED]: "Canvas" },
-      backgroundImage: {
-        default: dither(siteColors.buildDot),
-        [FORCED]: "none",
-      },
+      // The dither: the system's pixel in every square of the grid, a still background.
+      [pixelVars.color]: siteColors.buildDot,
+      backgroundImage: { default: pixel.full, [FORCED]: "none" },
       backgroundSize: `${siteBuild.dither} ${siteBuild.dither}`,
       outline: {
         default: "none",
@@ -397,10 +397,9 @@ export const looks = {
         default: siteColors.buildOutline,
         [FORCED]: "CanvasText",
       },
-      backgroundImage: {
-        default: dither(siteColors.buildGrid),
-        [FORCED]: "none",
-      },
+      // The dither: the system's pixel in every square of the grid, a still background.
+      [pixelVars.color]: siteColors.buildGrid,
+      backgroundImage: { default: pixel.full, [FORCED]: "none" },
       backgroundSize: `${siteBuild.dither} ${siteBuild.dither}`,
     },
     part: {
@@ -420,10 +419,9 @@ export const looks = {
         default: siteColors.buildOutline,
         [FORCED]: "CanvasText",
       },
-      backgroundImage: {
-        default: dither(siteColors.buildOutline),
-        [FORCED]: "none",
-      },
+      // The dither: the system's pixel in every square of the grid, a still background.
+      [pixelVars.color]: siteColors.buildOutline,
+      backgroundImage: { default: pixel.full, [FORCED]: "none" },
       backgroundSize: `${siteBuild.dither} ${siteBuild.dither}`,
     },
   }),

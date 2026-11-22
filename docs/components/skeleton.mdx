@@ -11,7 +11,7 @@ description: Placeholder shapes that stand in for content while it loads, so the
 
 ## How it waits
 
-`animation="wave"` (the default): a fine dot field with one wave of light across the whole page. `pulse`: the soft fill, breathing.
+`animation="wave"` (the default): a fine field of square pixels with one wave of light across the whole page. `pulse`: the soft fill, breathing.
 
 <Stage path="skeleton/looks" label="How it waits" />
 
@@ -104,15 +104,15 @@ Each variant and text size in the wave, then in the pulse.
     { group: "Shape", key: "Circle", value: "{radius-circle}" },
     {
       group: "Field",
-      key: "Dots",
-      value: "1px on a 4px pitch, {foreground} at 20%",
+      key: "Pixels",
+      value: "1px squares on a 4px pitch, {foreground} at 20%",
       note: "a block and a circle on {muted}; text on nothing",
     },
     {
       group: "Field",
       key: "Light",
       value: "A 420px band, 105°, mint into pine",
-      note: "seen only through the dots, a little larger",
+      note: "seen only through the pixels, at 2px",
       tokens: ["mint", "pine"],
     },
     { group: "Grey", key: "Fill", note: "no edge", tokens: ["skeleton-bg"] },

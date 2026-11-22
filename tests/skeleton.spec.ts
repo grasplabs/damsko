@@ -50,6 +50,37 @@ for (const [example, status] of [
   });
 }
 
+/** How many colours a picture holds: its PNG, read back in the page. */
+const colours = async (page: Page, png: Buffer) =>
+  await page.evaluate(async (base64) => {
+    const bytes = Uint8Array.from(
+      atob(base64),
+      (char) => char.codePointAt(0) ?? 0
+    );
+    const bitmap = await createImageBitmap(
+      new Blob([bytes], { type: "image/png" })
+    );
+    const canvas = new OffscreenCanvas(bitmap.width, bitmap.height);
+    const context = canvas.getContext("2d");
+    context?.drawImage(bitmap, 0, 0);
+    const pixels = new Uint32Array(
+      context?.getImageData(0, 0, bitmap.width, bitmap.height).data.buffer ?? []
+    );
+    return new Set(pixels).size;
+  }, png.toString("base64"));
+
+for (const theme of ["light", "dark"] as const) {
+  test(`the field's texture is square pixels, each sharp on the ground (${theme})`, async ({
+    page,
+  }) => {
+    await openExample(page, "skeleton", "text", { theme });
+    // At rest, lines of text are the ground and their pixels only: a square on whole pixels has
+    // no soft edge, so the picture holds exactly two colours. A round dot shades into the ground.
+    const lines = page.getByRole("status").locator("xpath=..");
+    expect(await colours(page, await lines.screenshot())).toBe(2);
+  });
+}
+
 test("with reduced motion nothing moves, and the wave starts once motion is allowed", async ({
   page,
 }) => {

@@ -1,5 +1,6 @@
-// The variables and markers every component shares. StyleX resolves a variable or a marker only
-// when it is imported straight from a .stylex.ts file, so they live here, not in styles.ts.
+// The variables, markers and the pixel every component shares. StyleX resolves a variable or a
+// marker only when it is imported straight from a .stylex.ts file, so they live here, not in
+// styles.ts.
 import * as stylex from "@stylexjs/stylex";
 
 import { duration, size } from "./tokens.stylex";
@@ -95,3 +96,35 @@ export const toastRegionMarker = stylex.defineMarker();
  * every Button in it takes an equal part of the line (button.tsx).
  */
 export const layerFooterMarker = stylex.defineMarker();
+
+/**
+ * The colour a pixel grid is drawn in as a background: a part sets it where it draws the grid,
+ * `{ [pixelVars.color]: colors.foreground }`. A mask needs none.
+ */
+export const pixelVars = stylex.defineVars({
+  color: "currentColor",
+});
+
+/** One square of `side` at the start corner of a tile, with hard edges. */
+const square = (side: string, colour: string) =>
+  `conic-gradient(from 270deg at ${side} ${side}, ${colour} 90deg, transparent 0)`;
+
+/**
+ * The system's pixel: one square at the start corner of every tile, with hard edges on whole
+ * pixels, so a grid of them is sharp at 1x and 2x. Every dither a part draws in CSS is this one
+ * (Skeleton's field, Progress's track how far unknown, Page header's banner, a Data grid's range):
+ * as a background in `pixelVars.color`, or as a mask over what shows through it. The pitch is the
+ * part's own `backgroundSize` or `maskSize`, in whole pixels, repeated from the corner: a tile
+ * stretched or spaced to fit would blur the squares.
+ *
+ *   backgroundImage: pixel.fine, backgroundSize: "4px 4px", [pixelVars.color]: colors.foreground
+ *   maskImage: pixel.fullMask, maskSize: "4px 4px"
+ */
+export const pixel = stylex.defineConsts({
+  /** A 1px square, as a background in `pixelVars.color`: a field at rest. */
+  fine: square("1px", pixelVars.color),
+  /** A 2px square from the same corner, so it stands on the 1px one: a dither that is seen. */
+  full: square("2px", pixelVars.color),
+  /** The 2px square as a mask: where a light shows, or a ground seen through the dither. */
+  fullMask: square("2px", "#000"),
+});

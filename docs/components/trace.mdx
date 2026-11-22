@@ -10,7 +10,7 @@ description: The building block for a line of an assistant's work, with a mark, 
 
 ## Steps
 
-`Trace` is a list of lines. A `TraceLine` straight inside it is a step: a quiet line of dots down from its mark to the next step's, its `TraceTitle` and a `TraceDescription`. In every line a first `TraceIcon` sits in a seat at its start, so titles start at one edge. A `TraceIcon` with nothing in it is the status mark.
+`Trace` is a list of lines. A `TraceLine` straight inside it is a step: a quiet line of square pixels down from its mark to the next step's, its `TraceTitle` and a `TraceDescription`. In every line a first `TraceIcon` sits in a seat at its start, so titles start at one edge. A `TraceIcon` with nothing in it is the status mark.
 
 <Stage path="trace/steps" label="Steps" />
 
@@ -90,7 +90,7 @@ A line is said once, when its status changes after it was drawn: when it finishe
       group: "Step",
       key: "Line between",
       value:
-        "Fine dots from mark to mark, {space-1} clear of each; muted once done, faint ahead of the work",
+        "Fine square pixels from mark to mark, {space-1} clear of each; muted once done, faint ahead of the work",
       tokens: ["muted-foreground", "agent-indicator-rest"],
     },
     {

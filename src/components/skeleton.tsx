@@ -8,7 +8,7 @@
 //   <Skeleton variant="rectangular" style={chart} />   a rectangle, sized by the layout
 //   <Skeleton variant="circular" />                    an avatar
 //
-// `animation` picks how it waits. `wave`, the default: a fine dot field, almost still, with a wave
+// `animation` picks how it waits. `wave`, the default: a fine field of pixels, almost still, with a wave
 // of light (mint into pine) crossing it, one wave for the whole page. `pulse`: the soft fill,
 // breathing slowly. `false`: the soft fill, still, for a long list. With reduced motion every one
 // is still.
@@ -31,6 +31,7 @@ import {
 } from "../lib/tokens.stylex";
 import { skeletonWave } from "../lib/tokens.values";
 import type { LayoutStyle } from "../lib/utils";
+import { pixel, pixelVars } from "../lib/vars.stylex";
 
 export type SkeletonVariant = "text" | "rectangular" | "circular";
 export type SkeletonSize = "sm" | "default" | "lg";
@@ -51,7 +52,7 @@ export interface SkeletonProps {
    */
   size?: SkeletonSize;
   /**
-   * How it waits: `wave` a dot field a wave of light crosses; `pulse` the soft fill, breathing;
+   * How it waits: `wave` a field of pixels a wave of light crosses; `pulse` the soft fill, breathing;
    * `false` the soft fill, still, for a long list, where many breathing at once is noise.
    * @default "wave"
    */
@@ -236,10 +237,8 @@ const breathe = stylex.keyframes({
   "50%": { opacity: size.skeletonLow },
 });
 
-/** The dots: 1px on a 4px pitch, in a quiet foreground. */
-const DOTS = `radial-gradient(circle at center, color-mix(in oklab, ${colors.foreground} 20%, transparent) 0.7px, transparent 1px)`;
-/** Where the light shows: the same pitch, a little larger, so a lit dot grows. */
-const LIT = `radial-gradient(circle at center, ${colors.foreground} 1px, transparent 1.4px)`;
+/** The field's pitch: a pixel in every 4px, from the field's start corner. */
+const PITCH = "4px 4px";
 
 const styles = stylex.create({
   skeleton: {
@@ -297,7 +296,7 @@ const styles = stylex.create({
     height: size.controlDefault,
     borderRadius: radius.circle,
   },
-  // ---- The dot field ----
+  // ---- The pixel field ----
   // No fill of its own: the field inside it draws, in the content box (a line's letters' height).
   bare: {
     backgroundColor: "transparent",
@@ -308,20 +307,20 @@ const styles = stylex.create({
     boxSizing: "border-box",
     height: "100%",
     overflow: "hidden",
-    // Square: a line's dots are its shape, and a rounded corner would cut the dots at its ends.
+    // Square: a line's pixels are its shape, and a rounded corner would cut them at its ends.
     borderRadius: 0,
-    backgroundImage: { default: DOTS, [media.forcedColors]: "none" },
-    backgroundSize: "4px 4px",
-    // Only whole dots: as many as fit, the room left over shared out between them, so no row of
-    // half dots is cut at a line's foot (a 14px line held three and a half rows).
-    backgroundRepeat: "space",
+    // The pixels: 1px squares (lib's one pixel) in a quiet foreground, on whole pixels from the
+    // start corner, so each is sharp and a text line's rows are whole (14px holds four).
+    [pixelVars.color]: `color-mix(in oklab, ${colors.foreground} 20%, transparent)`,
+    backgroundImage: { default: pixel.fine, [media.forcedColors]: "none" },
+    backgroundSize: PITCH,
     outlineWidth: { default: 0, [media.forcedColors]: 1 },
     outlineStyle: "solid",
     outlineColor: "GrayText",
     outlineOffset: -1,
   },
   // A picture or an avatar stands on the soft ground; text does not. The ground is the outer
-  // shape's, with its corner; the dots stand space-1 inside it, where no corner reaches them.
+  // shape's, with its corner; the pixels stand space-1 inside it, where no corner reaches them.
   groundOuter: {
     backgroundColor: colors.muted,
   },
@@ -331,11 +330,11 @@ const styles = stylex.create({
     backgroundClip: "content-box",
   },
   litInset: { inset: space["1"] },
-  // A circle's dots keep to the square inside it, clear of its curve: from a space-1 inset the
-  // square grid's corner dots stood on the rim.
+  // A circle's pixels keep to the square inside it, clear of its curve: from a space-1 inset the
+  // square grid's corner pixels stood on the rim.
   groundCircle: { padding: space["2"] },
   litCircle: { inset: space["2"] },
-  // Where the light can show: the dots, a little larger.
+  // Where the light can show: the same pixels, 2px, so a lit one grows where it stands.
   lit: {
     position: "absolute",
     inset: 0,
@@ -344,10 +343,8 @@ const styles = stylex.create({
       [media.forcedColors]: "none",
       [media.reducedMotion]: "none",
     },
-    maskImage: LIT,
-    maskSize: "4px 4px",
-    // As the dots: whole ones, laid out as theirs, so a lit dot stands on its dot.
-    maskRepeat: "space",
+    maskImage: pixel.fullMask,
+    maskSize: PITCH,
   },
   // The light: a soft band of mint into pine, slanted, moved by lightUp.
   band: {
@@ -370,7 +367,7 @@ const shapes = {
 const lines = { sm: styles.sm, default: styles.default, lg: styles.lg };
 
 /**
- * The dot field inside a Skeleton, and the light that crosses it. A line's dots are its shape; a
+ * The pixel field inside a Skeleton, and the light that crosses it. A line's pixels are its shape; a
  * rectangle's or a circle's stand inside its ground.
  */
 const Field = ({
