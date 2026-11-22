@@ -1234,6 +1234,7 @@ test("a line started with Shift+Enter in a full text is brought into view at onc
         )
     )
     .toBeLessThanOrEqual(1);
+});
 
 test("a spoken conversation stands in the card: its turns are said, and Close gives the text back with the focus", async ({
   page,
@@ -1284,4 +1285,47 @@ test("a spoken conversation takes the focus as it starts from the keyboard, and 
   await page.keyboard.press("Escape");
   await expect(voice).toHaveCount(0);
   await expect(page.getByRole("textbox", { name: "Answer" })).toBeFocused();
+});
+
+test("a spoken conversation that cannot hear says why at once, and offers another go", async ({
+  page,
+}) => {
+  await openExample(page, "prompt-input", "voice-problem");
+  const voice = page.getByRole("group", { name: "Voice conversation" });
+  await expect(
+    voice.getByRole("alert").filter({ hasText: "No microphone was found" })
+  ).toBeVisible();
+  // No time and no microphone to turn off: only another go, and the way out.
+  await expect(voice.getByRole("timer")).toHaveCount(0);
+  await expect(voice.getByRole("button", { name: "Mute" })).toHaveCount(0);
+  await voice.getByRole("button", { name: "Try again" }).click();
+  await expect(voice.getByRole("alert")).toHaveCount(0);
+  await expect(voice.getByRole("timer")).toBeVisible();
+});
+
+test("the voice's field is drawn from the sound the product reads, a frame at a time", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await openExample(page, "prompt-input", "voice-problem");
+  const voice = page.getByRole("group", { name: "Voice conversation" });
+  await voice.getByRole("button", { name: "Try again" }).click();
+  await expect(voice.getByRole("timer")).toBeVisible();
+  // Its pixels are there, and they change as the sound does.
+  const drawn = async () =>
+    await page.evaluate(() => {
+      const canvas = document.querySelector("canvas");
+      const pixels =
+        canvas
+          ?.getContext("2d")
+          ?.getImageData(0, 0, canvas.width, canvas.height).data ?? [];
+      let lit = 0;
+      for (let at = 3; at < pixels.length; at += 4) {
+        lit += (pixels[at] ?? 0) > 0 ? 1 : 0;
+      }
+      return lit;
+    });
+  await expect.poll(drawn).toBeGreaterThan(0);
+  const first = await drawn();
+  await expect.poll(drawn).not.toBe(first);
 });

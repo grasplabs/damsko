@@ -127,6 +127,7 @@ import {
   MicIcon,
   PaperclipIcon,
   PlusIcon,
+  RefreshCwIcon,
   SquareIcon,
   TriangleAlertIcon,
   XIcon,
@@ -193,6 +194,7 @@ import type {
   DropdownMenuProps,
 } from "./dropdown-menu";
 import { refitOf, stageOf } from "./prompt-input-limit";
+import { startVoiceField } from "./prompt-input-voice-field";
 import { Skeleton } from "./skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip";
 
@@ -774,6 +776,19 @@ export interface PromptInputVoiceProps {
    */
   level?: number;
   /**
+   * The sound now, from 0 to 1, read at each frame in place of `level`: the field is then drawn
+   * on a canvas and follows the voice with no render. Give the product's own sampler (an
+   * AnalyserNode's loudness).
+   */
+  sample?: () => number;
+  /**
+   * What stops the voice, in a short line ("No microphone was found"): shown in the words' place
+   * and said at once, with no field, no time and no microphone button.
+   */
+  problem?: ReactNode;
+  /** With a `problem`, shows a button that tries again, named by `promptInput.voice.retry`. */
+  onRetry?: () => void;
+  /**
    * The other voice's mark (an `<AgentIndicator />`, a picture), which stands in the time's place
    * while it speaks, so the turn reads without colour.
    */
@@ -815,6 +830,12 @@ const glow = stylex.keyframes({
   "0%": { opacity: 0 },
   "20%": { opacity: 1 },
   "100%": { opacity: 0 },
+});
+// A heard word resolves out of the system's pixels: seen through the grid, then whole.
+const resolve = stylex.keyframes({
+  "0%": { opacity: 0, maskImage: pixel.mask, maskSize: "3px 3px" },
+  "60%": { opacity: 1, maskImage: pixel.mask, maskSize: "3px 3px" },
+  "100%": { opacity: 1, maskImage: "none" },
 });
 // With reduced motion the halo stands still for its moment and is gone: a mark, no movement.
 const stay = stylex.keyframes({
@@ -1468,6 +1489,8 @@ const styles = stylex.create({
       "linear-gradient(90deg, transparent 12%, #000 38%, #000 62%, transparent 88%)",
   },
   voiceMuted: { opacity: size.opacityDisabled },
+  // The canvas's room: no line of the CSS field under it.
+  field: { "::before": { content: "none" } },
   // The other voice's field: the same body, a stop quieter, in the words' quiet colour.
   voiceOther: {
     color: { default: colors.mutedForeground, [FORCED]: "GrayText" },
@@ -1490,6 +1513,30 @@ const styles = stylex.create({
     overflowWrap: "anywhere",
   },
   spokenInterim: { color: colors.mutedForeground },
+  // The field drawn on a canvas, in the room the CSS field has.
+  canvas: { display: "block", width: "100%", height: "27px" },
+  // A word as it is heard: it comes out of the dither, a few pixels of it first, then whole. With
+  // reduced motion it is simply there.
+  word: {
+    animationName: { default: resolve, [REDUCED]: "none" },
+    animationDuration: duration.hover,
+    animationTimingFunction: "steps(3, end)",
+    animationFillMode: "backwards",
+  },
+  // What stops the voice: its mark in the destructive colour, its words in ink.
+  problem: {
+    display: "flex",
+    alignItems: "flex-start",
+    gap: space["1"],
+  },
+  problemMark: {
+    display: "flex",
+    flexShrink: 0,
+    marginBlockStart: `calc((${size.messageTextLine} - ${size.iconSm}) / 2)`,
+    color: colors.destructive,
+  },
+  // The room the field leaves, so the buttons stay at the row's end.
+  spare: { flexGrow: 1 },
   // The other voice's mark, in the time's place: as wide as a tool, so the field starts where it
   // does beside the time.
   speaker: {
@@ -3745,6 +3792,92 @@ export const PromptInputSpeechButton = ({
   );
 };
 
+/** The words of a turn, each in its own span, keyed by its place: a new one resolves as it comes. */
+const resolving = (said: string) =>
+  said
+    .split(" ")
+    .filter((word) => word !== "")
+    .map((word, at) => (
+      <Fragment key={at}>
+        {at > 0 && " "}
+        <span {...stylex.props(styles.word)}>{word}</span>
+      </Fragment>
+    ));
+
+/**
+ * The canvas the voice's field is drawn on, from the product's sampler at each frame: silence
+ * while `quiet` (the microphone off), and stepping slowly with reduced motion.
+ */
+const useVoiceField = (sample: (() => number) | undefined, quiet: boolean) => {
+  const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
+  // The newest sampler and whether it is quiet, read at each frame.
+  const now = useRef({ sample, quiet });
+  useEffect(() => {
+    now.current = { sample, quiet };
+  });
+  const drawn = sample !== undefined;
+  useEffect(() => {
+    if (canvas === null || !drawn) {
+      return nothing;
+    }
+    const field = startVoiceField(
+      canvas,
+      () => (now.current.quiet ? 0 : (now.current.sample?.() ?? 0)),
+      matchMedia("(prefers-reduced-motion: reduce)").matches
+    );
+    return field.stop;
+  }, [canvas, drawn]);
+  return setCanvas;
+};
+
+/** The words of the turn where the text stood, or, in their place, what stops the voice. */
+const VoiceWords = ({
+  problem,
+  interim,
+  children,
+  style,
+}: Pick<PromptInputVoiceProps, "problem" | "children" | "style"> & {
+  interim: string;
+}) =>
+  isBlank(problem) ? (
+    <p
+      data-slot="prompt-input-voice-words"
+      {...stylex.props(styles.spoken, scrollbarHidden, style)}
+    >
+      {typeof children === "string" ? resolving(children) : children}
+      {interim !== "" && (
+        <span {...stylex.props(styles.spokenInterim)}> {interim}</span>
+      )}
+    </p>
+  ) : (
+    <p
+      role="alert"
+      data-slot="prompt-input-voice-words"
+      {...stylex.props(styles.spoken, styles.problem, style)}
+    >
+      <span aria-hidden="true" {...stylex.props(styles.problemMark)}>
+        <Icon icon={TriangleAlertIcon} />
+      </span>
+      {problem}
+    </p>
+  );
+
+/** What leads the foot row: the other voice's mark while it speaks, else the time. */
+const VoiceLead = ({
+  speaker,
+  seconds,
+}: {
+  speaker: ReactNode;
+  seconds: number;
+}) =>
+  isBlank(speaker) ? (
+    <span role="timer" {...stylex.props(styles.time, styles.voiceTime)}>
+      {clock(seconds)}
+    </span>
+  ) : (
+    <span {...stylex.props(styles.speaker)}>{speaker}</span>
+  );
+
 /**
  * A spoken conversation, written in the PromptInput in place of its body and footer while it
  * runs: the words of the turn where the text stood, and under them the time (or, while the other
@@ -3757,6 +3890,9 @@ export const PromptInputVoice = ({
   children,
   interim = "",
   level = 0,
+  sample,
+  problem,
+  onRetry,
   speaker,
   muted,
   onMutedChange,
@@ -3769,11 +3905,15 @@ export const PromptInputVoice = ({
   const [ownMuted, setOwnMuted] = useState(false);
   const off = muted ?? ownMuted;
   const speaking = status === "speaking";
-  const seconds = useSeconds(!off);
+  const stopped = !isBlank(problem);
+  const seconds = useSeconds(!off && !stopped);
   const turn = speaking ? words.voice.speaking : words.voice.listening;
   useEffect(() => {
-    announce(turn);
-  }, [turn]);
+    if (!stopped) {
+      announce(turn);
+    }
+  }, [turn, stopped]);
+  const canvas = useVoiceField(sample, off && !speaking);
   // It stands in the text's place: said before the form's first look at what it holds, so a
   // conversation already running as the page comes takes no focus, and the text takes it back
   // as this goes.
@@ -3800,36 +3940,64 @@ export const PromptInputVoice = ({
       data-status={status}
       {...stylex.props(styles.conversation)}
     >
-      <p
-        data-slot="prompt-input-voice-words"
-        {...stylex.props(styles.spoken, scrollbarHidden, style)}
-      >
+      <VoiceWords problem={problem} interim={interim} style={style}>
         {children}
-        {interim !== "" && (
-          <span {...stylex.props(styles.spokenInterim)}> {interim}</span>
-        )}
-      </p>
+      </VoiceWords>
       <div data-slot="prompt-input-footer" {...stylex.props(styles.footer)}>
         <div {...stylex.props(styles.dictation)}>
-          {speaking && !isBlank(speaker) ? (
-            <span {...stylex.props(styles.speaker)}>{speaker}</span>
+          {stopped ? (
+            <>
+              <span {...stylex.props(styles.spare)} />
+              {onRetry !== undefined &&
+                toolButton({
+                  off: false,
+                  slot: "prompt-input-voice-retry",
+                  onClick: onRetry,
+                  children: (
+                    <>
+                      <Icon icon={RefreshCwIcon} />
+                      {words.voice.retry}
+                    </>
+                  ),
+                })}
+            </>
           ) : (
-            <span role="timer" {...stylex.props(styles.time, styles.voiceTime)}>
-              {clock(seconds)}
-            </span>
+            <>
+              <VoiceLead
+                speaker={speaking ? speaker : undefined}
+                seconds={seconds}
+              />
+              {sample === undefined ? (
+                <Level
+                  level={level}
+                  muted={off && !speaking}
+                  other={speaking}
+                />
+              ) : (
+                <span
+                  aria-hidden="true"
+                  {...stylex.props(
+                    styles.level,
+                    styles.field,
+                    speaking && styles.voiceOther
+                  )}
+                >
+                  <canvas ref={canvas} {...stylex.props(styles.canvas)} />
+                </span>
+              )}
+              {toolButton({
+                "aria-label": words.speechButton.mute,
+                pressed: off,
+                off: false,
+                slot: "prompt-input-voice-mute",
+                onClick: () => {
+                  setOwnMuted(!off);
+                  onMutedChange?.(!off);
+                },
+                children: <Icon icon={MicIcon} />,
+              })}
+            </>
           )}
-          <Level level={level} muted={off && !speaking} other={speaking} />
-          {toolButton({
-            "aria-label": words.speechButton.mute,
-            pressed: off,
-            off: false,
-            slot: "prompt-input-voice-mute",
-            onClick: () => {
-              setOwnMuted(!off);
-              onMutedChange?.(!off);
-            },
-            children: <Icon icon={MicIcon} />,
-          })}
           {toolButton({
             "aria-label": words.voice.close,
             off: false,

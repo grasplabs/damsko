@@ -148,6 +148,13 @@ useDictation({ listening, onPhrase: (phrase) => controller.insert(phrase) });
 
 <Stage path="prompt-input/voice" label="A spoken conversation" />
 
+Give `sample`, the product's own reading of the sound now, in place of `level`, and the field is drawn on a canvas at each frame, with no render; with reduced motion it steps at most four times a second. Each word resolves out of the same pixels as it is heard. When the voice cannot go on, `problem` says why in the words' place, at once, with no field, no time and no microphone, and `onRetry` adds a button for another go.
+
+<Stage
+  path="prompt-input/voice-problem"
+  label="A problem, and the sampled field"
+/>
+
 ## With a message
 
 One chat state drives both. PromptInput's `status` takes the AI SDK's own (`ready`, `submitted`, `streaming`, `error`), and Message's describes one answer (`thinking`, `streaming`, `done`, `stopped`, `error`), so the latest answer's is read from it: `submitted` is `thinking`, `streaming` is `streaming`, `ready` is `done` (or `stopped` once the person stopped it), `error` is `error`. Every earlier answer is `done`. AI Elements has a status on PromptInput's Submit only.

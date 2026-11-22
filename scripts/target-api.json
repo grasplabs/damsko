@@ -1155,7 +1155,8 @@
       "PromptInputMentionItemProps",
       "PromptInputSpeechButtonProps"
     ],
-    "src/components/prompt-input-limit.ts": null
+    "src/components/prompt-input-limit.ts": null,
+    "src/components/prompt-input-voice-field.ts": null
   },
   "radio-group": {
     "src/components/radio-group.tsx": [

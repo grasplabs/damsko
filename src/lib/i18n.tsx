@@ -667,6 +667,8 @@ export interface I18nCatalog {
       close: string;
       label: string;
       listening: string;
+      /** The button that tries again after a problem. */
+      retry: string;
       speaking: string;
     };
   };
@@ -1356,6 +1358,7 @@ const english: I18nCatalog = {
       close: "Close voice",
       label: "Voice conversation",
       listening: "Listening",
+      retry: "Try again",
       speaking: "Speaking",
     },
   },
