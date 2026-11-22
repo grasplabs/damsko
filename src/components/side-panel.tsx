@@ -59,7 +59,7 @@ import {
 import { durations } from "../lib/tokens.values";
 import { isBlank } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
-import { iconVars, motionVars } from "../lib/vars.stylex";
+import { iconVars, motionVars, sidePanelCardMarker } from "../lib/vars.stylex";
 import { Button } from "./button";
 import { Item, ItemContent, ItemGroup, ItemMedia, ItemTitle } from "./item";
 import { Skeleton } from "./skeleton";
@@ -1390,7 +1390,7 @@ export const SidePanelSection = (props: SidePanelSectionProps) => {
       ) : (
         <div
           data-slot="side-panel-section-card"
-          {...stylex.props(sectionStyles.card)}
+          {...stylex.props(sidePanelCardMarker, sectionStyles.card)}
         >
           {card}
         </div>

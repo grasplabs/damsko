@@ -315,7 +315,8 @@
       "registryDependencies": [
         "@damsko/hooks",
         "@damsko/lib",
-        "@damsko/spinner"
+        "@damsko/spinner",
+        "@damsko/tooltip"
       ],
       "docs": "https://damsko.joingrasp.com/components/button",
       "files": [
@@ -678,7 +679,8 @@
         "@damsko/hooks",
         "@damsko/input",
         "@damsko/item",
-        "@damsko/lib"
+        "@damsko/lib",
+        "@damsko/text"
       ],
       "docs": "https://damsko.joingrasp.com/components/connect-api-key-01",
       "files": [
@@ -1796,8 +1798,7 @@
         "@damsko/button",
         "@damsko/dropdown-menu",
         "@damsko/lib",
-        "@damsko/skeleton",
-        "@damsko/spinner"
+        "@damsko/skeleton"
       ],
       "docs": "https://damsko.joingrasp.com/components/page-header",
       "files": [
@@ -1935,6 +1936,7 @@
       "registryDependencies": [
         "@damsko/button",
         "@damsko/checkbox",
+        "@damsko/input-group",
         "@damsko/lib",
         "@damsko/radio-group",
         "@damsko/textarea"
@@ -2763,7 +2765,8 @@
         "@ui-sdk/react"
       ],
       "registryDependencies": [
-        "@damsko/lib"
+        "@damsko/lib",
+        "@damsko/tooltip"
       ],
       "docs": "https://damsko.joingrasp.com/components/toggle",
       "files": [
@@ -2786,7 +2789,8 @@
       ],
       "registryDependencies": [
         "@damsko/lib",
-        "@damsko/toggle"
+        "@damsko/toggle",
+        "@damsko/tooltip"
       ],
       "files": [
         {

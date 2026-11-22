@@ -7,7 +7,8 @@ import {
 } from "@grasp-os/ui/components/breadcrumb";
 
 // A file's path, shown beside the file in a list: none of its steps is a link, and none is the page
-// you are on, so each is a BreadcrumbLink without `href` and none is a BreadcrumbPage.
+// you are on, so each is a BreadcrumbLink without `href` and none is a BreadcrumbPage. The last one,
+// where the path ends, is drawn in the ink.
 export default function BreadcrumbPath() {
   return (
     <Breadcrumb aria-label="Where the file is">

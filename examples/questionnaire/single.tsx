@@ -10,6 +10,7 @@ import {
   QuestionnaireDescription,
   QuestionnaireInput,
   QuestionnaireItem,
+  QuestionnaireProgress,
   QuestionnaireSkip,
   QuestionnaireSubmit,
   QuestionnaireTitle,
@@ -50,6 +51,7 @@ export default function QuestionnaireSingle() {
   }
   return (
     <Questionnaire key={round} onSubmit={() => wait(500)} style={layout.column}>
+      <QuestionnaireProgress>Question</QuestionnaireProgress>
       <QuestionnaireItem name="report">
         <QuestionnaireTitle>
           Which report should I start with?

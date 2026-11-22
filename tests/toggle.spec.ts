@@ -181,3 +181,19 @@ test.describe("full width on a 320px phone", () => {
     await expect(long).toHaveAttribute("aria-pressed", "true");
   });
 });
+
+test("a toggle that is only an icon shows its name under a pointer and on keyboard focus, and one with words shows none", async ({
+  page,
+}) => {
+  await openExample(page, "toggle", "alone");
+  const bold = page.getByRole("button", { name: "Bold" });
+  await bold.hover();
+  await expect(page.getByRole("tooltip")).toHaveText("Bold");
+  await expect(bold).not.toHaveAttribute("aria-describedby");
+  await page.mouse.move(0, 0);
+  await expect(page.getByRole("tooltip")).toHaveCount(0);
+  await bold.focus();
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Shift+Tab");
+  await expect(page.getByRole("tooltip")).toHaveText("Bold");
+});

@@ -70,7 +70,7 @@ export default function SidePanelSectionExample() {
                 <ItemActions>
                   <Button
                     variant="ghost"
-                    size="icon-sm"
+                    size="icon-xs"
                     aria-label={`Remove ${trigger.name}`}
                   >
                     <Icon icon={TrashIcon} />
