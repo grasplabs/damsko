@@ -1,5 +1,5 @@
-// Label: the name of a control you can see, from shadcn's (registry/bases/base/ui/label.tsx),
-// converted from Tailwind to StyleX and built on UI SDK's Label, which names any control by
+// Label: the name of a control you can see,
+// in StyleX, built on UI SDK's Label, which names any control by
 // `htmlFor` (an input, and also a radio group or a slider) and passes a press on to it.
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //

@@ -1,5 +1,4 @@
-// Calendar: a month of days to choose one date, several, or a range from, from shadcn's
-// (registry/bases/base/ui/calendar.tsx, on react-day-picker), rebuilt on UI SDK's Calendar: small
+// Calendar: a month of days to choose one date, several, or a range from, built on UI SDK's Calendar: small
 // type, the month's name between Previous and Next (ghost Buttons), weekdays in muted words, and
 // days the size of a small control. A chosen day takes the first action's colour; a range joins its
 // days in a quiet band.

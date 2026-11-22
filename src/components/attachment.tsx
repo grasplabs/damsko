@@ -1,4 +1,4 @@
-// Attachment: a file or picture that goes with a message, after shadcn's (attachment.tsx), in
+// Attachment: a file or picture that goes with a message, in
 // StyleX on our Button: a small card with its picture or a mark for its kind, its name and a line
 // about it, and its actions. A prompt input shows them above its text and a message under its
 // words; neither is known here.
@@ -429,6 +429,7 @@ const styles = stylex.create({
     padding: 0,
     borderWidth: 0,
     borderRadius: "inherit",
+    cornerShape: "inherit",
     backgroundColor: "transparent",
     cursor: "pointer",
   },

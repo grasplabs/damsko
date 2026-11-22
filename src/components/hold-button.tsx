@@ -1,7 +1,7 @@
 // HoldButton: press and hold to confirm, for what cannot be undone but is not grave (delete a
 // draft). A press kept down for the hold's time runs `onConfirm` once; letting go early, moving off
-// or a touch that turns into a scroll cancels it. A fill crosses the button while it is held,
-// inside its shape, so its size never changes.
+// or a touch that turns into a scroll cancels it. A fill crosses the button while it is held: a layer
+// of the button itself (its ::before), so the button's own shape cuts it and its size never changes.
 //
 //   <HoldButton variant="destructive" onConfirm={deleteDraft}>Delete draft</HoldButton>
 //
@@ -9,8 +9,8 @@
 // instead, with the button's own words and Cancel: the button is that popover's trigger. An agent
 // presses the popover's action, which waits for the person's yes (UI SDK's agent bridge).
 //
-//   pointer    down starts it, up before the end cancels it, leaving the button cancels it, and a
-//              touch that turns into a scroll cancels it
+//   pointer    down starts it; up before the end, leaving the button, Escape and a touch that turns
+//              into a scroll cancel it
 //   keyboard   Enter or Space held down starts it, and key repeat never starts it again
 //   a tap      released within a quarter of the hold: opens the confirmation and runs nothing
 "use client";
@@ -274,8 +274,15 @@ const useHold = ({ time, pressable, act, onStart }: HoldOptions) => {
   };
 
   // A touch that turns into a scroll of something round the button cancels the hold. Scrolls
-  // elsewhere (a log that follows its end) do not. Listened for only while it holds.
+  // elsewhere (a log that follows its end) do not. Escape cancels it too, and is used up by that:
+  // the layer the button stands in stays open. Listened for only while it holds.
   useEffect(() => {
+    const escaped = (event: globalThis.KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.stopPropagation();
+        giveUpNow();
+      }
+    };
     const scrolled = (event: Event) => {
       const button = element.current;
       const { target } = event;
@@ -294,9 +301,11 @@ const useHold = ({ time, pressable, act, onStart }: HoldOptions) => {
         capture: true,
         passive: true,
       });
+      window.addEventListener("keydown", escaped, { capture: true });
     }
     return () => {
       window.removeEventListener("scroll", scrolled, { capture: true });
+      window.removeEventListener("keydown", escaped, { capture: true });
     };
   }, [holding]);
 
@@ -451,43 +460,48 @@ const ALWAYS = ":is([data-slot][data-button][data-variant])";
 
 const styles = stylex.create({
   // A long press selects no text and opens no callout, and it never shrinks under the press: the
-  // fill shows the press.
+  // fill shows the press. The fill is the button's own layer, so the button's shape, its corner and
+  // its size are the fill's, at every size and in a group; it lies over the button's edge and under
+  // the sheen and the words. It crosses from the start to the end, at an even pace, in the hold's
+  // time; let go, it runs back quickly. In forced colours it is a line at the foot.
   button: {
+    "--hold-button-start": { default: "0%", ":dir(rtl)": "100%" },
     WebkitTouchCallout: "none",
     WebkitUserSelect: "none",
     transform: { default: null, [ALWAYS]: "none" },
+    "::before": {
+      content: '""',
+      position: "absolute",
+      zIndex: -2,
+      inset: 0,
+      borderRadius: "inherit",
+      cornerShape: "inherit",
+      pointerEvents: "none",
+      forcedColorAdjust: "none",
+      backgroundRepeat: "no-repeat",
+      backgroundPosition: "var(--hold-button-start) 100%",
+      backgroundSize: { default: "0% 100%", [FORCED]: `0% ${sizes.ringWidth}` },
+      transitionProperty: "background-size",
+      // Let go, it runs back; with reduced motion it is simply empty again. While held it fills
+      // over the hold's own time even then: it is the timer, as a progress bar is, not a decoration.
+      transitionDuration: motionVars.leave,
+      transitionTimingFunction: {
+        default: duration.ease,
+        [REDUCED]: "linear",
+      },
+    },
   },
-  // The fill's frame: the button's own shape, so the fill never leaves it. Under the sheen.
-  clip: {
-    position: "absolute",
-    zIndex: -2,
-    inset: 0,
-    borderRadius: "inherit",
-    cornerShape: "inherit",
-    overflow: "hidden",
-    pointerEvents: "none",
+  held: {
+    "::before": {
+      backgroundSize: {
+        default: "100% 100%",
+        [FORCED]: `100% ${sizes.ringWidth}`,
+      },
+      transitionDuration: "var(--hold-button-time)",
+      transitionTimingFunction: "linear",
+    },
   },
-  // The fill crosses from the start to the end, at an even pace, in the hold's time; let go, it
-  // runs back quickly. In forced colours it is a line at the foot in the highlight colour.
-  fill: {
-    position: "absolute",
-    insetInlineStart: 0,
-    insetBlockStart: { default: 0, [FORCED]: "auto" },
-    insetBlockEnd: 0,
-    inlineSize: "0%",
-    blockSize: { default: "auto", [FORCED]: sizes.ringWidth },
-    forcedColorAdjust: "none",
-    transitionProperty: "inline-size",
-    // Let go, it runs back; with reduced motion it is simply empty again. While held it fills over
-    // the hold's own time even then: it is the timer, as a progress bar is, not a decoration.
-    transitionDuration: motionVars.leave,
-    transitionTimingFunction: { default: duration.ease, [REDUCED]: "linear" },
-  },
-  fillOn: {
-    inlineSize: "100%",
-    transitionTimingFunction: "linear",
-  },
-  fillTime: (time: string) => ({ transitionDuration: time }),
+  time: (time: string) => ({ "--hold-button-time": time }),
 });
 
 // Each variant's look for the hold: ghost and link are bare, with no fill of their own.
@@ -507,50 +521,52 @@ const heldStyles = stylex.create({
   bare: { backgroundColor: { default: null, [HELD]: "transparent" } },
 });
 
+/** The fill's one colour, as the picture a layer is sized by. */
+const flat = (colour: string) => `linear-gradient(${colour}, ${colour})`;
+
 // The fill is the variant's own pressed colour.
 const fillStyles = stylex.create({
   default: {
-    backgroundColor: { default: colors.primaryActive, [FORCED]: "Highlight" },
+    "::before": {
+      backgroundImage: {
+        default: flat(colors.primaryActive),
+        [FORCED]: flat("Highlight"),
+      },
+    },
   },
   outline: {
-    backgroundColor: { default: colors.secondaryActive, [FORCED]: "Highlight" },
+    "::before": {
+      backgroundImage: {
+        default: flat(colors.secondaryActive),
+        [FORCED]: flat("Highlight"),
+      },
+    },
   },
   secondary: {
-    backgroundColor: {
-      default: colors.buttonSecondaryActive,
-      [FORCED]: "Highlight",
+    "::before": {
+      backgroundImage: {
+        default: flat(colors.buttonSecondaryActive),
+        [FORCED]: flat("Highlight"),
+      },
     },
   },
   destructive: {
-    backgroundColor: { default: colors.destructiveHold, [FORCED]: "Highlight" },
+    "::before": {
+      backgroundImage: {
+        default: flat(colors.destructiveHold),
+        [FORCED]: flat("Highlight"),
+      },
+    },
   },
   bare: {
-    backgroundColor: { default: colors.accentActive, [FORCED]: "Highlight" },
+    "::before": {
+      backgroundImage: {
+        default: flat(colors.accentActive),
+        [FORCED]: flat("Highlight"),
+      },
+    },
   },
 });
-
-/** The fill, inside the button and under its words. */
-const HoldFill = ({
-  variant,
-  holding,
-  time,
-}: {
-  variant: ButtonVariant;
-  holding: boolean;
-  time: number;
-}) => (
-  <span aria-hidden="true" {...stylex.props(styles.clip)}>
-    <span
-      data-slot="hold-button-fill"
-      {...stylex.props(
-        styles.fill,
-        fillStyles[lookOf(variant)],
-        holding && styles.fillOn,
-        holding && styles.fillTime(`${time}ms`)
-      )}
-    />
-  </span>
-);
 
 // ---- The parts -------------------------------------------------------------------------------------
 
@@ -663,13 +679,14 @@ export const HoldButton = ({
               <button
                 type={type === "submit" ? "submit" : "button"}
                 {...pressing.handlers(theirs)}
-                {...stylex.props(styles.button, heldStyles[lookOf(variant)])}
+                {...stylex.props(
+                  styles.button,
+                  heldStyles[lookOf(variant)],
+                  fillStyles[lookOf(variant)],
+                  pressing.holding && styles.held,
+                  pressing.holding && styles.time(`${time}ms`)
+                )}
               >
-                <HoldFill
-                  variant={variant}
-                  holding={pressing.holding}
-                  time={time}
-                />
                 {children}
               </button>
             </Button>

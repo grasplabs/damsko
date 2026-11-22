@@ -1,5 +1,5 @@
-// HoverCard: a preview of where a link goes, for someone who rests on it, from shadcn's
-// (registry/bases/base/ui/hover-card.tsx), converted from Tailwind to StyleX and built on UI SDK's
+// HoverCard: a preview of where a link goes, for someone who rests on it,
+// in StyleX, built on UI SDK's
 // HoverCard: the popup's raised surface with the one corner, placed beside the link and kept inside
 // the window. The link stays a link: a press or a tap follows it.
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.

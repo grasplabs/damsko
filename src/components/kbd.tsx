@@ -1,4 +1,4 @@
-// Kbd: a key to press, after shadcn's, in StyleX. A small soft key with an edge, its sign in muted
+// Kbd: a key to press, in StyleX. A small soft key with an edge, its sign in muted
 // small type; a shortcut is a KbdGroup of one Kbd per key.
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //

@@ -1,5 +1,5 @@
-// Dialog: a focused task over the page, from shadcn's (registry/bases/base/ui/dialog.tsx),
-// converted from Tailwind to StyleX and built on UI SDK's Dialog: a raised panel with the one
+// Dialog: a focused task over the page,
+// in StyleX, built on UI SDK's Dialog: a raised panel with the one
 // corner over a shade, a title that names it, a body that scrolls between the title and actions
 // that stay put, and a close button in its corner. Under 640px it is a sheet along the bottom of
 // the window.
@@ -471,7 +471,7 @@ export interface DialogCloseProps
     WrapperProps {
   /**
    * The look of the Button it draws, without `asChild`: `outline` for Cancel beside the main
-   * action, as shadcn draws it; `default` when closing is the step the dialog is for.
+   * action; `default` when closing is the step the dialog is for.
    * @default "outline"
    */
   variant?: ButtonVariant;

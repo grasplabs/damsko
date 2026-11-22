@@ -25,7 +25,7 @@ import {
 } from "@ui-sdk/react/file-input";
 import type { FileInputValueChangeDetails } from "@ui-sdk/react/file-input";
 import { useEffect, useId, useRef, useState } from "react";
-import type { ReactNode } from "react";
+import type { ReactNode, RefObject } from "react";
 
 import { useI18n } from "../lib/i18n";
 import type { I18nCatalog } from "../lib/i18n";
@@ -50,6 +50,7 @@ import {
 import type { LayoutStyle } from "../lib/utils";
 import { iconVars, motionVars } from "../lib/vars.stylex";
 import { useFieldControl } from "./field";
+import { useHandover } from "./file-upload-handover";
 import { wellMarker } from "./file-upload.stylex";
 import { Spinner } from "./spinner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip";
@@ -557,6 +558,8 @@ const joined = (ids: (string | undefined)[]) =>
 
 interface WellProps {
   mounted: boolean;
+  /** The browser's own input, while it is drawn. */
+  native: RefObject<HTMLInputElement | null>;
   look: {
     shown: string | null;
     fit: "cover" | "contain";
@@ -581,7 +584,7 @@ const onGround = (look: WellProps["look"]) =>
   look.fit === "contain" && look.shown !== null;
 
 /** The well: a button that opens the picker, its tooltip the limits; without script, the browser's own file input over it. */
-const Well = ({ mounted, look, tip, control, onOpen }: WellProps) => {
+const Well = ({ mounted, native, look, tip, control, onOpen }: WellProps) => {
   if (!mounted) {
     return (
       <span
@@ -589,6 +592,7 @@ const Well = ({ mounted, look, tip, control, onOpen }: WellProps) => {
       >
         <Inside {...look} />
         <input
+          ref={native}
           id={control.id}
           data-slot="image-upload-input"
           type="file"
@@ -720,21 +724,21 @@ export const ImageUpload = ({
     words
   );
   const [error, setError] = useState("");
-  // Until the page runs its script, the browser's own file input does the work.
-  const [mounted, setMounted] = useState(false);
   // oxlint-disable-next-line react/hook-use-state -- a controller made once, never replaced
   const [files] = useState(createFileInputController);
   const errorId = useId();
   const root = useRef<HTMLDivElement>(null);
+  const native = useRef<HTMLInputElement>(null);
+  // Until the page runs its script, the browser's own file input does the work.
+  const mounted = useHandover(native, () => {
+    root.current
+      ?.querySelector<HTMLElement>("[data-slot=image-upload-button]")
+      ?.focus();
+  });
   // Inside a Field: its id (the label's `for`), its description, its name and whether it is out of use.
   const field = useFieldControl();
   const sentAs = name ?? field?.name;
   const off = disabled ?? field?.disabled;
-
-  useEffect(() => {
-    // oxlint-disable-next-line react/set-state-in-effect -- the browser's own input hands over only once the page runs its script
-    setMounted(true);
-  }, []);
 
   const shown = pending?.preview ?? kept;
   const status: Status = pending?.status ?? "idle";
@@ -797,6 +801,7 @@ export const ImageUpload = ({
         >
           <Well
             mounted={mounted}
+            native={native}
             look={{ shown, fit, fallback, status, size }}
             tip={tipFor(status, words, description)}
             control={{ ...wiring, name: sentAs, accept, disabled: off }}
