@@ -107,7 +107,8 @@ const answer: Record<ChatStatus, MessageStatus> = {
   status={status}
   onSubmit={({ text }) => {
     setStopped(false);
-    return sendMessage({ text });
+    // Not returned: it settles only once the whole answer has come.
+    void sendMessage({ text });
   }}
 >
   …
