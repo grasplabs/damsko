@@ -6,7 +6,7 @@ Every change a product sees, newest first. Versions follow [Semantic Versioning]
 
 The first release.
 
-- 109 components, one file each, named after shadcn: `src/components/<name>.tsx`, with `<name>.stylex.ts` where it defines markers or variables; data-table, data-grid and markdown are folders. shadcn/ui's primitives, from accordion to tooltip, with a few of Damsko's own beside them, such as markdown, snippet and data-grid.
+- 108 components, one file each, named after shadcn: `src/components/<name>.tsx`, with `<name>.stylex.ts` where it defines markers or variables; data-table, data-grid and markdown are folders. shadcn/ui's primitives, from accordion to tooltip, with a few of Damsko's own beside them, such as markdown, snippet and data-grid.
 - Four blocks: app-shell-01, connect-api-key-01, inspector-01, share-dialog-01. What the components and blocks share is in `lib/`, `hooks/` and `styles/`.
 - The AI components and patterns after shadcn's AI Elements, each installable on its own. The components: message, bubble, message-scroller, marker, attachment, questionnaire, trace and code-block. The patterns, built on them as shadcn builds them: chain-of-thought, chat, confirmation, context, inline-citation, model-selector, prompt-input, queue, reasoning, sources, stack-trace, subagent, suggestion, terminal, test-results and tool.
 - Tokens are `--damsko-*` CSS variables and StyleX constants by category (`colors`, `space`, `radius`, `shadow`, `font`, `duration`, `size`, `media`), from `@damsko/tokens` and `@damsko/lib`. Icons are one house set of Hugeicons drawings, named by shape, in `lib/icons.ts`.
