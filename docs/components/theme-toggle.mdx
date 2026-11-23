@@ -23,9 +23,15 @@ Controlled: give it the `mode` and an `onModeChange` that applies it (`data-mode
 
 ## Picker
 
-`variant="picker"` on a settings page. The themes under the modes are the product's, each with its name (`themes`), chosen with `theme` and `onThemeChange`; their ids are the stylesheet's (`themeIds`).
+`variant="picker"` on a settings page. The themes under the modes are the product's, each with its name (`themes`), chosen with `theme` and `onThemeChange`; their ids are the stylesheet's (`themeIds`). While the pointer rests on a theme's tile, or focus is on it, `onThemePreview` gives that theme, and nothing when it leaves: write it where you write the chosen one, and the page shows a theme before it is chosen.
 
 <Stage path="theme-toggle/picker" label="Picker" />
+
+### What a tile is rested on
+
+`onThemePreview` on its own: it says which theme the pointer or focus is on, and nothing once it has left.
+
+<Stage path="theme-toggle/preview" live label="What a tile is rested on" />
 
 ## Small tiles
 
@@ -159,6 +165,12 @@ A person chooses light, dark or the system's look, kept with the product's setti
       group: "Choosing",
       key: "Icon",
       value: "Each press goes to the next: Light, Dark, System.",
+    },
+    {
+      group: "Choosing",
+      key: "Preview",
+      value:
+        "In the picker, resting on a theme's tile or focusing it calls `onThemePreview` with that theme, and with nothing on leaving; shown is not chosen.",
     },
     {
       group: "State",

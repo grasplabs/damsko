@@ -447,6 +447,23 @@ test("a submenu opens with Right on its item, keeps the arrows to itself, and Le
   await expect(page.getByRole("button", { name: "Roadmap" })).toBeFocused();
 });
 
+test("a choice made in the menu is still made when the menu opens again", async ({
+  page,
+}) => {
+  await openExample(page, "dropdown-menu", "choices");
+  const view = page.getByRole("button", { name: "View" });
+  await view.click();
+  await page.getByRole("menuitemcheckbox", { name: "Show the grid" }).click();
+  await page.getByRole("menuitemradio", { name: "Name" }).click();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("menu")).toBeHidden();
+  await view.click();
+  await expect(
+    page.getByRole("menuitemcheckbox", { name: "Show the grid" })
+  ).not.toBeChecked();
+  await expect(page.getByRole("menuitemradio", { name: "Name" })).toBeChecked();
+});
+
 test("two items with the same words are each their own", async ({ page }) => {
   await openExample(page, "dropdown-menu", "same-words");
   await page.getByRole("button", { name: "Panels" }).click();

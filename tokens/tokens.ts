@@ -1389,6 +1389,12 @@ export const groups: TokenGroup[] = [
             use: "How long a result (Saved, Could not save) stays on a control before it returns.",
           },
           {
+            name: "loading-delay",
+            category: "duration",
+            value: "1000ms",
+            use: "How long work with no loading words of its own runs before a screen reader is told it is working. Work over sooner says only how it went: a copy never says it is working.",
+          },
+          {
             name: "duration-spin",
             category: "duration",
             value: "1500ms",

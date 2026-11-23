@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Menubar,
   MenubarCheckboxItem,
@@ -21,10 +23,14 @@ import {
   PlusIcon,
   TrashIcon,
 } from "@grasp-os/ui/lib/icons";
+import { useState } from "react";
 
 // A document editor's menus: actions with shortcuts, a destructive action, a submenu, settings and
-// a choice.
+// a choice. The page holds the settings and the choice: a menu's items are taken out when it closes.
 export default function MenubarEditor() {
+  const [outline, setOutline] = useState(true);
+  const [comments, setComments] = useState(false);
+  const [width, setWidth] = useState<string | null>("normal");
   return (
     <Menubar aria-label="Editor">
       <MenubarMenu>
@@ -69,10 +75,14 @@ export default function MenubarEditor() {
       <MenubarMenu>
         <MenubarTrigger>View</MenubarTrigger>
         <MenubarContent>
-          <MenubarCheckboxItem defaultChecked>Show outline</MenubarCheckboxItem>
-          <MenubarCheckboxItem>Show comments</MenubarCheckboxItem>
+          <MenubarCheckboxItem checked={outline} onCheckedChange={setOutline}>
+            Show outline
+          </MenubarCheckboxItem>
+          <MenubarCheckboxItem checked={comments} onCheckedChange={setComments}>
+            Show comments
+          </MenubarCheckboxItem>
           <MenubarSeparator />
-          <MenubarRadioGroup defaultValue="normal">
+          <MenubarRadioGroup value={width} onValueChange={setWidth}>
             <MenubarLabel>Page width</MenubarLabel>
             <MenubarRadioItem value="narrow">Narrow</MenubarRadioItem>
             <MenubarRadioItem value="normal">Normal</MenubarRadioItem>

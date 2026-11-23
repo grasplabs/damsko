@@ -180,13 +180,12 @@ export interface ContextMenuItemProps {
 export interface ContextMenuCheckboxItemProps {
   /** The words on the option ("Show grid"). */
   children: ReactNode;
-  /** On now. Pass it with `onCheckedChange` to keep it in state. */
-  checked?: boolean;
   /**
-   * On at first, when you do not keep it in state.
+   * On now, with `onCheckedChange`: the page holds it, since the menu's items are taken out as it
+   * closes.
    * @default false
    */
-  defaultChecked?: boolean;
+  checked?: boolean;
   /** Runs when it wants to turn on or off; `details.cancel()` keeps it as it is. */
   onCheckedChange?: CheckedChange;
   /**
@@ -211,10 +210,8 @@ export interface ContextMenuRadioGroupProps {
   children: ReactNode;
   /** Layout only. */
   style?: LayoutStyle;
-  /** The chosen option's value. Pass it with `onValueChange` to keep it in state. */
+  /** The chosen option's value, with `onValueChange`: the page holds it. */
   value?: string | null;
-  /** The option chosen at first, when you do not keep it in state. */
-  defaultValue?: string | null;
   /** Runs when another option is chosen; `details.cancel()` keeps the choice as it is. */
   onValueChange?: ValueChange;
 }
