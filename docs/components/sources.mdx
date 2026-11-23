@@ -83,10 +83,32 @@ SourceIcon holds whatever you map a source to: an icon for a file, a site's own 
     },
     {
       group: "List",
+      key: "Title",
+      value: "{text-sm} / {text-sm-line} in {font-weight-medium}",
+      note: "quiet when it cannot be opened",
+      tokens: ["foreground", "muted-foreground"],
+    },
+    {
+      group: "List",
+      key: "Number",
+      value:
+        "`index`, {text-xs} in even figures, {space-2} after the title's last word, never on a line of its own",
+      tokens: ["subtle-foreground"],
+    },
+    {
+      group: "List",
       key: "Where",
       value: "A quiet line under the title, {text-xs}: the host, or `origin`",
       note: "in danger when it could not be opened",
       tokens: ["muted-foreground", "destructive"],
+    },
+    {
+      group: "List",
+      key: "Quote",
+      value:
+        "`quote`, {text-xs} / {text-xs-line} under where it lives, two lines at most",
+      note: "none when it cannot be opened",
+      tokens: ["body-foreground"],
     },
   ]}
 />
@@ -130,7 +152,7 @@ SourceIcon holds whatever you map a source to: an icon for a file, a site's own 
     {
       key: "Source",
       value:
-        "A link, or a button, named by its title; a link says it opens in a new tab",
+        "A link, or a button, named by its title, then its number; a link says it opens in a new tab",
     },
     {
       key: "Locked or gone",

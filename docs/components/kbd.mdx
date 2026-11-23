@@ -21,6 +21,10 @@ A `KbdGroup` holds one key each, side by side, inside the sentence that says wha
 
 <Stage path="kbd/shortcut" label="A shortcut" />
 
+## In a tooltip
+
+A `Kbd` inside a tooltip's content loses its key cap: no fill, edge or padding, its sign in the tooltip's quiet words at the end of the line (`tooltip-muted-foreground`), so a shortcut reads as part of the tip. See [Tooltip](/components/tooltip).
+
 <Part title="Using it" />
 
 ## When to use it
@@ -80,6 +84,11 @@ A `KbdGroup` holds one key each, side by side, inside the sentence that says wha
       value: "A drag over the sentence leaves the sign out.",
     },
     { key: "Long signs", value: "Stay on one line; the key widens." },
+    {
+      key: "In a tooltip",
+      value: "No key cap: the sign alone, in the tooltip's quiet words.",
+      tokens: ["tooltip-muted-foreground"],
+    },
     {
       key: "Forced colours",
       value: "A 1px outline in the text colour draws the key.",
