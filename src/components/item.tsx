@@ -761,23 +761,47 @@ const TitleWords = ({ children }: { children: ReactNode }): ReactNode => {
 };
 
 /**
- * An xs row's words: its name in a span of its own, so in a side panel's card the name, not what
- * follows it, gives way with an ellipsis when the row runs out of room.
+ * A quieter word or two on the title's line, after the name: a role, "you", a count ("Admin"). In
+ * the muted ink at the regular weight; it wraps with the title, never cut off. Put it in the
+ * ItemTitle. On an `xs` row in a side panel's card it stands at the row's end instead, on one line.
  */
-const isWords = (part: ReactNode): part is string | number =>
-  typeof part === "string" || typeof part === "number";
+export const ItemDetail = ({ children, style }: ItemDetailProps) => {
+  const dense = use(RowSize) === "xs";
+  return isBlank(children) ? null : (
+    <>
+      {" "}
+      <span
+        data-slot="item-detail"
+        {...stylex.props(styles.detail, dense && styles.detailXs, style)}
+      >
+        {children}
+      </span>
+    </>
+  );
+};
 
+/**
+ * An xs row's words: everything before its ItemDetail, in order, in a span of its own (the title
+ * is a flex row there), so in a side panel's card the name, not the detail, gives way with an
+ * ellipsis when the row runs out of room. With no ItemDetail among them, the words as written.
+ */
 const nameFirst = (children: ReactNode): ReactNode => {
   const parts = [children].flat();
-  const words = parts.filter(isWords);
-  if (words.length === 0) {
+  const detail = parts.findIndex(
+    (part) => isValidElement(part) && part.type === ItemDetail
+  );
+  if (detail < 1) {
     return children;
   }
   return createElement(
     Fragment,
     null,
-    <span {...stylex.props(styles.nameXs)}>{words.join("")}</span>,
-    ...parts.filter((part) => !isWords(part))
+    createElement(
+      "span",
+      stylex.props(styles.nameXs),
+      ...parts.slice(0, detail)
+    ),
+    ...parts.slice(detail)
   );
 };
 
@@ -797,26 +821,6 @@ export const ItemTitle = ({ children, style }: ItemTitleProps) => {
         <TitleWords>{dense ? nameFirst(children) : children}</TitleWords>
       )}
     </span>
-  );
-};
-
-/**
- * A quieter word or two on the title's line, after the name: a role, "you", a count ("Admin"). In
- * the muted ink at the regular weight; it wraps with the title, never cut off. Put it in the
- * ItemTitle. On an `xs` row in a side panel's card it stands at the row's end instead, on one line.
- */
-export const ItemDetail = ({ children, style }: ItemDetailProps) => {
-  const dense = use(RowSize) === "xs";
-  return isBlank(children) ? null : (
-    <>
-      {" "}
-      <span
-        data-slot="item-detail"
-        {...stylex.props(styles.detail, dense && styles.detailXs, style)}
-      >
-        {children}
-      </span>
-    </>
   );
 };
 
