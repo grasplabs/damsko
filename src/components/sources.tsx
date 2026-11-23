@@ -5,7 +5,8 @@
 // least a large control tall, its mark on a tile, its title, and where it lives in a quiet line
 // under the title; the whole row takes the press. A source is not a step: no seat and no dots.
 // A source may say more: the number its citations carry in the answer (`index`), after its title,
-// and the passage the answer used (`quote`), under where it lives.
+// and the passage the answer used (a SourceQuote, as Inline citation's InlineCitationQuote), under
+// where it lives.
 //
 //   <Sources>
 //     <SourcesTrigger count={2}>
@@ -35,7 +36,7 @@
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
-import { createContext, use } from "react";
+import { createContext, isValidElement, use } from "react";
 import type { ReactNode } from "react";
 
 import { useI18n } from "../lib/i18n";
@@ -55,7 +56,7 @@ import {
   size,
   space,
 } from "../lib/tokens.stylex";
-import { citedSource, safeHref } from "../lib/utils";
+import { citedSource, listOf, safeHref } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { iconVars, motionVars } from "../lib/vars.stylex";
 import {
@@ -148,15 +149,19 @@ export interface SourceProps {
    * name a screen reader says, so it holds whatever order the list is in.
    */
   index?: number;
+  /** Its mark, a SourceIcon, and the passage the answer used, a SourceQuote. */
+  children?: ReactNode;
+  /** Where it sits and how wide it is. */
+  style?: LayoutStyle;
+}
+
+/** Every prop a SourceQuote takes. */
+export interface SourceQuoteProps {
   /**
    * The passage the answer used, in the source's own words: up to two lines under where it lives.
    * A source that cannot be opened shows none.
    */
-  quote?: string;
-  /** Its mark: a SourceIcon. */
-  children?: ReactNode;
-  /** Where it sits and how wide it is. */
-  style?: LayoutStyle;
+  children: ReactNode;
 }
 
 /** Every prop a SourceIcon takes. */
@@ -450,6 +455,21 @@ export const SourcesContent = ({ children, style }: SourcesContentProps) => {
   );
 };
 
+/** The passage of a source the answer used, under where it lives: two lines at most. */
+export const SourceQuote = ({ children }: SourceQuoteProps) => (
+  <>
+    {/* A comma a screen reader says between the note and the passage; the eye has the line. */}
+    <span {...stylex.props(visuallyHidden)}>, </span>
+    <span data-slot="source-quote" {...stylex.props(styles.quote)}>
+      {children}
+    </span>
+  </>
+);
+
+/** Whether a child of a Source is its SourceQuote. */
+const isQuote = (part: ReactNode) =>
+  isValidElement(part) && part.type === SourceQuote;
+
 /** Under a source's title: where it lives, with what keeps it shut, then the passage used. */
 const SourceNotes = ({
   access,
@@ -458,7 +478,7 @@ const SourceNotes = ({
 }: {
   access: SourceAccess;
   where: string | undefined;
-  quote: string | undefined;
+  quote: ReactNode[];
 }) => {
   const words = useI18n().sources;
   let note = where;
@@ -481,14 +501,7 @@ const SourceNotes = ({
           </span>
         </>
       )}
-      {access === "open" && quote !== undefined && quote !== "" && (
-        <>
-          <span {...stylex.props(visuallyHidden)}>, </span>
-          <span data-slot="source-quote" {...stylex.props(styles.quote)}>
-            {quote}
-          </span>
-        </>
-      )}
+      {access === "open" && quote}
     </>
   );
 };
@@ -501,7 +514,6 @@ export const Source = ({
   origin,
   access = "open",
   index,
-  quote,
   children,
   style,
 }: SourceProps) => {
@@ -512,10 +524,14 @@ export const Source = ({
   const host = citedSource(href)?.host;
   const where = host ?? (origin === "" ? undefined : origin);
   const live = access === "open" && (safe !== null || onOpen !== undefined);
+  // The passage stands under the notes, the mark before the words.
+  const parts = listOf(children);
+  const quote = parts.filter(isQuote);
+  const mark = parts.filter((part) => !isQuote(part));
   // The mark's tile beside the line: a tile is wider than a line's mark seat.
   const line = (
     <>
-      <AccessContext value={access}>{children}</AccessContext>
+      <AccessContext value={access}>{mark}</AccessContext>
       <span {...stylex.props(styles.words)}>
         <TraceLine>
           <TraceTitle>

@@ -18,7 +18,7 @@ Built on [Trace](/components/trace): the trigger is a TraceLine whose title is a
 
 `onOpen` tells the page a source was opened. A source with an `href` stays a link and goes there too; one without is a button that only runs `onOpen`. An address comes from a model or a tool, so it is checked as a link in Markdown is: http, https, mailto or a path on this site leads there, and any other (`javascript:`, `data:`, `//elsewhere`) leaves the title as words.
 
-`index` is the number the answer's citations give a source: it stands after the title and is said with it, so it holds whatever order the list is in. `quote` is the passage the answer used, up to two lines under where it lives; a source that cannot be opened shows none. The head here, its count, an order switch and a fold, is the page's own composition above `SourcesContent`.
+`index` is the number the answer's citations give a source: it stands after the title and is said with it, so it holds whatever order the list is in. A `SourceQuote` inside the Source is the passage the answer used, up to two lines under where it lives, as Inline citation's `InlineCitationQuote` is; a source that cannot be opened shows none. The head here, its count, an order switch and a fold, is the page's own composition above `SourcesContent`.
 
 <Stage path="sources/open" label="Opened by the page" />
 
@@ -106,7 +106,7 @@ SourceIcon holds whatever you map a source to: an icon for a file, a site's own 
       group: "List",
       key: "Quote",
       value:
-        "`quote`, {text-xs} / {text-xs-line} under where it lives, two lines at most",
+        "`SourceQuote`, {text-xs} / {text-xs-line} under where it lives, two lines at most",
       note: "none when it cannot be opened",
       tokens: ["body-foreground"],
     },
@@ -200,6 +200,14 @@ SourceIcon holds whatever you map a source to: an icon for a file, a site's own 
   source="src/components/sources.tsx"
   type="SourceIconProps"
   label="SourceIcon"
+/>
+
+### SourceQuote
+
+<Props
+  source="src/components/sources.tsx"
+  type="SourceQuoteProps"
+  label="SourceQuote"
 />
 
 </Reference>

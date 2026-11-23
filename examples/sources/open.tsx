@@ -4,6 +4,7 @@ import { Button } from "@grasp-os/ui/components/button";
 import {
   Source,
   SourceIcon,
+  SourceQuote,
   Sources,
   SourcesContent,
   SourcesTrigger,
@@ -206,7 +207,6 @@ export default function SourcesOpen() {
                 key={source.title}
                 title={source.title}
                 origin={source.origin}
-                quote={source.quote}
                 index={source.index}
                 href={source.href}
                 onOpen={() => {
@@ -216,6 +216,7 @@ export default function SourcesOpen() {
                 <SourceIcon>
                   <Icon icon={source.icon} />
                 </SourceIcon>
+                <SourceQuote>{source.quote}</SourceQuote>
               </Source>
             ))}
           </SourcesContent>

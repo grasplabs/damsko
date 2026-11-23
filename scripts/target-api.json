@@ -877,11 +877,13 @@
       "SourcesContent",
       "Source",
       "SourceIcon",
+      "SourceQuote",
       "SourcesProps",
       "SourcesTriggerProps",
       "SourcesContentProps",
       "SourceProps",
       "SourceIconProps",
+      "SourceQuoteProps",
       "SourceAccess"
     ]
   },
