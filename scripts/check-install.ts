@@ -718,7 +718,7 @@ const checkApp = async (label: string, app: string) => {
 
 /** The part of the app that is not Damsko's, as drawn: its pixels and every computed style. */
 const ownPart = async (label: string, app: string) => {
-  let seen: { pixels: string; styles: string } | undefined;
+  let seen: { pixels: string; styles: [string, string][][] } | undefined;
   if (!(await run("pnpm", ["build"], app))) {
     return seen;
   }
@@ -728,19 +728,13 @@ const ownPart = async (label: string, app: string) => {
     const styles = await page.evaluate(() =>
       [...document.querySelectorAll("#own, #own *")].map((element) => {
         const style = getComputedStyle(element);
-        // Left out: Damsko's own variables, which every element inherits from the root and
-        // nothing of the product's reads; and color-scheme, the one property themes.css sets on
-        // the root, for the tokens' light-dark(): in a light system it changes nothing drawn,
-        // which the pixels show.
-        return [...style]
-          .filter(
-            (name) => name !== "color-scheme" && !name.startsWith("--damsko-")
-          )
-          .map((name) => `${name}:${style.getPropertyValue(name)}`)
-          .join(";");
+        return [...style].map((name): [string, string] => [
+          name,
+          style.getPropertyValue(name),
+        ]);
       })
     );
-    seen = { pixels: pixels.toString("base64"), styles: styles.join("\n") };
+    seen = { pixels: pixels.toString("base64"), styles };
   });
   return seen;
 };
@@ -807,17 +801,23 @@ const besideTailwind = async (product: string) => {
       `${label}: a part of the product that is not Damsko's is drawn differently once Damsko is installed`
     );
   }
-  if (before.styles !== after.styles) {
-    const was = before.styles.split(/[;\n]/u);
-    const is = after.styles.split(/[;\n]/u);
+  // Every property the part had before has the value it had. Left out: color-scheme, the one
+  // property themes.css sets on the root, for the tokens' light-dark() (in a light system it
+  // changes nothing drawn, which the pixels show). Variables that are new on the root, Damsko's
+  // own names, are inherited and read by nothing of the product's.
+  const changed = before.styles.flatMap((element, index) => {
+    const now = new Map(after.styles[index]);
+    return element
+      .filter(
+        ([name, value]) => name !== "color-scheme" && now.get(name) !== value
+      )
+      .map(
+        ([name, value]) => `${name}: ${value} became ${String(now.get(name))}`
+      );
+  });
+  if (changed.length > 0 || before.styles.length !== after.styles.length) {
     failures.push(
-      `${label}: a part of the product that is not Damsko's has other computed styles once Damsko is installed (${was
-        .filter((each, index) => each !== is[index])
-        .slice(0, 5)
-        .join("; ")} became ${is
-        .filter((each, index) => each !== was[index])
-        .slice(0, 5)
-        .join("; ")})`
+      `${label}: a part of the product that is not Damsko's has other computed styles once Damsko is installed (${changed.slice(0, 5).join("; ")})`
     );
   }
   // The component beside it stands with no reset of Damsko's: its fill, its pointer, its font.
