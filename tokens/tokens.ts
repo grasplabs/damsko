@@ -4676,6 +4676,12 @@ export const contrastPairs: ContrastPair[] = [
   // An alert's icons on their tints: the neutral one in muted, the others in their own colour.
   { kind: "ui", on: "alert-bg-default", text: "muted-foreground" },
   { kind: "text", on: "mint", text: "brand-ink" },
+  // The rest of the pairs Get started reads shadcn's variables from (site/start/get-started.ts,
+  // shadcnColours): words on a popover and on a ghost's hover fill, and the sidebar's on its own.
+  { kind: "text", on: "popover", text: "foreground" },
+  { kind: "text", on: "accent", text: "foreground" },
+  { kind: "text", on: "sidebar", text: "sidebar-foreground" },
+  { kind: "text", on: "sidebar-accent", text: "sidebar-foreground" },
   // The words on each filled button, the labels the Button page's proof row reads.
   { kind: "text", on: "primary", text: "primary-foreground" },
   { kind: "text", on: "control", text: "foreground" },

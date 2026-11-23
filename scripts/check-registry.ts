@@ -15,13 +15,15 @@ import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import nodePath from "node:path";
 
 import { registrySchema } from "shadcn/schema";
-import ts from "typescript6";
 
 import {
   packageExports,
   pinned as pinnedVersion,
+  sections,
+  shadcnColours,
   versions,
 } from "../site/start/get-started.ts";
+import { contrastPairs } from "../tokens/tokens.ts";
 import {
   buildRegistry,
   catalog,
@@ -35,71 +37,7 @@ import {
   version as damskoVersion,
 } from "./build-registry.ts";
 import { readJson, stringsAt } from "./json.ts";
-
-/**
- * Every module a file reaches, and every declaration it references, read from a full parse: its
- * own reader, not the generator's quick scan, so a file the scan misreads still fails here. CSS
- * gives its @import and url() targets.
- */
-const modulesOf = (path: string, text: string): string[] => {
-  if (path.endsWith(".css")) {
-    return [
-      ...text.matchAll(
-        /@import\s+(?:url\()?\s*["'](?<imported>[^"']+)["']|url\(\s*["']?(?<url>[^"')]+)["']?\s*\)/gu
-      ),
-    ]
-      .map((match) => match.groups?.imported ?? match.groups?.url ?? "")
-      .filter(
-        (target) => target !== "" && !/^(?:data:|https?:|#)/u.test(target)
-      );
-  }
-  if (!/\.tsx?$/u.test(path)) {
-    return [];
-  }
-  const found: string[] = [];
-  const kind = path.endsWith("x") ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
-  const visit = (node: ts.Node) => {
-    if (
-      (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) &&
-      node.moduleSpecifier &&
-      ts.isStringLiteral(node.moduleSpecifier)
-    ) {
-      found.push(node.moduleSpecifier.text);
-    } else if (
-      ts.isImportTypeNode(node) &&
-      ts.isLiteralTypeNode(node.argument) &&
-      ts.isStringLiteral(node.argument.literal)
-    ) {
-      found.push(node.argument.literal.text);
-    } else if (
-      ts.isCallExpression(node) &&
-      node.expression.kind === ts.SyntaxKind.ImportKeyword
-    ) {
-      const [argument] = node.arguments;
-      if (
-        argument &&
-        (ts.isStringLiteral(argument) ||
-          ts.isNoSubstitutionTemplateLiteral(argument))
-      ) {
-        found.push(argument.text);
-      }
-    }
-    ts.forEachChild(node, visit);
-  };
-  const file = ts.createSourceFile(
-    path,
-    text,
-    ts.ScriptTarget.Latest,
-    true,
-    kind
-  );
-  visit(file);
-  // A declaration a file references (`/// <reference path>`) must be installed with it too.
-  return [
-    ...found,
-    ...file.referencedFiles.map((reference) => reference.fileName),
-  ];
-};
+import { modulesOf } from "./registry-deps.ts";
 
 /** Every docs page (MDX) under a folder, as paths relative to the repository. */
 const docPages = (dir: string): string[] =>
@@ -312,6 +250,8 @@ for (const item of registry.items) {
 // The docs' commands work against this registry as written: every `shadcn@<version> add` runs the
 // catalog's shadcn and names items that exist, and every package a command pins is at the
 // catalog's version, so a project set up from the docs builds with what Damsko is tested with.
+/** The packages Get started's commands add at the catalog's version: the app's own. */
+const pageAdds = new Set<string>();
 for (const page of [...docPages("docs"), "site/start/get-started.ts"]) {
   // A command in a TypeScript string has its line breaks written `\n`.
   const text = readFileSync(nodePath.join(root, page), "utf-8").replaceAll(
@@ -347,6 +287,7 @@ for (const page of [...docPages("docs"), "site/start/get-started.ts"]) {
       // A workspace's own package has no version to pin; one taken from the app's catalog is
       // pinned there, in the versions Get started gives (checked below).
       if (pinned?.name !== undefined && pinned.version === "catalog:") {
+        pageAdds.add(pinned.name);
         check(
           pinned.name in versions,
           `${page}: adds ${spec}, and Get started's versions (site/start/get-started.ts) have no ${pinned.name}`
@@ -362,6 +303,50 @@ for (const page of [...docPages("docs"), "site/start/get-started.ts"]) {
       }
     }
   }
+}
+
+// Every token Get started's blocks name (shadcn's variables, a font's family) is one tokens.css
+// defines: a token renamed fails here, not in a product.
+{
+  const defined = new Set(
+    [
+      ...readFileSync(
+        nodePath.join(root, "src/styles/tokens.css"),
+        "utf-8"
+      ).matchAll(/(?<name>--damsko-[\w-]+)\s*:/gu),
+    ].map((match) => match.groups?.name)
+  );
+  for (const block of sections.flatMap((section) =>
+    section.steps.flatMap((step) => step.blocks)
+  )) {
+    for (const match of block.code.matchAll(/(?<name>--damsko-[\w-]+)/gu)) {
+      const name = match.groups?.name ?? "";
+      check(
+        defined.has(name),
+        `Get started (site/start/get-started.ts) names ${name}, which src/styles/tokens.css does not define`
+      );
+    }
+  }
+}
+
+// Every fill and its words Get started reads shadcn's variables from (`primary` and
+// `primary-foreground`; `background` and `foreground`) is a text pair the token generator
+// measures, in light and dark and every theme: a bridge that read light words on a light fill
+// fails there.
+for (const words of Object.keys(shadcnColours).filter((name) =>
+  name.endsWith("foreground")
+)) {
+  const fill =
+    words === "foreground"
+      ? "background"
+      : words.slice(0, -"-foreground".length);
+  const [text, on] = [shadcnColours[words], shadcnColours[fill]];
+  check(
+    contrastPairs.some(
+      (pair) => pair.kind === "text" && pair.text === text && pair.on === on
+    ),
+    `Get started reads --${words} on --${fill} as --damsko-${String(text)} on --damsko-${String(on)}, which tokens/tokens.ts (contrastPairs) does not measure as text`
+  );
 }
 
 // The version Get started pins is this one: the install check installs from it.
@@ -382,16 +367,25 @@ for (const [name, version] of Object.entries(versions)) {
     `Get started's versions (site/start/get-started.ts): ${name} is ${version}, the catalog has ${catalog[name] ?? "it not at all"}`
   );
 }
-for (const item of registry.items) {
-  for (const name of [
+const itemPackages = new Set(
+  registry.items.flatMap((item) => [
     ...(item.dependencies ?? []),
     ...(item.devDependencies ?? []),
-  ]) {
-    check(
-      name in versions,
-      `${item.name} names ${name}, which Get started's versions (site/start/get-started.ts) do not pin`
-    );
-  }
+  ])
+);
+for (const name of itemPackages) {
+  check(
+    name in versions,
+    `an item names ${name}, which Get started's versions (site/start/get-started.ts) do not pin`
+  );
+}
+// And nothing else: a catalog entry pins only a package that is named by catalog:, so one that no
+// item and no command of the page adds pins nothing.
+for (const name of Object.keys(versions)) {
+  check(
+    itemPackages.has(name) || pageAdds.has(name),
+    `Get started's versions (site/start/get-started.ts) pin ${name}, which no item names and no command of the page adds`
+  );
 }
 
 // The exports map the docs give a product's packages/ui (site/start/get-started.ts) reaches every

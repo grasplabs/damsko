@@ -39,6 +39,12 @@
 // a Collapsible by a `name`, whose fold is kept and drawn the same way. Nothing here knows a
 // product: a profile, a theme control or a working mark is the caller's, composed into the parts.
 //
+// The provider's row is the window's height unless its `style` gives the frame's, and under lg
+// (the window's width) the sidebar is a Sheet fixed to the window. In a box of its own, such as a
+// gallery's card, give the row the box's height and make the box the containing block of what is
+// fixed (`contain: layout`, or a transform); or show it with `collapsible="none"`, which never
+// turns into a sheet.
+//
 // An area of the product with a navigation of its own (its settings, one project) is a level: the
 // SidebarLevels between the header and the footer hold a SidebarLevel for each, one shown at a
 // time, by `value` (the router's). The others stay in the page, unseen and out of reach, so each
