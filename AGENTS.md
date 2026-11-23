@@ -69,7 +69,7 @@ The product builds Damsko's source with its own toolchain, so every component pa
 - **Pictures, video and audio live only under `public/`**, and only as assets the site shows: its own, the brand book's, logos, example fixtures. Fonts live only in `src/styles/fonts/`, which the registry ships and the site loads. No screenshots that prove a change: they go in the pull request description. No file over 1 MB, and none that nothing refers to. The guard in CI (`scripts/guard.ts`) enforces it and names the files and folders `public/` may hold.
 - **The repository is public**: no secrets, client names, staff names or internal notes in code, comments, issues or pull requests. Workflows run on `pull_request`, never `pull_request_target`, and give no secret to a pull request from a fork.
 - **No compatibility code**: Grasp has no clients yet. Every change is a hard cut: no backwards compatibility, legacy layers, deprecated aliases or dead code.
-- **No AI attribution**: no co-author trailers or "generated with" lines in commits or pull requests. The `commit-msg` hook and CI enforce it.
+- **No AI attribution**: no AI or bot co-author trailers and no "generated with" lines in commits or pull requests; commits name only the people who wrote them. The `commit-msg` hook refuses such a commit and CI fails a pull request that holds one (`scripts/check-attribution.ts`).
 - **Never skip the git hooks** (`--no-verify`), and never loosen a lint rule to make code pass: fix the code. The rules `vite.config.ts` turns off for `examples/` and `site/` are what those folders do not pass; none is added, and each comes back on as its folder passes it.
 
 ## Branches and pull requests
