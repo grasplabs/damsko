@@ -6,12 +6,12 @@ description: A bar with a handle you drag to set a number, or two for a range.
 <Head
   lead={frontmatter.description}
   install="pnpm dlx shadcn@4.23.0 add @damsko/slider"
-  use={'import { Slider } from "@grasp-os/ui/components/slider";'}
+  use={'import { Slider, SliderLabel } from "@grasp-os/ui/components/slider";'}
 />
 
 ## With a label
 
-The label says what it sets; the value stands at the end of the same line.
+The `SliderLabel` says what it sets; the value stands at the end of the same line.
 
 <Stage path="slider/basic" live label="With a label" />
 
@@ -35,7 +35,7 @@ It keeps its value in view, and the sentence under it says why it cannot change.
 
 ## In a Field
 
-Without a `label`, the Field round it names it with its FieldLabel and describes it with its FieldDescription, as a Switch or a RadioGroup stands.
+Without a `SliderLabel`, the Field round it names it with its FieldLabel and describes it with its FieldDescription, as a Switch or a RadioGroup stands.
 
 <Stage path="slider/field" label="In a Field" />
 
@@ -369,7 +369,11 @@ Half strength, no drag, no focus. Say why beside it.
 <Rows
   title="Levels: accessibility"
   rows={[
-    { key: "Role", value: "A native range input: `slider`, named by `label`" },
+    {
+      key: "Role",
+      value:
+        "A native range input: `slider`, named by its `SliderLabel`, or by `aria-label`",
+    },
     { key: "Keys", value: "Arrows step, Home and End jump" },
     { key: "Value", value: "`aria-valuetext` is the level's label" },
   ]}
@@ -380,6 +384,12 @@ Half strength, no drag, no focus. Say why beside it.
 ## API
 
 <Props source="src/components/slider.tsx" type="SliderProps" />
+
+<Props
+  source="src/components/slider.tsx"
+  type="SliderLabelProps"
+  label="SliderLabel props"
+/>
 
 The rest of UI SDK's Slider (`largeStep`, `minStepsBetweenThumbs`, `readOnly`, `name`, `locale`, `controller`) passes through to the default variant.
 

@@ -561,13 +561,13 @@ const AgentWorkspace = () => {
                         <ConfirmationActions>
                           <ConfirmationAction
                             variant="outline"
-                            errorLabel="Could not decline"
+                            errorText="Could not decline"
                             onClick={decline}
                           >
                             Decline
                           </ConfirmationAction>
                           <ConfirmationAction
-                            errorLabel="Could not approve"
+                            errorText="Could not approve"
                             onClick={approve}
                           >
                             Approve

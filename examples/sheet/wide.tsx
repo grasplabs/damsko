@@ -79,8 +79,8 @@ export default function SheetWide() {
           <Button
             size="sm"
             onClick={saving}
-            loadingLabel="Saving"
-            errorLabel="Could not save"
+            loadingText="Saving"
+            errorText="Could not save"
           >
             Save all
           </Button>

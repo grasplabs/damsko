@@ -23,7 +23,7 @@ const did = (line: string) => async () => {
 export default function ButtonAgent() {
   return (
     <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
-      <Button variant="default" onClick={did("saved")} errorLabel="Not saved">
+      <Button variant="default" onClick={did("saved")} errorText="Not saved">
         Save changes
       </Button>
       <Button
@@ -32,14 +32,14 @@ export default function ButtonAgent() {
           await wait(300);
           throw new Error("The invite was not sent.");
         }}
-        errorLabel="Not sent"
+        errorText="Not sent"
       >
         Send invite
       </Button>
       <Button
         variant="destructive"
         onClick={did("deleted")}
-        errorLabel="Not deleted"
+        errorText="Not deleted"
         agentConfirm="Deletes the draft report"
       >
         Delete draft

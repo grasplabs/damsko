@@ -24,7 +24,7 @@ export default function NativeSelectGroups() {
       <FieldLabel>Time zone</FieldLabel>
       <NativeSelect defaultValue="Amsterdam">
         {zones.map((zone) => (
-          <NativeSelectOptGroup key={zone.region} label={zone.region}>
+          <NativeSelectOptGroup key={zone.region} heading={zone.region}>
             {zone.cities.map((city) => (
               <NativeSelectOption
                 key={city}

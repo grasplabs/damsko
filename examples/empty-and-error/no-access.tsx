@@ -33,9 +33,9 @@ export default function NoAccess() {
             variant="outline"
             size="sm"
             onClick={ask}
-            loadingLabel="Asking"
-            successLabel="Asked Maya"
-            errorLabel="Not sent"
+            loadingText="Asking"
+            successText="Asked Maya"
+            errorText="Not sent"
           >
             Ask for access
           </Button>

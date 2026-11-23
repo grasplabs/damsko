@@ -132,7 +132,7 @@ export interface ConfirmationActionProps {
   variant?: ButtonVariant;
   /**
    * Gives the answer. Return a Promise and the button works until it settles; when it rejects, the
-   * button says `errorLabel` and can be pressed again.
+   * button says `errorText` and can be pressed again.
    */
   onClick?: () => unknown;
   /**
@@ -150,7 +150,7 @@ export interface ConfirmationActionProps {
    * The words on the button when the answer failed.
    * @default `confirmation.failed` ("Failed")
    */
-  errorLabel?: string;
+  errorText?: string;
   /**
    * What an agent's press is said to do as the person is asked first.
    * @default `Presses "<its words>"`
@@ -446,14 +446,14 @@ export const ConfirmationAction = ({
   onClick,
   hold = false,
   disabled = false,
-  errorLabel,
+  errorText,
   agentConfirm,
   style,
 }: ConfirmationActionProps) => {
   const { agentAsks, agentPresses } = useI18n().action;
   const words = useI18n().confirmation;
   const context = use(ConfirmationContext);
-  const failed = errorLabel ?? words.failed;
+  const failed = errorText ?? words.failed;
   const confirm = confirmOf(agentConfirm, children, {
     agentAsks,
     agentPresses,
@@ -471,7 +471,7 @@ export const ConfirmationAction = ({
         aria-describedby={context?.requestId}
         data-slot="confirmation-action"
         onConfirm={run}
-        errorLabel={failed}
+        errorText={failed}
         style={style}
       >
         {children}
@@ -484,7 +484,7 @@ export const ConfirmationAction = ({
       variant={variant}
       size="sm"
       onClick={run}
-      errorLabel={failed}
+      errorText={failed}
       agentConfirm={confirm}
       disabled={disabled}
       style={style}

@@ -336,7 +336,7 @@ const useSave = () => useAction(save);
 const useSaveNamed = () => useAction(saveNamed);
 const useFailingSave = () =>
   useAction(failToSave, {
-    errorLabel: "Could not save",
+    errorText: "Could not save",
     onError: (error) => {
       errors.push(error);
     },

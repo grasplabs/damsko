@@ -1,4 +1,4 @@
-import { Slider } from "@grasp-os/ui/components/slider";
+import { Slider, SliderLabel } from "@grasp-os/ui/components/slider";
 import * as stylex from "@stylexjs/stylex";
 
 import { effort } from "./effort-levels";
@@ -9,12 +9,9 @@ const layout = stylex.create({ box: { width: "100%", maxWidth: "26rem" } });
 export default function SliderLevelsBasic() {
   return (
     <div {...stylex.props(layout.box)}>
-      <Slider
-        variant="levels"
-        label="Effort"
-        levels={effort}
-        defaultValue="high"
-      />
+      <Slider variant="levels" levels={effort} defaultValue="high">
+        <SliderLabel>Effort</SliderLabel>
+      </Slider>
     </div>
   );
 }

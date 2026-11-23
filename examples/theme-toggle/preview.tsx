@@ -39,7 +39,7 @@ export default function ThemeTogglePreview() {
       </Button>
       <ThemeToggle
         variant="picker"
-        label="Appearance"
+        heading="Appearance"
         mode={mode}
         onModeChange={setMode}
         theme={theme}

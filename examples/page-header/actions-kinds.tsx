@@ -31,8 +31,8 @@ export default function PageHeaderActionsKinds() {
           <Button
             variant="outline"
             status="loading"
-            successLabel="Exported"
-            errorLabel="Could not export"
+            successText="Exported"
+            errorText="Could not export"
           >
             <Icon icon={DownloadIcon} />
             Export

@@ -10,7 +10,7 @@ const layout = stylex.create({
 
 // The tools an agent reaches, as one row of tiles: three shown, then "+2" for the rest, named
 // once ("Slack, Google Drive, Notion and 2 others"). Two, with nothing more; one with a brand
-// with no mark, by its label; and the first at `default`.
+// with no mark, by its name; and the first at `default`.
 export default function BrandIconGroups() {
   return (
     <div {...stylex.props(layout.stack)}>
@@ -25,7 +25,7 @@ export default function BrandIconGroups() {
       />
       <BrandIconGroup items={[logos.slack, logos["google-sheets"]]} />
       <BrandIconGroup
-        items={[logos.slack, { label: "Acme CRM" }, logos.notion, logos.stripe]}
+        items={[logos.slack, { name: "Acme CRM" }, logos.notion, logos.stripe]}
       />
       <BrandIconGroup
         items={[

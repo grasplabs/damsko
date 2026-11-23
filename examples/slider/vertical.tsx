@@ -1,4 +1,4 @@
-import { Slider } from "@grasp-os/ui/components/slider";
+import { Slider, SliderLabel } from "@grasp-os/ui/components/slider";
 import * as stylex from "@stylexjs/stylex";
 
 const layout = stylex.create({
@@ -8,11 +8,8 @@ const layout = stylex.create({
 // Upright: Arrow Up raises it, Arrow Down lowers it. Its height comes from `style`.
 export default function SliderVertical() {
   return (
-    <Slider
-      label="Level"
-      orientation="vertical"
-      defaultValue={60}
-      style={layout.slider}
-    />
+    <Slider orientation="vertical" defaultValue={60} style={layout.slider}>
+      <SliderLabel>Level</SliderLabel>
+    </Slider>
   );
 }

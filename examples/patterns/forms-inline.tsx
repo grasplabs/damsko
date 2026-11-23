@@ -44,9 +44,9 @@ const layout = stylex.create({
 // The form checks itself (noValidate): what is wrong is said under the email, which takes focus.
 export default function FormsInline() {
   const send = useAction(invite, {
-    loadingLabel: "Inviting",
-    successLabel: "Invited",
-    errorLabel: "Not invited",
+    loadingText: "Inviting",
+    successText: "Invited",
+    errorText: "Not invited",
   });
   return (
     <form
@@ -87,9 +87,9 @@ export default function FormsInline() {
           type="submit"
           variant="default"
           status={send.status}
-          loadingLabel="Inviting"
-          successLabel="Invited"
-          errorLabel="Not invited"
+          loadingText="Inviting"
+          successText="Invited"
+          errorText="Not invited"
         >
           Invite
         </Button>

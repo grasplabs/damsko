@@ -524,10 +524,9 @@ const Row = ({
       {status === "uploading" ? (
         <span {...stylex.props(styles.progress)}>
           <Progress
-            label={words.uploadingName(file.name)}
+            aria-label={words.uploadingName(file.name)}
             value={Math.round((state?.progress ?? 0) * 100)}
             size="sm"
-            showLabel={false}
           />
         </span>
       ) : null}

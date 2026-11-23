@@ -19,7 +19,7 @@ export default function BrandIconFallback() {
       {sizes.map((size) => (
         <div key={size} {...stylex.props(layout.row)}>
           <BrandIcon {...logos.slack} size={size} />
-          <BrandIcon label="Acme CRM" size={size} />
+          <BrandIcon name="Acme CRM" size={size} />
           <BrandIcon {...logos.notion} size={size} />
         </div>
       ))}

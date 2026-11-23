@@ -55,8 +55,8 @@ export default function SpinnerOnFills() {
           key={variant}
           variant={variant}
           status="loading"
-          successLabel={done}
-          errorLabel={failed}
+          successText={done}
+          errorText={failed}
         >
           {words}
         </Button>

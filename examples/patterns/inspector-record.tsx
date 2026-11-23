@@ -124,7 +124,7 @@ const EditDialog = ({
       actions={[
         {
           label: "Save",
-          errorLabel: "Could not save",
+          errorText: "Could not save",
           // An empty name is refused: the field says why, and the dialog stays open.
           run: () => {
             if (draftName.trim() === "") {
@@ -182,7 +182,7 @@ const WriteDialog = ({
       actions={[
         {
           label: "Save",
-          errorLabel: "Could not save",
+          errorText: "Could not save",
           run: () => {
             if (note.trim() === "") {
               setEmpty(true);
@@ -237,7 +237,7 @@ const ApprovalDialog = ({
         : [
             {
               label: "Decline",
-              errorLabel: "Could not decline",
+              errorText: "Could not decline",
               variant: "outline",
               run: () => {
                 onAnswer(approval, false);
@@ -245,7 +245,7 @@ const ApprovalDialog = ({
             },
             {
               label: "Approve",
-              errorLabel: "Could not approve",
+              errorText: "Could not approve",
               run: () => {
                 onAnswer(approval, true);
               },

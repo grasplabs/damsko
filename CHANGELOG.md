@@ -10,6 +10,29 @@ The first release.
 - NativeSelect, the browser's own select in the field's box (`NativeSelectOption`, `NativeSelectOptGroup`), and SortableList, a list put in order by hand by each item's handle, from the pointer, a finger or the keyboard (`SortableListItem`, `SortableListHandle`, on UI SDK's `createReorder`). Heading takes `ref` and `tabIndex={-1}`, a place for focus when the control that had it goes.
 - Four blocks: app-shell-01, connect-api-key-01, inspector-01, share-dialog-01. What the components and blocks share is in `lib/`, `hooks/` and `styles/`.
 - The AI components and patterns, each installable on its own. The components: message, bubble, message-scroller, marker, attachment, questionnaire, trace and code-block. The patterns, built on them: chain-of-thought, chat, confirmation, context, inline-citation, model-selector, prompt-input, reasoning, sources, stack-trace, suggestion, terminal, test-results and tool.
+- A visible label is children or a label part, a control with no visible text takes `aria-label` and never a `label` prop, and the words a component shows or says itself and lets you replace end in `Text`. A hidden name for a part you cannot reach ends in `Label` (`thumbLabels`, `triggerLabel`). What changed:
+
+  | Component | Was | Now |
+  | --- | --- | --- |
+  | Progress | `label`, `showLabel` | `<ProgressLabel>` and `<ProgressValue>` children (`ProgressValue` takes `(formatted, value) => …` as children), or `aria-label` |
+  | ProgressCircle | `label`, `showLabel` | `aria-label`, `showValue` |
+  | Slider | `label` | `<SliderLabel>` child |
+  | Slider `variant="levels"` | `label`, `showLabel`, `emptyLabel` | `<SliderLabel>` child or `aria-label`, `emptyText` |
+  | PromptInputQueue | `label` | `<PromptInputQueueTrigger>` and `<PromptInputQueueContent>` children |
+  | PromptInputActionAddAttachments | `label` | children |
+  | PromptInputMentionContent | `emptyLabel`, `errorLabel` | a `<PromptInputMentionEmpty>` child, `errorText` |
+  | SidePanelSection | `emptyLabel`, `onAdd` | a `<SidePanelSectionAdd onClick>` child |
+  | MessageAction, ModelSelectorMaker, ModelSelectorLogo | `label` | `aria-label` |
+  | ThemeToggle | `label` | `aria-label`; the picker: `heading` |
+  | BrandIcon, BrandIconGroup items | `label` | `name` |
+  | ModelSelectorEffort | `label` | `heading` |
+  | Button, HoldButton, `useAction` | `loadingLabel`, `successLabel`, `errorLabel` | `loadingText`, `successText`, `errorText` (the options' type `ActionLabels` is `ActionText`) |
+  | DropdownMenuItem, ContextMenuItem, MenubarItem | `loadingLabel`, `errorLabel` | `loadingText`, `errorText` |
+  | Command, its items' data, ConfirmationAction, AudioPlayer, Switch | `errorLabel` | `errorText` |
+  | StepperNav | `finishLabel` | `finishText` |
+  | CodeBlock | `languageLabel` | `languageName` |
+  | inspector-01 sections | `emptyLabel` | `emptyText` |
+
 - Tokens are `--damsko-*` CSS variables and StyleX constants by category (`colors`, `space`, `radius`, `shadow`, `font`, `duration`, `size`, `media`), from `@damsko/tokens` and `@damsko/lib`. Icons are one house set of Hugeicons drawings, named by shape, in `lib/icons.ts`: the drawings Damsko's parts use and the shapes products share. Any other Hugeicons drawing a product imports from `@hugeicons/core-free-icons` and draws through the same `Icon`, marked with `directional` when it points along the line.
 - A shadcn registry at `https://damsko.joingrasp.com/r/{name}.json`: add it to `components.json` as `@damsko` and install with the stock CLI (`pnpm dlx shadcn@4.23.0 add @damsko/button`). Every file lands byte for byte at its own path under `src/` (`registry:file`, `~/src/…` targets, packages by name only), so `components.json` needs `baseColor: ""` and no other setting changes.
 - The primitives' few built-in words come from `I18nProvider`. Its catalogue may be built while rendering, from a translation library: the provider keeps the words it has until `locale`, now required, or a string changes. The action hook's words are the part `action` (was `useAction`, which the React Compiler read as a hook).

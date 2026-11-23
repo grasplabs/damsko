@@ -8,11 +8,11 @@ const layout = stylex.create({
 export default function ProgressRings() {
   return (
     <div {...stylex.props(layout.row)}>
-      <ProgressCircle size="sm" label="Saving" value={50} />
-      <ProgressCircle label="Uploading" value={50} />
-      <ProgressCircle size="lg" label="Uploading the photos" value={25} />
-      <ProgressCircle size="lg" label="Syncing" value={65} />
-      <ProgressCircle label="Connecting" value={null} />
+      <ProgressCircle size="sm" aria-label="Saving" value={50} />
+      <ProgressCircle aria-label="Uploading" value={50} />
+      <ProgressCircle size="lg" aria-label="Uploading the photos" value={25} />
+      <ProgressCircle size="lg" aria-label="Syncing" value={65} />
+      <ProgressCircle aria-label="Connecting" value={null} />
     </div>
   );
 }

@@ -7,14 +7,14 @@
 //   <Button variant="ghost" size="icon-sm" aria-label="More actions"><Icon icon={DotsIcon} /></Button>
 //   <Button asChild><a href="/settings">Settings</a></Button>
 //   <Button onClick={saveChanges}>Save changes</Button>          saveChanges returns a Promise
-//   <Button onClick={sendInvite} successLabel="Sent" errorLabel="Not sent">Send invite</Button>
+//   <Button onClick={sendInvite} successText="Sent" errorText="Not sent">Send invite</Button>
 //
 // A press whose `onClick` returns a Promise is followed by the Button itself (hooks/use-action):
 // while it works the button is busy, takes no second press and shows a spinner; once it settles, a
 // tick or the alert for a moment, then it rests. While it works the spinner takes the place of its
 // icon and the words stay; with no icon the mark stands over the words, which keep their place
 // unseen (and their name for a screen reader), so the button never changes width. Words for a
-// state (`loadingLabel`, `successLabel`, `errorLabel`) are said, and shown in the words' place, every
+// state (`loadingText`, `successText`, `errorText`) are said, and shown in the words' place, every
 // one stacked in the same cell so the widest sets the width. Failed, it draws the quiet fill with
 // destructive words and edge, whatever its variant. A page that runs the work elsewhere (a form's
 // submit) gives `status` instead.
@@ -128,11 +128,11 @@ interface ButtonBase extends Omit<
    */
   onClick?: ComponentProps<typeof ButtonPrimitive>["onClick"];
   /** Said while its press works, and shown in place of its words ("Saving"). */
-  loadingLabel?: string;
+  loadingText?: string;
   /** Said once its press worked, and shown in place of its words for a moment ("Saved"). */
-  successLabel?: string;
+  successText?: string;
   /** Said when its press failed, and shown in place of its words for a moment ("Not saved"). */
-  errorLabel?: string;
+  errorText?: string;
   /**
    * Where its work is, when the page runs it (a form's submit): the Button shows it and leaves
    * `onClick` alone. Whoever runs the work says how it went.
@@ -1074,9 +1074,9 @@ const usePress = (
   labels: Labels
 ) => {
   const action = useAction(waitFor, {
-    loadingLabel: labels.loading,
-    successLabel: labels.success,
-    errorLabel: labels.error,
+    loadingText: labels.loading,
+    successText: labels.success,
+    errorText: labels.error,
   });
   if (held !== undefined) {
     return { status: held, press: onClick };
@@ -1103,9 +1103,9 @@ const Pressable = ({
   disabled = false,
   focusableWhenDisabled = false,
   pendingAnnouncement = "",
-  loadingLabel,
-  successLabel,
-  errorLabel,
+  loadingText,
+  successText,
+  errorText,
   status: held,
   tooltip: _tooltip,
   onClick,
@@ -1116,9 +1116,9 @@ const Pressable = ({
 }: ButtonProps) => {
   const { agentAsks, agentPresses } = useI18n().action;
   const { status, press } = usePress(onClick, held, {
-    loading: loadingLabel,
-    success: successLabel,
-    error: errorLabel,
+    loading: loadingText,
+    success: successText,
+    error: errorText,
   });
   const working = status === "loading";
   const extra = withStatus(rest, status);
@@ -1150,7 +1150,7 @@ const Pressable = ({
       labels={
         isIconSize(size)
           ? {}
-          : { loading: loadingLabel, success: successLabel, error: errorLabel }
+          : { loading: loadingText, success: successText, error: errorText }
       }
     >
       {content}

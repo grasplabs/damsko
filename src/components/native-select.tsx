@@ -101,10 +101,13 @@ export interface NativeSelectOptionProps extends Omit<
 /** Every prop a NativeSelectOptGroup takes: a run of options under a name, an <optgroup>. */
 export interface NativeSelectOptGroupProps extends Omit<
   ComponentProps<"optgroup">,
-  "className" | "style" | "children"
+  "className" | "style" | "children" | "label"
 > {
-  /** The group's name ("Europe"), shown above its options and never chosen. */
-  label: string;
+  /**
+   * The group's name ("Europe"), shown above its options and never chosen: the <optgroup>'s
+   * `label`, the one way the browser names a group, as CommandGroup's `heading` names its own.
+   */
+  heading: string;
   /** Its NativeSelectOptions. */
   children: ReactNode;
   /**
@@ -288,11 +291,13 @@ export const NativeSelectOption = ({
 
 /** A run of options under a name: an <optgroup>. */
 export const NativeSelectOptGroup = ({
+  heading,
   children,
   ...rest
 }: NativeSelectOptGroupProps) => (
   <optgroup
     {...rest}
+    label={heading}
     data-slot="native-select-optgroup"
     {...stylex.props(styles.option)}
   >
