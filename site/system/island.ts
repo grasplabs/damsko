@@ -17,18 +17,20 @@ type Loaders = Record<
   () => Promise<{ default: ComponentType<Record<string, unknown>> }>
 >;
 
-/** Where a build puts the examples' map, by a name that never changes (./examples-map.ts). */
-export const EXAMPLES_MAP = "/_astro/examples-map.js";
+/** Where a build puts the map of one folder's examples, by a name that never changes (./vite.ts). */
+export const examplesMapOf = (folder: string) =>
+  `/_astro/examples-map/${folder}.js`;
 
-// The map is fetched once, when the first example comes near; in dev it is the module itself. In a
-// build the address is not written as an import, so no chunk names the map and none changes with it.
-// A page open across a deploy holds the old map: when an example then fails to load, the map is
-// fetched afresh once (a new address, as the browser keeps a module by its address) and the example
-// tried again with the names it gives, before the page is loaded again as the last resort.
-let mapLoad: Promise<Loaders> | null = null;
-let refreshed = false;
-const loadMap = async (fresh: boolean): Promise<Loaders> => {
-  const address = new URL(EXAMPLES_MAP, location.origin);
+// A folder's map is fetched once, when its first example comes near; in dev it is the module that
+// lists them all. In a build the address is not written as an import, so no chunk names a map and
+// none changes with it. A page open across a deploy holds the old map: when an example then fails
+// to load, its map is fetched afresh once (a new address, as the browser keeps a module by its
+// address) and the example tried again with the names it gives, before the page is loaded again
+// as the last resort.
+const mapLoads = new Map<string, Promise<Loaders>>();
+const refreshed = new Set<string>();
+const loadMap = async (folder: string, fresh: boolean): Promise<Loaders> => {
+  const address = new URL(examplesMapOf(folder), location.origin);
   if (fresh) {
     address.searchParams.set("build", String(Date.now()));
   }
@@ -37,29 +39,31 @@ const loadMap = async (fresh: boolean): Promise<Loaders> => {
     : await import(/* @vite-ignore */ address.href);
   return module.examples;
 };
-const examplesMap = (fresh = false) => {
-  if (fresh) {
-    mapLoad = null;
+const examplesMap = (folder: string, fresh = false) => {
+  let load = fresh ? undefined : mapLoads.get(folder);
+  if (load === undefined) {
+    load = loadMap(folder, fresh);
+    mapLoads.set(folder, load);
   }
-  mapLoad ??= loadMap(fresh);
-  return mapLoad;
+  return load;
 };
 
-/** The example's module, by the map; once more by a fresh map when the first try fails. */
+/** The example's module, by its folder's map; once more by a fresh map when the first try fails. */
 const loadExample = async (path: string) => {
   const key = `/examples/${path}.tsx`;
+  const [folder = ""] = path.split("/");
   try {
-    const load = (await examplesMap())[key];
+    const load = (await examplesMap(folder))[key];
     if (load === undefined) {
       throw new Error(`no example at examples/${path}.tsx`);
     }
     return await load();
   } catch (error) {
-    if (import.meta.env.DEV || refreshed) {
+    if (import.meta.env.DEV || refreshed.has(folder)) {
       throw error;
     }
-    refreshed = true;
-    const load = (await examplesMap(true))[key];
+    refreshed.add(folder);
+    const load = (await examplesMap(folder, true))[key];
     if (load === undefined) {
       throw error;
     }

@@ -8,7 +8,8 @@
 // (site/behaviour/folds.ts). The rail lists every fold. Markdown form: site/markdown.ts (the
 // sections as they are, open: an agent loses nothing).
 import "../system/styles/blocks.css";
-import { Fold } from "./fold";
+// Through the shell's own module: no request of its own on each page (../chrome/DocsShell.tsx).
+import { Fold } from "../chrome/DocsShell";
 
 interface Props {
   /** The words over the folds. */

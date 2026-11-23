@@ -37,11 +37,11 @@ export const robotsTxt = indexable
 
 /**
  * The files a build writes under one name that never changes, so a change to them touches no other
- * file: the examples' map (./examples-map.ts), StyleX's sheet (./vite.ts, stylexSheet) and the search index (./vite.ts, searchIndexFile). Each is asked for afresh every time (a 304 when unchanged);
+ * file: the examples' maps, one per folder (./vite.ts, examplesMap), StyleX's sheet (./vite.ts, stylexSheet) and the search index (./vite.ts, searchIndexFile). Each is asked for afresh every time (a 304 when unchanged);
  * everything they name is hashed and kept for ever.
  */
 export const fixedNames = [
-  "/_astro/examples-map.js",
+  "/_astro/examples-map/*",
   "/_astro/stylex.css",
   "/_astro/search-index.js",
 ];

@@ -78,6 +78,9 @@ import { useFolds } from "./nav-folds";
 // so the rail on every docs page costs no request of its own: no entry chunk for it, and its code
 // is in the shared islands chunk (site/system/vite.ts) that every docs page loads for the shell.
 export { TableOfContents } from "@grasp-os/ui/components/table-of-contents";
+// The folds of a page's reference and comparisons likewise (site/blocks/Reference.astro,
+// Intent.astro): as an island entry of its own, Fold was a request on 110 pages for 800 bytes.
+export { Fold } from "../blocks/fold";
 
 /** One page in the navigation. */
 export interface DocsShellPage {

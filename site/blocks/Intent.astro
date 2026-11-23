@@ -6,7 +6,8 @@
 // group) that opens to the comparison; `compare="open"` shows them open. Markdown form:
 // site/markdown.ts (the groups in full).
 import "../system/styles/blocks.css";
-import { Fold } from "./fold";
+// Through the shell's own module: no request of its own on each page (../chrome/DocsShell.tsx).
+import { Fold } from "../chrome/DocsShell";
 import { groupsOf } from "../choosing";
 import { chooseRows, guidanceColumn } from "../guidance";
 import { ChooseView, GuidanceView } from "./intent";
