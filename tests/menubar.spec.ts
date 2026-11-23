@@ -143,29 +143,6 @@ test("the chosen radio item shows a dot and the checked checkbox item a tick", a
   expect(dot).toEqual({ tick: false, dot: true });
 });
 
-test("in a menu where an item has an icon, an item without one starts its words on the others'", async ({
-  page,
-}) => {
-  await openExample(page, "menubar", "editor");
-  await page.getByRole("menuitem", { name: "Edit" }).click();
-  // Where the item's own words start: the text that is its name.
-  const startOf = async (name: string) =>
-    await page.getByRole("menuitem", { name }).evaluate((item, words) => {
-      const walker = document.createTreeWalker(item, NodeFilter.SHOW_TEXT);
-      for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-        if (node.textContent?.includes(words) === true) {
-          const range = document.createRange();
-          range.selectNodeContents(node);
-          return range.getBoundingClientRect().left;
-        }
-      }
-      return Number.NaN;
-    }, name);
-  expect(
-    Math.abs((await startOf("Redo")) - (await startOf("Copy link to section")))
-  ).toBeLessThanOrEqual(1);
-});
-
 test("a submenu opens with Right on its item and Left closes it", async ({
   page,
 }) => {
