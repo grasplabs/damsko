@@ -17,7 +17,7 @@ const styles = stylex.create({
     width: "100%",
     maxWidth: 560,
     minHeight: 264,
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
     backgroundColor: colors.card,
     boxShadow: size.borderStrong,

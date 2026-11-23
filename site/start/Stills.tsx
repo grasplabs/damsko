@@ -27,7 +27,7 @@ const still = stylex.create({
     overflow: "hidden",
     color: colors.bodyForeground,
     backgroundColor: colors.muted,
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
   },
   // The shade, over the frame rather than the window.
@@ -40,7 +40,7 @@ const still = stylex.create({
     width: `min(${size.dialogWidth}, 100% - 2 * ${size.dialogGutter})`,
     height: "fit-content",
     maxHeight: `calc(100% - 2 * ${size.dialogGutter})`,
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
   },
 });
 

@@ -217,7 +217,7 @@ const styles = stylex.create({
   default: {
     width: sizes.controlDefault,
     borderRadius: {
-      default: `min(${radius.base}, calc(${sizes.controlDefault} / 2))`,
+      default: `min(${radius.xl}, calc(${sizes.controlDefault} / 2))`,
       [ROUND]: `calc(${sizes.controlDefault} * 0.3)`,
     },
     fontSize: font.textBase,
@@ -225,7 +225,7 @@ const styles = stylex.create({
   lg: {
     width: sizes.controlLg,
     borderRadius: {
-      default: `min(${radius.base}, calc(${sizes.controlLg} / 2))`,
+      default: `min(${radius.xl}, calc(${sizes.controlLg} / 2))`,
       [ROUND]: `calc(${sizes.controlLg} * 0.3)`,
     },
     fontSize: font.textLg,

@@ -29,7 +29,7 @@ const layout = stylex.create({
   row: {
     boxSizing: "border-box",
     padding: space[4],
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
     boxShadow: size.borderStrong,
     fontFamily: font.sans,

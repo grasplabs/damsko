@@ -162,7 +162,7 @@ const styles = stylex.create({
     borderWidth: { default: 0, [FORCED]: 1 },
     borderStyle: "solid",
     borderColor: "currentColor",
-    borderRadius: `min(${radius.base}, calc((${size.controlSm} + 2 * ${space["1"]}) / 2))`,
+    borderRadius: `min(${radius.xl}, calc((${size.controlSm} + 2 * ${space["1"]}) / 2))`,
     cornerShape: radius.shape,
     backgroundColor: colors.card,
     boxShadow: shadow.sm,

@@ -667,7 +667,7 @@ const styles = stylex.create({
   date: {
     fontVariantNumeric: "tabular-nums",
     whiteSpace: "nowrap",
-    borderRadius: radius.mark,
+    borderRadius: radius.sm,
     cornerShape: radius.shape,
   },
   dateRoom: (width: string) => ({ display: "inline-block", minWidth: width }),

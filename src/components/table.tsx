@@ -618,7 +618,7 @@ const styles = stylex.create({
     paddingBlock: 0,
     paddingInline: space[1],
     borderWidth: 0,
-    borderRadius: radius.mark,
+    borderRadius: radius.sm,
     cornerShape: radius.shape,
     backgroundColor: {
       default: "transparent",

@@ -182,8 +182,8 @@ const look = stylex.create({
   panel: {
     overflow: "hidden",
     borderRadius: {
-      default: radius.base,
-      [PHONE]: `${radius.base} ${radius.base} 0 0`,
+      default: radius.xl,
+      [PHONE]: `${radius.xl} ${radius.xl} 0 0`,
     },
   },
 

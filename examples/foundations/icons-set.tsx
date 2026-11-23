@@ -94,7 +94,7 @@ const styles = stylex.create({
     paddingBlock: space["4"],
     paddingInline: space["1"],
     border: "none",
-    borderRadius: radius.mark,
+    borderRadius: radius.sm,
     cornerShape: radius.shape,
     backgroundColor: {
       default: "transparent",

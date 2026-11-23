@@ -427,7 +427,7 @@ const passwordStyles = stylex.create({
     padding: 0,
     borderWidth: 0,
     // Its corner nests inside the field's, space-1 in.
-    borderRadius: `max(0px, calc(${radius.base} - ${space[1]}))`,
+    borderRadius: `max(0px, calc(${radius.xl} - ${space[1]}))`,
     cornerShape: radius.shape,
     backgroundColor: "transparent",
     color: {

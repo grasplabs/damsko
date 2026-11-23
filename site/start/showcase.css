@@ -202,7 +202,7 @@
 .sc-box .sc-building {
   width: 100%;
   height: 100%;
-  border-radius: calc(var(--damsko-radius) * 1.2);
+  border-radius: calc(var(--damsko-radius-xl) * 1.2);
   corner-shape: var(--damsko-radius-shape);
   background-color: var(--damsko-background);
   box-shadow: var(--damsko-shadow-lg);
@@ -242,7 +242,7 @@
 
 .sc-panel {
   padding: var(--damsko-space-2) var(--damsko-space-4);
-  border-radius: var(--damsko-radius);
+  border-radius: var(--damsko-radius-xl);
   corner-shape: var(--damsko-radius-shape);
   background-color: var(--damsko-card);
   box-shadow: var(--damsko-shadow-sm);
@@ -251,7 +251,7 @@
  * with its padding under it: no empty band under the copy button. */
 .sc-thread {
   height: min(21rem, calc(var(--sc-room) * 0.5));
-  border-radius: calc(var(--damsko-radius) * 1.2);
+  border-radius: calc(var(--damsko-radius-xl) * 1.2);
   corner-shape: var(--damsko-radius-shape);
   background-color: var(--damsko-card);
   box-shadow: var(--damsko-shadow-lg);
@@ -259,7 +259,7 @@
 }
 .sc-activity {
   padding: var(--damsko-space-4);
-  border-radius: var(--damsko-radius);
+  border-radius: var(--damsko-radius-xl);
   corner-shape: var(--damsko-radius-shape);
   background-color: var(--damsko-card);
   box-shadow: var(--damsko-shadow-md);

@@ -190,7 +190,7 @@ const styles = stylex.create({
     display: "inline-flex",
     alignItems: "center",
     color: colors.foreground,
-    borderRadius: radius.row,
+    borderRadius: radius.lg,
     cornerShape: radius.shape,
   },
   mark: {
@@ -223,7 +223,7 @@ const styles = stylex.create({
       [media.pointerCoarse]: size.tapTarget,
     },
     paddingInline: size.sidebarRowInline,
-    borderRadius: radius.row,
+    borderRadius: radius.lg,
     cornerShape: radius.shape,
     color: colors.sidebarForeground,
     backgroundColor: {

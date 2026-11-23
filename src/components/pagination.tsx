@@ -257,7 +257,7 @@ const styles = stylex.create({
       default: "currentColor",
       [FORCED]: { default: "ButtonText", [OFF]: "GrayText" },
     },
-    borderRadius: `min(${radius.base}, calc(${size.paginationStep} / 2))`,
+    borderRadius: `min(${radius.xl}, calc(${size.paginationStep} / 2))`,
     cornerShape: radius.shape,
     color: {
       default: colors.foreground,

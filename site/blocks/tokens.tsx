@@ -129,7 +129,7 @@ const styles = stylex.create({
       ":focus-visible": colors.card,
     },
     borderWidth: 0,
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
     appearance: "none",
     "::placeholder": { color: colors.mutedForeground, opacity: 1 },

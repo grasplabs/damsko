@@ -29,7 +29,7 @@ export const layout = stylex.create({
     padding: space["3"],
     backgroundColor: colors.background,
     color: colors.bodyForeground,
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
   },
   ground: {
@@ -44,7 +44,7 @@ export const layout = stylex.create({
     fontFamily: font.sans,
     fontSize: font.textSm,
     lineHeight: font.textSmLine,
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
     boxShadow: size.borderStrong,
   },

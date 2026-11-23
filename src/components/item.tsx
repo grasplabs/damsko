@@ -219,7 +219,7 @@ const styles = stylex.create({
     width: "100%",
     minWidth: 0,
     margin: 0,
-    borderRadius: radius.row,
+    borderRadius: radius.lg,
     cornerShape: radius.shape,
     color: colors.foreground,
     fontFamily: font.sans,
@@ -352,7 +352,7 @@ const styles = stylex.create({
     justifyContent: "center",
     width: sizes.controlDefault,
     height: sizes.controlDefault,
-    borderRadius: `min(${radius.base}, calc(${sizes.controlDefault} / 2))`,
+    borderRadius: `min(${radius.xl}, calc(${sizes.controlDefault} / 2))`,
     cornerShape: radius.shape,
     backgroundColor: colors.control,
     boxShadow: sizes.borderStrong,
@@ -364,13 +364,13 @@ const styles = stylex.create({
     width: sizes.controlDefault,
     height: sizes.controlDefault,
     overflow: "hidden",
-    borderRadius: `min(${radius.base}, calc(${sizes.controlDefault} / 2))`,
+    borderRadius: `min(${radius.xl}, calc(${sizes.controlDefault} / 2))`,
     cornerShape: radius.shape,
   },
   mediaSm: {
     width: sizes.controlSm,
     height: sizes.controlSm,
-    borderRadius: `min(${radius.base}, calc(${sizes.controlSm} / 2))`,
+    borderRadius: `min(${radius.xl}, calc(${sizes.controlSm} / 2))`,
   },
   title: {
     fontSize: font.textSm,
@@ -573,13 +573,13 @@ const waits = stylex.create({
     width: sizes.controlDefault,
     height: sizes.controlDefault,
     overflow: "hidden",
-    borderRadius: `min(${radius.base}, calc(${sizes.controlDefault} / 2))`,
+    borderRadius: `min(${radius.xl}, calc(${sizes.controlDefault} / 2))`,
     cornerShape: radius.shape,
   },
   mediaSm: {
     width: sizes.controlSm,
     height: sizes.controlSm,
-    borderRadius: `min(${radius.base}, calc(${sizes.controlSm} / 2))`,
+    borderRadius: `min(${radius.xl}, calc(${sizes.controlSm} / 2))`,
   },
   // The bare icon's box, in line with the title.
   icon: {
@@ -588,7 +588,7 @@ const waits = stylex.create({
     width: sizes.iconSm,
     height: sizes.iconSm,
     overflow: "hidden",
-    borderRadius: radius.mark,
+    borderRadius: radius.sm,
     cornerShape: radius.shape,
   },
   // The title's and the description's lines, as long as a short name and a short line.

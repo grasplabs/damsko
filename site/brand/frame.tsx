@@ -72,7 +72,7 @@ const s = stylex.create({
   // button. Each control has its own; there is no tray.
   ground: {
     display: "inline-grid",
-    borderRadius: `min(${radius.base}, calc(${size.controlDefault} / 2))`,
+    borderRadius: `min(${radius.xl}, calc(${size.controlDefault} / 2))`,
     cornerShape: radius.shape,
     backgroundColor: colors.card,
     color: colors.foreground,
@@ -275,7 +275,7 @@ const s = stylex.create({
     padding: 0,
     listStyle: "none",
     backgroundColor: colors.border,
-    borderRadius: radius.mark,
+    borderRadius: radius.sm,
     cornerShape: radius.shape,
     overflow: "hidden",
   },
@@ -283,7 +283,7 @@ const s = stylex.create({
     position: "absolute",
     inset: 0,
     pointerEvents: "none",
-    borderRadius: radius.mark,
+    borderRadius: radius.sm,
     cornerShape: radius.shape,
     boxShadow: `inset 0 0 0 ${size.hairline} ${colors.border}`,
   },

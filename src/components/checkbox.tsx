@@ -66,7 +66,7 @@ const styles = stylex.create({
     width: size.checkboxBox,
     height: size.checkboxBox,
     marginTop: `calc((${font.textSmLine} - ${size.checkboxBox}) / 2)`,
-    borderRadius: radius.mark,
+    borderRadius: radius.sm,
     cornerShape: radius.shape,
   },
   mark: {

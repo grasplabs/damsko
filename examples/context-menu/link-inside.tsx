@@ -13,7 +13,7 @@ const layout = stylex.create({
   link: {
     display: "block",
     padding: space[3],
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     color: colors.foreground,
     fontFamily: font.sans,
     fontSize: font.textSm,

@@ -54,7 +54,7 @@ export const segmentStyles = stylex.create({
     backgroundColor: colors.accent,
     // The one corner in the system's squircle, as the library's segmented controls; a segment
     // nests inside it, the track's corner less its 2px of padding.
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
   },
   segment: {
@@ -97,7 +97,7 @@ export const segmentStyles = stylex.create({
         [media.forcedColors]: "Highlight",
       },
     },
-    borderRadius: `calc(${radius.base} - 2px)`,
+    borderRadius: `calc(${radius.xl} - 2px)`,
     cornerShape: radius.shape,
     cursor: "pointer",
     transform: { default: null, ":active": `scale(${size.buttonPressScale})` },
@@ -159,7 +159,7 @@ const styles = stylex.create({
     borderWidth: 0,
     borderStyle: "none",
     cursor: "pointer",
-    borderRadius: radius.mark,
+    borderRadius: radius.sm,
     cornerShape: radius.shape,
     transitionProperty: "color",
     transitionDuration: duration.hover,
@@ -178,7 +178,7 @@ const styles = stylex.create({
       insetInline: 0,
       bottom: 0,
       height: 2,
-      borderRadius: radius.hairline,
+      borderRadius: radius.xs,
       backgroundColor: {
         default: "transparent",
         ":is([aria-selected=true])": {
@@ -200,7 +200,7 @@ const styles = stylex.create({
     bottom: 0,
     width: 0,
     height: 2,
-    borderRadius: radius.hairline,
+    borderRadius: radius.xs,
     backgroundColor: colors.mint,
     opacity: {
       default: 0,
@@ -289,7 +289,7 @@ const styles = stylex.create({
       [stylex.when.ancestor('[data-ground="night"]', stageMarker)]:
         `light-dark(${siteColors.stageBg}, ${colors.brandNight})`,
     },
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
     boxShadow: size.borderStrong,
     transitionProperty: "background-color",

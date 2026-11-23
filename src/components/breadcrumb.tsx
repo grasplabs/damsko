@@ -234,7 +234,7 @@ const styles = stylex.create({
     textDecoration: "none",
     paddingInline: ROOM,
     marginInline: `calc(-1 * ${ROOM})`,
-    borderRadius: radius.mark,
+    borderRadius: radius.sm,
     cornerShape: radius.shape,
     transitionProperty: "color",
     transitionDuration: motionVars.mark,
@@ -288,7 +288,7 @@ const styles = stylex.create({
     whiteSpace: "nowrap",
     color: colors.foreground,
     fontWeight: font.weightMedium,
-    borderRadius: radius.mark,
+    borderRadius: radius.sm,
     cornerShape: radius.shape,
   },
   // The chevron between steps, quieter than the words. Right to left the icon turns round itself.

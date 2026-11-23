@@ -75,7 +75,7 @@ export const heard = stylex.create({
     minWidth: 0,
     margin: 0,
     padding: space["4"],
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
     backgroundColor: colors.muted,
     boxShadow: size.borderStrong,

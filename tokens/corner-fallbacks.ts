@@ -9,6 +9,6 @@
 // Written into the token CSS by tokens/generate.ts; a name here that is not a token fails it.
 export const cornerFallbacks: Record<string, string> = {
   radius: "9px",
-  "radius-mark": "4px",
-  "sidebar-card-radius": "11px",
+  "radius-sm": "4px",
+  "radius-2xl": "11px",
 };

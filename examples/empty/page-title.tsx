@@ -19,7 +19,7 @@ const layout = stylex.create({
   },
   page: {
     display: "grid",
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
     backgroundColor: colors.card,
     boxShadow: size.borderStrong,

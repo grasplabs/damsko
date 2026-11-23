@@ -64,7 +64,7 @@ export const ruleStyles = stylex.create({
     transitionProperty: "text-decoration-color",
     transitionDuration: duration.hover,
     transitionTimingFunction: duration.ease,
-    borderRadius: radius.hairline,
+    borderRadius: radius.xs,
   },
 });
 

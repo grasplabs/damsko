@@ -52,7 +52,7 @@ const styles = stylex.create({
   step: { display: "grid", justifyItems: "center", rowGap: space["2"] },
   block: {
     backgroundColor: colors.mint,
-    borderRadius: radius.mark,
+    borderRadius: radius.sm,
     cornerShape: radius.shape,
   },
   small: { borderRadius: 0 },

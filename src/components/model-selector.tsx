@@ -331,7 +331,7 @@ const StarFilledIcon: IconData = StarIcon.map(([tag, attrs]) => [
 // One step for the makers and the rows (28px, 44 on a touch screen), so each logo stands level with
 // a row; the corner nests in the panel's, capped at half the step.
 const STEP = size.controlXs;
-const STEP_CORNER = `min(${radius.base}, calc(${size.controlXs} / 2))`;
+const STEP_CORNER = `min(${radius.xl}, calc(${size.controlXs} / 2))`;
 const COARSE = media.pointerCoarse;
 const FORCED = media.forcedColors;
 const HOVER = media.hover;

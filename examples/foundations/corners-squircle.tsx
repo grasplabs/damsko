@@ -20,7 +20,7 @@ import { useState } from "react";
 
 // Six times the one corner: the shape of a squircle does not change with its size, so this is the
 // 20px corner of every card, magnified.
-const BIG = `calc(${radius.base} * 6)`;
+const BIG = `calc(${radius.xl} * 6)`;
 
 const styles = stylex.create({
   stage: {
@@ -33,7 +33,7 @@ const styles = stylex.create({
   tile: {
     position: "relative",
     width: "100%",
-    maxWidth: `calc(${radius.base} * 20)`,
+    maxWidth: `calc(${radius.xl} * 20)`,
     aspectRatio: "3 / 2",
   },
   shape: {

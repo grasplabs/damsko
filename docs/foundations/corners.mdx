@@ -35,22 +35,42 @@ description: One corner for almost everything, a squircle, so a curve meets its 
 
 </AllTokens>
 
-## Rows
+## What takes which step
 
-A row takes the row corner, `radius-row`: the one corner less the room a container keeps round its rows (20px less 4px, so 16px), capped at half the row's height, in the squircle. A menu or list item, an Item, a tree or sidebar row and a trigger that runs the width all take it, so a row reads the same wherever it stands. What holds rows nests round them: a floating sidebar takes a row's corner plus the 8px it keeps round its rows (`sidebar-card-radius`, 24px), in the squircle. The page card beside an inset sidebar holds no sidebar rows, so the rule does not reach it: it is the app's main surface and keeps its own plain 12px corner (`sidebar-inset-radius`). A trigger inside a card is still a row and takes the row corner, in a Tool's card as on a Sources line.
+One scale, named by size as shadcn names it. `radius` is the base, 20px; `radius-lg`, `radius-xl` and `radius-2xl` are made from it, so they follow it, and the steps under them are fixed. A part takes a step, never the base, and never a radius of its own.
 
-## Tiles and thin things
+| Step | Value | What takes it |
+| --- | --- | --- |
+| `radius-xs` | 2px | A thing too thin for `radius-sm`: an 8px swatch, a highlight's edge. |
+| `radius-sm` | 6px | A mark under 24px tall: a key, inline code, the box of a checkbox, a square tile at 24px. |
+| `radius-md` | 12px | The page's card beside an inset sidebar: the app's main surface, a plain round corner. It holds no sidebar rows, so it does not nest round them. |
+| `radius-lg` | the base less 4px, so 16px | A row: a menu or list item, an Item, a tree or sidebar row, a trigger that runs the width, in a card too. A container keeps 4px round its rows, so a row's corner is the container's less that room. |
+| `radius-xl` | the base, 20px | Controls and containers: buttons, fields, cards, menus, panels, a square tile. |
+| `radius-2xl` | the base plus 4px, so 24px | A surface that nests rows 8px in: a floating sidebar, a row's 16px plus the 8px it keeps round its rows. |
+| `radius-full` | 999px | A pill: a chip, a badge, the track of a switch, a slider or a progress bar. |
 
-A square tile takes the one corner capped at half its side, and the mark corner at 24px: Icon tile and Brand icon alike. A thing too thin for the mark corner (an 8px swatch, a highlight's edge) takes `radius-hairline`.
+Every step is capped at half the height of what takes it, so a small control becomes a pill and a row never rounds past its own ends.
+
+`radius-circle` is 50%, for an avatar or a dot. It stands beside `radius-full` because a percentage follows its box and a length does not: half of each side, so it grows with the box and a dot can turn into a square on the way to an error.
+
+The Prompt input's card keeps its own token, `prompt-input-radius`: 24px, a button's corner at its size (16px) plus the footer's 8px. It is not `radius-2xl` because the bands above and under the card tuck behind it by the same length, and because it stays 24px in a browser that draws no squircle, where the scale's corners are smaller.
+
+## Nesting
+
+An outer corner is the inner corner plus the room between them, and an inner corner is the outer one less that room. A row in a menu is 20px less 4px; a floating sidebar is 16px plus 8px; a segment is its track's corner less the track's padding.
+
+## The shape
+
+`radius-shape` is the system's corner shape, a squircle: every corner on the scale writes it as `corner-shape` after its radius, so the curve eases into the edge. A pill and a circle leave it out: they are round by their radius alone, and the squircle would draw a rounded rectangle.
 
 ## Rules
 
 <Rules
   always={[
-    "Write `corner-shape` after `corner`, so the squircle takes the radius.",
-    "Give a mark under 24px tall the mark corner, in the squircle like every other corner.",
-    "Use the pill for a chip, a badge or the track of a switch, a slider or a progress bar, and the circle for an avatar or a dot.",
-    "Give a segmented control the one corner on its track, and each segment the track's corner less its padding.",
+    "Write `corner-shape` after the radius, so the squircle takes it.",
+    "Give a mark under 24px tall `radius-sm`, in the squircle like every other corner.",
+    "Use `radius-full` for a chip, a badge or the track of a switch, a slider or a progress bar, and `radius-circle` for an avatar or a dot.",
+    "Give a segmented control `radius-xl` on its track, and each segment the track's corner less its padding.",
   ]}
   never={["A radius of your own.", "Square corners on a control or a card."]}
 />

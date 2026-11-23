@@ -117,7 +117,7 @@ const HOVER = media.hover;
 const COARSE = media.pointerCoarse;
 
 // A segment's corner nests inside the track's: the one corner less the track's padding.
-const SEGMENT_CORNER = `calc(${radius.base} - ${space.toggleTrackPadding})`;
+const SEGMENT_CORNER = `calc(${radius.xl} - ${space.toggleTrackPadding})`;
 
 const styles = stylex.create({
   root: {
@@ -157,12 +157,12 @@ const styles = stylex.create({
   iconSm: {
     width: size.controlXs,
     height: size.controlXs,
-    borderRadius: `min(${radius.base}, calc(${size.controlXs} / 2))`,
+    borderRadius: `min(${radius.xl}, calc(${size.controlXs} / 2))`,
   },
   iconDefault: {
     width: size.controlSm,
     height: size.controlSm,
-    borderRadius: `min(${radius.base}, calc(${size.controlSm} / 2))`,
+    borderRadius: `min(${radius.xl}, calc(${size.controlSm} / 2))`,
   },
   // A finger's 44px, unseen, on a touch screen, from the button's own size.
   target: {
@@ -294,7 +294,7 @@ const styles = stylex.create({
     paddingBlockEnd: space[2],
     borderWidth: 0,
     backgroundColor: "transparent",
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
     textAlign: "start",
     fontFamily: font.sans,
@@ -316,7 +316,7 @@ const styles = stylex.create({
   ring: {
     position: "absolute",
     inset: space[1],
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
     boxShadow: `0 0 0 2px ${colors.foreground}`,
   },
@@ -331,7 +331,7 @@ const styles = stylex.create({
     aspectRatio: "16 / 10",
     overflow: "hidden",
     backgroundColor: colors.background,
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
     boxShadow: size.borderStrong,
     borderWidth: { default: 0, [FORCED]: 1 },
@@ -381,7 +381,7 @@ const styles = stylex.create({
     gap: space[1],
     padding: space[2],
     backgroundColor: colors.card,
-    borderRadius: radius.mark,
+    borderRadius: radius.sm,
     cornerShape: radius.shape,
     boxShadow: shadow.sm,
   },

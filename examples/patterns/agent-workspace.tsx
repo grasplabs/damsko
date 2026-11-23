@@ -133,7 +133,7 @@ const layout = stylex.create({
     minHeight: "36rem",
     maxHeight: "56rem",
     overflow: "clip",
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
     boxShadow: size.borderStrong,
   },

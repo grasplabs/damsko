@@ -306,7 +306,7 @@ const styles = stylex.create({
   // The area: as it is, with the shared focus ring when the keyboard reaches it.
   area: {
     display: "block",
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
     WebkitTouchCallout: "none",
   },

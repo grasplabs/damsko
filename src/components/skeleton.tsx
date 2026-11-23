@@ -313,7 +313,7 @@ const styles = stylex.create({
     width: "100%",
     flexShrink: 1,
     backgroundClip: "content-box",
-    borderRadius: radius.mark,
+    borderRadius: radius.sm,
     cornerShape: radius.shape,
   },
   sm: {
@@ -334,7 +334,7 @@ const styles = stylex.create({
     width: "100%",
     flexShrink: 1,
     height: size.controlDefault,
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
   },
   // An avatar: a circle as large as a default control. It keeps its size in a row.

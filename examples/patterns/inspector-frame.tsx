@@ -80,7 +80,7 @@ const layout = stylex.create({
     height: `calc(100dvh - 2 * ${space["6"]})`,
     minHeight: 560,
     overflow: "clip",
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
     boxShadow: size.borderStrong,
     backgroundColor: colors.background,
@@ -95,7 +95,7 @@ const layout = stylex.create({
   // The plain main area: a ground where the object's own page would be.
   plain: {
     minHeight: 320,
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
     backgroundColor: colors.muted,
   },

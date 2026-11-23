@@ -14,7 +14,7 @@ const layout = stylex.create({
     boxSizing: "border-box",
     paddingBlock: space[1],
     paddingInline: space[2],
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
     backgroundColor: colors.card,
     boxShadow: `inset 0 0 0 ${size.hairline} ${colors.border}`,

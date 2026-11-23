@@ -42,7 +42,7 @@ const styles = stylex.create({
   frame: {
     position: "relative",
     overflow: "clip",
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
     boxShadow: size.borderStrong,
     isolation: "isolate",
@@ -73,7 +73,7 @@ const styles = stylex.create({
     color: colors.foreground,
     cursor: "pointer",
     listStyle: "none",
-    borderRadius: radius.mark,
+    borderRadius: radius.sm,
     cornerShape: radius.shape,
     "::-webkit-details-marker": { display: "none" },
   },

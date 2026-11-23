@@ -335,7 +335,7 @@ const styles = stylex.create({
   ring: {
     position: "absolute",
     inset: 0,
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
     pointerEvents: "none",
     outlineWidth: {

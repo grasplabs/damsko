@@ -15,7 +15,7 @@ const layout = stylex.create({
     width: "100%",
     maxWidth: `calc(${size.popupWidth} * 1.8)`,
     height: `calc(${size.popupHeight} * 0.9)`,
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
     boxShadow: size.borderStrong,
     overflow: "hidden",

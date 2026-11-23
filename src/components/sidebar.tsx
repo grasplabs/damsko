@@ -248,7 +248,7 @@ const styles = stylex.create({
     lineHeight: font.textSmLine,
   },
   floating: {
-    borderRadius: radius.sidebarCardRadius,
+    borderRadius: radius["2xl"],
     cornerShape: radius.shape,
     borderWidth: size.hairline,
     borderStyle: "solid",
@@ -320,7 +320,7 @@ const styles = stylex.create({
       default: null,
       [stylex.when.anySibling('[data-variant="inset"]', sidebarMarker)]: {
         default: null,
-        [media.lg]: radius.sidebarInsetRadius,
+        [media.lg]: radius.md,
       },
     },
     // The line is a layer over what the card holds, so no bar's ground inside covers it.
@@ -410,7 +410,7 @@ const styles = stylex.create({
     paddingBlockEnd: space["1"],
     paddingInline: size.sidebarRowInline,
     borderWidth: 0,
-    borderRadius: radius.row,
+    borderRadius: radius.lg,
     cornerShape: radius.shape,
     backgroundColor: "transparent",
     // Drawn as a button or a link (`asChild`), it answers the pointer as a row's words do.
@@ -469,7 +469,7 @@ const styles = stylex.create({
     borderWidth: { default: 0, [FORCED]: size.hairline },
     borderStyle: "solid",
     borderColor: "ButtonText",
-    borderRadius: radius.row,
+    borderRadius: radius.lg,
     cornerShape: radius.shape,
     color: {
       default: colors.sidebarSecondaryForeground,
@@ -578,7 +578,7 @@ const styles = stylex.create({
     borderWidth: { default: 0, [FORCED]: size.hairline },
     borderStyle: "solid",
     borderColor: "transparent",
-    borderRadius: radius.row,
+    borderRadius: radius.lg,
     cornerShape: radius.shape,
     overflow: "hidden",
     color: {
@@ -634,7 +634,7 @@ const styles = stylex.create({
   },
   // A large row (a person, a workspace), in the words read first; it folds to its picture alone.
   lg: {
-    borderRadius: radius.row,
+    borderRadius: radius.lg,
     color: colors.sidebarForeground,
     height: {
       default: size.sidebarMenuButtonHeightLg,
@@ -746,7 +746,7 @@ const styles = stylex.create({
     width: ICON,
     height: ICON,
     overflow: "hidden",
-    borderRadius: radius.mark,
+    borderRadius: radius.sm,
     cornerShape: radius.shape,
   },
 

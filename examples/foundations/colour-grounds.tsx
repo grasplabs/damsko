@@ -112,7 +112,7 @@ const styles = stylex.create({
     rowGap: space["3"],
     minWidth: 0,
     padding: space["5"],
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
     backgroundColor: colors.card,
     boxShadow: shadow.sm,

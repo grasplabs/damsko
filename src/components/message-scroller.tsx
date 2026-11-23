@@ -368,7 +368,7 @@ const styles = stylex.create({
   jumpButton: {
     display: "inline-flex",
     pointerEvents: "auto",
-    borderRadius: `min(${radius.base}, calc(${size.controlSm} / 2))`,
+    borderRadius: `min(${radius.xl}, calc(${size.controlSm} / 2))`,
     cornerShape: radius.shape,
     backgroundColor: colors.card,
     boxShadow: shadow.sm,

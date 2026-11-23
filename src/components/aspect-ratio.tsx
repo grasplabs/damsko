@@ -38,7 +38,7 @@ const styles = stylex.create({
     overflow: "hidden",
   }),
   rounded: {
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
   },
 });

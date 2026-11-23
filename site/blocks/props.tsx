@@ -19,7 +19,7 @@ const styles = stylex.create({
   },
   box: {
     overflow: "clip",
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
     boxShadow: `inset 0 0 0 1px ${colors.border}`,
   },

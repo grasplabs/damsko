@@ -135,7 +135,7 @@ const styles = stylex.create({
     paddingBlock: space["3"],
     paddingInline: space["4"],
     border: "none",
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
     color: colors.foreground,
     fontFamily: font.sans,

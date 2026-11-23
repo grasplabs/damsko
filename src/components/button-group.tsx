@@ -99,10 +99,10 @@ const styles = stylex.create({
     backgroundColor: colors.control,
     boxShadow: shadow.inputShadow,
     borderRadius: {
-      default: `min(${radius.base}, calc(${size.controlDefault} / 2))`,
-      [sized("xs icon-xs")]: `min(${radius.base}, calc(${size.controlXs} / 2))`,
-      [sized("sm icon-sm")]: `min(${radius.base}, calc(${size.controlSm} / 2))`,
-      [sized("lg icon-lg")]: `min(${radius.base}, calc(${size.controlLg} / 2))`,
+      default: `min(${radius.xl}, calc(${size.controlDefault} / 2))`,
+      [sized("xs icon-xs")]: `min(${radius.xl}, calc(${size.controlXs} / 2))`,
+      [sized("sm icon-sm")]: `min(${radius.xl}, calc(${size.controlSm} / 2))`,
+      [sized("lg icon-lg")]: `min(${radius.xl}, calc(${size.controlLg} / 2))`,
     },
     cornerShape: radius.shape,
     "::after": {

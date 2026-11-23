@@ -113,7 +113,7 @@ const styles = stylex.create({
     borderStyle: "solid",
     borderColor: "currentColor",
     // A default Input's corner, so a field and a textarea in one form are cut the same.
-    borderRadius: `min(${radius.base}, calc(${size.controlDefault} / 2))`,
+    borderRadius: `min(${radius.xl}, calc(${size.controlDefault} / 2))`,
     cornerShape: radius.shape,
     backgroundColor: colors.inputBg,
     boxShadow: {

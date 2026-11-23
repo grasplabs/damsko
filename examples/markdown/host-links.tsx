@@ -46,7 +46,7 @@ const styles = stylex.create({
   asking: {
     padding: 0,
     borderWidth: 0,
-    borderRadius: radius.mark,
+    borderRadius: radius.sm,
     cornerShape: radius.shape,
     backgroundColor: "transparent",
     font: "inherit",
@@ -62,7 +62,7 @@ const styles = stylex.create({
     marginInlineStart: space["1"],
     paddingInline: space["1"],
     borderWidth: 0,
-    borderRadius: radius.mark,
+    borderRadius: radius.sm,
     cornerShape: radius.shape,
     backgroundColor: colors.muted,
     color: colors.foreground,

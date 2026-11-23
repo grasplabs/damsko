@@ -226,7 +226,7 @@ const styles = stylex.create({
   },
   // Lit while the pointer is on the citation, or focus is on its chip.
   text: {
-    borderRadius: radius.hairline,
+    borderRadius: radius.xs,
     backgroundColor: {
       default: "transparent",
       [stylex.when.ancestor(":focus-within")]: colors.accent,
