@@ -27,15 +27,7 @@ import type { ComponentProps, ReactNode, Ref } from "react";
 
 import { ChevronDownIcon, Icon } from "../lib/icons";
 import { focusField, inputStyles } from "../lib/styles";
-import {
-  colors,
-  duration,
-  font,
-  media,
-  radius,
-  size,
-  space,
-} from "../lib/tokens.stylex";
+import { colors, size, space } from "../lib/tokens.stylex";
 import { assignRef, isInvalid, warnUnnamed } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { iconVars } from "../lib/vars.stylex";
@@ -119,49 +111,18 @@ export interface NativeSelectOptGroupProps extends Omit<
 
 // ---- The look --------------------------------------------------------------------------------------
 
-const FORCED = media.forcedColors;
-const TYPING = media.maxSmOrCoarse;
 // The placeholder chosen: the first option, with the value "".
 const PLACEHOLDER = ':has(> option[value=""]:checked)';
 
 const styles = stylex.create({
-  // The box round the select, as wide as the column it stands in: it places the chevron.
-  box: {
-    position: "relative",
-    display: "flex",
-    alignItems: "stretch",
-    boxSizing: "border-box",
-    width: "100%",
-    minWidth: 0,
-    maxWidth: "100%",
-  },
-  // Closed: Select's trigger, as Input draws a field (lib/styles' inputStyles for the height,
-  // corner, hover, focus edge, wrong and out of use).
+  // Closed: Select's trigger, as Input draws a field (lib/styles' inputStyles: the box, the
+  // control's base, the height, corner, hover, focus edge, wrong and out of use).
   select: {
     flexGrow: 1,
-    boxSizing: "border-box",
-    width: "100%",
-    minWidth: 0,
-    margin: 0,
-    appearance: "none",
-    // No border: the edge is a hairline drawn inside. A real one in forced colours, where the
-    // shadow is dropped.
-    borderWidth: { default: 0, [FORCED]: 1 },
-    borderStyle: "solid",
-    borderColor: "currentColor",
-    cornerShape: radius.shape,
-    backgroundColor: colors.inputBg,
     color: {
       default: colors.foreground,
       [PLACEHOLDER]: colors.mutedForeground,
     },
-    fontFamily: font.sans,
-    // 16px on a phone or a touch screen, or Safari zooms the page in when the select takes focus.
-    fontSize: { default: font.textSm, [TYPING]: size.inputTextTouch },
-    lineHeight: font.textSmLine,
-    fontWeight: font.weightNormal,
-    letterSpacing: "normal",
-    textAlign: "start",
     // The chosen words stay on one line and end in an ellipsis before the chevron.
     whiteSpace: "nowrap",
     overflow: "hidden",
@@ -172,15 +133,13 @@ const styles = stylex.create({
     cursor: "pointer",
     WebkitTapHighlightColor: "transparent",
     touchAction: "manipulation",
-    transitionProperty: "box-shadow, background-color",
-    transitionDuration: duration.hover,
-    transitionTimingFunction: duration.ease,
   },
   // The list is the system's: its rows in the ink on the raised ground, in light and dark (a
-  // computer that draws the list from the page's colours), whatever the closed control shows.
+  // computer that draws the list from the page's colours), whatever the closed control shows. An
+  // option out of use is not coloured, so it keeps the browser's own grey.
   option: {
     backgroundColor: colors.popover,
-    color: colors.foreground,
+    color: { default: null, ":enabled": colors.foreground },
   },
   // Select's chevron: at the end, space-2 in, in muted. It lets presses through to the select.
   chevron: {
@@ -196,6 +155,39 @@ const styles = stylex.create({
   },
   chevronDisabled: { opacity: size.opacityDisabled },
 });
+
+const targetStyles = {
+  sm: inputStyles.targetSm,
+  default: inputStyles.targetDefault,
+  lg: inputStyles.targetLg,
+} as const;
+
+/**
+ * The finger's 44px round the select on a touch screen (inputStyles.target) opens it as a press on
+ * the select does: the system's list where the browser can open it from code, focus elsewhere,
+ * which on a phone brings the same wheel. A pointer's extension of a control the keys reach already.
+ */
+const opener =
+  (select: () => HTMLSelectElement | null) =>
+  (target: HTMLSpanElement | null) => {
+    const open = () => {
+      const control = select();
+      if (control === null || control.disabled) {
+        return;
+      }
+      control.focus();
+      try {
+        control.showPicker();
+      } catch {
+        // Refused (no list from code here, or no press behind it): focused, as a tap leaves it.
+      }
+    };
+    const listening = new AbortController();
+    target?.addEventListener("click", open, { signal: listening.signal });
+    return () => {
+      listening.abort();
+    };
+  };
 
 const sizeStyles = {
   sm: inputStyles.sm,
@@ -231,8 +223,13 @@ export const NativeSelect = ({
     <div
       ref={attach}
       data-slot="native-select-wrapper"
-      {...stylex.props(styles.box, style)}
+      {...stylex.props(inputStyles.box, style)}
     >
+      <span
+        aria-hidden="true"
+        ref={opener(() => own.current)}
+        {...stylex.props(inputStyles.target, targetStyles[scale])}
+      />
       <FieldControl
         // What the Field merges with its own: its id wins, its description joins the caller's.
         id={id}
@@ -250,6 +247,7 @@ export const NativeSelect = ({
                 {...mergeProps(props, rest)}
                 data-slot="native-select"
                 {...stylex.props(
+                  inputStyles.control,
                   styles.select,
                   sizeStyles[scale],
                   !off && inputStyles.enabled,

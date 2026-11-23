@@ -3,6 +3,10 @@ import type { Locator } from "@playwright/test";
 
 import { openExample } from "./example.ts";
 
+// WebKit on a Mac moves Tab only between fields unless Option is held.
+const tab = (browserName: string) =>
+  browserName === "webkit" ? "Alt+Tab" : "Tab";
+
 /** What a field's box looks like: the properties Input, Select and Native select share. */
 const look = async (control: Locator) =>
   await control.evaluate((element) => {
@@ -45,6 +49,7 @@ test("closed, it is Input's and Select's box: the same height, corner, fill, edg
 });
 
 test("focus from the keys is Input's edge and halo, and a pointer's hover deepens the hairline as Input's does", async ({
+  browserName,
   page,
 }) => {
   await openExample(page, "native-select", "fields");
@@ -58,13 +63,13 @@ test("focus from the keys is Input's edge and halo, and a pointer's hover deepen
 
   await page.mouse.move(0, 0);
   const inputRest = await edge(input);
-  await page.keyboard.press("Tab");
+  await page.keyboard.press(tab(browserName));
   await expect(input).toBeFocused();
   const inputFocus = await edge(input);
   expect(inputFocus).not.toBe(inputRest);
   // Tab past the Select's trigger to the native select.
-  await page.keyboard.press("Tab");
-  await page.keyboard.press("Tab");
+  await page.keyboard.press(tab(browserName));
+  await page.keyboard.press(tab(browserName));
   await expect(native).toBeFocused();
   expect(await edge(native)).toBe(inputFocus);
 });
@@ -162,7 +167,48 @@ test("an option in a group is chosen as any other, and an option out of use cann
   await openExample(page, "native-select", "groups");
   const control = page.getByRole("combobox", { name: "Time zone" });
   await expect(control).toHaveValue("Amsterdam");
-  await expect(page.getByRole("option", { name: "Lisbon" })).toBeDisabled();
+  const lisbon = page.getByRole("option", { name: "Lisbon" });
+  await expect(lisbon).toBeDisabled();
+  // An option out of use is drawn as the browser draws one (Firefox's grey): the same colour as a
+  // bare option out of use put beside it.
+  expect(
+    await lisbon.evaluate((element) => {
+      const bare = document.createElement("option");
+      bare.disabled = true;
+      element.after(bare);
+      const same =
+        getComputedStyle(bare).color === getComputedStyle(element).color;
+      bare.remove();
+      return same;
+    })
+  ).toBe(true);
   await control.selectOption("Tokyo");
   await expect(control).toHaveValue("Tokyo");
+});
+
+test.describe("on a touch screen", () => {
+  test.use({
+    viewport: { width: 390, height: 844 },
+    hasTouch: true,
+    isMobile: true,
+  });
+
+  test("a finger just past its edge reaches it, as Input's 44px target does, at the sizes under 44px", async ({
+    page,
+  }) => {
+    await openExample(page, "native-select", "sizes");
+    for (const name of ["Sort rows by", "Sort projects by"]) {
+      const control = page.getByRole("combobox", { name });
+      // oxlint-disable-next-line no-await-in-loop -- one control after the other
+      const box = await control.boundingBox();
+      // Three pixels under its bottom edge, outside what it draws.
+      // oxlint-disable-next-line no-await-in-loop -- one control after the other
+      await page.touchscreen.tap(
+        (box?.x ?? 0) + (box?.width ?? 0) / 2,
+        (box?.y ?? 0) + (box?.height ?? 0) + 3
+      );
+      // oxlint-disable-next-line no-await-in-loop -- one control after the other
+      await expect(control).toBeFocused();
+    }
+  });
 });
