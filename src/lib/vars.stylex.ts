@@ -90,6 +90,13 @@ export const listMarker = stylex.defineMarker();
 export const sidePanelCardMarker = stylex.defineMarker();
 
 /**
+ * The marker of a one-row prompt input's card, so a model chip in it answers what the row decides
+ * about its room (`data-model-chip`): `mark`, it shows only its maker's mark; `hidden`, it is away
+ * until something is typed (prompt-input.tsx, `useRowFit`).
+ */
+export const promptInputRowMarker = stylex.defineMarker();
+
+/**
  * The room a menu's words keep at their start for an icon (`menuStyles.inset`). Each menu panel
  * sets it for its own rows (`menuStyles.panel`): an icon and its gap when one of them has an icon,
  * none when none has. A submenu stands inside its parent's panel and sets its own, so the parent's

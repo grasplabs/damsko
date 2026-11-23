@@ -152,7 +152,12 @@ import {
   nothing,
 } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
-import { iconVars, pixel, ringInsetMarker } from "../lib/vars.stylex";
+import {
+  iconVars,
+  pixel,
+  promptInputRowMarker,
+  ringInsetMarker,
+} from "../lib/vars.stylex";
 import { Alert, AlertAction, AlertTitle } from "./alert";
 import {
   Attachment,
@@ -2189,78 +2194,167 @@ const useTypedQuiet = (
 // oxlint-disable-next-line unicorn/prefer-number-coercion -- a length reads "8px", which Number() makes NaN
 const px = (value: string) => Number.parseFloat(value) || 0;
 
+/** A length token ("var(--damsko-…)", set in rem or px) as the browser resolves it on `element`, in px. */
+const tokenPx = (element: Element, token: string) => {
+  const value = getComputedStyle(element)
+    .getPropertyValue(token.slice("var(".length, -1))
+    .trim();
+  return value.endsWith("rem")
+    ? px(value) * px(getComputedStyle(document.documentElement).fontSize)
+    : px(value);
+};
+
+/** What the one row decides about its room (`rowFit`). */
+interface RowFit {
+  /** The text has the card's whole width, the tools and Submit under it. */
+  tall: boolean;
+  /** The model chips (ModelSelector) among the tools: whole, their maker's mark alone, or away. */
+  chip: "whole" | "mark" | "hidden";
+}
+
+/** What the row keeps between reads: the room the chips need to come back, and to unfold. */
+interface RowRoom {
+  /** The chips' width and the gap each keeps, while they show. */
+  chips: number;
+  /** The sides' width while the chips show whole. */
+  whole: number;
+}
+
+/** A model chip's width in its row and the gap it keeps there: what it takes while it shows. */
+const chipRoom = (chip: HTMLElement) => {
+  const drawn = [...chip.children].filter(
+    (part) =>
+      part.getClientRects().length > 0 &&
+      !["absolute", "fixed"].includes(getComputedStyle(part).position)
+  );
+  const width = drawn
+    .map((part) => part.getBoundingClientRect().width)
+    .reduce((sum, each) => sum + each, 0);
+  return drawn.length === 0
+    ? 0
+    : width + px(getComputedStyle(chip.parentElement ?? chip).columnGap);
+};
+
 /**
- * Whether the one row's words have outgrown their line: they take two lines where they stand, or
- * one that is wider than the room between the tools and Submit, or that room is under the text's
- * least width. The text then takes the card's whole width and the tools go under it. Every width
- * is read from the card and its two sides, which stand alike in both forms, so the answer never
- * depends on the form it changes and nothing flickers at the edge.
+ * How the one row fits its room, as the original's composer decides it. The text never gives:
+ * first a model chip among the tools folds to its maker's mark, where whole it would leave the
+ * text under its least width (`prompt-input-field-min`; at rest the placeholder's,
+ * `prompt-input-placeholder-min`), and on a phone's row (under `prompt-input-chip-fold`) always.
+ * Then, at rest, the chip folds away while even its mark leaves the placeholder under its least,
+ * and comes back once something is typed; only where nothing is left to fold is the placeholder
+ * cut. With words, they outgrow their line when they take two lines, or one wider than the room
+ * between the tools and Submit, or that room is under the text's least: the text then takes the
+ * card's whole width and the tools go under it. Every width is read from the card and its two
+ * sides, which stand alike in both forms, so the answer never depends on the form it changes and
+ * nothing flickers at the edge. A change of the chip is drawn before the next answer is read.
  */
-const outgrown = (card: HTMLElement) => {
+const rowFit = (
+  card: HTMLElement,
+  was: RowFit,
+  room: RowRoom
+): RowFit | null => {
   const editor = card.querySelector<HTMLElement>(
     '[data-slot="prompt-input-textarea"]'
   );
   if (editor === null) {
     return null;
   }
-  if (editor.dataset.empty !== undefined) {
-    return false;
-  }
   const look = getComputedStyle(card);
-  const own = getComputedStyle(editor);
   // Every group of tools, and Submit where it stands apart from them.
   const sides = [
     ...card.querySelectorAll<HTMLElement>(
       '[data-slot="prompt-input-tools"], [data-slot="prompt-input-end"]'
     ),
-  ]
-    .filter(
-      (side) =>
-        side.parentElement?.closest('[data-slot="prompt-input-tools"]') === null
-    )
+  ].filter(
+    (side) =>
+      side.parentElement?.closest('[data-slot="prompt-input-tools"]') === null
+  );
+  const sidesWidth = sides
     .map((side) => side.getBoundingClientRect().width)
     .reduce((sum, width) => sum + width, 0);
-  const room =
-    card.clientWidth -
-    px(look.paddingInlineStart) -
-    px(look.paddingInlineEnd) -
-    2 * px(look.columnGap) -
-    sides;
+  const chips = sides.flatMap((side) => [
+    ...side.querySelectorAll<HTMLElement>('[data-slot="model-selector"]'),
+  ]);
+  const hidden = was.chip === "hidden";
+  if (!hidden) {
+    room.chips = chips.map(chipRoom).reduce((sum, width) => sum + width, 0);
+  }
+  // The sides with the chips in sight, as they stand now: what the text has beside them.
+  const shown = sidesWidth + (hidden ? room.chips : 0);
+  // A chip's words (ModelSelectorName in its trigger): what folds.
+  const words = chips
+    .map((chip) => chip.querySelector("[data-in-chip]"))
+    .filter((name) => name !== null);
+  const whole = words.some((name) => name.getClientRects().length > 0);
+  if (whole) {
+    room.whole = shown;
+  }
+  const inner =
+    card.clientWidth - px(look.paddingInlineStart) - px(look.paddingInlineEnd);
+  const beside = inner - 2 * px(look.columnGap);
+  const resting = editor.dataset.empty !== undefined;
+  const least = resting
+    ? tokenPx(card, size.promptInputPlaceholderMin)
+    : px(getComputedStyle(editor.parentElement ?? editor).minWidth);
+  const folds =
+    words.length > 0 &&
+    (inner < tokenPx(card, size.promptInputChipFold) ||
+      beside - Math.max(room.whole, shown) < least);
+  const folded = folds ? "mark" : "whole";
+  if (!hidden && folded !== was.chip) {
+    // The sides change width with the fold: the rest is read once it is drawn.
+    return { tall: was.tall, chip: folded };
+  }
+  // At rest, after the fold, the chip goes while even as it stands the placeholder is under its least.
+  const chip =
+    resting && chips.length > 0 && beside - shown < least ? "hidden" : folded;
+  if (chip !== was.chip) {
+    return { tall: was.tall, chip };
+  }
+  if (resting) {
+    return { tall: false, chip };
+  }
+  const text = beside - sidesWidth;
+  const own = getComputedStyle(editor);
   const lines =
     (editor.scrollHeight - px(own.paddingBlockStart)) / px(own.lineHeight);
-  const least = px(getComputedStyle(editor.parentElement ?? editor).minWidth);
-  if (lines > 1.5 || room < least) {
-    return true;
+  if (lines > 1.5 || text < least) {
+    return { tall: true, chip };
   }
-  const words = document.createRange();
-  words.selectNodeContents(editor);
+  const typed = document.createRange();
+  typed.selectNodeContents(editor);
   // A caret's width to spare, so the last letter is never under Submit.
-  return (
-    words.getBoundingClientRect().width + 2 >
-    room - px(own.paddingInlineStart) - px(own.paddingInlineEnd)
-  );
+  return {
+    tall:
+      typed.getBoundingClientRect().width + 2 >
+      text - px(own.paddingInlineStart) - px(own.paddingInlineEnd),
+    chip,
+  };
 };
 
+const ROW_AT_REST: RowFit = { tall: false, chip: "whole" };
+
 /**
- * In one row, whether the text has the card's whole width (`outgrown`): read as the card comes,
- * and again, before paint, as anything in it changes (the words, a tool that comes or goes) or it
+ * In one row, how it fits its room (`rowFit`): read as the card comes, and again, before paint,
+ * as anything in it changes (the words, a tool that comes or goes, the chip folding) or it
  * changes width. While something stands in the text's place the answer stays as it was.
  */
-const useRowTall = (
+const useRowFit = (
   on: boolean,
   card: { current: HTMLElement | null },
   dictating: boolean
-) => {
-  const [tall, setTall] = useState(false);
+): { tall: boolean; chip: "mark" | "hidden" | undefined } => {
+  const [fit, setFit] = useState(ROW_AT_REST);
+  const room = useRef<RowRoom>({ chips: 0, whole: 0 });
   useLayoutEffect(() => {
     const box = card.current;
     if (!on || box === null) {
       return nothing;
     }
     const read = () => {
-      const next = outgrown(box);
-      if (next !== null) {
-        setTall(next);
+      const next = rowFit(box, fit, room.current);
+      if (next !== null && (next.tall !== fit.tall || next.chip !== fit.chip)) {
+        setFit(next);
       }
     };
     read();
@@ -2276,9 +2370,16 @@ const useRowTall = (
       resized.disconnect();
       changed.disconnect();
     };
-  }, [on, card]);
-  // A dictation's bar is the foot row, so the words stand over it.
-  return on && (tall || dictating);
+  }, [on, card, fit]);
+  if (!on) {
+    return { tall: false, chip: undefined };
+  }
+  // A dictation's bar is the foot row, so the words stand over it. A chip shown whole is said by
+  // no mark on the card.
+  return {
+    tall: fit.tall || dictating,
+    chip: fit.chip === "whole" ? undefined : fit.chip,
+  };
 };
 
 /**
@@ -2373,6 +2474,8 @@ const cardLook = ({
   styles.card,
   glass && styles.glass,
   compact && styles.compact,
+  // A model chip in one row answers what the row decides about its room (`useRowFit`).
+  compact && promptInputRowMarker,
   tall && styles.compactTall,
   dragging && styles.dragging,
   over && styles.over,
@@ -2828,7 +2931,8 @@ export const PromptInput = ({
   const empty = emptyOf(current);
   const still = disabled || loading;
   const takeFiles = still ? undefined : attachments.value.add;
-  const tall = useRowTall(compact && !loading, card, dictating);
+  const row = useRowFit(compact && !loading, card, dictating);
+  const { tall } = row;
   useTypedQuiet(card, dictating, current);
   const success = useSuccessCount(status, words.succeeded);
   const drags = useFileDrags(form, takeFiles, globalDrop);
@@ -3093,6 +3197,7 @@ export const PromptInput = ({
                   // Still while the page loads: nothing in it is focused or read out.
                   inert={loading}
                   aria-hidden={loading || undefined}
+                  data-model-chip={row.chip}
                   onPointerDown={onPointerDown}
                   {...stylex.props(
                     // The rings of the controls in the card are drawn inside them.

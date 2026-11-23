@@ -131,20 +131,10 @@ import {
   today,
 } from "./chat-page-data";
 
-// A box under this (the compact row's least for its placeholder whole beside the model chip):
-// the chip folds away until something is typed.
-const NARROW_BOX = "@container prompt-input (width < 24rem)";
-
 const layout = stylex.create({
   // In the box's one row: the model, the voice and Send together at its end, Send a space-2 apart.
   end: { gridArea: "end", marginInlineStart: "auto" },
   apart: { marginInlineStart: space["1"] },
-  // As the original's compact box: in a box too narrow for the chip and the placeholder whole, the
-  // chip folds away at rest and comes back once something is typed.
-  chip: {
-    display: { default: "contents", [NARROW_BOX]: "none" },
-  },
-  chipWritten: { display: "contents" },
   // The Chats group's label, a button that folds it: its count and chevron at its end.
   fold: { display: "flex", alignItems: "center", gap: space["1"] },
   count: { marginInlineStart: "auto", fontVariantNumeric: "tabular-nums" },
@@ -557,13 +547,10 @@ type Status = NonNullable<PromptInputProps["status"]>;
  */
 const ChatBox = ({ run, state }: { run: ChatRun; state: ChatState }) => {
   const [failed, setFailed] = useState(state === "failed-send");
-  // Words in the box bring the model chip back in a narrow box (layout.chip).
-  const [written, setWritten] = useState(state === "failed-send");
   const [seen, setSeen] = useState(state);
   if (seen !== state) {
     setSeen(state);
     setFailed(state === "failed-send");
-    setWritten(state === "failed-send");
   }
   const { chip } = useModelChip();
   const working = run.phase === "working" || run.phase === "answering";
@@ -581,9 +568,8 @@ const ChatBox = ({ run, state }: { run: ChatRun; state: ChatState }) => {
       status={status}
       disabled={state === "loading"}
       defaultValue={state === "failed-send" ? [unsent] : undefined}
-      onValueChange={(value) => {
+      onValueChange={() => {
         setFailed(false);
-        setWritten(value.some((part) => part !== ""));
       }}
       onSubmit={async ({ text }) => {
         await wait(700);
@@ -606,9 +592,7 @@ const ChatBox = ({ run, state }: { run: ChatRun; state: ChatState }) => {
           </PromptInputActionMenu>
         </PromptInputTools>
         <PromptInputTools style={layout.end}>
-          <span {...stylex.props(layout.chip, written && layout.chipWritten)}>
-            {chip}
-          </span>
+          {chip}
           <PromptInputSpeechButton />
           <PromptInputSubmit onStop={run.stop} style={layout.apart} />
         </PromptInputTools>

@@ -3285,6 +3285,18 @@ export const groups: TokenGroup[] = [
             use: "The least width of a one-row prompt input's text: with less room beside the tools, the text takes the row and the tools go under it. The text never gives.",
           },
           {
+            name: "prompt-input-placeholder-min",
+            category: "size",
+            value: "6rem",
+            use: "The least width of a one-row prompt input's placeholder at rest: with less room, its model chip folds to the maker's mark, then folds away until something is typed. Only then is the placeholder cut.",
+          },
+          {
+            name: "prompt-input-chip-fold",
+            category: "size",
+            value: "24rem",
+            use: "Under this width of a one-row prompt input's row (a phone's), its model chip shows only the maker's mark, whatever room the text has.",
+          },
+          {
             name: "prompt-input-light",
             category: "colors",
             value:

@@ -883,6 +883,10 @@
   --damsko-prompt-input-mention-width: 18rem;
   /* The least width of a one-row prompt input's text: with less room beside the tools, the text takes the row and the tools go under it. The text never gives. */
   --damsko-prompt-input-field-min: 8rem;
+  /* The least width of a one-row prompt input's placeholder at rest: with less room, its model chip folds to the maker's mark, then folds away until something is typed. Only then is the placeholder cut. */
+  --damsko-prompt-input-placeholder-min: 6rem;
+  /* Under this width of a one-row prompt input's row (a phone's), its model chip shows only the maker's mark, whatever room the text has. */
+  --damsko-prompt-input-chip-fold: 24rem;
   /* The working light over a prompt input's top edge: lime, sea and mint in beams with gaps between, ending as it starts so it loops without a seam. */
   --damsko-prompt-input-light: linear-gradient(90deg, var(--damsko-brand-mint) 0%, var(--damsko-brand-sea) 12%, transparent 22%, var(--damsko-brand-lime) 34%, var(--damsko-brand-mint) 44%, transparent 54%, var(--damsko-brand-sea) 64%, var(--damsko-brand-lime) 76%, transparent 88%, var(--damsko-brand-mint) 100%);
   /* The working light in one accent colour, the colour set on the light's layer. */

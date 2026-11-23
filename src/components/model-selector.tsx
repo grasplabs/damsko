@@ -90,7 +90,7 @@ import {
 import { popup } from "../lib/tokens.values";
 import { announce, className, listOf, nothing, textOf } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
-import { motionVars } from "../lib/vars.stylex";
+import { motionVars, promptInputRowMarker } from "../lib/vars.stylex";
 import { BrandIcon } from "./brand-icon";
 import { Button } from "./button";
 import { buttonMarker } from "./button.stylex";
@@ -337,7 +337,17 @@ const FORCED = media.forcedColors;
 const HOVER = media.hover;
 
 const styles = stylex.create({
-  root: { display: "contents" },
+  // In a one-row prompt input at rest with no room for it, the chip is away: unseen, out of the
+  // tab order and unsaid, until something is typed (prompt-input.tsx, `useRowFit`).
+  root: {
+    display: {
+      default: "contents",
+      [stylex.when.ancestor(
+        ":is([data-model-chip=hidden])",
+        promptInputRowMarker
+      )]: "none",
+    },
+  },
   // The chip's mark, words and chevron, a step apart and a size down from the Button's. The words
   // are quiet at rest and in ink under the pointer, through the Button's own marker. The span lies
   // over the whole Button (its padding taken back), so while the panel is open it carries the
@@ -570,6 +580,15 @@ const styles = stylex.create({
     textOverflow: "ellipsis",
     whiteSpace: "nowrap",
   },
+  // In the chip, where a one-row prompt input is short of room for the text, the words fold away
+  // and the maker's mark stands alone; the chip's name and its tooltip still say them.
+  nameFolds: {
+    display: {
+      default: null,
+      [stylex.when.ancestor(":is([data-model-chip])", promptInputRowMarker)]:
+        "none",
+    },
+  },
   logo: { display: "inline-flex", flexShrink: 0 },
 });
 
@@ -610,6 +629,9 @@ interface Row {
 }
 
 const RowContext = createContext<Row | null>(null);
+
+/** Whether a part stands in the trigger's chip, not in the panel. */
+const ChipContext = createContext(false);
 
 const useRoot = (part: string): Root => {
   const root = use(RootContext);
@@ -735,12 +757,13 @@ export const ModelSelectorTrigger = ({
   const label =
     named ??
     (shows === "" ? words.trigger : words.triggerWith(words.trigger, shows));
+  // A chip of the caller's own (`asChild`) keeps its words: the row's fold is for this chip's.
   const chip = asChild ? (
     children
   ) : (
     <Button variant="ghost" size="xs" style={style}>
       <span {...stylex.props(styles.chip)}>
-        {children}
+        <ChipContext value>{children}</ChipContext>
         <span aria-hidden="true" {...stylex.props(styles.chevron)}>
           <Icon icon={ChevronDownIcon} />
         </span>
@@ -1125,11 +1148,18 @@ export const ModelSelectorLogo = ({
 export const ModelSelectorName = ({
   children,
   style,
-}: ModelSelectorNameProps) => (
-  <span data-slot="model-selector-name" {...stylex.props(styles.name, style)}>
-    {children}
-  </span>
-);
+}: ModelSelectorNameProps) => {
+  const inChip = use(ChipContext);
+  return (
+    <span
+      data-slot="model-selector-name"
+      data-in-chip={inChip || undefined}
+      {...stylex.props(styles.name, inChip && styles.nameFolds, style)}
+    >
+      {children}
+    </span>
+  );
+};
 
 /**
  * A row's star: adds the model to the favourites or takes it out, without picking it. The keys reach
