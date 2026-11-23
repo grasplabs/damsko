@@ -10,20 +10,30 @@
 //   <name>-<what>.ts helpers (registry:ui);
 // - one per folder component: src/components/<name>/ (registry:ui);
 // - one per block: src/blocks/<name>/ (registry:block);
-// - lib (src/lib, registry:lib), hooks (src/hooks, registry:hook) and tokens (src/styles: the CSS
-//   variables and the themes, registry:lib).
+// - lib (src/lib, registry:lib), hooks (src/hooks, registry:hook), tokens (src/styles: the CSS
+//   variables, the themes and the base, registry:lib) and fonts (src/styles/fonts.css and
+//   src/styles/fonts/: the faces, their files, their licence and the script that unpacks them,
+//   registry:lib).
 //
 // The shape the stock shadcn CLI installs byte for byte: every file is `registry:file` with the
 // target `~/<its path>`, so it lands at the same path under a project's root (src/… in src/…),
 // comments and imports untouched. That is why every import in src/ is relative. npm packages are
 // listed by name only, so a project's own `catalog:` versions stand.
+//
+// A font file is the one exception. The CLI carries a file's content as text, which a font is
+// not, so a font's target is `~/<its path>.base64` and its content, in the registry as served
+// (scripts/registry-dist.ts), the file in base64; the script installed beside them turns the six
+// back into the files (src/styles/fonts/unpack.mjs).
+//
+// Every item carries `meta`: the version (package.json) and the licence its files are under,
+// wherever they are installed. The served registry adds the commit (scripts/registry-dist.ts).
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import nodePath from "node:path";
 
 import ts from "typescript6";
 import { parse } from "yaml";
 
-import { stringsAt } from "./json.ts";
+import { isRecord, stringsAt } from "./json.ts";
 
 export const root = nodePath.resolve(import.meta.dirname, "..");
 /** The namespace a project names this registry by, in its components.json. */
@@ -31,7 +41,27 @@ export const namespace = "@damsko";
 /** Where the site and the registry are served. */
 export const homepage = "https://damsko.joingrasp.com";
 
-/** The items that are not a component or a block, by the folder they ship. */
+/** A font file: carried as base64 text, since the CLI writes a file's content as text. */
+export const isFont = (path: string) => path.endsWith(".woff2");
+
+/** Where a file lands in a project: its own path, and a font as base64 text beside its name. */
+export const targetOf = (path: string) =>
+  `~/${path}${isFont(path) ? ".base64" : ""}`;
+
+/**
+ * The licence note every item carries (`meta.license`), as shadcn registries carry one: the files
+ * stay under Damsko's licence wherever they are installed. No file gets a header for it.
+ */
+export const license =
+  "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them.";
+/** The fonts are not Damsko's: their own licence travels with them. */
+const fontLicense =
+  "SIL Open Font License 1.1 (src/styles/fonts/OFL.txt, installed with the files): Geist, Geist Mono and Geist Serif, copyright The Geist Project Authors. The stylesheet is under Damsko's LICENSE.";
+
+const isFontFile = (path: string) =>
+  path === "src/styles/fonts.css" || path.startsWith("src/styles/fonts/");
+
+/** The items that are not a component or a block, by the files they ship. */
 const sharedItems = [
   {
     name: "lib",
@@ -53,11 +83,26 @@ const sharedItems = [
     name: "tokens",
     type: "registry:lib",
     folder: "src/styles",
+    owns: (path: string) => !isFontFile(path),
     title: "Tokens",
     description:
-      "Every colour, space, corner, edge, shadow, time and curve as CSS variables (tokens.css), and the modes and themes (themes.css). Import both once, at the root.",
+      "Every colour, space, corner, edge, shadow, time and curve as CSS variables (tokens.css), and the modes and themes (themes.css): import the two once, at the root. With them, base.css: an optional reset for a new app that has none; never import it beside Tailwind, whose preflight is the reset. The font families the tokens name are not included: add @damsko/fonts, or load Geist yourself.",
+  },
+  {
+    name: "fonts",
+    type: "registry:lib",
+    folder: "src/styles",
+    owns: isFontFile,
+    title: "Fonts",
+    description:
+      "Geist, Geist Mono and Geist Serif as the tokens name them: the @font-face rules (fonts.css), the six subset files and their licence (fonts/). The files arrive as base64 text; fonts/unpack.mjs turns them into the fonts. Run it after every install and before every build (node src/styles/fonts/unpack.mjs; --check fails while one is packed), and import fonts.css once, at the root.",
+    license: fontLicense,
   },
 ] as const;
+
+/** Whether a shared item ships a file. */
+const ships = (item: (typeof sharedItems)[number], path: string) =>
+  path.startsWith(`${item.folder}/`) && (!("owns" in item) || item.owns(path));
 
 /** Items a part relies on without importing them: lib's StyleX names read tokens.css's variables. */
 const declaredNeeds: Record<string, string[]> = { lib: ["tokens"] };
@@ -105,7 +150,7 @@ export const itemOf = (path: string): string | undefined => {
       )
       .toSorted((one, other) => other.length - one.length)[0];
   }
-  return sharedItems.find((item) => path.startsWith(`${item.folder}/`))?.name;
+  return sharedItems.find((item) => ships(item, path))?.name;
 };
 
 /** The file an import resolves to, the way TypeScript and Vite resolve it, or undefined. */
@@ -166,6 +211,11 @@ export const exactVersion = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$/u;
 const manifest: unknown = JSON.parse(
   readFileSync(nodePath.join(root, "package.json"), "utf-8")
 );
+/** Damsko's version (package.json), which every item carries. */
+export const version =
+  isRecord(manifest) && typeof manifest.version === "string"
+    ? manifest.version
+    : "";
 const dependencies = stringsAt(manifest, "dependencies");
 const devDependencies = stringsAt(manifest, "devDependencies");
 
@@ -228,6 +278,7 @@ export interface RegistryItem {
   devDependencies?: string[];
   registryDependencies?: string[];
   docs?: string;
+  meta: { version: string; license: string };
   files: { path: string; type: "registry:file"; target: string }[];
 }
 
@@ -263,6 +314,7 @@ export const buildRegistry = () => {
     title: string;
     description: string;
     docs?: string;
+    license?: string;
   }[] = [
     ...flatComponents().map((name) =>
       component(
@@ -288,7 +340,14 @@ export const buildRegistry = () => {
         docs: page?.docs,
       };
     }),
-    ...sharedItems.map((item) => ({ ...item, files: filesIn(item.folder) })),
+    ...sharedItems.map((item) => ({
+      name: item.name,
+      type: item.type,
+      title: item.title,
+      description: item.description,
+      ...("license" in item ? { license: item.license } : {}),
+      files: filesIn(item.folder).filter((file) => ships(item, file)),
+    })),
   ].toSorted((one, other) => one.name.localeCompare(other.name));
 
   const owned = new Set(units.flatMap((unit) => unit.files));
@@ -354,10 +413,11 @@ export const buildRegistry = () => {
           }
         : {}),
       ...(unit.docs === undefined ? {} : { docs: unit.docs }),
+      meta: { version, license: unit.license ?? license },
       files: unit.files.map((path) => ({
         path,
         type: "registry:file" as const,
-        target: `~/${path}`,
+        target: targetOf(path),
       })),
     };
   });

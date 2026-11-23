@@ -73,6 +73,9 @@ catalog:
   "@stylexjs/unplugin": 0.19.2
   babel-plugin-react-compiler: 1.0.0
   "@playwright/test": 1.65.0
+  # What Get started pins for an app beside Tailwind, which the install check builds.
+  tailwindcss: 4.3.5
+  "@tailwindcss/vite": 4.3.5
   shadcn: 4.23.0
 
 # Vite+ replaces Vite and pins Vitest for every package.

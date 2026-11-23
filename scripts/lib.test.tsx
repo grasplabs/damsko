@@ -257,7 +257,7 @@ describe(useI18n, () => {
 
   test("a part the catalogue gives speaks its language; a part it leaves out stays English", () => {
     const html = renderToStaticMarkup(
-      <I18nProvider catalog={{ dialog: { close: "Sluiten" } }}>
+      <I18nProvider locale="nl-NL" catalog={{ dialog: { close: "Sluiten" } }}>
         <DialogClose /> <SheetClose />
       </I18nProvider>
     );
@@ -267,6 +267,7 @@ describe(useI18n, () => {
   test("a word built from others is a function the catalogue gives too", () => {
     const html = renderToStaticMarkup(
       <I18nProvider
+        locale="nl-NL"
         catalog={{
           holdButton: {
             ask: (action) => `${action}?`,

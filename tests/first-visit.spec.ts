@@ -8,7 +8,7 @@
 // the report ("first visit"). It is read once the page has settled: its fonts are in, every example
 // within a screen of view is live (site/system/island.ts), and the network is quiet. The fonts are
 // the three common files every page preloads, and a family's full file only on a page that shows a
-// character of it (site/styles/fonts.css).
+// character of it (src/styles/fonts.css).
 //
 // It was not always so: a page with a hyphenated block (`hyphens: auto`) laid out before the
 // preloaded common file had arrived asked the family for the hyphen U+2010, which only the full

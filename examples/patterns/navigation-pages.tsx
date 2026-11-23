@@ -49,7 +49,7 @@ export default function NavigationPages() {
     };
   }, []);
   return (
-    <I18nProvider catalog={results}>
+    <I18nProvider locale="en-GB" catalog={results}>
       <Pagination
         total={86}
         pageSize={10}

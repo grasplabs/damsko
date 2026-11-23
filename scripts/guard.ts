@@ -3,7 +3,8 @@
  * - a file under public/ that is not one of the site's root files or in one
  *   of the folders named below, and one that nothing refers to;
  * - an image, video or audio file outside public/ (screenshots that prove a
- *   change go in the pull request);
+ *   change go in the pull request), and a font file outside src/styles/fonts/,
+ *   which the registry's `fonts` item installs and the site serves;
  * - any file over 1 MB;
  * - a Markdown file that isn't on the allowlist (no plans, notes or
  *   handover files: the why goes in code comments and pull requests).
@@ -24,8 +25,11 @@ const PUBLIC_ROOT = new Set([
   "public/site.webmanifest",
 ]);
 
-/** The folders under public/: the brand book's assets, the fonts, example media and people. */
-const PUBLIC_FOLDERS = /^public\/(?:brand|fonts|media|people)\//u;
+/** The folders under public/: the brand book's assets, example media and people. */
+const PUBLIC_FOLDERS = /^public\/(?:brand|media|people)\//u;
+
+/** A font file: only in src/styles/fonts/, which the registry's `fonts` item ships and the site loads. */
+const FONT = /\.(?:woff2?|ttf|otf|eot)$/iu;
 
 const MARKDOWN = /\.mdx?$/iu;
 
@@ -87,6 +91,9 @@ const problems = files.flatMap((file) => {
   }
   if (MEDIA.test(file) && !inPublic) {
     found.push(`${file}: pictures, video and audio live only in public/`);
+  }
+  if (FONT.test(file) && !file.startsWith("src/styles/fonts/")) {
+    found.push(`${file}: fonts live only in src/styles/fonts/`);
   }
   if (
     MARKDOWN.test(file) &&
