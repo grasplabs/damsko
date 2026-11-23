@@ -95,7 +95,7 @@ import type {
   RootContent,
   TableNode,
 } from "./parse";
-import { useReveal, useSettled, Words } from "./reveal";
+import { fadeStyle, useReveal, useSettled, Words } from "./reveal";
 import type { Reveal } from "./reveal";
 
 /** A link in the answer, as the host's renderer sees it. */
@@ -870,6 +870,34 @@ const NoteMark = ({
   );
 };
 
+/**
+ * Code in a sentence. While its block is written, the chip fades in whole, its fill with its words:
+ * words fading inside a chip already drawn would show an empty box first.
+ */
+const CodeInline = ({
+  node,
+  context,
+}: {
+  node: Extract<PhrasingContent, { type: "inlineCode" }>;
+  context: Context;
+}) => {
+  const at = node.position?.start.offset;
+  const fades = context.reveal !== null && at !== undefined;
+  return (
+    <code
+      data-at={fades ? context.base + at : undefined}
+      ref={fades ? context.reveal?.attach : undefined}
+      {...stylex.props(
+        styles.inlineCode,
+        context.size === "xs" && styles.xsmallCode,
+        fades && fadeStyle
+      )}
+    >
+      {node.value}
+    </code>
+  );
+};
+
 const Inline = ({
   node,
   context,
@@ -906,16 +934,7 @@ const Inline = ({
       );
     }
     case "inlineCode": {
-      return (
-        <code
-          {...stylex.props(
-            styles.inlineCode,
-            context.size === "xs" && styles.xsmallCode
-          )}
-        >
-          {wordsOf(node.value, node.position?.start.offset, context)}
-        </code>
-      );
+      return <CodeInline node={node} context={context} />;
     }
     case "break": {
       return <br />;

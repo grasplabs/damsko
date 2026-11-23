@@ -34,6 +34,9 @@ const styles = stylex.create({
   },
 });
 
+/** A part that fades in whole as it is shown, as a word does (code in a sentence, its chip and all). */
+export const fadeStyle = styles.word;
+
 /** The words being shown in one answer as it is written, and when each was first shown. */
 export interface Reveal {
   /** What a word is: a word with the spaces after it, or a character. */

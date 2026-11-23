@@ -626,14 +626,13 @@ test("with motion, a screen reader hears each finished block once, never a word 
       return heardSoFar.join(" | ");
     })
     .toContain("Next week the rule covers refunds too");
-  // From the run started here: the one that played as the page opened may have begun to speak.
-  const all = await said();
-  const from = all.findLastIndex((words) =>
-    words.startsWith("What changed this week")
-  );
-  const heard = all.slice(from);
-  expect(from).toBeGreaterThanOrEqual(0);
-  expect(heard.length).toBeLessThan(12);
+  // Whole blocks, never a word or two: the run that played as the page opened may have begun to
+  // speak too, so both are counted.
+  const heard = await said();
+  expect(heard.length).toBeLessThan(24);
+  for (const words of heard) {
+    expect(words.split(" ").length).toBeGreaterThanOrEqual(3);
+  }
   expect(heard.join(" ")).toContain(
     "Support closed 58 requests and Sales closed 33, so the queue is the shortest it has been since March."
   );
