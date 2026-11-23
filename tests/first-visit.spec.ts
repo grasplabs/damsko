@@ -5,9 +5,16 @@
 // Chromium only (playwright.config.ts). The figures mean something for a build alone, which is what the specs serve,
 // compressed as the host serves it (scripts/serve.ts).
 //
+// The fonts are held back until the page has drawn, as on a slow line: what a page draws in its
+// fallback font it draws otherwise (other widths, so other line breaks and hyphens), and a
+// character drawn only then can ask for a font file a quick line never fetches. Held, every run
+// counts that heavier visit; let go at once, a run counted one or the other by how busy the
+// machine was.
+//
 // The pages below need more, each for what it loads, said beside it: what the page takes, its
 // heavier font set included, plus a request and about 10KB.
 import { expect, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 import { docsPages } from "./example.ts";
 
@@ -18,6 +25,19 @@ const sum = (list: { bytes: number }[]) => {
     total += request.bytes;
   }
   return total;
+};
+
+/** Waits until the page has drawn what it holds: two frames on. */
+const drawn = async (page: Page): Promise<void> => {
+  await page.evaluate(async () => {
+    const frames = Promise.withResolvers<null>();
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        frames.resolve(null);
+      });
+    });
+    await frames.promise;
+  });
 };
 
 const limits = { requests: 26, bytes: 600 * 1024, fonts: 150 * 1024 };
@@ -70,7 +90,17 @@ for (const path of docsPages().filter((each) =>
         request.bytes = event.encodedDataLength;
       }
     });
-    await page.goto(new URL(path, process.env.BASE_URL).href);
+    const fonts = Promise.withResolvers<null>();
+    await page.route("**/fonts/*.woff2", async (route) => {
+      await fonts.promise;
+      await route.continue();
+    });
+    // The page's load waits on its fonts: only its arrival is waited for here.
+    await page.goto(new URL(path, process.env.BASE_URL).href, {
+      waitUntil: "domcontentloaded",
+    });
+    await drawn(page);
+    fonts.resolve(null);
     await page.waitForLoadState("networkidle");
     const list = [...requests.values()];
     expect(sum(list.filter((request) => request.font))).toBeLessThanOrEqual(

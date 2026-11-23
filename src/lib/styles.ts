@@ -351,9 +351,13 @@ const textStyles = stylex.create({
     scrollbarWidth: "none",
   },
   // A word hyphenates only when long (12 letters or more), never within 5 of its ends, where its
-  // language allows (the page's `lang`). Safari reads its own two limits.
+  // language allows (the page's `lang`). Safari reads its own two limits. The hyphen it draws is
+  // the keyboard's own (U+002D), which every font file holds; a browser's own choice is the
+  // typographic one (U+2010), and where a font is split by `unicode-range` that one sits in the
+  // large file, fetched whole for a hyphen (often one only the fallback font's line breaks drew).
   hyphenate: {
     hyphens: "auto",
+    hyphenateCharacter: '"-"',
     hyphenateLimitChars: "12 5 5",
     WebkitHyphenateLimitBefore: 5,
     WebkitHyphenateLimitAfter: 5,
