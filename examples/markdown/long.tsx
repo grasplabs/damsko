@@ -7,6 +7,7 @@ import {
   ToggleGroup,
   ToggleGroupItem,
 } from "@grasp-os/ui/components/toggle-group";
+import { focusRingInset, scrollbarHidden } from "@grasp-os/ui/lib/styles";
 import { space } from "@grasp-os/ui/lib/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
 import { useState } from "react";
@@ -39,6 +40,8 @@ const layout = stylex.create({
     gap: space["4"],
     width: "100%",
     maxWidth: 560,
+  },
+  box: {
     maxHeight: 480,
     overflowY: "auto",
   },
@@ -104,9 +107,16 @@ export default function MarkdownLong() {
           Play
         </Button>
       </div>
-      <Markdown streaming={!played.done} animated={animated}>
-        {played.text}
-      </Markdown>
+      <div
+        tabIndex={0}
+        role="region"
+        aria-label="Answer"
+        {...stylex.props(layout.box, scrollbarHidden, focusRingInset)}
+      >
+        <Markdown streaming={!played.done} animated={animated}>
+          {played.text}
+        </Markdown>
+      </div>
     </div>
   );
 }

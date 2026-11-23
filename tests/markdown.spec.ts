@@ -410,8 +410,10 @@ test("a section written open stands open from the first paint, without opening",
 
 /** What a stream drew, watched each frame in the page until the answer is whole and settled. */
 interface Watched {
-  /** Each word's fade, by where it starts in the source: when it began, every time it was seen. */
-  begins: Record<string, number[]>;
+  /** The frame each span was first seen in, by where its words start in the source. */
+  firstSeen: Record<string, number>;
+  /** The spans (by where they start) that went faint again after they had reached full ink. */
+  faded: string[];
   /** The most word spans on the page at once, and how many are left once it is done. */
   most: number;
   left: number;
@@ -430,7 +432,8 @@ const watchFades = async (page: Page): Promise<Watched> =>
       await new Promise<Watched>((resolve) => {
         const answer = document.querySelector("[data-slot=markdown]");
         const seen: Watched = {
-          begins: {},
+          firstSeen: {},
+          faded: [],
           most: 0,
           left: 0,
           moved: 0,
@@ -449,17 +452,21 @@ const watchFades = async (page: Page): Promise<Watched> =>
           };
         };
         let quiet = 0;
-        // When each word's fade began: its start, less any delay it was given to carry on.
+        let frames = 0;
+        // The most ink each span's words have had, drawn again or made afresh: a fade that starts
+        // over shows as words going faint again.
+        const ink = new Map<string, number>();
         const fades = (spans: HTMLElement[]) => {
+          frames += 1;
           for (const span of spans) {
-            for (const animation of span.getAnimations()) {
-              const delay = animation.effect?.getTiming().delay ?? 0;
-              const start = Number(animation.startTime ?? Number.NaN);
-              const at = span.dataset.at ?? "";
-              if (!Number.isNaN(start)) {
-                seen.begins[at] = [...(seen.begins[at] ?? []), start + delay];
-              }
+            const at = span.dataset.at ?? "";
+            seen.firstSeen[at] ??= frames;
+            const now = Number(getComputedStyle(span).opacity);
+            const most = ink.get(at) ?? 0;
+            if (most >= 0.9 && now < most - 0.3 && !seen.faded.includes(at)) {
+              seen.faded.push(at);
             }
+            ink.set(at, Math.max(most, now));
           }
         };
         // Once the first paragraph is finished (a list follows it), it never moves or redraws.
@@ -532,18 +539,17 @@ test("with motion, the words come a few at a time, each fades in once, in order,
       120
     );
   }
-  // Each word's fade began once: drawn again, made afresh or not, it carries on where it was.
-  const fades = Object.entries(watched.begins);
-  expect(fades.length).toBeGreaterThan(60);
-  for (const [, begun] of fades) {
-    expect(Math.max(...begun) - Math.min(...begun)).toBeLessThan(20);
-  }
-  // In order: a word further on never began before one before it (a frame's grace).
-  const order = fades
-    .map(([at, begun]) => [Number(at), Math.min(...begun)] as const)
+  // Each step of words fades in once: drawn again, made afresh or not, it carries on where it was
+  // and never goes faint again.
+  const steps = Object.entries(watched.firstSeen);
+  expect(steps.length).toBeGreaterThan(30);
+  expect(watched.faded).toStrictEqual([]);
+  // In order: words further on are never put on the page before the words before them.
+  const order = steps
+    .map(([at, frame]) => [Number(at), frame] as const)
     .toSorted(([one], [other]) => one - other);
-  for (const [index, [, begun]] of order.entries()) {
-    expect(begun).toBeGreaterThanOrEqual((order[index - 1]?.[1] ?? 0) - 20);
+  for (const [index, [, frame]] of order.entries()) {
+    expect(frame).toBeGreaterThanOrEqual(order[index - 1]?.[1] ?? 0);
   }
   // Spans only while a block is written: few at once, none once it is done.
   expect(watched.most).toBeLessThan(120);
@@ -573,7 +579,6 @@ test("with reduced motion, the words show as they arrive: no fade and no spans",
   await openExample(page, "markdown", "pace");
   await page.getByRole("button", { name: "Bursts" }).click();
   const watched = await watchFades(page);
-  expect(Object.keys(watched.begins)).toHaveLength(0);
   expect(watched.most).toBe(0);
   // Whole bursts: fewer steps than a burst has words.
   expect(watched.shown.length).toBeLessThan(40);
