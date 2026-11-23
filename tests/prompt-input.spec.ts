@@ -1546,3 +1546,26 @@ test("while a voice is heard a dithered light stands over the card, and goes wit
   await page.getByRole("button", { name: "Cancel dictation" }).click();
   await expect.poll(light).toBe("0");
 });
+
+test("in a box as narrow as a phone's, the chat page's model chip folds away at rest so the placeholder stays whole, and comes back once something is typed", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await openExample(page, "patterns", "chat-page");
+  const box = page.getByRole("form", { name: "Message the assistant" });
+  const chip = box.getByRole("button", { name: /Medium/u });
+  // Wide, the chip stands in the box at rest.
+  await expect(chip).toBeVisible();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(chip).toBeHidden();
+  const field = box.getByRole("textbox", { name: "Message" });
+  // The placeholder whole: its words are not cut off with an ellipsis.
+  expect(
+    await field.evaluate(
+      (element) => element.scrollWidth <= element.clientWidth
+    )
+  ).toBe(true);
+  await field.click();
+  await page.keyboard.type("And churn among teams of five?");
+  await expect(chip).toBeVisible();
+});

@@ -119,6 +119,7 @@ import * as stylex from "@stylexjs/stylex";
 import { useEffect, useState } from "react";
 
 import { useModelChip } from "../prompt-input/model";
+import { citeStyles } from "../sources/cited";
 import {
   answer,
   chats,
@@ -130,25 +131,20 @@ import {
   today,
 } from "./chat-page-data";
 
+// A box under this (the compact row's least for its placeholder whole beside the model chip):
+// the chip folds away until something is typed.
+const NARROW_BOX = "@container prompt-input (width < 24rem)";
+
 const layout = stylex.create({
-  // A citation's number after its claim: a small box on the soft fill with the system's edge.
-  cited: {
-    marginInlineStart: space["1"],
-    paddingBlock: 1,
-    paddingInline: space["1"],
-    borderRadius: radius.sm,
-    cornerShape: radius.shape,
-    fontSize: font.textXs,
-    lineHeight: font.textXsLine,
-    fontWeight: font.weightMedium,
-    fontVariantNumeric: "tabular-nums",
-    color: colors.mutedForeground,
-    backgroundColor: colors.muted,
-    boxShadow: size.borderStrong,
-  },
   // In the box's one row: the model, the voice and Send together at its end, Send a space-2 apart.
   end: { gridArea: "end", marginInlineStart: "auto" },
   apart: { marginInlineStart: space["1"] },
+  // As the original's compact box: in a box too narrow for the chip and the placeholder whole, the
+  // chip folds away at rest and comes back once something is typed.
+  chip: {
+    display: { default: "contents", [NARROW_BOX]: "none" },
+  },
+  chipTyped: { display: "contents" },
   // The Chats group's label, a button that folds it: its count and chevron at its end.
   fold: { display: "flex", alignItems: "center", gap: space["1"] },
   count: { marginInlineStart: "auto", fontVariantNumeric: "tabular-nums" },
@@ -471,7 +467,7 @@ const citation = (link: MarkdownLink) => {
     <span
       role="note"
       aria-label={`Source ${n}`}
-      {...stylex.props(layout.cited)}
+      {...stylex.props(citeStyles.number, citeStyles.after)}
     >
       {n}
     </span>
@@ -567,6 +563,8 @@ const ChatBox = ({ run, state }: { run: ChatRun; state: ChatState }) => {
     setFailed(state === "failed-send");
   }
   const { chip } = useModelChip();
+  // Something typed brings the model chip back in a narrow box (layout.chip).
+  const [typed, setTyped] = useState(state === "failed-send");
   const working = run.phase === "working" || run.phase === "answering";
   let status: Status = working ? "streaming" : "ready";
   if (failed) {
@@ -582,8 +580,9 @@ const ChatBox = ({ run, state }: { run: ChatRun; state: ChatState }) => {
       status={status}
       disabled={state === "loading"}
       defaultValue={state === "failed-send" ? [unsent] : undefined}
-      onValueChange={() => {
+      onValueChange={(value) => {
         setFailed(false);
+        setTyped(value.some((part) => part !== ""));
       }}
       onSubmit={async ({ text }) => {
         await wait(700);
@@ -606,7 +605,9 @@ const ChatBox = ({ run, state }: { run: ChatRun; state: ChatState }) => {
           </PromptInputActionMenu>
         </PromptInputTools>
         <PromptInputTools style={layout.end}>
-          {chip}
+          <span {...stylex.props(layout.chip, typed && layout.chipTyped)}>
+            {chip}
+          </span>
           <PromptInputSpeechButton />
           <PromptInputSubmit onStop={run.stop} style={layout.apart} />
         </PromptInputTools>
