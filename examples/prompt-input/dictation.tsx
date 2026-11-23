@@ -16,6 +16,8 @@ import {
 import { createTokenInputController } from "@ui-sdk/react/token-input";
 import { useEffect, useRef, useState } from "react";
 
+import { layout } from "./layout";
+
 const typed = "Before Monday: ";
 const heard = ["send", "the", "numbers", "to", "the", "board"];
 
@@ -80,6 +82,9 @@ export default function PromptInputDictation() {
               <PromptInputActionAddAttachments />
             </PromptInputActionMenuContent>
           </PromptInputActionMenu>
+        </PromptInputTools>
+        {/* At the end, the microphone beside Send. */}
+        <PromptInputTools>
           <PromptInputSpeechButton
             listening={listening}
             onListeningChange={(next) => {
@@ -106,8 +111,8 @@ export default function PromptInputDictation() {
             sample={sound}
             interim={hearing ? heard[words] : undefined}
           />
+          <PromptInputSubmit style={layout.apart} />
         </PromptInputTools>
-        <PromptInputSubmit />
       </PromptInputFooter>
     </PromptInput>
   );

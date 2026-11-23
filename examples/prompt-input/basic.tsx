@@ -69,12 +69,15 @@ export default function PromptInputBasic() {
                 <PromptInputActionAddAttachments />
               </PromptInputActionMenuContent>
             </PromptInputActionMenu>
+          </PromptInputTools>
+          {/* At the end, the voice beside Send: the two ways to send what you mean. */}
+          <PromptInputTools>
             <PromptInputSpeechButton
               listening={listening}
               onListeningChange={setListening}
             />
+            <PromptInputSubmit onStop={stop} style={layout.apart} />
           </PromptInputTools>
-          <PromptInputSubmit onStop={stop} />
         </PromptInputFooter>
       </PromptInput>
       <p aria-live="polite" {...stylex.props(layout.sent)}>

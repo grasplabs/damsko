@@ -502,6 +502,17 @@ test("the words stay until the send succeeds, and words typed while it is out st
   await expect(text).toHaveText("second and more");
 });
 
+test("the microphone stands at the end, a space-2 before Send", async ({
+  page,
+}) => {
+  await openExample(page, "prompt-input", "dictation", { time: fixedTime });
+  const speech = await page
+    .getByRole("button", { name: "Dictate" })
+    .boundingBox();
+  const send = await page.getByRole("button", { name: "Send" }).boundingBox();
+  expect((send?.x ?? 0) - ((speech?.x ?? 0) + (speech?.width ?? 0))).toBe(8);
+});
+
 test("the speech button says whether it listens", async ({ page }) => {
   await openExample(page, "prompt-input", "compact");
   const speech = page.getByRole("button", { name: "Dictate" });
