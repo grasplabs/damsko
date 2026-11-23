@@ -16,8 +16,8 @@ import { layout } from "./layout";
 const answer =
   "The team agreed to move the launch to the second week of June, to keep the budget as it is, and to ask the supplier for a new delivery date by Friday.";
 
-// The answer arrives a few words at a time, then starts over, so the stream can be seen. The words
-// come in smoothly between chunks; with reduced motion, as they arrive.
+// The answer arrives a few words at a time, then starts over, so the stream can be seen. Between
+// chunks the words come in one at a time, each fading in; with reduced motion, as they arrive.
 export default function MessageStreaming() {
   const words = answer.split(" ");
   const [count, setCount] = useState(0);

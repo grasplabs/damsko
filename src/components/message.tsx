@@ -22,7 +22,8 @@
 //   </Message>
 //
 // Beside the row's parts, each for what a product would otherwise build itself: the
-// answer drawn through Markdown at a steady pace while it streams (MessageResponse), a named row of
+// answer drawn through Markdown, its words let out at a steady pace and fading in while it streams
+// (MessageResponse), a named row of
 // actions (MessageActions, MessageAction), a failure with Try again (MessageError), a message's
 // shape while it loads (MessageSkeleton), the assistant's `status` said once, and a name for each
 // message ("You" at the end of the line, "Assistant" at its start, unless the caller names it), so
@@ -39,11 +40,10 @@ import {
   useEffect,
   useLayoutEffect,
   useRef,
-  useState,
-  useSyncExternalStore,
 } from "react";
 import type { ReactNode } from "react";
 
+import type { SmoothTextUnit } from "../hooks/use-smooth-text";
 import { useI18n } from "../lib/i18n";
 import {
   Icon,
@@ -61,7 +61,7 @@ import {
   size,
   space,
 } from "../lib/tokens.stylex";
-import { announce, lazyPart, nothing } from "../lib/utils";
+import { announce, lazyPart } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { iconVars } from "../lib/vars.stylex";
 import { Bubble, BubbleContent } from "./bubble";
@@ -152,11 +152,18 @@ export interface MessageResponseProps {
   /** The answer, in Markdown: as much of it as has arrived. Copy copies this same source. */
   children: string;
   /**
-   * Still being written: the words come in smoothly, never in bursts, and what is half-written is
-   * drawn whole. With reduced motion they are drawn as they arrive. Once false, all of it shows.
+   * Still being written: the words come in at a steady pace, a word at a time, each fading in, and
+   * what is half-written is drawn whole. With reduced motion they are drawn as they arrive. Once
+   * false, all of it shows.
    * @default true while the Message's status is streaming
    */
   streaming?: boolean;
+  /**
+   * How the words come in while it is written: `word` a word at a time, `character` a character
+   * at a time, each fading in; `false` as they are given. As Markdown's `animated`.
+   * @default "word"
+   */
+  animated?: SmoothTextUnit | false;
   /** Layout only. */
   style?: LayoutStyle;
 }
@@ -548,73 +555,6 @@ export const MessageFooter = ({ children, style }: MessageFooterProps) => {
   );
 };
 
-// ---- Smooth text --------------------------------------------------------------------------------
-
-const REDUCE = "(prefers-reduced-motion: reduce)";
-
-const watchMotion = (changed: () => void) => {
-  const query = window.matchMedia(REDUCE);
-  query.addEventListener("change", changed);
-  return () => {
-    query.removeEventListener("change", changed);
-  };
-};
-
-/** The time it takes to catch up with what has arrived: a burst is spread over about this long. */
-const CATCH_UP = 300;
-
-/** Runs `step` once a frame with the share of CATCH_UP since the last one; returns what stops it. */
-const everyFrame = (step: (share: number) => void) => {
-  let last = performance.now();
-  let frame = 0;
-  const tick = (now: number) => {
-    step(Math.min(1, (now - last) / CATCH_UP));
-    last = now;
-    frame = requestAnimationFrame(tick);
-  };
-  frame = requestAnimationFrame(tick);
-  return () => {
-    cancelAnimationFrame(frame);
-  };
-};
-
-/**
- * The words of an answer still being written, let out a few characters a frame so a chunk never
- * lands as a jump: each frame takes a share of what is still to show, so a large burst comes
- * quickly and a trickle at about a frame a character. Once the stream ends, or with reduced
- * motion, the whole text shows at once: the end is never held back. Nothing runs while caught up,
- * so the answer is drawn again (and its last block read again) at most once a frame.
- */
-const useSmoothText = (text: string, streaming: boolean): string => {
-  const reduced = useSyncExternalStore(
-    watchMotion,
-    () => window.matchMedia(REDUCE).matches,
-    () => false
-  );
-  const paced = streaming && !reduced;
-  // Words there when it is first drawn are not news: they show at once.
-  const [shown, setShown] = useState(text.length);
-  // Not paced, or the text was replaced by a shorter one (an answer written again): in step.
-  if ((!paced && shown !== text.length) || shown > text.length) {
-    setShown(text.length);
-  }
-  const behind = paced && shown < text.length;
-  useEffect(() => {
-    if (!behind) {
-      return nothing;
-    }
-    const end = text.length;
-    return everyFrame((share) => {
-      setShown((at) =>
-        Math.min(end, at + Math.max(1, Math.ceil((end - at) * share)))
-      );
-    });
-  }, [behind, text.length]);
-  return paced ? text.slice(0, Math.min(shown, text.length)) : text;
-};
-
-// -------------------------------------------------------------------------------------------------
-
 // Markdown (its parser, CodeBlock, Table and Link) is fetched only once an answer is drawn, so a
 // page that shows none does not pay for it. A server render that waits for it (React's prerender,
 // renderToReadableStream's allReady) draws the formatted answer as before; until it has come in the
@@ -626,31 +566,32 @@ const Markdown = lazyPart(
 );
 
 /**
- * The assistant's answer, drawn from Markdown, its words coming in smoothly while it is written;
- * Stopped under it when it was stopped part way.
+ * The assistant's answer, drawn from Markdown, its words coming in a word at a time and fading in
+ * while it is written (Markdown's `animated`); Stopped under it when it was stopped part way.
  */
 export const MessageResponse = ({
   children,
   streaming: given,
+  animated = "word",
   style,
 }: MessageResponseProps) => {
   const status = use(StatusContext);
   const words = useI18n().message;
   const streaming = given ?? status === "streaming";
-  const shown = useSmoothText(children, streaming);
   return (
     <>
       <div
         data-slot="message-response"
         {...stylex.props(styles.response, scrollbarHidden, style)}
       >
-        <Suspense fallback={<p {...stylex.props(styles.plain)}>{shown}</p>}>
+        <Suspense fallback={<p {...stylex.props(styles.plain)}>{children}</p>}>
           <Markdown
             size="message"
             streaming={streaming}
+            animated={animated}
             truncated={status === "stopped"}
           >
-            {shown}
+            {children}
           </Markdown>
         </Suspense>
       </div>

@@ -196,6 +196,7 @@ const breathe = stylex.keyframes({
   from: { opacity: size.spinnerFaint },
   to: { opacity: 1 },
 });
+const lineIn = stylex.keyframes({ from: { opacity: 0 } });
 
 const styles = stylex.create({
   box: {
@@ -372,6 +373,14 @@ const styles = stylex.create({
   lineWrapped: {
     whiteSpace: "pre-wrap",
     overflowWrap: "anywhere",
+  },
+  // While the code is still coming in, each new line fades in as it starts, as an answer's words
+  // do; the code on it then comes as it is, so it reads as it is typed. Nothing kept after.
+  lineArrives: {
+    animationName: { default: lineIn, [REDUCED]: "none" },
+    animationDuration: duration.stream,
+    animationTimingFunction: duration.easeStream,
+    animationFillMode: "backwards",
   },
   // A highlighted line: a wash and a bar at its start, so colour is never the only mark; an added
   // or removed one, the diff's wash and the bar in its colour.
@@ -613,9 +622,14 @@ const BlockContext = createContext<Block | null>(null);
 // Whether CodeBlockActions stand in a header, or over the code.
 const InHeader = createContext(false);
 // How the content draws its lines.
-const LinesContext = createContext<{ lineNumbers: boolean; wrap: boolean }>({
+const LinesContext = createContext<{
+  lineNumbers: boolean;
+  wrap: boolean;
+  streaming: boolean;
+}>({
   lineNumbers: false,
   wrap: false,
+  streaming: false,
 });
 
 const useBlock = (part: string): Block => {
@@ -787,7 +801,7 @@ export const CodeBlockLine = ({
   children,
   variant = "default",
 }: CodeBlockLineProps) => {
-  const { lineNumbers, wrap } = use(LinesContext);
+  const { lineNumbers, wrap, streaming } = use(LinesContext);
   return (
     <span
       data-slot="code-block-line"
@@ -795,6 +809,7 @@ export const CodeBlockLine = ({
       {...stylex.props(
         styles.line,
         wrap && styles.lineWrapped,
+        streaming && styles.lineArrives,
         variant === "highlighted" && styles.highlighted,
         variant === "added" && styles.added,
         variant === "removed" && styles.removed
@@ -984,7 +999,9 @@ export const CodeBlockContent = ({
         >
           <code data-language={language}>
             {/* oxlint-disable-next-line react/jsx-no-constructed-context-values -- compiled */}
-            <LinesContext value={{ lineNumbers, wrap }}>{lines}</LinesContext>
+            <LinesContext value={{ lineNumbers, wrap, streaming }}>
+              {lines}
+            </LinesContext>
           </code>
         </div>
         {more > 0 && (

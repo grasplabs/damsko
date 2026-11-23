@@ -10,7 +10,9 @@
 // While it streams, what is half-written is made whole (parse.ts, repair): bold is bold from its
 // first letter, a table is a table from its first row, an open fence is code still being written,
 // and a link still being written keeps the room its arrow will take. Nothing flickers or re-flows
-// when a mark closes. The words come as they are given: pacing them is the message's job.
+// when a mark closes. The words are let out at a steady pace, a word at a time, however unevenly
+// they arrive (useSmoothText), and each fades in as it is shown (reveal.tsx); code comes a line at a
+// time. Only the block being written is drawn again as words come: a finished block is drawn once.
 //
 // It knows no router and no citation: the host draws any link it wants to (`renderLink`, or a part
 // around it through MarkdownLinkProvider). Every value is a token. A caller sets layout only.
@@ -25,9 +27,12 @@ import {
   useId,
   useRef,
   useState,
+  useSyncExternalStore,
 } from "react";
 import type { FC, ReactNode } from "react";
 
+import { usePacedText, useReducedMotion } from "../../hooks/use-smooth-text";
+import type { SmoothTextUnit } from "../../hooks/use-smooth-text";
 import { useI18n } from "../../lib/i18n";
 import { CheckIcon, ChevronRightIcon, Icon } from "../../lib/icons";
 import { choiceBoxStyles, focusRing, visuallyHidden } from "../../lib/styles";
@@ -40,7 +45,7 @@ import {
   size,
   space,
 } from "../../lib/tokens.stylex";
-import { announce, safeHref } from "../../lib/utils";
+import { announce, nothing, safeHref } from "../../lib/utils";
 import type { LayoutStyle } from "../../lib/utils";
 import { iconVars, motionVars } from "../../lib/vars.stylex";
 import {
@@ -90,6 +95,8 @@ import type {
   RootContent,
   TableNode,
 } from "./parse";
+import { useReveal, useSettled, Words } from "./reveal";
+import type { Reveal } from "./reveal";
 
 /** A link in the answer, as the host's renderer sees it. */
 export interface MarkdownLink {
@@ -128,6 +135,14 @@ export interface MarkdownProps {
    * @default false
    */
   truncated?: boolean;
+  /**
+   * While it streams, the words are let out at a steady pace and each fades in as it is shown:
+   * `word` a word at a time (with the spaces and marks after it), `character` a character at a
+   * time; `false` shows them as they are given, all at once. With reduced motion they show as they
+   * arrive, with no fade.
+   * @default "word"
+   */
+  animated?: SmoothTextUnit | false;
   /**
    * How a screen reader hears it while it is written: `polite`, each block once it is finished;
    * `off`, nothing, for words beside the answer that another part already says (Reasoning's
@@ -485,6 +500,8 @@ interface Context {
   openCode: RootContent | undefined;
   /** Inside a link: a picture or a note's mark there is words, never a link in a link. */
   inLink: boolean;
+  /** This block's words fade in as they are shown: it is being written, or just was. */
+  reveal: Reveal | null;
   words: ReturnType<typeof useI18n>["markdown"];
   /** How a single newline is drawn (`softBreaks`). */
   softBreaks: MarkdownSoftBreaks;
@@ -582,17 +599,37 @@ const eachNode = (
 /** A table column's side, from the source's colons. */
 const sides = { left: "start", right: "end", center: "center" } as const;
 
+/**
+ * A text's words, from `at` in the source: as they are, or while its block is written, each a span
+ * that fades in as it is shown (reveal.tsx).
+ */
+const wordsOf = (value: string, at: number | undefined, context: Context) =>
+  context.reveal === null || at === undefined ? (
+    value
+  ) : (
+    <Words value={value} at={context.base + at} reveal={context.reveal} />
+  );
+
 /** A text's single newlines as line breaks, its words between them as they are. */
-const withBreaks = (value: string): ReactNode => {
+const withBreaks = (
+  value: string,
+  at: number | undefined,
+  context: Context
+): ReactNode => {
   if (!value.includes("\n")) {
-    return value;
+    return wordsOf(value, at, context);
   }
-  return value.split("\n").map((line, index) => (
-    <Fragment key={index}>
-      {index > 0 && <br />}
-      {line}
-    </Fragment>
-  ));
+  let from = 0;
+  return value.split("\n").map((line, index) => {
+    const start = from;
+    from += line.length + 1;
+    return (
+      <Fragment key={index}>
+        {index > 0 && <br />}
+        {wordsOf(line, at === undefined ? at : at + start, context)}
+      </Fragment>
+    );
+  });
 };
 
 const SHORT_LINE = 60;
@@ -784,7 +821,10 @@ const PictureInline = ({
     }
   }
   const href = safeHref(url);
-  const words = alt === "" ? (href ?? "") : alt;
+  const words =
+    alt === ""
+      ? (href ?? "")
+      : wordsOf(alt, node.position?.start.offset, context);
   if (href === null || context.inLink) {
     return words;
   }
@@ -839,7 +879,10 @@ const Inline = ({
 }): ReactNode => {
   switch (node.type) {
     case "text": {
-      return context.lineBreaks ? withBreaks(node.value) : node.value;
+      const at = node.position?.start.offset;
+      return context.lineBreaks
+        ? withBreaks(node.value, at, context)
+        : wordsOf(node.value, at, context);
     }
     case "strong": {
       return (
@@ -870,7 +913,7 @@ const Inline = ({
             context.size === "xs" && styles.xsmallCode
           )}
         >
-          {node.value}
+          {wordsOf(node.value, node.position?.start.offset, context)}
         </code>
       );
     }
@@ -1389,11 +1432,129 @@ const GroupedBlock = ({
   );
 };
 
+/** A finished block as it was drawn, and the source it was drawn from. */
+interface Drawn {
+  from: number;
+  text: string;
+  element: ReactNode;
+}
+
+/** The finished blocks as drawn, and what they were drawn with (`settingsOf`). */
+interface DrawnBlocks {
+  settings: readonly unknown[];
+  blocks: readonly (Drawn | undefined)[];
+}
+
+const NONE_DRAWN: DrawnBlocks = { settings: [], blocks: [] };
+
+/** Where a block stands in the source, when the parser said so. */
+const placeOf = ({ node, base }: Placed) => {
+  const from = node.position?.start.offset;
+  const to = node.position?.end.offset;
+  return from === undefined || to === undefined
+    ? null
+    : { from: base + from, to: base + to };
+};
+
+const noSubscribe = () => nothing;
+
+/**
+ * The answer's blocks, each drawn once it is finished and settled, and then never again: a block
+ * drawn as before (its source, and what it is drawn with, the same) is the same element, which
+ * React passes over. So as an answer is written, only the block being written (and one whose words
+ * are still fading in) is drawn again, however long the answer grows.
+ */
+const useDrawnBlocks = (
+  groups: Grouped[],
+  shown: string,
+  settled: number,
+  reveal: Reveal | null,
+  context: Context,
+  settings: readonly unknown[]
+): ReactNode[] => {
+  const [drawn, setDrawn] = useState(NONE_DRAWN);
+  const same =
+    settings.length === drawn.settings.length &&
+    settings.every((value, index) => Object.is(value, drawn.settings[index]));
+  const drawing = groups.map(
+    (grouped, index): { element: ReactNode; kept: Drawn | undefined } => {
+      // Finished, and its words faded in: drawn as plain text, once.
+      const done = index < settled;
+      const place =
+        done && grouped.type === "block" ? placeOf(grouped.placed) : null;
+      const before = same ? drawn.blocks[index] : undefined;
+      if (
+        place !== null &&
+        before !== undefined &&
+        before.from === place.from &&
+        before.text.length === place.to - place.from &&
+        shown.startsWith(before.text, place.from)
+      ) {
+        return { element: before.element, kept: before };
+      }
+      const element = (
+        <GroupedBlock
+          key={index}
+          grouped={grouped}
+          context={reveal === null || done ? context : { ...context, reveal }}
+        />
+      );
+      return {
+        element,
+        kept:
+          place === null
+            ? undefined
+            : {
+                from: place.from,
+                text: shown.slice(place.from, place.to),
+                element,
+              },
+      };
+    }
+  );
+  const blocks = drawing.map(({ kept }) => kept);
+  if (!same || blocks.some((kept, index) => kept !== drawn.blocks[index])) {
+    setDrawn({ settings, blocks });
+  }
+  return drawing.map(({ element }): ReactNode => element);
+};
+
+/**
+ * What to draw of an answer (useAnswer), its words let out at a steady pace while it is written
+ * (useSmoothText), and how they fade in as they are shown. They fade only in the browser, once it
+ * has taken over the page: what the server drew stands as it is.
+ */
+const useWritten = (
+  source: string,
+  streaming: boolean,
+  truncated: boolean,
+  animated: SmoothTextUnit | false
+) => {
+  const reduced = useReducedMotion();
+  const hydrated = useSyncExternalStore(
+    noSubscribe,
+    () => true,
+    () => false
+  );
+  const paced = usePacedText(bounded(source), {
+    streaming: streaming && animated !== false,
+    unit: animated === false ? "word" : animated,
+  });
+  const reveal = useReveal(
+    paced.text.length,
+    streaming,
+    paced.round,
+    animated !== false && !reduced && hydrated ? animated : false
+  );
+  return { ...useAnswer(paced.text, streaming, truncated), reveal };
+};
+
 /** An answer drawn from Markdown, safe while it streams. */
 export const Markdown = ({
   children: source,
   streaming = false,
   truncated = false,
+  animated = "word",
   live = "polite",
   size: answerSize = "default",
   headingLevel = 1,
@@ -1404,10 +1565,11 @@ export const Markdown = ({
 }: MarkdownProps) => {
   const words = useI18n().markdown;
   const prefix = useId().replaceAll(":", "");
-  const { shown, kept, written } = useAnswer(
-    bounded(source),
+  const { shown, kept, written, reveal } = useWritten(
+    source,
     streaming,
-    truncated
+    truncated,
+    animated
   );
   const provided = use(ProvidedLinks);
   const all = useBlocks(shown, streaming);
@@ -1422,6 +1584,11 @@ export const Markdown = ({
   const lastBlock = blocks.at(-1);
   const tableNames = nameTables(blocks);
   useSaidBlocks(blocks, streaming, live === "polite", tableNames, words.table);
+  const groups = groupSections(placed);
+  const settled = useSettled(
+    streaming ? Math.max(groups.length - 1, 0) : groups.length,
+    streaming
+  );
   const context: Context = {
     definitions,
     renderLink,
@@ -1440,6 +1607,7 @@ export const Markdown = ({
         ? lastBlock
         : undefined,
     inLink: false,
+    reveal: null,
     words,
     softBreaks,
     lineBreaks: false,
@@ -1451,6 +1619,17 @@ export const Markdown = ({
     Inline,
     Block,
   };
+  const drawn = useDrawnBlocks(groups, shown, settled, reveal, context, [
+    renderLink,
+    provided,
+    answerSize,
+    headingLevel,
+    softBreaks,
+    codeMaxLines,
+    words,
+    prefix,
+    written,
+  ]);
   return (
     <div
       data-slot="markdown"
@@ -1463,10 +1642,7 @@ export const Markdown = ({
         style
       )}
     >
-      {groupSections(placed).map((grouped, index) => (
-        // A block keeps its place by its order, so one that is already shown never fades in again.
-        <GroupedBlock key={index} grouped={grouped} context={context} />
-      ))}
+      {drawn}
       {notes.length > 0 && <Notes notes={notes} context={context} />}
     </div>
   );

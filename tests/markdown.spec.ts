@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
-import { openExample } from "./example.ts";
+import { listenToLiveRegions, openExample } from "./example.ts";
 
 /** What the page shows now that it should never show while an answer streams. */
 const strayMarks = async (page: Page) =>
@@ -404,4 +404,226 @@ test("a section written open stands open from the first paint, without opening",
     "data-seen-heights",
     /^[1-9]\d*$/u
   );
+});
+
+// ---- Words fading in as they are shown (examples/markdown/pace) -------------------------------
+
+/** What a stream drew, watched each frame in the page until the answer is whole and settled. */
+interface Watched {
+  /** Each word's fade, by where it starts in the source: when it began, every time it was seen. */
+  begins: Record<string, number[]>;
+  /** The most word spans on the page at once, and how many are left once it is done. */
+  most: number;
+  left: number;
+  /** How far the heading and the first paragraph's first and last words ever moved, in px. */
+  moved: number;
+  /** How many times the first paragraph was drawn again by React once it was finished. */
+  redrawn: number;
+  /** The text shown, in order, each time it changed. */
+  shown: string[];
+}
+
+const watchFades = async (page: Page): Promise<Watched> =>
+  await page.evaluate(
+    async () =>
+      // oxlint-disable-next-line promise/avoid-new -- frames until a condition, which have no promise of their own
+      await new Promise<Watched>((resolve) => {
+        const answer = document.querySelector("[data-slot=markdown]");
+        const seen: Watched = {
+          begins: {},
+          most: 0,
+          left: 0,
+          moved: 0,
+          redrawn: -1,
+          shown: [],
+        };
+        let props: unknown = null;
+        let anchors: { node: Element; top: number; left: number }[] = [];
+        let quiet = 0;
+        // When each word's fade began: its start, less any delay it was given to carry on.
+        const fades = (spans: HTMLElement[]) => {
+          for (const span of spans) {
+            for (const animation of span.getAnimations()) {
+              const delay = animation.effect?.getTiming().delay ?? 0;
+              const start = Number(animation.startTime ?? Number.NaN);
+              const at = span.dataset.at ?? "";
+              if (!Number.isNaN(start)) {
+                seen.begins[at] = [...(seen.begins[at] ?? []), start + delay];
+              }
+            }
+          }
+        };
+        // Once the first paragraph is finished (a list follows it), it never moves or redraws.
+        const finished = (paragraph: Element) => {
+          const key = Object.keys(paragraph).find((name) =>
+            name.startsWith("__reactProps")
+          );
+          const now: unknown =
+            key === undefined ? null : Reflect.get(paragraph, key);
+          if (now !== props) {
+            seen.redrawn += 1;
+            props = now;
+          }
+          if (anchors.length === 0) {
+            anchors = [answer?.querySelector("h2"), paragraph].flatMap(
+              (node) => {
+                if (node === null || node === undefined) {
+                  return [];
+                }
+                const box = node.getBoundingClientRect();
+                return [{ node, top: box.top, left: box.left }];
+              }
+            );
+          }
+        };
+        const frame = () => {
+          const spans = [
+            ...(answer?.querySelectorAll<HTMLElement>("span[data-at]") ?? []),
+          ];
+          seen.most = Math.max(seen.most, spans.length);
+          fades(spans);
+          const text = answer?.textContent ?? "";
+          if (text !== seen.shown.at(-1)) {
+            seen.shown.push(text);
+          }
+          const paragraph = answer?.querySelector("p");
+          if (paragraph && answer?.querySelector("ul")) {
+            finished(paragraph);
+          }
+          for (const { node, top, left } of anchors) {
+            const box = node.getBoundingClientRect();
+            seen.moved = Math.max(
+              seen.moved,
+              Math.abs(box.top - top),
+              Math.abs(box.left - left)
+            );
+          }
+          const busy = answer?.getAttribute("aria-busy") === "true";
+          quiet = !busy && spans.length === 0 ? quiet + 1 : 0;
+          if (quiet > 10) {
+            resolve({ ...seen, left: spans.length });
+          } else {
+            requestAnimationFrame(frame);
+          }
+        };
+        requestAnimationFrame(frame);
+      })
+  );
+
+test("with motion, the words come a few at a time, each fades in once, in order, and the answer ends as text", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await openExample(page, "markdown", "pace");
+  await page.getByRole("button", { name: "Play again" }).click();
+  const watched = await watchFades(page);
+  // A word at a time: many small steps, never a whole paragraph at once.
+  expect(watched.shown.length).toBeGreaterThan(60);
+  for (const [index, text] of watched.shown.entries()) {
+    expect(text.length - (watched.shown[index - 1]?.length ?? 0)).toBeLessThan(
+      120
+    );
+  }
+  // Each word's fade began once: drawn again, made afresh or not, it carries on where it was.
+  const fades = Object.entries(watched.begins);
+  expect(fades.length).toBeGreaterThan(60);
+  for (const [, begun] of fades) {
+    expect(Math.max(...begun) - Math.min(...begun)).toBeLessThan(20);
+  }
+  // In order: a word further on never began before one before it (a frame's grace).
+  const order = fades
+    .map(([at, begun]) => [Number(at), Math.min(...begun)] as const)
+    .toSorted(([one], [other]) => one - other);
+  for (const [index, [, begun]] of order.entries()) {
+    expect(begun).toBeGreaterThanOrEqual((order[index - 1]?.[1] ?? 0) - 20);
+  }
+  // Spans only while a block is written: few at once, none once it is done.
+  expect(watched.most).toBeLessThan(120);
+  expect(watched.left).toBe(0);
+  await expect(page.getByText("expect the finance desk's queue")).toBeVisible();
+});
+
+test("with motion, nothing already shown moves, and a finished block is not drawn again", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await openExample(page, "markdown", "pace");
+  await page.getByRole("button", { name: "250 tokens/s" }).click();
+  const watched = await watchFades(page);
+  expect(watched.moved).toBeLessThan(0.5);
+  // Once with its fading words, once more as plain text when they have faded: never per word.
+  expect(watched.redrawn).toBeLessThanOrEqual(2);
+});
+
+test("with reduced motion, the words show as they arrive: no fade and no spans", async ({
+  page,
+}) => {
+  await openExample(page, "markdown", "pace");
+  await page.getByRole("button", { name: "Bursts" }).click();
+  const watched = await watchFades(page);
+  expect(Object.keys(watched.begins)).toHaveLength(0);
+  expect(watched.most).toBe(0);
+  // Whole bursts: fewer steps than a burst has words.
+  expect(watched.shown.length).toBeLessThan(40);
+});
+
+test("a hidden tab shows all that has arrived at once, and turned off the words come as given", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.clock.install();
+  await openExample(page, "markdown", "pace");
+  await page.getByRole("button", { name: "Bursts" }).click();
+  // Up to a burst that ends half way through a word: "sends" waits for the word after it.
+  await page.clock.runFor(1050);
+  const answer = page.locator("[data-slot=markdown]");
+  await expect(answer).not.toContainText("which sends");
+  await page.evaluate(() => {
+    Object.defineProperty(document, "visibilityState", {
+      configurable: true,
+      get: () => "hidden",
+    });
+    document.dispatchEvent(new Event("visibilitychange"));
+  });
+  await expect(answer).toContainText("which sends");
+  await page.getByRole("button", { name: "Off" }).click();
+  await page.clock.runFor(30);
+  await expect(answer.locator("span[data-at]")).toHaveCount(0);
+});
+
+test("with motion, a screen reader hears each finished block once, never a word at a time", async ({
+  page,
+}) => {
+  const said = await listenToLiveRegions(page);
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await openExample(page, "markdown", "pace");
+  await page.getByRole("button", { name: "250 tokens/s" }).click();
+  const answer = page.locator("[data-slot=markdown]");
+  // While it is written, its words read as one run of text, whatever spans they fade in.
+  await expect(answer).toHaveAttribute("aria-busy", "true");
+  await expect(answer.getByRole("paragraph").first()).toContainText(
+    "Support closed 58 requests and Sales"
+  );
+  expect(await answer.getByRole("paragraph").first().ariaSnapshot()).toMatch(
+    /^- paragraph: Support closed 58 requests and Sales/u
+  );
+  await expect(answer).not.toHaveAttribute("aria-busy");
+  // Each block once, whole: a heading, a paragraph, a list, a table's name, a quote.
+  await expect
+    .poll(async () => {
+      const heardSoFar = await said();
+      return heardSoFar.join(" | ");
+    })
+    .toContain("Next week the rule covers refunds too");
+  // From the run started here: the one that played as the page opened may have begun to speak.
+  const all = await said();
+  const heard = all.slice(all.lastIndexOf("What changed this week"));
+  expect(heard.length).toBeLessThan(12);
+  expect(
+    heard.some((words) =>
+      words.includes(
+        "Support closed 58 requests and Sales closed 33, so the queue is the shortest it has been since March."
+      )
+    )
+  ).toBe(true);
 });

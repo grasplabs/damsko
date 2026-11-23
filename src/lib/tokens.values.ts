@@ -15,6 +15,8 @@ export const durations = {
   arrive: 600,
   stagger: 90,
   swap: 120,
+  stream: 250,
+  streamLag: 400,
   resultFollow: 80,
   work: 1200,
   hold: 1600,

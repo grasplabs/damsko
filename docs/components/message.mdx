@@ -22,7 +22,7 @@ A `Message` is the row; its `MessageContent` is the column that holds the surfac
 
 ## Streaming
 
-With `status="streaming"`, the words come in smoothly between chunks, never in bursts, and what is half-written is drawn whole. With reduced motion they are drawn as they arrive. When the stream ends, all of it shows at once. Its actions keep their room while it is written, unseen, so the end moves nothing.
+With `status="streaming"`, the words come in a word at a time at a steady pace, however unevenly the chunks arrive, each fading in as it is shown, and what is half-written is drawn whole: Markdown's [Word by word](/components/markdown#word-by-word), which `animated` sets (`word`, `character`, or `false` for the words as they come). With reduced motion they are drawn as they arrive. When the stream ends, all of it shows at once. Its actions keep their room while it is written, unseen, so the end moves nothing. Give it the whole answer so far each time more arrives; the pace is the browser's, so a server need not smooth its stream.
 
 <Stage path="message/streaming" label="Streaming" />
 
@@ -224,8 +224,8 @@ const answer: Record<ChatStatus, MessageStatus> = {
     {
       key: "Streaming",
       value:
-        "Each frame lets out a share of the words still to show, so a burst is spread over about 300ms",
-      note: "reduced: drawn as they arrive; the end always at once",
+        "A word at a time, each fading in: a chunk's first word at once, the rest spread until the next is due, never more than {stream-lag} behind",
+      note: "{duration-stream}; reduced: drawn as they arrive; the end always at once",
     },
     {
       key: "Footer",
@@ -240,7 +240,8 @@ const answer: Record<ChatStatus, MessageStatus> = {
     {
       group: "Streaming",
       key: "Words",
-      value: "Grow as they arrive; half-written Markdown is drawn whole.",
+      value:
+        "Come in a word at a time and fade in; half-written Markdown is drawn whole.",
     },
     {
       group: "Streaming",

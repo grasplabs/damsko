@@ -1352,6 +1352,24 @@ export const groups: TokenGroup[] = [
             use: "A control's words changing in place: the old fade out as the new fade in.",
           },
           {
+            name: "duration-stream",
+            category: "duration",
+            value: "250ms",
+            use: "A word of an answer still being written fading in as it is shown: long enough that the last few words fade at once, a soft edge rather than a flicker. Dropped with reduced motion.",
+          },
+          {
+            name: "ease-stream",
+            category: "duration",
+            value: "{ease-in-out}",
+            use: "A streamed word's fade: slow to start and soft to settle, so the last few words shown feather from nothing to full ink rather than flicker on.",
+          },
+          {
+            name: "stream-lag",
+            category: "duration",
+            value: "400ms",
+            use: "The most an answer still being written is shown behind what has arrived: a burst is spread over at most this long, a slow stream shown as it comes.",
+          },
+          {
             name: "swap-blur",
             category: "size",
             value: "blur(2px)",

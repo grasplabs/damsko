@@ -17,11 +17,41 @@ Headings, lists, a table (Table, scrolling sideways in its own box), code in a s
 
 ## While it is written
 
-`streaming`: what is half-written at the end is drawn as what it will be. A table is a table from its head, code shows as it comes in a CodeBlock that says it is being written, a link still being written is its words with its arrow's room kept, and bold is bold from its first letter. Nothing flickers or re-flows when a mark closes. The words come as they are given: pacing them is the message's job. A screen reader hears each block once it is finished, never each word; `live="off"` keeps it silent, for words beside the answer that another part already says (Reasoning's thoughts).
+`streaming`: what is half-written at the end is drawn as what it will be. A table is a table from its head, code shows as it comes in a CodeBlock that says it is being written, a link still being written is its words with its arrow's room kept, and bold is bold from its first letter. Nothing flickers or re-flows when a mark closes. The words come in a word at a time, each fading in (below). A screen reader hears each block once it is finished, never each word; `live="off"` keeps it silent, for words beside the answer that another part already says (Reasoning's thoughts).
 
 <Stage path="markdown/streaming" label="While it is written" />
 
 <Stage path="markdown/half-written" label="Caught part way" />
+
+## Word by word
+
+A model's stream comes in uneven chunks: a token at a time, then a paragraph at once after a pause. While `streaming`, Markdown lets the words out at a steady pace, whole words only, at the pace they arrive: each chunk's first word shows at once and the rest are spread until the next chunk is due, so a burst runs on evenly instead of landing in a lump, and the answer is never more than 400ms behind what has arrived. A word still being written waits for its end, so it never shows in two halves. Each new word fades in once (250ms, opacity only, so nothing beside it moves); a word already shown never fades again, however the answer is read anew. Code comes a line at a time, each new line fading in. When the stream ends, or the tab was hidden, all that has arrived shows at once. With reduced motion the words show as they arrive, with no fade.
+
+`animated` picks the unit: `word` (the default; Chinese, Japanese, Thai and emoji are words too), `character`, or `false` for the words as they are given. Only the block being written is drawn again as words come; a finished block keeps its spans until its last words have faded, then is plain text, drawn once.
+
+<Stage path="markdown/pace" live label="Word by word" />
+
+Feed it the whole text so far, each time more arrives, with `streaming` true until the stream ends. With the AI SDK, that is the message's text parts as `useChat` gives them:
+
+```tsx
+const { messages, status } = useChat();
+
+{
+  messages.map((message, index) => (
+    <Markdown
+      key={message.id}
+      streaming={index === messages.length - 1 && status === "streaming"}
+    >
+      {message.parts
+        .filter((part) => part.type === "text")
+        .map((part) => part.text)
+        .join("")}
+    </Markdown>
+  ));
+}
+```
+
+The pacing happens here, in the browser, so the server sends tokens as they come. Pacing on the server too (the AI SDK's `smoothStream`, which holds each word back by a fixed delay) adds its delay to every word and still arrives in network-sized chunks; leave it off, or keep its delay short. Throttling the client's updates (`useChat`'s `throttle`) only makes the chunks bigger, which the pace spreads again. A hook of its own, `useSmoothText(text, { streaming })` (`hooks/use-smooth-text.ts`), paces any text the same way: the text to show, a word at a time.
 
 ## Cut off
 
@@ -204,6 +234,39 @@ Markdown knows no router and no citation. `renderLink` draws every link and pict
       group: "Blocks",
       key: "Rule",
       value: "A Separator",
+    },
+  ]}
+/>
+
+<Rows
+  title="Motion"
+  rows={[
+    {
+      key: "Pace",
+      value:
+        "A word at a time; each chunk's first word at once, the rest spread until the next is due",
+      note: "{stream-lag} behind at most",
+    },
+    {
+      key: "Words",
+      value: "Each new word fades in once, opacity only",
+      note: "{duration-stream}, {ease-stream}",
+    },
+    {
+      key: "Code",
+      value: "Each new line fades in; its code comes as it is typed",
+      note: "{duration-stream}",
+    },
+    {
+      key: "Framed blocks",
+      value: "A table, fenced code or a rule fades in whole as it arrives",
+      note: "{duration-ui}",
+    },
+    {
+      key: "End",
+      value:
+        "All that has arrived at once: when the stream ends or the tab was hidden",
+      note: "reduced: no pace and no fade, words as they arrive",
     },
   ]}
 />

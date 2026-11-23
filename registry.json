@@ -1573,6 +1573,11 @@
           "path": "src/hooks/use-scroll-edges.ts",
           "type": "registry:file",
           "target": "~/src/hooks/use-scroll-edges.ts"
+        },
+        {
+          "path": "src/hooks/use-smooth-text.ts",
+          "type": "registry:file",
+          "target": "~/src/hooks/use-smooth-text.ts"
         }
       ]
     },
@@ -2047,6 +2052,7 @@
       "registryDependencies": [
         "@damsko/code-block",
         "@damsko/collapsible",
+        "@damsko/hooks",
         "@damsko/lib",
         "@damsko/link",
         "@damsko/separator",
@@ -2072,6 +2078,11 @@
           "path": "src/components/markdown/parse.ts",
           "type": "registry:file",
           "target": "~/src/components/markdown/parse.ts"
+        },
+        {
+          "path": "src/components/markdown/reveal.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/markdown/reveal.tsx"
         }
       ]
     },
@@ -2138,6 +2149,7 @@
       "registryDependencies": [
         "@damsko/bubble",
         "@damsko/button",
+        "@damsko/hooks",
         "@damsko/lib",
         "@damsko/markdown",
         "@damsko/skeleton",
