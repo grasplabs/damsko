@@ -92,7 +92,7 @@ export default function TreeActions() {
         style={layout.after}
         onClick={() => {
           setFiles(["notes.md", "budget.xlsx", "plan.md"]);
-          setSaid("Nothing yet");
+          setSaid("Every file is back");
         }}
       >
         Put back
