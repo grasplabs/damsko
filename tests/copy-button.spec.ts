@@ -1,7 +1,12 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
-import { fixedTime, listenToLiveRegions, openExample } from "./example.ts";
+import {
+  fixedTime,
+  listenToLiveRegions,
+  liveRegion,
+  openExample,
+} from "./example.ts";
 
 test.use({ permissions: ["clipboard-read", "clipboard-write"] });
 
@@ -15,9 +20,9 @@ test("a press copies the value and says so once", async ({ page }) => {
     .poll(async () => await clipboard(page))
     .toContain('import { Badge } from "@grasp-os/ui/components/badge";');
   // The page's one live region says it.
-  await expect(
-    page.getByRole("status").filter({ hasText: /^Copied$/u })
-  ).toHaveCount(1);
+  await expect(liveRegion(page).filter({ hasText: /^Copied$/u })).toHaveCount(
+    1
+  );
 });
 
 test("a copy is over at once, so only its result is said, never that it is working", async ({
@@ -102,7 +107,7 @@ test("a copy that fails says so and is not reported as copied", async ({
   });
   await page.getByRole("button", { name: "Copy the note" }).click();
   await expect(
-    page.getByRole("status").filter({ hasText: /^Not copied$/u })
+    liveRegion(page).filter({ hasText: /^Not copied$/u })
   ).toHaveCount(1);
   await expect(page.getByText("Nothing copied yet")).toBeVisible();
 });

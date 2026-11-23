@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import type { Locator, Page } from "@playwright/test";
 
-import { hasFocusRing, openExample } from "./example.ts";
+import { hasFocusRing, liveRegion, openExample } from "./example.ts";
 
 const clipboard = async (page: Page) =>
   await page.evaluate(async () => await navigator.clipboard.readText());
@@ -47,9 +47,9 @@ test.describe("copying", () => {
     await expect
       .poll(async () => await clipboard(page))
       .toBe("usr_01J9X4F81C2QK7M3");
-    await expect(
-      page.getByRole("status").filter({ hasText: /^Copied$/u })
-    ).toHaveCount(1);
+    await expect(liveRegion(page).filter({ hasText: /^Copied$/u })).toHaveCount(
+      1
+    );
   });
 
   test("a copy button stands in its value's row, at the end", async ({

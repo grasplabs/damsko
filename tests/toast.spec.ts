@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { openExample } from "./example.ts";
+import { liveRegion, openExample } from "./example.ts";
 
 test("a press shows a toast with its words in Notifications, and focus stays where it was", async ({
   page,
@@ -22,7 +22,7 @@ test("a toast is said to a screen reader without taking focus", async ({
   await openExample(page, "toast", "basic");
   await page.getByRole("button", { name: "Share report" }).click();
   await expect(
-    page.getByRole("status").filter({ hasText: "Report shared" })
+    liveRegion(page).filter({ hasText: "Report shared" })
   ).toHaveCount(1);
 });
 

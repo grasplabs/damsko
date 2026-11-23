@@ -1,4 +1,5 @@
-// The page has one pair of live regions, UI SDK's, there from the start and neither an alert;
+// The page has one pair of live regions, UI SDK's, there from the start, neither a status nor an
+// alert;
 // every part speaks through them (lib/utils `announce`), and UI SDK's own parts (a toast, a
 // field's error) too. Messages that come at once are each said once, none lost.
 import { expect, test } from "@playwright/test";
@@ -63,7 +64,7 @@ const addExample = async (
   );
 };
 
-test("the page's two live regions are there from the start, empty, and neither is an alert", async ({
+test("the page's two live regions are there from the start, empty, and neither is a status or an alert", async ({
   page,
 }) => {
   await openExample(page, "empty", "basic");
@@ -71,6 +72,7 @@ test("the page's two live regions are there from the start, empty, and neither i
   await expect(regions).toHaveCount(2);
   await expect(regions).toHaveText(["", ""]);
   await expect(page.getByRole("alert")).toHaveCount(0);
+  await expect(page.getByRole("status")).toHaveCount(0);
   await expect(page.locator("[aria-live=assertive]")).toHaveCount(1);
 });
 

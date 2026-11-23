@@ -4,6 +4,7 @@ import type { Locator, Page } from "@playwright/test";
 import {
   fixedTime,
   listenToLiveRegions,
+  liveRegion,
   openExample,
   pickerFrom,
 } from "./example.ts";
@@ -193,7 +194,7 @@ test("@ opens the menu at the caret, and a pick goes in as one token that Backsp
   await expect(text).toContainText("Ask Amara Okafor");
   // Said as it goes in, with its kind.
   await expect(
-    page.getByRole("status").filter({ hasText: "Amara Okafor" }).first()
+    liveRegion(page).filter({ hasText: "Amara Okafor" }).first()
   ).toContainText("mention");
   await page.keyboard.press("Backspace");
   await page.keyboard.press("Backspace");
@@ -753,7 +754,7 @@ test("a failure the status says shows in the band, and is said once", async ({
   ).toBeVisible();
   // Said once to a screen reader, in the page's live region.
   await expect(
-    page.getByRole("status").filter({ hasText: "Could not send" })
+    liveRegion(page).filter({ hasText: "Could not send" })
   ).toHaveCount(1);
 });
 
@@ -874,7 +875,7 @@ test("an accent colours the working light", async ({ page }) => {
 
 test("success is said once each time it comes", async ({ page }) => {
   await openExample(page, "prompt-input", "success");
-  const said = page.getByRole("status").filter({ hasText: "Done" });
+  const said = liveRegion(page).filter({ hasText: "Done" });
   await expect(said).toHaveCount(1);
   await expect(page.getByRole("button", { name: "Send" })).toBeEnabled();
 });

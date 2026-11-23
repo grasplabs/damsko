@@ -149,6 +149,17 @@ declare global {
   }
 }
 
+/** The page's live region of that politeness, where `announce` and UI SDK's parts speak. */
+export const liveRegion = (
+  page: Page,
+  politeness: "polite" | "assertive" = "polite"
+): Locator =>
+  page.locator(
+    politeness === "polite"
+      ? '[data-ui-sdk-announcer=""]'
+      : '[data-ui-sdk-announcer="assertive"]'
+  );
+
 /**
  * Listens, from before the page opens, to what its live regions (`announce`'s) say, and returns
  * what reads it: every message, in the order it was said.

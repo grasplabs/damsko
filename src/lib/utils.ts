@@ -386,9 +386,10 @@ const heedOthers = (region: HTMLElement) => {
 
 /**
  * The page's two live regions, UI SDK's (`prepareAnnouncements`), so the page has one pair, there
- * before anything is said. Its assertive one is `role="alert"`, an empty alert on every page: the
- * role goes, and `aria-live="assertive"` with `aria-atomic`, all the role means to a screen reader,
- * stays. Readied again before each message, in case the page lost them. Does nothing on the
+ * before anything is said. UI SDK makes them `role="status"` and `role="alert"`: an empty status
+ * and an empty alert on every page, which a page's own `getByRole("status")` or "no alert here"
+ * then finds. The roles go; `aria-live` and `aria-atomic`, all either role means to a screen
+ * reader, stay. Readied again before each message, in case the page lost them. Does nothing on the
  * server, or where UI SDK speaks through an announcer of its own.
  */
 export const readyLiveRegions = (): void => {
@@ -405,9 +406,7 @@ export const readyLiveRegions = (): void => {
     if (region === null || regions.get(politeness) === region) {
       continue;
     }
-    if (politeness === "assertive") {
-      region.removeAttribute("role");
-    }
+    region.removeAttribute("role");
     heedOthers(region);
     regions.set(politeness, region);
   }

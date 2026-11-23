@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
-import { fixedTime, openExample } from "./example.ts";
+import { fixedTime, liveRegion, openExample } from "./example.ts";
 
 test.use({ permissions: ["clipboard-read", "clipboard-write"] });
 
@@ -41,9 +41,9 @@ test("copy puts the code on the clipboard exactly and says so once", async ({
   await page.getByRole("button", { name: COPY }).click();
   // Exactly the code: no line numbers, nothing added.
   await expect.poll(async () => await clipboard(page)).toBe(basicCode);
-  await expect(
-    page.getByRole("status").filter({ hasText: /^Copied$/u })
-  ).toHaveCount(1);
+  await expect(liveRegion(page).filter({ hasText: /^Copied$/u })).toHaveCount(
+    1
+  );
 });
 
 test("the keyboard copies too", async ({ page }) => {

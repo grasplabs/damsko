@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import type { Locator, Page } from "@playwright/test";
 
-import { listenToLiveRegions, openExample } from "./example.ts";
+import { listenToLiveRegions, liveRegion, openExample } from "./example.ts";
 
 // How far the log is scrolled from its top, how far it stands from its end, and how tall its
 // rows are, in pixels.
@@ -235,7 +235,7 @@ test("sending and its answer say 1 new message: the person's own turn is not new
   await page.evaluate(() => {
     window.messageScrollerScript?.answer("The north changed its first week.");
   });
-  await expect(page.getByRole("status")).toHaveText("1 new message");
+  await expect(liveRegion(page)).toHaveText("1 new message");
   await page.evaluate(() => {
     window.messageScrollerScript?.answer(
       "The north changed its first week, and its renewals rose."
@@ -265,7 +265,7 @@ test("older turns drawn above, as the reader reads back, are not news", async ({
   await page.evaluate(() => {
     window.messageScrollerScript?.answer("The north changed its first week.");
   });
-  await expect(page.getByRole("status")).toHaveText("1 new message");
+  await expect(liveRegion(page)).toHaveText("1 new message");
   await page.evaluate(() => {
     window.messageScrollerScript?.older();
   });

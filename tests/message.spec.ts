@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import type { Locator, Page } from "@playwright/test";
 
-import { listenToLiveRegions, openExample } from "./example.ts";
+import { listenToLiveRegions, liveRegion, openExample } from "./example.ts";
 
 test.use({ permissions: ["clipboard-read", "clipboard-write"] });
 
@@ -93,9 +93,9 @@ test("Copy copies the answer's Markdown source and says Copied", async ({
     .poll(async () => await clipboard(page))
     .toContain("**Only Tailspin Logistics raised its prices**");
   expect(await clipboard(page)).toContain("| Supplier | Change | From |");
-  await expect(
-    page.getByRole("status").filter({ hasText: /^Copied$/u })
-  ).toHaveCount(1);
+  await expect(liveRegion(page).filter({ hasText: /^Copied$/u })).toHaveCount(
+    1
+  );
 });
 
 test("the answer reads at the message's words, 14px on a 22px line, its table too", async ({

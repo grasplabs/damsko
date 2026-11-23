@@ -13,7 +13,7 @@
 //
 // F6 moves focus to the newest toast and back; Escape dismisses the focused one. A toast is
 // announced to a screen reader without taking focus, through the page's one pair of live regions,
-// there before the first toast and neither of them an alert (lib/utils `readyLiveRegions`), which
+// there before the first toast and neither a status nor an alert (lib/utils `readyLiveRegions`), which
 // also say what its action says when its work failed (lib/utils `announce`).
 "use client";
 
@@ -533,8 +533,8 @@ export const Toaster = ({
     align = "center";
   }
   useOneRegion(toaster ?? toast, position);
-  // UI SDK's toast region readies the page's live regions as it mounts, its assertive one an
-  // alert: readied once more after it, so neither is (lib/utils `readyLiveRegions`).
+  // UI SDK's toast region readies the page's live regions as it mounts, a status and an alert:
+  // readied once more after it, so they are neither (lib/utils `readyLiveRegions`).
   useEffect(() => {
     readyLiveRegions();
   }, []);

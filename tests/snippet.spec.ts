@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
-import { fixedTime, hasFocusRing, openExample } from "./example.ts";
+import { fixedTime, hasFocusRing, liveRegion, openExample } from "./example.ts";
 
 test.use({ permissions: ["clipboard-read", "clipboard-write"] });
 
@@ -16,9 +16,9 @@ test("a press on the button copies the value and says so once", async ({
   await openExample(page, "snippet", "basic");
   await page.getByRole("button", { name: "Copy the install command" }).click();
   await expect.poll(async () => await clipboard(page)).toContain(command);
-  await expect(
-    page.getByRole("status").filter({ hasText: /^Copied$/u })
-  ).toHaveCount(1);
+  await expect(liveRegion(page).filter({ hasText: /^Copied$/u })).toHaveCount(
+    1
+  );
 });
 
 test("a press on the value copies it too", async ({ page }) => {
