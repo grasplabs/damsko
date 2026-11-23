@@ -28,7 +28,6 @@ export const choosingGroups: ChoosingGroup[] = [
     title: "Saying that something happened",
     of: ["toast", "alert", "empty"],
   },
-  { title: "How something stands", of: ["badge", "tag"] },
   {
     title: "Waiting",
     of: ["skeleton", "spinner", "progress", "agent-indicator", "shimmer"],

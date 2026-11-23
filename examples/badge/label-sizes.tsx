@@ -1,4 +1,4 @@
-import { Tag } from "@grasp-os/ui/components/tag";
+import { Badge } from "@grasp-os/ui/components/badge";
 import { space } from "@grasp-os/ui/lib/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
 
@@ -12,11 +12,14 @@ const layout = stylex.create({
   },
 });
 
-export default function TagSizes() {
+// A label's two sizes: `default` 24px beside body text, `sm` 20px in a dense row.
+export default function BadgeLabelSizes() {
   return (
     <div {...stylex.props(layout.row)}>
-      <Tag>Quarterly</Tag>
-      <Tag size="sm">Quarterly</Tag>
+      <Badge variant="secondary">Quarterly</Badge>
+      <Badge variant="secondary" size="sm">
+        Quarterly
+      </Badge>
     </div>
   );
 }
