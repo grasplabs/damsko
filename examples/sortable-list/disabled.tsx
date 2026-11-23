@@ -15,8 +15,8 @@ const layout = stylex.create({
 
 const tracks = ["Intro", "Morning", "Noon", "Evening"];
 
-// One item held in place (the intro always plays first): it cannot be picked up, and the others
-// still move past it. Below, a whole list out of use, with why.
+// One item that cannot be picked up (the intro is never moved by hand); the others still move past
+// it, so its place changes as they do. Below, a whole list out of use, with why.
 export default function SortableListDisabled() {
   const [order, setOrder] = useState(tracks);
   return (

@@ -2939,6 +2939,7 @@
         "@ui-sdk/react"
       ],
       "registryDependencies": [
+        "@damsko/button",
         "@damsko/lib"
       ],
       "docs": "https://damsko.joingrasp.com/components/sortable-list",

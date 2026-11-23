@@ -24,6 +24,7 @@
 
 import * as stylex from "@stylexjs/stylex";
 import {
+  createAutoScroll,
   createChange,
   createReorder,
   definePrimitive,
@@ -36,7 +37,6 @@ import type { ReactNode } from "react";
 
 import { useI18n } from "../lib/i18n";
 import { GripVerticalIcon, Icon } from "../lib/icons";
-import { focusRing } from "../lib/styles";
 import {
   colors,
   duration,
@@ -48,7 +48,7 @@ import {
 } from "../lib/tokens.stylex";
 import { announce, className } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
-import { iconVars } from "../lib/vars.stylex";
+import { buttonVariants } from "./button";
 
 /** Why the order changed: a pointer's drag, the keyboard, or code. */
 export type SortableListChangeReason = ReorderReason;
@@ -94,7 +94,7 @@ export interface SortableListItemProps {
    */
   textValue?: string;
   /**
-   * It cannot be picked up; the others still move past it.
+   * It cannot be picked up. It does not hold its place: the others still move past it.
    * @default false
    */
   disabled?: boolean;
@@ -135,7 +135,7 @@ interface ItemProps {
 }
 
 /** The draft at rest: nothing picked up. */
-const notMoving: ReorderDraft | null = null;
+const notMoving = (): ReorderDraft | null => null;
 
 const sortableList = definePrimitive({
   name: "sortable-list",
@@ -148,7 +148,7 @@ const sortableList = definePrimitive({
   controlled: ["value"],
   state: (options: SortableListOptions) => ({
     value: options.value ?? [],
-    moving: notMoving,
+    moving: notMoving(),
   }),
   sync: (options) =>
     options.value === undefined ? {} : { value: options.value },
@@ -164,18 +164,97 @@ const sortableList = definePrimitive({
       label: (key) => context.props<ItemProps>("item", key)?.textValue,
       // Said through the page's one live region (lib/utils' announce), as every part of Damsko
       // speaks; the empty text left to UI SDK says nothing a second time.
+      // A step takes the place of the one still waiting to be said, so what is said keeps up
+      // with the item; a pick up, a drop and a put back are each said.
       message: (message) => {
         const { say } = context.options();
         announce(
           say === undefined
             ? reorderMessage(message)
             : say(message.type, message.label, message.position, message.total),
-          "assertive"
+          "assertive",
+          message.type === "move" ? `${context.id}-move` : undefined
         );
         return "";
       },
     });
-    return { reorder };
+
+    // A pointer's drag near the top or bottom of what scrolls (the list's box, the page) scrolls
+    // it, so an item goes past what one screen shows. UI SDK scrolls only while it drags a copy of
+    // the item; here the item itself is dragged, so the scroll is followed here: the item keeps
+    // under the pointer by what scrolled (--drag-scroll), and the drag finds its place again as
+    // the content moves under a still pointer.
+    // The one drag's scrolling at a time: a new press ends the last one's, as does the list going.
+    let stopScrolling: (() => void) | undefined;
+    context.onDestroy(() => {
+      stopScrolling?.();
+    });
+    const scrollWhileDragging = (down: PointerEvent, key: string) => {
+      stopScrolling?.();
+      const item = context.element("item", key);
+      const list = item?.parentElement;
+      if (item === undefined || list === null || list === undefined) {
+        return;
+      }
+      const doc = item.ownerDocument;
+      const { top } = list.getBoundingClientRect();
+      let x = down.clientX;
+      let y = down.clientY;
+      const dragged = () => context.store.get().moving?.pointer === true;
+      const scroller = createAutoScroll({
+        ignore: () => item,
+        onScroll: () => {
+          doc.dispatchEvent(
+            new PointerEvent("pointermove", {
+              pointerId: down.pointerId,
+              pointerType: down.pointerType,
+              isPrimary: down.isPrimary,
+              buttons: 1,
+              clientX: x,
+              clientY: y,
+              bubbles: true,
+            })
+          );
+        },
+      });
+      const moved = (event: PointerEvent) => {
+        if (event.pointerId !== down.pointerId) {
+          return;
+        }
+        x = event.clientX;
+        y = event.clientY;
+        if (dragged()) {
+          scroller.update(x, y);
+        }
+      };
+      const scrolled = () => {
+        if (dragged()) {
+          item.style.setProperty(
+            "--drag-scroll",
+            `${top - list.getBoundingClientRect().top}px`
+          );
+        }
+      };
+      const listening = new AbortController();
+      const stop = () => {
+        stopScrolling = undefined;
+        scroller.stop();
+        item.style.removeProperty("--drag-scroll");
+        listening.abort();
+      };
+      const ended = (event: PointerEvent) => {
+        if (event.pointerId === down.pointerId) {
+          stop();
+        }
+      };
+      const { signal } = listening;
+      doc.addEventListener("pointermove", moved, { signal });
+      doc.addEventListener("pointerup", ended, { signal });
+      doc.addEventListener("pointercancel", ended, { signal });
+      doc.addEventListener("scroll", scrolled, { capture: true, signal });
+      stopScrolling = stop;
+    };
+    return { reorder, scrollWhileDragging };
   },
   slots: (slot) => ({
     root: slot({}),
@@ -211,7 +290,10 @@ const sortableList = definePrimitive({
       // A press with no drag (a click, or a screen reader's activation, which sends no key) picks
       // the item up, and a second puts it down, as Space does; a press on another item's handle
       // puts the first back and picks that one up. A drag that ends swallows its click.
-      press: ({ api, key, store }, event) => {
+      // Focus goes to the handle first: a click does not give a button focus in WebKit, and the
+      // arrows that move the item are the handle's.
+      press: ({ api, key, store, el }, event) => {
+        el?.focus({ preventScroll: true });
         const state = store.get();
         if (api.reorder.moving(state, key)) {
           api.reorder.drop(event);
@@ -228,6 +310,7 @@ const sortableList = definePrimitive({
         },
         pointerdown: (event, { api, key }) => {
           api.reorder.pointerdown(event, key);
+          api.scrollWhileDragging(event, key);
         },
       },
     }),
@@ -238,7 +321,6 @@ const sortableList = definePrimitive({
 
 const COARSE = media.pointerCoarse;
 const FORCED = media.forcedColors;
-const HOVER = media.hover;
 const REDUCED = media.reducedMotion;
 
 const styles = stylex.create({
@@ -280,45 +362,16 @@ const styles = stylex.create({
   },
   // Dragged: it follows the pointer up and down the list, never sideways.
   dragging: {
-    transform: "translateY(var(--drag-y, 0px))",
+    transform: "translateY(calc(var(--drag-y, 0px) + var(--drag-scroll, 0px)))",
     // Its words are not selected as it is dragged over.
     userSelect: "none",
   },
-  // The grip: a ghost icon button, square at the small control's height.
-  handle: {
-    [iconVars.size]: size.iconSm,
-    [iconVars.stroke]: size.iconStroke,
-    position: "relative",
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    flexShrink: 0,
-    width: size.controlSm,
-    height: size.controlSm,
-    margin: 0,
-    padding: 0,
-    borderWidth: { default: 0, [FORCED]: 1 },
-    borderStyle: "solid",
-    borderColor: "transparent",
-    borderRadius: `min(${radius.xl}, calc(${size.controlSm} / 2))`,
-    cornerShape: radius.shape,
-    backgroundColor: {
-      default: "transparent",
-      ":hover": { default: null, [HOVER]: colors.accent },
-      ":active": colors.accentActive,
-    },
-    color: {
-      default: colors.mutedForeground,
-      ":hover": { default: null, [HOVER]: colors.foreground },
-    },
+  // The grip: Button's ghost icon button (buttonVariants), which a finger drags the item by;
+  // anywhere else on the item a finger scrolls the page.
+  grip: {
     cursor: { default: "grab", ":active": "grabbing" },
-    // A finger on the grip drags the item; anywhere else on the item it scrolls the page.
     touchAction: "none",
     userSelect: "none",
-    WebkitTapHighlightColor: "transparent",
-    transitionProperty: "background-color, color",
-    transitionDuration: duration.hover,
-    transitionTimingFunction: duration.ease,
   },
   // Up from the keyboard: the press's fill stays while it is moved.
   handleMoving: {
@@ -444,10 +497,10 @@ export const SortableListHandle = ({
       disabled,
       className: (state: { moving: boolean }) =>
         className(
-          styles.handle,
+          buttonVariants({ variant: "ghost", size: "icon-sm" }),
+          styles.grip,
           state.moving && styles.handleMoving,
-          disabled && styles.handleDisabled,
-          focusRing
+          disabled && styles.handleDisabled
         ),
       children: (
         <>

@@ -10,7 +10,7 @@ description: A list a person puts in order by hand, dragging each item by its ha
 
 ## Basic usage
 
-SortableList holds the order; each SortableListItem is one item, and its SortableListHandle moves it. Drag a handle, or focus one and press Space, the arrows, then Space. Keep the order in state: the new one comes back through `onValueChange` once the item is put down.
+SortableList holds the order; each SortableListItem is one item, and its SortableListHandle moves it. Two of Grasp's apps put a list in order this way: the admin, a company's onboarding steps; the web app, a field's options. Drag a handle, or focus one and press Space, the arrows, then Space. Keep the order in state: the new one comes back through `onValueChange` once the item is put down.
 
 <Stage path="sortable-list/basic" live label="Basic usage" />
 
@@ -26,11 +26,15 @@ A space typed in a field is a space; only a handle picks an item up.
 
 <Stage path="sortable-list/fields" live label="Items that are fields" />
 
-## Held in place
+## Items that cannot be picked up
 
-A `disabled` item cannot be picked up, and the others still move past it. A `disabled` list moves nothing; say why near it.
+A `disabled` item cannot be picked up. It does not hold its place: the others move past it, and it moves aside for them. A `disabled` list moves nothing; say why near it.
 
-<Stage path="sortable-list/disabled" live label="Held in place" />
+<Stage
+  path="sortable-list/disabled"
+  live
+  label="Items that cannot be picked up"
+/>
 
 ## Right to left
 
