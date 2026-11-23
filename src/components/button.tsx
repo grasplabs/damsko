@@ -266,10 +266,11 @@ const styles = stylex.create({
         [media.maxSm]: 0,
       },
     },
+    // It may give way in a row that is short of room, whatever the page's reset says.
     minWidth: {
-      default: null,
+      default: 0,
       [stylex.when.ancestor(":is(*)", layerFooterMarker)]: {
-        default: null,
+        default: 0,
         [media.maxSm]: "fit-content",
       },
     },
