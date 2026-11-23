@@ -812,6 +812,17 @@ describe("an answer of more lines than any answer's", () => {
       800,
     ],
     ["a line with no spaces", (n: number) => "a".repeat(n), 160_000],
+    // A piece never reads more of another than its name: what it defines may be long.
+    [
+      "links to one long definition",
+      (n: number) => `[a]: ${"x".repeat(25 * n)}\n\n${"[a]\n\n".repeat(n)}`,
+      4000,
+    ],
+    [
+      "references to one long note",
+      (n: number) => `[^a]: ${"x ".repeat(12 * n)}\n\n${"[^a]\n\n".repeat(n)}`,
+      4000,
+    ],
     [
       "code of many lines",
       (n: number) => `\`\`\`\n${"a\n\nb\n".repeat(n)}\`\`\`\n`,
@@ -853,6 +864,27 @@ describe("an answer of more lines than any answer's", () => {
     ],
     ["a paragraph of many lines", (n: number) => "a\n".repeat(n)],
     ["blank lines in a list", (n: number) => `- a\n${"\n".repeat(n)}- b\n`],
+    [
+      "a list whose lines end in a return alone",
+      (n: number) => "- a\r".repeat(n),
+    ],
+    // What looks to open code and does not: its lines count as any others do.
+    [
+      "a list after a fence in HTML",
+      (n: number) => `<div>\n\`\`\`\n</div>\n\n${"- item\n".repeat(n)}`,
+    ],
+    [
+      "a list after a fence in a comment",
+      (n: number) => `<!--\n\`\`\`\n-->\n\n${"- item\n".repeat(n)}`,
+    ],
+    [
+      "a list after a fence that its list item's end closed",
+      (n: number) => `- a\n  \`\`\`\n\nb\n\n${"- item\n".repeat(n)}`,
+    ],
+    [
+      "a quote carried on by lines with no mark, after a fence in HTML",
+      (n: number) => `<div>\n\`\`\`\n</div>\n\n> a\n${"a\n".repeat(n)}`,
+    ],
   ])(
     "%s of 24,000 lines takes no more than its lines' share longer than one of 3,000",
     (_, make) => {
@@ -1008,6 +1040,16 @@ describe("an answer of more lines than any answer's", () => {
         `Before.\n\n\`\`\`md\n${counted((at) => `- item ${at}\n\n# heading ${at}\n> quote\n`)(n)}\`\`\`\n\nAfter **it**.\n`,
     ],
     [
+      "code of 6,000 lines, and the list of 100 lines after it",
+      () =>
+        `Before.\n\n\`\`\`\n${counted((at) => `line ${at}\n${at % 3 === 0 ? "\nat the margin\n" : ""}`)(3600)}\`\`\`\n\n${counted((at) => `- item ${at}\n`)(100)}`,
+    ],
+    [
+      "5,000 links defined one under the other, each referred to",
+      () =>
+        `${counted((at) => `See [r${at}].\n\n`)(5000)}${counted((at) => `[r${at}]: https://example.com/${at}\n`)(5000)}`,
+    ],
+    [
       "code never closed",
       (n: number) =>
         `Before.\n\n~~~\n${counted((at) => `- item ${at}\n\n`)(n)}`,
@@ -1065,6 +1107,22 @@ describe("an answer of more lines than any answer's", () => {
       counted((at) => `> paragraph ${at}\n>\n>\n`),
     ],
     ["notes", counted((at) => `Words[^${at}].\n\n[^${at}]: Note ${at}.\n\n`)],
+    [
+      "paragraphs after a byte order mark",
+      (n: number) =>
+        `\uFEFF${counted((at) => `Paragraph ${at} of **it**.\n\n`)(n)}`,
+    ],
+    [
+      "a list with lines of a no-break space or a form feed alone in it",
+      counted(
+        (at) =>
+          `- item ${at}\n${at % 7 === 0 ? "\u00A0\n" : ""}${at % 11 === 0 ? "\f\n" : ""}\nBetween **them**.\n\n`
+      ),
+    ],
+    [
+      "paragraphs whose lines end in a return alone",
+      counted((at) => `Paragraph ${at} of **it**.\r\r- item\r\r`),
+    ],
     [
       "a note of many paragraphs",
       (n: number) =>
@@ -1253,18 +1311,19 @@ describe("an answer read in pieces is the answer read whole", () => {
     "> > deep|\t- tab|<pre>|</pre>|- [ ] t|- |   |>     code|[r2]:|  /u2|<script>|</script>|<?|?>|**b",
     "c**|`co|de`|[a|](b)|>```|  ```|-|2.|Setext|  ---|- - a|> # h|    - deep|      - deeper|<details>",
     "</details>|<summary>s</summary>|````|~~~~|   ```|<![CDATA[|]]>|<!DOCTYPE html>|[r]:|  [x]: /x",
+    "\u00A0|\f|\u00A0a",
   ]
     .join("|")
     .replaceAll("/", "\n")
     .split("|");
   const soup = () => {
     const favoured = [pick(kinds, ""), pick(kinds, ""), pick(kinds, "")];
-    const eol = random(8) === 0 ? "\r\n" : "\n";
+    const eol = pick(["\n", "\n", "\n", "\n", "\n", "\r\n", "\r"], "\n");
     return made(
       70 + random(260),
       () => (random(3) === 0 ? pick(favoured, "") : pick(kinds, "")) + eol,
-      ""
-    );
+      random(6) === 0 ? "\uFEFF" : ""
+    ).replace(/^(?=.)/u, random(6) === 0 ? "\uFEFF" : "");
   };
 
   test.each([
@@ -1358,6 +1417,24 @@ describe("while a long block is written", () => {
     },
     SLOW_TEST
   );
+
+  test("a paragraph shown as plain text for want of budget stays plain as more is written", () => {
+    // 2,448 marks: its square is all but the budget. Its end comes with a paragraph of 140 more.
+    const dense = `${"*a* ".repeat(1224)}\n\n`;
+    const next = "*b* ".repeat(110);
+    let kept = NOTHING;
+    const marked: boolean[] = [];
+    for (const end of [
+      dense.length - 40,
+      dense.length + 280,
+      dense.length + 440,
+    ]) {
+      const read = readBlocks((dense + next).slice(0, end), kept);
+      ({ kept } = read);
+      marked.push(hasMarks(read.blocks.at(-1)?.node ?? { type: "none" }));
+    }
+    expect(marked).toStrictEqual([true, false, false]);
+  });
 
   test(
     "a list written past the budget keeps its items a list, and the lines after them plain",
