@@ -778,6 +778,105 @@ test("right to left, a row's icon, its words, its count and its nested rows mirr
   expect(nested.right).toBe(parent.right);
 });
 
+/**
+ * How far a row's words travel over the 40 frames from when `act` starts: the spread of where they
+ * start, in pixels.
+ */
+const travelOf = async (row: Locator, act: () => Promise<void>) => {
+  await row.evaluate((node) => {
+    const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT);
+    let text = walker.nextNode();
+    while (text !== null && (text.textContent ?? "").trim() === "") {
+      text = walker.nextNode();
+    }
+    const range = document.createRange();
+    if (text !== null) {
+      range.selectNodeContents(text);
+    }
+    const starts: number[] = [];
+    delete node.dataset.travel;
+    const watch = () => {
+      starts.push(range.getBoundingClientRect().left);
+      if (starts.length < 40) {
+        requestAnimationFrame(watch);
+      } else {
+        node.dataset.travel = String(Math.max(...starts) - Math.min(...starts));
+      }
+    };
+    watch();
+  });
+  await act();
+  await expect(row).toHaveAttribute("data-travel", /\d/u);
+  return Number(await row.getAttribute("data-travel"));
+};
+
+/** How far a row's words travel as the pointer rests on it, presses it and leaves, and focus comes and goes. */
+const movesOf = async (page: Page, row: Locator) => {
+  const box = await boxOf(row);
+  return [
+    await travelOf(row, async () => {
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    }),
+    await travelOf(row, async () => {
+      await page.mouse.down();
+    }),
+    await travelOf(row, async () => {
+      await page.mouse.move(900, 600);
+      await page.mouse.up();
+    }),
+    await travelOf(row, async () => {
+      await page.keyboard.press("Shift");
+      await row.focus();
+    }),
+    await travelOf(row, async () => {
+      await row.blur();
+    }),
+  ];
+};
+
+for (const [example, folded, direction] of [
+  ["basic", false, "ltr"],
+  ["basic", false, "rtl"],
+  ["actions", false, "ltr"],
+  ["levels", false, "ltr"],
+  ["icon", true, "ltr"],
+] as const) {
+  test(`${example}, ${folded ? "on the rail" : "open"}, ${direction}: a row's words stay where they stand while it is hovered, pressed and focused`, async ({
+    page,
+  }) => {
+    // Forty frames for each of five moves on every row.
+    test.slow();
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    await openExample(page, "sidebar", example);
+    await page.evaluate((dir) => {
+      document.documentElement.dir = dir;
+    }, direction);
+    if (folded) {
+      await triggerOf(page).click();
+      // Once the fold has drawn: each row a 32px square.
+      const first = sidebarOf(page).getByRole("link").first();
+      await expect
+        .poll(async () => {
+          const box = await boxOf(first);
+          return box.width;
+        })
+        .toBe(32);
+    }
+    await page.mouse.move(900, 600);
+    const rows = sidebarOf(page)
+      .getByRole("navigation")
+      .first()
+      .getByRole("link");
+    await expect(rows.first()).toBeVisible();
+    for (const row of await rows.all()) {
+      // oxlint-disable-next-line no-await-in-loop -- one row after the other, as a person goes
+      expect(await movesOf(page, row), (await row.textContent()) ?? "").toEqual(
+        [0, 0, 0, 0, 0]
+      );
+    }
+  });
+}
+
 // ---- Long names ----------------------------------------------------------------------------------
 
 test("a name longer than its row ends in an ellipsis inside the row, and its tooltip shows it whole", async ({
