@@ -175,3 +175,31 @@ test("a cleared search gives the list back and the focus to the search", async (
   await expect(search).toHaveAttribute("placeholder", "Search projects");
   await expect(page.getByText(/No projects match/u)).toHaveCount(0);
 });
+
+test("every shape of what will stand in the place is drawn whole: no dither left at no size", async ({
+  page,
+}) => {
+  await openExample(page, "empty", "clearing");
+  const found = await page
+    .getByText("None yet.")
+    .first()
+    .evaluate(() => {
+      const fills = [
+        ...document.querySelectorAll(
+          "[data-slot=empty] ~ [aria-hidden=true] *"
+        ),
+        ...document.querySelectorAll(
+          "[aria-hidden=true]:has(~ [data-slot=empty]) *"
+        ),
+      ].filter((part) => getComputedStyle(part).backgroundImage !== "none");
+      return {
+        fills: fills.length,
+        empty: fills.filter((part) => {
+          const box = part.getBoundingClientRect();
+          return box.width === 0 || box.height === 0;
+        }).length,
+      };
+    });
+  expect(found.fills).toBeGreaterThan(20);
+  expect(found.empty).toBe(0);
+});

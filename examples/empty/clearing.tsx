@@ -142,7 +142,7 @@ const ghost = stylex.create({
     cornerShape: radius.shape,
   }),
   asked: { marginInlineStart: "auto" },
-  fill: { width: "100%", height: "100%" },
+  fill: { display: "block", width: "100%", height: "100%" },
   // A chart: its bars on the place's floor, a line's room under the words.
   chart: {
     alignItems: "flex-end",
