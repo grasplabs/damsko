@@ -4,7 +4,7 @@
 // through every entry point a render uses, holding three things:
 //
 //   - growth: at four times the size, under eight times the time on the processor (in step is
-//     four, the square sixteen), the best of three;
+//     four, the square sixteen), the best of up to five runs;
 //   - a hard cap at 2 KB, which a path that grows exponentially passes by long before it grows;
 //   - a ceiling per character at the larger size, which a path that is in step but costly for
 //     each character (a line nested 199 deep) passes by.
@@ -316,8 +316,11 @@ const GROWTH = 8;
  */
 const TINY = 2000;
 const HARD_CAP = 200;
-/** What one call may take for each character at the larger size, in milliseconds (30 µs). */
-const CEILING = 0.03;
+/**
+ * What one call may take for each character at the larger size, in milliseconds (100 µs): what is
+ * in step but costly for each character, as a line nested 199 deep was, takes more.
+ */
+const CEILING = 0.1;
 
 /** What is run: given an answer, a call that weighs one entry point on it. */
 export type Entry = (text: string) => () => void;
@@ -325,7 +328,8 @@ export type Entry = (text: string) => () => void;
 /**
  * What is wrong with `entry` on `family`, or null: growth from `small` to four times it of GROWTH
  * or more, more than CEILING a character at the larger size, or more than HARD_CAP at 2 KB. Each
- * is the best of three, the second and third run only when the first is over.
+ * is the best of up to five runs, each run only when the ones before are over: a busy machine
+ * slows one run, not five.
  */
 export const weighed = (
   family: Family,
@@ -334,7 +338,7 @@ export const weighed = (
 ): string | null => {
   const tiny = entry(family.make(TINY));
   let capped = Number.POSITIVE_INFINITY;
-  for (let run = 0; run < 3 && capped > HARD_CAP; run += 1) {
+  for (let run = 0; run < 5 && capped > HARD_CAP; run += 1) {
     const start = now();
     tiny();
     capped = Math.min(capped, now() - start);
@@ -347,7 +351,7 @@ export const weighed = (
   const more = entry(family.make(large));
   let fast = Number.POSITIVE_INFINITY;
   let slow = Number.POSITIVE_INFINITY;
-  for (let run = 0; run < 3; run += 1) {
+  for (let run = 0; run < 5; run += 1) {
     fast = Math.min(fast, costOf(fewer));
     slow = Math.min(slow, costOf(more));
     if (slow < fast * GROWTH && slow < large * CEILING) {

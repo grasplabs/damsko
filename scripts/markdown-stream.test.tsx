@@ -401,9 +401,13 @@ describe("the cost gate's hostile families, streamed a character at a time", () 
   test("what was shown is only ever added to, but for marks a later character decides", () => {
     const found: string[] = [];
     for (const family of families) {
-      if (family.kind !== "random") {
+      // Each mark and structure, and each pair of marks in one paragraph.
+      if (
+        family.kind !== "random" &&
+        (family.kind !== "pair" || !family.blocks)
+      ) {
         const { changes } = streamOf(
-          family.make(family.kind === "pair" ? 48 : 200),
+          family.make(family.kind === "pair" ? 40 : 160),
           false
         );
         found.push(

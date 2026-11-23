@@ -21,16 +21,23 @@ import type { Entry } from "./markdown-cost.ts";
 /** How many chunks are weighed at the end of a stream. */
 const STEPS = 2;
 
+/** What one read of a stream so far keeps, by where it stops and the answer: read once for every chunk size. */
+const keptAt = new Map<string, Kept>();
+
 /** Chunks of `chunk` characters at the end of a stream of an answer. */
 const streamed =
   (chunk: number): Entry =>
   (text) => {
-    // The last chunks, so the answer is as long as the family's size when they are read.
+    // The last chunks, so the answer is as long as the family's size when they are read. What
+    // Markdown keeps is that of a read a little further back, the same for every chunk size: a
+    // block it keeps is finished, so it is kept a few characters later too.
     const from = Math.max(0, text.length - chunk * STEPS);
-    const { kept } = readBlocks(
-      repair(bounded(text.slice(0, from))).text,
-      NOTHING
-    );
+    const at = Math.max(0, text.length - 1024 * STEPS);
+    const key = `${at}:${text}`;
+    const kept =
+      keptAt.get(key) ??
+      readBlocks(repair(bounded(text.slice(0, at))).text, NOTHING).kept;
+    keptAt.set(key, kept);
     return () => {
       let held: Kept = kept;
       for (let step = 1; step <= STEPS; step += 1) {

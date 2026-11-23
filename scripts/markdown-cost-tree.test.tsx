@@ -1,9 +1,10 @@
 // The cost gate (scripts/markdown-cost.ts) on an answer read and drawn whole, from 4 KB to 16 KB:
 // each mark and structure drawn on the server while written (bounded, repaired, read a block at a
 // time, drawn), which reads it as it is read once written too; and each pair of marks in one
-// paragraph read while written (a pair in blocks of its own is weighed as text and streamed). A tree
-// costs the parser some microseconds a character, so these are the sizes a minute allows, and well
-// past where a path that grows as the square shows it.
+// paragraph read while written (a pair in blocks of its own is weighed as text). A tree costs the
+// parser some microseconds a character, so these are the sizes a minute allows, and well past
+// where a path that grows as the square shows it. (A paragraph's marks cost their square up to the
+// parse's budget, a tenth of a second, and no further: see MAX_COST in parse.ts.)
 //
 //   pnpm exec vp test scripts/markdown-cost-tree.test.tsx
 import { renderToStaticMarkup } from "react-dom/server";
