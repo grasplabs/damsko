@@ -20,7 +20,7 @@ export default function ThemeTogglePickerMd() {
       <div {...stylex.props(layout.ground, column.settings)}>
         <ThemeToggle
           variant="picker"
-          label="Appearance"
+          aria-label="Appearance"
           tileSize="default"
           mode={mode}
           onModeChange={setMode}

@@ -3,14 +3,19 @@
 // each thumb, so the keys, a screen reader's gestures and an agent all move it. A soft track, the
 // ink range, a white thumb with the low lift; its label and the value stand on one line above it.
 //
-//   <Slider label="Volume" defaultValue={40} />
-//   <Slider label="Price" defaultValue={[20, 80]} thumbLabels={["Lowest price", "Highest price"]} />
+//   <Slider defaultValue={40}><SliderLabel>Volume</SliderLabel></Slider>
+//   <Slider defaultValue={[20, 80]} thumbLabels={["Lowest price", "Highest price"]}>
+//     <SliderLabel>Price</SliderLabel>
+//   </Slider>
 //   <Field><FieldLabel>Volume</FieldLabel><Slider defaultValue={40} /></Field>   the Field labels it
 //
 // `variant="levels"` is one of a short, named scale (two to seven levels), chosen along a round
 // track of dots, built for effort (Low, Medium, High, Extra high, Max):
 //
-//   <Slider variant="levels" label="Effort" levels={levels} defaultValue="medium" />
+//   <Slider variant="levels" levels={levels} defaultValue="medium">
+//     <SliderLabel>Effort</SliderLabel>
+//   </Slider>
+//   <Slider variant="levels" aria-label="Effort" levels={levels} />   no words over the track
 //
 // Its track is filled with a halftone of dots: up to the thumb they are lit, the ink and its deeper
 // green, growing further along so more reads as more; the last few before the thumb glow warm. Past
@@ -31,7 +36,7 @@ import {
   SliderTrack,
   SliderValue as SliderValuePrimitive,
 } from "@ui-sdk/react/slider";
-import { useEffect, useId, useRef, useState } from "react";
+import { createContext, use, useEffect, useId, useRef, useState } from "react";
 import type {
   ChangeEvent,
   ComponentProps,
@@ -80,11 +85,11 @@ interface SliderDefaultOwnProps {
    */
   variant?: "default";
   /**
-   * What it sets, in sentence case ("Volume"). It names a single thumb, and a range's group. Leave
-   * it out inside a Field: its FieldLabel names the slider. Levels: required, a quiet word above
-   * the track.
+   * Its SliderLabel: what it sets, in sentence case ("Volume"). It names a single thumb, and a
+   * range's group. Leave it out inside a Field: its FieldLabel names the slider. Levels: a quiet
+   * word above the track, or `aria-label` in its place.
    */
-  label?: ReactNode;
+  children?: ReactNode;
   /** One sentence under it: what the number changes. A screen reader says it after the name. */
   description?: ReactNode;
   /**
@@ -93,7 +98,7 @@ interface SliderDefaultOwnProps {
    */
   thumbLabels?: string[];
   /**
-   * Shows the value beside the label, formatted with `format`. Only with a `label`.
+   * Shows the value beside the label, formatted with `format`. Only with a SliderLabel.
    * @default true
    */
   showValue?: boolean;
@@ -147,21 +152,14 @@ interface SliderDefaultOwnProps {
 }
 
 /** The props of a levels slider: one of a short named scale. */
-interface SliderLevelsProps {
+interface SliderLevelsBase {
   // Each prop it shares with the default slider is documented there, once, for both.
   variant: "levels";
-  /** The levels, lowest first: two to seven. Fewer than two shows `emptyLabel` and no control. */
+  /** The levels, lowest first: two to seven. Fewer than two shows `emptyText` and no control. */
   levels: readonly SliderLevel[];
   value?: string | undefined;
   defaultValue?: string | undefined;
   onValueChange?: ((value: string) => void) | undefined;
-  label: string;
-  /**
-   * Shows `label` over the track. Set `false` when the words round it name it: a screen reader
-   * still says it. Levels only.
-   * @default true
-   */
-  showLabel?: boolean;
   /**
    * The last level is its own state while chosen (the working light in the dots, a wave, the thumb
    * aglow): `true`, `false`, or `"auto"`, on for four levels or more (a short scale's last step is
@@ -176,8 +174,35 @@ interface SliderLevelsProps {
   size?: "sm" | "default";
   disabled?: boolean;
   /** The line shown instead of the control when there are fewer than two levels. Levels only. */
-  emptyLabel?: ReactNode;
+  emptyText?: ReactNode;
   style?: LayoutStyle;
+}
+
+/**
+ * A levels slider with its name over the track.
+ * @when levels, with a SliderLabel
+ */
+interface SliderLevelsLabelled extends SliderLevelsBase {
+  children: ReactNode;
+  "aria-label"?: never;
+}
+
+/**
+ * A levels slider the words round it already name.
+ * @when levels, without a SliderLabel
+ */
+interface SliderLevelsNamed extends SliderLevelsBase {
+  children?: never;
+  /** What it sets ("Effort"), when no SliderLabel stands over the track. Levels only. */
+  "aria-label": string;
+}
+
+type SliderLevelsProps = SliderLevelsLabelled | SliderLevelsNamed;
+
+/** Every prop a SliderLabel takes. */
+export interface SliderLabelProps {
+  /** What the slider sets, in sentence case ("Volume"). */
+  children: ReactNode;
 }
 
 type SliderDefaultProps = SliderDefaultOwnProps &
@@ -384,10 +409,19 @@ const SliderRail = ({
   </SliderControl>
 );
 
+/** Which slider a SliderLabel stands in: it draws that slider's label. */
+const LabelContext = createContext<
+  | { variant: "default" }
+  | { variant: "levels"; id: string | undefined; large: boolean }
+  | undefined
+>(undefined);
+
+const DEFAULT_LABEL = { variant: "default" } as const;
+
 /** A number or a range along a scale. */
 const DefaultSlider = ({
   variant: _variant,
-  label,
+  children,
   description,
   thumbLabels,
   showValue = true,
@@ -398,7 +432,8 @@ const DefaultSlider = ({
   ...rest
 }: SliderDefaultProps) => {
   const start = rest.value ?? rest.defaultValue ?? 0;
-  const labelled = label !== undefined && label !== null && label !== "";
+  const labelled =
+    children !== undefined && children !== null && children !== false;
   const slider = (
     <SliderPrimitive
       {...rest}
@@ -409,7 +444,7 @@ const DefaultSlider = ({
     >
       {labelled && (
         <div {...stylex.props(styles.head)}>
-          <FieldLabel>{label}</FieldLabel>
+          <LabelContext value={DEFAULT_LABEL}>{children}</LabelContext>
           {showValue && (
             <SliderValuePrimitive
               {...stylex.props(styles.value, disabled && styles.disabled)}
@@ -1063,6 +1098,7 @@ const LevelsTrack = ({
   large,
   lit,
   id,
+  ariaLabel,
   input,
   describedBy,
 }: {
@@ -1073,6 +1109,7 @@ const LevelsTrack = ({
   large: boolean;
   lit: boolean;
   id: string;
+  ariaLabel: string | undefined;
   input: RefObject<HTMLInputElement | null>;
   describedBy: string | undefined;
 }) => {
@@ -1150,6 +1187,7 @@ const LevelsTrack = ({
           <input
             ref={input}
             id={id}
+            aria-label={ariaLabel}
             type="range"
             min={0}
             max={count - 1}
@@ -1201,18 +1239,42 @@ const LevelsEnds = ({
   </div>
 );
 
+/** A slider's name, over its track: what it sets. */
+export const SliderLabel = ({ children }: SliderLabelProps) => {
+  const slider = use(LabelContext);
+  if (slider === undefined) {
+    throw new Error("SliderLabel must be used within a Slider.");
+  }
+  if (slider.variant === "default") {
+    return <FieldLabel>{children}</FieldLabel>;
+  }
+  // No control to name (fewer than two levels): the words alone.
+  const Tag = slider.id === undefined ? "span" : "label";
+  return (
+    <Tag
+      htmlFor={slider.id}
+      {...stylex.props(
+        levelStyles.label,
+        slider.large && levelStyles.labelDefault
+      )}
+    >
+      {children}
+    </Tag>
+  );
+};
+
 /** One of a short named scale, chosen along a round track of dots. */
 const LevelsSlider = ({
   levels,
   value,
   defaultValue,
   onValueChange,
-  label,
-  showLabel = true,
+  children,
+  "aria-label": ariaLabel,
   top = "auto",
   size: sliderSize = "default",
   disabled = false,
-  emptyLabel,
+  emptyText,
   style,
 }: SliderLevelsProps) => {
   const id = useId();
@@ -1235,20 +1297,19 @@ const LevelsSlider = ({
         data-empty=""
         {...stylex.props(levelStyles.root, style)}
       >
-        <span
-          {...stylex.props(
-            levelStyles.label,
-            large && levelStyles.labelDefault,
-            !showLabel && visuallyHidden
-          )}
-        >
-          {label}
-        </span>
+        {ariaLabel === undefined ? (
+          // oxlint-disable-next-line react/jsx-no-constructed-context-values -- compiled
+          <LabelContext value={{ variant: "levels", id: undefined, large }}>
+            {children}
+          </LabelContext>
+        ) : (
+          <span {...stylex.props(visuallyHidden)}>{ariaLabel}</span>
+        )}
         <p
           data-slot="slider-levels-empty"
           {...stylex.props(levelStyles.note, levelStyles.emptyRoom)}
         >
-          {emptyLabel}
+          {emptyText}
         </p>
       </div>
     );
@@ -1266,16 +1327,12 @@ const LevelsSlider = ({
         style
       )}
     >
-      <label
-        htmlFor={id}
-        {...stylex.props(
-          levelStyles.label,
-          large && levelStyles.labelDefault,
-          !showLabel && visuallyHidden
-        )}
-      >
-        {label}
-      </label>
+      {ariaLabel === undefined ? (
+        // oxlint-disable-next-line react/jsx-no-constructed-context-values -- compiled
+        <LabelContext value={{ variant: "levels", id, large }}>
+          {children}
+        </LabelContext>
+      ) : null}
       <LevelsTrack
         levels={levels}
         at={at}
@@ -1284,6 +1341,7 @@ const LevelsSlider = ({
         large={large}
         lit={topOn(top, count) && at === count - 1}
         id={id}
+        ariaLabel={ariaLabel}
         input={input}
         describedBy={
           description === undefined ? undefined : `${id}-description`

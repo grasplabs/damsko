@@ -35,9 +35,9 @@ const saveProject = (_data: FormData) =>
 export default function FormsSettings() {
   const form = useRef<HTMLFormElement>(null);
   const save = useAction(saveProject, {
-    loadingLabel: "Saving",
-    successLabel: "Saved",
-    errorLabel: "Not saved",
+    loadingText: "Saving",
+    successText: "Saved",
+    errorText: "Not saved",
   });
   return (
     <Form
@@ -85,9 +85,9 @@ export default function FormsSettings() {
           type="submit"
           variant="default"
           status={save.status}
-          loadingLabel="Saving"
-          successLabel="Saved"
-          errorLabel="Not saved"
+          loadingText="Saving"
+          successText="Saved"
+          errorText="Not saved"
         >
           Save changes
         </Button>

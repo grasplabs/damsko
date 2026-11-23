@@ -55,7 +55,7 @@ export default function ThemeSystem() {
     <div data-mode={mode} data-theme={theme} {...stylex.props(styles.ground)}>
       <ThemeToggle
         variant="picker"
-        label="Appearance"
+        aria-label="Appearance"
         mode={mode}
         onModeChange={setMode}
         theme={theme}

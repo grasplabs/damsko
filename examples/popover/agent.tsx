@@ -59,8 +59,8 @@ const Share = () => {
             size="sm"
             variant="default"
             onClick={send}
-            loadingLabel="Sending"
-            errorLabel="Could not send"
+            loadingText="Sending"
+            errorText="Could not send"
           >
             Send invite
           </Button>
@@ -97,8 +97,8 @@ const Publish = () => {
             size="sm"
             variant="default"
             onClick={publish}
-            loadingLabel="Publishing"
-            errorLabel="Could not publish"
+            loadingText="Publishing"
+            errorText="Could not publish"
           >
             Publish now
           </Button>

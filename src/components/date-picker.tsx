@@ -127,7 +127,7 @@ export interface DatePickerProps extends Omit<
    * The calendar button's whole name, in the page's language, in place of the I18nProvider's
    * (`datePicker.select`) and the date after it.
    */
-  triggerLabel?: string;
+  triggerText?: string;
   /**
    * For a range: the ranges offered in a column beside the months. `true` for Today, Last 7 days,
    * Last 30 days and This month, counted from today (`today`, else the browser's, in `timeZone`),
@@ -673,7 +673,7 @@ export const DatePicker = ({
   onValueChange,
   numberOfMonths = 1,
   size: scale = "default",
-  triggerLabel,
+  triggerText,
   presets = false,
   "aria-invalid": ariaInvalid,
   showOutsideDays,
@@ -696,7 +696,7 @@ export const DatePicker = ({
   const said = saidOf(value, locale);
   const choose = range ? words.rangeTrigger : words.select;
   const named =
-    triggerLabel ?? (said === "" ? choose : words.triggerWith(choose, said));
+    triggerText ?? (said === "" ? choose : words.triggerWith(choose, said));
   return (
     <RootPrimitive
       {...rest}

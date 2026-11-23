@@ -40,7 +40,7 @@ export default function MessageActionsExample() {
           </Bubble>
           <MessageActions>
             <CopyButton value={question} />
-            <MessageAction label="Edit">
+            <MessageAction aria-label="Edit">
               <Icon icon={PencilIcon} />
             </MessageAction>
           </MessageActions>
@@ -52,7 +52,7 @@ export default function MessageActionsExample() {
           <MessageActions>
             <CopyButton value={answer} />
             <MessageAction
-              label="Good answer"
+              aria-label="Good answer"
               pressed={rating === "good"}
               onClick={() => {
                 setRating(rating === "good" ? null : "good");
@@ -63,7 +63,7 @@ export default function MessageActionsExample() {
               />
             </MessageAction>
             <MessageAction
-              label="Poor answer"
+              aria-label="Poor answer"
               pressed={rating === "poor"}
               onClick={() => {
                 setRating(rating === "poor" ? null : "poor");
@@ -73,7 +73,7 @@ export default function MessageActionsExample() {
                 icon={rating === "poor" ? ThumbsDownFilledIcon : ThumbsDownIcon}
               />
             </MessageAction>
-            <MessageAction label="Write it again">
+            <MessageAction aria-label="Write it again">
               <Icon icon={RefreshCwIcon} />
             </MessageAction>
           </MessageActions>

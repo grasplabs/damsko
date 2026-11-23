@@ -21,7 +21,7 @@ export default function CommandAgent() {
           {
             value: "send",
             label: "Send the summary",
-            errorLabel: "Could not send",
+            errorText: "Could not send",
           },
         ]}
         onAction={async (value) => {

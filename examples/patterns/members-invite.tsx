@@ -223,8 +223,8 @@ export function InviteDialog({
             size="sm"
             variant="default"
             onClick={send}
-            loadingLabel="Sending"
-            errorLabel="Could not send"
+            loadingText="Sending"
+            errorText="Could not send"
           >
             Send invites
           </Button>

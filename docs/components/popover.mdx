@@ -50,7 +50,7 @@ An icon-only trigger can say what its popover is for with a Tooltip round it. Th
   always={[
     "A title that says what the popover is for, in sentence case: Publish this report.",
     "Cancel first, then the one action the popover is for, last.",
-    "An `errorLabel` on the action's Button that says plainly what did not happen: Could not publish.",
+    "An `errorText` on the action's Button that says plainly what did not happen: Could not publish.",
   ]}
   never={["A popover opened from inside another popover."]}
 />
@@ -183,13 +183,13 @@ An icon-only trigger can say what its popover is for with a Tooltip round it. Th
       group: "Input",
       key: "Failed",
       value:
-        "The Button says its `errorLabel` for {duration-hold}, and the popover stays open to try again.",
+        "The Button says its `errorText` for {duration-hold}, and the popover stays open to try again.",
     },
     {
       group: "Input",
       key: "Agents",
       value:
-        "Open it by its trigger's name, read its title, press an action by name. A failed action answers not ok, with its `errorLabel`.",
+        "Open it by its trigger's name, read its title, press an action by name. A failed action answers not ok, with its `errorText`.",
     },
     {
       group: "Content",

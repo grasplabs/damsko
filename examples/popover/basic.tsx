@@ -44,8 +44,8 @@ export default function PopoverBasic() {
             size="sm"
             variant="default"
             onClick={publish}
-            loadingLabel="Publishing"
-            errorLabel="Could not publish"
+            loadingText="Publishing"
+            errorText="Could not publish"
           >
             Publish
           </Button>

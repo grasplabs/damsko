@@ -84,7 +84,7 @@ export default function SidePanelSectionExample() {
       <SidePanelSection
         title="Context"
         description="Files and notes the agent reads before it starts."
-        emptyLabel="Add context"
+        emptyText="Add context"
       />
     </div>
   );

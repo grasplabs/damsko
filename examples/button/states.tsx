@@ -17,8 +17,8 @@ export default function ButtonState({
     <Button
       variant={variant}
       status={status}
-      successLabel="Saved"
-      errorLabel="Not saved"
+      successText="Saved"
+      errorText="Not saved"
       disabled={disabled}
     >
       Save changes

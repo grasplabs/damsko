@@ -37,9 +37,9 @@ export default function Offline() {
             variant="outline"
             size="sm"
             onClick={check}
-            loadingLabel="Checking"
-            successLabel="Back online"
-            errorLabel="Still offline"
+            loadingText="Checking"
+            successText="Back online"
+            errorText="Still offline"
           >
             Check again
           </Button>

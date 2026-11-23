@@ -148,7 +148,7 @@ export default function SidePanelBasic() {
           <SidePanelSection
             title="People with access"
             description="Who can open the report."
-            emptyLabel="Add people"
+            emptyText="Add people"
           />
         </SidePanelContent>
         <SidePanelContent value="activity">

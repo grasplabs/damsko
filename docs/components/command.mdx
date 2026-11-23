@@ -66,7 +66,7 @@ The list as parts: CommandGroup with its `heading`, CommandItem with the command
     "`actions` on a command, with `onItemAction`, when a result has more to do than its one action: behind a quiet More, and the right arrow.",
     "Commands that start with a verb: New project, not Project.",
     "Groups when there are more than a handful.",
-    "An errorLabel for every command whose work can fail.",
+    "An errorText for every command whose work can fail.",
   ]}
   never={[
     "A shortcut the browser already uses, such as Ctrl+J or Ctrl+N.",
@@ -136,7 +136,7 @@ The list as parts: CommandGroup with its `heading`, CommandItem with the command
     {
       group: "Items",
       key: "Failed",
-      value: "Its errorLabel at the end",
+      value: "Its errorText at the end",
       tokens: ["destructive"],
     },
   ]}
@@ -194,7 +194,7 @@ The list as parts: CommandGroup with its `heading`, CommandItem with the command
     {
       group: "Work",
       key: "Failed",
-      value: "A throw or a rejection shows the command's `errorLabel`.",
+      value: "A throw or a rejection shows the command's `errorText`.",
     },
   ]}
 />

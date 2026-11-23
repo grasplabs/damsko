@@ -19,13 +19,13 @@ Scroll it: the bar stays, gains its hairline, and takes the views as icons. The 
 
 ## Views alone
 
-Without a title, the views are the head: they stand at the panel's top with their words, never fold, and stay while the content scrolls. The SidePanel's `aria-label` names the panel, and `viewsLabel` the views. For a side panel of the page's own thing, a note's links and comments, where a title would only repeat the page's.
+Without a title, the views are the head: they stand at the panel's top with their words, never fold, and stay while the content scrolls. The SidePanel's `aria-label` names the panel, and `viewsText` the views. For a side panel of the page's own thing, a note's links and comments, where a title would only repeat the page's.
 
 <Stage path="side-panel/views-only" label="Views alone" />
 
 ## Sections
 
-Each section is a quiet title, one action at the end of its row and one card under it. A `description` explains the title in a tooltip, under a dashed line. Empty, the card is one row that adds the first (`emptyLabel`, `onAdd`).
+Each section is a quiet title, one action at the end of its row and one card under it. A `description` explains the title in a tooltip, under a dashed line. Empty, the card is one row that adds the first (`emptyText`, `onAdd`).
 
 <Stage path="side-panel/section" label="Sections" />
 
@@ -182,7 +182,7 @@ SidePanelText holds a long text in a card (an agent's instructions, a note): it 
     {
       key: "Views",
       value:
-        "Tabs: one tab stop, the arrow keys between them, folded or not; named by `viewsLabel`, else the I18nProvider's `sidePanel.views`",
+        "Tabs: one tab stop, the arrow keys between them, folded or not; named by `viewsText`, else the I18nProvider's `sidePanel.views`",
     },
     {
       key: "Close",

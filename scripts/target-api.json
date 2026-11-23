@@ -371,8 +371,11 @@
   "progress": {
     "src/components/progress.tsx": [
       "Progress",
+      "ProgressLabel",
+      "ProgressValue",
       "ProgressCircle",
       "ProgressProps",
+      "ProgressLabelProps",
       "ProgressCircleProps",
       "ProgressVariant",
       "ProgressSize"
@@ -1119,7 +1122,9 @@
       "PromptInputNote",
       "PromptInputBanner",
       "PromptInputQueue",
+      "PromptInputQueueContent",
       "PromptInputQueueItem",
+      "PromptInputQueueTrigger",
       "PromptInputVoice",
       "PromptInputMention",
       "PromptInputMentionContent",
@@ -1147,7 +1152,9 @@
       "PromptInputNoteProps",
       "PromptInputBannerProps",
       "PromptInputQueueProps",
+      "PromptInputQueueContentProps",
       "PromptInputQueueItemProps",
+      "PromptInputQueueTriggerProps",
       "PromptInputVoiceProps",
       "PromptInputMentionProps",
       "PromptInputMentionContentProps",
@@ -1217,7 +1224,9 @@
   "slider": {
     "src/components/slider.tsx": [
       "Slider",
+      "SliderLabel",
       "SliderProps",
+      "SliderLabelProps",
       "SliderValue",
       "SliderLevel"
     ],

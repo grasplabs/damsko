@@ -54,8 +54,8 @@ export default function DrawerBasic() {
           <Button
             size="sm"
             onClick={save}
-            loadingLabel="Saving"
-            errorLabel="Could not save"
+            loadingText="Saving"
+            errorText="Could not save"
           >
             Set reminder
           </Button>

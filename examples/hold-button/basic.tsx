@@ -11,9 +11,9 @@ export default function HoldButtonBasic() {
     <HoldButton
       variant="destructive"
       onConfirm={deleteDraft}
-      loadingLabel="Deleting"
-      successLabel="Deleted"
-      errorLabel="Not deleted"
+      loadingText="Deleting"
+      successText="Deleted"
+      errorText="Not deleted"
     >
       <Icon icon={TrashIcon} />
       Delete draft

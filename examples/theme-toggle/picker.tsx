@@ -26,7 +26,7 @@ export default function ThemeTogglePicker() {
       <div {...stylex.props(layout.ground, layout.wide)}>
         <ThemeToggle
           variant="picker"
-          label="Appearance"
+          aria-label="Appearance"
           mode={mode}
           onModeChange={setMode}
           theme={theme}

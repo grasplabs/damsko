@@ -113,7 +113,7 @@ export interface InspectorSection {
   /** Adds to it: "Add" at the title's end, and the empty card's one row. */
   onAdd?: () => void;
   /** The empty card's words, where "Add" and the title read badly ("Add a trigger"). */
-  emptyLabel?: string;
+  emptyText?: string;
   /** Another action at the title's end, in place of "Add": a switch, a menu. */
   action?: ReactNode;
 }
@@ -271,7 +271,7 @@ const Section = ({
       <SidePanelSection
         title={section.title}
         description={section.description}
-        emptyLabel={section.emptyLabel ?? words.addTo(section.title)}
+        emptyText={section.emptyText ?? words.addTo(section.title)}
         onAdd={handleAdd}
       />
     );
@@ -366,7 +366,7 @@ export const Inspector = ({
           actions={actions}
           onClose={onClose}
           views={views}
-          viewsLabel={words.views}
+          viewsText={words.views}
         />
         {tabs.length > 0
           ? tabs.map((view) => (

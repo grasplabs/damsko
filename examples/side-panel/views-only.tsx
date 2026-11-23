@@ -35,7 +35,7 @@ export default function SidePanelViewsOnly() {
     <div {...stylex.props(layout.box)}>
       <SidePanel aria-label="About this note" defaultValue="links">
         <SidePanelHeader
-          viewsLabel="About this note"
+          viewsText="About this note"
           views={[
             { value: "links", label: "Links", icon: LinkIcon },
             { value: "comments", label: "Comments", icon: MessageCircleIcon },
@@ -78,14 +78,14 @@ export default function SidePanelViewsOnly() {
           <SidePanelSection
             title="Comments"
             description="What people said about it."
-            emptyLabel="No comments yet"
+            emptyText="No comments yet"
           />
         </SidePanelContent>
         <SidePanelContent value="history">
           <SidePanelSection
             title="History"
             description="Its changes, the newest first."
-            emptyLabel="No changes yet"
+            emptyText="No changes yet"
           />
         </SidePanelContent>
       </SidePanel>

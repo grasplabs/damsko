@@ -2,7 +2,7 @@
 
 import { Badge } from "@grasp-os/ui/components/badge";
 import { Button } from "@grasp-os/ui/components/button";
-import { Slider } from "@grasp-os/ui/components/slider";
+import { Slider, SliderLabel } from "@grasp-os/ui/components/slider";
 import {
   colors,
   font,
@@ -403,13 +403,14 @@ export default function ColourGrounds() {
       </div>
       <div {...stylex.props(styles.foot)}>
         <Slider
-          label="From night to paper"
           value={at}
           onValueChange={(value) => {
             setAt(typeof value === "number" ? value : (value[0] ?? 50));
           }}
           showValue={false}
-        />
+        >
+          <SliderLabel>From night to paper</SliderLabel>
+        </Slider>
       </div>
     </div>
   );

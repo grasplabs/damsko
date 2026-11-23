@@ -103,10 +103,10 @@ export interface ThemeToggleProps {
    */
   tileSize?: "fill" | "default";
   /**
-   * Its name, said with the choice, and the picker's mode heading.
+   * Its name, said with the choice: the name of the group of modes.
    * @default "Theme" (I18nProvider themeToggle.label)
    */
-  label?: string;
+  "aria-label"?: string;
   /** Layout only: where it sits. */
   style?: LayoutStyle;
 }
@@ -926,7 +926,7 @@ export const ThemeToggle = ({
   themes = noThemes,
   showThemes = true,
   tileSize = "fill",
-  label: labelGiven,
+  "aria-label": labelGiven,
   style,
 }: ThemeToggleProps) => {
   const { themeToggle: words } = useI18n();

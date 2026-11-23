@@ -27,8 +27,8 @@ export const useCopy = (
     },
     {
       ...labels,
-      successLabel: labels.successLabel ?? words.copied,
-      errorLabel: labels.errorLabel ?? words.copyError,
+      successText: labels.successText ?? words.copied,
+      errorText: labels.errorText ?? words.copyError,
     }
   );
 };

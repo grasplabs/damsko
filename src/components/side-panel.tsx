@@ -7,7 +7,7 @@
 //   <SidePanel aria-label="Agent" defaultValue="settings">
 //     <SidePanelHeader title="Weekly pipeline digest" views={[...]} actions={...} onClose={close} />
 //     <SidePanelContent value="settings">
-//       <SidePanelSection title="Triggers" emptyLabel="Add trigger" onAdd={openTriggers} />
+//       <SidePanelSection title="Triggers" emptyText="Add trigger" onAdd={openTriggers} />
 //     </SidePanelContent>
 //   </SidePanel>
 //
@@ -306,7 +306,7 @@ export interface SidePanelHeaderProps {
   /** The thing's views, as tabs under its head. The SidePanel needs a `defaultValue` or `value`. */
   views?: SidePanelView[];
   /** What the views are of, as a screen reader names the tab list. Left out, `sidePanel.views`. */
-  viewsLabel?: string;
+  viewsText?: string;
   /**
    * The level of the title's heading.
    * @default 2
@@ -937,7 +937,7 @@ export const SidePanelHeader = ({
   actions,
   onClose: onCloseGiven,
   views,
-  viewsLabel,
+  viewsText,
   level,
   loading,
 }: SidePanelHeaderProps) => {
@@ -956,7 +956,7 @@ export const SidePanelHeader = ({
   // No title and nothing else of a head: no head, no empty room; the views are the panel's top.
   const headed = hasHead({ title, icon, description, meta });
   if (!headed && !holds && hasViews) {
-    return <ViewsStrip views={views} label={viewsLabel} list={list} />;
+    return <ViewsStrip views={views} label={viewsText} list={list} />;
   }
   return (
     <>
@@ -991,7 +991,7 @@ export const SidePanelHeader = ({
           {...stylex.props(headerStyles.viewsSentinel)}
         />
       )}
-      {hasViews && <Views views={views} label={viewsLabel} list={list} />}
+      {hasViews && <Views views={views} label={viewsText} list={list} />}
       <div
         aria-hidden
         data-slot="side-panel-header-line"
@@ -1200,7 +1200,7 @@ interface WithContent extends SectionBase {
    * @default true
    */
   card?: boolean;
-  emptyLabel?: never;
+  emptyText?: never;
   onAdd?: never;
 }
 
@@ -1212,7 +1212,7 @@ interface Empty extends SectionBase {
   children?: never;
   card?: never;
   /** The words of the row that adds the first one ("Add trigger"). */
-  emptyLabel: string;
+  emptyText: string;
   /** Runs when that row is pressed. */
   onAdd?: () => void;
 }
@@ -1349,7 +1349,7 @@ export const SidePanelSection = (props: SidePanelSectionProps) => {
   const id = useId();
   const Heading = sectionHeadings[level];
   const card =
-    props.emptyLabel === undefined ? (
+    props.emptyText === undefined ? (
       props.children
     ) : (
       // A list of one, named by the title: the row that adds the first.
@@ -1364,7 +1364,7 @@ export const SidePanelSection = (props: SidePanelSectionProps) => {
             <Icon icon={PlusIcon} />
           </ItemMedia>
           <ItemContent>
-            <ItemTitle>{props.emptyLabel}</ItemTitle>
+            <ItemTitle>{props.emptyText}</ItemTitle>
           </ItemContent>
         </Item>
       </ItemGroup>
@@ -1386,7 +1386,7 @@ export const SidePanelSection = (props: SidePanelSectionProps) => {
           <div {...stylex.props(sectionStyles.end)}>{action}</div>
         )}
       </div>
-      {props.emptyLabel === undefined && props.card === false ? (
+      {props.emptyText === undefined && props.card === false ? (
         props.children
       ) : (
         <div

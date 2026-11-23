@@ -32,7 +32,7 @@ export default function SwitchAgent() {
       </Field>
       <Field orientation="horizontal">
         <FieldLabel>Reminders</FieldLabel>
-        <Switch onSave={() => wait(300)} errorLabel="Could not save" />
+        <Switch onSave={() => wait(300)} errorText="Could not save" />
       </Field>
     </form>
   );
