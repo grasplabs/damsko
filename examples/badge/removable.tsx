@@ -1,6 +1,6 @@
 "use client";
 
-import { Tag } from "@grasp-os/ui/components/tag";
+import { Badge } from "@grasp-os/ui/components/badge";
 import { size, space } from "@grasp-os/ui/lib/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
 import { useState } from "react";
@@ -11,23 +11,24 @@ const layout = stylex.create({
     flexWrap: "wrap",
     gap: space["2"],
     justifyContent: "center",
-    minHeight: size.tagHeight,
+    minHeight: size.badgeLabelHeight,
   },
 });
 
-export default function TagRemovable() {
+export default function BadgeRemovable() {
   const [tags, setTags] = useState(["Design", "Research", "Hiring"]);
   return (
     <div {...stylex.props(layout.row)}>
       {tags.map((tag) => (
-        <Tag
+        <Badge
           key={tag}
+          variant="secondary"
           onRemove={() => {
             setTags((current) => current.filter((item) => item !== tag));
           }}
         >
           {tag}
-        </Tag>
+        </Badge>
       ))}
     </div>
   );

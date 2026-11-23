@@ -177,7 +177,7 @@
   --damsko-radius-hairline: 2px;
   /* Marks under 24px tall: a key, inline code. */
   --damsko-radius-mark: 6px;
-  /* A pill: a chip, a tag, the track of a switch or a slider. Never a control that holds buttons. */
+  /* A pill: a chip, a badge, the track of a switch or a slider. Never a control that holds buttons. */
   --damsko-radius-full: 999px;
   /* A circle: an avatar, a dot. */
   --damsko-radius-circle: 50%;
@@ -407,8 +407,8 @@
   --damsko-input-focus-read: inset 0 0 0 1px var(--damsko-input-border-focus);
   /* A wrong field in focus: its red hairline stays and the faint halo turns red, so it stays wrong while you type. */
   --damsko-input-focus-invalid: inset 0 0 0 1px var(--damsko-input-border-invalid), var(--damsko-input-shadow), 0 0 0 3px var(--damsko-input-focus-halo-invalid);
-  /* The size of the words in every field on a phone or a touch screen (media.typing), a Select's trigger too, so fields side by side stay one size: under 16px, Safari zooms the page in on focus. */
-  --damsko-input-text-touch: 16px;
+  /* The size of the words in every field on a phone or a touch screen (media.typing), a Select's trigger too, so fields side by side stay one size: under 16px, Safari zooms the page in on focus. Never under 16px, and in rem above it, since words follow the reader's text size. */
+  --damsko-input-text-touch: max(16px, 1rem);
   /* The breath of lift under a field, beneath its hairline: lift-low's shadow without its edge. */
   --damsko-input-shadow: 0 1px 2px var(--damsko-shadow-color-faint), 0 2px 4px var(--damsko-shadow-color-faint);
   /* Checkbox: checkbox. */
@@ -548,8 +548,16 @@
   --damsko-badge-height-sm: 18px;
   /* Room at each end of a badge, inside its pill. */
   --damsko-badge-padding: 6px;
-  /* An icon before a badge's words. */
+  /* An icon before a badge's words, and a label's remove cross. */
   --damsko-badge-icon: 12px;
+  /* The height of a label: a secondary or outline badge, which sorts or names something. */
+  --damsko-badge-label-height: var(--damsko-chip);
+  /* The height of a small label, in a dense row. */
+  --damsko-badge-label-height-sm: 20px;
+  /* Room at each end of a label's words. */
+  --damsko-badge-label-padding: var(--damsko-space-2);
+  /* A secondary badge's fill: a veil of ink, so it shows on paper and on soft. */
+  --damsko-badge-secondary: var(--damsko-accent-active);
   /* The mark of a severity: a dot beside neutral words, so the colour never paints the whole line. */
   --damsko-severity-dot: 6px;
   /* Empty: empty. */
@@ -830,17 +838,6 @@
   --damsko-resizable-handle-length: 24px;
   /* The width of a handle's grip. */
   --damsko-resizable-handle-width: 4px;
-  /* Tag: tag. */
-  /* The height of a tag. */
-  --damsko-tag-height: var(--damsko-chip);
-  /* The height of a small tag, in a dense row. */
-  --damsko-tag-height-sm: 20px;
-  /* Room at each end of a tag's words. */
-  --damsko-tag-padding: var(--damsko-space-2);
-  /* The size of an icon in a tag, and of its remove cross. */
-  --damsko-tag-icon: var(--damsko-badge-icon);
-  /* A soft tag's fill: a veil of ink, so it shows on paper and on soft. */
-  --damsko-tag-bg: var(--damsko-accent-active);
   /* Section header: section header. */
   /* Room between a section's header and each part under it. */
   --damsko-section-header-gap: var(--damsko-space-6);

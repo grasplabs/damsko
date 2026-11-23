@@ -1,10 +1,16 @@
-// Badge: a short status in a pill: a soft tinted fill, the system's edge, and words
-// in the variant's colour. It says how something stands; it does nothing when pressed, unless it is
-// drawn as a link (`asChild`).
+// Badge: a word or two in a pill. Five variants are a status, how something stands (`default`,
+// `success`, `warning`, `destructive`, `info`): a soft tinted fill, the system's edge, and words in
+// the variant's colour. Two are a label, what sorts or names something ("Design", "Q3"):
+// `secondary`, a soft fill, and `outline`, an edge alone, a step taller with the words in the
+// text's colour. It does nothing when pressed, unless it is drawn as a link (`asChild`); with
+// `onRemove` it carries a small button that takes it away, as a filter or a chosen value does.
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
 //   <Badge>Draft</Badge>
 //   <Badge variant="success" icon={CheckIcon}>Ready</Badge>
+//   <Badge variant="secondary">Design</Badge>                a label
+//   <Badge variant="outline" icon={LinkIcon}>Shared</Badge>
+//   <Badge variant="secondary" onRemove={() => drop("design")}>Design</Badge>
 //   <Badge variant="destructive" size="sm">Failed</Badge>
 //   <Badge loading={sending} icon={CheckIcon}>{sending ? "Sending" : "Invited"}</Badge>
 //   <Badge dot variant="destructive">3 errors</Badge>        how serious, as a dot
@@ -17,19 +23,19 @@
 // variant keeps its own shape: destructive and success a full dot, warning a ring, default and
 // info a dash.
 //
-// For a label that sorts or names something, use a Tag. Every value is a token. A caller may set
-// layout only (the `style` prop).
+// Every value is a token. A caller may set layout only (the `style` prop). The remove button's name
+// comes from the I18nProvider (`badge.remove`, `badge.removeNamed`).
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
 import { renderElement } from "@ui-sdk/react/primitive";
 import { isValidElement } from "react";
-import type { ReactNode } from "react";
+import type { MouseEvent, ReactElement, ReactNode } from "react";
 
 import { useI18n } from "../lib/i18n";
-import { Icon, LoaderIcon } from "../lib/icons";
+import { Icon, LoaderIcon, XIcon } from "../lib/icons";
 import type { IconData } from "../lib/icons";
-import { focusRing, hyphenate } from "../lib/styles";
+import { focusRing, hyphenate, tapTarget } from "../lib/styles";
 import {
   colors,
   duration,
@@ -41,33 +47,53 @@ import {
 } from "../lib/tokens.stylex";
 import { isBlank } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
-import { iconVars } from "../lib/vars.stylex";
+import { iconVars, motionVars } from "../lib/vars.stylex";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip";
 
-/** How it stands: a plain fact, done or fine, worth a look, failed or blocked, a note. */
+/**
+ * A status, how it stands: a plain fact, done or fine, worth a look, failed or blocked, a note. Or
+ * a label, what sorts or names it: `secondary` filled, `outline` an edge alone.
+ */
 export type BadgeVariant =
   | "default"
+  | "secondary"
+  | "outline"
   | "success"
   | "warning"
   | "destructive"
   | "info";
-/** `default` 22px, `sm` 18px for a dense table. */
+/** A status: `default` 22px, `sm` 18px for a dense table. A label: `default` 24px, `sm` 20px. */
 export type BadgeSize = "sm" | "default";
 
-/** Every prop a Badge takes. */
-export interface BadgeProps {
+/** A label's variants: what sorts or names something. */
+type BadgeLabelVariant = "secondary" | "outline";
+
+/** What every Badge takes, a status or a label. */
+interface BadgeOwnProps {
   /**
    * The status, in a word or two, in sentence case ("Needs review"). It says it, never the colour
    * alone. With `dot`, what happened or how many ("3 errors"); leave it out for the dot alone. With
-   * `asChild`, the one element to draw as the badge (`<a href>`), holding the words.
+   * `asChild`, the one element to draw as the badge (`<a href>`), holding the words. A label's
+   * words stay on one line: too long for the room, they end in an ellipsis, and text words carry
+   * their whole text as a `title`, so what the ellipsis hides can still be read.
    */
   children?: ReactNode;
   /**
-   * How it stands: `default` for a plain fact, `success` when it is done or fine, `warning` when
-   * someone should look, `destructive` when it failed or is blocked, `info` for a note.
+   * A status, how it stands: `default` for a plain fact, `success` when it is done or fine,
+   * `warning` when someone should look, `destructive` when it failed or is blocked, `info` for a
+   * note. A label, what sorts or names it: `secondary` filled, the usual label; `outline` an edge
+   * alone, quieter, for labels beside chosen ones.
    * @default "default"
    */
   variant?: BadgeVariant;
+  /**
+   * Takes the badge away: shows a small button after the words that runs this. A label only
+   * (`secondary`, `outline`): a chosen value or a filter is taken away, a status is not. Its name is
+   * "Remove" and the words when they are text. Focus then moves to the next badge's remove button
+   * in the same row, or the one before when it was the last. When none is left, move focus
+   * yourself, to the field that adds them. Not drawn with `asChild` or `dot`.
+   */
+  onRemove?: () => void;
   /**
    * How serious something is: a dot in the variant's colour beside words in the text's colour,
    * for a page full of them (captured logs), in place of the tinted pill.
@@ -75,7 +101,8 @@ export interface BadgeProps {
    */
   dot?: boolean;
   /**
-   * The height: `default` 22px, `sm` 18px for a dense table.
+   * The height. A status: `default` 22px, `sm` 18px for a dense table. A label (`secondary`,
+   * `outline`): `default` 24px beside body text, `sm` 20px in a dense row or a table.
    * @default "default"
    */
   size?: BadgeSize;
@@ -112,6 +139,18 @@ export interface BadgeProps {
   /** Layout only: margins and alignment. The look belongs to the badge. */
   style?: LayoutStyle;
 }
+
+/**
+ * Every prop a Badge takes. `onRemove` is a label's alone, so a status given one does not compile:
+ * shadcn's Badge has no remove at all, and what its kin take away (a Combobox's chips, a tag) is
+ * always a neutral label, never how something stands.
+ */
+export type BadgeProps =
+  | (BadgeOwnProps & {
+      variant?: Exclude<BadgeVariant, BadgeLabelVariant>;
+      onRemove?: never;
+    })
+  | (BadgeOwnProps & { variant: BadgeLabelVariant });
 
 const FORCED = media.forcedColors;
 const REDUCED = media.reducedMotion;
@@ -191,6 +230,88 @@ const styles = stylex.create({
     backgroundColor: colors.infoSubtle,
     boxShadow: sizes.borderStrong,
   },
+  // A label (secondary, outline): one line 24px tall with 8px at each end, the words in the text's
+  // colour and a size up, cut with an ellipsis where a status would wrap.
+  label: {
+    [iconVars.size]: sizes.badgeIcon,
+    [iconVars.stroke]: sizes.iconStroke,
+    display: "inline-flex",
+    alignItems: "center",
+    gap: space["1"],
+    boxSizing: "border-box",
+    maxWidth: "100%",
+    paddingInline: space.badgeLabelPadding,
+    borderRadius: radius.full,
+    fontFamily: font.sans,
+    fontWeight: font.weightMedium,
+    color: colors.foreground,
+    whiteSpace: "nowrap",
+    verticalAlign: "middle",
+    // Forced colours drop the fill and the edge: a line keeps the pill, inside it.
+    outline: { default: "none", [FORCED]: "1px solid currentColor" },
+    outlineOffset: -1,
+  },
+  labelDefault: {
+    height: sizes.badgeLabelHeight,
+    fontSize: font.textSm,
+    lineHeight: font.textSmLine,
+  },
+  labelSm: {
+    height: sizes.badgeLabelHeightSm,
+    fontSize: font.textXs,
+    lineHeight: font.textXsLine,
+  },
+  secondary: {
+    backgroundColor: colors.badgeSecondary,
+  },
+  outline: {
+    boxShadow: sizes.borderStrong,
+  },
+  labelWords: {
+    minWidth: 0,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+  },
+  // A label drawn as the caller's element (a link): its words are the element's own text, which a
+  // flex box cannot cut, so it is one line box as tall as the label, cut with the same ellipsis.
+  labelLinked: {
+    display: "inline-block",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+  },
+  labelLinkedDefault: { lineHeight: sizes.badgeLabelHeight },
+  labelLinkedSm: { lineHeight: sizes.badgeLabelHeightSm },
+  // With a remove button, the end is the button's own room.
+  removable: {
+    paddingInlineEnd: space["1"],
+  },
+  remove: {
+    position: "relative",
+    display: "inline-grid",
+    placeItems: "center",
+    flexShrink: 0,
+    boxSizing: "border-box",
+    width: sizes.iconSm,
+    height: sizes.iconSm,
+    margin: 0,
+    padding: 0,
+    borderWidth: 0,
+    borderRadius: radius.full,
+    color: {
+      default: colors.mutedForeground,
+      ":hover": { default: null, [media.hover]: colors.foreground },
+    },
+    backgroundColor: {
+      default: "transparent",
+      ":hover": { default: null, [media.hover]: colors.badgeSecondary },
+    },
+    cursor: "pointer",
+    WebkitTapHighlightColor: "transparent",
+    touchAction: "manipulation",
+    transitionProperty: "color, background-color",
+    transitionDuration: motionVars.mark,
+    transitionTimingFunction: duration.ease,
+  },
   // A badge drawn as a link: the pointer's cursor, and its words underlined under it.
   link: {
     cursor: "pointer",
@@ -258,19 +379,50 @@ const dotStyles = stylex.create({
 
 const pillLooks = {
   default: styles.variantDefault,
+  secondary: styles.secondary,
+  outline: styles.outline,
   success: styles.success,
   warning: styles.warning,
   destructive: styles.destructive,
   info: styles.info,
 } as const;
 
+// A label has no severity: its dot is the quiet one, named as a note.
 const dotLooks = {
   default: dotStyles.quiet,
+  secondary: dotStyles.quiet,
+  outline: dotStyles.quiet,
   success: dotStyles.success,
   warning: dotStyles.warning,
   destructive: dotStyles.destructive,
   info: dotStyles.quiet,
 } as const;
+
+/** Whether the variant is a label (what sorts or names something), not a status. */
+const isLabel = (variant: BadgeVariant): variant is BadgeLabelVariant =>
+  variant === "secondary" || variant === "outline";
+
+// After a remove, the keyboard lands on a neighbour's remove button instead of the page: the next
+// in the row, or the one before. Found before the badge goes, focused once it has.
+const keepFocus = (event: MouseEvent<HTMLButtonElement>) => {
+  const all = [
+    ...(event.currentTarget
+      .closest("[data-slot=badge]")
+      ?.parentElement?.querySelectorAll<HTMLButtonElement>(
+        "[data-slot=badge] > [data-slot=badge-remove]"
+      ) ?? []),
+  ];
+  const at = all.indexOf(event.currentTarget);
+  const next = all[at + 1] ?? all[at - 1];
+  if (!next) {
+    return;
+  }
+  requestAnimationFrame(() => {
+    if (next.isConnected) {
+      next.focus();
+    }
+  });
+};
 
 /** `dot`: the dot in the variant's colour, and the words beside it, or the dot alone, named. */
 const Dot = ({
@@ -296,7 +448,11 @@ const Dot = ({
       <span
         // Alone, the dot is the thing said; beside words, the words say it.
         role={alone ? "img" : undefined}
-        aria-label={alone ? (named ?? words.dot[variant]) : undefined}
+        aria-label={
+          alone
+            ? (named ?? words.dot[isLabel(variant) ? "default" : variant])
+            : undefined
+        }
         aria-hidden={alone ? undefined : true}
         {...stylex.props(dotStyles.dot, dotLooks[variant])}
       />
@@ -323,28 +479,81 @@ const Mark = ({ icon, loading }: { icon?: IconData; loading: boolean }) => {
   return icon ? <Icon icon={icon} /> : null;
 };
 
-/** The words, and the mark before them. A badge that may be loading is a polite status. */
+/**
+ * The words, the mark before them and the remove button after. A badge that may be loading is a
+ * polite status. A label's words are cut, so text carries itself whole as a `title`: no measuring.
+ */
 const Inside = ({
   icon,
   loading,
+  label,
+  onRemove,
   children,
 }: {
   icon: IconData | undefined;
   loading: boolean | undefined;
+  label: boolean;
+  onRemove: (() => void) | undefined;
   children: ReactNode;
-}) => (
-  <>
-    <Mark icon={icon} loading={loading === true} />
-    <span
-      role={loading === undefined ? undefined : "status"}
-      {...stylex.props(styles.words)}
-    >
-      {children}
-    </span>
-  </>
-);
+}) => {
+  const { badge: words } = useI18n();
+  return (
+    <>
+      <Mark icon={icon} loading={loading === true} />
+      <span
+        role={loading === undefined ? undefined : "status"}
+        title={label && typeof children === "string" ? children : undefined}
+        {...stylex.props(label ? styles.labelWords : styles.words)}
+      >
+        {children}
+      </span>
+      {onRemove !== undefined && (
+        <button
+          type="button"
+          aria-label={
+            typeof children === "string"
+              ? words.removeNamed(children)
+              : words.remove
+          }
+          data-slot="badge-remove"
+          onClick={(event) => {
+            keepFocus(event);
+            onRemove();
+          }}
+          {...stylex.props(styles.remove, focusRing)}
+        >
+          <span aria-hidden="true" {...stylex.props(tapTarget)} />
+          <Icon icon={XIcon} />
+        </button>
+      )}
+    </>
+  );
+};
 
-/** A short status in a pill, or how serious something is as a dot. */
+/** The pill's shape at its size: a label's one cut line (a link's too), or a status that wraps. */
+const shapeOf = (label: boolean, size: BadgeSize, linked: boolean) => {
+  const small = size === "sm";
+  if (!label) {
+    return [styles.badge, hyphenate, small ? styles.sm : styles.default];
+  }
+  return [
+    styles.label,
+    small ? styles.labelSm : styles.labelDefault,
+    linked && styles.labelLinked,
+    linked && (small ? styles.labelLinkedSm : styles.labelLinkedDefault),
+  ];
+};
+
+/** A linked label's whole text, for when it is cut: the plain label's words carry theirs. */
+const titleOf = (
+  label: boolean,
+  element: ReactElement<{ children?: ReactNode }> | undefined
+): string | undefined =>
+  label && typeof element?.props.children === "string"
+    ? element.props.children
+    : undefined;
+
+/** A short status or a label in a pill, or how serious something is as a dot. */
 export const Badge = ({
   children,
   variant = "default",
@@ -354,6 +563,7 @@ export const Badge = ({
   loading,
   tooltip,
   asChild = false,
+  onRemove,
   "aria-label": named,
   style,
 }: BadgeProps) => {
@@ -371,11 +581,13 @@ export const Badge = ({
       ? children
       : undefined;
   const linked = element !== undefined;
+  const label = isLabel(variant);
+  // Only a label is taken away.
+  const remove = label ? onRemove : undefined;
   const look = stylex.props(
-    styles.badge,
-    hyphenate,
-    size === "sm" ? styles.sm : styles.default,
+    shapeOf(label, size, linked),
     pillLooks[variant],
+    remove !== undefined && !linked && styles.removable,
     linked && styles.link,
     explained && styles.explained,
     (explained || linked) && focusRing,
@@ -385,6 +597,7 @@ export const Badge = ({
     "data-slot": "badge",
     "data-variant": variant,
     "data-loading": loading === true ? "" : undefined,
+    title: titleOf(label, element),
     ...look,
   };
   // Drawn as the caller's element (a link), the badge's look, mark and words go onto it.
@@ -396,7 +609,7 @@ export const Badge = ({
         // oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- the tooltip describes it, as a Key-value icon's does
         tabIndex={explained ? 0 : undefined}
       >
-        <Inside icon={icon} loading={loading}>
+        <Inside icon={icon} loading={loading} label={label} onRemove={remove}>
           {children}
         </Inside>
       </span>

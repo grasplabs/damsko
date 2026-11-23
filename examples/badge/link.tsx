@@ -13,10 +13,12 @@ const layout = stylex.create({
     lineHeight: font.textSmLine,
     color: colors.foreground,
   },
+  // Too narrow for the label's words, so they are cut.
+  narrow: { display: "inline-flex", maxWidth: 120 },
 });
 
 // A status that leads somewhere: `asChild` draws the link as the badge. It stays a link, named by
-// its words, with the keyboard's ring.
+// its words, with the keyboard's ring. A label drawn as a link is cut as any label is, its whole text in its `title`.
 export default function BadgeLink() {
   return (
     <div {...stylex.props(layout.row)}>
@@ -24,6 +26,11 @@ export default function BadgeLink() {
       <Badge asChild variant="info">
         <a href="#changes">What is new</a>
       </Badge>
+      <span {...stylex.props(layout.narrow)}>
+        <Badge asChild variant="outline">
+          <a href="#team">Design systems and research</a>
+        </Badge>
+      </span>
     </div>
   );
 }

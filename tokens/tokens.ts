@@ -747,7 +747,7 @@ export const groups: TokenGroup[] = [
             name: "radius-full",
             category: "radius",
             value: "999px",
-            use: "A pill: a chip, a tag, the track of a switch or a slider. Never a control that holds buttons.",
+            use: "A pill: a chip, a badge, the track of a switch or a slider. Never a control that holds buttons.",
           },
           {
             name: "radius-circle",
@@ -1528,8 +1528,8 @@ export const groups: TokenGroup[] = [
           {
             name: "input-text-touch",
             category: "size",
-            value: "16px",
-            use: "The size of the words in every field on a phone or a touch screen (media.typing), a Select's trigger too, so fields side by side stay one size: under 16px, Safari zooms the page in on focus.",
+            value: "max(16px, 1rem)",
+            use: "The size of the words in every field on a phone or a touch screen (media.typing), a Select's trigger too, so fields side by side stay one size: under 16px, Safari zooms the page in on focus. Never under 16px, and in rem above it, since words follow the reader's text size.",
           },
           {
             name: "input-shadow",
@@ -2045,7 +2045,31 @@ export const groups: TokenGroup[] = [
             name: "badge-icon",
             category: "size",
             value: "12px",
-            use: "An icon before a badge's words.",
+            use: "An icon before a badge's words, and a label's remove cross.",
+          },
+          {
+            name: "badge-label-height",
+            category: "size",
+            value: "{chip}",
+            use: "The height of a label: a secondary or outline badge, which sorts or names something.",
+          },
+          {
+            name: "badge-label-height-sm",
+            category: "size",
+            value: "20px",
+            use: "The height of a small label, in a dense row.",
+          },
+          {
+            name: "badge-label-padding",
+            category: "space",
+            value: "{space-2}",
+            use: "Room at each end of a label's words.",
+          },
+          {
+            name: "badge-secondary",
+            category: "colors",
+            value: "{accent-active}",
+            use: "A secondary badge's fill: a veil of ink, so it shows on paper and on soft.",
           },
           {
             name: "severity-dot",
@@ -3094,48 +3118,6 @@ export const groups: TokenGroup[] = [
             category: "size",
             value: "4px",
             use: "The width of a handle's grip.",
-          },
-        ],
-      },
-    ],
-  },
-  {
-    id: "tag",
-    title: "Tag",
-    sets: [
-      {
-        id: "tag-parts",
-        title: "Tag",
-        tokens: [
-          {
-            name: "tag-height",
-            category: "size",
-            value: "{chip}",
-            use: "The height of a tag.",
-          },
-          {
-            name: "tag-height-sm",
-            category: "size",
-            value: "20px",
-            use: "The height of a small tag, in a dense row.",
-          },
-          {
-            name: "tag-padding",
-            category: "space",
-            value: "{space-2}",
-            use: "Room at each end of a tag's words.",
-          },
-          {
-            name: "tag-icon",
-            category: "size",
-            value: "{badge-icon}",
-            use: "The size of an icon in a tag, and of its remove cross.",
-          },
-          {
-            name: "tag-bg",
-            category: "colors",
-            value: "{accent-active}",
-            use: "A soft tag's fill: a veil of ink, so it shows on paper and on soft.",
           },
         ],
       },
