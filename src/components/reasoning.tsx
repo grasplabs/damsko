@@ -100,7 +100,7 @@ interface ReasoningState {
   duration: number | undefined;
 }
 
-// How long the thoughts stay open once the thinking has ended (AI Elements' AUTO_CLOSE_DELAY).
+// How long the thoughts stay open once the thinking has ended: a second, long enough to see it end.
 const CLOSE_AFTER = 1000;
 
 // Markdown, loaded the first time the thoughts show; NotYetShown stands in until then.

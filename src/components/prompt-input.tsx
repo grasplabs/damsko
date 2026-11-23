@@ -37,7 +37,7 @@
 // label and kind. The caller says which characters open a menu, where each one's items come from,
 // and how a picked item becomes a token; nothing here knows what the items are.
 //
-// The files are the prompt input's, as AI Elements' are: picked, pasted or dropped, it keeps them,
+// The files are the prompt input's own: picked, pasted or dropped, it keeps them,
 // PromptInputAttachments shows them (as an AttachmentGroup), and they go with the message to `onSubmit`;
 // `usePromptInputAttachments()` reads and changes them from a part of the caller's. The body is a
 // slot: in place of the text the caller may put a question or a dictation, and focus follows it
@@ -195,8 +195,8 @@ import { Skeleton } from "./skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip";
 
 /**
- * Where the answer to the last message is: AI Elements' four, from the AI SDK's chat status, and
- * `success`, the moment a product marks an answer as done.
+ * Where the answer to the last message is: the AI SDK's chat status (`ready`, `submitted`,
+ * `streaming`, `error`), and `success`, the moment a product marks an answer as done.
  */
 type Status = "ready" | "submitted" | "streaming" | "error" | "success";
 
@@ -1673,7 +1673,7 @@ const useOutside = () => {
   return outside;
 };
 
-/** The files attached to the message, and what changes them: AI Elements' attachments. */
+/** The files attached to the message, and what changes them. */
 interface PromptInputAttachmentsValue {
   /** The files, in the order they came. */
   files: PromptInputFile[];
