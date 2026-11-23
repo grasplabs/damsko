@@ -199,8 +199,10 @@ const styles = stylex.create({
   },
   filled: { stroke: "none" },
   solid: { fill: "currentColor" },
+  // Turned with `scale`, the property UI SDK turns a list item's icon with ([data-mirror] in right to
+  // left): both set the one value, so an icon in a menu or a list turns once, never twice.
   mirror: {
-    transform: { default: null, ":dir(rtl)": "scaleX(-1)" },
+    scale: { default: null, ":dir(rtl)": "-1 1" },
   },
 });
 
