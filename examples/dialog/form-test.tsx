@@ -85,8 +85,8 @@ export default function DialogFormTest() {
           <Button
             size="sm"
             onClick={rename}
-            loadingLabel="Renaming"
-            errorLabel="Could not rename"
+            loadingText="Renaming"
+            errorText="Could not rename"
           >
             Rename
           </Button>

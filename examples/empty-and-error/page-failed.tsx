@@ -182,9 +182,9 @@ export function PageFailed({ whole = false }: { whole?: boolean }) {
           <Button
             variant="default"
             onClick={retry}
-            loadingLabel="Trying again"
-            successLabel="Loaded"
-            errorLabel="Not loaded"
+            loadingText="Trying again"
+            successText="Loaded"
+            errorText="Not loaded"
           >
             Try again
           </Button>

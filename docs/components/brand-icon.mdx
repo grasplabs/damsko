@@ -11,7 +11,7 @@ description: Another company's logo, shown for an integration, a source or a way
 
 ## The set
 
-Each mark is the brand's own, filled and in its own colours. Damsko draws none: the product keeps its brands' logos, each an `IconData` made with `filledMark` from lib/icons, and passes one as `logo` with the brand's name as `label`. Only `label` is required: without `logo` the tile shows the first letter, `tile` is on unless turned off, and `decorative` is off unless the name is in the words beside it. A black or white mark, such as GitHub's or X's, draws its parts in `currentColor`, so it follows the ink and stands in both themes.
+Each mark is the brand's own, filled and in its own colours. Damsko draws none: the product keeps its brands' logos, each an `IconData` made with `filledMark` from lib/icons, and passes one as `logo` with the brand's name as `name`. Only `name` is required: without `logo` the tile shows the first letter, `tile` is on unless turned off, and `decorative` is off unless the name is in the words beside it. A black or white mark, such as GitHub's or X's, draws its parts in `currentColor`, so it follows the ink and stands in both themes.
 
 <Stage path="brand-icon/set" label="The set" />
 
@@ -41,7 +41,7 @@ When the brand's name is in the words beside it, the mark is `decorative`.
 
 ## A brand with no mark
 
-`label` with no `logo`: the tile shows the brand's first letter on its quiet ground, in the same squircle as the marks beside it, never Avatar's circle. The name is the tile's name for a screen reader.
+`name` with no `logo`: the tile shows the brand's first letter on its quiet ground, in the same squircle as the marks beside it, never Avatar's circle. The name is the tile's name for a screen reader.
 
 <Stage path="brand-icon/fallback" label="A brand with no mark" />
 
@@ -53,7 +53,7 @@ When the brand's name is in the words beside it, the mark is `decorative`.
   of="brand-icon"
   always={[
     "Another company's mark: an integration, a source, a way to sign in.",
-    "The brand's name as `label`, in the brand's own words.",
+    "The brand's name as `name`, in the brand's own words.",
   ]}
   never={["A person or a team: use Avatar.", "The product's own mark."]}
 />

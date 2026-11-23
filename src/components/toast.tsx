@@ -484,32 +484,32 @@ const useOneRegion = (queue: object, where: string) => {
 
 /**
  * A toast's action, as UI SDK's ToastAction hands it: a small outline Button that shows its work
- * while the action's Promise runs, and says `errorLabel` once it failed, once to a screen reader
+ * while the action's Promise runs, and says `errorText` once it failed, once to a screen reader
  * through the page's live region. The toast stays then.
  */
 const ActionButton = ({
   props,
   state,
   label,
-  errorLabel,
+  errorText,
 }: {
   props: Record<string, unknown>;
   state: ToastButtonState;
   label: ReactNode;
-  errorLabel: string;
+  errorText: string;
 }) => {
   const failed = state.error !== undefined && state.error !== null;
   const said = useRef(false);
   useEffect(() => {
     if (failed && !said.current) {
-      announce(errorLabel);
+      announce(errorText);
     }
     said.current = failed;
-  }, [failed, errorLabel]);
+  }, [failed, errorText]);
   return (
     <Button {...props} variant="outline" size="sm">
       {state.pending && <Spinner />}
-      {failed && !state.pending ? errorLabel : label}
+      {failed && !state.pending ? errorText : label}
     </Button>
   );
 };
@@ -625,7 +625,7 @@ export const Toaster = ({
                           props={props}
                           state={state}
                           label={data.action?.label}
-                          errorLabel={words.error}
+                          errorText={words.error}
                         />
                       )}
                     />

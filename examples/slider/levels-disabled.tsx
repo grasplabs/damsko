@@ -1,4 +1,4 @@
-import { Slider } from "@grasp-os/ui/components/slider";
+import { Slider, SliderLabel } from "@grasp-os/ui/components/slider";
 import { colors, font, space } from "@grasp-os/ui/lib/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
 
@@ -19,13 +19,9 @@ const layout = stylex.create({
 export default function SliderLevelsDisabled() {
   return (
     <div {...stylex.props(layout.box)}>
-      <Slider
-        variant="levels"
-        label="Effort"
-        levels={effort}
-        defaultValue="medium"
-        disabled
-      />
+      <Slider variant="levels" levels={effort} defaultValue="medium" disabled>
+        <SliderLabel>Effort</SliderLabel>
+      </Slider>
       <p {...stylex.props(layout.why)}>
         Your plan sets effort for this workspace.
       </p>

@@ -177,9 +177,9 @@ function Swap() {
     <Button
       variant="default"
       onClick={approve}
-      loadingLabel="Approving"
-      successLabel="Approved"
-      errorLabel="Failed"
+      loadingText="Approving"
+      successText="Approved"
+      errorText="Failed"
     >
       Approve
     </Button>

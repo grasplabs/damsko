@@ -371,8 +371,12 @@
   "progress": {
     "src/components/progress.tsx": [
       "Progress",
+      "ProgressLabel",
+      "ProgressValue",
       "ProgressCircle",
       "ProgressProps",
+      "ProgressLabelProps",
+      "ProgressValueProps",
       "ProgressCircleProps",
       "ProgressVariant",
       "ProgressSize"
@@ -1120,10 +1124,13 @@
       "PromptInputNote",
       "PromptInputBanner",
       "PromptInputQueue",
+      "PromptInputQueueContent",
       "PromptInputQueueItem",
+      "PromptInputQueueTrigger",
       "PromptInputVoice",
       "PromptInputMention",
       "PromptInputMentionContent",
+      "PromptInputMentionEmpty",
       "PromptInputMentionItem",
       "PromptInputSpeechButton",
       "PromptInputMessage",
@@ -1148,10 +1155,13 @@
       "PromptInputNoteProps",
       "PromptInputBannerProps",
       "PromptInputQueueProps",
+      "PromptInputQueueContentProps",
       "PromptInputQueueItemProps",
+      "PromptInputQueueTriggerProps",
       "PromptInputVoiceProps",
       "PromptInputMentionProps",
       "PromptInputMentionContentProps",
+      "PromptInputMentionEmptyProps",
       "PromptInputMentionItemProps",
       "PromptInputSpeechButtonProps"
     ],
@@ -1205,6 +1215,7 @@
       "SidePanelContent",
       "SidePanelText",
       "SidePanelSection",
+      "SidePanelSectionAdd",
       "SidePanelPlacementProvider",
       "SidePanelProps",
       "SidePanelHeaderProps",
@@ -1212,13 +1223,16 @@
       "SidePanelContentProps",
       "SidePanelTextProps",
       "SidePanelSectionProps",
+      "SidePanelSectionAddProps",
       "SidePanelPlacement"
     ]
   },
   "slider": {
     "src/components/slider.tsx": [
       "Slider",
+      "SliderLabel",
       "SliderProps",
+      "SliderLabelProps",
       "SliderValue",
       "SliderLevel"
     ],

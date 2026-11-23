@@ -14,7 +14,7 @@ import {
 import { useState } from "react";
 
 // A stand-in for a check that finds a fault: it sends nothing, so it does not say "Not sent". Given
-// no errorLabel of its own, the button says the catalogue's neutral words, and the dialog stays open.
+// no errorText of its own, the button says the catalogue's neutral words, and the dialog stays open.
 const check = () =>
   new Promise((_, reject) =>
     setTimeout(() => {
@@ -42,7 +42,7 @@ export default function DialogCheckFailed() {
         </DialogHeader>
         <DialogFooter>
           <DialogClose>Cancel</DialogClose>
-          <Button size="sm" onClick={test} loadingLabel="Testing">
+          <Button size="sm" onClick={test} loadingText="Testing">
             Test
           </Button>
         </DialogFooter>

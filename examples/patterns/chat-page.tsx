@@ -426,7 +426,7 @@ const AssistantTurn = ({
             <MessageActions>
               <CopyButton value={shown} />
               <MessageAction
-                label="Good answer"
+                aria-label="Good answer"
                 pressed={rating === "good"}
                 disabled={!settled}
                 onClick={() => {
@@ -436,7 +436,7 @@ const AssistantTurn = ({
                 <Icon icon={ThumbsUpIcon} />
               </MessageAction>
               <MessageAction
-                label="Poor answer"
+                aria-label="Poor answer"
                 pressed={rating === "poor"}
                 disabled={!settled}
                 onClick={() => {
@@ -446,7 +446,7 @@ const AssistantTurn = ({
                 <Icon icon={ThumbsDownIcon} />
               </MessageAction>
               <MessageAction
-                label="Write it again"
+                aria-label="Write it again"
                 disabled={!settled}
                 onClick={run.retry}
               >

@@ -17,10 +17,10 @@ export default function ButtonVariants() {
     });
   return (
     <>
-      <Button variant="default" onClick={work} successLabel="Saved">
+      <Button variant="default" onClick={work} successText="Saved">
         Save changes
       </Button>
-      <Button variant="outline" onClick={work} successLabel="Invited">
+      <Button variant="outline" onClick={work} successText="Invited">
         Invite people
       </Button>
       <Button

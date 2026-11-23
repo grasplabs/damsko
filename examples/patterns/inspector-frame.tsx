@@ -198,7 +198,7 @@ export const InspectorShare = ({
           size="sm"
           variant="default"
           onClick={() => copyLink(href, toast)}
-          errorLabel="Could not copy"
+          errorText="Could not copy"
         >
           <Icon icon={LinkIcon} />
           Copy link
@@ -420,7 +420,7 @@ export interface InspectorDialogAction {
   label: string;
   /** The work; it may throw, and the dialog then stays open and the button says so. */
   run: () => void | Promise<void>;
-  errorLabel: string;
+  errorText: string;
   /** @default "default" */
   variant?: ButtonVariant;
 }
@@ -440,7 +440,7 @@ const DialogAnswer = ({
       await action.run();
       onDone();
     }}
-    errorLabel={action.errorLabel}
+    errorText={action.errorText}
   >
     {action.label}
   </Button>
@@ -577,7 +577,7 @@ const EmptyInspector = ({ onClose, toast }: InspectorOptions) => {
         {
           id: "details",
           title: "Details",
-          emptyLabel: "Add a detail",
+          emptyText: "Add a detail",
           ...details,
         },
       ]}

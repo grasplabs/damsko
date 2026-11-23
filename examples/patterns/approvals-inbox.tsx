@@ -373,14 +373,14 @@ const RequestView = ({
           <ConfirmationActions>
             <ConfirmationAction
               variant="outline"
-              errorLabel="Could not decline"
+              errorText="Could not decline"
               onClick={() => decline(open)}
             >
               Decline
             </ConfirmationAction>
             <ConfirmationAction
               hold={open.stake === "moderate"}
-              errorLabel="Could not approve"
+              errorText="Could not approve"
               onClick={async () => {
                 if (open.stake === "grave" && !(await askFirst(open))) {
                   return;
@@ -491,9 +491,9 @@ export default function ApprovalsInbox({
   const toTab = useRef(false);
   // Try again works on its button, which keeps focus meanwhile, until the requests take its place.
   const retry = useAction(() => wait(900), {
-    loadingLabel: "Loading the requests",
-    successLabel: "Loaded",
-    errorLabel: "Not loaded",
+    loadingText: "Loading the requests",
+    successText: "Loaded",
+    errorText: "Not loaded",
   });
 
   useEffect(() => {
@@ -762,9 +762,9 @@ export default function ApprovalsInbox({
         variant="outline"
         status={retry.status}
         onClick={() => void tryAgain()}
-        loadingLabel="Loading the requests"
-        successLabel="Loaded"
-        errorLabel="Not loaded"
+        loadingText="Loading the requests"
+        successText="Loaded"
+        errorText="Not loaded"
       >
         Try again
       </Button>

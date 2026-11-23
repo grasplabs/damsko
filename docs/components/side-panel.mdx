@@ -7,7 +7,7 @@ description: A panel beside a page that shows the details of one thing, in secti
   lead={frontmatter.description}
   install="pnpm dlx shadcn@4.23.0 add @damsko/side-panel"
   use={
-    'import { SidePanel, SidePanelContent, SidePanelHeader, SidePanelSection, SidePanelText } from "@grasp-os/ui/components/side-panel";'
+    'import { SidePanel, SidePanelContent, SidePanelHeader, SidePanelSection, SidePanelSectionAdd, SidePanelText } from "@grasp-os/ui/components/side-panel";'
   }
 />
 
@@ -25,7 +25,7 @@ Without a title, the views are the head: they stand at the panel's top with thei
 
 ## Sections
 
-Each section is a quiet title, one action at the end of its row and one card under it. A `description` explains the title in a tooltip, under a dashed line. Empty, the card is one row that adds the first (`emptyLabel`, `onAdd`).
+Each section is a quiet title, one action at the end of its row and one card under it. A `description` explains the title in a tooltip, under a dashed line. Empty, the card is one row that adds the first: a `SidePanelSectionAdd`, its words what it adds, named by the section's title.
 
 <Stage path="side-panel/section" label="Sections" />
 
@@ -249,6 +249,14 @@ A view in `views`:
   source="src/components/side-panel.tsx"
   type="SidePanelSectionProps"
   label="SidePanelSection"
+/>
+
+### SidePanelSectionAdd
+
+<Props
+  source="src/components/side-panel.tsx"
+  type="SidePanelSectionAddProps"
+  label="SidePanelSectionAdd"
 />
 
 ### SidePanelText

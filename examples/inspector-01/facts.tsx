@@ -69,7 +69,7 @@ export default function InspectorFacts() {
           id: "contacts",
           title: "Contacts",
           onAdd: () => undefined,
-          emptyLabel: "Add a contact",
+          emptyText: "Add a contact",
         },
       ]}
     />

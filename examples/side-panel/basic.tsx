@@ -17,6 +17,7 @@ import {
   SidePanelContent,
   SidePanelHeader,
   SidePanelSection,
+  SidePanelSectionAdd,
 } from "@grasp-os/ui/components/side-panel";
 import { Toaster, createToaster } from "@grasp-os/ui/components/toast";
 import {
@@ -148,8 +149,9 @@ export default function SidePanelBasic() {
           <SidePanelSection
             title="People with access"
             description="Who can open the report."
-            emptyLabel="Add people"
-          />
+          >
+            <SidePanelSectionAdd>Add people</SidePanelSectionAdd>
+          </SidePanelSection>
         </SidePanelContent>
         <SidePanelContent value="activity">
           <SidePanelSection

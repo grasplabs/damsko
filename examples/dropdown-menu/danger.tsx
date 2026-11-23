@@ -33,7 +33,7 @@ export default function DropdownMenuDanger() {
           icon={TrashIcon}
           variant="destructive"
           onSelect={remove}
-          errorLabel="Could not move it"
+          errorText="Could not move it"
         >
           Move to trash
         </DropdownMenuItem>

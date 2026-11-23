@@ -8,6 +8,7 @@ import { Button } from "@grasp-os/ui/components/button";
 import { dialogStyles } from "@grasp-os/ui/components/dialog";
 import { Field, FieldLabel } from "@grasp-os/ui/components/field";
 import { Input } from "@grasp-os/ui/components/input";
+import { Slider, SliderLabel } from "@grasp-os/ui/components/slider";
 import { Tabs, TabsList, TabsTrigger } from "@grasp-os/ui/components/tabs";
 import { ArrowRightIcon, Icon, XIcon } from "@grasp-os/ui/lib/icons";
 import { colors, radius, size, space } from "@grasp-os/ui/lib/tokens.stylex";
@@ -85,6 +86,12 @@ export const EmailField = () => (
     <FieldLabel>Work email</FieldLabel>
     <Input type="email" defaultValue="noor@northwind.example" />
   </Field>
+);
+
+export const VolumeSlider = () => (
+  <Slider defaultValue={64}>
+    <SliderLabel>Volume</SliderLabel>
+  </Slider>
 );
 
 /** The way into the docs from the fullscreen showcase: always in view, a link that works with no script. */
