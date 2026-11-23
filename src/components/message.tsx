@@ -256,6 +256,11 @@ const styles = stylex.create({
       default: "0px",
       ":has([data-slot='message-footer'])": `calc(${font.textXsLine} + ${space["2"]})`,
     },
+    // Stopped is said once: on the actions' row when the Message holds actions, else under the words.
+    [messageVars.stoppedUnder]: {
+      default: "inline-flex",
+      ":has([data-slot='message-actions'])": "none",
+    },
     position: "relative",
     display: "flex",
     gap: space["2"],
@@ -320,12 +325,10 @@ const styles = stylex.create({
     overflowWrap: "anywhere",
   },
   // A stopped answer's one quiet line. With actions it stands on their row, before them
-  // (MessageActions draws it there): this one, under the words, is for an answer that has none.
+  // (MessageActions draws it there): the one under the words is for a Message that holds none
+  // (messageVars.stoppedUnder, set by the Message from what it holds).
   note: {
-    display: {
-      default: "inline-flex",
-      ":has(~ [data-slot=message-actions])": "none",
-    },
+    display: "inline-flex",
     alignItems: "center",
     alignSelf: "flex-start",
     gap: space["1"],
@@ -373,6 +376,8 @@ const styles = stylex.create({
   },
   // After Stopped on the row, the actions start after its words, not under the first letter.
   actionsStopped: { marginInlineStart: 0 },
+  // Stopped under the words: only when the Message holds no actions.
+  noteUnder: { display: messageVars.stoppedUnder },
   // Stopped on the actions' row: a space-3 before the first button.
   noteInRow: {
     display: "inline-flex",
@@ -645,8 +650,8 @@ const Markdown = lazyPart(
 
 /**
  * The assistant's answer, drawn from Markdown, its words coming in smoothly while it is written;
- * Stopped under it when it was stopped part way and has no actions (MessageActions says it on its
- * row otherwise).
+ * Stopped under it when it was stopped part way and its Message holds no actions (MessageActions
+ * says it on its row otherwise), wherever in the Message either stands.
  */
 export const MessageResponse = ({
   children,
@@ -674,7 +679,10 @@ export const MessageResponse = ({
         </Suspense>
       </div>
       {status === "stopped" && (
-        <p data-slot="message-stopped" {...stylex.props(styles.note)}>
+        <p
+          data-slot="message-stopped"
+          {...stylex.props(styles.note, styles.noteUnder)}
+        >
           <Icon icon={SquareIcon} />
           {words.stopped}
         </p>
