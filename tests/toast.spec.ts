@@ -26,6 +26,24 @@ test("a toast is said to a screen reader without taking focus", async ({
   ).toHaveCount(1);
 });
 
+test("a Toaster's live regions are on the page before the first toast, and neither is an alert", async ({
+  page,
+}) => {
+  await openExample(page, "toast", "types");
+  // There before a toast comes, so a screen reader knows them; empty, and no alert on the page.
+  const live = page.locator("[aria-live]:not([data-slot=toast-region])");
+  await expect(live).toHaveCount(2);
+  await expect(live).toHaveText(["", ""]);
+  await expect(page.getByRole("alert")).toHaveCount(0);
+  expect(await page.locator("body").ariaSnapshot()).not.toMatch(/\balert\b/u);
+  // An error interrupts, by the assertive region, and is still no second alert on the page.
+  await page.getByRole("button", { name: "Error" }).click();
+  await expect(page.locator("[aria-live=assertive]")).toHaveText(
+    "Could not save. Check your connection and try again."
+  );
+  await expect(page.getByRole("alert")).toHaveCount(0);
+});
+
 test("F6 moves focus to the newest toast, Escape dismisses it, and focus goes back", async ({
   page,
 }) => {

@@ -372,8 +372,14 @@ const regionOf = (politeness: Politeness): HTMLElement => {
   let region = regions.get(politeness);
   if (region?.isConnected !== true) {
     region = document.createElement("p");
-    region.setAttribute("role", politeness === "polite" ? "status" : "alert");
+    // The assertive region interrupts by aria-live alone, never as an alert: it stands on the page
+    // empty, or holds a message the page already shows, and neither is an alert of the page's own.
+    // The alert role means no more than this live setting to a screen reader.
+    if (politeness === "polite") {
+      region.setAttribute("role", "status");
+    }
     region.setAttribute("aria-live", politeness);
+    region.setAttribute("aria-atomic", "true");
     region.dataset.slot = "live-region";
     // Visually hidden: present to a screen reader, never seen.
     region.style.cssText =

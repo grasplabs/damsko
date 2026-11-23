@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { openExample } from "./example.ts";
+import { listenToLiveRegions, openExample } from "./example.ts";
 
 test("an empty state is read where it stands, never said aloud", async ({
   page,
@@ -18,12 +18,16 @@ test("an empty state is read where it stands, never said aloud", async ({
 test("a destructive state says its title and sentence, never its way on", async ({
   page,
 }) => {
+  const said = await listenToLiveRegions(page);
   await openExample(page, "empty-and-error", "did-not-load");
-  const alert = page.getByRole("alert");
-  await expect(alert).toContainText("The projects did not load");
-  await expect(alert).toContainText("Check your connection, then try again.");
-  await expect(alert).not.toContainText("Try again", { ignoreCase: false });
   await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();
+  await expect
+    .poll(said)
+    .toEqual([
+      "The projects did not load. Nothing is lost. Check your connection, then try again.",
+    ]);
+  // Said at once, yet no alert of the page's own: the state is read where it stands.
+  await expect(page.getByRole("alert")).toHaveCount(0);
 });
 
 test("a destructive state with no title says it did not load", async ({
