@@ -23,7 +23,8 @@ export type MarkdownRoot = ReturnType<typeof fromMarkdown>;
 // 80 ns times `m` squared, half a second for the 2,700 that 8,000 characters can hold, a
 // millisecond for the 128 of a paragraph dense with links, bold and code. So a paragraph of at
 // most FREE_MARKS marks is always read for them. One with more spends its marks squared from
-// MAX_COST, and once that is spent such paragraphs are their own characters, as plain text, in
+// MAX_COST, a tenth of a second's reading, so a paragraph of more than about 1,200 marks never is;
+// and once that is spent such paragraphs are their own characters, as plain text, in
 // their place (in their list item, quote or cell). So is one longer than MAX_INLINE. To find them,
 // the source is read first for its blocks alone, with nothing inline; then with each plain block's
 // characters stood in for by one that starts no mark, and they are given back.
@@ -42,7 +43,7 @@ const MAX_INLINE = 8000;
 /** The most marks a paragraph, heading or table cell holds and is read for them whatever came before. */
 const FREE_MARKS = 128;
 /** What the paragraphs with more marks may cost in one read, each its marks squared. */
-const MAX_COST = 6_000_000;
+const MAX_COST = 1_500_000;
 /** What a piece's lines weigh before it ends where the next block starts. */
 const PIECE = 64;
 /** What the pieces may cost in one read, each its weight squared: a tenth of a second at the costliest. */

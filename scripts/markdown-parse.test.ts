@@ -648,7 +648,7 @@ describe("a paragraph longer than any answer's", () => {
   // Each paragraph just under the bound costs its most, emphasis in emphasis half a second for one
   // of them: 64,000 characters of those, which were read for their marks whatever they held, took
   // 3.5 s. Now a paragraph with more than 128 marks spends its marks squared from a budget that
-  // half a second's reading spends, and those after it are plain text. One run of each, timed.
+  // a tenth of a second's reading spends, and those after it are plain text. One run of each, timed.
   test.each([
     ["closing stars", "a* ".repeat(2667)],
     [
@@ -670,8 +670,8 @@ describe("a paragraph longer than any answer's", () => {
   test(
     "a paragraph dense with marks is read for them while the budget lasts, and a paragraph of few marks after it too",
     () => {
-      // 2,000 marks: its square is two thirds of the budget.
-      const dense = "*a* ".repeat(1000).trim();
+      // 1,000 marks: its square is two thirds of the budget.
+      const dense = "*a* ".repeat(500).trim();
       const short = "Some **bold** and [a link](https://example.com).";
       const tree = parseMarkdown([dense, dense, short, dense].join("\n\n"));
       expect(tree.children.map((node) => hasMarks(node))).toStrictEqual([
@@ -1575,8 +1575,8 @@ describe("while a long block is written", () => {
   );
 
   test("a paragraph shown as plain text for want of budget stays plain as more is written", () => {
-    // 2,448 marks: its square is all but the budget. Its end comes with a paragraph of 140 more.
-    const dense = `${"*a* ".repeat(1224)}\n\n`;
+    // 1,224 marks: its square is all but the budget. Its end comes with a paragraph of 140 more.
+    const dense = `${"*a* ".repeat(612)}\n\n`;
     const next = "*b* ".repeat(110);
     let kept = NOTHING;
     const marked: boolean[] = [];
