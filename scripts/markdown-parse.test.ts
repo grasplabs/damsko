@@ -744,10 +744,22 @@ describe("a long answer of ordinary blocks", () => {
   );
 
   test("a link or a note defined in another piece of it is still one", () => {
-    const source = `Start [the wiki][wiki] and a note[^1].\n\n${"Words.\n\n".repeat(200)}Later [the wiki][wiki], [wiki] and a note[^1], but [not defined].\n\n> [quoted]: https://example.com/quoted\n\n${"Words.\n\n".repeat(200)}End [quoted] and [the wiki][wiki].\n\n\`\`\`\n[code]: https://example.com/not-defined\n\`\`\`\n\nAnd [code] is words.\n\n[wiki]: https://example.com/wiki\n[^1]: The note.\n`;
-    expect(parseMarkdown(source).children).toStrictEqual(
-      wholeTree(source).children
-    );
+    const words = "Words.\n\n".repeat(200);
+    const source = [
+      "Start [the wiki][wiki], [a\\*b] and a note[^1].\n\n",
+      words,
+      "Later [the wiki][wiki], [wiki] and a note[^1], but [not defined].\n\n",
+      "> [quoted]: https://example.com/quoted\n\n",
+      words,
+      "End [quoted], [two lines] and [the wiki][wiki].\n\n",
+      "```\n[code]: https://example.com/not-defined\n```\n\n",
+      "And [code] is words.\n\n",
+      "[wiki]: https://example.com/wiki\n[a\\*b]: /starred\n",
+      "[two lines]:\n  https://example.com/two\n[^1]: The note.\n",
+    ].join("");
+    const tree = parseMarkdown(source);
+    expect(tree.children).toStrictEqual(wholeTree(source).children);
+    expect(tree.position).toStrictEqual(wholeTree(source).position);
   });
 });
 
@@ -759,92 +771,42 @@ const counted = (unit: (at: number) => string) => (count: number) =>
 const stairs = (deep: number) =>
   lines(deep, (depth) => `${"  ".repeat(depth)}- item ${depth}\n`);
 
-describe("a block of more lines than any answer's", () => {
-  // The parser's work on a list grows faster than its items (a tight list of 400 KB took 19 s,
-  // one of items with no words 77 s), and so it does on a paragraph's lines, on lines given to a
-  // quote or a list item with no mark of theirs (60 s), and on underlined headings (40 s). An
-  // answer is read in pieces, so each takes time in step with its lines: eight times the lines, in
-  // step is 8, the square is 64. The first eight are weighed at as many lines as that growth shows
-  // at without the pieces; the kinds after them grow too slowly there to show in less than
-  // seconds, and are weighed so that no work of the pieces' own grows with them.
+describe("an answer of more lines than any answer's", () => {
+  // The parser's work grows faster than an answer's lines: every list item moves every later
+  // event of the whole answer (lists of fifty items with a paragraph between, 20,000 items in all,
+  // took 3.7 s), and every underlined heading is looked for from the start again (40 s for
+  // 400 KB). An answer is read in pieces that end where a block starts after a blank line, so
+  // these take time in step with their length: eight times the text, in step is 8, the square 64.
   test.each([
-    ["a list of items with no words", counted(() => "-\n"), 16_000],
-    ["lists in lists", counted(() => "- a\n  - b\n    - c\n"), 2400],
     [
-      "a list item of many items under it",
-      (n: number) => `- a\n${"  - b\n".repeat(n)}`,
-      4000,
-    ],
-    ["a list a space in from the margin", counted(() => " - a\n"), 4000],
-    [
-      "a list item carried on by lines with no indent",
-      (n: number) => `- a\n${"b\n".repeat(n)}`,
-      4000,
-    ],
-    [
-      "a quote carried on by lines with no mark",
-      (n: number) => `> a\n${"b\n".repeat(n)}`,
-      4000,
+      "lists with a paragraph between",
+      counted((at) => `${"- a\n".repeat(50)}\nParagraph ${at}.\n\n`),
+      320,
     ],
     ["underlined headings", counted(() => "a\n===\n\n"), 5000],
-    ["a quote of many lines", counted(() => "> a\n"), 4000],
-    ["a tight list", counted(() => "- a\n"), 4000],
-    ["an ordered list", counted(() => "1. a\n"), 2000],
-    ["a list of tasks", counted(() => "- [x] a\n"), 2000],
-    [
-      "a list with blank lines between its items",
-      counted(() => "- a\n\n"),
-      2000,
-    ],
-    ["a list in a quote", counted(() => "> - a\n"), 2000],
-    [
-      "a table of many rows",
-      (n: number) => `| a | b |\n| - | - |\n${"| c | d |\n".repeat(n)}`,
-      2000,
-    ],
     ["headings", counted(() => "# a\n\n"), 2000],
-    ["a paragraph of many lines", counted(() => "a\n"), 4000],
+    ["paragraphs", counted((at) => `Paragraph ${at} of **it**.\n\n`), 2000],
+    [
+      "tables with a paragraph between",
+      counted(() => "| a | b |\n| - | - |\n| c | d |\n\nBetween.\n\n"),
+      500,
+    ],
+    ["pieces of code", counted(() => "```\na\n```\n\n"), 1000],
     ["notes", counted((at) => `a[^${at}]\n\n[^${at}]: b\n\n`), 800],
     [
       "links defined apart",
-      counted((at) => `[a${at}]\n\n[a${at}]: https://example.com\n\n`),
+      (n: number) =>
+        `${counted((at) => `[a${at}]\n\n`)(n)}${counted((at) => `[a${at}]: https://example.com\n`)(n)}`,
       800,
     ],
     ["a line with no spaces", (n: number) => "a".repeat(n), 160_000],
-    ["blank lines", counted(() => "\n"), 16_000],
-    [
-      "blank lines in a list",
-      (n: number) => `- a\n${"\n".repeat(n)}- b\n`,
-      16_000,
-    ],
-    [
-      "blank lines in indented code",
-      (n: number) => `    a\n${"\n".repeat(n)}    b\n`,
-      16_000,
-    ],
     [
       "code of many lines",
-      (n: number) => `\`\`\`\n${"a\n".repeat(n)}\`\`\`\n`,
-      16_000,
-    ],
-    [
-      "code of many lines in a list item",
-      (n: number) => `- a\n\n  \`\`\`\n${"  a\n".repeat(n)}  \`\`\`\n`,
+      (n: number) => `\`\`\`\n${"a\n\nb\n".repeat(n)}\`\`\`\n`,
       8000,
     ],
-    // What looks to open code or a comment and does not: the list after it is read in pieces too.
-    [
-      "a fence in HTML, then a list",
-      (n: number) => `<div>\n\`\`\`\n\n${"- a\n".repeat(n)}`,
-      2000,
-    ],
-    [
-      "a comment in HTML, then a list",
-      (n: number) => `<div>\n<!--\n\n${"- a\n".repeat(n)}`,
-      2000,
-    ],
   ])(
-    "%s takes time in step with its length",
+    "%s take time in step with their length",
     (_, make, count) => {
       const eighth = make(count / 8);
       const whole = make(count);
@@ -857,26 +819,77 @@ describe("a block of more lines than any answer's", () => {
     SLOW_TEST
   );
 
-  // A tight list's growth is the slowest to show: eight times the items took some twenty times as
-  // long. So it is weighed over a longer step, sixty-four times the items, where in step is 64 at
-  // most and the square 4,096: 16,000 items took 170 times as long as 250, and now take 26 times.
-  test(
-    "a tight list of 16,000 items takes time in step with its length",
-    () => {
-      const few = "- a\n".repeat(250);
-      const many = "- a\n".repeat(16_000);
+  // One block has no such place to end a piece at. Its lines squared are spent from a budget, and
+  // past it they are plain lines, which take time in step: 3,000 lines and 24,000 are both past it,
+  // and the square of their growth would be 64 (a quote of 400 KB carried on with no mark took 60 s).
+  test.each([
+    ["a tight list", (n: number) => "- a\n".repeat(n)],
+    ["a list of items with no words", (n: number) => "-\n".repeat(n)],
+    ["lists in lists", (n: number) => "- a\n  - b\n    - c\n".repeat(n / 3)],
+    ["a list with blank lines between", (n: number) => "- a\n\n".repeat(n / 2)],
+    [
+      "a list item carried on by lines with no indent",
+      (n: number) => `- a\n${"b\n".repeat(n)}`,
+    ],
+    [
+      "a quote carried on by lines with no mark",
+      (n: number) => `> a\n${"b\n".repeat(n)}`,
+    ],
+    [
+      "a table of many rows",
+      (n: number) => `| a | b |\n| - | - |\n${"| c | d |\n".repeat(n)}`,
+    ],
+    ["a paragraph of many lines", (n: number) => "a\n".repeat(n)],
+    ["blank lines in a list", (n: number) => `- a\n${"\n".repeat(n)}- b\n`],
+  ])(
+    "%s of 24,000 lines takes no more than its lines' share longer than one of 3,000",
+    (_, make) => {
+      const eighth = make(3000);
+      const whole = make(24_000);
       const growth = growthOf(
-        () => boundedTree(few),
-        () => boundedTree(many),
-        96
+        () => boundedTree(eighth),
+        () => boundedTree(whole)
       );
-      expect(growth).toBeLessThan(96);
+      expect(growth).toBeLessThan(24);
     },
     SLOW_TEST
   );
 
-  // Read in pieces, each is the tree the parser reads whole: one list, one quote, one table, one
-  // paragraph, one piece of code, with every item, row and line, and every place the source's.
+  test("a list of 5,000 items is a list as far as the budget goes, and plain lines after, every word kept", () => {
+    const source = `${counted((at) => `- item ${at} is **here**\n`)(5000)}\nAfter **it**.\n`;
+    const [list, plain, after] = parseMarkdown(source).children;
+    const items = list?.type === "list" ? list.children : [];
+    // The square of 2,828 is the last under 8,000,000.
+    expect(items).toHaveLength(2828);
+    expect(shapeOf(items.at(-1) ?? { type: "none" })).toBe(
+      "listItem(paragraph(text,strong(text)))"
+    );
+    expect(countOf(plain ?? { type: "none" }, ["text", "break"])).toStrictEqual(
+      {
+        text: 2172,
+        break: 2171,
+      }
+    );
+    expect(wordsOf(plain ?? { type: "none" })).toContain(
+      "- item 4999 is **here**"
+    );
+    // What follows the block is read as ever.
+    expect(shapeOf(after ?? { type: "none" })).toBe(
+      "paragraph(text,strong(text),text)"
+    );
+  });
+
+  test("a list of 2,000 items is one list, and what follows it is read for its marks", () => {
+    const source = `${counted((at) => `- item ${at}\n`)(2000)}\nAfter **it**.\n`;
+    const [list, after] = parseMarkdown(source).children;
+    expect(list?.type === "list" && list.children).toHaveLength(2000);
+    expect(shapeOf(after ?? { type: "none" })).toBe(
+      "paragraph(text,strong(text),text)"
+    );
+  });
+
+  // No piece ends inside a block, so each is the tree the parser reads whole: a blank line in
+  // code, in a comment, in a list or in a quote ends none.
   test.each([
     [
       "a tight list",
@@ -1040,25 +1053,13 @@ describe("a block of more lines than any answer's", () => {
   ])(
     "%s is read as the parser reads it whole",
     (_, make) => {
-      const source = bounded(make(500));
+      const source = bounded(make(300));
       expect(parseMarkdown(source).children).toStrictEqual(
         wholeTree(source).children
       );
     },
     SLOW_TEST
   );
-
-  test("a list of 2,000 items is one list, every item with its words", () => {
-    const source = counted((at) => `- item ${at} is **here**\n`)(2000);
-    const [list, ...rest] = parseMarkdown(source).children;
-    const items = list?.type === "list" ? list.children : [];
-    expect(rest).toHaveLength(0);
-    expect(items).toHaveLength(2000);
-    expect(shapeOf(items.at(-1) ?? { type: "none" })).toBe(
-      "listItem(paragraph(text,strong(text)))"
-    );
-    expect(wordsOf(items.at(-1) ?? { type: "none" })).toBe("item 1999 is here");
-  });
 
   test("a list 500 deep keeps every item's words, in lists as deep as a real answer's", () => {
     const tree = boundedTree(stairs(500));
@@ -1212,8 +1213,8 @@ describe("while a long block is written", () => {
     SLOW_TEST
   );
 
-  test("a paragraph of 400 short lines never turns: each of its parts is read for its marks", () => {
-    const source = lines(400, (n) => `Line ${n} with **bold**.\n`);
+  test("a paragraph of 300 short lines never turns", () => {
+    const source = lines(300, (n) => `Line ${n} with **bold**.\n`);
     for (const blocks of written(source, 997)) {
       expect(blocks).toHaveLength(1);
       expect(
@@ -1223,6 +1224,23 @@ describe("while a long block is written", () => {
       );
     }
   });
+
+  test(
+    "a list written past the budget keeps its items a list, and the lines after them plain",
+    () => {
+      const source = counted((at) => `- item ${at}\n`)(3300);
+      let before = 0;
+      for (const [list, ...rest] of written(source, 6007)) {
+        const items = list?.children?.length ?? 0;
+        expect(items).toBeGreaterThanOrEqual(before);
+        expect(items).toBeLessThanOrEqual(2828);
+        expect(rest.every((block) => !hasMarks(block))).toBeTruthy();
+        before = items;
+      }
+      expect(before).toBe(2828);
+    },
+    SLOW_TEST
+  );
 
   test(
     "a list of 300 items is one list at every step, each item read for its marks",

@@ -542,11 +542,12 @@ describe("answers no real answer looks like", () => {
         `${"<details>\n<summary>s</summary>\n\n".repeat(n)}${"</details>\n\n".repeat(n)}`,
       1600,
     ],
-    ["a list of 4,000 items", (n: number) => "- a\n".repeat(n), 4000],
+    // Both past the budget of lines: the list's first 2,828 items are drawn as one, the rest as lines.
+    ["a list of 24,000 items", (n: number) => "- a\n".repeat(n), 24_000],
     [
-      "a list item carried on by 4,000 lines",
-      (n: number) => `- a\n${"b\n".repeat(n)}`,
-      4000,
+      "lists of fifty items, a paragraph between",
+      (n: number) => `${"- a\n".repeat(50)}\nBetween.\n\n`.repeat(n),
+      160,
     ],
   ])(
     "%s takes time in step with its length, written and while written",
@@ -568,19 +569,19 @@ describe("answers no real answer looks like", () => {
 });
 
 describe("an answer longer than one piece", () => {
-  test("a list of 3,000 items is one list, and an ordered one counts on from its start", () => {
-    const items = Array.from({ length: 3000 }, (_, at) => `item ${at}`);
+  test("a list of 2,000 items is one list, and an ordered one counts on from its start", () => {
+    const items = Array.from({ length: 2000 }, (_, at) => `item ${at}`);
     const bullets = draw(items.map((item) => `- ${item}`).join("\n"));
     expect(bullets.match(/<ul\b/gu)).toHaveLength(1);
-    expect(bullets.match(/<li\b/gu)).toHaveLength(3000);
+    expect(bullets.match(/<li\b/gu)).toHaveLength(2000);
     const numbered = draw(
       items.map((item, at) => `${at + 5}. ${item}`).join("\n")
     );
     expect(numbered.match(/<ol\b[^>]*>/gu)).toStrictEqual([
       expect.stringContaining('start="5"'),
     ]);
-    expect(numbered.match(/<li\b/gu)).toHaveLength(3000);
-    expect(textOf(numbered)).toContain("item 2999");
+    expect(numbered.match(/<li\b/gu)).toHaveLength(2000);
+    expect(textOf(numbered)).toContain("item 1999");
   });
 
   test("its marks are read to its end, and a link defined at its end leads there from its start", () => {
