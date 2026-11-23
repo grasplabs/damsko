@@ -1,6 +1,5 @@
 // Skeleton: a placeholder in the shape of content that is still loading, in StyleX. It takes the shape of
 // what it stands for: a line of text, a rectangle, or a circle.
-// Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
 //   <Skeleton />                                       one line of small text
 //   <Skeleton size="lg" />                             one line of a lead or a card title

@@ -1,12 +1,9 @@
-// Confirmation: a step that waits for a person's yes, from shadcn's Confirmation pattern
-// (content/docs/ai-elements/base/confirmation.mdx), built as it builds it: an outlined small Item,
-// the title its ItemTitle, the answers its ItemActions and each answer a small Button. The title and
-// the answers share a row while there is room, the answers at its end; what the step touches
-// (ConfirmationDetails) takes a line of its own between them. It knows only the state it is given,
-// the AI SDK's tool state and its approval:
-// while approval is requested it says the request and offers the answers; once answered it says what
-// was decided, and the answers go.
-// Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
+// Confirmation: a step that waits for a person's yes. It is built from Item: an outlined small
+// Item, the title its ItemTitle, the answers its ItemActions and each answer a small Button. The
+// title and the answers share a row while there is room, the answers at its end; what the step
+// touches (ConfirmationDetails) takes a line of its own between them. It knows only the state it is
+// given, the AI SDK's tool state and its approval: while approval is requested it says the request
+// and offers the answers; once answered it says what was decided, and the answers go.
 //
 //   <Confirmation state={part.state} approval={part.approval}>
 //     <ConfirmationTitle>

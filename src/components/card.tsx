@@ -1,6 +1,5 @@
 // Card: a surface that holds one thing and what belongs to it: a white surface with
 // a hairline and a soft lift, the one corner, and room inside.
-// Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
 //   <Card>
 //     <CardTitle>Quarterly review</CardTitle>

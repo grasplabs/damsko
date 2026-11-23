@@ -3,7 +3,6 @@
 // the switch role beside a hidden native input, so a form sends it and an agent can turn it on by
 // name. It draws itself only; its words are Field's parts, on a row at least 44px tall that a press
 // on the switch, its label or the space around them turns:
-// Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
 //   <Field orientation="horizontal">
 //     <FieldContent>

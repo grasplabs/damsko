@@ -2,7 +2,6 @@
 // built on RadioGroup, Checkbox, Textarea, InputGroup's input and
 // Button. Each item is one choice, several, or the person's own words; a choice item may take
 // words of the person's own as well (QuestionnaireInput, "Other").
-// Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
 //   <Questionnaire onSubmit={(answers) => answer(answers)}>
 //     <QuestionnaireItem name="report">

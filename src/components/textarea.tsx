@@ -2,7 +2,6 @@
 // in StyleX, built on UI SDK's Textarea, with Input's fill, hairline,
 // focus edge and words, so a form's fields are one family. It grows with its text up to
 // textarea-height, then its text scrolls inside it.
-// Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
 //   <Textarea aria-label="Notes" placeholder="What should the team know?" />
 //   <Textarea rows={6} autoResize={false} />                    a fixed height the person can drag

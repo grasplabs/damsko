@@ -2,7 +2,6 @@
 // on UI SDK's InputGroup. The group draws an input's look (lib/styles' field box) round all its
 // parts, so "https://", the words typed and a Copy button read as one field. A press on an addon's
 // words or icon puts the caret in the input.
-// Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
 //   <InputGroup>
 //     <InputGroupAddon><InputGroupText>https://</InputGroupText></InputGroupAddon>

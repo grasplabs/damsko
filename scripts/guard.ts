@@ -7,7 +7,11 @@
  *   which the registry's `fonts` item installs and the site serves;
  * - any file over 1 MB;
  * - a Markdown file that isn't on the allowlist (no plans, notes or
- *   handover files: the why goes in code comments and pull requests).
+ *   handover files: the why goes in code comments and pull requests);
+ * - a text file that credits shadcn/ui as the source of its code: the components are Damsko's own,
+ *   and THIRD_PARTY_NOTICES.md lists the third-party work that is in the tree;
+ * - a file in src/ that describes its code as AI Elements' own (the possessive): a comment says
+ *   what the thing is in Damsko's terms.
  */
 import { execFileSync } from "node:child_process";
 import { readFileSync, statSync } from "node:fs";
@@ -45,6 +49,12 @@ const TEXT =
   /\.(?:astro|css|html|json|jsonc|md|mdx|svg|ts|tsx|txt|webmanifest|ya?ml)$/iu;
 
 const MAX_BYTES = 1024 * 1024;
+
+/** The credit line the components once carried, in two halves so this file does not hold it. */
+const SHADCN_CREDIT = new RegExp(["adapted from", "shadcn"].join(" "), "iu");
+
+/** "AI Elements" as a possessive, with a straight or a curly apostrophe: whose a thing in src/ is. */
+const AI_ELEMENTS_OWN = /\bAI\s+Elements['\u2019]/iu;
 
 const files = execFileSync(
   "git",
@@ -107,6 +117,19 @@ const problems = files.flatMap((file) => {
   }
   return found;
 });
+
+for (const { file, text } of texts) {
+  if (SHADCN_CREDIT.test(text)) {
+    problems.push(
+      `${file}: credits shadcn/ui as its source; the components are Damsko's own (THIRD_PARTY_NOTICES.md)`
+    );
+  }
+  if (file.startsWith("src/") && AI_ELEMENTS_OWN.test(text)) {
+    problems.push(
+      `${file}: calls its code AI Elements' own; say what the thing is in Damsko's terms`
+    );
+  }
+}
 
 if (problems.length > 0) {
   console.error(

@@ -2,7 +2,6 @@
 // in StyleX, built on UI SDK's Slider: a native range input in
 // each thumb, so the keys, a screen reader's gestures and an agent all move it. A soft track, the
 // ink range, a white thumb with the low lift; its label and the value stand on one line above it.
-// Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
 //   <Slider label="Volume" defaultValue={40} />
 //   <Slider label="Price" defaultValue={[20, 80]} thumbLabels={["Lowest price", "Highest price"]} />

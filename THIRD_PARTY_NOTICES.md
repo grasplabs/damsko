@@ -1,34 +1,6 @@
 # Third-party notices
 
-Damsko is Grasp's (see [LICENSE](LICENSE)). Parts of it come from, or follow, the third-party work below, which stays under its own licence. Each adapted source file says so in a header line, which travels with the file when the registry installs it. npm packages Damsko depends on (Hugeicons, UI SDK, StyleX, React and the rest) are not in this repository and keep their own licences.
-
-## shadcn/ui
-
-This covers shadcn/ui's components (https://github.com/shadcn-ui/ui) and its AI Elements components and patterns, all part of shadcn/ui and under its MIT licence: their parts, names and structure, converted to StyleX and UI SDK. The files in `src/components/` adapted from them are the files whose header line says so: "Adapted from shadcn/ui (MIT)".
-
-```text
-MIT License
-
-Copyright (c) 2023 shadcn
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-```
+Damsko is Grasp's own code (see [LICENSE](LICENSE)). The third-party work below is in this repository, or closely followed by a file in it, and stays under its own licence. A source file that follows one says so in a header line, which travels with the file when the registry installs it. npm packages Damsko depends on (Hugeicons, UI SDK, StyleX, React and the rest) are not in this repository and keep their own licences.
 
 ## jsdiff
 

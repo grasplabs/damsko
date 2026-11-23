@@ -3,7 +3,6 @@
 // little off its trigger, with no arrow. It opens when the pointer rests on the trigger for
 // tooltip-delay, and at once when keyboard focus reaches it. It closes on Escape, when the pointer
 // leaves and when focus moves on. It describes its trigger, and holds nothing to press.
-// Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
 //   <Tooltip shortcut="mod+d">
 //     <TooltipTrigger asChild>

@@ -1,10 +1,7 @@
-// PromptInput: where a person writes to an assistant, after shadcn's Prompt Input pattern
-// (apps/v4/content/docs/ai-elements/base/prompt-input.mdx and its demo), whose parts keep the AI
-// Elements names its migration keeps, in StyleX on UI SDK's Token Input and Trigger Menu. A card
-// with the files on top (Attachment), then the text, then a footer of tools (Button, DropdownMenu),
-// Submit at the end. Enter sends and Shift+Enter starts a line; an input method's Enter never
-// sends, and Enter in an open suggestion menu chooses the suggestion.
-// Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
+// PromptInput: where a person writes to an assistant, in StyleX on UI SDK's Token Input and Trigger
+// Menu. A card with the files on top (Attachment), then the text, then a footer of tools (Button,
+// DropdownMenu), Submit at the end. Enter sends and Shift+Enter starts a line; an input method's
+// Enter never sends, and Enter in an open suggestion menu chooses the suggestion.
 //
 //   <PromptInput onSubmit={({ text, files, tokens }) => send(text, files, tokens)} status={status}>
 //     <PromptInputHeader>
@@ -40,17 +37,17 @@
 // label and kind. The caller says which characters open a menu, where each one's items come from,
 // and how a picked item becomes a token; nothing here knows what the items are.
 //
-// The files are the prompt input's, as AI Elements' are: picked, pasted or dropped, it keeps them,
+// The files are the prompt input's own: picked, pasted or dropped, it keeps them,
 // PromptInputAttachments shows them (as an AttachmentGroup), and they go with the message to `onSubmit`;
 // `usePromptInputAttachments()` reads and changes them from a part of the caller's. The body is a
 // slot: in place of the text the caller may put a question or a dictation, and focus follows it
 // there and back. Every value is a token.
 //
-// shadcn draws the pattern as an InputGroup with addons above and below a textarea. Damsko's
-// InputGroup is a field's box (an input's hairline and corner, no room inside, its addons padded as
-// a field's), so the card here keeps the composer's own look, and its tools are Buttons, not
-// InputGroupButtons (which set themselves in from a field's edge). The text is Token Input's editor,
-// not a textarea, so a mention is a token; the length limit's sums are in prompt-input-limit.ts.
+// The card is not an InputGroup with addons above and below a textarea: Damsko's InputGroup is a
+// field's box (an input's hairline and corner, no room inside, its addons padded as a field's), so
+// the card here keeps the composer's own look, and its tools are Buttons, not InputGroupButtons
+// (which set themselves in from a field's edge). The text is Token Input's editor, not a textarea,
+// so a mention is a token; the length limit's sums are in prompt-input-limit.ts.
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
@@ -198,8 +195,8 @@ import { Skeleton } from "./skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip";
 
 /**
- * Where the answer to the last message is: AI Elements' four, from the AI SDK's chat status, and
- * `success`, the moment a product marks an answer as done.
+ * Where the answer to the last message is: the AI SDK's chat status (`ready`, `submitted`,
+ * `streaming`, `error`), and `success`, the moment a product marks an answer as done.
  */
 type Status = "ready" | "submitted" | "streaming" | "error" | "success";
 
@@ -1676,7 +1673,7 @@ const useOutside = () => {
   return outside;
 };
 
-/** The files attached to the message, and what changes them: AI Elements' attachments. */
+/** The files attached to the message, and what changes them. */
 interface PromptInputAttachmentsValue {
   /** The files, in the order they came. */
   files: PromptInputFile[];

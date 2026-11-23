@@ -2,7 +2,6 @@
 // StyleX. Bars, an area and lines on a shared drawing, plus four figures of their own: bars across
 // (ChartBarList), parts of a whole (ChartPie), flows between stages (ChartSankey) and a trend beside
 // its number (ChartSparkline).
-// Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
 //   <ChartContainer aria-label="Tickets solved" summary="Up from 40 in January to 72 in June."
 //     data={rows} xKey="month" config={{ solved: { label: "Solved" } }}>
