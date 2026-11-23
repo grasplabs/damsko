@@ -13,6 +13,7 @@ const look = stylex.create({
     width: 160,
     maxWidth: "100%",
     borderRadius: radius.mark,
+    cornerShape: radius.shape,
     boxShadow: size.borderStrong,
     backgroundColor: colors.card,
   },

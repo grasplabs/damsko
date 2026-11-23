@@ -88,6 +88,7 @@ const s = stylex.create({
     aspectRatio: "1",
     overflow: "hidden",
     borderRadius: radius.mark,
+    cornerShape: radius.shape,
     backgroundColor: colors.brandInk,
     boxShadow: {
       default: `inset 0 0 0 1px color-mix(in oklch, ${colors.brandMint} 22%, transparent)`,
@@ -163,6 +164,7 @@ const s = stylex.create({
     listStyle: "none",
     borderStartStartRadius: radius.mark,
     borderStartEndRadius: radius.mark,
+    cornerShape: radius.shape,
     backgroundColor: `color-mix(in oklch, ${colors.brandInk} 92%, ${colors.brandNight})`,
     boxShadow: `inset 0 1px 0 color-mix(in oklch, ${colors.brandMint} 30%, transparent), 0 -24px 60px color-mix(in oklch, ${colors.brandNight} 70%, transparent)`,
   },

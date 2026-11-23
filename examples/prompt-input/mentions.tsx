@@ -12,7 +12,12 @@ import type {
   PromptInputMentionData,
   PromptInputMentionTrigger,
 } from "@grasp-os/ui/components/prompt-input";
-import { FileIcon, SearchIcon, SparklesIcon } from "@grasp-os/ui/lib/icons";
+import {
+  FileIcon,
+  SearchIcon,
+  SparklesIcon,
+  UsersIcon,
+} from "@grasp-os/ui/lib/icons";
 import * as stylex from "@stylexjs/stylex";
 import { useState } from "react";
 
@@ -21,7 +26,7 @@ import { layout } from "./layout";
 // Made-up names, for the example only.
 const people: PromptInputMentionData[] = [
   { value: "amara", label: "Amara Okafor", description: "Design lead" },
-  { value: "tomas", label: "Tomás Varga", description: "Finance" },
+  { value: "tomas", label: "Tomas Varga", description: "Finance" },
   { value: "lin", label: "Lin Hayashi", description: "Operations" },
 ];
 
@@ -81,8 +86,24 @@ const offline = async (): Promise<PromptInputMentionData[]> =>
     }, 150);
   });
 
+// What @ can mention, as the menu's first level: a kind goes one level in.
+const kinds: PromptInputMentionData[] = [
+  {
+    value: "people",
+    label: "People",
+    icon: UsersIcon,
+    description: "Someone in the workspace",
+  },
+  {
+    value: "files",
+    label: "Files",
+    icon: FileIcon,
+    description: "A document or a sheet",
+  },
+];
+
 const triggers: PromptInputMentionTrigger[] = [
-  { char: "@", type: "mention", description: "mention", items: look },
+  { char: "@", type: "mention", description: "mention", items: look, kinds },
   {
     char: "/",
     boundary: "line",
@@ -94,8 +115,9 @@ const triggers: PromptInputMentionTrigger[] = [
   { char: "#", type: "channel", description: "channel", items: offline },
 ];
 
-// @ mentions a person or a file; / at a line's start a command; # a channel, which fails to load. Each pick is a token in the text:
-// the arrows cross it in one step, and Backspace takes it out whole.
+// @ mentions a person or a file: first the kinds, then the things of the kind picked, or type to
+// search both at once. / at a line's start is a command; # a channel, which fails to load. Each
+// pick is a token in the text: the arrows cross it in one step, and Backspace takes it out whole.
 export default function PromptInputMentions() {
   const [sent, setSent] = useState("");
   return (

@@ -151,6 +151,10 @@ export const colors = stylex.defineConsts({
   tagBg: "var(--damsko-tag-bg)",
   // Table of contents: table of contents.
   tableOfContentsRead: "var(--damsko-table-of-contents-read)",
+  // Prompt input and attachments: prompt input and attachments.
+  promptInputLight: "var(--damsko-prompt-input-light)",
+  promptInputTint: "var(--damsko-prompt-input-tint)",
+  promptInputGlass: "var(--damsko-prompt-input-glass)",
   // Sidebar: sidebar.
   sidebar: "var(--damsko-sidebar)",
   sidebarAccent: "var(--damsko-sidebar-accent)",
@@ -301,18 +305,13 @@ export const radius = stylex.defineConsts({
   base: "var(--damsko-radius)",
   shape: "var(--damsko-radius-shape)",
   promptInputRadius: "var(--damsko-prompt-input-radius)",
+  row: "var(--damsko-radius-row)",
+  hairline: "var(--damsko-radius-hairline)",
   mark: "var(--damsko-radius-mark)",
   full: "var(--damsko-radius-full)",
   circle: "var(--damsko-radius-circle)",
   // Sidebar: sidebar sizes.
-  sidebarRadius: "var(--damsko-sidebar-radius)",
-  sidebarRadiusLg: "var(--damsko-sidebar-radius-lg)",
   sidebarCardRadius: "var(--damsko-sidebar-card-radius)",
-  // Tree: tree.
-  treeViewRowRadius: "var(--damsko-tree-view-row-radius)",
-  // Icon tile: icon tile.
-  iconTileRadius: "var(--damsko-icon-tile-radius)",
-  iconTileSmRadius: "var(--damsko-icon-tile-sm-radius)",
 });
 
 export const shadow = stylex.defineConsts({
@@ -343,6 +342,8 @@ export const shadow = stylex.defineConsts({
   menuShadow: "var(--damsko-menu-shadow)",
   // Switch: switch.
   switchThumbShadow: "var(--damsko-switch-thumb-shadow)",
+  // Prompt input and attachments: prompt input and attachments.
+  promptInputHalo: "var(--damsko-prompt-input-halo)",
 });
 
 export const font = stylex.defineConsts({
@@ -446,6 +447,12 @@ export const duration = stylex.defineConsts({
   // Toast: toast.
   toastDuration: "var(--damsko-toast-duration)",
   toastDurationAction: "var(--damsko-toast-duration-action)",
+  // Prompt input and attachments: prompt input and attachments.
+  promptInputHaloTime: "var(--damsko-prompt-input-halo-time)",
+  promptInputLightIn: "var(--damsko-prompt-input-light-in)",
+  promptInputBeam: "var(--damsko-prompt-input-beam)",
+  promptInputBeamFast: "var(--damsko-prompt-input-beam-fast)",
+  promptInputBeamSlow: "var(--damsko-prompt-input-beam-slow)",
   // Confirmation: confirmation.
   confirmationSettle: "var(--damsko-confirmation-settle)",
   // Stepper: stepper.
@@ -648,6 +655,9 @@ export const size = stylex.defineConsts({
   attachmentMaxWidth: "var(--damsko-attachment-max-width)",
   attachmentThumb: "var(--damsko-attachment-thumb)",
   promptInputMentionWidth: "var(--damsko-prompt-input-mention-width)",
+  promptInputFieldMin: "var(--damsko-prompt-input-field-min)",
+  promptInputGlassBlur: "var(--damsko-prompt-input-glass-blur)",
+  promptInputLightOpacity: "var(--damsko-prompt-input-light-opacity)",
   // Message: message.
   messageBubbleWidth: "var(--damsko-message-bubble-width)",
   messageText: "var(--damsko-message-text)",

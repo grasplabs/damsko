@@ -41,6 +41,7 @@
   --damsko-destructive-shadow-color: light-dark(oklch(0.52 0.175 28 / 0.1), oklch(0.52 0.175 28 / 0.2));
   --damsko-shadow-sm-destructive: 0 1px 2px var(--damsko-destructive-shadow-color), 0 2px 4px var(--damsko-destructive-shadow-color), 0 0 0 1px var(--damsko-destructive-border);
   --damsko-code-bg: light-dark(oklch(0.29 0.05 162 / 0.06), oklch(0.96 0.02 150 / 0.09));
+  --damsko-radius-row: calc(var(--damsko-radius) - var(--damsko-popup-padding));
   --damsko-border-strong-color: light-dark(oklch(0.173 0.028 169.36 / 0.06), oklch(0.96 0.02 150 / 0.1));
   --damsko-shadow-color-faint: light-dark(oklch(0.173 0.028 169.36 / 0.02), oklch(0 0 none / 0.2));
   --damsko-shadow-color-soft: light-dark(oklch(0.173 0.028 169.36 / 0.06), oklch(0 0 none / 0.4));
@@ -187,6 +188,10 @@
   --damsko-table-of-contents-tick-active: var(--damsko-space-5);
   --damsko-table-of-contents-tick-gap: var(--damsko-space-2);
   --damsko-attachment-thumb: var(--damsko-control-default);
+  --damsko-prompt-input-light: linear-gradient(90deg, var(--damsko-brand-mint) 0%, var(--damsko-brand-sea) 12%, transparent 22%, var(--damsko-brand-lime) 34%, var(--damsko-brand-mint) 44%, transparent 54%, var(--damsko-brand-sea) 64%, var(--damsko-brand-lime) 76%, transparent 88%, var(--damsko-brand-mint) 100%);
+  --damsko-prompt-input-tint: linear-gradient(90deg, currentColor 0%, color-mix(in oklch, currentColor 55%, transparent) 14%, transparent 24%, currentColor 36%, color-mix(in oklch, currentColor 30%, transparent) 50%, transparent 58%, currentColor 68%, color-mix(in oklch, currentColor 45%, transparent) 82%, currentColor 100%);
+  --damsko-prompt-input-halo: 0 0 10px 2px color-mix(in oklch, currentColor 45%, transparent), 0 3px 18px 3px color-mix(in oklch, currentColor 25%, transparent);
+  --damsko-prompt-input-glass: color-mix(in oklch, var(--damsko-card) 86%, transparent);
   --damsko-message-text: var(--damsko-text-sm);
   --damsko-sidebar: light-dark(oklch(0.962 0.006 165.08), oklch(0.173 0.028 169.36));
   --damsko-sidebar-menu-button-height: var(--damsko-control-sm);
@@ -317,6 +322,7 @@
   --damsko-destructive-shadow-color: light-dark(oklch(0.52 0.175 28 / 0.1), oklch(0.52 0.175 28 / 0.2));
   --damsko-shadow-sm-destructive: 0 1px 2px var(--damsko-destructive-shadow-color), 0 2px 4px var(--damsko-destructive-shadow-color), 0 0 0 1px var(--damsko-destructive-border);
   --damsko-code-bg: light-dark(oklch(0.29 0.1 178 / 0.06), oklch(0.96 0.04 178 / 0.09));
+  --damsko-radius-row: calc(var(--damsko-radius) - var(--damsko-popup-padding));
   --damsko-border-strong-color: light-dark(oklch(0.173 0.056 178 / 0.06), oklch(0.96 0.04 178 / 0.1));
   --damsko-shadow-color-faint: light-dark(oklch(0.173 0.056 178 / 0.02), oklch(0 0 none / 0.2));
   --damsko-shadow-color-soft: light-dark(oklch(0.173 0.056 178 / 0.06), oklch(0 0 none / 0.4));
@@ -463,6 +469,10 @@
   --damsko-table-of-contents-tick-active: var(--damsko-space-5);
   --damsko-table-of-contents-tick-gap: var(--damsko-space-2);
   --damsko-attachment-thumb: var(--damsko-control-default);
+  --damsko-prompt-input-light: linear-gradient(90deg, var(--damsko-brand-mint) 0%, var(--damsko-brand-sea) 12%, transparent 22%, var(--damsko-brand-lime) 34%, var(--damsko-brand-mint) 44%, transparent 54%, var(--damsko-brand-sea) 64%, var(--damsko-brand-lime) 76%, transparent 88%, var(--damsko-brand-mint) 100%);
+  --damsko-prompt-input-tint: linear-gradient(90deg, currentColor 0%, color-mix(in oklch, currentColor 55%, transparent) 14%, transparent 24%, currentColor 36%, color-mix(in oklch, currentColor 30%, transparent) 50%, transparent 58%, currentColor 68%, color-mix(in oklch, currentColor 45%, transparent) 82%, currentColor 100%);
+  --damsko-prompt-input-halo: 0 0 10px 2px color-mix(in oklch, currentColor 45%, transparent), 0 3px 18px 3px color-mix(in oklch, currentColor 25%, transparent);
+  --damsko-prompt-input-glass: color-mix(in oklch, var(--damsko-card) 86%, transparent);
   --damsko-message-text: var(--damsko-text-sm);
   --damsko-sidebar: light-dark(oklch(0.942 0.018 172), oklch(0.215 0.058 178));
   --damsko-sidebar-menu-button-height: var(--damsko-control-sm);
@@ -593,6 +603,7 @@
   --damsko-destructive-shadow-color: light-dark(oklch(0.52 0.175 28 / 0.1), oklch(0.52 0.175 28 / 0.2));
   --damsko-shadow-sm-destructive: 0 1px 2px var(--damsko-destructive-shadow-color), 0 2px 4px var(--damsko-destructive-shadow-color), 0 0 0 1px var(--damsko-destructive-border);
   --damsko-code-bg: light-dark(oklch(0.29 0.011 75 / 0.06), oklch(0.96 0.004 75 / 0.09));
+  --damsko-radius-row: calc(var(--damsko-radius) - var(--damsko-popup-padding));
   --damsko-border-strong-color: light-dark(oklch(0.173 0.006 75 / 0.06), oklch(0.96 0.004 75 / 0.1));
   --damsko-shadow-color-faint: light-dark(oklch(0.173 0.006 75 / 0.02), oklch(0 0 none / 0.2));
   --damsko-shadow-color-soft: light-dark(oklch(0.173 0.006 75 / 0.06), oklch(0 0 none / 0.4));
@@ -739,6 +750,10 @@
   --damsko-table-of-contents-tick-active: var(--damsko-space-5);
   --damsko-table-of-contents-tick-gap: var(--damsko-space-2);
   --damsko-attachment-thumb: var(--damsko-control-default);
+  --damsko-prompt-input-light: linear-gradient(90deg, var(--damsko-brand-mint) 0%, var(--damsko-brand-sea) 12%, transparent 22%, var(--damsko-brand-lime) 34%, var(--damsko-brand-mint) 44%, transparent 54%, var(--damsko-brand-sea) 64%, var(--damsko-brand-lime) 76%, transparent 88%, var(--damsko-brand-mint) 100%);
+  --damsko-prompt-input-tint: linear-gradient(90deg, currentColor 0%, color-mix(in oklch, currentColor 55%, transparent) 14%, transparent 24%, currentColor 36%, color-mix(in oklch, currentColor 30%, transparent) 50%, transparent 58%, currentColor 68%, color-mix(in oklch, currentColor 45%, transparent) 82%, currentColor 100%);
+  --damsko-prompt-input-halo: 0 0 10px 2px color-mix(in oklch, currentColor 45%, transparent), 0 3px 18px 3px color-mix(in oklch, currentColor 25%, transparent);
+  --damsko-prompt-input-glass: color-mix(in oklch, var(--damsko-card) 86%, transparent);
   --damsko-message-text: var(--damsko-text-sm);
   --damsko-sidebar: light-dark(oklch(0.952 0.011 85), oklch(0.205 0.006 75));
   --damsko-sidebar-menu-button-height: var(--damsko-control-sm);
