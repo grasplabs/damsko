@@ -4,7 +4,7 @@ Grasp's design system: React components, a few ready-made blocks, design tokens 
 
 Docs, every component and its examples: https://damsko.joingrasp.com
 
-Damsko is proprietary: its source is public to read, and only Grasp, its affiliates and its contractors working for Grasp may use it ([LICENSE](LICENSE); third-party material: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)).
+Damsko is proprietary: its source is public to read, and only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use it ([LICENSE](LICENSE); third-party material: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)).
 
 ## Install a component
 
@@ -94,7 +94,7 @@ An item names what it builds on by the same registry (`@damsko/lib`), so everyth
 
 ## Licence of installed files
 
-Installed files stay under Damsko's [LICENSE](LICENSE) wherever they land, whatever the licence of the repository around them: only Grasp, its affiliates and its contractors working for Grasp may use them. Every registry item says so in its `meta.license`, as shadcn registries carry a licence; no file gets a header for it. The fonts are the exception: they are under the SIL Open Font License 1.1, and `OFL.txt` is installed beside them. Third-party material: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+Installed files stay under Damsko's [LICENSE](LICENSE) wherever they land, whatever the licence of the repository around them: only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them. Every registry item says so in its `meta.license`, as shadcn registries carry a licence; no file gets a header for it. The fonts are the exception: they are under the SIL Open Font License 1.1, and `OFL.txt` is installed beside them. Third-party material: [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 ## Develop
 
