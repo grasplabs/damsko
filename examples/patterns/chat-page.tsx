@@ -118,6 +118,7 @@ import {
 import * as stylex from "@stylexjs/stylex";
 import { useEffect, useState } from "react";
 
+import { useModelChip } from "../prompt-input/model";
 import {
   answer,
   chats,
@@ -145,7 +146,7 @@ const layout = stylex.create({
     backgroundColor: colors.muted,
     boxShadow: size.borderStrong,
   },
-  // In the box's one row: the voice and Send together at its end, a space-2 apart.
+  // In the box's one row: the model, the voice and Send together at its end, Send a space-2 apart.
   end: { gridArea: "end", marginInlineStart: "auto" },
   apart: { marginInlineStart: space["1"] },
   // The Chats group's label, a button that folds it: its count and chevron at its end.
@@ -565,6 +566,7 @@ const ChatBox = ({ run, state }: { run: ChatRun; state: ChatState }) => {
     setSeen(state);
     setFailed(state === "failed-send");
   }
+  const { chip } = useModelChip();
   const working = run.phase === "working" || run.phase === "answering";
   let status: Status = working ? "streaming" : "ready";
   if (failed) {
@@ -604,6 +606,7 @@ const ChatBox = ({ run, state }: { run: ChatRun; state: ChatState }) => {
           </PromptInputActionMenu>
         </PromptInputTools>
         <PromptInputTools style={layout.end}>
+          {chip}
           <PromptInputSpeechButton />
           <PromptInputSubmit onStop={run.stop} style={layout.apart} />
         </PromptInputTools>

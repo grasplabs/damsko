@@ -48,19 +48,87 @@ const styles = stylex.create({
   submit: { alignSelf: "end" },
 });
 
-// The model and how hard it thinks, as one chip among the tools: the Model selector, opening
-// upwards. The prompt input holds neither choice; the page keeps them and sends them along.
-export default function PromptInputModel() {
+/**
+ * The model and how hard it thinks, as one chip: the Model selector, opening upwards, with the
+ * page's own state. What it says (the model and its effort) comes with it. The chat page pattern
+ * puts the same chip in its box.
+ */
+export const useModelChip = () => {
   const [model, setModel] = useState("opus");
   const [effort, setEffort] = useState("medium");
   const [favorites, setFavorites] = useState(["opus", "gemini-pro"]);
-  const [sent, setSent] = useState("");
   const current = modelOf(model);
   const logo = current === undefined ? undefined : logoOf(current.maker);
   const levels = current?.levels ?? [];
   const level = levels.find((each) => each.value === effort)?.label;
   const name = current?.name ?? "";
   const said = level === undefined ? name : `${name}, ${level}`;
+  const chip = (
+    <ModelSelector
+      value={model}
+      onValueChange={(next) => {
+        setModel(next);
+        setEffort(effortFor(next, effort));
+      }}
+      favorites={favorites}
+      onFavoritesChange={setFavorites}
+      effort={effort}
+      onEffortChange={setEffort}
+    >
+      <ModelSelectorTrigger tooltip={level === undefined ? undefined : said}>
+        {logo === undefined ? null : <ModelSelectorLogo logo={logo} />}
+        <ModelSelectorName>{level ?? name}</ModelSelectorName>
+      </ModelSelectorTrigger>
+      <ModelSelectorContent side="top">
+        <ModelSelectorInput />
+        <ModelSelectorMakers>
+          {makers.map((maker) => (
+            <ModelSelectorMaker
+              key={maker.id}
+              value={maker.id}
+              aria-label={maker.name}
+              logo={maker.logo}
+            />
+          ))}
+        </ModelSelectorMakers>
+        <ModelSelectorList>
+          <ModelSelectorEmpty />
+          {makers.map((maker) => (
+            <ModelSelectorGroup
+              key={maker.id}
+              value={maker.id}
+              heading={maker.name}
+            >
+              {models
+                .filter((each) => each.maker === maker.id)
+                .map((each) => (
+                  <ModelSelectorItem
+                    key={each.id}
+                    value={each.id}
+                    keywords={[maker.name]}
+                    description={each.description}
+                    disabled={each.unavailable}
+                  >
+                    <ModelSelectorLogo logo={maker.logo} />
+                    <ModelSelectorName>{each.name}</ModelSelectorName>
+                    <ModelSelectorFavorite />
+                  </ModelSelectorItem>
+                ))}
+            </ModelSelectorGroup>
+          ))}
+        </ModelSelectorList>
+        <ModelSelectorEffort levels={levels} />
+      </ModelSelectorContent>
+    </ModelSelector>
+  );
+  return { said, chip };
+};
+
+// The model and how hard it thinks, as one chip among the tools: the Model selector, opening
+// upwards. The prompt input holds neither choice; the page keeps them and sends them along.
+export default function PromptInputModel() {
+  const [sent, setSent] = useState("");
+  const { said, chip } = useModelChip();
   return (
     <div {...stylex.props(layout.column)}>
       <PromptInput
@@ -86,64 +154,7 @@ export default function PromptInputModel() {
                 <PromptInputActionAddAttachments />
               </PromptInputActionMenuContent>
             </PromptInputActionMenu>
-            <ModelSelector
-              value={model}
-              onValueChange={(next) => {
-                setModel(next);
-                setEffort(effortFor(next, effort));
-              }}
-              favorites={favorites}
-              onFavoritesChange={setFavorites}
-              effort={effort}
-              onEffortChange={setEffort}
-            >
-              <ModelSelectorTrigger
-                tooltip={level === undefined ? undefined : said}
-              >
-                {logo === undefined ? null : <ModelSelectorLogo logo={logo} />}
-                <ModelSelectorName>{level ?? name}</ModelSelectorName>
-              </ModelSelectorTrigger>
-              <ModelSelectorContent side="top">
-                <ModelSelectorInput />
-                <ModelSelectorMakers>
-                  {makers.map((maker) => (
-                    <ModelSelectorMaker
-                      key={maker.id}
-                      value={maker.id}
-                      aria-label={maker.name}
-                      logo={maker.logo}
-                    />
-                  ))}
-                </ModelSelectorMakers>
-                <ModelSelectorList>
-                  <ModelSelectorEmpty />
-                  {makers.map((maker) => (
-                    <ModelSelectorGroup
-                      key={maker.id}
-                      value={maker.id}
-                      heading={maker.name}
-                    >
-                      {models
-                        .filter((each) => each.maker === maker.id)
-                        .map((each) => (
-                          <ModelSelectorItem
-                            key={each.id}
-                            value={each.id}
-                            keywords={[maker.name]}
-                            description={each.description}
-                            disabled={each.unavailable}
-                          >
-                            <ModelSelectorLogo logo={maker.logo} />
-                            <ModelSelectorName>{each.name}</ModelSelectorName>
-                            <ModelSelectorFavorite />
-                          </ModelSelectorItem>
-                        ))}
-                    </ModelSelectorGroup>
-                  ))}
-                </ModelSelectorList>
-                <ModelSelectorEffort levels={levels} />
-              </ModelSelectorContent>
-            </ModelSelector>
+            {chip}
           </PromptInputTools>
           <PromptInputSubmit style={styles.submit} />
         </PromptInputFooter>
