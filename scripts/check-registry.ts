@@ -17,12 +17,18 @@ import nodePath from "node:path";
 import { registrySchema } from "shadcn/schema";
 import ts from "typescript6";
 
-import { packageExports, versions } from "../site/start/get-started.ts";
+import {
+  packageExports,
+  pinned as pinnedVersion,
+  versions,
+} from "../site/start/get-started.ts";
 import {
   buildRegistry,
   catalog,
   exactVersion,
   packageOf,
+  fontSumsPath,
+  fontSumsText,
   registryText,
   root,
   targetOf,
@@ -210,6 +216,13 @@ for (const problem of problems) {
   }
 }
 
+// The fonts' checksums are the files' own.
+check(
+  existsSync(nodePath.join(root, fontSumsPath)) &&
+    readFileSync(nodePath.join(root, fontSumsPath), "utf-8") === fontSumsText(),
+  `${fontSumsPath} is out of date: run pnpm run generate`
+);
+
 // registry.json is current and matches shadcn's own schema (the CLI a project runs).
 const written = nodePath.join(root, "registry.json");
 check(
@@ -350,6 +363,12 @@ for (const page of [...docPages("docs"), "site/start/get-started.ts"]) {
     }
   }
 }
+
+// The version Get started pins is this one: the install check installs from it.
+check(
+  pinnedVersion === `v${damskoVersion}`,
+  `Get started pins ${pinnedVersion} (site/start/get-started.ts, pinned), package.json says v${damskoVersion}`
+);
 
 // The versions Get started gives an app (its catalog) are the ones Damsko is tested with, and name
 // every package an item brings: an app set up from the page, and the install check that follows

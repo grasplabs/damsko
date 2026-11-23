@@ -47,13 +47,14 @@ export interface Step {
 /**
  * One part of the page: a heading, a sentence and its steps, numbered from one. `starts` says
  * where its paths are from: an empty folder of its own (`empty`), the folder the section named
- * goes on in, or each app's own folder (`each app`: app/ and apps/web/).
+ * goes on in, each app's own folder (`each app`: app/ and apps/web/), or the folder components.json
+ * is in (`the registry's`: app/ and packages/ui/).
  */
 export interface Section {
   slug: string;
   title: string;
   lead: string;
-  starts: "empty" | "each app" | { after: string };
+  starts: "empty" | "each app" | "the registry's" | { after: string };
   steps: Step[];
 }
 
@@ -174,6 +175,8 @@ export const versions: Record<string, string> = {
   // Beside Tailwind.
   tailwindcss: "4.3.5",
   "@tailwindcss/vite": "4.3.5",
+  // A Geist of the app's own, where the page shows one.
+  "@fontsource-variable/geist": "5.3.0",
   // What the components import: the CLI adds each by name, and pnpm gives it this version.
   "@hugeicons/core-free-icons": "4.4.0",
   "@hugeicons/react": "1.1.10",
@@ -241,9 +244,32 @@ const registryAddress = `${siteAddress}/r/{name}.json`;
 const firstApp =
   'import { Button } from "@grasp-os/ui/components/button";\n\nexport default function App() {\n  return <Button variant="default">Save changes</Button>;\n}';
 
-/** The scripts that unpack the fonts before the app is run or built, from the app's folder. */
-const unpackScripts = (script: string) =>
-  `// package.json, in scripts\n"predev": "node ${script}",\n"prebuild": "node ${script}"`;
+/** The fonts are unpacked once, where they were installed, and committed. */
+const unpack = "node src/styles/fonts/unpack.mjs";
+
+/**
+ * The version the page pins, as an example: Damsko's own now (scripts/check-registry.ts holds it
+ * to package.json), so the install check can install from it.
+ */
+export const pinned = "v0.1.0";
+
+const everyItemAgain =
+  "pnpm dlx shadcn@4.23.0 add @damsko/tokens @damsko/fonts @damsko/lib @damsko/hooks @damsko/button --overwrite --yes";
+
+/**
+ * Whether the page provides the family the sans token names first, as a function a browser test
+ * evaluates in the page. The install check evaluates it in every app it builds.
+ */
+export const sansProvided = [
+  "() => {",
+  "  const root = getComputedStyle(document.documentElement);",
+  '  const [first = ""] = root.getPropertyValue("--damsko-font-sans").split(",");',
+  '  const family = first.trim().replaceAll(\'"\', "");',
+  "  return [...document.fonts].some(",
+  '    (face) => face.family.replaceAll(\'"\', "") === family',
+  "  );",
+  "}",
+].join("\n");
 
 const nodeResolution = '"module": "esnext",\n"moduleResolution": "bundler"';
 
@@ -251,7 +277,7 @@ export const sections: Section[] = [
   {
     slug: "install",
     title: "Install",
-    lead: "From an empty folder to a working button: a React app on Vite, StyleX, then the tokens, the fonts and a component from the shadcn CLI. Damsko's install check carries out these blocks, in this order, in an empty folder, on every change.",
+    lead: "From an empty folder to a working button: a React app on Vite, StyleX, then the tokens, the fonts and a component from the shadcn CLI. Damsko's install check carries out these blocks, in this order, in an empty folder, on every change. The address in components.json here is this site's, which serves main as last deployed: a product pins a version instead (Pin and update, below).",
     starts: "empty",
     steps: [
       {
@@ -356,24 +382,19 @@ export const sections: Section[] = [
       {
         slug: "add-the-fonts",
         name: "Add the fonts",
-        note: 'Geist, Geist Mono and Geist Serif under the names the tokens use, as files your own origin serves, with their licence (SIL Open Font License 1.1, fonts/OFL.txt). The CLI carries a file as text, so the six fonts arrive as base64 beside a script that turns them into the files (fonts/unpack.mjs). Run it before every dev and build, so a skipped unpack cannot pass unseen: it is safe to run again, and fails when a font fonts.css names is missing. A product that loads Geist another way skips this item: the tokens name "Geist Variable" and "Geist Mono Variable" too, the families Fontsource\'s variable packages register, after "Geist" and "Geist Mono", so either source draws the components in Geist and both may be loaded at once.',
+        note: "Geist, Geist Mono and Geist Serif under the names the tokens use, as files your own origin serves, with their licence (SIL Open Font License 1.1, fonts/OFL.txt). The CLI carries a file as text, so the six fonts arrive as base64 beside a script that turns them into the files (fonts/unpack.mjs). Run it once, here, and commit the six files: no build runs it, so the fonts are there however the app is built, by its own script or by a runner that calls the bundler from another folder. It is safe to run again, and fails when a font a sheet names is missing; with --check, in the product's checks, it changes nothing and fails while one is packed (Check for drift, below).",
         blocks: [
           {
-            code: "pnpm dlx shadcn@4.23.0 add @damsko/fonts",
+            code: `pnpm dlx shadcn@4.23.0 add @damsko/fonts\n${unpack}`,
             lang: "bash",
             does: { kind: "run", in: "app" },
-          },
-          {
-            code: unpackScripts("src/styles/fonts/unpack.mjs"),
-            lang: "jsonc",
-            does: { kind: "set", file: "app/package.json", at: ["scripts"] },
           },
         ],
       },
       {
         slug: "import-the-styles",
         name: "Import the styles",
-        note: "The whole of src/index.css, in place of what Vite's template put there: the tokens first. base.css is for this app because it is new and has no reset; beside Tailwind it is left out (below).",
+        note: "The whole of src/index.css, in place of what Vite's template put there: the tokens first. base.css is for this app because it is new and has no reset; beside Tailwind it is left out (below). fonts.css is the three families; an app that serves one of them itself imports the others' sheets in its place (With a Geist of its own, below).",
         blocks: [
           {
             code: appStyles("./styles"),
@@ -534,30 +555,19 @@ export const sections: Section[] = [
       {
         slug: "add-to-the-package",
         name: "Add the tokens, the fonts and a component",
-        note: "In packages/ui, where components.json is. The app unpacks the fonts before it runs or builds.",
+        note: "In packages/ui, where components.json is; the fonts are unpacked there, once, and committed.",
         blocks: [
           {
-            code: "pnpm dlx shadcn@4.23.0 add @damsko/tokens @damsko/fonts @damsko/button",
+            code: `pnpm dlx shadcn@4.23.0 add @damsko/tokens @damsko/fonts @damsko/button\n${unpack}`,
             lang: "bash",
             does: { kind: "run", in: "packages/ui" },
-          },
-          {
-            code: unpackScripts(
-              "../../packages/ui/src/styles/fonts/unpack.mjs"
-            ).replace("// package.json", "// apps/web/package.json"),
-            lang: "jsonc",
-            does: {
-              kind: "set",
-              file: "apps/web/package.json",
-              at: ["scripts"],
-            },
           },
         ],
       },
       {
         slug: "the-apps-styles",
         name: "The app's styles",
-        note: "The whole of apps/web/src/index.css, through the package. fonts.css names its files by their path beside it, so the app's build finds and serves them.",
+        note: "The whole of apps/web/src/index.css, through the package. The fonts' sheets name their files by their path beside them, so the app's build finds and serves them.",
         blocks: [
           {
             code: appStyles("@grasp-os/ui/styles"),
@@ -628,6 +638,54 @@ export const sections: Section[] = [
     ],
   },
   {
+    slug: "with-a-geist-of-its-own",
+    title: "With a Geist of its own",
+    lead: 'A product that already serves Geist loads it once, never beside Damsko\'s. The tokens name one family each ("Geist", "Geist Serif", "Geist Mono"), each family is a sheet of its own beside its files, and fonts.css is the three together. So the product leaves out the sheet of the family it has, imports the ones it lacks, and sets that family\'s token to the name its own has. The install check goes on from the app beside Tailwind, with Fontsource\'s Geist as an older kit loads it, and fails when two Geists load or when Geist Serif or Geist Mono does not arrive.',
+    starts: { after: "beside-tailwind" },
+    steps: [
+      {
+        slug: "the-apps-own-geist",
+        name: "The app's own Geist",
+        note: 'Skip this in a product that has it already. Fontsource\'s variable package registers the family as "Geist Variable".',
+        blocks: [
+          {
+            code: "pnpm add @fontsource-variable/geist@catalog:",
+            lang: "bash",
+            does: { kind: "run", in: "apps/web" },
+          },
+        ],
+      },
+      {
+        slug: "the-styles-without-damskos-geist",
+        name: "The styles, without Damsko's Geist",
+        note: "The whole of apps/web/src/index.css: the app's own Geist, the tokens and themes, then the two families it lacks in place of fonts.css, and the sans token set to its own family after tokens.css. --damsko-font-serif and --damsko-font-mono are set the same way by a product that brings those. Leaving a sheet out is all it takes to load nothing of that family: Damsko's Geist is 20 KB for the common characters and 28 KB more on a page with an accented one.",
+        blocks: [
+          {
+            code: '@import "tailwindcss";\n@import "@fontsource-variable/geist";\n@import "@grasp-os/ui/styles/tokens.css";\n@import "@grasp-os/ui/styles/themes.css";\n@import "@grasp-os/ui/styles/fonts/geist-serif.css";\n@import "@grasp-os/ui/styles/fonts/geist-mono.css";\n\n:root {\n  --damsko-font-sans: "Geist Variable", ui-sans-serif, system-ui, sans-serif;\n}',
+            lang: "css",
+            does: { kind: "write", file: "apps/web/src/index.css" },
+          },
+          {
+            code: "pnpm build",
+            lang: "bash",
+            does: { kind: "run", in: "apps/web" },
+          },
+        ],
+      },
+      {
+        slug: "check-the-family",
+        name: "Check the family",
+        note: "A sheet left out with its token not set fails without a word: the text falls back to the system's font. So the product's browser test asks the page, once, whether it provides the family the sans token names first. The install check evaluates this function in every app it builds, and in this one again with the token left unset, where it must say no.",
+        blocks: [
+          {
+            code: `const sansProvided = ${sansProvided};\n\nexpect(await page.evaluate(sansProvided)).toBe(true);`,
+            lang: "ts",
+          },
+        ],
+      },
+    ],
+  },
+  {
     slug: "light-and-dark",
     title: "Light and dark",
     lead: "themes.css reads one attribute, data-mode (light, dark or system), on the root element or on any other; with none, the system's setting decides. Damsko has no theme provider: whatever holds a person's choice in the product writes the attribute.",
@@ -668,51 +726,46 @@ export const sections: Section[] = [
   {
     slug: "pin-and-update",
     title: "Pin and update",
-    lead: "What a product installs is one commit of Damsko, and the record of which is the product's own: the registry address in its components.json. The CLI writes files only, so nothing in an installed file says where it came from. The durable form of a version is Damsko's git: a tag for each state a product installs, and the registry built from that tag. The site serves main as last deployed, and that one commit under its own address as a convenience; do not depend on the site for an older one.",
-    starts: "each app",
+    lead: "What a product installs is one version of Damsko, and the record of which is the product's own: the address in its components.json. The CLI writes files only, so nothing in an installed file says where it came from; each item's meta, in the registry, says its version and commit. This site serves two things. /r/{name}.json is main as last deployed, whichever commit that is (version.json names it): right for a first look, never for a pin. /r/<tag>/{name}.json is a released version, and never changes: every release of Damsko is served there, from the archive its tag's release on GitHub carries.",
+    starts: "the registry's",
     steps: [
       {
-        slug: "pin-a-commit",
-        name: "Pin what the site serves",
-        note: "version.json names the commit and version the site serves now. /r/<commit>/ never serves another commit's files: an install from it is exactly that commit, or a 404 once main has moved on.",
+        slug: "pin-a-version",
+        name: "Pin a version",
+        note: "One line of components.json: the tag in the registry's address. An item names what it builds on by the same registry, so everything a component brings comes from that version too. The second form reads the tag from the environment, for a product that keeps it elsewhere; the CLI stops and names the variable when it is not set.",
         blocks: [
-          { code: `curl -s ${siteAddress}/version.json`, lang: "bash" },
           {
-            code: `"registries": { "@damsko": "${siteAddress}/r/<commit>/{name}.json" }`,
+            code: `// components.json\n"registries": { "@damsko": "${siteAddress}/r/${pinned}/{name}.json" }`,
+            lang: "jsonc",
+            does: { kind: "set", file: "components.json", at: [] },
+          },
+          {
+            code: `"registries": { "@damsko": "${siteAddress}/r/\${DAMSKO_VERSION}/{name}.json" }`,
             lang: "jsonc",
           },
         ],
       },
       {
-        slug: "any-other-version",
-        name: "Any other version",
-        note: "A tag or commit the site no longer serves is built from Damsko itself, with its dependencies installed, and served from this machine: put the address the last command prints in components.json for the install.",
+        slug: "install-and-update",
+        name: "Install and update",
+        note: "Every item the product has, all at once: never one item alone (the items share lib/ and the tokens), and never shadcn add --all, which installs from shadcn's own registry. Then unpack the fonts, review the diff and commit it, the six font files with it. To update, change the tag in components.json and run it again.",
         blocks: [
           {
-            code: "git clone https://github.com/grasplabs/damsko.git\ncd damsko\ngit checkout <tag or commit>\npnpm install\nnode scripts/registry-dist.ts out\nnode scripts/serve.ts --dir out",
+            code: `${everyItemAgain}\n${unpack}`,
             lang: "bash",
-          },
-        ],
-      },
-      {
-        slug: "update",
-        name: "Update",
-        note: "Put the new address in components.json, install every item the product has again, all at once, unpack the fonts and review the diff. Never one item alone (the items share lib/ and the tokens), and never shadcn add --all, which installs from shadcn's own registry.",
-        blocks: [
-          {
-            code: "pnpm dlx shadcn@4.23.0 add @damsko/tokens @damsko/fonts @damsko/lib @damsko/hooks @damsko/button --overwrite --yes\nnode src/styles/fonts/unpack.mjs\ngit status --short",
-            lang: "bash",
+            does: { kind: "run", in: "." },
           },
         ],
       },
       {
         slug: "check-for-drift",
         name: "Check for drift",
-        note: "In the product's own checks. The first command fails while a font is still packed or missing; after the same install again, the second prints nothing when the product's copy is the pin's, new and changed files alike (git diff alone misses a file git does not track yet). The files are never edited in the product: a change is a pull request in Damsko, then an update.",
+        note: "In the product's own checks, with its work committed: the same install again, the fonts unpacked, then two questions. The fonts' own check fails while a font is packed, missing or not the file that was installed; it is what keeps the fonts in place, whatever builds the app. The last line fails when the product's copy is not the pin's, new and changed files alike (git diff alone misses a file git does not track yet). The files are never edited in the product: a change is a pull request in Damsko, then an update.",
         blocks: [
           {
-            code: "node src/styles/fonts/unpack.mjs --check\ngit status --porcelain",
+            code: `${everyItemAgain}\n${unpack}\n${unpack} --check\ntest -z "$(git status --porcelain)"`,
             lang: "bash",
+            does: { kind: "run", in: "." },
           },
         ],
       },

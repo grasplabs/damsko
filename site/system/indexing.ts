@@ -51,14 +51,14 @@ const fixedHeaders = fixedNames
 
 /**
  * The registry (dist/r, scripts/registry-dist.ts). /r/<name>.json is main as last deployed and
- * changes with every deploy: kept for five minutes, then asked for again. /r/<commit>/<name>.json
- * never serves another commit's files: kept for a year. The second rule takes the first one's
- * header off before it sets its own, as Cloudflare's _headers would otherwise join the two.
+ * changes with every deploy: kept for five minutes, then asked for again. /r/<tag>/<name>.json is
+ * a released version, which never changes: kept for a year. The second rule takes the first
+ * one's header off before it sets its own, as Cloudflare's _headers would otherwise join the two.
  */
 const registryHeaders = [
   "/r/*",
   "  Cache-Control: public, max-age=300, must-revalidate",
-  "/r/:commit/*",
+  "/r/:tag/*",
   "  ! Cache-Control",
   "  Cache-Control: public, max-age=31536000, immutable",
   "",

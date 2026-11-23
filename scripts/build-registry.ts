@@ -27,6 +27,7 @@
 //
 // Every item carries `meta`: the version (package.json) and the licence its files are under,
 // wherever they are installed. The served registry adds the commit (scripts/registry-dist.ts).
+import { createHash } from "node:crypto";
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import nodePath from "node:path";
 
@@ -86,7 +87,7 @@ const sharedItems = [
     owns: (path: string) => !isFontFile(path),
     title: "Tokens",
     description:
-      "Every colour, space, corner, edge, shadow, time and curve as CSS variables (tokens.css), and the modes and themes (themes.css): import the two once, at the root. With them, base.css: an optional reset for a new app that has none; never import it beside Tailwind, whose preflight is the reset. The font families the tokens name are not included: add @damsko/fonts, or load Geist yourself.",
+      "Every colour, space, corner, edge, shadow, time and curve as CSS variables (tokens.css), and the modes and themes (themes.css): import the two once, at the root. With them, base.css: an optional reset for a new app that has none; never import it beside Tailwind, whose preflight is the reset. The font families the tokens name are not included: add @damsko/fonts, and set a family's token (--damsko-font-sans, -serif, -mono) where the app serves that family under another name.",
   },
   {
     name: "fonts",
@@ -95,7 +96,7 @@ const sharedItems = [
     owns: isFontFile,
     title: "Fonts",
     description:
-      "Geist, Geist Mono and Geist Serif as the tokens name them: the @font-face rules (fonts.css), the six subset files and their licence (fonts/). The files arrive as base64 text; fonts/unpack.mjs turns them into the fonts. Run it after every install and before every build (node src/styles/fonts/unpack.mjs; --check fails while one is packed), and import fonts.css once, at the root.",
+      "Geist, Geist Mono and Geist Serif as the tokens name them: one sheet of @font-face rules per family beside the six subset files and their licence (fonts/), and fonts.css, the three together. The files arrive as base64 text; fonts/unpack.mjs turns them into the fonts. Run it once after every install and commit the files (node src/styles/fonts/unpack.mjs; --check fails while one is packed, missing or altered), and import fonts.css once, at the root, or only the sheets of the families the app does not serve itself.",
     license: fontLicense,
   },
 ] as const;
@@ -432,11 +433,29 @@ export const buildRegistry = () => {
 };
 
 /** registry.json's text, as the formatter writes JSON. */
+/** Where the fonts' checksums are: installed with them, read by the script that unpacks them. */
+export const fontSumsPath = "src/styles/fonts/SHA256SUMS";
+
+/** The checksum of every font file, in the form `shasum -c` reads: what unpack.mjs holds a font to. */
+export const fontSumsText = () =>
+  readdirSync(nodePath.join(root, "src/styles/fonts"))
+    .filter(isFont)
+    .toSorted()
+    .map(
+      (name) =>
+        `${createHash("sha256")
+          .update(readFileSync(nodePath.join(root, "src/styles/fonts", name)))
+          .digest("hex")}  ${name}\n`
+    )
+    .join("");
+
 export const registryText = (registry: unknown) =>
   `${JSON.stringify(registry, null, 2)}\n`;
 
 if (import.meta.main) {
   const { writeFileSync } = await import("node:fs");
+  // First: the registry's fonts item ships it.
+  writeFileSync(nodePath.join(root, fontSumsPath), fontSumsText());
   const { registry, problems } = buildRegistry();
   for (const problem of problems) {
     console.error(

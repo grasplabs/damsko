@@ -1,30 +1,32 @@
 // The registry as it is served: `shadcn build` on registry.json, then what the stock build cannot
-// do, and the same files once more under the commit they were built from.
+// do; the same files as one archive, the form a release carries; and every released version
+// beside the latest, from those archives.
 //
-//   node scripts/registry-dist.ts <folder>     writes <folder>/r/ and <folder>/r/<commit>/
+//   node scripts/registry-dist.ts <folder>             writes <folder>/r/
+//   node scripts/registry-dist.ts <folder> --release   and <folder>/registry-v<version>.tgz with
+//                                                      its checksum (<name>.sha256)
+//   node scripts/registry-dist.ts <folder> --versions  and <folder>/r/<tag>/ for every release
 //
-// `pnpm build` runs it on dist/, after the site; scripts/check-install.ts installs from what it
-// writes. After `shadcn build`:
+// `pnpm build` runs it on dist/ with --versions, after the site; scripts/check-install.ts installs
+// from what it writes, as a product does; .github/workflows/release.yml attaches the archive to a
+// tag's release. After `shadcn build`:
 // - a font's content is the file in base64 (the stock build read its bytes as text, which loses
 //   them), under the `<name>.woff2.base64` target registry.json gives it;
 // - every item's `meta` gains `commit`, beside the version and the licence registry.json holds, so
-//   an installed item can be traced to the commit it came from without comparing bytes;
-// - everything is written again under `r/<commit>/`. That address never serves another commit's
-//   files: a product names it in its components.json and installs exactly that commit, or gets a
-//   404 once the site has moved on (README.md, "Pin a version").
+//   an item can be traced to the commit it came from without comparing bytes.
+//
+// A version's address is /r/<tag>/{name}.json. An item names what it builds on as `@damsko/<name>`,
+// which the CLI resolves through the same address in the product's components.json: an install
+// from a version takes every item from that version.
 import { execFileSync, spawn } from "node:child_process";
+import { createHash } from "node:crypto";
 import { once } from "node:events";
-import {
-  cpSync,
-  mkdirSync,
-  readFileSync,
-  readdirSync,
-  writeFileSync,
-} from "node:fs";
+import { mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import nodePath from "node:path";
 import { text } from "node:stream/consumers";
+import { gunzipSync, gzipSync } from "node:zlib";
 
-import { isFont, root } from "./build-registry.ts";
+import { isFont, root, version } from "./build-registry.ts";
 import { isRecord, readJson } from "./json.ts";
 
 const FULL_SHA = /^[0-9a-f]{40}$/iu;
@@ -79,8 +81,8 @@ const served = (item: unknown, commit: string): unknown => {
 };
 
 /**
- * Writes the registry into `<out>/r` and `<out>/r/<commit>`, and returns the commit. Never
- * synchronous: scripts/check-install.ts serves from the same process.
+ * Writes the registry into `<out>/r`, and returns the commit. Never synchronous:
+ * scripts/check-install.ts serves from the same process.
  */
 export const writeRegistry = async (out: string): Promise<string> => {
   const dir = nodePath.join(out, "r");
@@ -116,21 +118,208 @@ export const writeRegistry = async (out: string): Promise<string> => {
         : served(json, commit);
     writeFileSync(path, `${JSON.stringify(next, null, 2)}\n`);
   }
-  if (FULL_SHA.test(commit)) {
-    mkdirSync(nodePath.join(dir, commit), { recursive: true });
-    for (const name of files) {
-      cpSync(nodePath.join(dir, name), nodePath.join(dir, commit, name));
-    }
-  }
   return commit;
 };
 
+/** The name of a version's archive, as its release carries it: `registry-v0.1.0.tgz`. */
+export const archiveName = (tag: string) => `registry-${tag}.tgz`;
+
+const BLOCK = 512;
+
+/** A field of a tar header: an octal number, padded with zeros, then NUL. */
+const octal = (value: number, width: number) =>
+  `${value.toString(8).padStart(width - 1, "0")}\0`;
+
+/**
+ * A file as a tar entry (ustar): its header, its bytes, padded to the block. Nothing of the
+ * machine it is packed on: no time, owner and group 0, mode 644, no extended attributes.
+ */
+const tarEntry = (name: string, content: Buffer): Buffer => {
+  const header = Buffer.alloc(BLOCK);
+  header.write(name, 0, 100);
+  header.write(octal(0o644, 8), 100);
+  header.write(octal(0, 8), 108);
+  header.write(octal(0, 8), 116);
+  header.write(octal(content.length, 12), 124);
+  header.write(octal(0, 12), 136);
+  // The checksum is taken with its own field as spaces.
+  header.write("        ", 148);
+  header.write("0", 156);
+  header.write("ustar\u000000", 257);
+  let sum = 0;
+  for (const byte of header) {
+    sum += byte;
+  }
+  header.write(`${octal(sum, 7)} `, 148);
+  const padding = Buffer.alloc((BLOCK - (content.length % BLOCK)) % BLOCK);
+  return Buffer.concat([header, content, padding]);
+};
+
+/** The files of a tar archive, by name. Only what tarEntry writes: plain files, short names. */
+const tarFiles = (archive: Buffer): Map<string, Buffer> => {
+  const files = new Map<string, Buffer>();
+  let at = 0;
+  while (at + BLOCK <= archive.length && archive[at] !== 0) {
+    const field = (from: number, length: number) =>
+      archive
+        .subarray(from, from + length)
+        .toString("utf-8")
+        .replace(/\0.*$/su, "");
+    const size = Number.parseInt(field(at + 124, 12), 8);
+    files.set(field(at, 100), archive.subarray(at + BLOCK, at + BLOCK + size));
+    at += BLOCK + Math.ceil(size / BLOCK) * BLOCK;
+  }
+  return files;
+};
+
+const sha256 = (bytes: Buffer) =>
+  createHash("sha256").update(bytes).digest("hex");
+
+/**
+ * Packs `<out>/r` as `<out>/registry-v<version>.tgz`, with `<name>.sha256` beside it in the form
+ * `shasum -c` reads, and returns the tag. A tag is a pin, so the archive is the same bytes
+ * wherever and whenever the same commit is packed: the entries in name order, written here and
+ * not by the system's tar, and nothing in the gzip header.
+ */
+export const packRegistry = (out: string): string => {
+  const tag = `v${version}`;
+  const names = readdirSync(nodePath.join(out, "r"), { withFileTypes: true })
+    .filter((entry) => entry.isFile())
+    .map((entry) => `r/${entry.name}`)
+    .toSorted();
+  const archive = gzipSync(
+    Buffer.concat([
+      ...names.map((name) =>
+        tarEntry(name, readFileSync(nodePath.join(out, name)))
+      ),
+      Buffer.alloc(BLOCK * 2),
+    ]),
+    { level: 9 }
+  );
+  // The one byte of a gzip header that names the system it was made on.
+  archive[9] = 255;
+  const name = archiveName(tag);
+  writeFileSync(nodePath.join(out, name), archive);
+  writeFileSync(
+    nodePath.join(out, `${name}.sha256`),
+    `${sha256(archive)}  ${name}\n`
+  );
+  return tag;
+};
+
+/** Damsko's repository, public: its tags are read by git and its releases' files by their address. */
+export const repository = "https://github.com/grasplabs/damsko";
+
+const TAG = /^v\d+\.\d+\.\d+$/u;
+const ITEM = /^r\/[\w-]+\.json$/u;
+
+/** The version tags a repository has, as `git ls-remote --tags` lists them, in order. */
+const tagsOf = (from: string): string[] => {
+  let listed = "";
+  try {
+    listed = execFileSync("git", ["ls-remote", "--tags", from], {
+      encoding: "utf-8",
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+  } catch (error) {
+    throw new Error(
+      `registry: the tags of ${from} could not be read, so no released version can be served: ${error instanceof Error ? error.message : String(error)}`,
+      { cause: error }
+    );
+  }
+  return listed
+    .split("\n")
+    .map((line) => /\trefs\/tags\/(?<tag>[^^\s]+)$/u.exec(line)?.groups?.tag)
+    .filter((tag) => tag !== undefined)
+    .filter((tag) => TAG.test(tag))
+    .toSorted();
+};
+
+/** A file of a release, or undefined when the release has none by that name (404). */
+const fetched = async (url: string): Promise<Buffer | undefined> => {
+  let response: Response;
+  try {
+    response = await fetch(url);
+  } catch (error) {
+    throw new Error(
+      `registry: ${url} could not be reached, so its version cannot be served`,
+      { cause: error }
+    );
+  }
+  if (response.status === 404) {
+    return undefined;
+  }
+  if (!response.ok) {
+    throw new Error(`registry: ${url} answered ${String(response.status)}`);
+  }
+  return Buffer.from(await response.arrayBuffer());
+};
+
+/**
+ * Writes every released version into `<out>/r/<tag>/`, from the archive its release carries, and
+ * returns the tags written. Asked for at every build, nothing kept between builds, and nothing of
+ * GitHub's API: the tags by git, each file by its release's address. A tag whose release has no
+ * archive is passed over and said; an archive that is not the file its checksum names stops the
+ * build, as does GitHub not answering: a site that dropped the versions unseen would break every
+ * product's pin. `tags` stands in for git where there is no repository to ask
+ * (scripts/check-install.ts).
+ */
+export const writeVersions = async (
+  out: string,
+  from = repository,
+  tags = tagsOf(from)
+): Promise<string[]> => {
+  const written: string[] = [];
+  for (const tag of tags) {
+    const name = archiveName(tag);
+    const at = `${from}/releases/download/${tag}/${name}`;
+    // oxlint-disable-next-line no-await-in-loop -- one release after the other, two small files
+    const archive = await fetched(at);
+    if (archive === undefined) {
+      console.log(
+        `registry: ${tag} has no archive in its release, passed over`
+      );
+      continue;
+    }
+    // oxlint-disable-next-line no-await-in-loop -- as above
+    const sum = await fetched(`${at}.sha256`);
+    if (sum?.toString("utf-8").split(/\s/u)[0] !== sha256(archive)) {
+      throw new Error(`registry: ${name} is not the file its checksum names`);
+    }
+    const dir = nodePath.join(out, "r", tag);
+    mkdirSync(dir, { recursive: true });
+    for (const [file, content] of tarFiles(gunzipSync(archive))) {
+      // Only an item's file, by its plain name: nothing an archive says is written anywhere else.
+      if (ITEM.test(file)) {
+        writeFileSync(nodePath.join(dir, nodePath.basename(file)), content);
+      }
+    }
+    written.push(tag);
+  }
+  return written;
+};
+
 if (import.meta.main) {
-  const [out] = process.argv.slice(2);
-  if (out === undefined) {
-    console.error("usage: node scripts/registry-dist.ts <folder>");
+  const [out, flag] = process.argv.slice(2);
+  if (
+    out === undefined ||
+    (flag !== undefined && flag !== "--release" && flag !== "--versions")
+  ) {
+    console.error(
+      "usage: node scripts/registry-dist.ts <folder> [--release | --versions]"
+    );
     process.exit(1);
   }
   const commit = await writeRegistry(nodePath.resolve(out));
-  console.log(`registry: written to ${out}/r and ${out}/r/${commit}`);
+  console.log(`registry: ${commit} written to ${out}/r`);
+  if (flag === "--release") {
+    const tag = packRegistry(nodePath.resolve(out));
+    console.log(`registry: packed as ${out}/${archiveName(tag)}`);
+  }
+  if (flag === "--versions") {
+    const tags = await writeVersions(nodePath.resolve(out));
+    console.log(
+      `registry: ${tags.length} released version(s) written to ${out}/r/<tag>${tags.length > 0 ? `: ${tags.join(", ")}` : ""}`
+    );
+  }
 }

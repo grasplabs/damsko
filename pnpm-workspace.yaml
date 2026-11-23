@@ -73,11 +73,13 @@ catalog:
   "@stylexjs/unplugin": 0.19.2
   babel-plugin-react-compiler: 1.0.0
   "@playwright/test": 1.65.0
-  # What Get started pins for the apps the install check builds from it: Vite's React plugin, and
-  # Tailwind for the app beside it. (Its Vite is the page's own: here the name is Vite+'s.)
+  # What Get started pins for the apps the install check builds from it: Vite's React plugin,
+  # Tailwind for the app beside it, and Fontsource's Geist for the app with a Geist of its own.
+  # (Its Vite is the page's own: here the name is Vite+'s.)
   "@vitejs/plugin-react": 6.3.0
   tailwindcss: 4.3.5
   "@tailwindcss/vite": 4.3.5
+  "@fontsource-variable/geist": 5.3.0
   shadcn: 4.23.0
 
 # Vite+ replaces Vite and pins Vitest for every package.
