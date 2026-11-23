@@ -1,0 +1,60 @@
+---
+title: Theme choice
+description: The person's theme remembered across visits, and the circle that grows from the switch when they change it.
+---
+
+<Head lead={frontmatter.description} />
+
+## Remembered, and changed from the switch
+
+The Theme toggle reads and writes no storage and moves nothing on the page: the product holds the choice. A small provider does both jobs. It reads the kept mode from localStorage as an outside store (`useSyncExternalStore`, the system's setting on the server), writes `data-mode` on the element round the page, and hands the mode and a way to set it to whatever draws the switch.
+
+Pick Dark below and load the page again: it opens dark, drawn so before React wakes. The change itself grows from the switch as a circle.
+
+<Stage
+  path="patterns/theme-choice"
+  label="Remembered, and changed from the switch"
+/>
+
+## Before the first paint
+
+The server cannot read localStorage, so it draws the system's setting, and a line of script as the first thing in the element writes the kept mode on it before anything is painted. In a product the same line runs in the `<head>` and writes on `<html>`:
+
+```html
+<script>
+  try {
+    const mode = localStorage.getItem("theme");
+    if (mode === "light" || mode === "dark")
+      document.documentElement.dataset.mode = mode;
+  } catch {}
+</script>
+```
+
+The element carries `suppressHydrationWarning`, as the script may have changed its `data-mode` before React woke.
+
+## The circle
+
+A person's own pick grows from the switch: the change is applied inside a View Transition, and the new page is clipped to a circle that starts at the middle of the switch and reaches the farthest corner of the window, in 300ms on the system's ease.
+
+```tsx
+const transition = document.startViewTransition(() => {
+  flushSync(apply);
+});
+```
+
+With reduced motion, and in a browser without View Transitions, the change is one frame. So is any change the person did not make: loading, the system's setting, another tab. The [Themes](/foundations/themes#the-change) foundation shows the three ways side by side.
+
+## Rules
+
+<Rules
+  always={[
+    "Keep the choice in the product: a provider, an account or storage.",
+    "Write the kept mode before the first paint, so the page never opens in the wrong theme.",
+    "Grow the change from the control the person pressed, within 300ms.",
+  ]}
+  never={[
+    "The kept choice read during a render on the server.",
+    "The circle for a change the person did not make.",
+    "Any motion with reduced motion: the theme changes in one frame.",
+  ]}
+/>

@@ -1,0 +1,38 @@
+---
+title: Sidebar rows
+description: A row renamed where it stands, and a row's menu on a right press, a long press and the menu key.
+---
+
+<Head lead={frontmatter.description} />
+
+## Rename in place, and a row's menu
+
+A row of a Sidebar is a link, so a press goes to its place. Two things are added round it, each from a part the library has.
+
+- **Rename.** A double press on the row, F2 while it holds focus, or Rename in its menu puts an Inline edit in the row's place, held open by the page (`editing`). Enter keeps the name, Escape leaves it as it was, and leaving the field keeps it too. When the field closes, focus goes back to the row.
+- **The row's menu.** A Context menu round the row opens on a right press, a long press on a touch screen, and the menu key or Shift+F10 while the row holds focus. `tabStop={false}`, as the link is the row's tab stop.
+
+<Stage path="patterns/sidebar-rows" label="Rename in place, and a row's menu" />
+
+## What it is made of
+
+- **SidebarMenuItem** and **SidebarMenuButton** (`asChild`, the link) for the row at rest.
+- **InlineEdit** with `editing` and `onEditingChange`, drawn in the row's place while it is renamed; `onSubmit` may return a Promise, and the field then waits for it and says how it went.
+- **ContextMenu**, its trigger round the row named for the row (`aria-label`), its items the row's actions, Rename showing F2 in a **ContextMenuShortcut**.
+
+A context menu cannot be found by looking. Where the actions must be seen, give the row a **SidebarMenuAction** that opens the same actions in a Dropdown menu, as [Sidebar](/components/sidebar#a-rows-actions) shows: it is always shown on a touch screen.
+
+## Rules
+
+<Rules
+  always={[
+    "The same actions by pointer, touch and keys: right press, long press, the menu key and Shift+F10.",
+    "Rename in the row's own place, with the name as it stands chosen.",
+    "Focus back on the row when the field closes.",
+  ]}
+  never={[
+    "An action only in the context menu when people must find it: add the row's own action too.",
+    "A dialog to rename one row.",
+    "A second tab stop for the menu's area: the row's link is the stop.",
+  ]}
+/>

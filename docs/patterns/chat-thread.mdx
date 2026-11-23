@@ -1,0 +1,49 @@
+---
+title: Chat thread
+description: A thread's day lines, the line where the unread messages start, older messages loaded as the reader nears the top, and long threads.
+---
+
+<Head lead={frontmatter.description} />
+
+## Day lines, Unread and older messages
+
+A thread is a Message scroller whose rows are the messages and the lines between them. Each line is a Marker of the `separator` variant in a row of its own: one where the day changes, and one under the last message the person had read, which says Unread. The product knows the days and what was read; the scroller only draws the rows.
+
+Older messages are fetched a page at a time, once the oldest row drawn comes into view (`useMessageScrollerVisibility`). While they come, a Marker with `role="status"` says so over the log, not as a row of it. When the page is drawn above, the log holds the row being read where it is, at its very top too, and rows drawn above are not said as new.
+
+<Stage
+  path="patterns/chat-thread"
+  label="Day lines, Unread and older messages"
+/>
+
+## What it is made of
+
+- **MessageScroller**, with `autoScroll`, so a new message is followed while the reader is at the end. Every row is a `MessageScrollerItem` that is the content's own child, with a `key` of its own: a message's id, the day for a day line, one name for the Unread line.
+- **Marker**, `variant="separator"`, for a day line and for Unread: its words are read, its rules are drawn.
+- **Marker** with `role="status"` and a **Spinner** while a page of older messages comes; the log is `aria-busy` meanwhile.
+- **Message** and **Bubble** for each message; `scrollAnchor` on the person's own.
+
+## Long threads
+
+Message scroller has no virtualiser. Every row drawn stays in the page, and the browser skips the work of drawing the ones out of view (`content-visibility: auto`), so a thread of some hundreds of rows opens and scrolls well: the example below holds 500. What keeps a long thread light is the paging above: the page holds the messages the person has scrolled back to, never the whole history.
+
+The limit: rows are never taken out again, so a thread a person reads back through for many thousands of messages keeps them all in the page. A product with threads that long windows the rows itself (draw the pages near the view, and a spacer as tall as the rest); the library ships no such part.
+
+<Stage path="message-scroller/long" label="500 turns, every row drawn" />
+
+## Rules
+
+<Rules
+  always={[
+    "A day line where the day changes, and one Unread line under the last message read.",
+    "Fetch older messages before the reader reaches the top, a page at a time, and say that they are coming.",
+    "Keep the row being read where it is when rows are drawn above it.",
+    "Each row a child of the content with its own key, the lines too.",
+  ]}
+  never={[
+    "A line that is a row's decoration: it is a row of its own, read in order.",
+    "The loading line as a row of the log: the log would hold on to it, not to the message being read.",
+    "The whole history fetched to draw the latest page.",
+    "Older messages said as new.",
+  ]}
+/>
