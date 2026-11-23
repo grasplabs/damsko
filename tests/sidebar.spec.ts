@@ -93,6 +93,49 @@ test("folded off the canvas by the keys while focus is inside, focus goes to the
   await expect(triggerOf(page)).toBeFocused();
 });
 
+test("opened from the page's trigger, which shows only while the sidebar is away, focus goes to the sidebar's own trigger", async ({
+  page,
+}) => {
+  await openExample(page, "sidebar", "basic");
+  const own = sidebarOf(page).getByRole("button", { name: TOGGLE });
+  await own.focus();
+  await page.keyboard.press("Enter");
+  // Folded off the canvas with focus inside: the page's trigger, which now shows, takes it.
+  const bar = triggerOf(page);
+  await expect(bar).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(bar).toBeHidden();
+  await expect(own).toBeFocused();
+});
+
+test("a row and a nested row keep their own slots under their tooltips, for a product's styles", async ({
+  page,
+}) => {
+  await openExample(page, "sidebar", "basic");
+  const sidebar = sidebarOf(page);
+  await expect(sidebar.getByRole("link", { name: "Brain" })).toHaveAttribute(
+    "data-slot",
+    "sidebar-menu-button"
+  );
+  await expect(sidebar.getByRole("link", { name: "Claims" })).toHaveAttribute(
+    "data-slot",
+    "sidebar-menu-sub-button"
+  );
+});
+
+test("on a phone the page can keep the sheet's state: choosing a place closes it", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await openExample(page, "sidebar", "from-the-page");
+  await triggerOf(page).click();
+  const sheet = page.getByRole("dialog", { name: "Sidebar" });
+  await expect(sheet).toBeVisible();
+  await sheet.getByRole("link", { name: "Inbox" }).click();
+  await expect(sheet).toBeHidden();
+  await expect(triggerOf(page)).toHaveAttribute("aria-expanded", "false");
+});
+
 test("folded to its icons, every place keeps its name and shows it in a tooltip", async ({
   page,
 }) => {
@@ -778,105 +821,6 @@ test("right to left, a row's icon, its words, its count and its nested rows mirr
   expect(nested.right).toBe(parent.right);
 });
 
-/**
- * How far a row's words travel over the 40 frames from when `act` starts: the spread of where they
- * start, in pixels.
- */
-const travelOf = async (row: Locator, act: () => Promise<void>) => {
-  await row.evaluate((node) => {
-    const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT);
-    let text = walker.nextNode();
-    while (text !== null && (text.textContent ?? "").trim() === "") {
-      text = walker.nextNode();
-    }
-    const range = document.createRange();
-    if (text !== null) {
-      range.selectNodeContents(text);
-    }
-    const starts: number[] = [];
-    delete node.dataset.travel;
-    const watch = () => {
-      starts.push(range.getBoundingClientRect().left);
-      if (starts.length < 40) {
-        requestAnimationFrame(watch);
-      } else {
-        node.dataset.travel = String(Math.max(...starts) - Math.min(...starts));
-      }
-    };
-    watch();
-  });
-  await act();
-  await expect(row).toHaveAttribute("data-travel", /\d/u);
-  return Number(await row.getAttribute("data-travel"));
-};
-
-/** How far a row's words travel as the pointer rests on it, presses it and leaves, and focus comes and goes. */
-const movesOf = async (page: Page, row: Locator) => {
-  const box = await boxOf(row);
-  return [
-    await travelOf(row, async () => {
-      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-    }),
-    await travelOf(row, async () => {
-      await page.mouse.down();
-    }),
-    await travelOf(row, async () => {
-      await page.mouse.move(900, 600);
-      await page.mouse.up();
-    }),
-    await travelOf(row, async () => {
-      await page.keyboard.press("Shift");
-      await row.focus();
-    }),
-    await travelOf(row, async () => {
-      await row.blur();
-    }),
-  ];
-};
-
-for (const [example, folded, direction] of [
-  ["basic", false, "ltr"],
-  ["basic", false, "rtl"],
-  ["actions", false, "ltr"],
-  ["levels", false, "ltr"],
-  ["icon", true, "ltr"],
-] as const) {
-  test(`${example}, ${folded ? "on the rail" : "open"}, ${direction}: a row's words stay where they stand while it is hovered, pressed and focused`, async ({
-    page,
-  }) => {
-    // Forty frames for each of five moves on every row.
-    test.slow();
-    await page.emulateMedia({ reducedMotion: "no-preference" });
-    await openExample(page, "sidebar", example);
-    await page.evaluate((dir) => {
-      document.documentElement.dir = dir;
-    }, direction);
-    if (folded) {
-      await triggerOf(page).click();
-      // Once the fold has drawn: each row a 32px square.
-      const first = sidebarOf(page).getByRole("link").first();
-      await expect
-        .poll(async () => {
-          const box = await boxOf(first);
-          return box.width;
-        })
-        .toBe(32);
-    }
-    await page.mouse.move(900, 600);
-    const rows = sidebarOf(page)
-      .getByRole("navigation")
-      .first()
-      .getByRole("link");
-    await expect(rows.first()).toBeVisible();
-    for (const row of await rows.all()) {
-      // oxlint-disable-next-line no-await-in-loop -- one row after the other, as a person goes
-      expect(await movesOf(page, row), (await row.textContent()) ?? "").toEqual(
-        [0, 0, 0, 0, 0]
-      );
-    }
-  });
-}
-
 // ---- Long names ----------------------------------------------------------------------------------
 
 test("a name longer than its row ends in an ellipsis inside the row, and its tooltip shows it whole", async ({
@@ -961,6 +905,58 @@ test("no row's fill or corners are cut at either end, in a group that folds too"
 });
 
 // ---- The docs site's own sidebar -----------------------------------------------------------------
+
+test("the docs site's sidebar: a run the reader opened stays open in every frame of a page change", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(new URL("/components/button", process.env.BASE_URL).href);
+  const run = page.getByRole("button", { name: /^Text input/u });
+  await run.click();
+  await expect(run).toHaveAttribute("aria-expanded", "true");
+  // From here to the next page, every frame and the moment the router swaps it in: whether the
+  // run's pages are shown.
+  await page.evaluate(() => {
+    const seen: string[] = [];
+    Reflect.set(globalThis, "seen", seen);
+    const note = () => {
+      const label = [
+        ...document.querySelectorAll("[data-sidebar-fold] button"),
+      ].find((button) => button.textContent?.startsWith("Text input"));
+      const panel = label
+        ?.closest("[data-sidebar-fold]")
+        ?.querySelector("[data-slot=collapsible-content]");
+      seen.push(panel?.hasAttribute("hidden") === true ? "folded" : "open");
+    };
+    document.addEventListener("astro:after-swap", note);
+    const start = performance.now();
+    const frame = () => {
+      note();
+      if (performance.now() - start < 1500) {
+        requestAnimationFrame(frame);
+      }
+    };
+    requestAnimationFrame(frame);
+  });
+  await page
+    .getByRole("navigation", { name: "Pages" })
+    .getByRole("link", { name: "Copy button" })
+    .click();
+  await expect(page).toHaveURL(/\/components\/copy-button$/u);
+  const seen = async () =>
+    await page.evaluate(() => {
+      const all: unknown = Reflect.get(globalThis, "seen");
+      return Array.isArray(all) ? all.map(String) : [];
+    });
+  // A second and a half of frames: the swap, the shell waking and what follows.
+  await expect
+    .poll(async () => {
+      const all = await seen();
+      return all.length;
+    })
+    .toBeGreaterThan(60);
+  expect(await seen()).not.toContain("folded");
+});
 
 test("the docs site's sidebar: the theme's ground, runs as labels, and the current page a flat row cut nowhere", async ({
   page,

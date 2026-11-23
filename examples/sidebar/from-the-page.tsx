@@ -22,6 +22,7 @@ import {
 } from "@grasp-os/ui/lib/icons";
 import { colors, font, size, space } from "@grasp-os/ui/lib/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
+import { useState } from "react";
 
 const layout = stylex.create({
   frame: {
@@ -76,11 +77,17 @@ const FocusMode = () => {
 };
 
 // The page's own control folds and opens it through `useSidebar`: `setOpen` takes a value or, as
-// React's setState, an updater, which builds on the state the calls before it left.
+// React's setState, an updater, which builds on the state the calls before it left. On a phone the
+// page keeps the sheet's state (`openMobile`, `onOpenMobileChange`), and choosing a place closes it.
 export default function SidebarFromThePage() {
+  const [menu, setMenu] = useState(false);
   return (
     <div {...stylex.props(layout.frame)}>
-      <SidebarProvider style={layout.provider}>
+      <SidebarProvider
+        style={layout.provider}
+        openMobile={menu}
+        onOpenMobileChange={setMenu}
+      >
         <Sidebar>
           <SidebarContent>
             <SidebarGroup>
@@ -92,7 +99,12 @@ export default function SidebarFromThePage() {
                         asChild
                         isActive={place.name === "Dashboard"}
                       >
-                        <a href={`#${place.name.toLowerCase()}`}>
+                        <a
+                          href={`#${place.name.toLowerCase()}`}
+                          onClick={() => {
+                            setMenu(false);
+                          }}
+                        >
                           <Icon icon={place.icon} />
                           {place.name}
                         </a>

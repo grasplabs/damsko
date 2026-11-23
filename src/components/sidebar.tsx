@@ -961,6 +961,56 @@ const applied = (
   now: boolean
 ) => (typeof value === "function" ? value(now) : value);
 
+/**
+ * A state the caller may keep (`given`, with its `onChange`) or leave to the provider, else
+ * `fallback`. An updater builds on the call before it in the same event (two in one event apply
+ * twice, as React's setState): what was set and not drawn yet is held until the change is drawn.
+ */
+const useHeld = (
+  given: boolean | undefined,
+  fallback: boolean,
+  onChange: ((now: boolean) => void) | undefined
+) => {
+  const [own, setOwn] = useState<boolean>();
+  const value = given ?? own ?? fallback;
+  const unseen = useRef<boolean | null>(null);
+  useEffect(() => {
+    unseen.current = null;
+  });
+  const set = (next: boolean | ((now: boolean) => boolean)) => {
+    const now = applied(next, unseen.current ?? value);
+    unseen.current = now;
+    setOwn(now);
+    onChange?.(now);
+  };
+  return [value, set] as const;
+};
+
+/** Whether focus can go to it now: drawn (not in a folded group), and not out of reach. */
+const inReach = (element: HTMLElement) =>
+  element.isConnected &&
+  element.checkVisibility({ visibilityProperty: true }) &&
+  element.closest("[inert]") === null;
+
+/**
+ * Where focus lands in a level it is moved into, or in a sidebar that opened while what held it went:
+ * what held it there before, on the way back to a level; else the page you are on; else its first stop. One that cannot take focus now (its group folded,
+ * its row gone) is passed over.
+ */
+const landingIn = (level: HTMLElement, opener?: HTMLElement) =>
+  [
+    opener !== undefined && level.contains(opener) ? opener : null,
+    level.querySelector<HTMLElement>('[aria-current="page"]'),
+    ...level.querySelectorAll<HTMLElement>("a[href], button:not(:disabled)"),
+  ].find((stop) => stop !== null && inReach(stop));
+
+/** Whether focus can stay on an element: in the page, and not in a sidebar folded off the canvas. */
+const reachable = (element: Element) =>
+  element.isConnected &&
+  element.closest(
+    '[data-slot="sidebar"][data-collapsible="offcanvas"][data-state="collapsed"]'
+  ) === null;
+
 /** Every prop a SidebarProvider takes. */
 export interface SidebarProviderProps {
   /** The Sidebar and the SidebarInset beside it. */
@@ -974,6 +1024,13 @@ export interface SidebarProviderProps {
   defaultOpen?: boolean;
   /** Runs with the new state when the trigger, the rail or the keys fold or open it. */
   onOpenChange?: (open: boolean) => void;
+  /**
+   * The sheet is open now, on a narrow window. Pass it with `onOpenMobileChange` to keep the state
+   * yourself (a store that outlives the frame, a sign-out that closes it).
+   */
+  openMobile?: boolean;
+  /** Runs with the new state when the trigger, the keys or the sheet itself open or close the sheet. */
+  onOpenMobileChange?: (open: boolean) => void;
   /**
    * Where the person's choices are kept in localStorage, so they stay as they left them: whether
    * it is open, and which SidebarCollapsible groups are folded (each under `storageKey:name`). Put
@@ -997,67 +1054,61 @@ export const SidebarProvider = ({
   open: given,
   defaultOpen = true,
   onOpenChange,
+  openMobile: givenMobile,
+  onOpenMobileChange,
   storageKey,
   keyboardShortcut = SIDEBAR_KEYBOARD_SHORTCUT,
   style,
 }: SidebarProviderProps) => {
   const { toggle } = useI18n().sidebar;
-  const [own, setOwn] = useState<boolean>();
-  const [openMobile, setOpenMobile] = useState(false);
   const kept = useSyncExternalStore(
     watchKept,
     () => readKept(storageKey),
     nothingKept
   );
   const isMobile = useSyncExternalStore(watchMobile, onMobile, notOnMobile);
-  const open = given ?? own ?? kept ?? defaultOpen;
+  const [open, setOpen] = useHeld(given, kept ?? defaultOpen, (now) => {
+    keep(storageKey, now);
+    onOpenChange?.(now);
+  });
+  const [openMobile, setOpenMobile] = useHeld(
+    givenMobile,
+    false,
+    onOpenMobileChange
+  );
   const id = useId();
   const element = useRef<HTMLDivElement | null>(null);
 
-  // The state set in this event and not drawn yet, so an updater builds on the call before it
-  // (two in one event apply twice, as React's setState); cleared once the change is drawn.
-  const unseen = useRef<boolean | null>(null);
-  // Folded off the canvas while focus was inside it: once the fold is drawn, focus goes to the
-  // trigger that is still in reach (the page's, which may only show while the sidebar is away).
-  const stranded = useRef(false);
+  // What held focus as the trigger, the rail or the keys folded or opened it. Once the change is
+  // drawn, if that went out of reach (folded off the canvas with it, or a trigger in the page that
+  // shows only while the sidebar is away), focus goes to a trigger still in reach, else to the
+  // open sidebar's current row.
+  const held = useRef<Element | null>(null);
   useEffect(() => {
-    unseen.current = null;
-    if (stranded.current) {
-      stranded.current = false;
-      const wrapper = element.current;
-      const triggers =
-        wrapper?.querySelectorAll<HTMLElement>(
-          '[data-slot="sidebar-trigger"]'
-        ) ?? [];
-      [...triggers]
-        .find(
-          (trigger) =>
-            trigger.closest(
-              '[data-slot="sidebar"][data-collapsible="offcanvas"]'
-            ) === null
-        )
-        ?.focus();
+    const before = held.current;
+    held.current = null;
+    if (before === null || reachable(before)) {
+      return;
     }
+    const wrapper = element.current;
+    const trigger = [
+      ...(wrapper?.querySelectorAll<HTMLElement>(
+        '[data-slot="sidebar-trigger"]'
+      ) ?? []),
+    ].find(reachable);
+    const sidebar = wrapper?.querySelector<HTMLElement>(
+      '[data-slot="sidebar"]'
+    );
+    (trigger ?? (open && sidebar ? landingIn(sidebar) : undefined))?.focus();
   });
-  const setOpen = (value: boolean | ((now: boolean) => boolean)) => {
-    const now = applied(value, unseen.current ?? open);
-    unseen.current = now;
-    keep(storageKey, now);
-    setOwn(now);
-    onOpenChange?.(now);
-  };
 
   const toggleSidebar = () => {
     if (isMobile) {
       setOpenMobile((now) => !now);
       return;
     }
-    // Folded off the canvas, what holds focus inside goes out of reach.
-    const away = element.current?.querySelector(
-      '[data-slot="sidebar"][data-collapsible="offcanvas"]'
-    );
-    stranded.current = open && away?.contains(document.activeElement) === true;
-    setOpen(!open);
+    held.current = document.activeElement;
+    setOpen((now) => !now);
   };
 
   const shortcut = keyboardShortcut === false ? "" : keyboardShortcut;
@@ -1692,9 +1743,6 @@ export interface SidebarCollapsibleProps {
   onOpenChange?: (open: boolean) => void;
 }
 
-const awake = () => true;
-const asleep = () => false;
-
 /** What takes focus inside an element, in the page's order. */
 const stopsIn = (element: HTMLElement | null): HTMLElement[] => [
   ...(element?.querySelectorAll<HTMLElement>(
@@ -1721,14 +1769,17 @@ export const SidebarCollapsible = ({
     () => readKept(key),
     nothingKept
   );
-  const isAwake = useSyncExternalStore(watchKept, awake, asleep);
   const [own, setOwn] = useState<boolean>();
   // Whether the fold kept differed from the one first drawn, said once, as the page wakes: the
-  // Collapsible is then a new one (its key), which starts as kept with nothing to move.
+  // Collapsible is then a new one (its key), which starts as kept with nothing to move. Said in a
+  // layout effect, so the new one is drawn before the first paint after waking: never a frame of
+  // the first one folded where the head script had opened it.
   const [start, setStart] = useState<"first" | "same" | "kept">("first");
-  if (isAwake && start === "first") {
-    setStart(kept !== undefined && kept !== defaultOpen ? "kept" : "same");
-  }
+  useLayoutEffect(() => {
+    const now = readKept(key);
+    // oxlint-disable-next-line react/set-state-in-effect -- what the head script drew is known only once the page runs, and must be drawn before it paints
+    setStart(now !== undefined && now !== defaultOpen ? "kept" : "same");
+  }, [key, defaultOpen]);
   // Drawn anew, the group's elements are new ones: focus that stood in it before the page woke
   // (on its label, most often) is put back on the same stop, or on the first when that one is
   // now folded away.
@@ -2110,24 +2161,6 @@ const useLevels = (name: string): LevelsState => {
   }
   return levels;
 };
-
-/** Whether focus can go to it now: drawn (not in a folded group), and not out of reach. */
-const inReach = (element: HTMLElement) =>
-  element.isConnected &&
-  element.checkVisibility({ visibilityProperty: true }) &&
-  element.closest("[inert]") === null;
-
-/**
- * Where focus lands in a level it is moved into: what held it there before, on the way back; else
- * the page you are on; else its first stop. One that cannot take focus now (its group folded,
- * its row gone) is passed over.
- */
-const landingIn = (level: HTMLElement, opener: HTMLElement | undefined) =>
-  [
-    opener !== undefined && level.contains(opener) ? opener : null,
-    level.querySelector<HTMLElement>('[aria-current="page"]'),
-    ...level.querySelectorAll<HTMLElement>("a[href], button:not(:disabled)"),
-  ].find((stop) => stop !== null && inReach(stop));
 
 /** Every prop a SidebarLevels takes. */
 export interface SidebarLevelsProps {
