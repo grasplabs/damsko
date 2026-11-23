@@ -296,8 +296,8 @@ const styles = stylex.create({
   linkOutline: {
     backgroundColor: {
       default: colors.card,
-      ":hover": { default: null, [HOVER]: colors.secondaryHover },
-      ":active": colors.secondaryActive,
+      ":hover": { default: null, [HOVER]: colors.controlHover },
+      ":active": colors.controlActive,
     },
   },
   linkMuted: {
@@ -355,7 +355,7 @@ const styles = stylex.create({
     height: sizes.controlDefault,
     borderRadius: `min(${radius.base}, calc(${sizes.controlDefault} / 2))`,
     cornerShape: radius.shape,
-    backgroundColor: colors.secondary,
+    backgroundColor: colors.control,
     boxShadow: sizes.borderStrong,
     color: colors.foreground,
   },

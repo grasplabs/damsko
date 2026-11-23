@@ -747,7 +747,7 @@ export const groups: TokenGroup[] = [
             name: "radius-full",
             category: "radius",
             value: "999px",
-            use: "A pill: a chip, a tag, the track of a switch or a slider. Never a control that holds buttons.",
+            use: "A pill: a chip, a badge, the track of a switch or a slider. Never a control that holds buttons.",
           },
           {
             name: "radius-circle",
@@ -977,21 +977,21 @@ export const groups: TokenGroup[] = [
             use: "Words and icons on action-fill-disabled: half strength on paper, muted at night (still 3:1 on the ground).",
           },
           {
-            name: "secondary",
+            name: "control",
             category: "colors",
             value: "oklch(1 0 none)",
             dark: "oklch(0.96 0.02 150 / 0.08)",
             use: "The quiet fill of an outline Button and a field: white on a light ground, a veil of white on a dark one.",
           },
           {
-            name: "secondary-hover",
+            name: "control-hover",
             category: "colors",
             value: "{muted}",
             dark: "oklch(0.96 0.02 150 / 0.12)",
             use: "The quiet fill under a pointer: one step down to soft.",
           },
           {
-            name: "secondary-active",
+            name: "control-active",
             category: "colors",
             value: "oklch(0.95 0.007 160)",
             dark: "oklch(0.96 0.02 150 / 0.16)",
@@ -1012,22 +1012,22 @@ export const groups: TokenGroup[] = [
             use: "A ghost control's fill while pressed.",
           },
           {
-            name: "button-secondary",
+            name: "secondary",
             category: "colors",
             value: "{accent-active}",
             use: "A secondary Button's flat fill: a veil of ink with no edge and no lift, so it reads on the page, a card and a soft band alike, a step quieter than an outline Button and a step firmer than a ghost one.",
           },
           {
-            name: "button-secondary-hover",
+            name: "secondary-hover",
             category: "colors",
             value: "{toggle-bg-pressed}",
-            use: "button-secondary under a pointer: the veil one step deeper.",
+            use: "secondary under a pointer: the veil one step deeper.",
           },
           {
-            name: "button-secondary-active",
+            name: "secondary-active",
             category: "colors",
             value: "{toggle-bg-pressed-hover}",
-            use: "button-secondary while pressed: one step past hover.",
+            use: "secondary while pressed: one step past hover.",
           },
           {
             name: "destructive-fill",
@@ -1429,7 +1429,7 @@ export const groups: TokenGroup[] = [
           {
             name: "input-bg",
             category: "colors",
-            value: "{secondary}",
+            value: "{control}",
             use: "The ground of a field you type in: the quiet button's fill, so a field and a button in one row match.",
           },
           {
@@ -1440,7 +1440,7 @@ export const groups: TokenGroup[] = [
             use: "The ground of a read-only field: the soft ground (in dark a thinner veil than field-fill's, still above a disabled field's), a hairline and no lift. Settled, not greyed: quieter than a field open for typing, never as faint as a disabled one.",
           },
           {
-            name: "input-ink-read",
+            name: "input-foreground-read",
             category: "colors",
             value: "{muted-foreground}",
             use: "The words of a read-only field: the muted step, still easy to read and copy. Disabled fields are weaker again (dim).",
@@ -1528,8 +1528,8 @@ export const groups: TokenGroup[] = [
           {
             name: "input-text-touch",
             category: "size",
-            value: "16px",
-            use: "The size of the words in every field on a phone or a touch screen (media.typing), a Select's trigger too, so fields side by side stay one size: under 16px, Safari zooms the page in on focus.",
+            value: "max(16px, 1rem)",
+            use: "The size of the words in every field on a phone or a touch screen (media.typing), a Select's trigger too, so fields side by side stay one size: under 16px, Safari zooms the page in on focus. Never under 16px, and in rem above it, since words follow the reader's text size.",
           },
           {
             name: "input-shadow",
@@ -2045,7 +2045,31 @@ export const groups: TokenGroup[] = [
             name: "badge-icon",
             category: "size",
             value: "12px",
-            use: "An icon before a badge's words.",
+            use: "An icon before a badge's words, and a label's remove cross.",
+          },
+          {
+            name: "badge-label-height",
+            category: "size",
+            value: "{chip}",
+            use: "The height of a label: a secondary or outline badge, which sorts or names something.",
+          },
+          {
+            name: "badge-label-height-sm",
+            category: "size",
+            value: "20px",
+            use: "The height of a small label, in a dense row.",
+          },
+          {
+            name: "badge-label-padding",
+            category: "space",
+            value: "{space-2}",
+            use: "Room at each end of a label's words.",
+          },
+          {
+            name: "badge-secondary",
+            category: "colors",
+            value: "{accent-active}",
+            use: "A secondary badge's fill: a veil of ink, so it shows on paper and on soft.",
           },
           {
             name: "severity-dot",
@@ -2768,7 +2792,7 @@ export const groups: TokenGroup[] = [
             use: "A chosen row's band in the mint look: the Data grid's wash over a range, so the two read as one family.",
           },
           {
-            name: "table-head-text",
+            name: "table-head-foreground",
             category: "colors",
             value: "{muted-foreground}",
             dark: "oklch(0.72 0.025 158)",
@@ -2926,7 +2950,7 @@ export const groups: TokenGroup[] = [
             use: "A chosen day, and the ends of a chosen range: the first action's colour.",
           },
           {
-            name: "calendar-text-selected",
+            name: "calendar-foreground-selected",
             category: "colors",
             value: "{primary-foreground}",
             use: "The number on a chosen day.",
@@ -3100,48 +3124,6 @@ export const groups: TokenGroup[] = [
     ],
   },
   {
-    id: "tag",
-    title: "Tag",
-    sets: [
-      {
-        id: "tag-parts",
-        title: "Tag",
-        tokens: [
-          {
-            name: "tag-height",
-            category: "size",
-            value: "{chip}",
-            use: "The height of a tag.",
-          },
-          {
-            name: "tag-height-sm",
-            category: "size",
-            value: "20px",
-            use: "The height of a small tag, in a dense row.",
-          },
-          {
-            name: "tag-padding",
-            category: "space",
-            value: "{space-2}",
-            use: "Room at each end of a tag's words.",
-          },
-          {
-            name: "tag-icon",
-            category: "size",
-            value: "{badge-icon}",
-            use: "The size of an icon in a tag, and of its remove cross.",
-          },
-          {
-            name: "tag-bg",
-            category: "colors",
-            value: "{accent-active}",
-            use: "A soft tag's fill: a veil of ink, so it shows on paper and on soft.",
-          },
-        ],
-      },
-    ],
-  },
-  {
     id: "section-header",
     title: "Section header",
     sets: [
@@ -3256,6 +3238,81 @@ export const groups: TokenGroup[] = [
             category: "size",
             value: "18rem",
             use: "The width of the menu that opens at the caret when @ or / is typed.",
+          },
+          {
+            name: "prompt-input-field-min",
+            category: "size",
+            value: "8rem",
+            use: "The least width of a one-row prompt input's text: with less room beside the tools, the text takes the row and the tools go under it. The text never gives.",
+          },
+          {
+            name: "prompt-input-light",
+            category: "colors",
+            value:
+              "linear-gradient(90deg, {brand-mint} 0%, {brand-sea} 12%, transparent 22%, {brand-lime} 34%, {brand-mint} 44%, transparent 54%, {brand-sea} 64%, {brand-lime} 76%, transparent 88%, {brand-mint} 100%)",
+            use: "The working light over a prompt input's top edge: lime, sea and mint in beams with gaps between, ending as it starts so it loops without a seam.",
+          },
+          {
+            name: "prompt-input-tint",
+            category: "colors",
+            value:
+              "linear-gradient(90deg, currentColor 0%, color-mix(in oklch, currentColor 55%, transparent) 14%, transparent 24%, currentColor 36%, color-mix(in oklch, currentColor 30%, transparent) 50%, transparent 58%, currentColor 68%, color-mix(in oklch, currentColor 45%, transparent) 82%, currentColor 100%)",
+            use: "The working light in one accent colour, the colour set on the light's layer.",
+          },
+          {
+            name: "prompt-input-halo",
+            category: "shadow",
+            value:
+              "0 0 10px 2px color-mix(in oklch, currentColor 45%, transparent), 0 3px 18px 3px color-mix(in oklch, currentColor 25%, transparent)",
+            use: "Success: a soft glow round a prompt input's card in the colour set on it, mint by default. It fades out; it never draws a line.",
+          },
+          {
+            name: "prompt-input-halo-time",
+            category: "duration",
+            value: "1.2s",
+            use: "The success halo, from nothing to full and out again: a moment, played once.",
+          },
+          {
+            name: "prompt-input-glass",
+            category: "colors",
+            value: "color-mix(in oklch, {card} 86%, transparent)",
+            use: "A prompt input's card over what scrolls behind it (variant=\"glass\"): the card's colour most of the way, over a blur.",
+          },
+          {
+            name: "prompt-input-glass-blur",
+            category: "size",
+            value: "blur(14px) saturate(1.5)",
+            use: "The backdrop filter that goes with prompt-input-glass.",
+          },
+          {
+            name: "prompt-input-light-opacity",
+            category: "size",
+            value: "0.9",
+            use: "How strongly the working light shows round the card: soft, never a hard ring.",
+          },
+          {
+            name: "prompt-input-light-in",
+            category: "duration",
+            value: "280ms",
+            use: "How long the working light takes to come up or go.",
+          },
+          {
+            name: "prompt-input-beam",
+            category: "duration",
+            value: "6s",
+            use: "The widest beam of the working light, once along the edge. A continuous sign of life: it may loop longer than a transition.",
+          },
+          {
+            name: "prompt-input-beam-fast",
+            category: "duration",
+            value: "4.4s",
+            use: "The quickest beam of the working light.",
+          },
+          {
+            name: "prompt-input-beam-slow",
+            category: "duration",
+            value: "7s",
+            use: "The slowest beam of the working light: it breathes, it does not race.",
           },
         ],
       },
@@ -3379,14 +3436,14 @@ export const groups: TokenGroup[] = [
             use: "A row or button under the pointer.",
           },
           {
-            name: "sidebar-rule",
+            name: "sidebar-border",
             category: "colors",
             value: "oklch(0 0 0 / 0.08)",
             dark: "oklch(1 0 0 / 0.1)",
             use: "A rule that parts the sidebar, and a badge's edge.",
           },
           {
-            name: "sidebar-text",
+            name: "sidebar-foreground",
             category: "colors",
             value: "oklch(0.269 0 0)",
             dark: "oklch(0.96 0 0)",
@@ -3395,14 +3452,14 @@ export const groups: TokenGroup[] = [
           // 0.52 in light: 4.86:1 on the system's ground and 4.69:1 on Pine's (its paper's ground is a
           // hair darker), the least step that passes 4.5:1 for the rows' 14px words on every theme.
           {
-            name: "sidebar-text-secondary",
+            name: "sidebar-secondary-foreground",
             category: "colors",
             value: "oklch(0.52 0 0)",
             dark: "oklch(0.72 0 0)",
             use: "The rows' words and their icons.",
           },
           {
-            name: "sidebar-text-tertiary",
+            name: "sidebar-tertiary-foreground",
             category: "colors",
             value: "oklch(0.64 0 0)",
             dark: "oklch(0.6 0 0)",
@@ -3964,7 +4021,7 @@ export const groups: TokenGroup[] = [
             use: "The room between two rows of a tree.",
           },
           {
-            name: "tree-view-text",
+            name: "tree-view-foreground",
             category: "colors",
             value: "{body-foreground}",
             use: "A tree row's words.",
@@ -3988,13 +4045,13 @@ export const groups: TokenGroup[] = [
             use: "A tree row's chevron and icon: quieter than its words, unless a host draws them in the words' colour (a sidebar does).",
           },
           {
-            name: "tree-view-text-hover",
+            name: "tree-view-foreground-hover",
             category: "colors",
             value: "{body-foreground}",
             use: "A tree row's words under a pointer: as they stand, unless a host brightens them (a sidebar does).",
           },
           {
-            name: "tree-view-text-selected",
+            name: "tree-view-foreground-selected",
             category: "colors",
             value: "{foreground}",
             use: "The words of a chosen row and of the current page.",
@@ -4606,9 +4663,9 @@ export const contrastPairs: ContrastPair[] = [
   { kind: "text", on: "mint", text: "brand-ink" },
   // The words on each filled button, the labels the Button page's proof row reads.
   { kind: "text", on: "primary", text: "primary-foreground" },
+  { kind: "text", on: "control", text: "foreground" },
   { kind: "text", on: "secondary", text: "foreground" },
-  { kind: "text", on: "button-secondary", text: "foreground" },
-  { kind: "text", on: "button-secondary-active", text: "foreground" },
+  { kind: "text", on: "secondary-active", text: "foreground" },
   { kind: "text", on: "destructive-fill", text: "destructive-fill-foreground" },
   { kind: "text", on: "success-fill", text: "success-fill-foreground" },
   // A pressed button's words.
@@ -4680,7 +4737,11 @@ export const contrastPairs: ContrastPair[] = [
     }))
   ),
   // A calendar's day: its number on the chosen fill, inside a range, and on today.
-  { kind: "text", on: "calendar-bg-selected", text: "calendar-text-selected" },
+  {
+    kind: "text",
+    on: "calendar-bg-selected",
+    text: "calendar-foreground-selected",
+  },
   { kind: "text", on: "calendar-bg-range", text: "foreground" },
   { kind: "text", on: "calendar-bg-today", text: "foreground" },
   // A tree's chosen row: its words on the fill.
@@ -4713,16 +4774,16 @@ export const contrastPairs: ContrastPair[] = [
   { kind: "text", on: "sidebar-accent", text: "foreground" },
   { kind: "text", on: "sidebar-accent", text: "muted-foreground" },
   // The sidebar's own words on its ground and on the page card beside it: the current row's, and
-  // the rows' and the group labels' (sidebar-text-secondary).
+  // the rows' and the group labels' (sidebar-secondary-foreground).
   ...["sidebar", "sidebar-card"].map((on): ContrastPair => ({
     kind: "text",
     on,
-    text: "sidebar-text",
+    text: "sidebar-foreground",
   })),
   ...["sidebar", "sidebar-card"].map((on): ContrastPair => ({
     kind: "text",
     on,
-    text: "sidebar-text-secondary",
+    text: "sidebar-secondary-foreground",
   })),
   // A confirmation's "Cannot be undone", on the card and on its list of what it touches.
   ...["card", "muted"].map((on): ContrastPair => ({

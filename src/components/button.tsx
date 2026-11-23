@@ -140,6 +140,14 @@ interface ButtonBase extends Omit<
    */
   status?: ActionStatus;
   /**
+   * Squeezed, the words stay on one line and end in an ellipsis instead of wrapping, and the button
+   * may shrink to its square. They stay its name whole; give `tooltip` to show them whole to the
+   * pointer. For a name in a narrow head, where a second line would push the next control off. An
+   * icon-only button has no words to cut.
+   * @default false
+   */
+  truncate?: boolean;
+  /**
    * Its tooltip, under a resting pointer and on keyboard focus. Left out, a control that is only an
    * icon shows its `aria-label`; `false` shows none; words or a node show those in its place, on a
    * control with words too. Inside a Tooltip of your own it shows none.
@@ -320,11 +328,16 @@ const styles = stylex.create({
   busy: {
     cursor: "progress",
   },
+  // Truncated: the button may shrink to its square floor (each size's minWidth), on one line.
+  cut: {
+    flexShrink: 1,
+    whiteSpace: "nowrap",
+  },
   // Failed, on every variant: calm. The quiet fill, destructive words, a field's edge tinted
   // destructive, and one small shake. The alert and the words say it too, so it is never colour alone.
   failed: {
     color: { default: colors.destructive, [FORCED]: "ButtonText" },
-    backgroundColor: colors.secondary,
+    backgroundColor: colors.control,
     boxShadow: sizes.errorBorder,
     animationName: {
       default: stylex.keyframes({
@@ -511,7 +524,7 @@ const variantStyles = stylex.create({
   // or dense action where a row of edged, lifted buttons would be too heavy.
   secondary: {
     color: colors.foreground,
-    backgroundColor: colors.buttonSecondary,
+    backgroundColor: colors.secondary,
     boxShadow: "none",
   },
   destructive: {
@@ -523,7 +536,7 @@ const variantStyles = stylex.create({
   // input beside it.
   outline: {
     color: colors.foreground,
-    backgroundColor: colors.secondary,
+    backgroundColor: colors.control,
     boxShadow: shadow.bevelMuted,
   },
   // Its ink, its fills and its ring's colour are ghostVars, which the part that holds it may set.
@@ -574,11 +587,11 @@ const liveStyles = stylex.create({
   },
   secondary: {
     backgroundColor: {
-      default: colors.buttonSecondary,
-      ":hover": { default: null, [HOVER]: colors.buttonSecondaryHover },
+      default: colors.secondary,
+      ":hover": { default: null, [HOVER]: colors.secondaryHover },
       ":active": {
-        default: colors.buttonSecondaryActive,
-        [HOVER]: colors.buttonSecondaryActive,
+        default: colors.secondaryActive,
+        [HOVER]: colors.secondaryActive,
       },
     },
   },
@@ -605,11 +618,11 @@ const liveStyles = stylex.create({
   },
   outline: {
     backgroundColor: {
-      default: colors.secondary,
-      ":hover": { default: null, [HOVER]: colors.secondaryHover },
+      default: colors.control,
+      ":hover": { default: null, [HOVER]: colors.controlHover },
       ":active": {
-        default: colors.secondaryActive,
-        [HOVER]: colors.secondaryActive,
+        default: colors.controlActive,
+        [HOVER]: colors.controlActive,
       },
     },
   },
@@ -706,8 +719,9 @@ const ownOf = (
     variant,
     size,
     disabled,
+    truncate,
     style,
-  }: Required<Pick<ButtonBase, "variant" | "disabled">> &
+  }: Required<Pick<ButtonBase, "variant" | "disabled" | "truncate">> &
     Pick<ButtonBase, "style"> & { size: ButtonSize },
   extra: Record<string, unknown>,
   agentConfirm: string | undefined,
@@ -722,6 +736,7 @@ const ownOf = (
   return {
     ...stylex.props(
       lookOf(variant, size, !disabled),
+      truncate && styles.cut,
       disabled && !busy && styles.disabled,
       disabled && !busy && variant === "default" && styles.defaultDisabled,
       busy && styles.busy,
@@ -836,6 +851,20 @@ const statusStyles = stylex.create({
   unseen: {
     color: "transparent",
   },
+  // Truncated: the content is a row of its own that may shrink, its icons whole and its words cut.
+  cutRow: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: space["2"],
+    minWidth: 0,
+    maxWidth: "100%",
+  },
+  cutWords: {
+    minWidth: 0,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+  },
   // A state's mark, centred over the words.
   mark: {
     position: "absolute",
@@ -929,6 +958,19 @@ const spinning = (children: ReactNode) => {
       );
 };
 
+/** The content with each run of words in a box that cuts them with an ellipsis (`truncate`). */
+const cutWords = (children: ReactNode): ReactNode[] =>
+  listOf(children).map((child, index): ReactNode =>
+    typeof child === "string" || typeof child === "number" ? (
+      // Words have no id of their own; their place among the icons is their key.
+      <span key={index} {...stylex.props(statusStyles.cutWords)}>
+        {child}
+      </span>
+    ) : (
+      child
+    )
+  );
+
 /**
  * The words, and over them the state's mark; with words for a state, every state stacked in one
  * cell. Mounted only while it shows, a mark never turns unseen.
@@ -936,19 +978,21 @@ const spinning = (children: ReactNode) => {
 const Status = ({
   status,
   labels,
-  children,
+  truncate,
+  children: given,
 }: {
   status: ActionStatus;
   labels: Labels;
+  truncate: boolean;
   children: ReactNode;
 }) => {
   const label = status === "idle" ? undefined : labels[status];
   // While it works with no words of its own, the spinner stands where the icon stood.
   const inPlace =
-    status === "loading" && label === undefined
-      ? spinning(children)
-      : undefined;
+    status === "loading" && label === undefined ? spinning(given) : undefined;
   const resting = status === "idle" || inPlace !== undefined;
+  const content = inPlace ?? given;
+  const children = truncate ? cutWords(content) : content;
   const mark =
     resting || label !== undefined ? null : (
       <span aria-hidden="true" {...stylex.props(statusStyles.mark)}>
@@ -962,11 +1006,11 @@ const Status = ({
         <span
           data-slot="button-content"
           {...stylex.props(
-            statusStyles.contents,
+            truncate ? statusStyles.cutRow : statusStyles.contents,
             !resting && statusStyles.unseen
           )}
         >
-          {inPlace ?? children}
+          {children}
         </span>
         {mark}
       </>
@@ -983,7 +1027,7 @@ const Status = ({
               (label === undefined ? statusStyles.faded : statusStyles.gone)
           )}
         >
-          {inPlace ?? children}
+          {children}
         </span>
         {(["loading", "success", "error"] as const).map((each) =>
           labels[each] === undefined ? null : (
@@ -1066,6 +1110,7 @@ const Pressable = ({
   tooltip: _tooltip,
   onClick,
   style,
+  truncate = false,
   children,
   ...rest
 }: ButtonProps) => {
@@ -1079,7 +1124,7 @@ const Pressable = ({
   const extra = withStatus(rest, status);
   const off = disabled || working;
   const own = ownOf(
-    { variant, size, disabled: off, style },
+    { variant, size, disabled: off, truncate, style },
     extra,
     agentConfirm,
     textOf(children) || extra["aria-label"],
@@ -1101,6 +1146,7 @@ const Pressable = ({
   const words = (content: ReactNode) => (
     <Status
       status={status}
+      truncate={truncate}
       labels={
         isIconSize(size)
           ? {}

@@ -350,7 +350,7 @@ for (const theme of ["light", "dark"] as const) {
     await expect(retry).toBeVisible();
     const same = await retry.evaluate((button) => {
       const probe = document.createElement("span");
-      probe.style.backgroundColor = "var(--damsko-secondary)";
+      probe.style.backgroundColor = "var(--damsko-control)";
       probe.style.boxShadow = "var(--damsko-bevel-muted)";
       button.after(probe);
       const want = getComputedStyle(probe);

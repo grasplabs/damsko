@@ -97,7 +97,7 @@ const styles = stylex.create({
     // edge drawn over the buttons (::after), so a chosen, open or pressed button's fill never covers
     // the group's edge. The buttons' corners follow the group's (Button, inGroup).
     position: "relative",
-    backgroundColor: colors.secondary,
+    backgroundColor: colors.control,
     boxShadow: shadow.inputShadow,
     borderRadius: {
       default: `min(${radius.base}, calc(${size.controlDefault} / 2))`,

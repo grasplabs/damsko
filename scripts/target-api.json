@@ -163,11 +163,13 @@
     "src/components/combobox.tsx": [
       "Combobox",
       "ComboboxEmpty",
+      "ComboboxOptions",
       "ComboboxProps",
       "ComboboxItem",
       "ComboboxItems",
       "ComboboxSize",
-      "ComboboxEmptyProps"
+      "ComboboxEmptyProps",
+      "ComboboxOptionsProps"
     ]
   },
   "container": {
@@ -467,9 +469,6 @@
       "TableOfContentsProps",
       "TableOfContentsItem"
     ]
-  },
-  "tag": {
-    "src/components/tag.tsx": ["Tag", "TagProps"]
   },
   "textarea": {
     "src/components/textarea.tsx": ["Textarea", "TextareaProps"]
@@ -1118,6 +1117,9 @@
       "PromptInputAttachment",
       "usePromptInputAttachments",
       "PromptInputNote",
+      "PromptInputBanner",
+      "PromptInputQueue",
+      "PromptInputQueueItem",
       "PromptInputMention",
       "PromptInputMentionContent",
       "PromptInputMentionItem",
@@ -1142,6 +1144,9 @@
       "PromptInputAttachmentsProps",
       "PromptInputAttachmentProps",
       "PromptInputNoteProps",
+      "PromptInputBannerProps",
+      "PromptInputQueueProps",
+      "PromptInputQueueItemProps",
       "PromptInputMentionProps",
       "PromptInputMentionContentProps",
       "PromptInputMentionItemProps",
@@ -1476,7 +1481,7 @@
     "src/components/tags-input.tsx": [
       "TagsInput",
       "TagsInputProps",
-      "TagsInputTranslations"
+      "TagsInputLabels"
     ]
   },
   "tool": {

@@ -56,7 +56,6 @@ import {
   PromptInputNote,
   PromptInputSubmit,
   PromptInputTextarea,
-  PromptInputTools,
 } from "@grasp-os/ui/components/prompt-input";
 import type { PromptInputProps } from "@grasp-os/ui/components/prompt-input";
 import {
@@ -514,6 +513,7 @@ const ChatBox = ({ run, state }: { run: ChatRun; state: ChatState }) => {
       key={state}
       aria-label="Message the assistant"
       compact
+      variant="glass"
       status={status}
       disabled={state === "loading"}
       defaultValue={state === "failed-send" ? [unsent] : undefined}
@@ -532,15 +532,9 @@ const ChatBox = ({ run, state }: { run: ChatRun; state: ChatState }) => {
         />
       </PromptInputBody>
       <PromptInputFooter>
-        <PromptInputTools>
-          {failed && (
-            <PromptInputNote>
-              Could not send. Your message is kept.
-            </PromptInputNote>
-          )}
-        </PromptInputTools>
         <PromptInputSubmit onStop={run.stop} />
       </PromptInputFooter>
+      <PromptInputNote />
     </PromptInput>
   );
 };

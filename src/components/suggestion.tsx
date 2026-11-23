@@ -63,7 +63,10 @@ export interface SuggestionProps {
    * @default false
    */
   disabled?: boolean;
-  /** Where it sits. */
+  /**
+   * Where it sits and how much room it takes. It lands on the suggestion's outermost element, the
+   * box that holds it to the row's width; the button fills that box.
+   */
   style?: LayoutStyle;
 }
 
@@ -71,10 +74,14 @@ export interface SuggestionProps {
 const RING_ROOM = `calc(${size.ringWidth} + ${size.ringOffset})`;
 
 const styles = stylex.create({
-  // The scroller: sideways only, no bar, and the sideways wheel stays in it. It stands out by the
+  // The scroller, with the suggestions in one line: sideways only, no bar, and the sideways wheel
+  // stays in it. It stands out by the
   // ring's room on every side, so the buttons inside keep the column's edges.
   scroller: {
-    display: "block",
+    display: "flex",
+    flexWrap: "nowrap",
+    alignItems: "center",
+    gap: space["2"],
     boxSizing: "border-box",
     minWidth: 0,
     maxWidth: `calc(100% + 2 * ${RING_ROOM})`,
@@ -84,13 +91,15 @@ const styles = stylex.create({
     overflowY: "hidden",
     overscrollBehaviorX: "contain",
   },
-  // The buttons in one line, as wide as they come to.
-  row: {
-    display: "flex",
-    flexWrap: "nowrap",
-    alignItems: "center",
-    gap: space["2"],
-    width: "max-content",
+  // A suggestion's room in the row: as wide as its words, so the row scrolls before one shrinks, and
+  // never wider than the row, so one longer than all of it is cut (Button's `truncate`).
+  // One column the button fills, so a width given by `style` is the button's too.
+  suggestion: {
+    display: "inline-grid",
+    gridTemplateColumns: "minmax(0, 1fr)",
+    flexShrink: 0,
+    minWidth: 0,
+    maxWidth: "100%",
   },
 });
 
@@ -111,7 +120,7 @@ export const Suggestions = ({
       data-slot="suggestions"
       {...stylex.props(styles.scroller, scrollbarHidden, edgeFade, style)}
     >
-      <div {...stylex.props(styles.row)}>{children}</div>
+      {children}
     </div>
   );
 };
@@ -126,24 +135,27 @@ export const Suggestion = ({
   disabled = false,
   style,
 }: SuggestionProps) => (
-  <Button
-    type="button"
-    variant={variant}
-    size={height}
-    disabled={disabled}
-    onClick={() => {
-      onClick?.(suggestion);
-    }}
-    // A browser scrolls a button that takes focus only when none of it shows: one cut by the row's
-    // edge, or under its fade, is brought wholly into view here, its ring with it.
-    onFocus={(event) => {
-      event.currentTarget.scrollIntoView({
-        block: "nearest",
-        inline: "nearest",
-      });
-    }}
-    style={style}
-  >
-    {children ?? suggestion}
-  </Button>
+  <span {...stylex.props(styles.suggestion, style)}>
+    <Button
+      type="button"
+      variant={variant}
+      size={height}
+      // Never wider than the row: one too long for it is cut with an ellipsis, and keeps its name.
+      truncate
+      disabled={disabled}
+      onClick={() => {
+        onClick?.(suggestion);
+      }}
+      // A browser scrolls a button that takes focus only when none of it shows: one cut by the row's
+      // edge, or under its fade, is brought wholly into view here, its ring with it.
+      onFocus={(event) => {
+        event.currentTarget.scrollIntoView({
+          block: "nearest",
+          inline: "nearest",
+        });
+      }}
+    >
+      {children ?? suggestion}
+    </Button>
+  </span>
 );

@@ -234,7 +234,7 @@ const styles = stylex.create({
   // Settled, as Input's: the soft ground, a hairline, no lift, its characters a step quieter.
   readOnly: {
     backgroundColor: colors.inputBgRead,
-    color: colors.inputInkRead,
+    color: colors.inputForegroundRead,
     boxShadow: `inset 0 0 0 1px ${colors.input}`,
   },
   // Where typing goes: the focus edge and halo, red when the code is wrong, whether a press or the

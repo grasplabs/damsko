@@ -128,6 +128,10 @@ export interface I18nCatalog {
       destructive: string;
       info: string;
     };
+    /** The remove button's name, when the words are not text. */
+    remove: string;
+    /** The remove button's name, from the badge's words. */
+    removeNamed: (words: string) => string;
   };
   breadcrumb: {
     /** The button that shows the levels folded away in the middle. */
@@ -628,7 +632,7 @@ export interface I18nCatalog {
     cut: (max: number) => string;
     /** Over the card while files are dragged onto it. */
     drop: string;
-    /** Said when a send failed. */
+    /** Said when a send failed, and shown on the band under the card. */
     failed: string;
     /** In the mention menu when nothing matches. */
     mentionEmpty: string;
@@ -642,12 +646,23 @@ export interface I18nCatalog {
     near: (max: number) => string;
     /** Said once at the limit. */
     reached: (max: number) => string;
-    /** The speech button: its name, and what it says while it listens. */
-    speechButton: { label: string; listening: string };
+    /**
+     * The speech button: its name, and what it says while it listens, which names the bar that
+     * stands in the footer then; the bar's Cancel, Done and microphone.
+     */
+    speechButton: {
+      cancel: string;
+      done: string;
+      label: string;
+      listening: string;
+      mute: string;
+    };
     /** Submit's name while the answer comes. */
     stop: string;
     /** Submit's name. */
     submit: string;
+    /** Said once as the status comes to `success`. */
+    succeeded: string;
   };
   questionnaire: {
     /** Under the card when the answers could not be sent, and given to an agent. */
@@ -763,12 +778,6 @@ export interface I18nCatalog {
     /** The name of a tab's close button: what it closes. */
     close: (name: string) => string;
   };
-  tag: {
-    /** The remove button's name, when the words are not text. */
-    remove: string;
-    /** The remove button's name, from the tag's words. */
-    removeNamed: (words: string) => string;
-  };
   tagsInput: {
     duplicate: (value: string) => string;
     empty: string;
@@ -848,10 +857,10 @@ export interface I18nCatalog {
   treeView: {
     /** Clears the filter field. */
     clear: string;
+    /** Shown in the tree's place when the filter matches nothing. */
+    empty: string;
     /** The filter field's name and its placeholder. */
     filter: string;
-    /** Shown in the tree's place when the filter matches nothing. */
-    noMatches: string;
   };
   useAction: {
     /** What an agent is told before it presses a danger or approve button with no words. */
@@ -912,6 +921,8 @@ const english: I18nCatalog = {
       destructive: "Error",
       info: "Info",
     },
+    remove: "Remove",
+    removeNamed: (words: string) => `Remove ${words}`,
   },
   breadcrumb: {
     ellipsis: "Show hidden levels",
@@ -1305,7 +1316,7 @@ const english: I18nCatalog = {
         ? "What was added was left out: no more can be written"
         : `What was added was cut at the limit of ${englishCharacters(max)}`,
     drop: "Drop to add",
-    failed: "Could not send",
+    failed: "Could not send. Your message is kept.",
     mentionEmpty: "No matches",
     mentionsError: "Could not load suggestions",
     mentionsFound: (count: number) =>
@@ -1321,9 +1332,16 @@ const english: I18nCatalog = {
       max === 0
         ? "No more can be written"
         : `The limit of ${englishCharacters(max)} is reached`,
-    speechButton: { label: "Dictate", listening: "Listening" },
+    speechButton: {
+      cancel: "Cancel dictation",
+      done: "Done",
+      label: "Dictate",
+      listening: "Listening",
+      mute: "Mute",
+    },
     stop: "Stop",
     submit: "Send",
+    succeeded: "Done",
   },
   questionnaire: {
     error: "Could not send the answer",
@@ -1404,10 +1422,6 @@ const english: I18nCatalog = {
   tabs: {
     close: (name: string) => `Close ${name}`,
   },
-  tag: {
-    remove: "Remove",
-    removeNamed: (words: string) => `Remove ${words}`,
-  },
   tagsInput: {
     duplicate: (word) => `"${word}" is already added.`,
     empty: "Press Enter to add it.",
@@ -1487,8 +1501,8 @@ const english: I18nCatalog = {
   },
   treeView: {
     clear: "Clear the filter",
+    empty: "No matches",
     filter: "Filter",
-    noMatches: "No matches",
   },
   useAction: {
     agentAsks: "Does something that needs your yes",

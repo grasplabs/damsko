@@ -163,12 +163,12 @@ const styles = stylex.create({
     paddingInline: "6px",
     borderWidth: 0,
     backgroundColor: {
-      default: colors.secondary,
-      ":hover": { default: null, [media.hover]: colors.secondaryHover },
-      ":is([aria-expanded=true])": colors.secondaryHover,
+      default: colors.control,
+      ":hover": { default: null, [media.hover]: colors.controlHover },
+      ":is([aria-expanded=true])": colors.controlHover,
       // The part the keyboard is on: the ring goes round the whole control (focusField.group), and
       // this part takes the stronger fill, so it is plain which one.
-      ":focus-visible": colors.secondaryActive,
+      ":focus-visible": colors.controlActive,
       ":disabled": colors.muted,
     },
     color: { default: colors.foreground, ":disabled": colors.subtleForeground },

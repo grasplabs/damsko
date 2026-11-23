@@ -22,7 +22,7 @@ export default function SliderLevelsSheet() {
           variant="levels"
           key={level.id}
           label={`Effort at ${level.label}`}
-          labelHidden
+          showLabel={false}
           levels={effort}
           defaultValue={level.id}
         />

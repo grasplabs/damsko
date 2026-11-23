@@ -24,7 +24,6 @@ import { Card, CardDescription, CardTitle } from "@grasp-os/ui/components/card";
 import { Kbd } from "@grasp-os/ui/components/kbd";
 import { Slider } from "@grasp-os/ui/components/slider";
 import { Spinner } from "@grasp-os/ui/components/spinner";
-import { Tag } from "@grasp-os/ui/components/tag";
 
 import Docs from "../layouts/Docs.astro";
 import { ditherDefs } from "../overview/pen.ts";
@@ -309,9 +308,9 @@ const field = `(() => {
         <Kbd>⌘K</Kbd>
       </div>
       <div class="sc-piece sc-row sc-wide-only sc-tags" data-piece aria-hidden="true" inert style={at({ t: 0.6, l: "36%", d: 0.45, s: 1.3 })}>
-        <Tag>Design</Tag>
-        <Tag variant="outline">Research</Tag>
-        <Tag>Agents</Tag>
+        <Badge variant="secondary">Design</Badge>
+        <Badge variant="outline">Research</Badge>
+        <Badge variant="secondary">Agents</Badge>
       </div>
 
       {/* 2. Motion: things at work. */}
