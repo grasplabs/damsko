@@ -1,6 +1,6 @@
 // Inspector: a side panel that inspects one record, built from data: a head (its icon, its title,
 // who and when, its actions), its views as tabs, then sections of rows, facts or words, and a
-// footer under them. While the record loads, the head waits as placeholders. Built of
+// footer under them (each view's own, with views). While the record loads, the head waits as placeholders. Built of
 // SidePanel, SidePanelSection, IconTile, KeyValueList, Item and Empty, so every measure is theirs.
 //
 //   <Inspector
@@ -119,6 +119,12 @@ export interface InspectorSection {
   action?: ReactNode;
 }
 
+/** One of an Inspector's views: a tab in its head, and what stands under its sections. */
+export interface InspectorView extends SidePanelView {
+  /** Anything under the view's sections: small print, a folded "Advanced settings". */
+  footer?: ReactNode;
+}
+
 /** Every prop an Inspector takes. */
 export interface InspectorProps {
   /** What the panel is about, as a screen reader names the landmark ("Agent details"). */
@@ -135,18 +141,15 @@ export interface InspectorProps {
   actions?: ReactNode;
   /** Shows a close button in the bar, and runs when it is pressed. */
   onClose?: () => void;
-  /** Its views, as tabs under the head; each section names its own with `view`. */
-  views?: SidePanelView[];
+  /** Its views, as tabs under the head; each section names its own with `view`, and each view has its own `footer`. */
+  views?: InspectorView[];
   /** The view shown at first, by its `value`. @default the first view */
   defaultView?: string;
   /** The sections, in order. */
   sections: readonly InspectorSection[];
   /** What the panel says when it has no sections at all ("Nothing is set up yet"). */
   empty?: ReactNode;
-  /**
-   * Anything under the sections: small print, a folded "Advanced settings". With views, under the
-   * sections of each.
-   */
+  /** Anything under the sections, when it has no views: small print, a folded "Advanced settings". */
   footer?: ReactNode;
   /**
    * The record is not there yet: its title, and its line when `description` is given (even
@@ -380,7 +383,11 @@ export const Inspector = ({
           meta={meta}
           actions={actions}
           onClose={onClose}
-          views={views}
+          views={views?.map(({ value, label: name, icon: mark }) => ({
+            value,
+            label: name,
+            icon: mark,
+          }))}
           viewsLabel={words.views}
           loading={loading}
         />
@@ -392,7 +399,7 @@ export const Inspector = ({
                     (section) => section.view === view.value
                   )}
                   empty={empty}
-                  footer={footer}
+                  footer={view.footer}
                   words={words}
                 />
               </SidePanelContent>

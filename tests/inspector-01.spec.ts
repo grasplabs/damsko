@@ -77,6 +77,26 @@ test("the views are tabs: the arrow keys move between them, each showing its own
   await expect(panel.getByRole("list", { name: "People" })).toBeHidden();
 });
 
+test("each view has its own footer, under its own sections", async ({
+  page,
+}) => {
+  await openExample(page, "inspector-01", "views");
+  const panel = page.getByRole("complementary", { name: "Report details" });
+  const footer = panel.getByText("Activity older than 90 days is removed.");
+  // Details has none.
+  await expect(panel.getByRole("list", { name: "People" })).toBeVisible();
+  await expect(footer).toBeHidden();
+  await panel.getByRole("tab", { name: "Activity" }).click();
+  await expect(footer).toBeVisible();
+  const recent = await panel
+    .getByRole("region", { name: "Recent" })
+    .boundingBox();
+  const foot = await footer.boundingBox();
+  expect(foot?.y ?? 0).toBeGreaterThanOrEqual(
+    (recent?.y ?? 0) + (recent?.height ?? 0)
+  );
+});
+
 test("facts are a list of terms and their values; a missing value is said Not set", async ({
   page,
 }) => {
