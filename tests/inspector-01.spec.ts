@@ -99,21 +99,16 @@ test("with no sections it says what will stand there", async ({ page }) => {
   ).toBeVisible();
 });
 
-test("the head's tile takes the look it is given, and who made it shows their face", async ({
+test("the head draws a bare icon on a tinted tile and an element as it is given, and who made it shows their face", async ({
   page,
 }) => {
+  const tile = page
+    .locator("[data-slot=inspector] [data-slot=icon-tile]")
+    .first();
   await openExample(page, "inspector-01", "views");
-  const look = await page
-    .getByRole("heading", { name: "Churn by region, Q3" })
-    .evaluate(
-      (title) =>
-        title
-          .closest("[data-slot=inspector]")
-          ?.querySelector<HTMLElement>("[data-slot=icon-tile]")?.dataset
-          .variant ?? ""
-    );
-  expect(look).toBe("gradient");
+  await expect(tile).toHaveAttribute("data-variant", "gradient");
   await openExample(page, "inspector-01", "basic");
+  await expect(tile).toHaveAttribute("data-variant", "tinted");
   await expect(page.getByText("By AO Amara Okafor")).toBeVisible();
 });
 

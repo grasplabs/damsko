@@ -17,13 +17,12 @@
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
-import { Fragment } from "react";
-import type { ReactNode } from "react";
+import { Fragment, isValidElement } from "react";
+import type { ReactElement, ReactNode } from "react";
 
 import { Button } from "../../components/button";
 import { Empty, EmptyDescription, EmptyHeader } from "../../components/empty";
 import { IconTile } from "../../components/icon-tile";
-import type { IconTileVariant } from "../../components/icon-tile";
 import {
   Item,
   ItemActions,
@@ -128,13 +127,12 @@ export interface InspectorProps {
   title: string;
   /** One line about it, under its name. */
   description?: ReactNode;
-  /** The record's own icon, in a tile at the head. */
-  icon?: IconData;
   /**
-   * The tile's look (IconTile's `variant`): `gradient` for the one record a page is about, solid.
-   * @default "tinted"
+   * The record's own icon at the head: an icon from lib/icons, drawn on a tinted IconTile, or the
+   * element itself (`<IconTile icon={ChartColumnIcon} variant="gradient" />` for the one record a
+   * page is about).
    */
-  iconVariant?: IconTileVariant;
+  icon?: IconData | ReactElement;
   /** Who and when, a dot between them ("By Amara Okafor", "Updated 18h ago"). */
   meta?: ReactNode[];
   /** The bar's buttons, `sm`, the main one first. */
@@ -338,7 +336,6 @@ export const Inspector = ({
   title,
   description,
   icon,
-  iconVariant = "tinted",
   meta,
   actions,
   onClose,
@@ -363,8 +360,10 @@ export const Inspector = ({
       >
         <SidePanelHeader
           icon={
-            icon === undefined ? undefined : (
-              <IconTile icon={icon} variant={iconVariant} />
+            icon === undefined || isValidElement(icon) ? (
+              icon
+            ) : (
+              <IconTile icon={icon} />
             )
           }
           title={title}

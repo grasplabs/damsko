@@ -2,6 +2,7 @@
 
 import { Inspector } from "@grasp-os/ui/blocks/inspector-01/inspector-01";
 import { Badge } from "@grasp-os/ui/components/badge";
+import { IconTile } from "@grasp-os/ui/components/icon-tile";
 import {
   ChartColumnIcon,
   CircleUserIcon,
@@ -26,8 +27,7 @@ export default function InspectorViews() {
     <Inspector
       aria-label="Report details"
       style={layout.panel}
-      icon={ChartColumnIcon}
-      iconVariant="gradient"
+      icon={<IconTile icon={ChartColumnIcon} variant="gradient" />}
       title="Churn by region, Q3"
       description="How many customers left in each region, and what changed."
       meta={["Updated 2 days ago"]}
