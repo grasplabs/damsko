@@ -249,7 +249,7 @@ test("a group folds from its label, and the header's field filters the rows", as
   ).toBeVisible();
 });
 
-test("with a storage key a group's fold stays across a reload, apart from the sidebar's own", async ({
+test("with a storage key a group's fold stays when the page is loaded again, apart from the sidebar's own", async ({
   page,
 }) => {
   await openExample(page, "sidebar", "groups");
@@ -257,14 +257,14 @@ test("with a storage key a group's fold stays across a reload, apart from the si
   const teams = page.getByRole("button", { name: "Teams", exact: true });
   await projects.click();
   await expect(projects).toHaveAttribute("aria-expanded", "false");
-  await page.reload();
+  await openExample(page, "sidebar", "groups");
   await expect(projects).toHaveAttribute("aria-expanded", "false");
   await expect(page.getByRole("link", { name: "Hiring" })).toBeHidden();
   await expect(teams).toHaveAttribute("aria-expanded", "true");
   await expect(page.getByRole("link", { name: "Finance" })).toBeVisible();
   await expect(triggerOf(page)).toHaveAttribute("aria-expanded", "true");
   await projects.click();
-  await page.reload();
+  await openExample(page, "sidebar", "groups");
   await expect(projects).toHaveAttribute("aria-expanded", "true");
   await expect(page.getByRole("link", { name: "Hiring" })).toBeVisible();
 });
@@ -318,8 +318,9 @@ test("levels: a group's fold in a level is kept by its name too", async ({
   const account = sidebar.getByRole("button", { name: "Your account" });
   await account.click();
   await expect(account).toHaveAttribute("aria-expanded", "false");
-  await page.reload();
-  await sidebarOf(page).getByRole("link", { name: "Settings" }).click();
+  // Opened again, and live again before the press: the same visit, loaded anew.
+  await openExample(page, "sidebar", "levels");
+  await sidebar.getByRole("link", { name: "Settings" }).click();
   await expect(account).toHaveAttribute("aria-expanded", "false");
   await expect(sidebar.getByRole("link", { name: "Profile" })).toBeHidden();
 });
