@@ -690,24 +690,45 @@ describe("components", () => {
     ]);
   });
 
-  test("while written, a picture reaches `img` only once its address is whole", () => {
+  test("while written, no caller's part is handed half an address: not `a`, `img`, `renderLink` or a provider", () => {
+    // Half of an address (`https://i`, `https://bare.exa`) is another site's: a picture drawn from
+    // it loads from there, a link leads there.
     const answer =
-      "A chart: ![chart](https://images.example.com/charts/q3.png) and more.";
-    const sources = new Set<string | undefined>();
+      "A chart: ![chart](https://images.example.com/q3.png), [the report](https://example.com/q3), <https://auto.example.com/x> and https://bare.example.com/path now.";
+    const handed = new Set<string | undefined>();
+    const hand: MarkdownLinkRenderer = (link) => {
+      handed.add(link.href);
+    };
     for (let at = 1; at <= answer.length; at += 1) {
-      draw(answer.slice(0, at), {
+      const source = answer.slice(0, at);
+      draw(source, {
         streaming: true,
         components: {
+          a: ({ href, children }) => {
+            handed.add(href);
+            return <i>{children}</i>;
+          },
           img: ({ src }) => {
-            sources.add(src);
+            handed.add(src);
             return null;
           },
         },
       });
+      draw(source, { streaming: true, renderLink: hand });
+      renderToStaticMarkup(
+        <MarkdownLinkProvider renderLink={hand}>
+          <Markdown streaming>{source}</Markdown>
+        </MarkdownLinkProvider>
+      );
     }
-    expect([...sources]).toStrictEqual([
-      "https://images.example.com/charts/q3.png",
-    ]);
+    expect(handed).toStrictEqual(
+      new Set([
+        "https://images.example.com/q3.png",
+        "https://example.com/q3",
+        "https://auto.example.com/x",
+        "https://bare.example.com/path",
+      ])
+    );
   });
 
   test("a missing cell is handed an empty cell's node", () => {

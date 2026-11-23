@@ -496,7 +496,6 @@ const fromOurs = (node: Element | string): Parts => {
 interface Tree {
   type: string;
   value?: string;
-  url?: string;
   depth?: number;
   children?: Tree[];
 }
@@ -505,7 +504,6 @@ interface Tree {
 const kindsIn = (tree: Tree) => {
   const kinds = {
     html: new Array<string>(),
-    links: false,
     pictures: false,
     headings: false,
   };
@@ -514,9 +512,6 @@ const kindsIn = (tree: Tree) => {
       kinds.html.push(node.value ?? "");
     }
     kinds.pictures ||= node.type === "image" || node.type === "imageReference";
-    kinds.links ||=
-      (node.type === "link" || node.type === "definition") &&
-      safeHref(node.url) === null;
     kinds.headings ||= node.type === "heading" && (node.depth ?? 0) > 4;
     for (const child of node.children ?? []) {
       visit(child);
@@ -525,6 +520,17 @@ const kindsIn = (tree: Tree) => {
   visit(tree);
   return kinds;
 };
+
+/** Whether the spec draws a link to other than http, https or mailto. */
+const leadsElsewhere = (node: Element): boolean =>
+  node.children.some(
+    (child) =>
+      typeof child !== "string" &&
+      ((child.tag === "a" &&
+        child.attributes.has("href") &&
+        safeHref(child.attributes.get("href") ?? "") === null) ||
+        leadsElsewhere(child))
+  );
 
 /** A node of the parser's tree, as far as drawing it by Markdown's rules reads it. */
 interface Drawn {
@@ -741,9 +747,7 @@ const READ_OTHERWISE = new Map([
 const verdictOf = ({ set, example, markdown, html }: Example) => {
   const tree = JSON.stringify(parseMarkdown(bounded(markdown)));
   let read = tree === JSON.stringify(plain(markdown)) ? "same" : "bug";
-  if (read === "bug" && bounded(markdown) !== markdown) {
-    read = "greater than";
-  } else if (
+  if (
     read === "bug" &&
     tree ===
       JSON.stringify(
@@ -771,11 +775,13 @@ const verdictOf = ({ set, example, markdown, html }: Example) => {
   };
   let drawn = "bug";
   if (written(fromSpec(spec, rules)) === ours) {
-    drawn = "links";
+    // Put down to the rule whose kind of node the example holds; none, and it is a bug.
     if (kinds.pictures) {
       drawn = "pictures";
     } else if (kinds.headings) {
       drawn = "headings";
+    } else if (leadsElsewhere(spec)) {
+      drawn = "links";
     }
   } else if (fromTree(parseMarkdown(bounded(markdown))) !== ours) {
     // Every other class is drawn by Markdown's rules from the tree Markdown reads: checked so.

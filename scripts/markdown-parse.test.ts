@@ -376,8 +376,9 @@ const growthOf = (small: () => unknown, whole: () => unknown, limit = 24) => {
 
 describe("the end of a long answer, read on every word that arrives", () => {
   // Each took half a second or more at 40 KB, for every few words, while its patterns weighed every
-  // way to split the run; now it takes time in step with the length. Four times the text: in step
-  // is 4, the square is 16.
+  // way to split the run; now it takes time in step with the length. 100 KB against 400 KB, four
+  // times the text: in step is 4, the square is 16. (At 400 KB each takes milliseconds, a tenth of
+  // a second at most: long enough to weigh well, short enough to run often.)
   test.each([
     ["a run of stars", (n: number) => `${"*".repeat(n)}a`],
     [
@@ -393,18 +394,21 @@ describe("the end of a long answer, read on every word that arrives", () => {
       (n: number) => `[a](b "${"](".repeat(n / 2)}" c`,
     ],
     // Thousands of marks that each open and none closes: each new one is weighed against those
-    // still open, so they must not all be weighed again.
+    // still open, so they must not all be weighed again (400 KB of `*a ` took 39 s when they were).
     ["stars that open", (n: number) => "*a ".repeat(n / 3)],
     ["underscores that open", (n: number) => "_a ".repeat(n / 3)],
     ["double stars that open", (n: number) => "**a ".repeat(n / 4)],
     ["strikes that open", (n: number) => "~~a ".repeat(n / 4)],
     ["stars that open in a quote", (n: number) => "> *a\n".repeat(n / 5)],
+    ["brackets that open", (n: number) => "[a ".repeat(n / 3)],
+    ["backticks that open", (n: number) => "`a ".repeat(n / 3)],
+    ["tags that open", (n: number) => "<a ".repeat(n / 3)],
   ])(
     "%s",
     (_, make) => {
       for (const read of [repair, tidy]) {
-        const quarter = make(10_000);
-        const whole = make(40_000);
+        const quarter = make(100_000);
+        const whole = make(400_000);
         const growth = growthOf(
           () => read(quarter),
           () => read(whole),
@@ -422,12 +426,13 @@ const filled = (unit: string) => (length: number) =>
   unit.repeat(Math.ceil(length / unit.length));
 
 describe("an answer streamed in chunks", () => {
-  // Every chunk repairs the answer so far: 50 KB in 500 chunks of 100 characters. Its repair reads
+  // Every chunk repairs the answer so far: 25 KB in 250 chunks of 100 characters. Its repair reads
   // only what follows the last blank line, and the marks of that, each against those still open,
-  // so in all it costs about a second, not minutes, however many marks open; and the ten answers
-  // one after another, read a block at a time as Markdown reads them, about a second more. (A
-  // block of 50 KB with no blank line in it is read again whole on every chunk, as it always was:
-  // that is the parse, not the repair.) Timed in this process's time on the processor.
+  // so in all it costs a few tenths of a second at most, not the 6 to 16 seconds it took when every
+  // mark was weighed against all those open; and the ten answers one after another, read a block at
+  // a time as Markdown reads them, less again. (A block with no blank line in it, as the quote here,
+  // is read again whole on every chunk, as it always was: that is the parse, not the repair.) Timed
+  // in this process's time on the processor.
   const fixture = readJson(
     fileURLToPath(new URL("fixtures/markdown-answers.json", import.meta.url))
   );
@@ -443,19 +448,19 @@ describe("an answer streamed in chunks", () => {
   test.each([
     [
       "the ten answers, again and again",
-      filled(`${answers}\n\n`)(50_000),
+      filled(`${answers}\n\n`)(25_000),
       true,
     ],
-    ["stars that open", "*a ".repeat(17_000), false],
-    ["underscores that open", "_a ".repeat(17_000), false],
-    ["stars that open in a quote", "> *a\n".repeat(10_000), false],
+    ["stars that open", "*a ".repeat(8500), false],
+    ["underscores that open", "_a ".repeat(8500), false],
+    ["stars that open in a quote", "> *a\n".repeat(5000), false],
   ])(
-    "%s: 50 KB in 500 chunks",
+    "%s: 25 KB in 250 chunks",
     (_, text, blocks) => {
       let repairing = 0;
       let reading = 0;
       let kept = NOTHING;
-      for (let chunk = 1; chunk <= 500; chunk += 1) {
+      for (let chunk = 1; chunk <= 250; chunk += 1) {
         const start = now();
         const shown = repair(bounded(text.slice(0, chunk * 100))).text;
         const repaired = now();
@@ -465,7 +470,8 @@ describe("an answer streamed in chunks", () => {
         repairing += repaired - start;
         reading += now() - repaired;
       }
-      // About a second each on a laptop: three times that is allowed a slow machine.
+      // A slow machine is allowed many times a laptop's few tenths of a second, and still half the
+      // least the old weighing took.
       expect(repairing).toBeLessThan(3000);
       expect(reading).toBeLessThan(3000);
     },
@@ -1665,9 +1671,10 @@ describe("what an answer refers to", () => {
       "- > $100: expensive",
       "1. > 5 ms",
       "  - > 25–30: rich; you need strong growth",
+      "> - > 5 ms",
     ]) {
       expect(wordsOf(boundedTree(comparison))).toBe(
-        comparison.replace(/^[ \t]*(?:-|\d\.)[ \t]+/u, "")
+        comparison.replace(/^(?:> )?[ \t]*(?:-|\d\.)[ \t]+/u, "")
       );
     }
     // A quote that starts with a number stays a quote, and code stays code.

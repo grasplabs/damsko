@@ -146,7 +146,8 @@ type MarkdownElement =
  * Elements drawn in Markdown's place, keyed by HTML element name (a map written for react-markdown
  * or Streamdown carries over): each is given the element's own props (its `children`; `href` and `title` for
  * `a`, `src`, `alt` and `title` for `img`, `className` `language-…` for fenced code, `start` for `ol`,
- * `align` for a cell) and the syntax tree's `node` it draws.
+ * `align` for a cell) and the syntax tree's `node` it draws, which is internal (MarkdownProps'
+ * `components`).
  */
 export type MarkdownComponents = {
   [Tag in MarkdownElement]?: ComponentType<
@@ -216,7 +217,8 @@ export interface MarkdownProps {
    * link through `<Link asChild>`, a button that asks before leaving, a citation). Return undefined
    * for Markdown's own: http, https and mailto as a Link, anything else as its words; a picture is
    * never loaded unless the host draws it. Footnote marks and their way back stay Markdown's own.
-   * While an answer streams, its last link's address can still grow: it is called again as it does.
+   * While an answer streams, it is never handed a link or a picture still being written, whose
+   * address can still grow: that one is held back, words and all, until its address is whole.
    */
   renderLink?: MarkdownLinkRenderer;
   /**
@@ -229,9 +231,10 @@ export interface MarkdownProps {
    * choice to load pictures, and it checks the addresses it trusts. `code` draws code in a sentence
    * and fenced code (its `node.type` is `code`, its `className` `language-…`), in CodeBlock's place;
    * `pre`, when given, holds fenced code's `code`. Headings are named by the level they are drawn at
-   * (`headingLevel`). Task boxes and footnotes stay Markdown's own. `node` is the syntax tree's node
-   * as the answer wrote it: its `url` and raw HTML are unchecked, so draw from the checked `href`
-   * and `src`, never from `node.url`.
+   * (`headingLevel`). Task boxes and footnotes stay Markdown's own. `node` is internal: the
+   * parser's syntax tree node (mdast), to tell what is drawn by (`node.type`, a fence's
+   * `node.value`), shaped as the parser shapes it and holding the answer as written. Its `url` and
+   * raw HTML are unchecked, so draw from the checked `href` and `src`, never from `node.url`.
    */
   components?: MarkdownComponents;
   /** Layout only: where it sits and how much room it takes. */
@@ -533,6 +536,8 @@ interface Context {
   provided: MarkdownLinkRenderer | null;
   /** While written: how much of the source is the stream's own (repair closed the rest). */
   kept: number;
+  /** While written: where the stream's own words end, the marks after a bare address apart. */
+  ends: number;
   /** Where the block being drawn starts in the source: its nodes' places count from there. */
   base: number;
   footnotes: Map<string, number>;
@@ -730,16 +735,16 @@ const Phrasing = ({
     <context.Inline key={index} node={node} context={context} />
   ));
 
-/** No address of the link's own yet: none (a reference whose definition is still to come), or the first letters of a web address. */
-const isPlaceholder = (url: string | undefined) =>
-  url === undefined || "https://".startsWith(url) || "http://".startsWith(url);
-
 /**
  * Whether a link still being written will get an arrow, as far as its address tells yet: none so
- * far, or a web address. One that starts any other way (mailto:) gets none, so no room is kept.
+ * far (a reference whose definition is still to come, or the first letters of a web address), or a
+ * web address. One that starts any other way (mailto:) gets none, so no room is kept.
  */
 const isComing = (url: string | undefined) =>
-  isPlaceholder(url) || /^https?:\/\//u.test(url ?? "");
+  url === undefined ||
+  "https://".startsWith(url) ||
+  "http://".startsWith(url) ||
+  /^https?:\/\//u.test(url);
 
 /** A link node's address and title, from itself or the definition it refers to. */
 const targetOf = (
@@ -767,6 +772,29 @@ const isAutolink = (node: Linked) => {
   );
 };
 
+/**
+ * Whether a link or a picture is still being written, so its address may still grow: repair closed
+ * it (it ends past what the stream gave), or it is a bare address the stream ends on. Half of an
+ * address (`https://i`) is another site's, so nothing is drawn from it that loads or leads anywhere.
+ */
+const isWriting = (node: Linked | Pictured, context: Context) => {
+  if (!context.streaming) {
+    return false;
+  }
+  const start = node.position?.start.offset ?? 0;
+  const end = node.position?.end.offset ?? 0;
+  const [only] = node.type === "link" ? node.children : [];
+  // A bare address is its own words, no mark round it (`<https://…>` has two).
+  const bare = only?.type === "text" && only.value.length === end - start;
+  return bare
+    ? context.base + end >= context.ends
+    : context.base + end > context.kept;
+};
+
+/** Whether the host draws links: the page's own `renderLink`, or a part around Markdown. */
+const isHosted = (context: Context) =>
+  context.renderLink !== undefined || context.provided !== null;
+
 /** What the host draws for a link: the page's own first, then the part around Markdown. */
 const hosted = (
   context: Context,
@@ -792,21 +820,19 @@ const LinkInline = ({
   node: Linked;
   context: Context;
 }): ReactNode => {
-  // Still being written: its end was closed by repair, so its address may still grow.
-  const coming =
-    context.streaming &&
-    context.base + (node.position?.end.offset ?? 0) > context.kept;
-  // Where a part around Markdown draws links (MarkdownLinkProvider), such a link is held back,
-  // words and all, until its address has arrived: a citation's number never shows as words first,
-  // then turns into its mark.
-  if (coming && context.provided !== null) {
+  const coming = isWriting(node, context);
+  // Where the host draws links (`renderLink`, or a part around Markdown through
+  // MarkdownLinkProvider), such a link is held back, words and all, until its address has arrived:
+  // the host is never handed half of one, and a citation's number never shows as words first, then
+  // turns into its mark.
+  if (coming && isHosted(context)) {
     return null;
   }
   const { url, title } = targetOf(node, context);
   const words = (
     <Phrasing nodes={node.children} context={{ ...context, inLink: true }} />
   );
-  if (url !== undefined && !(context.streaming && isPlaceholder(url))) {
+  if (url !== undefined) {
     const drawn = hosted(context, {
       href: url,
       title,
@@ -857,9 +883,15 @@ const PictureInline = ({
   node: Pictured;
   context: Context;
 }): ReactNode => {
+  // Still being written: held back where the host draws pictures, as a link is, and otherwise its
+  // words, which load nothing and lead nowhere, until its address is whole.
+  const coming = isWriting(node, context);
+  if (coming && isHosted(context)) {
+    return null;
+  }
   const { url, title } = targetOf(node, context);
   const alt = node.alt ?? "";
-  if (url !== undefined && url !== "") {
+  if (!coming && url !== undefined && url !== "") {
     const drawn = hosted(context, {
       href: url,
       title,
@@ -870,11 +902,6 @@ const PictureInline = ({
       return drawn;
     }
   }
-  // Still being written (repair closed it): half of its address (`https://i`) would be another
-  // site's, so it is its words, and nothing loads or leads anywhere, until its address is whole.
-  const coming =
-    context.streaming &&
-    context.base + (node.position?.end.offset ?? 0) > context.kept;
   const href = coming || url === undefined ? null : safeHref(encodedUrl(url));
   const Picture = context.components.img;
   if (Picture !== undefined && href !== null && /^https?:/u.test(href)) {
@@ -1466,6 +1493,9 @@ const Notes = ({
   </ol>
 );
 
+/** What GitHub leaves off the end of a bare address, as words after it (`see https://example.com.`). */
+const AFTER_ADDRESS = new Set("!\"'),.:;?_*~");
+
 /**
  * What to draw of an answer: while it is written, made whole; once written, tidied if it may have
  * been cut off (it was streamed here, or the caller says so).
@@ -1480,13 +1510,19 @@ const useAnswer = (source: string, streaming: boolean, truncated: boolean) => {
     return {
       shown: tidied ? tidy(source) : source,
       kept: Number.POSITIVE_INFINITY,
+      ends: Number.POSITIVE_INFINITY,
       written: streamed,
       tidied,
     };
   }
   // `kept`: how much of it is the stream's own; past it, repair closed what was still open.
   const { text, kept } = repair(source);
-  return { shown: text, kept, written: true, tidied: true };
+  // `ends`: where the stream's own words end, but for the marks a bare address leaves off its end.
+  let ends = kept;
+  while (ends > 0 && AFTER_ADDRESS.has(text[ends - 1] ?? "")) {
+    ends -= 1;
+  }
+  return { shown: text, kept, ends, written: true, tidied: true };
 };
 
 /**
@@ -1659,7 +1695,7 @@ export const Markdown = ({
 }: MarkdownProps) => {
   const words = useI18n().markdown;
   const prefix = useId().replaceAll(":", "");
-  const { shown, kept, written, tidied } = useAnswer(
+  const { shown, kept, ends, written, tidied } = useAnswer(
     bounded(source),
     streaming,
     truncated
@@ -1683,6 +1719,7 @@ export const Markdown = ({
     renderLink,
     provided,
     kept,
+    ends,
     base: 0,
     footnotes,
     noted: new Set(notes.map((note) => note.identifier)),

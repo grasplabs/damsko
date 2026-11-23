@@ -1494,11 +1494,12 @@ const MAX_DEPTH = 32;
 const FOOTNOTE_START = /^\[\^[^\]\s]+\]:/u;
 const ORDERED = /^\d{1,9}[.)](?:[ \t]|$)/u;
 /**
- * A list item's mark, at most three spaces in (four is code), then `>` or `>=`, a number or a
- * price (a range, a percentage, a short unit), then a colon or the line's end: greater than.
+ * A list item's mark, in quotes or not, at most three spaces in (four is code), then `>` or `>=`, a
+ * number or a price (a range, a percentage, a short unit), then a colon or the line's end: greater
+ * than.
  */
 const GREATER_THAN =
-  /^(?<item> {0,3}(?:[-*+]|\d{1,9}[.)])[ \t]+)>(?==?[ \t]*\$?\d[\d.,]*(?:[ \t]?[-–][ \t]?\$?\d[\d.,]*)?%?(?:[ \t]?[A-Za-z]{1,5})?[ \t]*(?::|$))/u;
+  /^(?<item>(?: {0,3}> ?)* {0,3}(?:[-*+]|\d{1,9}[.)])[ \t]+)>(?==?[ \t]*\$?\d[\d.,]*(?:[ \t]?[-–][ \t]?\$?\d[\d.,]*)?%?(?:[ \t]?[A-Za-z]{1,5})?[ \t]*(?::|$))/u;
 
 /**
  * Where a backslash undoes the first container mark past MAX_DEPTH that opens `line` (quotes, list
