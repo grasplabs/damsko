@@ -17,7 +17,7 @@ Headings, lists, a table (Table, scrolling sideways in its own box), code in a s
 
 ## While it is written
 
-`streaming`: what is half-written at the end is drawn as what it will be. A table is a table from its head, code shows as it comes in a CodeBlock that says it is being written, a link still being written is its words with its arrow's room kept, and bold is bold from its first letter. Nothing flickers or re-flows when a mark closes. The words come as they are given: pacing them is the message's job. A screen reader hears each block once it is finished, never each word; `live="off"` keeps it silent, for words beside the answer that another part already says (Reasoning's thoughts).
+`streaming`: what is half-written at the end is drawn as what it will be. A table is a table from its head, code shows as it comes in a CodeBlock that says it is being written, a link still being written is its words with its arrow's room kept, and bold is bold from its first letter. What is only the start of a mark waits for its words: a list's number, a task's box, a fence, a tag, a bracket that may open a link. A note's mark is its number before the note arrives at the end, and a section that folds is one from its summary. Nothing flickers or re-flows when a mark closes. The words come as they are given: pacing them is the message's job. A screen reader hears each block once it is finished, never each word; `live="off"` keeps it silent, for words beside the answer that another part already says (Reasoning's thoughts).
 
 <Stage path="markdown/streaming" label="While it is written" />
 
@@ -100,7 +100,7 @@ Its links may come from a page the agent read. Raw HTML is text, never HTML, and
       group: "Pictures",
       key: "![alt](url)",
       value:
-        "Never loaded: its alt words, a link to the picture when http or https. The host may draw it (renderLink, type image)",
+        "Never loaded: its alt words, a link to the picture when http or https. The host may draw it (renderLink, type image, or components.img for an http or https address)",
     },
     {
       group: "Streaming",
@@ -135,6 +135,76 @@ Markdown knows no router and no citation. `renderLink` draws every link and pict
 ```
 
 <Stage path="markdown/host-links" label="The host's links" />
+
+## Your own elements
+
+`components` draws elements in Markdown's place, by their HTML names, as react-markdown's and Streamdown's `components` do: `a`, `blockquote`, `code`, `del`, `em`, `h1` to `h6`, `hr`, `img`, `li`, `ol`, `p`, `pre`, `strong`, `table`, `thead`, `tbody`, `tr`, `th`, `td` and `ul`. Each is given the element's own props and the syntax tree's `node`. The safe defaults hold: `a` gets only a link Markdown would draw (http, https or mailto, its address whole), and `img` only a picture at an http or https address, which giving it chooses to load. `code` draws code in a sentence and fenced code (`node.type` is `code`, `className` is `language-…`) in CodeBlock's place, so a fence can be a diagram or maths of the product's own. Here a link names its site and fenced code has no line numbers.
+
+```tsx
+<Markdown
+  components={{
+    a: ({ href, children }) => (
+      <ProductLink href={href}>{children}</ProductLink>
+    ),
+    code: ({ node, children }) =>
+      node.type === "code" ? (
+        <Diagram source={node.value} />
+      ) : (
+        <code>{children}</code>
+      ),
+  }}
+>
+  {answer}
+</Markdown>
+```
+
+<Stage path="markdown/components" label="Your own elements" />
+
+## How it is tested
+
+Against the specifications it reads, example by example, and against streams. The specs' examples and Streamdown's inputs are kept in the repository with their source and licence (`scripts/fixtures`); the counts are those the tests measure.
+
+<Rows
+  title="What the tests hold"
+  rows={[
+    {
+      group: "Read and drawn",
+      key: "CommonMark Spec 0.31.2",
+      value:
+        "652 examples. Read: all 652 as the parser alone reads them. Drawn: 462 as the spec draws them; 96 links to other than http, https or mailto as their words; 22 pictures as their words; 65 with raw HTML, shown as its text; 2 fifth or sixth headings as fourth ones; 5 bare web or mail addresses linked, as GitHub links them",
+    },
+    {
+      group: "Read and drawn",
+      key: "GitHub Flavored Markdown",
+      value:
+        "54 examples. Read: 52 as the parser alone reads them, 2 with a strike of one tilde read as a tilde. Drawn: 46 as cmark-gfm draws them; 1 link to ftp as its words; 3 with raw HTML, shown as its text; 2 with a tilde for a strike; 2 that micromark reads otherwise than cmark-gfm or that have no HTML",
+    },
+    {
+      group: "While it is written",
+      key: "Answers",
+      value:
+        "10 answers as a model writes them, 9,258 prefixes, a character at a time: a raw mark shows at 13 and something is taken back at 1, all one star inside a word that CommonMark pairs with a later one (5*3 … 2*2)",
+    },
+    {
+      group: "While it is written",
+      key: "Streamdown's tests",
+      value:
+        "966 inputs of their tests, each a half-written answer: Markdown shows the same as remend for 822, fewer raw marks for 95, holds back a mark or a bracket still being written for 43 (remend shows it), and more raw marks for 6: a star inside a word, or a bracket that ran past its line, which it leaves as words",
+    },
+    {
+      group: "Untrusted text",
+      key: "Every prefix",
+      value:
+        "Of a hostile answer, written and cut off: no link to other than http, https or mailto, no element made from HTML",
+    },
+    {
+      group: "Untrusted text",
+      key: "Hostile sizes",
+      value:
+        "Answers no model writes (nesting thousands deep, 100 KB of brackets, a list of 100,000 items) take time in step with their length",
+    },
+  ]}
+/>
 
 <Part title="Using it" />
 

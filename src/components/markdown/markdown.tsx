@@ -6,6 +6,7 @@
 //   <Markdown>{answer}</Markdown>
 //   <Markdown streaming>{partial}</Markdown>
 //   <Markdown renderLink={(link) => …}>{answer}</Markdown>     the host draws the links
+//   <Markdown components={{ code: MyCode }}>{answer}</Markdown>  the host draws elements, by name
 //
 // While it streams, what is half-written is made whole (parse.ts, repair): bold is bold from its
 // first letter, a table is a table from its first row, an open fence is code still being written,
@@ -13,7 +14,9 @@
 // when a mark closes. The words come as they are given: pacing them is the message's job.
 //
 // It knows no router and no citation: the host draws any link it wants to (`renderLink`, or a part
-// around it through MarkdownLinkProvider). Every value is a token. A caller sets layout only.
+// around it through MarkdownLinkProvider), and any element it wants to (`components`, by the names
+// react-markdown and Streamdown use), within the same safe defaults. Every value is a token. A
+// caller sets layout only.
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
@@ -26,7 +29,7 @@ import {
   useRef,
   useState,
 } from "react";
-import type { FC, ReactNode } from "react";
+import type { ComponentProps, ComponentType, FC, ReactNode } from "react";
 
 import { useI18n } from "../../lib/i18n";
 import { CheckIcon, ChevronRightIcon, Icon } from "../../lib/icons";
@@ -69,6 +72,7 @@ import {
 import { tableVars } from "../table.stylex";
 import {
   bounded,
+  encodedUrl,
   groupSections,
   NOTHING,
   openFence,
@@ -84,6 +88,7 @@ import type {
   Grouped,
   List,
   ListItem,
+  MarkdownNode,
   Paragraph,
   PhrasingContent,
   Placed,
@@ -107,6 +112,46 @@ export interface MarkdownLink {
 
 /** Draws a link in Markdown's place, or gives undefined to leave it to Markdown. */
 export type MarkdownLinkRenderer = (link: MarkdownLink) => ReactNode;
+
+/** The elements Markdown draws that a caller may draw instead, by their HTML names. */
+type MarkdownElement =
+  | "a"
+  | "blockquote"
+  | "code"
+  | "del"
+  | "em"
+  | "h1"
+  | "h2"
+  | "h3"
+  | "h4"
+  | "h5"
+  | "h6"
+  | "hr"
+  | "img"
+  | "li"
+  | "ol"
+  | "p"
+  | "pre"
+  | "strong"
+  | "table"
+  | "tbody"
+  | "td"
+  | "th"
+  | "thead"
+  | "tr"
+  | "ul";
+
+/**
+ * Elements drawn in Markdown's place, by their HTML names, as react-markdown's and Streamdown's
+ * `components` are: each is given the element's own props (its `children`; `href` and `title` for
+ * `a`, `src`, `alt` and `title` for `img`, `className` `language-…` for fenced code, `start` for `ol`,
+ * `style.textAlign` for a cell) and the syntax tree's `node` it draws.
+ */
+export type MarkdownComponents = {
+  [Tag in MarkdownElement]?: ComponentType<
+    ComponentProps<Tag> & { node: MarkdownNode }
+  >;
+};
 
 /** How a single newline inside a paragraph is drawn: a space, a line break, or a break only in a paragraph of short lines. */
 export type MarkdownSoftBreaks = "space" | "line" | "auto";
@@ -173,6 +218,18 @@ export interface MarkdownProps {
    * While an answer streams, its last link's address can still grow: it is called again as it does.
    */
   renderLink?: MarkdownLinkRenderer;
+  /**
+   * Draws elements in Markdown's place, by their HTML names (`{ code: MyCode, a: MyLink }`), as
+   * react-markdown's and Streamdown's `components`; any element left out is Markdown's own. The safe
+   * defaults hold: `a` is given only a link Markdown would draw (http, https or mailto, its address
+   * whole), its address encoded as CommonMark has it; any other link is its words. `img` draws a
+   * picture whose address is http or https, which is never loaded otherwise: giving it is the
+   * choice to load pictures, and it checks the addresses it trusts. `code` draws code in a sentence
+   * and fenced code (its `node.type` is `code`, its `className` `language-…`), in CodeBlock's place;
+   * `pre`, when given, holds fenced code's `code`. Headings are named by the level they are drawn at
+   * (`headingLevel`). Task boxes and footnotes stay Markdown's own.
+   */
+  components?: MarkdownComponents;
   /** Layout only: where it sits and how much room it takes. */
   style?: LayoutStyle;
 }
@@ -499,6 +556,10 @@ interface Context {
   references: Map<RootContent, number>;
   /** Each table's name: the words of the heading above it. */
   tableNames: Map<RootContent, string>;
+  /** The notes the answer defines: a mark of one not yet defined (still coming) leads nowhere yet. */
+  noted: Set<string>;
+  /** The caller's elements, by name (`components`). */
+  components: MarkdownComponents;
   /** The parts that draw a phrase and a block, handed down so the parts above can draw them. */
   Inline: FC<{ node: PhrasingContent; context: Context }>;
   Block: FC<{ node: RootContent; context: Context }>;
@@ -638,6 +699,22 @@ const inParagraph = (node: Paragraph, context: Context): Context => {
     : { ...context, lineBreaks };
 };
 
+/** The caller's element for `tag` (`components`), given its props and the node it draws, or Markdown's own. */
+const elementOf = <Tag extends MarkdownElement>(
+  context: Context,
+  tag: Tag,
+  node: MarkdownNode,
+  props: ComponentProps<Tag>,
+  own: ReactNode
+): ReactNode => {
+  // SAFETY: `components` maps each tag to a part that takes that tag's props and the node, which is
+  // what it is given here; TypeScript cannot follow a tag that is a type parameter through the map.
+  const Custom = context.components[tag] as
+    | ComponentType<ComponentProps<Tag> & { node: MarkdownNode }>
+    | undefined;
+  return Custom === undefined ? own : <Custom {...props} node={node} />;
+};
+
 const Phrasing = ({
   nodes,
   context,
@@ -649,12 +726,9 @@ const Phrasing = ({
     <context.Inline key={index} node={node} context={context} />
   ));
 
-/** The first letters of a web address, or a `#` repair put in: no address of the link's own yet. */
+/** No address of the link's own yet: none (a reference whose definition is still to come), or the first letters of a web address. */
 const isPlaceholder = (url: string | undefined) =>
-  url === undefined ||
-  url === "#" ||
-  "https://".startsWith(url) ||
-  "http://".startsWith(url);
+  url === undefined || "https://".startsWith(url) || "http://".startsWith(url);
 
 /**
  * Whether a link still being written will get an arrow, as far as its address tells yet: none so
@@ -742,7 +816,7 @@ const LinkInline = ({
   // Markdown's own link waits for its whole address: half of one (`https://exa`) would lead to
   // another site. Until then, its words, with the room its arrow will take, so the words after it
   // never move when the address is whole.
-  const href = coming ? null : safeHref(url);
+  const href = coming || url === undefined ? null : safeHref(encodedUrl(url));
   if (href === null || context.inLink) {
     return context.streaming && !context.inLink && isComing(url) ? (
       <>
@@ -754,15 +828,24 @@ const LinkInline = ({
       words
     );
   }
+  const Custom = context.components.a;
+  if (Custom !== undefined) {
+    return (
+      <Custom node={node} href={href} title={title}>
+        {words}
+      </Custom>
+    );
+  }
   return (
-    <Link href={href} external={!href.startsWith("mailto:")}>
+    <Link href={href} title={title} external={!href.startsWith("mailto:")}>
       {words}
     </Link>
   );
 };
 
-// A picture is never loaded (no request leaves for it): the host draws it (`renderLink`, type
-// `image`), or it is shown by its words and leads to the picture when it may.
+// A picture is never loaded (no request leaves for it) unless the host draws it (`renderLink`, type
+// `image`, or `components.img` for one at an http or https address); otherwise it is shown by its
+// words and leads to the picture when it may.
 const PictureInline = ({
   node,
   context,
@@ -783,13 +866,17 @@ const PictureInline = ({
       return drawn;
     }
   }
-  const href = safeHref(url);
+  const href = url === undefined ? null : safeHref(encodedUrl(url));
+  const Picture = context.components.img;
+  if (Picture !== undefined && href !== null && /^https?:/u.test(href)) {
+    return <Picture node={node} src={href} alt={alt} title={title} />;
+  }
   const words = alt === "" ? (href ?? "") : alt;
   if (href === null || context.inLink) {
     return words;
   }
   return (
-    <Link href={href} external>
+    <Link href={href} title={title} external>
       {words}
     </Link>
   );
@@ -808,6 +895,16 @@ const NoteMark = ({
   }
   if (context.inLink) {
     return String(number);
+  }
+  // Its note is still coming: its number, leading nowhere yet.
+  if (!context.noted.has(node.identifier)) {
+    return (
+      <sup {...stylex.props(styles.footnoteMark)}>
+        <span aria-label={context.words.footnote(number)}>
+          {String(number)}
+        </span>
+      </sup>
+    );
   }
   // Each reference has its own id; the note leads back to the first.
   const nth = context.references.get(node);
@@ -842,28 +939,41 @@ const Inline = ({
       return context.lineBreaks ? withBreaks(node.value) : node.value;
     }
     case "strong": {
-      return (
-        <strong {...stylex.props(styles.strong)}>
-          <Phrasing nodes={node.children} context={context} />
-        </strong>
+      const children = <Phrasing nodes={node.children} context={context} />;
+      return elementOf(
+        context,
+        "strong",
+        node,
+        { children },
+        <strong {...stylex.props(styles.strong)}>{children}</strong>
       );
     }
     case "emphasis": {
-      return (
-        <em {...stylex.props(styles.emphasis)}>
-          <Phrasing nodes={node.children} context={context} />
-        </em>
+      const children = <Phrasing nodes={node.children} context={context} />;
+      return elementOf(
+        context,
+        "em",
+        node,
+        { children },
+        <em {...stylex.props(styles.emphasis)}>{children}</em>
       );
     }
     case "delete": {
-      return (
-        <del {...stylex.props(styles.deleted)}>
-          <Phrasing nodes={node.children} context={context} />
-        </del>
+      const children = <Phrasing nodes={node.children} context={context} />;
+      return elementOf(
+        context,
+        "del",
+        node,
+        { children },
+        <del {...stylex.props(styles.deleted)}>{children}</del>
       );
     }
     case "inlineCode": {
-      return (
+      return elementOf(
+        context,
+        "code",
+        node,
+        { children: node.value },
         <code
           {...stylex.props(
             styles.inlineCode,
@@ -914,7 +1024,13 @@ const TaskBox = ({ done, said }: { done: boolean; said: string }) => (
   </>
 );
 
-const Item = ({ item, context }: { item: ListItem; context: Context }) => {
+const Item = ({
+  item,
+  context,
+}: {
+  item: ListItem;
+  context: Context;
+}): ReactNode => {
   const body = (
     <div {...stylex.props(styles.itemBody)}>
       {item.children.map((child, index) =>
@@ -933,44 +1049,73 @@ const Item = ({ item, context }: { item: ListItem; context: Context }) => {
     </div>
   );
   if (item.checked === null || item.checked === undefined) {
-    return <li {...stylex.props(styles.item)}>{body}</li>;
+    return elementOf(
+      context,
+      "li",
+      item,
+      { children: body },
+      <li {...stylex.props(styles.item)}>{body}</li>
+    );
   }
-  return (
-    <li {...stylex.props(styles.item, styles.task)}>
+  const children = (
+    <>
       <TaskBox
         done={item.checked}
         said={item.checked ? context.words.done : context.words.notDone}
       />
       {body}
-    </li>
+    </>
+  );
+  return elementOf(
+    context,
+    "li",
+    item,
+    { children },
+    <li {...stylex.props(styles.item, styles.task)}>{children}</li>
   );
 };
 
-const ListBlock = ({ node, context }: { node: List; context: Context }) => {
+const ListBlock = ({
+  node,
+  context,
+}: {
+  node: List;
+  context: Context;
+}): ReactNode => {
   const items = node.children.map((item, index) => (
     <Item key={index} item={item} context={context} />
   ));
-  return node.ordered === true ? (
-    <ol
-      start={node.start ?? undefined}
-      {...stylex.props(styles.list, styles.ordered)}
-    >
-      {items}
-    </ol>
-  ) : (
-    <ul {...stylex.props(styles.list, styles.unordered)}>{items}</ul>
-  );
+  const start = node.start ?? undefined;
+  return node.ordered === true
+    ? elementOf(
+        context,
+        "ol",
+        node,
+        { start, children: items },
+        <ol start={start} {...stylex.props(styles.list, styles.ordered)}>
+          {items}
+        </ol>
+      )
+    : elementOf(
+        context,
+        "ul",
+        node,
+        { children: items },
+        <ul {...stylex.props(styles.list, styles.unordered)}>{items}</ul>
+      );
 };
 
 // A table scrolls sideways inside its own box, with no bar (Table's), so a wide one never widens the
-// answer. A row arrives whole, when its line has ended (repair), so its cells come in together.
+// answer. A row arrives whole, when its line has ended (repair), so its cells come in together. Every
+// row has as many cells as the head, as GitHub draws it: a short row's last are empty, a long one's
+// extra cells go.
 const TableBlock = ({
   node,
   context,
 }: {
   node: TableNode;
   context: Context;
-}) => {
+}): ReactNode => {
   const [head, ...rows] = node.children;
   // A table that was written here keeps the even columns it had as its rows came, for as long as
   // it is on the page: its cells never move, not when a row comes and not when it is whole.
@@ -978,37 +1123,91 @@ const TableBlock = ({
   if (node === context.writing && !written) {
     setWritten(true);
   }
-  const align = (column: number) => {
+  const columns = Array.from(head?.children ?? [], (_, column) => {
     const side = node.align?.[column];
     return side === null || side === undefined ? "start" : sides[side];
+  });
+  const cellOf = (
+    row: TableNode["children"][number],
+    tag: "th" | "td",
+    align: (typeof columns)[number],
+    column: number
+  ): ReactNode => {
+    const cell = row.children[column];
+    const children =
+      cell === undefined ? null : (
+        <Phrasing nodes={cell.children} context={context} />
+      );
+    return (
+      <Fragment key={column}>
+        {elementOf(
+          context,
+          tag,
+          cell ?? row,
+          { align: node.align?.[column] ?? undefined, children },
+          tag === "th" ? (
+            <TableHead align={align}>{children}</TableHead>
+          ) : (
+            <TableCell align={align}>{children}</TableCell>
+          )
+        )}
+      </Fragment>
+    );
   };
-  return (
+  const rowOf = (
+    row: TableNode["children"][number],
+    tag: "th" | "td"
+  ): ReactNode => {
+    const cells = columns.map((align, column): ReactNode =>
+      cellOf(row, tag, align, column)
+    );
+    return elementOf(
+      context,
+      "tr",
+      row,
+      { children: cells },
+      <TableRow>{cells}</TableRow>
+    );
+  };
+  const header =
+    head === undefined
+      ? null
+      : elementOf(
+          context,
+          "thead",
+          node,
+          { children: rowOf(head, "th") },
+          <TableHeader>{rowOf(head, "th")}</TableHeader>
+        );
+  const bodyRows = rows.map((row, index) => (
+    <Fragment key={index}>{rowOf(row, "td")}</Fragment>
+  ));
+  const body = elementOf(
+    context,
+    "tbody",
+    node,
+    { children: bodyRows },
+    <TableBody>{bodyRows}</TableBody>
+  );
+  return elementOf(
+    context,
+    "table",
+    node,
+    {
+      "aria-label": context.tableNames.get(node) ?? context.words.table,
+      children: (
+        <>
+          {header}
+          {body}
+        </>
+      ),
+    },
     <Table
       aria-label={context.tableNames.get(node) ?? context.words.table}
       streaming={written}
     >
-      {head !== undefined && (
-        <TableHeader>
-          <TableRow>
-            {head.children.map((cell, column) => (
-              <TableHead key={column} align={align(column)}>
-                <Phrasing nodes={cell.children} context={context} />
-              </TableHead>
-            ))}
-          </TableRow>
-        </TableHeader>
-      )}
-      <TableBody>
-        {rows.map((row, index) => (
-          <TableRow key={index}>
-            {row.children.map((cell, column) => (
-              <TableCell key={column} align={align(column)}>
-                <Phrasing nodes={cell.children} context={context} />
-              </TableCell>
-            ))}
-          </TableRow>
-        ))}
-      </TableBody>
+      {header}
+      {body}
     </Table>
   );
 };
@@ -1033,12 +1232,17 @@ const Heading = ({
 }: {
   node: HeadingNode;
   context: Context;
-}) => {
+}): ReactNode => {
   // The fifth and sixth depths are drawn and placed as the fourth, from the caller's level on.
   const depth = Math.min(node.depth, 4);
   const Tag =
     headingTags[Math.min(context.headingLevel - 1 + depth, 6) - 1] ?? "h6";
-  return (
+  const children = <Phrasing nodes={node.children} context={context} />;
+  return elementOf(
+    context,
+    Tag,
+    node,
+    { children },
     <Tag
       {...stylex.props(
         styles.heading,
@@ -1046,7 +1250,7 @@ const Heading = ({
         context.greedy && styles.greedy
       )}
     >
-      <Phrasing nodes={node.children} context={context} />
+      {children}
     </Tag>
   );
 };
@@ -1062,12 +1266,16 @@ const Block = ({
 }): ReactNode => {
   switch (node.type) {
     case "paragraph": {
-      return (
+      const children = (
+        <Phrasing nodes={node.children} context={inParagraph(node, context)} />
+      );
+      return elementOf(
+        context,
+        "p",
+        node,
+        { children },
         <p {...stylex.props(styles.paragraph, context.greedy && styles.greedy)}>
-          <Phrasing
-            nodes={node.children}
-            context={inParagraph(node, context)}
-          />
+          {children}
         </p>
       );
     }
@@ -1078,18 +1286,37 @@ const Block = ({
       return <ListBlock node={node} context={context} />;
     }
     case "blockquote": {
-      return (
-        <blockquote {...stylex.props(styles.quote)}>
-          {node.children.map((child, index) => (
-            <Block key={index} node={child} context={context} />
-          ))}
-        </blockquote>
+      const children = node.children.map((child, index) => (
+        <Block key={index} node={child} context={context} />
+      ));
+      return elementOf(
+        context,
+        "blockquote",
+        node,
+        { children },
+        <blockquote {...stylex.props(styles.quote)}>{children}</blockquote>
       );
     }
     case "thematicBreak": {
-      return <Separator />;
+      return elementOf(context, "hr", node, {}, <Separator />);
     }
     case "code": {
+      const { code: Code, pre: Pre } = context.components;
+      if (Code !== undefined || Pre !== undefined) {
+        const className =
+          node.lang === null || node.lang === undefined
+            ? undefined
+            : `language-${node.lang}`;
+        const code =
+          Code === undefined ? (
+            <code className={className}>{node.value}</code>
+          ) : (
+            <Code node={node} className={className}>
+              {node.value}
+            </Code>
+          );
+        return Pre === undefined ? code : <Pre node={node}>{code}</Pre>;
+      }
       return (
         <CodeBlock
           language={node.lang ?? "text"}
@@ -1127,7 +1354,7 @@ const Block = ({
  * reference to a note counted in the order it is drawn (the answer, then the notes at its foot), so
  * each has its own id and drawing it twice (StrictMode) changes nothing.
  */
-const gather = (nodes: RootContent[]) => {
+const gather = (nodes: RootContent[], written: boolean) => {
   const definitions = new Map<
     string,
     { url: string; title: string | undefined }
@@ -1153,6 +1380,10 @@ const gather = (nodes: RootContent[]) => {
     const note = found.get(id);
     return note === undefined ? [] : [note];
   });
+  // Each note numbered by where it is first referred to. While the answer is written, a note whose
+  // words have not arrived yet has its number too, so no number moves when they do.
+  const numbered = written ? order : notes.map((note) => note.identifier);
+  const footnotes = new Map(numbered.map((id, index) => [id, index + 1]));
   // A reference inside a link is drawn as its number only, with no id: it is not counted.
   const references = new Map<RootContent, number>();
   const counted = new Map<string, number>();
@@ -1168,7 +1399,7 @@ const gather = (nodes: RootContent[]) => {
     count
   );
   eachNode(notes, count);
-  return { definitions, notes, references };
+  return { definitions, notes, references, footnotes };
 };
 
 /** Each table's name: the words of the heading that stands above it. */
@@ -1195,22 +1426,29 @@ const Notes = ({
   context: Context;
 }) => (
   <ol {...stylex.props(styles.footnotes)}>
-    {notes.map((note, index) => (
-      <li key={note.identifier} id={`${context.prefix}-fn-${index + 1}`}>
-        {note.children.map((child, at) =>
-          child.type === "paragraph" ? (
-            <span key={at}>
-              <Phrasing nodes={child.children} context={context} />{" "}
-              <Link href={`#${context.prefix}-ref-${index + 1}-1`}>
-                {context.words.back(index + 1)}
-              </Link>
-            </span>
-          ) : (
-            <Block key={at} node={child} context={context} />
-          )
-        )}
-      </li>
-    ))}
+    {notes.map((note, index) => {
+      const number = context.footnotes.get(note.identifier) ?? index + 1;
+      return (
+        <li
+          key={note.identifier}
+          value={number}
+          id={`${context.prefix}-fn-${number}`}
+        >
+          {note.children.map((child, at) =>
+            child.type === "paragraph" ? (
+              <span key={at}>
+                <Phrasing nodes={child.children} context={context} />{" "}
+                <Link href={`#${context.prefix}-ref-${number}-1`}>
+                  {context.words.back(number)}
+                </Link>
+              </span>
+            ) : (
+              <Block key={at} node={child} context={context} />
+            )
+          )}
+        </li>
+      );
+    })}
   </ol>
 );
 
@@ -1224,15 +1462,17 @@ const useAnswer = (source: string, streaming: boolean, truncated: boolean) => {
     setStreamed(true);
   }
   if (!streaming) {
+    const tidied = truncated || streamed;
     return {
-      shown: truncated || streamed ? tidy(source) : source,
+      shown: tidied ? tidy(source) : source,
       kept: Number.POSITIVE_INFINITY,
       written: streamed,
+      tidied,
     };
   }
   // `kept`: how much of it is the stream's own; past it, repair closed what was still open.
   const { text, kept } = repair(source);
-  return { shown: text, kept, written: true };
+  return { shown: text, kept, written: true, tidied: true };
 };
 
 /**
@@ -1298,7 +1538,7 @@ const useBlocks = (shown: string, live: boolean): Placed[] => {
     }
     return parseMarkdown(shown).children.map((node) => ({ node, base: 0 }));
   }
-  const read = readBlocks(shown, kept);
+  const read = readBlocks(shown, kept, live);
   if (read.kept !== kept) {
     setKept(read.kept);
   }
@@ -1389,6 +1629,9 @@ const GroupedBlock = ({
   );
 };
 
+/** No elements of the caller's: every one is Markdown's own. */
+const NO_COMPONENTS: MarkdownComponents = {};
+
 /** An answer drawn from Markdown, safe while it streams. */
 export const Markdown = ({
   children: source,
@@ -1400,19 +1643,21 @@ export const Markdown = ({
   softBreaks = "space",
   codeMaxLines = 18,
   renderLink,
+  components = NO_COMPONENTS,
   style,
 }: MarkdownProps) => {
   const words = useI18n().markdown;
   const prefix = useId().replaceAll(":", "");
-  const { shown, kept, written } = useAnswer(
+  const { shown, kept, written, tidied } = useAnswer(
     bounded(source),
     streaming,
     truncated
   );
   const provided = use(ProvidedLinks);
   const all = useBlocks(shown, streaming);
-  const { definitions, notes, references } = gather(
-    all.map(({ node }) => node)
+  const { definitions, notes, references, footnotes } = gather(
+    all.map(({ node }) => node),
+    streaming
   );
   const placed = all.filter(
     ({ node }) =>
@@ -1428,9 +1673,9 @@ export const Markdown = ({
     provided,
     kept,
     base: 0,
-    footnotes: new Map(
-      notes.map((note, index) => [note.identifier, index + 1])
-    ),
+    footnotes,
+    noted: new Set(notes.map((note) => note.identifier)),
+    components,
     prefix,
     streaming,
     codeMaxLines,
@@ -1463,7 +1708,7 @@ export const Markdown = ({
         style
       )}
     >
-      {groupSections(placed).map((grouped, index) => (
+      {groupSections(placed, tidied).map((grouped, index) => (
         // A block keeps its place by its order, so one that is already shown never fades in again.
         <GroupedBlock key={index} grouped={grouped} context={context} />
       ))}

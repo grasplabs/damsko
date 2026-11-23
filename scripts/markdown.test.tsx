@@ -629,3 +629,110 @@ describe("footnotes", () => {
     expect(html).toContain(`href="#${ids[0] ?? ""}"`);
   });
 });
+
+describe("components", () => {
+  test("a caller's `a` and `code` draw links and code, given the element's props and the node", () => {
+    const html = draw(
+      'See [the guide](https://example.com/guide "Guide") and `x`.\n\n```ts\nconst a = 1;\n```',
+      {
+        components: {
+          a: ({ href, title, children, node }) => (
+            <i data-href={href} data-title={title} data-node={node.type}>
+              {children}
+            </i>
+          ),
+          code: ({ className, children, node }) => (
+            <kbd data-class={className} data-node={node.type}>
+              {children}
+            </kbd>
+          ),
+        },
+      }
+    );
+    expect(html).toContain(
+      '<i data-href="https://example.com/guide" data-title="Guide" data-node="link">the guide</i>'
+    );
+    expect(html).toContain('<kbd data-node="inlineCode">x</kbd>');
+    expect(html).toContain(
+      '<kbd data-class="language-ts" data-node="code">const a = 1;</kbd>'
+    );
+    expect(anchors(html)).toStrictEqual([]);
+  });
+
+  test("`a` is given only a link Markdown would draw, its address encoded as CommonMark has it", () => {
+    const seen: (string | undefined)[] = [];
+    const html = draw(
+      `[x](${JS}:alert(1)) [y](/relative) [z](data:text/html,x) <https://example.com/a\\b>`,
+      {
+        components: {
+          a: ({ href, children }) => {
+            seen.push(href);
+            return <i>{children}</i>;
+          },
+        },
+      }
+    );
+    expect(seen).toStrictEqual(["https://example.com/a%5Cb"]);
+    expect(textOf(html)).toContain("x y z");
+  });
+
+  test("a picture is drawn only by a caller's `img`, and only from http or https", () => {
+    const source =
+      '![chart](https://img.example.com/c.png "Chart") ![x](data:image/png;base64,AAAA)';
+    expect(draw(source)).not.toMatch(/<img/u);
+    const html = draw(source, {
+      components: {
+        img: ({ src, alt, title }) => <img src={src} alt={alt} title={title} />,
+      },
+    });
+    expect(html.match(/<img [^>]*>/gu)).toStrictEqual([
+      '<img src="https://img.example.com/c.png" alt="chart" title="Chart"/>',
+    ]);
+  });
+
+  test("headings by the level they are drawn at; table cells as many as the head", () => {
+    const html = draw("# Top\n\n| a | b |\n| - | -: |\n| 1 |\n| 1 | 2 | 3 |", {
+      headingLevel: 2,
+      components: {
+        h2: ({ children }) => <b data-level="2">{children}</b>,
+        td: ({ children, align }) => <td data-align={align}>{children}</td>,
+      },
+    });
+    expect(html).toContain('<b data-level="2">Top</b>');
+    expect(html.match(/<td\b[^>]*>[^<]*<\/td>/gu)).toStrictEqual([
+      "<td>1</td>",
+      '<td data-align="right"></td>',
+      "<td>1</td>",
+      '<td data-align="right">2</td>',
+    ]);
+  });
+});
+
+describe("links' titles and notes while written", () => {
+  test("a link's title is its tooltip", () => {
+    expect(draw('[x](https://example.com "The title")')).toMatch(
+      /<a [^>]*title="The title"/u
+    );
+  });
+
+  test("a note's mark is its number before the note arrives, leading nowhere yet", () => {
+    const html = draw("A claim[^1] and more.", { streaming: true });
+    expect(html).toMatch(
+      /<sup\b[^>]*><span aria-label="Footnote 1">1<\/span><\/sup>/u
+    );
+    expect(textOf(html)).not.toContain("[^1]");
+    expect(anchors(html)).toStrictEqual([]);
+    expect(textOf(draw("A claim[^1] and more."))).toContain("[^1]");
+  });
+
+  test("a section is one from its summary while written, and stays so once tidied", () => {
+    const open = "<details>\n<summary>More</summary>\n\nWords.";
+    expect(draw(open, { streaming: true })).toContain(
+      'data-slot="markdown-section"'
+    );
+    expect(draw(open, { truncated: true })).toContain(
+      'data-slot="markdown-section"'
+    );
+    expect(draw(open)).not.toContain('data-slot="markdown-section"');
+  });
+});

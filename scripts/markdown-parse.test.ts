@@ -100,9 +100,10 @@ describe(repair, () => {
     expect(repair("**under 3% [2").text).toBe("**under 3%**");
   });
 
-  test("a task's box is not a link", () => {
-    expect(repair("- [ ").text).toBe("- [ ");
-    expect(repair("- [x]").text).toBe("- [x]");
+  test("a task's box waits for its words, and is no link", () => {
+    expect(repair("Done.\n\n- [ ").text).toBe("Done.\n\n");
+    expect(repair("Done.\n\n- [x]").text).toBe("Done.\n\n");
+    expect(repair("- [x] Sent").text).toBe("- [x] Sent");
   });
 
   test("a table is a table from its head, and a row waits for its line", () => {
@@ -138,6 +139,83 @@ describe(repair, () => {
     const source = "Words **bold";
     const { text, kept } = repair(source);
     expect(text.slice(0, kept)).toBe(source.slice(0, kept));
+  });
+});
+
+describe("repair, where remend's own tests found it wanting", () => {
+  test("bold and emphasis close innermost first, a run of three as both", () => {
+    expect(repair("***first*** and ***second").text).toBe(
+      "***first*** and ***second***"
+    );
+    for (const whole of [
+      "***first*** and ***second***",
+      "**bold and *italic*** more text",
+      "___both___ done",
+    ]) {
+      expect(repair(whole).text).toBe(whole);
+    }
+  });
+
+  test("a mark is read as CommonMark reads it, by what stands on each side", () => {
+    for (const words of [
+      "A_1 and x_i are subscripts, $n_{break}$ too",
+      "5*3 = 15, written with a star",
+      "20~25°C, and about ~5 minutes",
+      "\\_fully\\_escaped\\_",
+    ]) {
+      expect(repair(words).text).toBe(words);
+    }
+    expect(repair("before *a*b after *c").text).toBe("before *a*b after *c*");
+  });
+
+  test("a run like one still open did not close it, so neither is closed", () => {
+    for (const words of [
+      "**太字（説明）**と続き",
+      "***重要な情報（詳細）***続き",
+    ]) {
+      expect(repair(words).text).toBe(words);
+    }
+  });
+
+  test("code in a fence is code, however deep in quotes and lists, and its fence ends with them", () => {
+    for (const code of [
+      "1.  Install:\n    ```bash\n    npm install foo",
+      "~~~\ncode with __stuff\n~~~\ndone",
+      "> ```js\n> const x = a__b",
+    ]) {
+      expect(repair(code).text).toBe(code);
+    }
+    expect(repair("> ```\n> a__b\n\nafter __open").text).toBe(
+      "> ```\n> a__b\n\nafter __open__"
+    );
+  });
+
+  test("marks close in the block still being written, not across a list's items", () => {
+    expect(repair("* Item with *incomplete italic\n* Another item").text).toBe(
+      "* Item with *incomplete italic\n* Another item"
+    );
+    // A line just begun ends nothing: the paragraph may go on on it.
+    expect(repair("**bold\n").text).toBe("**bold**");
+  });
+
+  test("a tag or a bare address not yet closed waits, and so does a section's opening", () => {
+    expect(repair('Hello <div class="foo').text).toBe("Hello");
+    expect(repair("See <https://exa").text).toBe("See");
+    expect(repair("Done.\n\n<details>\n<summary>The lo").text).toBe(
+      "Done.\n\n"
+    );
+  });
+
+  test("a bracket or a note still being written waits, one after another", () => {
+    expect(repair("[link1 and [link2").text).toBe("");
+    expect(repair("on the rota [the wiki][ro").text).toBe("on the rota");
+    expect(repair("as the note says[^ol").text).toBe("as the note says");
+  });
+
+  test("a link's definition waits for its line's end", () => {
+    expect(
+      repair('Words.\n\n[rota]: https://wiki.example.com/rota "On-c').text
+    ).toBe("Words.\n\n");
   });
 });
 
@@ -1478,6 +1556,48 @@ describe("while a long block is written", () => {
     },
     SLOW_TEST
   );
+});
+
+describe("what an answer refers to", () => {
+  test("a link defined in a finished block is a link in the blocks after it", () => {
+    const { kept } = readBlocks(
+      "[docs]: https://example.com/docs\n\nRead",
+      NOTHING
+    );
+    const { blocks } = readBlocks(
+      "[docs]: https://example.com/docs\n\nRead [docs].",
+      kept
+    );
+    expect(kept.blocks).toHaveLength(1);
+    expect(shapeOf(blocks.at(-1)?.node ?? { type: "none" })).toBe(
+      "paragraph(text,linkReference(text),text)"
+    );
+  });
+
+  test("while written, a note or a reference whose definition is still to come is one already", () => {
+    const { blocks } = readBlocks(
+      "A claim[^1] and [the wiki][wiki].",
+      NOTHING,
+      true
+    );
+    expect(shapeOf(blocks[0]?.node ?? { type: "none" })).toBe(
+      "paragraph(text,footnoteReference,text,linkReference(text),text)"
+    );
+    expect(
+      shapeOf(
+        readBlocks("A claim[^1].", NOTHING).blocks[0]?.node ?? { type: "none" }
+      )
+    ).toBe("paragraph(text)");
+  });
+
+  test("a list item's `>` before a number says greater than, and a strike is two tildes", () => {
+    expect(wordsOf(boundedTree("- > 25: rich"))).toBe("> 25: rich");
+    expect(
+      shapeOf(
+        parseMarkdown("20~25°C and ~~gone~~").children[0] ?? { type: "none" }
+      )
+    ).toBe("paragraph(text,delete(text))");
+  });
 });
 
 describe(readBlocks, () => {

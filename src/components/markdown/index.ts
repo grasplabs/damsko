@@ -3,10 +3,11 @@
 // tested as plain functions, and markdown.tsx draws what it reads.
 export { Markdown, MarkdownLinkProvider } from "./markdown";
 export type {
+  MarkdownComponents,
   MarkdownLink,
   MarkdownLinkRenderer,
   MarkdownProps,
   MarkdownSoftBreaks,
 } from "./markdown";
 export { parseMarkdown } from "./parse";
-export type { MarkdownRoot } from "./parse";
+export type { MarkdownNode, MarkdownRoot } from "./parse";
