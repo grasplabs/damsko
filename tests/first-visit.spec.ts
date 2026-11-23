@@ -15,9 +15,16 @@
 // file's range named, and fetched that file (29KB) on some visits. The common file now answers
 // for every character first, so nothing is asked of the full file while it loads.
 //
-// The pages below need more, each for what it loads, said beside it: what the page takes, plus a
-// request and about 10KB.
+// What keeps a page light: an example is drawn on the server and its code is fetched only when it
+// comes within a screen of view, each example a file of its own with the components it draws
+// (site/system/vite.ts, exampleChunk), so a page takes the code of its first screens and no more.
+// The two tests at the end hold that: an example far down the page sleeps until it is near, wakes
+// in the place it was drawn in, and is woken by an address that names its section.
+//
+// The page below needs more requests, for what it loads, said beside it: what the page takes, plus
+// a request. No page needs more bytes: the heaviest, the data table's, takes 542KB.
 import { expect, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 import { docsPages, settled } from "./example.ts";
 
@@ -33,31 +40,10 @@ const sum = (list: { bytes: number }[]) => {
 const limits = { requests: 26, bytes: 600 * 1024, fonts: 150 * 1024 };
 
 const over: Record<string, { requests?: number; bytes?: number }> = {
-  // Markdown (micromark and GFM, with Code block) in its bubble-with-Markdown example.
-  "/components/bubble": { bytes: 620 * 1024 },
-  // The chart library, drawn on the page.
-  "/components/chart": { bytes: 710 * 1024 },
-  // The settings example holds a Data table (TanStack Table, Pagination, Checkbox).
-  "/components/container": { requests: 34, bytes: 650 * 1024 },
-  // TanStack Table and every part a data table draws.
-  "/components/data-table": { requests: 30, bytes: 680 * 1024 },
-  // A field round every control: date picker, calendar, combobox, number field, tags and OTP.
-  "/components/field": { requests: 30, bytes: 620 * 1024 },
-  // The row example sets the tile in a Data table (TanStack Table, Pagination, Checkbox).
-  "/components/icon-tile": { requests: 29, bytes: 630 * 1024 },
-  // Markdown with Code block and Prism, its own subject.
-  "/components/markdown": { requests: 29, bytes: 630 * 1024 },
-  // MessageResponse's Markdown, once its answers draw, Message scroller, and Reasoning in a turn.
-  "/components/message": { requests: 32, bytes: 630 * 1024 },
-  // Prompt input and the parts its examples compose: the page stood 152 bytes under the limit,
-  // and the docs' own Sidebar and Snippet, on every page, then grew by under 1KB.
-  "/components/prompt-input": { bytes: 610 * 1024 },
-  // Reasoning, which loads Markdown with it for its thoughts.
-  "/components/reasoning": { requests: 29, bytes: 620 * 1024 },
-  // Prism, for the commit example's diffs: it is the row that opens, in view on the first screen.
-  "/components/trace": { requests: 27 },
-  // Tool, which loads Code block and Prism with it for its input and output.
-  "/components/tool": { requests: 28 },
+  // Its one example on the first screen is a whole settings page: a Data table (TanStack Table,
+  // Table, Pagination, Checkbox, Select) under a Page header, with a Card, a Switch, an Avatar
+  // and the Alert dialog and Toast its rows answer with, each component a file. It takes 30.
+  "/components/container": { requests: 31 },
 };
 
 for (const path of docsPages().filter((each) =>
@@ -103,3 +89,63 @@ for (const path of docsPages().filter((each) =>
     expect(bytes).toBeLessThanOrEqual(over[path]?.bytes ?? limits.bytes);
   });
 }
+
+/** The scroller's height and where an example stands in it, to the pixel. */
+const placeOf = async (page: Page, example: string) =>
+  await page.evaluate((path) => {
+    const island = document.querySelector(
+      `damsko-island[data-example="${path}"]`
+    );
+    const scroller = island?.closest("[data-site-scroller]");
+    const box = island?.firstElementChild?.getBoundingClientRect();
+    return {
+      asleep: island?.matches(":not([data-island-live])") === true,
+      pageHeight: scroller?.scrollHeight,
+      top: (box?.top ?? 0) + (scroller?.scrollTop ?? 0),
+      height: box?.height,
+    };
+  }, example);
+
+/** Waits until an example on a docs page is live (site/system/island.ts drops `ssr`). */
+const awake = async (page: Page, example: string) => {
+  await page.waitForFunction(
+    (path) =>
+      document
+        .querySelector(`damsko-island[data-example="${path}"]`)
+        ?.hasAttribute("ssr") === false,
+    example
+  );
+};
+
+test("an example far down a page sleeps until it is near, and wakes in its place", async ({
+  page,
+}) => {
+  await page.goto(new URL("/components/button", process.env.BASE_URL).href);
+  await settled(page);
+  await page.waitForLoadState("networkidle");
+  const before = await placeOf(page, "button/truncate");
+  expect(before.asleep).toBe(true);
+  await page
+    .getByRole("heading", { name: "A long name in a narrow head" })
+    .scrollIntoViewIfNeeded();
+  await awake(page, "button/truncate");
+  expect(await placeOf(page, "button/truncate")).toEqual({
+    ...before,
+    asleep: false,
+  });
+});
+
+test("an address that names a section wakes the example under it", async ({
+  page,
+}) => {
+  await page.goto(
+    new URL(
+      "/components/button#a-long-name-in-a-narrow-head",
+      process.env.BASE_URL
+    ).href
+  );
+  await awake(page, "button/truncate");
+  await expect(
+    page.getByRole("heading", { name: "A long name in a narrow head" })
+  ).toBeInViewport();
+});

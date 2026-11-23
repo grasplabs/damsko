@@ -1,11 +1,11 @@
 // The Vite plugins the docs site needs beyond Astro's own, used by astro.config.ts. Each says why it
 // exists; most carry over something learnt under the previous docs system, the docs system before this one.
 import { createHash } from "node:crypto";
-import { writeFileSync } from "node:fs";
+import { readdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 import { isRunnableDevEnvironment } from "vite";
-import type { EnvironmentModuleNode, Plugin } from "vite";
+import type { EnvironmentModuleNode, Plugin, Rolldown } from "vite";
 
 import { buildSearchIndex } from "../search-index.ts";
 import { root } from "./content.ts";
@@ -15,7 +15,7 @@ import { root } from "./content.ts";
 /**
  * In a build, StyleX's plugin appends all the CSS it collected to one CSS file it picks itself. Here
  * the CSS is a sheet of its own, `/_astro/stylex.css`, under a name that never changes (as the
- * examples' map: ./examples-map.ts), so a change to one style changes this file and the pages whose
+ * examples' maps: examplesMap below), so a change to one style changes this file and the pages whose
  * markup changed, not every page that links the sheet (1,157 of 1,519 files for one line of Badge's
  * padding when it was part of the hashed base sheet). It opens with its build stamp, the hash of its
  * own rules, which the router reads to see a newer sheet after a deploy (site/behaviour/stylex-sheet.ts).
@@ -46,23 +46,29 @@ export const stylexSheet = (collect: () => string | undefined): Plugin => ({
 // ---- Fewer requests on a first visit --------------------------------------------------------------
 
 // What every preview needs: the React stack and the packages under the components, and the shared
-// core of src/ (icons, tokens, focus). Not the components themselves: all of them together are
-// 400KB, and a page shows a few. Astro's React renderer (for an Astro island, `client:idle`) too.
-// A part of UI SDK that only one component uses goes with that component (fewerChunks, `owner`).
+// core of src/ (icons, tokens, focus). Not the components or the blocks themselves: all of them
+// together are 400KB, and a page shows a few. Astro's React renderer (for an Astro island,
+// `client:idle`) too. A part of UI SDK that only a few components use goes with one of them
+// (fewerChunks, `owner`).
+// Nor a stylesheet of src/ (themes.css, which six examples import as a product does): in this
+// chunk it was a sheet every page with an example fetched, 5KB the page's own sheet already holds.
 // The small packages both Recharts and TanStack Table import (use-sync-external-store, react-is,
 // clsx) are here too: in the chart chunk, they made a data table's page load all of Recharts.
 const islandStack = (id: string) =>
   /[\\/]node_modules[\\/](?:react|react-dom|react-is|scheduler|use-sync-external-store|clsx|@stylexjs|@floating-ui|@ui-sdk|@hugeicons|@astrojs[\\/]react-renderer)[\\/]/u.test(
     id
   ) ||
-  (id.startsWith(`${root}src/`) && !id.startsWith(`${root}src/components/`));
+  (id.startsWith(`${root}src/`) &&
+    !id.startsWith(`${root}src/components/`) &&
+    !id.startsWith(`${root}src/blocks/`) &&
+    !(id.split("?")[0] ?? "").endsWith(".css"));
 
-// Recharts and what it brings: its own chunk, so only a page with a chart loads it. With it the chart
-// itself: its folder, and chart.tsx and chart-math.ts beside it.
+// Recharts and what it brings: its own chunk, so only a page with a chart loads it. The chart
+// itself is a component's chunk like any other (componentOf).
 const chartStack = (id: string) =>
   /[\\/]node_modules[\\/](?:recharts|@reduxjs|react-redux|redux|redux-thunk|reselect|immer|victory-vendor|d3-[a-z-]+|internmap|es-toolkit|decimal\.js-light|eventemitter3|tiny-invariant)[\\/]/u.test(
     id
-  ) || id.startsWith(`${root}src/components/chart`);
+  );
 
 // TanStack Table: one chunk, only on a page with a data table. Left to Rolldown it was split into
 // five chunks (useTable, the row model, the features) that imported each other in a circle, and on
@@ -82,30 +88,65 @@ const siteOwn = (id: string) =>
     !/\.(?:tsx|jsx)$/u.test(id.split("?")[0] ?? id)) ||
   /[\\/]node_modules[\\/](?:astro|@astrojs[\\/]runtime)[\\/]/u.test(id);
 
-/** "src/components/data-table/data-table.tsx" → "component-data-table": one chunk per folder component. */
-const componentFolder = (id: string) => {
-  const match = /^src\/components\/([a-z0-9-]+)\//u.exec(
-    id.startsWith(root) ? id.slice(root.length) : ""
-  );
-  return match ? `component-${match[1]}` : null;
-};
-
-// Examples that draw with components nothing else on their page uses, far down it: each a chunk
-// of its own, so those components load as the example nears the viewport, not with the page's
-// first example. The Model selector's stack (Command, Popover, Toggle group, the makers' marks) and
-// the working line's (Agent indicator, Shimmer) were eight requests and 32KB of a first visit to
-// the prompt input's page.
-const examplesApart = new Set(["prompt-input"]);
+/** Every component by name: a `.tsx` in src/components, or one of the folder components. */
+const componentNames = new Set(
+  readdirSync(`${root}src/components`, { withFileTypes: true }).flatMap(
+    (entry) => {
+      if (entry.isDirectory()) {
+        return [entry.name];
+      }
+      return entry.name.endsWith(".tsx") ? [entry.name.slice(0, -4)] : [];
+    }
+  )
+);
 
 /**
- * "examples/button/states.tsx" → "examples-button": one chunk per example folder, with what lies in
- * its subfolders (the streaming replay's `streams/*.json`). Left out, such a file went into the
+ * The component or block a file of src/ belongs to, as its chunk's name:
+ *
+ *   src/components/button.tsx, button.stylex.ts     → "component-button"
+ *   src/components/code-block-prism.ts              → "component-code-block" (a helper beside it)
+ *   src/components/data-table/columns.tsx           → "component-data-table" (a folder component)
+ *   src/blocks/share-dialog-01/share-dialog-01.tsx  → "block-share-dialog-01"
+ *
+ * A helper is its component's by name, `<name>-<what>.ts`: the longest component name it starts
+ * with, so `input-group.tsx` is Input group's and not a helper of Input. This once read folders
+ * only. Since each primitive became one file it named three components, every other one counted
+ * as "elsewhere", and all of UI SDK (1.2MB of the 1.8MB) went into the chunk every page loads.
+ */
+const componentOf = (id: string) => {
+  const path = id.startsWith(root)
+    ? (id.slice(root.length).split("?")[0] ?? "")
+    : "";
+  const block = /^src\/blocks\/([a-z0-9-]+)\//u.exec(path);
+  if (block) {
+    return `block-${block[1]}`;
+  }
+  const base = /^src\/components\/([a-z0-9-]+)[./]/u.exec(path)?.[1];
+  if (base === undefined) {
+    return null;
+  }
+  for (let name = base; name !== "";) {
+    if (componentNames.has(name)) {
+      return `component-${name}`;
+    }
+    name = name.slice(0, Math.max(name.lastIndexOf("-"), 0));
+  }
+  return null;
+};
+
+/**
+ * "examples/button/states.tsx" → "examples-button-states": one chunk per example, so the
+ * components an example draws with load as it nears the viewport (./island.ts), not with the
+ * page's first example. As one chunk per folder, a page's first example fetched what every example
+ * below it uses: Markdown and Prism on the message's page, a data table on the container's, 57
+ * requests and 800KB on a pattern's page, whose folder holds every pattern.
+ *
+ * What a folder's examples share (a `.ts` beside them, a file in a subfolder: the streaming
+ * replay's `streams/*.json`) is one chunk, "examples-button". Left out, such a file went into the
  * chunk of the example that imports it, which imports the folder's chunk back: the two chunks
  * loaded in a circle and the data was still undefined when the folder's chunk read it.
- *
- * An example in `examplesApart` is a chunk of its own, "examples-prompt-input-model".
  */
-const exampleFolder = (id: string) => {
+const exampleChunk = (id: string) => {
   const match = /[\\/]examples[\\/]([a-z0-9-]+)[\\/](.+)$/u.exec(
     id.split("?")[0] ?? ""
   );
@@ -113,10 +154,114 @@ const exampleFolder = (id: string) => {
     return null;
   }
   const [, folder = "", file = ""] = match;
-  // An example of an apart folder; what its examples share (a `.ts` beside them) stays one chunk.
-  return examplesApart.has(folder) && /^[a-z0-9-]+\.tsx$/u.test(file)
+  return /^[a-z0-9-]+\.tsx$/u.test(file)
     ? `examples-${folder}-${file.replace(/\.tsx$/u, "")}`
     : `examples-${folder}`;
+};
+
+/** A name in an import or export list: an identifier, or a string (`export { a as "b" }`). */
+const listed = (name: { name: string } | { value: string }) =>
+  "name" in name ? name.name : name.value;
+
+/**
+ * What each module really takes from UI SDK: its imports of UI SDK, where an import of one of UI
+ * SDK's lists of everything (`@ui-sdk/core` and `@ui-sdk/core/renderer`, modules that only import
+ * and export again) is replaced by the modules behind the names taken from it. By the lists
+ * themselves, every component that takes `definePrimitive` from one reached all of UI SDK, each
+ * of its parts then had a dozen users, and none could go with the one component that draws it.
+ */
+const sdkImports = async (
+  context: Rolldown.PluginContext,
+  uiSdk: (id: string) => boolean
+): Promise<(id: string) => string[]> => {
+  const program = (id: string) => {
+    const code = context.getModuleInfo(id)?.code;
+    const lang = /\.(?:tsx|ts|jsx)$/u
+      .exec(id.split("?")[0] ?? "")?.[0]
+      .slice(1);
+    return typeof code === "string"
+      ? context.parse(code, {
+          lang: lang === "tsx" || lang === "ts" || lang === "jsx" ? lang : "js",
+        })
+      : null;
+  };
+  // Each list: the module behind every name it exports.
+  const lists = new Map<string, Map<string, string>>();
+  for (const id of context.getModuleIds()) {
+    const body = uiSdk(id) ? (program(id)?.body ?? []) : [];
+    if (
+      body.length === 0 ||
+      !body.every(
+        (node) =>
+          node.type === "ImportDeclaration" ||
+          (node.type === "ExportNamedDeclaration" &&
+            node.declaration === null &&
+            node.source === null)
+      )
+    ) {
+      continue;
+    }
+    const sources = new Map<string, string>();
+    const behind = new Map<string, string>();
+    for (const node of body) {
+      if (node.type === "ImportDeclaration") {
+        const resolved = await context.resolve(node.source.value, id);
+        for (const specifier of node.specifiers ?? []) {
+          if (resolved) {
+            sources.set(specifier.local.name, resolved.id);
+          }
+        }
+      }
+    }
+    for (const node of body) {
+      if (node.type === "ExportNamedDeclaration") {
+        for (const specifier of node.specifiers) {
+          const source = sources.get(listed(specifier.local));
+          if (source !== undefined) {
+            behind.set(listed(specifier.exported), source);
+          }
+        }
+      }
+    }
+    lists.set(id, behind);
+  }
+  const all = (id: string) =>
+    (context.getModuleInfo(id)?.importedIds ?? []).filter((each) =>
+      uiSdk(each)
+    );
+  const taken = new Map<string, string[]>();
+  for (const id of context.getModuleIds()) {
+    const imports = all(id);
+    if (!imports.some((each) => lists.has(each))) {
+      taken.set(id, imports);
+      continue;
+    }
+    const real = new Set(imports.filter((each) => !lists.has(each)));
+    for (const node of program(id)?.body ?? []) {
+      if (node.type !== "ImportDeclaration" || node.importKind === "type") {
+        continue;
+      }
+      const resolved = await context.resolve(node.source.value, id);
+      const behind = resolved ? lists.get(resolved.id) : undefined;
+      if (behind === undefined) {
+        continue;
+      }
+      for (const specifier of node.specifiers ?? []) {
+        const source =
+          specifier.type === "ImportSpecifier"
+            ? behind.get(listed(specifier.imported))
+            : undefined;
+        // A name the list does not explain (a namespace, a default): the whole list, as before.
+        for (const each of source === undefined
+          ? all(resolved?.id ?? "")
+          : [source]) {
+          real.add(each);
+        }
+      }
+    }
+    taken.set(id, [...real]);
+  }
+  return (id) => taken.get(id) ?? [];
 };
 
 /**
@@ -128,11 +273,13 @@ const exampleFolder = (id: string) => {
  *   brand        the brand book's own modules (site/brand), only on its pages
  *   islands      the React stack, the core of src/, the shared part of UI SDK and the components
  *                most others are built from (Button), loaded only when a preview comes to life
- *   component-*  one component and the part of UI SDK only it uses (only pages that show it load it)
+ *   component-*  one component (its file, its `.stylex.ts` and its helpers, or its folder) and the
+ *                part of UI SDK only it uses, loaded by the examples that draw it
+ *   block-*      one block, likewise
  *   (an Astro island, `client:idle`, stays its own entry chunk)
  *   chart        Recharts and what it brings, only on a page with a chart
  *   table        TanStack Table, only on a page with a data table
- *   examples-*   the examples of one folder together, so a component page's stages are one request
+ *   examples-*   one example each, and what a folder's examples share (exampleChunk)
  *
  * A group also takes what its modules import, unless a group of higher priority took it first. So the
  * chart and the examples come last: placed first, the first example folder took React and the router into its
@@ -162,8 +309,11 @@ export const fewerChunks = (): Plugin => {
   // UI SDK modules two or three components use (see buildEnd), with those components: kept out of
   // islands and owned by one of them.
   const few = new Map<string, string[]>();
+  // UI SDK modules no component uses, only an example or a script some pages load (the agent
+  // bridge of the agent examples, 55KB): not in islands, loaded with what asks for them.
+  const apart = new Set<string>();
   const sharedComponent = (id: string) => {
-    const group = componentFolder(id) ?? owner.get(id);
+    const group = componentOf(id) ?? owner.get(id);
     return (
       group !== undefined &&
       group !== null &&
@@ -173,7 +323,7 @@ export const fewerChunks = (): Plugin => {
   };
   const inIslands = (id: string) =>
     !astroIslands.has(id) &&
-    ((islandStack(id) && !owner.has(id) && !few.has(id)) ||
+    ((islandStack(id) && !owner.has(id) && !few.has(id) && !apart.has(id)) ||
       sharedComponent(id));
   // What every page runs: the modules the layouts' scripts, Astro's page script and its router
   // reach by plain imports, islands left out. A module under site/ that only some pages reach (the
@@ -214,7 +364,7 @@ export const fewerChunks = (): Plugin => {
         if (target.startsWith(`${root}src/`)) lazy.add(target);
       }
     },
-    buildEnd() {
+    async buildEnd() {
       const reached = [...this.getModuleIds()].filter((id) =>
         everyPageEntry(id)
       );
@@ -243,7 +393,7 @@ export const fewerChunks = (): Plugin => {
       for (let grew = true; grew;) {
         grew = false;
         for (const id of this.getModuleIds()) {
-          const folder = componentFolder(id);
+          const folder = componentOf(id);
           if (broughtBy.has(id) || folder === null) {
             continue;
           }
@@ -255,8 +405,7 @@ export const fewerChunks = (): Plugin => {
             bringer === undefined ||
             !importers.every(
               (from) =>
-                broughtBy.get(from) === bringer &&
-                componentFolder(from) === folder
+                broughtBy.get(from) === bringer && componentOf(from) === folder
             )
           ) {
             continue;
@@ -266,21 +415,32 @@ export const fewerChunks = (): Plugin => {
           grew = true;
         }
       }
-      // Who reaches each UI SDK module: a component's group, or anything else (an example, the
-      // site's agent bridge, another package), which counts as a second user.
+      // Who reaches each UI SDK module: a component or block, by its chunk's name; "elsewhere", the
+      // core of src/ and what every page runs, whose modules are the shared base; or "page", an
+      // example or a script of the site that only some pages load, which decides nothing: it
+      // loads the module from wherever the components put it.
+      const userOf = (id: string) => {
+        const component = componentOf(id);
+        if (component) {
+          return component;
+        }
+        return id.startsWith(`${root}src/`) || everyPage.has(id)
+          ? "elsewhere"
+          : "page";
+      };
+      const taken = await sdkImports(this, uiSdk);
       const reach = new Map<string, Set<string>>();
       for (const id of this.getModuleIds()) {
         if (uiSdk(id)) {
           continue;
         }
-        const user = componentFolder(id) ?? "elsewhere";
+        const user = userOf(id);
         const seen = new Set<string>();
         const stack = [id];
         while (stack.length > 0) {
           const current = stack.pop() ?? "";
-          for (const dependency of this.getModuleInfo(current)?.importedIds ??
-            []) {
-            if (seen.has(dependency) || !uiSdk(dependency)) {
+          for (const dependency of taken(current)) {
+            if (seen.has(dependency)) {
               continue;
             }
             seen.add(dependency);
@@ -300,20 +460,26 @@ export const fewerChunks = (): Plugin => {
         );
       }
       for (const [id, users] of reach) {
-        const [only] = users;
-        if (users.size === 1 && only && only !== "elsewhere") {
+        if (users.has("elsewhere")) {
+          continue;
+        }
+        const components = [...users].filter((user) => user !== "page");
+        const [only] = components;
+        if (only === undefined) {
+          apart.add(id);
+        } else if (components.length === 1) {
           owner.set(id, only);
         }
         // Two or three components and nothing else: not the shared base. Kept out of islands, and
         // given to one of them (chosen below, once it is known which are built on which).
-        else if (users.size <= 3 && !users.has("elsewhere")) {
-          few.set(id, [...users]);
+        else if (components.length <= 3) {
+          few.set(id, components);
         }
       }
       // Which other components each component is built from, however indirectly.
       const builtOn = new Map<string, Set<string>>();
       for (const id of this.getModuleIds()) {
-        const user = componentFolder(id);
+        const user = componentOf(id);
         if (!user) {
           continue;
         }
@@ -327,7 +493,7 @@ export const fewerChunks = (): Plugin => {
               continue;
             }
             seen.add(dependency);
-            const group = componentFolder(dependency);
+            const group = componentOf(dependency);
             if (group && group !== user) {
               const users = builtOn.get(group) ?? new Set<string>();
               users.add(user);
@@ -342,9 +508,29 @@ export const fewerChunks = (): Plugin => {
       for (const [group, users] of builtOn) {
         if (users.size >= 3) shared.add(group);
       }
-      // The Outline is the docs rail, on every docs page beside the shell: with the shared base, not a
-      // request of its own on each page (its compact form, loaded with import(), stays apart).
-      shared.add("component-outline");
+      // What the docs shell is built from (Sidebar, Breadcrumb, Tooltip, Theme toggle, the rail's
+      // Table of contents) is on every docs page: with the shared base, not a request each.
+      const shell = [`${root}site/chrome/DocsShell.tsx`];
+      const walked = new Set(shell);
+      while (shell.length > 0) {
+        const current = shell.pop() ?? "";
+        const group = componentOf(current);
+        if (group) {
+          shared.add(group);
+        }
+        for (const dependency of this.getModuleInfo(current)?.importedIds ??
+          []) {
+          if (
+            !(
+              walked.has(dependency) ||
+              /[\\/]node_modules[\\/]/u.test(dependency)
+            )
+          ) {
+            walked.add(dependency);
+            shell.push(dependency);
+          }
+        }
+      }
       // A module two or three components share goes with the one the others are built on (Checkbox,
       // for what Data table also uses), whose chunk those pages load anyway; else the first by name.
       // Left to Rolldown it was a small chunk of its own, a request more on each of their pages.
@@ -393,7 +579,7 @@ export const fewerChunks = (): Plugin => {
               siteOwn(id) &&
               sitePart(id) &&
               !astroIslands.has(id) &&
-              id !== EXAMPLES_MAP_MODULE &&
+              !id.startsWith(`\0${EXAMPLES_MAP_PREFIX}`) &&
               id !== "\0virtual:damsko-search",
           },
           // The brand book's own modules: only its pages load them, so an edit to one renames them
@@ -420,21 +606,20 @@ export const fewerChunks = (): Plugin => {
           },
           { name: "islands", priority: 4, test: (id: string) => inIslands(id) },
           {
-            name: (id: string) => componentFolder(id) ?? owner.get(id) ?? null,
+            name: (id: string) => componentOf(id) ?? owner.get(id) ?? null,
             priority: 3,
             includeDependenciesRecursively: false,
             test: (id: string) =>
               !inIslands(id) &&
-              ((componentFolder(id) !== null && !lazy.has(id)) ||
-                owner.has(id)),
+              ((componentOf(id) !== null && !lazy.has(id)) || owner.has(id)),
           },
           { name: "chart", priority: 2, test: chartStack },
           { name: "table", priority: 2, test: tableStack },
           {
-            name: (id: string) => exampleFolder(id),
+            name: (id: string) => exampleChunk(id),
             priority: 1,
             includeDependenciesRecursively: false,
-            test: (id: string) => exampleFolder(id) !== null,
+            test: (id: string) => exampleChunk(id) !== null,
           },
         ],
       },
@@ -442,28 +627,62 @@ export const fewerChunks = (): Plugin => {
   };
 };
 
-// ---- The examples' map, by a fixed name -----------------------------------------------------------
+// ---- The examples' maps, by fixed names ----------------------------------------------------------
 
-/** The module that lists every example (./examples-map.ts). */
-const EXAMPLES_MAP_MODULE = `${root}site/system/examples-map.ts`;
+/** The module that lists the examples of one folder: "virtual:damsko-examples/button". */
+const EXAMPLES_MAP_PREFIX = "virtual:damsko-examples/";
+
+/** Every `.tsx` under a folder, as paths from it. */
+const examplesUnder = (folder: string): string[] =>
+  readdirSync(folder, { withFileTypes: true })
+    .toSorted((a, b) => a.name.localeCompare(b.name))
+    .flatMap((entry) => {
+      if (entry.isDirectory()) {
+        return examplesUnder(join(folder, entry.name)).map(
+          (file) => `${entry.name}/${file}`
+        );
+      }
+      return entry.name.endsWith(".tsx") ? [entry.name] : [];
+    });
 
 /**
- * The examples' map is its own entry of the client build, written as `_astro/examples-map.js` with no
- * hash, and loaded by that name (./island.ts, EXAMPLES_MAP). Everything it points at keeps its hashed
- * name. As part of the site's shared chunk it renamed that chunk on any change to any example, and
- * with it every chunk and every page of the build (1,159 of 1,519 files for one word in one example).
+ * Each example folder's map is its own entry of the client build, written as
+ * `_astro/examples-map/<folder>.js` with no hash, and loaded by that name (./island.ts,
+ * examplesMapOf). Everything it points at keeps its hashed name. As part of the site's shared chunk
+ * the map renamed that chunk on any change to any example, and with it every chunk and every page
+ * of the build (1,159 of 1,519 files for one word in one example). As one file for every folder it
+ * was 23KB of every first visit, to find the two or three examples a page shows.
  */
 export const examplesMap = (): Plugin => ({
   name: "damsko:examples-map",
   apply: "build",
   applyToEnvironment: (environment) => environment.name === "client",
   buildStart() {
-    this.emitFile({
-      type: "chunk",
-      id: EXAMPLES_MAP_MODULE,
-      fileName: "_astro/examples-map.js",
-      preserveSignature: "strict",
-    });
+    for (const entry of readdirSync(`${root}examples`, {
+      withFileTypes: true,
+    })) {
+      if (entry.isDirectory()) {
+        this.emitFile({
+          type: "chunk",
+          id: `${EXAMPLES_MAP_PREFIX}${entry.name}`,
+          fileName: `_astro/examples-map/${entry.name}.js`,
+          preserveSignature: "strict",
+        });
+      }
+    }
+  },
+  resolveId: (source) =>
+    source.startsWith(EXAMPLES_MAP_PREFIX) ? `\0${source}` : undefined,
+  load(id) {
+    if (!id.startsWith(`\0${EXAMPLES_MAP_PREFIX}`)) {
+      return;
+    }
+    const folder = id.slice(EXAMPLES_MAP_PREFIX.length + 1);
+    const lines = examplesUnder(`${root}examples/${folder}`).map(
+      (file) =>
+        `${JSON.stringify(`/examples/${folder}/${file}`)}: () => import(${JSON.stringify(`${root}examples/${folder}/${file}`)}),`
+    );
+    return `export const examples = {\n${lines.join("\n")}\n};\n`;
   },
 });
 
