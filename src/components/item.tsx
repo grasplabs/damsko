@@ -162,7 +162,7 @@ export interface ItemMediaProps {
    * Where it stands. `start` on the title's line (and in the middle of a row with no
    * description); `center` in the middle of its row, on all the words however many lines they
    * take, as a logo, a tile or a face stands.
-   * @default "start"
+   * @default "start" for a bare mark, "center" for an icon in its square or a picture
    */
   align?: "start" | "center";
   /** Layout only: margins. */
@@ -642,9 +642,12 @@ const holds = (children: ReactNode, parts: readonly unknown[]) =>
 export const ItemMedia = ({
   children,
   variant = "default",
-  align = "start",
+  align: given,
   style,
 }: ItemMediaProps) => {
+  // A square or a picture stands in the middle of its row, on all the words; a bare icon on the
+  // title's line.
+  const align = given ?? (variant === "default" ? "start" : "center");
   const sized = use(RowSize);
   const small = sized !== "default";
   if (use(RowLoading) && isBlank(children)) {
