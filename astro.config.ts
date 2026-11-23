@@ -274,7 +274,7 @@ const pagesIn = (folder: string): string[] =>
   filesIn(folder).filter((file) => file.endsWith(".html"));
 
 /** version.json: the commit the build is of and Damsko's version, so a release can prove the site
- * serves it and a product can see that its pin is behind (README.md, "Pin a version").
+ * serves it and anyone can see which commit an install from the site is (README.md, "Pin a version").
  * Cloudflare's Workers Builds names the commit in WORKERS_CI_COMMIT_SHA. */
 const versionFile: AstroIntegration = {
   name: "damsko:version-file",

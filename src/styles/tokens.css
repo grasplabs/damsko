@@ -80,11 +80,11 @@
   --damsko-code-bg: light-dark(oklch(0.29 0.05 162 / 0.06), oklch(0.96 0.02 150 / 0.09));
   /* Type: families. */
   /* Everything that is not a title: interface, body, labels. */
-  --damsko-font-sans: "Geist", "Geist Variable", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
+  --damsko-font-sans: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
   /* Titles, figures and names in a list, at weight 400 only. */
   --damsko-font-serif: "Geist Serif", Georgia, serif;
   /* Code, token names and anything typed exactly. */
-  --damsko-font-mono: "Geist Mono", "Geist Mono Variable", ui-monospace, "SF Mono", Menlo, monospace;
+  --damsko-font-mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
   /* Type: sizes. */
   /* The smallest text there is: tags, labels, chips, code. */
   --damsko-text-xs: 0.8125rem;

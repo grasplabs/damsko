@@ -1,13 +1,13 @@
-// Turns the fonts beside this file from the text the shadcn CLI wrote into the files fonts.css
-// names. The CLI carries a file's content as text, which a font is not, so each font arrives as
-// `<name>.woff2.base64`; this writes `<name>.woff2` from it and removes the text. Run it after
-// every install or update of the fonts item, and before every build, so a skipped run cannot
-// pass unseen:
+// Turns the fonts beside this file from the text the shadcn CLI wrote into the files the sheets
+// here name. The CLI carries a file's content as text, which a font is not, so each font arrives
+// as `<name>.woff2.base64`; this writes `<name>.woff2` from it and removes the text. Run it once
+// after every install or update of the fonts item and commit the files it writes; no build runs
+// it, so every way of building finds the fonts. The product's checks run it with --check:
 //
 //   node src/styles/fonts/unpack.mjs           unpacks what is packed; safe to run again
 //   node src/styles/fonts/unpack.mjs --check   changes nothing; fails while anything is packed
 //
-// Either way it fails, with the names, when a file fonts.css names is not there.
+// Either way it fails, with the names, when a file a sheet names is not there.
 import {
   existsSync,
   readFileSync,
@@ -38,10 +38,12 @@ if (process.argv.includes("--check")) {
   }
 }
 
-const sheet = readFileSync(new URL("../fonts.css", import.meta.url), "utf-8");
-for (const [, name] of sheet.matchAll(/url\("\.\/fonts\/(?<name>[^"]+)"\)/gu)) {
-  if (name !== undefined && !existsSync(new URL(name, fonts))) {
-    problems.push(`${name}, which fonts.css names, is missing`);
+for (const sheet of readdirSync(fonts).filter((name) => name.endsWith(".css"))) {
+  const css = readFileSync(new URL(sheet, fonts), "utf-8");
+  for (const [, name] of css.matchAll(/url\("\.\/(?<name>[^"]+)"\)/gu)) {
+    if (name !== undefined && !existsSync(new URL(name, fonts))) {
+      problems.push(`${name}, which ${sheet} names, is missing`);
+    }
   }
 }
 

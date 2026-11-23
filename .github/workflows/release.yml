@@ -1,0 +1,66 @@
+# A version's registry, built once and kept: on a `v*` tag, the registry is
+# built from the tagged commit and attached to the tag's release as
+# registry-<tag>.tgz with its checksum (registry-<tag>.tgz.sha256). A
+# product pins the tag and downloads that archive, with none of Damsko's
+# toolchain (Get started, "Pin and update").
+#
+# Safe to run again for a tag that is pushed again: the release is made
+# only when there is none, and the two assets replace the ones it has.
+# It creates and moves no tag. Needs no secret: the job's own token, with
+# `contents: write` for the release and nothing else.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  registry:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .node-version
+          package-manager-cache: false
+      - uses: voidzero-dev/setup-vp@3754dd7dbdb32bd8f6d28b6043de13ad3a75f21f # v1.21.1
+        with:
+          node-manager: false
+          cache: true
+          run-install: false
+      - run: vp install --frozen-lockfile
+      # The archive is named for package.json's version, which every item's
+      # meta says too: a tag that names another version is a mistake.
+      - name: The tag is package.json's version
+        run: |
+          version="v$(node -p 'require("./package.json").version')"
+          if [ "$version" != "$TAG" ]; then
+            echo "::error::the tag is $TAG and package.json says $version"
+            exit 1
+          fi
+        env:
+          TAG: ${{ github.ref_name }}
+      - run: node scripts/registry-dist.ts out --release
+      - name: Attach the registry to the tag's release
+        run: |
+          if ! gh release view "$TAG" > /dev/null 2>&1; then
+            gh release create "$TAG" --verify-tag --title "$TAG" \
+              --notes "The registry of $TAG, built from the tag: registry-$TAG.tgz and its checksum. What changed is in CHANGELOG.md."
+          fi
+          gh release upload "$TAG" "out/registry-$TAG.tgz" "out/registry-$TAG.tgz.sha256" --clobber
+        env:
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}

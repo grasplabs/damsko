@@ -77,7 +77,7 @@ jobs:
   # The registry as a product installs it: every item added by name with the
   # stock shadcn CLI from the registry built here, served on 127.0.0.1, into
   # a fresh workspace; byte for byte, only the packages the items name, it
-  # type-checks, and the two apps Get started describes are built from that
+  # type-checks, and the apps Get started describes are built from that
   # page's own code and opened in Chromium: the fonts load, the base is
   # applied, the mode follows a choice, the words follow a runtime catalogue
   # (scripts/check-install.ts). Its own job: it installs from npm.

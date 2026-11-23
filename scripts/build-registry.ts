@@ -86,7 +86,7 @@ const sharedItems = [
     owns: (path: string) => !isFontFile(path),
     title: "Tokens",
     description:
-      "Every colour, space, corner, edge, shadow, time and curve as CSS variables (tokens.css), and the modes and themes (themes.css): import the two once, at the root. With them, base.css: an optional reset for a new app that has none; never import it beside Tailwind, whose preflight is the reset. The font families the tokens name are not included: add @damsko/fonts, or load Geist yourself.",
+      "Every colour, space, corner, edge, shadow, time and curve as CSS variables (tokens.css), and the modes and themes (themes.css): import the two once, at the root. With them, base.css: an optional reset for a new app that has none; never import it beside Tailwind, whose preflight is the reset. The font families the tokens name are not included: add @damsko/fonts, and set a family's token (--damsko-font-sans, -serif, -mono) where the app serves that family under another name.",
   },
   {
     name: "fonts",
@@ -95,7 +95,7 @@ const sharedItems = [
     owns: isFontFile,
     title: "Fonts",
     description:
-      "Geist, Geist Mono and Geist Serif as the tokens name them: the @font-face rules (fonts.css), the six subset files and their licence (fonts/). The files arrive as base64 text; fonts/unpack.mjs turns them into the fonts. Run it after every install and before every build (node src/styles/fonts/unpack.mjs; --check fails while one is packed), and import fonts.css once, at the root.",
+      "Geist, Geist Mono and Geist Serif as the tokens name them: one sheet of @font-face rules per family beside the six subset files and their licence (fonts/), and fonts.css, the three together. The files arrive as base64 text; fonts/unpack.mjs turns them into the fonts. Run it once after every install and commit the files (node src/styles/fonts/unpack.mjs; --check fails while one is packed), and import fonts.css once, at the root, or only the sheets of the families the app does not serve itself.",
     license: fontLicense,
   },
 ] as const;

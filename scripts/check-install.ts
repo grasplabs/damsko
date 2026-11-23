@@ -1,8 +1,10 @@
 // The registry installs as a product installs it, from the registry built here and served on
 // 127.0.0.1. Two parts.
 //
-// Every item: added by name with the stock shadcn CLI, at the commit's own address, into a fresh
-// workspace's packages/ui with the product's catalog and strict TypeScript flags. It holds when
+// Every item: added by name with the stock shadcn CLI into a fresh workspace's packages/ui with
+// the product's catalog and strict TypeScript flags, as a product pins a version: from the
+// release's archive (scripts/registry-dist.ts, as .github/workflows/release.yml packs it), which
+// the script Get started gives downloads, checks and serves. It holds when
 // - the fonts arrive packed, their check says so, and their script unpacks them;
 // - the installed src/ is then Damsko's src/ byte for byte (nothing missing, nothing extra,
 //   nothing written anywhere else), and every item says its version, commit and licence;
@@ -13,10 +15,12 @@
 // Get started, as written: every block of the page that says what it does
 // (site/start/get-started.ts, `does`) is carried out in the page's order in an empty folder: its
 // commands run, its files written, and nothing else: no file, package or setting the page does
-// not show. So the page cannot say one thing and this prove another. Three apps come of it: the
+// not show. So the page cannot say one thing and this prove another. Four apps come of it: the
 // app with the components in its own src/, the app that imports them from a workspace package,
-// and that app beside Tailwind. Each must build (`pnpm build`, the page's last block) and draw
-// its button with its fill, from fonts its own origin serves, with light-dark() kept.
+// that app beside Tailwind, and that app with a Geist of its own. Each must build (`pnpm build`,
+// the page's last block) and draw its button with its fill, from fonts its own origin serves,
+// with light-dark() kept. No block runs the fonts' script but the one that installs them, and no
+// app has a script that does: the fonts are files by then, whatever builds the app.
 //
 // Then, in each of the first two, one file takes the place of the page's src/App.tsx
 // (scripts/check-install-app.tsx) to show the rest in a browser: the three font families from
@@ -24,7 +28,10 @@
 // components' words following a catalogue built while rendering, as one object per language.
 // Beside Tailwind, where the reset is left out, a part of the app that is not Damsko's
 // (scripts/check-install-own.tsx) is drawn before anything of Damsko's is there and again after,
-// and must be the same pixels with the same computed styles.
+// and must be the same pixels with the same computed styles. With a Geist of its own (Fontsource's,
+// as an older kit loads it), the app is built by the bundler called directly, with no package
+// script, and must load that Geist and no file of Damsko's Geist, with Geist Serif and Geist Mono
+// from Damsko's files.
 //
 //   node scripts/check-install.ts           fresh folders in the system's temp folder, removed after
 //   node scripts/check-install.ts --keep    keeps them, and says where
@@ -39,6 +46,7 @@ import {
   mkdtempSync,
   readFileSync,
   readdirSync,
+  renameSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
@@ -53,6 +61,7 @@ import { parse, stringify } from "yaml";
 
 import {
   packageExports,
+  releasesAddress,
   sections,
   siteAddress,
 } from "../site/start/get-started.ts";
@@ -60,7 +69,7 @@ import type { Block } from "../site/start/get-started.ts";
 import { namespace, root, version as damskoVersion } from "./build-registry.ts";
 import { isRecord, readJson, stringsAt } from "./json.ts";
 import { registryItems } from "./registry-deps.ts";
-import { writeRegistry } from "./registry-dist.ts";
+import { archiveName, packRegistry, writeRegistry } from "./registry-dist.ts";
 import { serve } from "./serve.ts";
 
 const { values } = parseArgs({
@@ -132,9 +141,18 @@ const write = (dir: string, path: string, value: unknown) => {
   );
 };
 
-// The registry as the site serves it (scripts/registry-dist.ts).
+// The registry as the site serves it, and its archive where a tag's release has it
+// (scripts/registry-dist.ts).
 const registryDir = nodePath.join(scratch, "registry");
 const commit = await writeRegistry(registryDir);
+const tag = packRegistry(registryDir);
+for (const name of [archiveName(tag), `${archiveName(tag)}.sha256`]) {
+  mkdirSync(nodePath.join(registryDir, "releases", tag), { recursive: true });
+  renameSync(
+    nodePath.join(registryDir, name),
+    nodePath.join(registryDir, "releases", tag, name)
+  );
+}
 const served = await serve(registryDir);
 
 /** The product's flags (its tsconfig.base.json), with no ambient types: what a file needs, it brings. */
@@ -162,6 +180,66 @@ const flags = {
   skipLibCheck: true,
   types: [],
 };
+
+/** A JSON file as Vite's template writes them: with comments and trailing commas. */
+const lenientJson = (source: string): unknown =>
+  JSON.parse(
+    source
+      .replaceAll(/\/\*[\s\S]*?\*\//gu, "")
+      .replaceAll(/^\s*\/\/.*$/gmu, "")
+      .replaceAll(/,(?=\s*[}\]])/gu, "")
+  );
+
+/** Carries one block of the page out, as the block says, from the folder its section starts in. */
+const carryOut = async (block: Block, dir: string): Promise<boolean> => {
+  const { does } = block;
+  if (does === undefined) {
+    return true;
+  }
+  // The page writes the registry's address as a placeholder for its own origin, and the releases'
+  // as GitHub's: here, this server.
+  const code = block.code
+    .replaceAll(siteAddress, served.url)
+    .replaceAll(releasesAddress, `${served.url}/releases`);
+  if (does.kind === "run") {
+    return await run("sh", ["-ec", code], nodePath.join(dir, does.in));
+  }
+  if (does.kind === "write") {
+    write(dir, does.file, `${code}\n`);
+    return true;
+  }
+  const file = nodePath.join(dir, does.file);
+  if (does.kind === "head") {
+    writeFileSync(
+      file,
+      readFileSync(file, "utf-8").replace("<head>", `<head>\n${code}`)
+    );
+    return true;
+  }
+  const whole = lenientJson(readFileSync(file, "utf-8"));
+  let at = whole;
+  for (const key of does.at) {
+    if (!isRecord(at)) {
+      break;
+    }
+    at[key] ??= {};
+    at = at[key];
+  }
+  const members = lenientJson(`{\n${code}\n}`);
+  if (!(isRecord(at) && isRecord(members))) {
+    failures.push(`${does.file}: has no object at ${does.at.join(".")}`);
+    return false;
+  }
+  Object.assign(at, members);
+  write(dir, does.file, whole);
+  return true;
+};
+
+/** The blocks of one step of the page. */
+const stepOf = (section: string, step: string): Block[] =>
+  sections
+    .find((candidate) => candidate.slug === section)
+    ?.steps.find((candidate) => candidate.slug === step)?.blocks ?? [];
 
 /**
  * A font arrives as its file in base64. While it is packed the fonts' own check fails, so a
@@ -278,8 +356,8 @@ const everyItem = async () => {
     devDependencies: start,
   });
   write(project, "tsconfig.json", { compilerOptions: flags, include: ["src"] });
-  // baseColor "" keeps the CLI off shadcn's own site. The registry at its commit's address: an
-  // address that serves this commit's files and no other's.
+  // baseColor "" keeps the CLI off shadcn's own site. The registry's address is the page's, for a
+  // pinned version: its script and its line of components.json, carried out below.
   write(project, "components.json", {
     $schema: "https://ui.shadcn.com/schema.json",
     style: "new-york",
@@ -293,18 +371,29 @@ const everyItem = async () => {
       hooks: "@grasp-os/ui/hooks",
       utils: "@grasp-os/ui/lib/utils",
     },
-    registries: { [namespace]: `${served.url}/r/${commit}/{name}.json` },
   });
+  const pin = stepOf("pin-and-update", "pin-a-version");
+  if (pin.length === 0) {
+    failures.push("Get started no longer says how to pin a version");
+    return;
+  }
+  for (const block of pin) {
+    // oxlint-disable-next-line no-await-in-loop -- a page is followed one block after the other
+    await carryOut(block, project);
+  }
   const before = new Set(readdirSync(project));
   if (!(await run("pnpm", ["install"], workspace))) {
     return;
   }
   // Every item by name, in one command, as a product syncs: never `--all`, which means shadcn's
-  // own registry.
+  // own registry. Through the page's script, with the tag: from the archive, not from a site.
   const items = registryItems();
   await run(
-    "pnpm",
+    "node",
     [
+      "damsko-registry.mjs",
+      tag,
+      "pnpm",
       "exec",
       "shadcn",
       "add",
@@ -342,10 +431,18 @@ const everyItem = async () => {
     }
   }
 
-  // Every item, as served at the commit's address, says where it came from and its licence.
+  // Every item, as the archive the script unpacked has it, says where it came from and its licence.
   for (const item of items) {
     const said = stringsAt(
-      readJson(nodePath.join(registryDir, "r", commit, `${item.name}.json`)),
+      readJson(
+        nodePath.join(
+          project,
+          "node_modules/.cache/damsko",
+          tag,
+          "r",
+          `${item.name}.json`
+        )
+      ),
       "meta"
     );
     if (
@@ -382,57 +479,6 @@ const everyItem = async () => {
   console.log(
     `install: ${items.length} items, ${installed.size} files installed into ${project}`
   );
-};
-
-/** A JSON file as Vite's template writes them: with comments and trailing commas. */
-const lenientJson = (source: string): unknown =>
-  JSON.parse(
-    source
-      .replaceAll(/\/\*[\s\S]*?\*\//gu, "")
-      .replaceAll(/^\s*\/\/.*$/gmu, "")
-      .replaceAll(/,(?=\s*[}\]])/gu, "")
-  );
-
-/** Carries one block of the page out, as the block says, from the folder its section starts in. */
-const carryOut = async (block: Block, dir: string): Promise<boolean> => {
-  const { does } = block;
-  if (does === undefined) {
-    return true;
-  }
-  // The page writes the registry's address as a placeholder for its own origin: here, this server.
-  const code = block.code.replaceAll(siteAddress, served.url);
-  if (does.kind === "run") {
-    return await run("sh", ["-ec", code], nodePath.join(dir, does.in));
-  }
-  if (does.kind === "write") {
-    write(dir, does.file, `${code}\n`);
-    return true;
-  }
-  const file = nodePath.join(dir, does.file);
-  if (does.kind === "head") {
-    writeFileSync(
-      file,
-      readFileSync(file, "utf-8").replace("<head>", `<head>\n${code}`)
-    );
-    return true;
-  }
-  const whole = lenientJson(readFileSync(file, "utf-8"));
-  let at = whole;
-  for (const key of does.at) {
-    if (!isRecord(at)) {
-      break;
-    }
-    at[key] ??= {};
-    at = at[key];
-  }
-  const members = lenientJson(`{\n${code}\n}`);
-  if (!(isRecord(at) && isRecord(members))) {
-    failures.push(`${does.file}: has no object at ${does.at.join(".")}`);
-    return false;
-  }
-  Object.assign(at, members);
-  write(dir, does.file, whole);
-  return true;
 };
 
 /** Carries a section of the page out, block after block; stops at the first that fails. */
@@ -824,6 +870,73 @@ const besideTailwind = async (product: string) => {
   await checkPage(`${label}, a component with no reset of Damsko's`, app);
 };
 
+/**
+ * With a Geist of its own: the page's styles, the check's app (text in each family), built by the
+ * page's block and then by the bundler alone. One Geist loads, the app's; the two families it
+ * lacks come from Damsko's files.
+ */
+const ownGeist = async (product: string) => {
+  const app = nodePath.join(product, "apps/web");
+  const label = "the app with a Geist of its own";
+  write(
+    app,
+    "src/App.tsx",
+    readFileSync(nodePath.join(root, "scripts/check-install-app.tsx"), "utf-8")
+  );
+  if (!(await follow("with-a-geist-of-its-own", product))) {
+    return;
+  }
+  // As a runner that calls the bundler itself does: no package script runs, before or after.
+  const dist = nodePath.join(app, "dist");
+  rmSync(dist, { recursive: true });
+  if (!(await run("pnpm", ["exec", "vite", "build"], app))) {
+    return;
+  }
+  // Damsko's fonts in the build, by their bytes: the two of each family the app lacks, and none
+  // of the family it brings.
+  const built = filesUnder(dist)
+    .filter((file) => file.endsWith(".woff2"))
+    .map((file) => readFileSync(nodePath.join(dist, file)));
+  const ours = filesUnder(nodePath.join(root, "src/styles/fonts"))
+    .filter((file) => file.endsWith(".woff2"))
+    .filter((file) =>
+      built.some((font) =>
+        font.equals(readFileSync(nodePath.join(root, "src/styles/fonts", file)))
+      )
+    )
+    .toSorted();
+  const lacked = [
+    "geist-mono-common.woff2",
+    "geist-mono-latin.woff2",
+    "geist-serif-common.woff2",
+    "geist-serif.woff2",
+  ];
+  if (ours.join(",") !== lacked.join(",")) {
+    failures.push(
+      `${label}: the build holds ${ours.join(", ")} of Damsko's fonts, not ${lacked.join(", ")}`
+    );
+  }
+  await inBrowser(label, dist, async (page, url, expect) => {
+    await open(page, url, "button");
+    const seen = await drawn(page);
+    expect(
+      seen.loaded.includes("Geist Variable") &&
+        seen.button.family.startsWith('"Geist Variable"'),
+      `the button is not drawn in the app's own Geist (${seen.button.family}; loaded: ${seen.loaded.join(", ")})`
+    );
+    expect(
+      !seen.loaded.includes("Geist"),
+      `two Geists loaded side by side (${seen.loaded.join(", ")})`
+    );
+    for (const family of ["Geist Mono", "Geist Serif"]) {
+      expect(
+        seen.loaded.includes(family),
+        `the family "${family}" did not load (loaded: ${seen.loaded.join(", ")})`
+      );
+    }
+  });
+};
+
 /** Get started, carried out as written, in empty folders. */
 const thePage = async () => {
   const plain = nodePath.join(scratch, "plain");
@@ -846,9 +959,10 @@ const thePage = async () => {
       await checkApp(label, app);
     }
     await besideTailwind(product);
+    await ownGeist(product);
   }
   console.log(
-    "install: Get started carried out as written; three apps built and opened in Chromium"
+    "install: Get started carried out as written; four apps built and opened in Chromium"
   );
 };
 

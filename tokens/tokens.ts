@@ -427,11 +427,11 @@ export const groups: TokenGroup[] = [
           {
             name: "font-sans",
             category: "font",
-            // "Geist" is the family the registry's fonts item registers (styles/fonts.css);
-            // "Geist Variable" is the name the same font has from Fontsource's variable package,
-            // so a product that already loads it that way is drawn in Geist too.
+            // One family, the one the registry's fonts item registers (styles/fonts/geist.css). An
+            // app that serves Geist under another name leaves that sheet out and sets this
+            // variable to its own family (styles/fonts.css), so one Geist loads, never two.
             value:
-              '"Geist", "Geist Variable", "Geist Fallback", ui-sans-serif, system-ui, sans-serif',
+              '"Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif',
             use: "Everything that is not a title: interface, body, labels.",
           },
           {
@@ -443,8 +443,7 @@ export const groups: TokenGroup[] = [
           {
             name: "font-mono",
             category: "font",
-            value:
-              '"Geist Mono", "Geist Mono Variable", ui-monospace, "SF Mono", Menlo, monospace',
+            value: '"Geist Mono", ui-monospace, "SF Mono", Menlo, monospace',
             use: "Code, token names and anything typed exactly.",
           },
         ],

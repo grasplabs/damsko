@@ -1,30 +1,32 @@
 // The registry as it is served: `shadcn build` on registry.json, then what the stock build cannot
-// do, and the same files once more under the commit they were built from.
+// do; and the same files as one archive, the form a release carries.
 //
-//   node scripts/registry-dist.ts <folder>     writes <folder>/r/ and <folder>/r/<commit>/
+//   node scripts/registry-dist.ts <folder>             writes <folder>/r/
+//   node scripts/registry-dist.ts <folder> --release   and <folder>/registry-v<version>.tgz with
+//                                                      its checksum (<name>.sha256)
 //
 // `pnpm build` runs it on dist/, after the site; scripts/check-install.ts installs from what it
-// writes. After `shadcn build`:
+// writes, and from the archive as a product does; .github/workflows/release.yml attaches the
+// archive to a tag's release. After `shadcn build`:
 // - a font's content is the file in base64 (the stock build read its bytes as text, which loses
 //   them), under the `<name>.woff2.base64` target registry.json gives it;
 // - every item's `meta` gains `commit`, beside the version and the licence registry.json holds, so
-//   an installed item can be traced to the commit it came from without comparing bytes;
-// - everything is written again under `r/<commit>/`. That address never serves another commit's
-//   files: a product names it in its components.json and installs exactly that commit, or gets a
-//   404 once the site has moved on (README.md, "Pin a version").
+//   an item can be traced to the commit it came from without comparing bytes.
 import { execFileSync, spawn } from "node:child_process";
+import { createHash } from "node:crypto";
 import { once } from "node:events";
 import {
-  cpSync,
-  mkdirSync,
   readFileSync,
   readdirSync,
+  rmSync,
+  utimesSync,
   writeFileSync,
 } from "node:fs";
 import nodePath from "node:path";
 import { text } from "node:stream/consumers";
+import { gzipSync } from "node:zlib";
 
-import { isFont, root } from "./build-registry.ts";
+import { isFont, root, version } from "./build-registry.ts";
 import { isRecord, readJson } from "./json.ts";
 
 const FULL_SHA = /^[0-9a-f]{40}$/iu;
@@ -79,8 +81,8 @@ const served = (item: unknown, commit: string): unknown => {
 };
 
 /**
- * Writes the registry into `<out>/r` and `<out>/r/<commit>`, and returns the commit. Never
- * synchronous: scripts/check-install.ts serves from the same process.
+ * Writes the registry into `<out>/r`, and returns the commit. Never synchronous:
+ * scripts/check-install.ts serves from the same process.
  */
 export const writeRegistry = async (out: string): Promise<string> => {
   const dir = nodePath.join(out, "r");
@@ -116,21 +118,50 @@ export const writeRegistry = async (out: string): Promise<string> => {
         : served(json, commit);
     writeFileSync(path, `${JSON.stringify(next, null, 2)}\n`);
   }
-  if (FULL_SHA.test(commit)) {
-    mkdirSync(nodePath.join(dir, commit), { recursive: true });
-    for (const name of files) {
-      cpSync(nodePath.join(dir, name), nodePath.join(dir, commit, name));
-    }
-  }
   return commit;
 };
 
+/** The name of a version's archive, as its release carries it: `registry-v0.1.0.tgz`. */
+export const archiveName = (tag: string) => `registry-${tag}.tgz`;
+
+/**
+ * Packs `<out>/r` as `<out>/registry-v<version>.tgz`, with `<name>.sha256` beside it in the form
+ * `shasum -c` reads, and returns the tag. The same registry packs to the same bytes on the same
+ * machine (names in order, one time for every file, no time in the gzip header), so a tag pushed
+ * again replaces its asset with one of the same checksum.
+ */
+export const packRegistry = (out: string): string => {
+  const tag = `v${version}`;
+  const names = readdirSync(nodePath.join(out, "r"), { withFileTypes: true })
+    .filter((entry) => entry.isFile())
+    .map((entry) => `r/${entry.name}`)
+    .toSorted();
+  for (const name of names) {
+    utimesSync(nodePath.join(out, name), 0, 0);
+  }
+  const tar = nodePath.join(out, "registry.tar");
+  execFileSync("tar", ["-cf", tar, "-C", out, ...names]);
+  const archive = gzipSync(readFileSync(tar));
+  rmSync(tar);
+  const name = archiveName(tag);
+  writeFileSync(nodePath.join(out, name), archive);
+  writeFileSync(
+    nodePath.join(out, `${name}.sha256`),
+    `${createHash("sha256").update(archive).digest("hex")}  ${name}\n`
+  );
+  return tag;
+};
+
 if (import.meta.main) {
-  const [out] = process.argv.slice(2);
-  if (out === undefined) {
-    console.error("usage: node scripts/registry-dist.ts <folder>");
+  const [out, flag] = process.argv.slice(2);
+  if (out === undefined || (flag !== undefined && flag !== "--release")) {
+    console.error("usage: node scripts/registry-dist.ts <folder> [--release]");
     process.exit(1);
   }
   const commit = await writeRegistry(nodePath.resolve(out));
-  console.log(`registry: written to ${out}/r and ${out}/r/${commit}`);
+  console.log(`registry: ${commit} written to ${out}/r`);
+  if (flag === "--release") {
+    const tag = packRegistry(nodePath.resolve(out));
+    console.log(`registry: packed as ${out}/${archiveName(tag)}`);
+  }
 }
