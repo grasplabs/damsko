@@ -114,8 +114,9 @@ export interface ItemProps {
    */
   asChild?: boolean;
   /**
-   * Out of use, for a row that is a link or a button: dimmed as a disabled Button is, said as
-   * unavailable, and it takes no press. Say why near it.
+   * Out of use, for a row that is a link or a button (`href`, `onClick` or `asChild`): dimmed as a
+   * disabled Button is, with no light under a pointer, said as unavailable and still reached by Tab
+   * so it can be read; a click, a middle click, Enter or Space does nothing. Say why near it.
    * @default false
    */
   disabled?: boolean;
@@ -533,7 +534,7 @@ const styles = stylex.create({
     textDecoration: "none",
     cursor: {
       default: "pointer",
-      ":is(:disabled, [aria-disabled=true])": "not-allowed",
+      ":is([aria-disabled=true])": "not-allowed",
     },
     outline: "none",
     "::after": {
@@ -683,12 +684,21 @@ interface Press {
   disabled: boolean;
 }
 
-/** What turns the caller's element (a router's link) off: said unavailable, its press stopped first. */
-const offElement = {
+/** Stops a press of a row out of use: its own action, a link's way and a router's. */
+const refuse = (event: { preventDefault: () => void }) => {
+  event.preventDefault();
+};
+
+/**
+ * A row out of use, whatever its press: said unavailable and still a stop for Tab, so its name and
+ * its reason can be read; a click, a middle click, Enter or Space does nothing and goes nowhere.
+ * Merged last onto the caller's element (a router's link, whose own address stays), so its press
+ * is stopped before the element's own handler runs.
+ */
+const outOfUse = {
   "aria-disabled": true,
-  onClick: (event: { preventDefault: () => void }) => {
-    event.preventDefault();
-  },
+  onClick: refuse,
+  onAuxClick: refuse,
 };
 const TitlePress = createContext<Press | undefined>(undefined);
 // Whether the Item stands in an ItemGroup or an ItemGrid: then it is a list item.
@@ -785,26 +795,26 @@ const TitleWords = ({ children }: { children: ReactNode }): ReactNode => {
   };
   // The caller's element (a router's link) carries the title alone; the row holds its other parts.
   if (element !== undefined) {
-    // Merged last, so its press is stopped before the element's own runs.
     return createElement(
       element.type,
       mergeProps(
         { ...own, "aria-current": active ? "page" : undefined },
         element.props,
-        disabled ? offElement : {}
+        disabled ? outOfUse : {}
       ),
       children
     );
   }
   if (href !== undefined) {
-    // Out of use it goes nowhere: no address, still read as a link, said unavailable.
+    // Out of use it has no address, so nothing (a middle click, the menu's "Open in new tab") can
+    // follow it: still a link, and a stop for Tab.
     return (
       <a
         href={disabled ? undefined : href}
         role={disabled ? "link" : undefined}
-        aria-disabled={disabled || undefined}
+        tabIndex={disabled ? 0 : undefined}
         aria-current={active ? "page" : undefined}
-        onClick={disabled ? undefined : onClick}
+        {...(disabled ? outOfUse : { onClick })}
         {...own}
       >
         {children}
@@ -814,9 +824,8 @@ const TitleWords = ({ children }: { children: ReactNode }): ReactNode => {
   return (
     <button
       type="button"
-      disabled={disabled || undefined}
       aria-current={active ? "true" : undefined}
-      onClick={onClick}
+      {...(disabled ? outOfUse : { onClick })}
       {...own}
     >
       {children}

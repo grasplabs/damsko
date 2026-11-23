@@ -71,18 +71,54 @@ test("a row that is one button is named by its title and described by its descri
   await expect(page.getByText("Chosen: OpenAI")).toBeVisible();
 });
 
-test("a row out of use takes no press and is said unavailable, its reason with its name", async ({
-  page,
-}) => {
-  await openExample(page, "item", "disabled");
-  const add = page.getByRole("button", { name: "Add a field" });
-  await expect(add).toBeDisabled();
-  await expect(add).toHaveAccessibleDescription(
-    "A form holds 20 fields at most"
-  );
-  await page.keyboard.press("Tab");
-  await expect(add).not.toBeFocused();
-});
+// One rule for a row out of use, whatever its press: a button, a link, a router's link.
+for (const [at, [role, name, reason]] of (
+  [
+    ["button", "Add a field", "A form holds 20 fields at most"],
+    ["link", "Billing", "Only an owner can open billing"],
+    ["link", "Members", "Members are managed by your company"],
+  ] as const
+).entries()) {
+  test(`a ${role} row out of use (${name}) is read and reached by Tab, and nothing presses it`, async ({
+    page,
+    context,
+  }) => {
+    await openExample(page, "item", "disabled");
+    const row = page.getByRole(role, { name });
+    await expect(row).toHaveAttribute("aria-disabled", "true");
+    await expect(row).toHaveAccessibleDescription(reason);
+    // Reached by Tab, in its place.
+    for (let stop = 0; stop <= at; stop += 1) {
+      // oxlint-disable-next-line no-await-in-loop -- one Tab after another
+      await page.keyboard.press("Tab");
+    }
+    await expect(row).toBeFocused();
+    // No light under the pointer.
+    const ground = async () =>
+      await row.evaluate((element) => {
+        const box = element.closest("[data-slot=item]");
+        return box === null ? "" : getComputedStyle(box).backgroundColor;
+      });
+    const still = await ground();
+    const box = await row.boundingBox();
+    const x = (box?.x ?? 0) + (box?.width ?? 0) / 2;
+    const y = (box?.y ?? 0) + (box?.height ?? 0) / 2;
+    await page.mouse.move(x, y);
+    expect(await ground()).toBe(still);
+    // A click, a middle click, Enter and Space: nothing opens, here or in a new tab.
+    const tabs = context.pages().length;
+    const address = page.url();
+    await page.mouse.click(x, y);
+    await page.mouse.click(x, y, { button: "middle" });
+    await row.focus();
+    await page.keyboard.press("Enter");
+    await page.keyboard.press("Space");
+    await page.waitForTimeout(300);
+    await expect(page.getByText("Nothing opened")).toBeVisible();
+    expect(page.url()).toBe(address);
+    expect(context.pages()).toHaveLength(tabs);
+  });
+}
 
 test("links with showChevron off draw no chevron; a link row draws one", async ({
   page,
