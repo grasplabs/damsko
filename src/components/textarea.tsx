@@ -179,7 +179,7 @@ const styles = stylex.create({
   // is the weaker look.
   readOnly: {
     backgroundColor: colors.inputBgRead,
-    color: colors.inputInkRead,
+    color: colors.inputForegroundRead,
     boxShadow: {
       default: `inset 0 0 0 1px ${colors.input}`,
       ":focus-visible": size.inputFocusRead,

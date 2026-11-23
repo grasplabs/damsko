@@ -17,11 +17,11 @@ const layout = stylex.create({
 export default function BrandIconsSizes() {
   return (
     <div {...stylex.props(layout.row)}>
+      <BrandIcon {...logos.slack} size="xs" />
       <BrandIcon {...logos.slack} size="sm" />
       <BrandIcon {...logos.slack} size="default" />
       <BrandIcon {...logos.slack} size="lg" />
-      <BrandIcon {...logos.slack} size="xl" />
-      <BrandIcon {...logos.slack} tile={false} />
+      <BrandIcon {...logos.slack} size="sm" tile={false} />
     </div>
   );
 }

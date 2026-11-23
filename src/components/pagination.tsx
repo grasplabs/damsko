@@ -268,12 +268,12 @@ const styles = stylex.create({
     // Drawn as the quiet button is: its fill and a low lift. A step at its end does not answer the
     // pointer: it lies flat on the soft ground, without the lift.
     backgroundColor: {
-      default: colors.secondary,
+      default: colors.control,
       ":hover": {
         default: null,
-        [HOVER]: { default: colors.secondaryHover, [OFF]: colors.muted },
+        [HOVER]: { default: colors.controlHover, [OFF]: colors.muted },
       },
-      ":active": { default: colors.secondaryActive, [OFF]: colors.muted },
+      ":active": { default: colors.controlActive, [OFF]: colors.muted },
       [OFF]: colors.muted,
     },
     boxShadow: { default: shadow.sm, [OFF]: "none" },

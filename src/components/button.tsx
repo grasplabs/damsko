@@ -324,7 +324,7 @@ const styles = stylex.create({
   // destructive, and one small shake. The alert and the words say it too, so it is never colour alone.
   failed: {
     color: { default: colors.destructive, [FORCED]: "ButtonText" },
-    backgroundColor: colors.secondary,
+    backgroundColor: colors.control,
     boxShadow: sizes.errorBorder,
     animationName: {
       default: stylex.keyframes({
@@ -511,7 +511,7 @@ const variantStyles = stylex.create({
   // or dense action where a row of edged, lifted buttons would be too heavy.
   secondary: {
     color: colors.foreground,
-    backgroundColor: colors.buttonSecondary,
+    backgroundColor: colors.secondary,
     boxShadow: "none",
   },
   destructive: {
@@ -523,7 +523,7 @@ const variantStyles = stylex.create({
   // input beside it.
   outline: {
     color: colors.foreground,
-    backgroundColor: colors.secondary,
+    backgroundColor: colors.control,
     boxShadow: shadow.bevelMuted,
   },
   // Its ink, its fills and its ring's colour are ghostVars, which the part that holds it may set.
@@ -574,11 +574,11 @@ const liveStyles = stylex.create({
   },
   secondary: {
     backgroundColor: {
-      default: colors.buttonSecondary,
-      ":hover": { default: null, [HOVER]: colors.buttonSecondaryHover },
+      default: colors.secondary,
+      ":hover": { default: null, [HOVER]: colors.secondaryHover },
       ":active": {
-        default: colors.buttonSecondaryActive,
-        [HOVER]: colors.buttonSecondaryActive,
+        default: colors.secondaryActive,
+        [HOVER]: colors.secondaryActive,
       },
     },
   },
@@ -605,11 +605,11 @@ const liveStyles = stylex.create({
   },
   outline: {
     backgroundColor: {
-      default: colors.secondary,
-      ":hover": { default: null, [HOVER]: colors.secondaryHover },
+      default: colors.control,
+      ":hover": { default: null, [HOVER]: colors.controlHover },
       ":active": {
-        default: colors.secondaryActive,
-        [HOVER]: colors.secondaryActive,
+        default: colors.controlActive,
+        [HOVER]: colors.controlActive,
       },
     },
   },

@@ -16,7 +16,7 @@ description: A section that opens and closes from a button, for detail most peop
 
 ## Several
 
-`variant="raised"` for panels that stand on their own; each opens apart from the others.
+`variant="outline"` for panels that stand on their own; each opens apart from the others.
 
 <Stage path="collapsible/several" label="Several" />
 
@@ -42,8 +42,8 @@ The trigger's states, then open and disabled, in either look.
     prop: "variant",
     label: "Variant",
     options: [
-      { id: "ghost", label: "Ghost" },
-      { id: "raised", label: "Raised" },
+      { id: "default", label: "Default" },
+      { id: "outline", label: "Outline" },
     ],
   }}
   cells={[
@@ -87,7 +87,7 @@ The trigger's states, then open and disabled, in either look.
     {
       group: "Trigger",
       key: "Corner",
-      value: "{radius}, capped at half the height, {radius-shape}",
+      value: "{radius-row}, capped at half the height, {radius-shape}",
     },
     {
       group: "Trigger",
@@ -102,15 +102,15 @@ The trigger's states, then open and disabled, in either look.
     },
     {
       group: "Look",
-      key: "Ghost",
+      key: "Default",
       value: "No fill until hover",
       tokens: ["accent", "accent-active"],
     },
     {
       group: "Look",
-      key: "Raised",
+      key: "Outline",
       value: "A quiet control's fill and low lift",
-      tokens: ["secondary", "secondary-hover", "secondary-active", "shadow-sm"],
+      tokens: ["control", "control-hover", "control-active", "shadow-sm"],
     },
     {
       group: "Type",
@@ -127,7 +127,7 @@ The trigger's states, then open and disabled, in either look.
     {
       group: "Disabled",
       key: "Look",
-      value: "Words in quiet; raised drops to soft, with no lift",
+      value: "Words in quiet; outline drops to soft, with no lift",
       tokens: ["subtle-foreground", "muted"],
     },
   ]}

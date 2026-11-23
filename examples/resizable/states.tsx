@@ -14,6 +14,7 @@ const look = stylex.create({
     height: size.tapTarget,
     overflow: "hidden",
     borderRadius: radius.mark,
+    cornerShape: radius.shape,
     boxShadow: size.borderStrong,
     backgroundColor: colors.card,
   },

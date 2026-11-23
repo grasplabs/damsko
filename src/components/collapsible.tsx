@@ -55,10 +55,10 @@ export interface CollapsibleProps {
    */
   disabled?: boolean;
   /**
-   * `ghost` lies on the page; `raised` stands off it, as a quiet button.
-   * @default "ghost"
+   * `default` lies on the page; `outline` stands off it, as a quiet button.
+   * @default "default"
    */
-  variant?: "ghost" | "raised";
+  variant?: "default" | "outline";
   /**
    * The trigger is only as wide as its words and its chevron, which then stands beside them: for
    * one quiet line among words. Without it the trigger runs the whole width, chevron at the end.
@@ -108,14 +108,14 @@ const styles = stylex.create({
     minWidth: 0,
     fontFamily: font.sans,
   },
-  raised: {
+  outline: {
     backgroundColor: {
-      default: colors.secondary,
+      default: colors.control,
       ":hover": {
         default: null,
-        [HOVER]: { default: colors.secondaryHover, [OFF]: colors.muted },
+        [HOVER]: { default: colors.controlHover, [OFF]: colors.muted },
       },
-      ":active": { default: colors.secondaryActive, [OFF]: colors.muted },
+      ":active": { default: colors.controlActive, [OFF]: colors.muted },
       [OFF]: colors.muted,
     },
     boxShadow: { default: shadow.sm, [OFF]: "none" },
@@ -132,7 +132,7 @@ const styles = stylex.create({
 });
 
 // The root's look, for its trigger: two plain values, so neither is a new object each render.
-const VariantContext = createContext<"ghost" | "raised">("ghost");
+const VariantContext = createContext<"default" | "outline">("default");
 const FitContentContext = createContext(false);
 
 /** One panel that opens and closes under its trigger. */
@@ -143,7 +143,7 @@ export const Collapsible = ({
   defaultOpen,
   onOpenChange,
   disabled,
-  variant = "ghost",
+  variant = "default",
   fitContent = false,
   style,
 }: CollapsibleProps) => (
@@ -181,7 +181,7 @@ export const CollapsibleTrigger = ({
     <CollapsibleTriggerPrimitive
       {...stylex.props(
         disclosureStyles.trigger,
-        variant === "raised" ? styles.raised : disclosureStyles.ghost,
+        variant === "outline" ? styles.outline : disclosureStyles.ghost,
         fitContent && styles.fit,
         style,
         focusRing

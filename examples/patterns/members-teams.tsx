@@ -65,6 +65,7 @@ const layout = stylex.create({
     textAlign: "start",
     cursor: "pointer",
     borderRadius: radius.mark,
+    cornerShape: radius.shape,
     textDecorationLine: { default: "none", ":hover": "underline" },
     textUnderlineOffset: "0.2em",
   },

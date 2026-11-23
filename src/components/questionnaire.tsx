@@ -474,10 +474,10 @@ const styles = stylex.create({
     borderRadius: radius.mark,
     cornerShape: radius.shape,
     backgroundColor: {
-      default: colors.secondary,
+      default: colors.control,
       [stylex.when.ancestor(":hover")]: {
         default: null,
-        [HOVER]: colors.secondaryHover,
+        [HOVER]: colors.controlHover,
       },
       [stylex.when.ancestor(
         ":has(:is([aria-checked=true], input[type=text]:not(:placeholder-shown)))"
@@ -539,7 +539,7 @@ const styles = stylex.create({
     borderColor: "currentColor",
     borderRadius: radius.mark,
     cornerShape: radius.shape,
-    backgroundColor: colors.secondary,
+    backgroundColor: colors.control,
     boxShadow: size.borderStrong,
     color: colors.mutedForeground,
     fontSize: font.textXs,

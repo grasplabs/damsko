@@ -326,7 +326,7 @@ for (const theme of ["light", "dark"] as const) {
         }
         const probe = document.createElement("span");
         label.append(probe);
-        const tokens = ["secondary", "primary"].map((name) => {
+        const tokens = ["control", "primary"].map((name) => {
           probe.style.backgroundColor = `var(--damsko-${name})`;
           return getComputedStyle(probe).backgroundColor;
         });

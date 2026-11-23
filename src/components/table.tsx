@@ -333,9 +333,14 @@ const styles = stylex.create({
     maxWidth: "100%",
     minWidth: 0,
     borderRadius: tableVars.corner,
+    cornerShape: radius.shape,
   },
   // The box and its ring stand in this, so the ring lies over the box alone.
-  box: { position: "relative", borderRadius: tableVars.corner },
+  box: {
+    position: "relative",
+    borderRadius: tableVars.corner,
+    cornerShape: radius.shape,
+  },
   // The ring: a part of its own laid over the box, above the head's fill and a held column, which
   // would hide a ring drawn under them. Shown while the box before it has the keyboard's focus.
   ring: {
@@ -343,6 +348,7 @@ const styles = stylex.create({
     inset: 0,
     zIndex: 5,
     borderRadius: "inherit",
+    cornerShape: "inherit",
     pointerEvents: "none",
     outlineWidth: size.ringWidth,
     outlineColor: colors.ring,
@@ -367,6 +373,7 @@ const styles = stylex.create({
     overflowY: "hidden",
     overscrollBehaviorX: "contain",
     borderRadius: tableVars.corner,
+    cornerShape: radius.shape,
     // No scrollbar: the edge that has more to scroll fades instead (fade).
     scrollbarWidth: "none",
   },
@@ -575,7 +582,7 @@ const styles = stylex.create({
     verticalAlign: "middle",
     fontSize: font.textSm,
     fontWeight: font.weightMedium,
-    color: colors.tableHeadText,
+    color: colors.tableHeadForeground,
     whiteSpace: "nowrap",
   },
   // A head with controls after its name (a column's menu, a resize handle): they sit at its end.
@@ -613,6 +620,7 @@ const styles = stylex.create({
     paddingInline: space[1],
     borderWidth: 0,
     borderRadius: radius.mark,
+    cornerShape: radius.shape,
     backgroundColor: {
       default: "transparent",
       ":hover": { default: null, [HOVER]: colors.accent },

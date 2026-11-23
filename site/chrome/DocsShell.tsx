@@ -187,7 +187,8 @@ const styles = stylex.create({
     display: "inline-flex",
     alignItems: "center",
     color: colors.foreground,
-    borderRadius: radius.sidebarRadius,
+    borderRadius: radius.row,
+    cornerShape: radius.shape,
   },
   mark: {
     display: "block",
@@ -219,8 +220,9 @@ const styles = stylex.create({
       [media.pointerCoarse]: size.tapTarget,
     },
     paddingInline: size.sidebarRowInline,
-    borderRadius: radius.sidebarRadius,
-    color: colors.sidebarText,
+    borderRadius: radius.row,
+    cornerShape: radius.shape,
+    color: colors.sidebarForeground,
     backgroundColor: {
       default: "transparent",
       [media.hover]: { default: null, ":hover": colors.sidebarHover },

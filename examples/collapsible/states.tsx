@@ -12,11 +12,11 @@ const layout = stylex.create({
 // One collapsible in one state, in either look. The docs draw it once per state; hover, keyboard
 // focus and pressed are forced from its own CSS. Open shows a one-line panel under the trigger.
 export default function CollapsibleState({
-  variant = "ghost",
+  variant = "default",
   open = false,
   disabled = false,
 }: {
-  variant?: "ghost" | "raised";
+  variant?: "default" | "outline";
   open?: boolean;
   disabled?: boolean;
 }) {

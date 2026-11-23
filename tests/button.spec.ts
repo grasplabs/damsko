@@ -217,7 +217,7 @@ for (const theme of ["light", "dark"] as const) {
     const look = await failed.evaluate((element) => {
       const probe = document.createElement("span");
       probe.style.color = "var(--damsko-destructive)";
-      probe.style.backgroundColor = "var(--damsko-secondary)";
+      probe.style.backgroundColor = "var(--damsko-control)";
       probe.style.boxShadow = "var(--damsko-error-border)";
       element.after(probe);
       const want = getComputedStyle(probe);

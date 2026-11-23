@@ -109,6 +109,7 @@
     color: var(--damsko-muted-foreground);
     background: var(--damsko-card);
     border-radius: var(--damsko-radius-mark);
+    corner-shape: var(--damsko-radius-shape);
     box-shadow: var(--damsko-border-strong);
   }
 
@@ -248,6 +249,7 @@
     list-style: none;
     cursor: pointer;
     border-radius: var(--damsko-radius-mark);
+    corner-shape: var(--damsko-radius-shape);
   }
   .site-onpage > summary::-webkit-details-marker {
     display: none;
@@ -340,6 +342,7 @@
     background: none;
     border: 0;
     border-radius: var(--damsko-radius-mark);
+    corner-shape: var(--damsko-radius-shape);
     transition: color var(--damsko-duration-hover) var(--damsko-ease);
   }
   .site-quiet-link > svg {
@@ -464,6 +467,7 @@
     color: var(--damsko-foreground);
     text-decoration: none;
     border-radius: var(--damsko-radius-mark);
+    corner-shape: var(--damsko-radius-shape);
   }
   .site-pager-link[data-side="next"] {
     grid-column: 2;
@@ -542,6 +546,7 @@
     color: var(--damsko-muted-foreground);
     text-decoration: none;
     border-radius: var(--damsko-radius-mark);
+    corner-shape: var(--damsko-radius-shape);
     opacity: 0;
     transition:
       opacity var(--damsko-duration-hover) var(--damsko-ease),

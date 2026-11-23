@@ -313,6 +313,7 @@ const styles = stylex.create({
     width: size.kbdHeight,
     height: size.kbdHeight,
     borderRadius: radius.mark,
+    cornerShape: radius.shape,
     backgroundColor: colors.dataGridRangeWash,
     color: colors.dataGridActiveBorder,
   },
@@ -389,6 +390,7 @@ const styles = stylex.create({
     marginInline: `calc(-1 * ${space[1]})`,
     paddingInline: space[1],
     borderRadius: radius.mark,
+    cornerShape: radius.shape,
     backgroundColor: colors.card,
     backgroundImage: `linear-gradient(${colors.dataGridRangeWash}, ${colors.dataGridRangeWash})`,
   },
@@ -421,7 +423,7 @@ const styles = stylex.create({
     height: size.tagHeightSm,
     paddingInline: space[2],
     borderRadius: radius.full,
-    backgroundColor: colors.secondary,
+    backgroundColor: colors.control,
     boxShadow: size.borderStrong,
     color: colors.foreground,
     // The table's own type, so its words sit on the row's line with their neighbours'.
@@ -432,7 +434,7 @@ const styles = stylex.create({
   // behind its words.
   chipClear: {
     backgroundColor: colors.card,
-    backgroundImage: `linear-gradient(${colors.secondary}, ${colors.secondary})`,
+    backgroundImage: `linear-gradient(${colors.control}, ${colors.control})`,
   },
   // Checkbox's own box, at its own size, on the row's centre.
   box: {

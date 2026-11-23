@@ -199,7 +199,7 @@ const looks = stylex.create({
     color: colors.primaryForeground,
   },
   secondary: {
-    backgroundColor: colors.secondary,
+    backgroundColor: colors.control,
     boxShadow: size.borderStrong,
   },
   muted: {
@@ -230,12 +230,12 @@ const pressed = stylex.create({
   },
   secondary: {
     backgroundColor: {
-      default: colors.secondary,
-      ":hover": colors.secondaryHover,
+      default: colors.control,
+      ":hover": colors.controlHover,
     },
   },
   muted: {
-    backgroundColor: { default: colors.muted, ":hover": colors.secondaryHover },
+    backgroundColor: { default: colors.muted, ":hover": colors.controlHover },
   },
   tinted: {
     backgroundColor: { default: colors.accent, ":hover": colors.accentActive },
