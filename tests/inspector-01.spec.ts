@@ -116,3 +116,37 @@ test("the head's tile takes the look it is given, and who made it shows their fa
   await openExample(page, "inspector-01", "basic");
   await expect(page.getByText("By AO Amara Okafor")).toBeVisible();
 });
+
+test("at a phone's width a date stays whole on one line, and a long name gives way to it", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openExample(page, "inspector-01", "basic");
+  const triggers = page.getByRole("list", { name: "Triggers" });
+  const whole = async (date: string): Promise<boolean> => {
+    const detail = triggers.getByText(date, { exact: true });
+    await expect(detail).toBeVisible();
+    return await detail.evaluate((element) => {
+      const range = document.createRange();
+      range.selectNodeContents(element);
+      const lines = new Set(
+        [...range.getClientRects()].map((rect) => Math.round(rect.top))
+      );
+      return lines.size === 1 && element.scrollWidth <= element.clientWidth;
+    });
+  };
+  expect(
+    await Promise.all(
+      ["Nov 23, 2026, 10:13 AM", "Nov 16, 2026, 9:02 AM"].map(whole)
+    )
+  ).toEqual([true, true]);
+  const name = triggers.getByText(
+    "First run, started by hand from the shared reports mailbox",
+    { exact: true }
+  );
+  await expect(name).toBeVisible();
+  const givesWay = await name.evaluate(
+    (element) => element.scrollWidth > element.clientWidth
+  );
+  expect(givesWay).toBe(true);
+});
