@@ -4792,6 +4792,7 @@ export const contrastPairs: ContrastPair[] = [
   { kind: "text", on: "code-block-marked", text: "body-foreground" },
   // A tooltip's words on its fill.
   { kind: "text", on: "tooltip", text: "tooltip-foreground" },
+  { kind: "text", on: "tooltip", text: "tooltip-muted-foreground" },
   // A sidebar's rows on its ground, and the current row's words on its fill.
   ...["foreground", "muted-foreground"].map((text): ContrastPair => ({
     kind: "text",
