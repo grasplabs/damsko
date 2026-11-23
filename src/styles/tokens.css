@@ -476,6 +476,8 @@
   --damsko-tooltip: light-dark(oklch(0.173 0.028 169.36 / 0.9), oklch(0.37 0.03 168 / 0.9));
   /* The words on a tooltip. */
   --damsko-tooltip-foreground: oklch(0.965 0.014 150);
+  /* The quiet words on a tooltip: the keys of its shortcut, at the end of its line. */
+  --damsko-tooltip-muted-foreground: oklch(0.78 0.025 158);
   /* How long the pointer rests on a control before its tooltip opens. The next one opens at once. */
   --damsko-tooltip-delay: 300ms;
   /* How far a tooltip stands off its trigger: clear of the pointer resting on it. */

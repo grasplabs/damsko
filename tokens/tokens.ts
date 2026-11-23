@@ -1767,6 +1767,12 @@ export const groups: TokenGroup[] = [
             use: "The words on a tooltip.",
           },
           {
+            name: "tooltip-muted-foreground",
+            category: "colors",
+            value: "oklch(0.78 0.025 158)",
+            use: "The quiet words on a tooltip: the keys of its shortcut, at the end of its line.",
+          },
+          {
             name: "tooltip-delay",
             category: "duration",
             value: "300ms",

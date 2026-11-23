@@ -118,6 +118,7 @@
   --damsko-popover-gap: var(--damsko-space-2);
   --damsko-tooltip: light-dark(oklch(0.173 0.028 169.36 / 0.9), oklch(0.37 0.03 168 / 0.9));
   --damsko-tooltip-foreground: oklch(0.965 0.014 150);
+  --damsko-tooltip-muted-foreground: oklch(0.78 0.025 158);
   --damsko-menu-shadow: var(--damsko-shadow-lg);
   --damsko-menu-item-padding: var(--damsko-space-2);
   --damsko-switch-thumb-shadow: drop-shadow(0 0 0.5px light-dark(oklch(0.173 0.028 169.36 / 0.22), oklch(0 0 none / 0.5))) drop-shadow(0 1px 1.5px light-dark(oklch(0.173 0.028 169.36 / 0.14), oklch(0 0 none / 0.4))) drop-shadow(0 2px 3px light-dark(oklch(0.173 0.028 169.36 / 0.08), oklch(0 0 none / 0.3)));
@@ -400,6 +401,7 @@
   --damsko-popover-gap: var(--damsko-space-2);
   --damsko-tooltip: light-dark(oklch(0.173 0.056 178 / 0.9), oklch(0.37 0.06 178 / 0.9));
   --damsko-tooltip-foreground: oklch(0.965 0.028 178);
+  --damsko-tooltip-muted-foreground: oklch(0.78 0.05 178);
   --damsko-menu-shadow: var(--damsko-shadow-lg);
   --damsko-menu-item-padding: var(--damsko-space-2);
   --damsko-switch-thumb-shadow: drop-shadow(0 0 0.5px light-dark(oklch(0.173 0.056 178 / 0.22), oklch(0 0 none / 0.5))) drop-shadow(0 1px 1.5px light-dark(oklch(0.173 0.056 178 / 0.14), oklch(0 0 none / 0.4))) drop-shadow(0 2px 3px light-dark(oklch(0.173 0.056 178 / 0.08), oklch(0 0 none / 0.3)));
@@ -682,6 +684,7 @@
   --damsko-popover-gap: var(--damsko-space-2);
   --damsko-tooltip: light-dark(oklch(0.173 0.006 75 / 0.9), oklch(0.37 0.007 75 / 0.9));
   --damsko-tooltip-foreground: oklch(0.965 0.003 75);
+  --damsko-tooltip-muted-foreground: oklch(0.78 0.006 75);
   --damsko-menu-shadow: var(--damsko-shadow-lg);
   --damsko-menu-item-padding: var(--damsko-space-2);
   --damsko-switch-thumb-shadow: drop-shadow(0 0 0.5px light-dark(oklch(0.173 0.006 75 / 0.22), oklch(0 0 none / 0.5))) drop-shadow(0 1px 1.5px light-dark(oklch(0.173 0.006 75 / 0.14), oklch(0 0 none / 0.4))) drop-shadow(0 2px 3px light-dark(oklch(0.173 0.006 75 / 0.08), oklch(0 0 none / 0.3)));

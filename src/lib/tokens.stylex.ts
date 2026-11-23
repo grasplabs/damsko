@@ -100,6 +100,7 @@ export const colors = stylex.defineConsts({
   accentHighlight: "var(--damsko-accent-highlight)",
   tooltip: "var(--damsko-tooltip)",
   tooltipForeground: "var(--damsko-tooltip-foreground)",
+  tooltipMutedForeground: "var(--damsko-tooltip-muted-foreground)",
   // Switch: switch.
   switchLight: "var(--damsko-switch-light)",
   switchTrackHover: "var(--damsko-switch-track-hover)",
