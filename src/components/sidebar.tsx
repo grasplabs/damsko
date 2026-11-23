@@ -239,19 +239,23 @@ const styles = stylex.create({
   roomy: { padding: space["2"] },
 
   // What it holds: the header, the content and the footer, top to bottom.
-  inner: {
+  // On the sidebar's ground, in an aside or a sheet.
+  ground: {
     [iconVars.size]: ICON,
     [iconVars.stroke]: size.iconStroke,
     display: "flex",
     flexDirection: "column",
-    boxSizing: "border-box",
-    width: "100%",
-    height: "100%",
     minHeight: 0,
     backgroundColor: colors.sidebar,
+    color: colors.sidebarForeground,
     fontFamily: font.sans,
     fontSize: font.textSm,
     lineHeight: font.textSmLine,
+  },
+  inner: {
+    boxSizing: "border-box",
+    width: "100%",
+    height: "100%",
   },
   floating: {
     borderRadius: radius["2xl"],
@@ -263,19 +267,9 @@ const styles = stylex.create({
   },
   // In a sheet, on a narrow window: it fills the sheet, on its own ground from edge to edge.
   sheet: {
-    [iconVars.size]: ICON,
-    [iconVars.stroke]: size.iconStroke,
-    display: "flex",
-    flexDirection: "column",
     flexGrow: 1,
-    minHeight: 0,
     borderRadius: "inherit",
     cornerShape: "inherit",
-    backgroundColor: colors.sidebar,
-    color: colors.sidebarForeground,
-    fontFamily: font.sans,
-    fontSize: font.textSm,
-    lineHeight: font.textSmLine,
   },
 
   // The rail along its inner edge: pressed, it folds or opens the sidebar. A line shows under the
@@ -1215,6 +1209,7 @@ export const Sidebar = ({
           <div
             data-sidebar="sidebar"
             {...stylex.props(
+              styles.ground,
               styles.inner,
               variant === "sidebar" &&
                 (side === "start" ? styles.edgeStart : styles.edgeEnd)
@@ -1242,7 +1237,7 @@ export const Sidebar = ({
               data-sidebar="sidebar"
               data-mobile="true"
               data-side={side}
-              {...stylex.props(styles.sheet)}
+              {...stylex.props(styles.ground, styles.sheet)}
             >
               {children}
             </div>
@@ -1286,7 +1281,11 @@ export const Sidebar = ({
         >
           <div
             data-sidebar="sidebar"
-            {...stylex.props(styles.inner, floating && styles.floating)}
+            {...stylex.props(
+              styles.ground,
+              styles.inner,
+              floating && styles.floating
+            )}
           >
             {children}
           </div>
