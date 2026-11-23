@@ -13,18 +13,15 @@ import { Fragment } from "react";
 // row already stands as tall as it will.
 export default function ItemLoading() {
   return (
-    <ItemGroup aria-label="Projects">
+    <ItemGroup separated aria-label="Projects">
       {[0, 1, 2].map((row) => (
-        <Fragment key={row}>
-          {row > 0 && <ItemSeparator />}
-          <Item loading>
-            <ItemMedia variant="icon" />
-            <ItemContent>
-              <ItemTitle />
-              <ItemDescription />
-            </ItemContent>
-          </Item>
-        </Fragment>
+        <Item key={row} loading>
+          <ItemMedia variant="icon" />
+          <ItemContent>
+            <ItemTitle />
+            <ItemDescription />
+          </ItemContent>
+        </Item>
       ))}
     </ItemGroup>
   );

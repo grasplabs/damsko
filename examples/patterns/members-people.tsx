@@ -369,11 +369,9 @@ export default function MembersPeople({
         <Card size="sm">
           <CardContent flush>
             {loading ? (
-              <ItemGroup aria-label="Members, loading">
+              <ItemGroup separated aria-label="Members, loading">
                 <LoadingRow />
-                <ItemSeparator />
                 <LoadingRow />
-                <ItemSeparator />
                 <LoadingRow />
               </ItemGroup>
             ) : null}
@@ -388,94 +386,88 @@ export default function MembersPeople({
               </Empty>
             ) : null}
             {loading || found.length === 0 ? null : (
-              <ItemGroup aria-label="Members">
+              <ItemGroup separated aria-label="Members">
                 {onPage.map((person, index) => (
-                  <Fragment key={person.email}>
-                    {index > 0 && <ItemSeparator />}
-                    <Item size="xs">
-                      <Who person={person} />
-                      <ItemActions>
+                  <Item key={person.email} size="xs">
+                    <Who person={person} />
+                    <ItemActions>
+                      {person.state === "invited" && (
+                        <Badge size="sm" variant="info">
+                          Invited
+                        </Badge>
+                      )}
+                      <Select items={roles} defaultValue={person.role}>
+                        <SelectTrigger
+                          size="sm"
+                          variant="ghost"
+                          aria-label={`Role of ${person.name}`}
+                        >
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent />
+                      </Select>
+                      <RowMenu name={person.name}>
+                        <DropdownMenuItem
+                          onSelect={() => {
+                            copy(person);
+                          }}
+                        >
+                          Copy email
+                        </DropdownMenuItem>
                         {person.state === "invited" && (
-                          <Badge size="sm" variant="info">
-                            Invited
-                          </Badge>
+                          <>
+                            <DropdownMenuItem
+                              onSelect={() =>
+                                toast("Invitation sent again", {
+                                  description: person.email,
+                                })
+                              }
+                            >
+                              Resend invitation
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onSelect={() => {
+                                revoke(person.email);
+                              }}
+                            >
+                              Revoke invitation
+                            </DropdownMenuItem>
+                          </>
                         )}
-                        <Select items={roles} defaultValue={person.role}>
-                          <SelectTrigger
-                            size="sm"
-                            variant="ghost"
-                            aria-label={`Role of ${person.name}`}
-                          >
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent />
-                        </Select>
-                        <RowMenu name={person.name}>
-                          <DropdownMenuItem
-                            onSelect={() => {
-                              copy(person);
-                            }}
-                          >
-                            Copy email
-                          </DropdownMenuItem>
-                          {person.state === "invited" && (
-                            <>
-                              <DropdownMenuItem
-                                onSelect={() =>
-                                  toast("Invitation sent again", {
-                                    description: person.email,
-                                  })
-                                }
-                              >
-                                Resend invitation
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onSelect={() => {
-                                  revoke(person.email);
-                                }}
-                              >
-                                Revoke invitation
-                              </DropdownMenuItem>
-                            </>
-                          )}
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onSelect={() => {
-                              move(person.email, "removed");
-                            }}
-                          >
-                            Remove from workspace
-                          </DropdownMenuItem>
-                        </RowMenu>
-                      </ItemActions>
-                    </Item>
-                  </Fragment>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onSelect={() => {
+                            move(person.email, "removed");
+                          }}
+                        >
+                          Remove from workspace
+                        </DropdownMenuItem>
+                      </RowMenu>
+                    </ItemActions>
+                  </Item>
                 ))}
               </ItemGroup>
             )}
             {!loading && removed.length > 0 && (
               <>
                 <p {...stylex.props(layout.removedLabel)}>Removed</p>
-                <ItemGroup aria-label="Removed">
+                <ItemGroup separated aria-label="Removed">
                   {removed.map((person, index) => (
-                    <Fragment key={person.email}>
-                      {index > 0 && <ItemSeparator />}
-                      <Item size="xs">
-                        <Who person={person} quiet />
-                        <ItemActions>
-                          <Badge size="sm">Removed</Badge>
-                          <RowMenu name={person.name}>
-                            <DropdownMenuItem
-                              onSelect={() => {
-                                move(person.email, "active");
-                              }}
-                            >
-                              Restore
-                            </DropdownMenuItem>
-                          </RowMenu>
-                        </ItemActions>
-                      </Item>
-                    </Fragment>
+                    <Item key={person.email} size="xs">
+                      <Who person={person} quiet />
+                      <ItemActions>
+                        <Badge size="sm">Removed</Badge>
+                        <RowMenu name={person.name}>
+                          <DropdownMenuItem
+                            onSelect={() => {
+                              move(person.email, "active");
+                            }}
+                          >
+                            Restore
+                          </DropdownMenuItem>
+                        </RowMenu>
+                      </ItemActions>
+                    </Item>
                   ))}
                 </ItemGroup>
               </>

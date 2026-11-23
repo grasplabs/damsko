@@ -24,6 +24,8 @@ for (const theme of ["light", "dark"] as const) {
     await openExample(page, "item", "links", { theme });
     const list = page.getByRole("list", { name: "Settings" });
     await expect(list.getByRole("listitem")).toHaveCount(3);
+    // `separated`: the hairline between every two rows.
+    await expect(list.locator("[data-slot=item-separator]")).toHaveCount(2);
     await expect(list.getByRole("link")).toHaveText([
       /^Profile/u,
       /^Notifications/u,
@@ -67,6 +69,36 @@ test("a row that is one button is named by its title and described by its descri
   await expect(page.getByText("Chosen: Anthropic")).toBeVisible();
   await page.getByRole("button", { name: "OpenAI", exact: true }).click();
   await expect(page.getByText("Chosen: OpenAI")).toBeVisible();
+});
+
+test("a row out of use takes no press and is said unavailable, its reason with its name", async ({
+  page,
+}) => {
+  await openExample(page, "item", "disabled");
+  const add = page.getByRole("button", { name: "Add a field" });
+  await expect(add).toBeDisabled();
+  await expect(add).toHaveAccessibleDescription(
+    "A form holds 20 fields at most"
+  );
+  await page.keyboard.press("Tab");
+  await expect(add).not.toBeFocused();
+});
+
+test("links with showChevron off draw no chevron; a link row draws one", async ({
+  page,
+}) => {
+  await openExample(page, "item", "sections");
+  const sections = page.getByRole("navigation", { name: "Settings" });
+  await expect(sections.getByRole("link")).toHaveCount(3);
+  await expect(sections.locator("svg")).toHaveCount(0);
+  await expect(sections.getByRole("link", { name: "Profile" })).toHaveAttribute(
+    "aria-current",
+    "page"
+  );
+  await openExample(page, "item", "links");
+  await expect(
+    page.getByRole("list", { name: "Settings" }).locator("svg")
+  ).toHaveCount(3);
 });
 
 test("a router's link drawn as the row says which one is open", async ({

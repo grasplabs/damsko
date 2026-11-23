@@ -41,19 +41,16 @@ export default function ItemRouter() {
   );
   return (
     <div {...stylex.props(layout.list)}>
-      <ItemGroup aria-label="Chats">
+      <ItemGroup separated aria-label="Chats">
         {chats.map((chat, index) => (
-          <Fragment key={chat.id}>
-            {index > 0 && <ItemSeparator />}
-            <Item size="sm" asChild active={chat.id === open}>
-              <RouterLink to={chat.id}>
-                <ItemContent>
-                  <ItemTitle>{chat.title}</ItemTitle>
-                  <ItemDescription>{chat.when}</ItemDescription>
-                </ItemContent>
-              </RouterLink>
-            </Item>
-          </Fragment>
+          <Item key={chat.id} size="sm" asChild active={chat.id === open}>
+            <RouterLink to={chat.id}>
+              <ItemContent>
+                <ItemTitle>{chat.title}</ItemTitle>
+                <ItemDescription>{chat.when}</ItemDescription>
+              </ItemContent>
+            </RouterLink>
+          </Item>
         ))}
       </ItemGroup>
     </div>

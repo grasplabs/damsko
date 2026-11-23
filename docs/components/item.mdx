@@ -64,9 +64,15 @@ The default `ItemMedia` stands an icon bare on the title's line, with no square:
 
 ## As links
 
-With `href` the row is one link: its title is the link, stretched over the whole row, named by the title and described by the description. An `ItemSeparator` draws a hairline between two rows.
+With `href` the row is one link: its title is the link, stretched over the whole row, named by the title and described by the description. `separated` on the ItemGroup draws the page's hairline between every two rows; an `ItemSeparator` draws one between two.
 
 <Stage path="item/links" label="As links" />
+
+## With no chevron
+
+Where every row of a list plainly opens its own page (a page's own sections, a list of sources), `showChevron={false}` leaves the link's chevron out.
+
+<Stage path="item/sections" label="With no chevron" />
 
 ## A router's link, the open one
 
@@ -79,6 +85,12 @@ With `href` the row is one link: its title is the link, stretched over the whole
 `onClick` makes the row one button, its title stretched over the whole row, named by the title and described by the description: a provider to choose. No chevron, since it goes nowhere.
 
 <Stage path="item/choice" label="As a choice" />
+
+## Out of use
+
+`disabled` puts a link or a button row out of use: dimmed as a disabled Button is, said as unavailable, and it takes no press. Say why near it, in its description, which is said with its name.
+
+<Stage path="item/disabled" label="Out of use" />
 
 ## Loading
 

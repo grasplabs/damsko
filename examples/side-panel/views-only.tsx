@@ -48,7 +48,7 @@ export default function SidePanelViewsOnly() {
             title="Linked from"
             description="Notes that point here."
           >
-            <ItemGroup>
+            <ItemGroup separated>
               <Item size="xs">
                 <ItemMedia>
                   <Icon icon={LinkIcon} />
@@ -60,7 +60,6 @@ export default function SidePanelViewsOnly() {
                   </ItemTitle>
                 </ItemContent>
               </Item>
-              <ItemSeparator />
               <Item size="xs">
                 <ItemMedia>
                   <Icon icon={LinkIcon} />
