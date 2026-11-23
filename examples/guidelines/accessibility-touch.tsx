@@ -45,6 +45,7 @@ const styles = stylex.create({
     borderStyle: "dashed",
     borderColor: colors.mutedForeground,
     borderRadius: radius.mark,
+    cornerShape: radius.shape,
     pointerEvents: "none",
   },
   note: {

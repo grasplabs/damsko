@@ -140,6 +140,7 @@ const styles = stylex.create({
     textAlign: "center",
     verticalAlign: "middle",
     borderRadius: radius.mark,
+    cornerShape: radius.shape,
     cursor: { default: "pointer", [off]: "default" },
     color: {
       default: colors.bodyForeground,

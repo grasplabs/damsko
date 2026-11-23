@@ -34,6 +34,7 @@ const look = stylex.create({
     width: 120,
     height: 80,
     borderRadius: radius.mark,
+    cornerShape: radius.shape,
     backgroundColor: colors.muted,
     borderWidth: { default: 0, [media.forcedColors]: 1 },
     borderStyle: "solid",

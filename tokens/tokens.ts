@@ -726,6 +726,18 @@ export const groups: TokenGroup[] = [
             use: "The Prompt input's card: a button's corner at its size (16px at 32px tall) plus the footer's inset (8px), so the card nests round its buttons.",
           },
           {
+            name: "radius-row",
+            category: "radius",
+            value: "calc({radius} - {popup-padding})",
+            use: "A row: a menu or list item, a tree or sidebar row, a trigger that runs the width. The one corner less the room a container keeps round its rows, capped at half the row's height.",
+          },
+          {
+            name: "radius-hairline",
+            category: "radius",
+            value: "2px",
+            use: "A thing too thin for the mark corner: a swatch 8px square, a highlight's edge.",
+          },
+          {
             name: "radius-mark",
             category: "radius",
             value: "6px",
@@ -3440,18 +3452,6 @@ export const groups: TokenGroup[] = [
             use: "A button that is only an icon in the frame (the sidebar's toggle).",
           },
           {
-            name: "sidebar-radius",
-            category: "radius",
-            value: "6px",
-            use: "A row's corner.",
-          },
-          {
-            name: "sidebar-radius-lg",
-            category: "radius",
-            value: "10px",
-            use: "A large row's corner.",
-          },
-          {
             name: "sidebar-card-radius",
             category: "radius",
             value: "12px",
@@ -3950,12 +3950,6 @@ export const groups: TokenGroup[] = [
             category: "space",
             value: "{space-2}",
             use: "Room at each end of a tree's row, inside its fill.",
-          },
-          {
-            name: "tree-view-row-radius",
-            category: "radius",
-            value: "8px",
-            use: "A tree row's corner: small, as a list item's.",
           },
           {
             name: "tree-view-row-gap",
@@ -4504,12 +4498,6 @@ export const groups: TokenGroup[] = [
             use: "The icon inside an object's tile.",
           },
           {
-            name: "icon-tile-radius",
-            category: "radius",
-            value: "14px",
-            use: "The tile's corner, in the system's squircle: the corner a 40px square takes.",
-          },
-          {
             name: "icon-tile-sm",
             category: "size",
             value: "{avatar-xs}",
@@ -4520,12 +4508,6 @@ export const groups: TokenGroup[] = [
             category: "size",
             value: "14px",
             use: "The icon inside the small tile.",
-          },
-          {
-            name: "icon-tile-sm-radius",
-            category: "radius",
-            value: "8px",
-            use: "The small tile's corner, in the system's squircle: the corner a 24px square takes.",
           },
           {
             name: "icon-tile-tint",

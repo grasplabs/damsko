@@ -375,6 +375,7 @@ const styles = stylex.create({
     padding: space[2],
     backgroundColor: colors.card,
     borderRadius: radius.mark,
+    cornerShape: radius.shape,
     boxShadow: shadow.sm,
   },
   bar: {

@@ -95,6 +95,7 @@ const styles = stylex.create({
     paddingInline: space["1"],
     border: "none",
     borderRadius: radius.mark,
+    cornerShape: radius.shape,
     backgroundColor: {
       default: "transparent",
       [media.hover]: { default: "transparent", ":hover": colors.muted },

@@ -219,7 +219,7 @@ const styles = stylex.create({
     minHeight: { default: size.treeViewRow, [COARSE]: size.treeViewRowTouch },
     paddingInlineStart: LEAD,
     paddingInlineEnd: space.treeViewRowPadding,
-    borderRadius: radius.treeViewRowRadius,
+    borderRadius: `min(${radius.row}, calc(${size.treeViewRow} / 2))`,
     cornerShape: radius.shape,
     letterSpacing: size.treeViewTracking,
     // Chosen or current: a fill, which forced colours drop, so the system's highlight there.
