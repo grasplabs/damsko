@@ -200,6 +200,7 @@
   --damsko-sidebar-text-tertiary: light-dark(oklch(0.64 0 0), oklch(0.6 0 0));
   --damsko-sidebar-card-border: light-dark(oklch(0 0 0 / 0.1), oklch(1 0 0 / 0.1));
   --damsko-sidebar-icon-button: var(--damsko-control-xs);
+  --damsko-sidebar-card-radius: calc(var(--damsko-radius-row) + var(--damsko-space-2));
   --damsko-app-shell-page-inline: var(--damsko-space-6);
   --damsko-carousel-gap: var(--damsko-space-4);
   --damsko-carousel-dot-bg: var(--damsko-muted-foreground);
@@ -477,6 +478,7 @@
   --damsko-sidebar-text-tertiary: light-dark(oklch(0.64 0 0), oklch(0.6 0 0));
   --damsko-sidebar-card-border: light-dark(oklch(0 0 0 / 0.1), oklch(1 0 0 / 0.1));
   --damsko-sidebar-icon-button: var(--damsko-control-xs);
+  --damsko-sidebar-card-radius: calc(var(--damsko-radius-row) + var(--damsko-space-2));
   --damsko-app-shell-page-inline: var(--damsko-space-6);
   --damsko-carousel-gap: var(--damsko-space-4);
   --damsko-carousel-dot-bg: var(--damsko-muted-foreground);
@@ -754,6 +756,7 @@
   --damsko-sidebar-text-tertiary: light-dark(oklch(0.64 0 0), oklch(0.6 0 0));
   --damsko-sidebar-card-border: light-dark(oklch(0 0 0 / 0.1), oklch(1 0 0 / 0.1));
   --damsko-sidebar-icon-button: var(--damsko-control-xs);
+  --damsko-sidebar-card-radius: calc(var(--damsko-radius-row) + var(--damsko-space-2));
   --damsko-app-shell-page-inline: var(--damsko-space-6);
   --damsko-carousel-gap: var(--damsko-space-4);
   --damsko-carousel-dot-bg: var(--damsko-muted-foreground);

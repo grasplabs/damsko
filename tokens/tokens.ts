@@ -3454,8 +3454,8 @@ export const groups: TokenGroup[] = [
           {
             name: "sidebar-card-radius",
             category: "radius",
-            value: "12px",
-            use: "The page card's corner.",
+            value: "calc({radius-row} + {space-2})",
+            use: "The corner of the page's card and of a floating sidebar, in the squircle: a row's corner plus the room the sidebar keeps round its rows, so the rows nest in it.",
           },
           {
             name: "sidebar-card-gap",

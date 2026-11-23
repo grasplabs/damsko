@@ -921,8 +921,8 @@
   --damsko-sidebar-icon: 16px;
   /* A button that is only an icon in the frame (the sidebar's toggle). */
   --damsko-sidebar-icon-button: var(--damsko-control-xs);
-  /* The page card's corner. */
-  --damsko-sidebar-card-radius: 12px;
+  /* The corner of the page's card and of a floating sidebar, in the squircle: a row's corner plus the room the sidebar keeps round its rows, so the rows nest in it. */
+  --damsko-sidebar-card-radius: calc(var(--damsko-radius-row) + var(--damsko-space-2));
   /* The room round the page's card, on the sidebar's ground. */
   --damsko-sidebar-card-gap: 6px;
   /* The rows' letter spacing: a hair tighter than set. */
@@ -1237,5 +1237,6 @@
   :root {
     --damsko-radius: 9px;
     --damsko-radius-mark: 4px;
+    --damsko-sidebar-card-radius: 11px;
   }
 }

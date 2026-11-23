@@ -345,10 +345,8 @@ const styles = stylex.create({
     // A title that wraps keeps a little room above and below; one line stays a small control tall.
     paddingBlock: `calc(${ROOM})`,
     columnGap: space["2"],
-    borderRadius: {
-      default: `min(${radius.row}, calc(${size.controlSm} / 2))`,
-      [stylex.when.ancestor(":is(*)", traceCardMarker)]: radius.base,
-    },
+    // A row's corner, in a card too: a trigger there is still a row, as a Sources trigger is.
+    borderRadius: `min(${radius.row}, calc(${size.controlSm} / 2))`,
     lineHeight: font.textSmLine,
     fontWeight: font.weightNormal,
     color: {
