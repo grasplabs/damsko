@@ -1,0 +1,371 @@
+/* The Tailwind experiment: what a product's CSS imports for the components in src/components-tw,
+   after tokens.css and `@import "tailwindcss"` (or its theme and utilities layers):
+
+     @import "tailwindcss";
+     @import "./styles/tokens.css";
+     @import "./styles-tw/damsko.css";
+
+   The theme maps Tailwind's names onto Damsko's variables; the rest is what StyleX's
+   defineVars, its media constants and lib/styles.ts said: the variables a holder sets for what is
+   inside it, the hover that only a fine pointer has, the squircle, and the focus rings. */
+@import "./theme.css";
+
+@source "../components-tw";
+@source "../lib-tw";
+
+/* Hover only where a pointer can hover, so a tap never leaves a control lit (media.hover). Tailwind's
+   own is `(hover: hover)` alone. Redefined under the same name it keeps its place in the variant
+   order, before focus and active. */
+@custom-variant hover {
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      @slot;
+    }
+  }
+}
+@custom-variant coarse (@media (pointer: coarse));
+/* A media list is written as a block: the one-line form splits at the comma. */
+@custom-variant phone-or-coarse {
+  @media (width < 40rem), (pointer: coarse) {
+    @slot;
+  }
+}
+@custom-variant no-script (@media (scripting: none));
+/* The keyboard's focus, never a press's (lib-tw/focus.ts marks a press with data-focus-pointer). */
+@custom-variant focus-key (&:focus-visible:not([data-focus-pointer]));
+@custom-variant motion-moving (&:is([data-starting-style], [data-ending-style]));
+@custom-variant leaving (&:is([data-ending-style]));
+
+/* The variables a part reads from whoever holds it (StyleX's defineVars): an icon's size and stroke,
+   a ghost button's ink and fills, a spinner's fade and stroke, and the times that become 0s when
+   the person asks for reduced motion. */
+:root {
+  --damsko-icon-size: var(--damsko-icon-sm);
+  --damsko-icon-stroke-width: var(--damsko-icon-stroke);
+  --damsko-ghost-ink: var(--damsko-foreground);
+  --damsko-ghost-hover: var(--damsko-accent);
+  --damsko-ghost-active: var(--damsko-accent-active);
+  --damsko-ghost-ring: var(--damsko-ring);
+  --damsko-spinner-floor: var(--damsko-spinner-fade);
+  --damsko-spinner-stroke: var(--damsko-icon-stroke);
+  --damsko-motion-press: var(--damsko-duration-press);
+  --damsko-motion-hover: var(--damsko-duration-hover);
+  --damsko-motion-mark: var(--damsko-duration-mark);
+  --damsko-motion-swap: var(--damsko-duration-swap);
+  --damsko-motion-open: var(--damsko-duration-open);
+  --damsko-motion-ui: var(--damsko-duration-ui);
+  --damsko-motion-leave: var(--damsko-duration-leave);
+  --damsko-motion-popup: var(--damsko-duration-popup);
+  --damsko-motion-tooltip-leave: var(--damsko-tooltip-leave);
+  --damsko-motion-collapsible-open: var(--damsko-collapsible-open);
+  /* A responsive Field's columns, and how a row narrower than 34rem stands (FieldGroup `fit`). */
+  --damsko-field-columns: minmax(0, 1fr) var(--damsko-field-control-column);
+  --damsko-field-columns-narrow: minmax(0, 1fr);
+  --damsko-field-display-narrow: grid;
+}
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --damsko-motion-press: 0s;
+    --damsko-motion-hover: 0s;
+    --damsko-motion-mark: 0s;
+    --damsko-motion-swap: 0s;
+    --damsko-motion-open: 0s;
+    --damsko-motion-ui: 0s;
+    --damsko-motion-leave: 0s;
+    --damsko-motion-popup: 0s;
+    --damsko-motion-tooltip-leave: 0s;
+    --damsko-motion-collapsible-open: 0s;
+  }
+}
+
+/* The one corner's shape. Tailwind has no corner-shape utility. */
+@utility corner-squircle {
+  corner-shape: var(--damsko-radius-shape);
+}
+@utility corner-inherit {
+  corner-shape: inherit;
+}
+@utility corner-round {
+  corner-shape: round;
+}
+
+/* The size and stroke the icons inside take. */
+@utility icon-sm {
+  --damsko-icon-size: var(--damsko-icon-sm);
+  --damsko-icon-stroke-width: var(--damsko-icon-stroke);
+}
+@utility icon-default {
+  --damsko-icon-size: var(--damsko-icon-default);
+}
+@utility icon-lg {
+  --damsko-icon-size: var(--damsko-spinner-lg);
+}
+
+/* The focus rings (lib/styles.ts). The ring is ring-width of the ring's ink, ring-offset off the
+   control's edge; in forced colours twice line-strong of Highlight. Inside a part that packs or
+   clips its controls (data-ring-inset) it is drawn just inside. */
+@utility focus-ring {
+  outline: none;
+  outline-offset: var(--damsko-ring-offset);
+  &:focus-visible:not([data-focus-pointer]) {
+    outline: var(--damsko-ring-width) solid var(--damsko-ring);
+  }
+  :where([data-ring-inset]) & {
+    outline-offset: calc(-1 * var(--damsko-ring-width));
+  }
+  @media (forced-colors: active) {
+    outline-offset: var(--damsko-ring-offset-mark);
+    &:focus-visible:not([data-focus-pointer]) {
+      outline: calc(2 * var(--damsko-line-strong)) solid Highlight;
+    }
+    :where([data-ring-inset]) & {
+      outline-offset: var(--damsko-ring-offset-mark);
+    }
+  }
+}
+@utility focus-ring-inset {
+  outline: none;
+  outline-offset: calc(-1 * var(--damsko-ring-width));
+  &:focus-visible:not([data-focus-pointer]) {
+    outline: var(--damsko-ring-width) solid var(--damsko-ring);
+  }
+}
+@utility focus-ring-text {
+  outline: none;
+  outline-offset: calc(var(--damsko-ring-offset-text) - 1px);
+  &:focus-visible:not([data-focus-pointer]) {
+    outline: var(--damsko-ring-width) solid var(--damsko-ring);
+  }
+}
+/* A field you type in: its own edge and halo show focus; in forced colours the system's line. */
+@utility focus-field {
+  outline: none;
+  outline-offset: var(--damsko-ring-offset);
+  @media (forced-colors: active) {
+    outline-offset: var(--damsko-ring-offset-mark);
+    &:focus-visible {
+      outline: var(--damsko-line-strong) solid;
+    }
+    &:focus-visible:not([data-focus-pointer]) {
+      outline: calc(2 * var(--damsko-line-strong)) solid Highlight;
+    }
+  }
+}
+@utility focus-field-read-only {
+  outline: none;
+  outline-offset: var(--damsko-ring-offset);
+  @media (forced-colors: active) {
+    outline-offset: var(--damsko-ring-offset-mark);
+    &:focus-visible {
+      outline: calc(2 * var(--damsko-line-strong)) solid Highlight;
+    }
+  }
+}
+/* A box round the input that types: in forced colours the system's line goes round the box. */
+@utility focus-field-within {
+  outline: none;
+  outline-offset: var(--damsko-ring-offset);
+  @media (forced-colors: active) {
+    outline-offset: var(--damsko-ring-offset-mark);
+    &:has(:is(input, textarea):focus-visible) {
+      outline: var(--damsko-line-strong) solid;
+    }
+    &:has(:is(input, textarea):focus-visible:not([data-focus-pointer])) {
+      outline: calc(2 * var(--damsko-line-strong)) solid Highlight;
+    }
+  }
+}
+@utility focus-field-within-editable {
+  outline: none;
+  outline-offset: var(--damsko-ring-offset);
+  @media (forced-colors: active) {
+    outline-offset: var(--damsko-ring-offset-mark);
+    &:has(:is(input, textarea):focus-visible) {
+      outline: calc(2 * var(--damsko-line-strong)) solid Highlight;
+    }
+  }
+}
+
+/* How interface words break: only a long word, never near its ends. */
+@utility hyphenate {
+  hyphens: auto;
+  hyphenate-limit-chars: 12 5 5;
+  -webkit-hyphenate-limit-before: 5;
+  -webkit-hyphenate-limit-after: 5;
+}
+@utility scrollbar-hidden {
+  scrollbar-width: none;
+}
+@utility tap-highlight-none {
+  -webkit-tap-highlight-color: transparent;
+}
+
+@keyframes damsko-leave {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+@keyframes damsko-spin {
+  from {
+    transform: rotate(0turn);
+  }
+  to {
+    transform: rotate(1turn);
+  }
+}
+@keyframes damsko-breathe {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: var(--damsko-spinner-faint);
+  }
+}
+@keyframes damsko-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes damsko-shake {
+  0%,
+  100% {
+    transform: none;
+  }
+  25% {
+    transform: translateX(calc(-1 * var(--damsko-result-shake)));
+  }
+  50% {
+    transform: translateX(var(--damsko-result-shake));
+  }
+  75% {
+    transform: translateX(calc(-0.5 * var(--damsko-result-shake)));
+  }
+}
+@keyframes damsko-mark-in {
+  from {
+    opacity: 0;
+    transform: scale(var(--damsko-result-mark-from));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* A layer's body (lib-tw/layer.ts): it scrolls on its own; a hairline at its top once it has
+   scrolled and at its bottom while there is more below, driven by its own scroll, and a fade into the
+   panel's ground above the bottom hairline. Never once the panel leaves. Room above and below for a
+   field's focus ring. Square, except its focus ring's small corner. */
+@keyframes damsko-layer-edges {
+  0% {
+    box-shadow: inset 0 -1px 0 var(--damsko-border);
+  }
+  1%,
+  99% {
+    box-shadow:
+      inset 0 1px 0 var(--damsko-border),
+      inset 0 -1px 0 var(--damsko-border);
+  }
+  100% {
+    box-shadow: inset 0 1px 0 var(--damsko-border);
+  }
+}
+@keyframes damsko-layer-more {
+  0%,
+  99% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@utility layer-body {
+  flex-grow: 1;
+  flex-shrink: 1;
+  min-height: 0;
+  margin-block-start: calc(var(--damsko-space-5) - var(--damsko-space-2));
+  margin-block-end: calc(-1 * var(--damsko-space-2));
+  padding-block: var(--damsko-space-2);
+  padding-inline: var(--damsko-space-6);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  font-size: var(--damsko-text-base);
+  line-height: var(--damsko-text-base-line);
+  color: var(--damsko-body-foreground);
+  overflow-wrap: anywhere;
+  hyphens: manual;
+  border-radius: 0;
+  corner-shape: var(--damsko-radius-shape);
+  &:focus-visible {
+    border-radius: var(--damsko-radius-sm);
+  }
+  @supports (animation-timeline: scroll()) {
+    animation-name: damsko-layer-edges;
+    animation-duration: auto;
+    animation-timing-function: linear;
+    animation-fill-mode: both;
+    animation-timeline: scroll(self);
+    :is([data-ending-style], [data-closed]) & {
+      animation-name: none;
+    }
+  }
+  &::after {
+    content: "";
+    position: sticky;
+    inset-block-end: calc(-1 * var(--damsko-space-2));
+    display: block;
+    height: var(--damsko-space-6);
+    margin-block-start: calc(-1 * var(--damsko-space-6));
+    margin-inline: calc(-1 * var(--damsko-space-6));
+    pointer-events: none;
+    background-image: linear-gradient(
+      to bottom,
+      transparent,
+      var(--damsko-card) calc(100% - var(--damsko-hairline)),
+      transparent calc(100% - var(--damsko-hairline))
+    );
+    opacity: 0;
+    @supports (animation-timeline: scroll()) {
+      animation-name: damsko-layer-more;
+      animation-duration: auto;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: scroll(nearest);
+    }
+  }
+  :is([data-ending-style], [data-closed]) &::after {
+    @supports (animation-timeline: scroll()) {
+      animation-name: none;
+    }
+  }
+}
+
+/* A sidebar level moving in from the way the person went. */
+@keyframes damsko-from-end {
+  from {
+    opacity: 0;
+    transform: translateX(var(--damsko-space-4));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes damsko-from-start {
+  from {
+    opacity: 0;
+    transform: translateX(calc(-1 * var(--damsko-space-4)));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

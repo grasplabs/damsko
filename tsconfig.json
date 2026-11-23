@@ -25,6 +25,11 @@
     "types": ["node", "vite/client"],
     "paths": {
       "@grasp-os/ui/lib/*": ["./src/lib/*"],
+      "@grasp-os/ui/lib-tw/*": ["./src/lib-tw/*"],
+      "@grasp-os/ui/components-tw/markdown": [
+        "./src/components-tw/markdown/index.ts"
+      ],
+      "@grasp-os/ui/components-tw/*": ["./src/components-tw/*.tsx"],
       "@grasp-os/ui/hooks/*": ["./src/hooks/*"],
       "@grasp-os/ui/blocks/*": ["./src/blocks/*"],
       "@grasp-os/ui/components/data-grid": [
@@ -45,6 +50,7 @@
     "tokens",
     "scripts",
     "tests",
+    "tests-tw",
     "site/**/*.ts",
     "site/**/*.tsx",
     "astro.config.ts",

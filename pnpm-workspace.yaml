@@ -81,6 +81,12 @@ catalog:
   "@tailwindcss/vite": 4.3.5
   "@fontsource-variable/geist": 5.3.0
   shadcn: 4.23.0
+  # The Tailwind experiment (experiment/tailwind): the parallel components in src/components-tw.
+  tailwind-merge: 3.7.1
+  class-variance-authority: 0.7.1
+  clsx: 2.1.1
+  streamdown: 2.8.0
+  rehype-sanitize: 6.0.0
 
 # Vite+ replaces Vite and pins Vitest for every package.
 overrides:

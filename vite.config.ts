@@ -61,7 +61,7 @@ export default defineConfig({
       {
         // The product's settings for its installed copy of these files
         // (packages/ui/src/components there).
-        files: ["src/components/**", "src/blocks/**"],
+        files: ["src/components/**", "src/blocks/**", "src/components-tw/**"],
         rules: {
           "shadcn/no-arbitrary-values": "off",
           "shadcn/no-restyle": "off",
@@ -96,7 +96,7 @@ export default defineConfig({
         // `test.each`, and Playwright names its files `.spec.ts`. These are
         // the Vitest rules that read any `*.spec.ts` as Vitest's; a
         // committed `.only` fails Playwright's own `forbidOnly` in CI.
-        files: ["tests/**/*.spec.ts"],
+        files: ["tests/**/*.spec.ts", "tests-tw/**/*.spec.ts"],
         plugins: ["vitest"],
         rules: {
           "vitest/consistent-test-filename": "off",

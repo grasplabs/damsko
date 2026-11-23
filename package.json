@@ -22,6 +22,8 @@
     "@tanstack/react-table": "catalog:",
     "@ui-sdk/core": "catalog:",
     "@ui-sdk/react": "catalog:",
+    "class-variance-authority": "catalog:",
+    "clsx": "catalog:",
     "mdast-util-from-markdown": "catalog:",
     "mdast-util-gfm": "catalog:",
     "micromark-extension-gfm": "catalog:",
@@ -29,7 +31,10 @@
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-is": "catalog:",
-    "recharts": "catalog:"
+    "recharts": "catalog:",
+    "rehype-sanitize": "catalog:",
+    "streamdown": "catalog:",
+    "tailwind-merge": "catalog:"
   },
   "devDependencies": {
     "@astrojs/mdx": "catalog:",
@@ -42,6 +47,7 @@
     "@shadcn/lint": "catalog:",
     "@stylexjs/babel-plugin": "catalog:",
     "@stylexjs/unplugin": "catalog:",
+    "@tailwindcss/vite": "catalog:",
     "@types/babel__core": "catalog:",
     "@types/mdast": "catalog:",
     "@types/node": "catalog:",
@@ -62,6 +68,7 @@
     "secretlint": "catalog:",
     "shadcn": "catalog:",
     "shiki": "catalog:",
+    "tailwindcss": "catalog:",
     "typescript": "catalog:",
     "typescript6": "catalog:",
     "ultracite": "catalog:",

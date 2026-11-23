@@ -1,0 +1,22 @@
+/* The Tailwind experiment: Tailwind's theme and utilities for the components in src/components-tw
+   and their examples (examples/*-tw). No preflight: the frame has its own base, and no component
+   leans on the app's reset. */
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities) source(none);
+@import "../../../src/styles-tw/damsko.css";
+
+@source "../../../examples/*-tw/*.tsx";
+
+/* What the Tailwind examples draw round themselves (a frame, a bar's underline, a head's edge):
+   theme entries, so an example names them as a class and no arbitrary value. */
+@theme inline {
+  --shadow-frame: 0 0 0 var(--damsko-hairline) var(--damsko-border);
+  --shadow-bar-under: inset 0 calc(-1 * var(--damsko-hairline)) 0
+    var(--damsko-border);
+  --shadow-edge: inset 0 0 0 var(--damsko-hairline) var(--damsko-border);
+  --spacing-sidebar-head-end: calc(
+    var(--damsko-sidebar-row-inline) -
+      (var(--damsko-sidebar-icon-button) - var(--damsko-sidebar-icon)) / 2
+  );
+  --color-canvas-text: CanvasText;
+}

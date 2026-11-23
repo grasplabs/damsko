@@ -27,6 +27,7 @@ import mdx from "@astrojs/mdx";
 import react from "@astrojs/react";
 import type { UserOptions } from "@stylexjs/unplugin";
 import stylex from "@stylexjs/unplugin/vite";
+import tailwindcss from "@tailwindcss/vite";
 import type { AstroIntegration } from "astro";
 import { defineConfig } from "astro/config";
 import { Features } from "lightningcss";
@@ -100,6 +101,19 @@ delete stylexPlugin.writeBundle;
 // code on a page reads as a product's. Here they point at src/: a one-file component by its file, a
 // folder component by its index.ts, a block by its file, and lib/ and hooks/ by their files.
 const damskoAliases = [
+  // The Tailwind experiment's parallel files (src/components-tw, src/lib-tw).
+  {
+    find: "@grasp-os/ui/components-tw/markdown",
+    replacement: `${root}src/components-tw/markdown/index.ts`,
+  },
+  {
+    find: /^@grasp-os\/ui\/components-tw\/(?<file>[a-z0-9-]+)$/u,
+    replacement: `${root}src/components-tw/$1.tsx`,
+  },
+  {
+    find: /^@grasp-os\/ui\/lib-tw\/(?<file>[a-z.-]+)$/u,
+    replacement: `${root}src/lib-tw/$1`,
+  },
   {
     find: /^@grasp-os\/ui\/lib\/(?<file>[a-z.-]+)$/u,
     replacement: `${root}src/lib/$1`,
@@ -511,6 +525,7 @@ export default defineConfig({
   vite: {
     cacheDir: "./.astro/vite",
     plugins: [
+      tailwindcss(),
       cacheStylex(stylexPlugin, root, stylexOptions),
       stylexSheet(() => collectStylex?.()),
       searchIndex(),
