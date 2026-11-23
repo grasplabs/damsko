@@ -814,3 +814,56 @@ describe("links' titles and notes while written", () => {
     expect(draw(open)).not.toContain('data-slot="markdown-section"');
   });
 });
+
+/** What a reader sees of each prefix of `answer`, drawn while written, and once it is done. */
+const shownAsWritten = (
+  answer: string,
+  props: Omit<MarkdownProps, "children"> = {}
+) => [
+  ...Array.from({ length: answer.length }, (_, at) =>
+    textOf(draw(answer.slice(0, at + 1), { ...props, streaming: true }))
+  ),
+  textOf(draw(answer, props)),
+];
+
+/** Where a prefix took back what the one before it showed. */
+const takenBack = (seen: string[]) =>
+  seen.flatMap((text, at) =>
+    at > 0 && !text.startsWith((seen[at - 1] ?? "").trimEnd())
+      ? [`${seen[at - 1] ?? ""} -> ${text}`]
+      : []
+  );
+
+/** A host's links, drawn as their words in bold. */
+const bold: MarkdownLinkRenderer = (link) => <b>{link.children}</b>;
+
+describe("what the earlier streaming rules got wrong", () => {
+  test("an address being typed is shown and stays, with the host drawing links, to the end", () => {
+    for (const answer of [
+      "The docs live at https://example.com/docs",
+      "Write to nick@example.com.",
+      "See https:// and https://example.com/a for more.",
+    ]) {
+      const seen = shownAsWritten(answer, { renderLink: bold });
+      expect(takenBack(seen)).toStrictEqual([]);
+      expect(seen.at(-1)).toBe(answer);
+    }
+  });
+
+  test("a note's number is the one the whole answer gives it, at every prefix", () => {
+    const answer = "One[^x] two[^1].\n\n[^1]: The note.";
+    const numbers = [
+      ...Array.from({ length: answer.length }, (_, at) =>
+        draw(answer.slice(0, at + 1), { streaming: true })
+      ),
+      draw(answer),
+    ].flatMap((html) => html.match(/Footnote \d+/gu) ?? []);
+    expect(new Set(numbers)).toStrictEqual(new Set(["Footnote 1"]));
+  });
+
+  test("a list item's `>` and a number is a quote at every prefix, never words with a `>`", () => {
+    const seen = shownAsWritten("- > 2024 was the year we grew.\n- > 25: rich");
+    expect(seen.filter((text) => text.includes(">"))).toStrictEqual([]);
+    expect(takenBack(seen)).toStrictEqual([]);
+  });
+});
