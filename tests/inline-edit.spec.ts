@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
-import { openExample } from "./example.ts";
+import { openExample, settled } from "./example.ts";
 
 /** What the page's live region last said. */
 const said = (page: Page) =>
@@ -154,4 +154,17 @@ test("a field the page keeps open saves on every Enter", async ({ page }) => {
   await field.press("Enter");
   await expect(page.getByText("Saved 2 times")).toBeVisible();
   await expect(field).toBeFocused();
+});
+
+test("a field that starts open takes no focus: the page stays where the reader is", async ({
+  page,
+}) => {
+  await openExample(page, "inline-edit", "kept-open");
+  await settled(page);
+  await expect(page.getByRole("textbox", { name: "Draft name" })).toBeVisible();
+  // Nothing was pressed: focus is still the page's, so a page that woke the field while the
+  // reader was elsewhere has not been scrolled to it.
+  expect(await page.evaluate(() => document.activeElement?.tagName)).toBe(
+    "BODY"
+  );
 });
