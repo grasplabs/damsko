@@ -4,6 +4,8 @@ import { CheckIcon } from "@grasp-os/ui/lib/icons";
 
 const words: Record<BadgeVariant, string> = {
   default: "Draft",
+  secondary: "Design",
+  outline: "Research",
   success: "Done",
   warning: "Needs review",
   destructive: "Blocked",

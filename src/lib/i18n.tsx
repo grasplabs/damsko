@@ -128,6 +128,10 @@ export interface I18nCatalog {
       destructive: string;
       info: string;
     };
+    /** The remove button's name, when the words are not text. */
+    remove: string;
+    /** The remove button's name, from the badge's words. */
+    removeNamed: (words: string) => string;
   };
   breadcrumb: {
     /** The button that shows the levels folded away in the middle. */
@@ -774,12 +778,6 @@ export interface I18nCatalog {
     /** The name of a tab's close button: what it closes. */
     close: (name: string) => string;
   };
-  tag: {
-    /** The remove button's name, when the words are not text. */
-    remove: string;
-    /** The remove button's name, from the tag's words. */
-    removeNamed: (words: string) => string;
-  };
   tagsInput: {
     duplicate: (value: string) => string;
     empty: string;
@@ -923,6 +921,8 @@ const english: I18nCatalog = {
       destructive: "Error",
       info: "Info",
     },
+    remove: "Remove",
+    removeNamed: (words: string) => `Remove ${words}`,
   },
   breadcrumb: {
     ellipsis: "Show hidden levels",
@@ -1421,10 +1421,6 @@ const english: I18nCatalog = {
   },
   tabs: {
     close: (name: string) => `Close ${name}`,
-  },
-  tag: {
-    remove: "Remove",
-    removeNamed: (words: string) => `Remove ${words}`,
   },
   tagsInput: {
     duplicate: (word) => `"${word}" is already added.`,

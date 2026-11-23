@@ -4,6 +4,7 @@ import {
   colors,
   duration,
   media,
+  radius,
   size,
   space,
 } from "@grasp-os/ui/lib/tokens.stylex";
@@ -63,7 +64,7 @@ export const ruleStyles = stylex.create({
     transitionProperty: "text-decoration-color",
     transitionDuration: duration.hover,
     transitionTimingFunction: duration.ease,
-    borderRadius: 2,
+    borderRadius: radius.hairline,
   },
 });
 

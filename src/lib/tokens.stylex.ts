@@ -111,6 +111,8 @@ export const colors = stylex.defineConsts({
   // Tabs: tabs.
   tabLine: "var(--damsko-tab-line)",
   tabBgSelected: "var(--damsko-tab-bg-selected)",
+  // Badge: badge.
+  badgeSecondary: "var(--damsko-badge-secondary)",
   // Alert: alert.
   alertBgDefault: "var(--damsko-alert-bg-default)",
   // Progress: progress.
@@ -147,8 +149,6 @@ export const colors = stylex.defineConsts({
   // Resizable: resizable.
   resizableLine: "var(--damsko-resizable-line)",
   resizableLineActive: "var(--damsko-resizable-line-active)",
-  // Tag: tag.
-  tagBg: "var(--damsko-tag-bg)",
   // Table of contents: table of contents.
   tableOfContentsRead: "var(--damsko-table-of-contents-read)",
   // Prompt input and attachments: prompt input and attachments.
@@ -257,6 +257,8 @@ export const space = stylex.defineConsts({
   menuItemPadding: "var(--damsko-menu-item-padding)",
   // Tabs: tabs.
   tabGap: "var(--damsko-tab-gap)",
+  // Badge: badge.
+  badgeLabelPadding: "var(--damsko-badge-label-padding)",
   // Table: table.
   tableCellBlock: "var(--damsko-table-cell-block)",
   tableCellInline: "var(--damsko-table-cell-inline)",
@@ -269,8 +271,6 @@ export const space = stylex.defineConsts({
   toggleTrackPadding: "var(--damsko-toggle-track-padding)",
   // Kbd: kbd.
   kbdPadding: "var(--damsko-kbd-padding)",
-  // Tag: tag.
-  tagPadding: "var(--damsko-tag-padding)",
   // Section header: section header.
   sectionHeaderGap: "var(--damsko-section-header-gap)",
   // Table of contents: table of contents.
@@ -312,6 +312,7 @@ export const radius = stylex.defineConsts({
   circle: "var(--damsko-radius-circle)",
   // Sidebar: sidebar sizes.
   sidebarCardRadius: "var(--damsko-sidebar-card-radius)",
+  sidebarInsetRadius: "var(--damsko-sidebar-inset-radius)",
 });
 
 export const shadow = stylex.defineConsts({
@@ -544,6 +545,8 @@ export const size = stylex.defineConsts({
   badgeHeightSm: "var(--damsko-badge-height-sm)",
   badgePadding: "var(--damsko-badge-padding)",
   badgeIcon: "var(--damsko-badge-icon)",
+  badgeLabelHeight: "var(--damsko-badge-label-height)",
+  badgeLabelHeightSm: "var(--damsko-badge-label-height-sm)",
   severityDot: "var(--damsko-severity-dot)",
   // Empty: empty.
   emptyPage: "var(--damsko-empty-page)",
@@ -641,10 +644,6 @@ export const size = stylex.defineConsts({
   // Resizable: resizable.
   resizableHandleLength: "var(--damsko-resizable-handle-length)",
   resizableHandleWidth: "var(--damsko-resizable-handle-width)",
-  // Tag: tag.
-  tagHeight: "var(--damsko-tag-height)",
-  tagHeightSm: "var(--damsko-tag-height-sm)",
-  tagIcon: "var(--damsko-tag-icon)",
   // Section header: section header.
   sectionHeaderTitleWait: "var(--damsko-section-header-title-wait)",
   // Table of contents: table of contents.

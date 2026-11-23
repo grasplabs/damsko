@@ -69,6 +69,11 @@ const fadeStart = `linear-gradient(to left, black calc(100% - ${space["8"]}), tr
 const fadeBoth = `linear-gradient(to right, transparent, black ${space["8"]}, black calc(100% - ${space["8"]}), transparent)`;
 
 const styles = stylex.create({
+  // The field's ring, just inside its edge: the field is a box in a row or a dialog, where a ring
+  // standing off it would lie on what is beside it or be cut by what holds it.
+  ringInside: {
+    outlineOffset: `calc(-1 * ${size.ringWidth})`,
+  },
   // The field: a quiet fill in the system's corner, one line. It is one surface: its copy button
   // draws no fill or ring of its own in it (ghostVars), the field's fill answers the pointer and
   // the field takes the keyboard's ring (focusWithin); the icon is quiet until the pointer comes.
@@ -195,6 +200,7 @@ export const Snippet = ({
         styles.field,
         sized === "sm" ? styles.sm : styles.default,
         focusWithin,
+        styles.ringInside,
         style
       )}
     >

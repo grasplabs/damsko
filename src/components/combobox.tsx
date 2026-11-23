@@ -188,6 +188,14 @@ export interface ComboboxEmptyProps {
   children?: ReactNode;
 }
 
+/** Every prop a ComboboxOptions takes. */
+export interface ComboboxOptionsProps {
+  /** The items the field was given: what each shows beside its words (media, a description). */
+  items: ComboboxItems;
+  /** A ComboboxEmpty, for the words the list says when nothing matches. Without one, the catalogue's. */
+  children?: ReactNode;
+}
+
 // ---- The look --------------------------------------------------------------------------------------
 
 const HOVER = media.hover;
@@ -614,6 +622,26 @@ export const ComboboxEmpty = ({ children }: ComboboxEmptyProps) => {
   );
 };
 
+/**
+ * What the popup of a field on UI SDK's Combobox holds: the words when nothing matches, the items
+ * that match, and the fade over a long list's end. Combobox draws its own with it, and TagsInput
+ * its suggestions, so the two lists are one.
+ */
+export const ComboboxOptions = ({ items, children }: ComboboxOptionsProps) => {
+  const byValue = byValueOf(items);
+  return (
+    <>
+      {children ?? <ComboboxEmpty />}
+      <ComboboxList>
+        {(state: { items: ListData<unknown> }) => (
+          <Options items={state.items} byValue={byValue} />
+        )}
+      </ComboboxList>
+      <span aria-hidden="true" {...stylex.props(listStyles.more)} />
+    </>
+  );
+};
+
 /** Type to find one value in a list. */
 export const Combobox = ({
   items,
@@ -787,13 +815,7 @@ export const Combobox = ({
           scrollbarHidden
         )}
       >
-        {children ?? <ComboboxEmpty />}
-        <ComboboxList>
-          {(state: { items: ListData<unknown> }) => (
-            <Options items={state.items} byValue={byValue} />
-          )}
-        </ComboboxList>
-        <span aria-hidden="true" {...stylex.props(listStyles.more)} />
+        <ComboboxOptions items={items}>{children}</ComboboxOptions>
       </ComboboxContent>
     </ComboboxPrimitive>
   );

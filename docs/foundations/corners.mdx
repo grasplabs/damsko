@@ -37,7 +37,7 @@ description: One corner for almost everything, a squircle, so a curve meets its 
 
 ## Rows
 
-A row takes the row corner, `radius-row`: the one corner less the room a container keeps round its rows (20px less 4px, so 16px), capped at half the row's height, in the squircle. A menu or list item, an Item, a tree or sidebar row and a trigger that runs the width all take it, so a row reads the same wherever it stands.
+A row takes the row corner, `radius-row`: the one corner less the room a container keeps round its rows (20px less 4px, so 16px), capped at half the row's height, in the squircle. A menu or list item, an Item, a tree or sidebar row and a trigger that runs the width all take it, so a row reads the same wherever it stands. What holds rows nests round them: a floating sidebar takes a row's corner plus the 8px it keeps round its rows (`sidebar-card-radius`, 24px), in the squircle. The page card beside an inset sidebar holds no sidebar rows, so the rule does not reach it: it is the app's main surface and keeps its own plain 12px corner (`sidebar-inset-radius`). A trigger inside a card is still a row and takes the row corner, in a Tool's card as on a Sources line.
 
 ## Tiles and thin things
 
@@ -49,7 +49,7 @@ A square tile takes the one corner capped at half its side, and the mark corner 
   always={[
     "Write `corner-shape` after `corner`, so the squircle takes the radius.",
     "Give a mark under 24px tall the mark corner, in the squircle like every other corner.",
-    "Use the pill for a chip, a tag or the track of a switch, a slider or a progress bar, and the circle for an avatar or a dot.",
+    "Use the pill for a chip, a badge or the track of a switch, a slider or a progress bar, and the circle for an avatar or a dot.",
     "Give a segmented control the one corner on its track, and each segment the track's corner less its padding.",
   ]}
   never={["A radius of your own.", "Square corners on a control or a card."]}

@@ -1,6 +1,6 @@
-// Tags input: several values typed into one field, each a Tag, on UI SDK's Combobox with several
-// values (Ark's and Chakra's TagsInput, by name). Enter or a comma adds what was typed; pasted words
-// split on commas and new lines; Backspace in the empty field first goes to the last tag, and a
+// Tags input: several values typed into one field, each a secondary Badge, on UI SDK's Combobox
+// with several values (Ark's and Chakra's TagsInput, by name). Enter or a comma adds what was typed;
+// pasted words split on commas and new lines; Backspace in the empty field first goes to the last tag, and a
 // second Backspace takes it away; the arrow keys move between the tags. A value already there, or
 // one past `max`, is refused, and the field says why, to a screen reader too. Suggestions, when
 // given, open the Combobox's list as you type.
@@ -22,16 +22,11 @@ import {
   ComboboxChip,
   ComboboxChips,
   ComboboxContent,
-  ComboboxEmpty,
   ComboboxInput,
-  ComboboxItem,
-  ComboboxItemIndicator,
-  ComboboxList,
   ComboboxValue,
 } from "@ui-sdk/react/combobox";
 import type {
   ComboboxChipState,
-  ComboboxItemState,
   ComboboxValueState,
 } from "@ui-sdk/react/combobox";
 import { useId, useRef, useState } from "react";
@@ -39,7 +34,6 @@ import type { ClipboardEvent, KeyboardEvent } from "react";
 
 import { useI18n } from "../lib/i18n";
 import type { I18nCatalog } from "../lib/i18n";
-import { CheckIcon, Icon } from "../lib/icons";
 import {
   focusField,
   focusRing,
@@ -60,11 +54,11 @@ import {
 } from "../lib/tokens.stylex";
 // UI SDK places a popup in pixels: popup-gap and popup-gutter, as the generator writes them.
 import { popup } from "../lib/tokens.values";
-import { className } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { listMarker } from "../lib/vars.stylex";
+import { Badge } from "./badge";
+import { ComboboxEmpty, ComboboxOptions } from "./combobox";
 import type { InputSize } from "./input";
-import { Tag } from "./tag";
 
 /** The words a TagsInput says, so the product can say them in its own language. */
 export type TagsInputLabels = I18nCatalog["tagsInput"];
@@ -167,11 +161,15 @@ const styles = stylex.create({
     transitionTimingFunction: duration.ease,
   },
   // One line's height (inputStyles), with the padding that centres a tag in it.
-  sm: { paddingBlock: `calc((${sizes.controlSm} - ${sizes.tagHeight}) / 2)` },
-  default: {
-    paddingBlock: `calc((${sizes.controlDefault} - ${sizes.tagHeight}) / 2)`,
+  sm: {
+    paddingBlock: `calc((${sizes.controlSm} - ${sizes.badgeLabelHeight}) / 2)`,
   },
-  lg: { paddingBlock: `calc((${sizes.controlLg} - ${sizes.tagHeight}) / 2)` },
+  default: {
+    paddingBlock: `calc((${sizes.controlDefault} - ${sizes.badgeLabelHeight}) / 2)`,
+  },
+  lg: {
+    paddingBlock: `calc((${sizes.controlLg} - ${sizes.badgeLabelHeight}) / 2)`,
+  },
   // A finger needs 44px: on a touch screen an invisible area makes up a small field's height.
   target: {
     position: "absolute",
@@ -217,7 +215,7 @@ const styles = stylex.create({
     fieldSizing: "content",
     minWidth: "8ch",
     maxWidth: "100%",
-    height: sizes.tagHeight,
+    height: sizes.badgeLabelHeight,
     margin: 0,
     paddingBlock: 0,
     paddingInline: space[1],
@@ -244,7 +242,6 @@ const styles = stylex.create({
   },
   // The list under the field is at least as wide as the field.
   suggestions: { minWidth: "var(--anchor-width)" },
-  option: { fontWeight: font.weightNormal },
   // Why a value was refused, under the field, said to a screen reader too. Saying nothing, it stays
   // in the page for screen readers but out of the grid: no row, no gap, so the field's description
   // stands as close as any field's.
@@ -325,7 +322,7 @@ const chosenWords = (chosen: unknown): string[] =>
     : [];
 
 // Where the keyboard goes once a tag is taken away by its button: the next tag's remove button,
-// else the one before, else the field. Each tag stands in its own chip, so Tag's own rule (its
+// else the one before, else the field. Each tag stands in its own chip, so Badge's own rule (its
 // neighbours in the same row) finds none here: they are looked up across the whole field.
 const afterRemoving = (
   field: HTMLElement | null,
@@ -335,7 +332,7 @@ const afterRemoving = (
     return null;
   }
   const buttons = [
-    ...field.querySelectorAll<HTMLElement>("[data-slot=tag-remove]"),
+    ...field.querySelectorAll<HTMLElement>("[data-slot=badge-remove]"),
   ];
   return (
     buttons[at + 1] ??
@@ -344,7 +341,7 @@ const afterRemoving = (
   );
 };
 
-/** Several values typed into one field, each shown as a Tag. */
+/** Several values typed into one field, each shown as a secondary Badge. */
 export const TagsInput = ({
   value,
   defaultValue = noTags,
@@ -420,6 +417,8 @@ export const TagsInput = ({
     commit(next);
   };
 
+  // The suggestions as the list takes them: a list of its own, as the product's may be read-only.
+  const options = suggestions === undefined ? [] : [...suggestions];
   const root = useRef<HTMLDivElement>(null);
   // The suggestions open under the whole field, as wide as it, not under the few letters typed.
   const [field, setField] = useState<HTMLDivElement | null>(null);
@@ -498,6 +497,7 @@ export const TagsInput = ({
       <Combobox<string, true>
         multiple
         allowCustomValue
+        items={options.length > 0 ? options : undefined}
         value={values}
         defaultValue={defaultValue}
         onValueChange={change}
@@ -539,7 +539,8 @@ export const TagsInput = ({
                     {/* Out of use, by its own prop or its Field's, a tag cannot be taken away. */}
                     {(chip: ComboboxChipState) => (
                       <>
-                        <Tag
+                        <Badge
+                          variant="secondary"
                           onRemove={
                             chip.disabled
                               ? undefined
@@ -549,7 +550,7 @@ export const TagsInput = ({
                           }
                         >
                           {word}
-                        </Tag>
+                        </Badge>
                         {wrong === "" ? null : (
                           <span id={why} {...stylex.props(visuallyHidden)}>
                             , {wrong}
@@ -571,7 +572,7 @@ export const TagsInput = ({
             {...stylex.props(styles.input)}
           />
         </ComboboxChips>
-        {suggestions !== undefined && suggestions.length > 0 ? (
+        {options.length > 0 ? (
           <ComboboxContent
             anchor={field ?? undefined}
             sideOffset={popup.gap}
@@ -583,31 +584,9 @@ export const TagsInput = ({
               scrollbarHidden
             )}
           >
-            <ComboboxEmpty {...stylex.props(listStyles.empty)}>
-              {words.empty}
-            </ComboboxEmpty>
-            <ComboboxList>
-              {suggestions.map((word) => (
-                <ComboboxItem
-                  key={word}
-                  value={word}
-                  label={word}
-                  className={(state: ComboboxItemState) =>
-                    className(
-                      listStyles.item,
-                      listStyles.menuItem,
-                      styles.option,
-                      state.highlighted && listStyles.itemHighlighted
-                    )
-                  }
-                >
-                  <span {...stylex.props(listStyles.itemText)}>{word}</span>
-                  <ComboboxItemIndicator {...stylex.props(listStyles.check)}>
-                    <Icon icon={CheckIcon} />
-                  </ComboboxItemIndicator>
-                </ComboboxItem>
-              ))}
-            </ComboboxList>
+            <ComboboxOptions items={options}>
+              <ComboboxEmpty>{words.empty}</ComboboxEmpty>
+            </ComboboxOptions>
           </ComboboxContent>
         ) : null}
       </Combobox>

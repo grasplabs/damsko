@@ -130,6 +130,7 @@ const styles = stylex.create({
     flexDirection: "column",
     overflow: "clip",
     borderRadius: "inherit",
+    cornerShape: "inherit",
   },
   header: {
     display: "flex",

@@ -6,6 +6,31 @@ import { openExample } from "./example.ts";
 const scrollTop = async (element: Locator): Promise<number> =>
   await element.evaluate((node) => node.scrollTop);
 
+/**
+ * Presses a key that scrolls the area and waits until that scroll has ended.
+ *
+ * A browser may glide to where a key sends it, over many frames, and Chromium drops a scroll key
+ * that arrives while the glide before it is still ending: the area then stays where it was. A
+ * person's keys come far apart; a spec's follow in milliseconds on a busy machine. So the next
+ * key waits for the browser's own word that this one's scroll is over (`scrollend`), listened
+ * for before the key goes down.
+ */
+const pressAndScroll = async (area: Locator, key: string): Promise<void> => {
+  const scroll = await area.evaluateHandle((node) => {
+    const ended = Promise.withResolvers<null>();
+    node.addEventListener(
+      "scrollend",
+      () => {
+        ended.resolve(null);
+      },
+      { once: true }
+    );
+    return { ended: ended.promise };
+  });
+  await area.page().keyboard.press(key);
+  await scroll.evaluate(async ({ ended }) => await ended);
+};
+
 test("with words alone it is a named region the keyboard reaches and scrolls", async ({
   page,
 }) => {
@@ -15,19 +40,16 @@ test("with words alone it is a named region the keyboard reaches and scrolls", a
   await expect(area).toBeFocused();
   expect(await scrollTop(area)).toBe(0);
 
-  await page.keyboard.press("ArrowDown");
-  await expect.poll(async () => await scrollTop(area)).toBeGreaterThan(0);
-  await page.keyboard.press("End");
-  await expect
-    .poll(
-      async () =>
-        await area.evaluate(
-          (node) => node.scrollTop + node.clientHeight >= node.scrollHeight - 1
-        )
+  await pressAndScroll(area, "ArrowDown");
+  expect(await scrollTop(area)).toBeGreaterThan(0);
+  await pressAndScroll(area, "End");
+  expect(
+    await area.evaluate(
+      (node) => node.scrollTop + node.clientHeight >= node.scrollHeight - 1
     )
-    .toBe(true);
-  await page.keyboard.press("Home");
-  await expect.poll(async () => await scrollTop(area)).toBe(0);
+  ).toBe(true);
+  await pressAndScroll(area, "Home");
+  expect(await scrollTop(area)).toBe(0);
 });
 
 test("the browser's own scrollbar never shows", async ({ page }) => {
