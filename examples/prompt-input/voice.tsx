@@ -14,21 +14,22 @@ import {
 import { Icon, MicIcon } from "@grasp-os/ui/lib/icons";
 import { useEffect, useState } from "react";
 
-// A pretend conversation: the other voice asks, the person answers, turn about, a word a second.
+// A pretend conversation: the other voice asks, the person answers, a word a second.
 const turns = [
-  {
-    status: "speaking",
-    words: ["What", "slows", "the", "team", "down", "most?"],
-  },
-  { status: "listening", words: ["Waiting", "on", "reviews,", "mostly."] },
-  { status: "speaking", words: ["How", "long", "does", "one", "take?"] },
-  { status: "listening", words: ["Two", "days,", "on", "a", "good", "week."] },
+  { status: "speaking", words: "What slows the team down most?".split(" ") },
+  { status: "listening", words: "Waiting on reviews, mostly.".split(" ") },
 ] as const;
 
-// A spoken conversation stands in the card while it runs: the words of the turn, and under them
-// the time (the other voice's mark while it speaks), the voice's level, the microphone and a close
-// button. The turns pass by themselves. Close, or Escape, gives the text back; the microphone
-// button in the footer starts it again. The voices here are pretend.
+// A pretend voice, read a frame at a time as a product reads its microphone.
+const sound = () => {
+  const seconds = performance.now() / 1000;
+  const syllable = Math.max(0, Math.sin(seconds * 8)) ** 2;
+  const level = 0.05 + (0.5 + 0.4 * Math.sin(seconds * 1.3)) * syllable;
+  return { level, bands: [level, level * 0.8, level * 0.3] };
+};
+
+// A spoken conversation stands in the card while it runs; the turns pass by themselves. Close,
+// or Escape, gives the text back, and the microphone button starts it again.
 export default function PromptInputVoiceExample() {
   const [talking, setTalking] = useState(true);
   const [muted, setMuted] = useState(false);
@@ -62,7 +63,7 @@ export default function PromptInputVoiceExample() {
       {talking ? (
         <PromptInputVoice
           status={turn.status}
-          level={running ? 0.3 + 0.25 * (step % 3) : 0}
+          sample={sound}
           interim={listening ? turn.words[said] : undefined}
           speaker={<AgentIndicator />}
           muted={muted}

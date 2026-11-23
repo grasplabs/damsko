@@ -100,6 +100,7 @@ const examplesApart = new Set([
   "prompt-input/glass",
   "prompt-input/model",
   "prompt-input/voice",
+  "prompt-input/voice-problems",
   "prompt-input/working",
 ]);
 

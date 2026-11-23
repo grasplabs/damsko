@@ -19,6 +19,15 @@ import { useEffect, useState } from "react";
 const typed = "Before Monday: ";
 const heard = ["send", "the", "numbers", "to", "the", "board"];
 
+// A pretend voice, read a frame at a time as a product reads its microphone: syllables in
+// phrases, with a breath between them, and a little of the room under it.
+const sound = () => {
+  const seconds = performance.now() / 1000;
+  const syllable = Math.max(0, Math.sin(seconds * 8)) ** 2;
+  const level = 0.05 + (0.5 + 0.4 * Math.sin(seconds * 1.3)) * syllable;
+  return { level, bands: [level, level * 0.8, level * 0.3] };
+};
+
 // Dictation: the product listens and writes what it hears through the controller; the prompt
 // input shows the bar while it does: Cancel, the time, the voice's level, the microphone and
 // Done. The words here are pretend, one a second, and so is the level; the word being heard shows
@@ -77,7 +86,7 @@ export default function PromptInputDictation() {
             }}
             muted={muted}
             onMutedChange={setMuted}
-            level={hearing ? 0.25 + 0.25 * (words % 3) : 0}
+            sample={sound}
             interim={hearing ? heard[words] : undefined}
           />
         </PromptInputTools>

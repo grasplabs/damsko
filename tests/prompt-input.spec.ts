@@ -581,21 +581,6 @@ test("while it listens Enter in the text sends nothing, and Escape there cancels
   await expect(text).toBeFocused();
 });
 
-test("while it listens the words step back to the quiet colour, and come back as it ends", async ({
-  page,
-}) => {
-  await openExample(page, "prompt-input", "dictation", { time: fixedTime });
-  const text = page.getByRole("textbox", { name: "Message" });
-  const colour = async () =>
-    await text.evaluate((element) => getComputedStyle(element).color);
-  const ink = await colour();
-  await page.getByRole("button", { name: "Dictate" }).click();
-  await expect(page.getByRole("group", { name: "Listening" })).toBeVisible();
-  await expect.poll(colour).not.toBe(ink);
-  await page.getByRole("button", { name: "Done" }).click();
-  await expect.poll(colour).toBe(ink);
-});
-
 test("a word heard but not yet final shows lighter after the text, and is no part of it", async ({
   page,
 }) => {
@@ -1287,45 +1272,137 @@ test("a spoken conversation takes the focus as it starts from the keyboard, and 
   await expect(page.getByRole("textbox", { name: "Answer" })).toBeFocused();
 });
 
-test("a spoken conversation that cannot hear says why at once, and offers another go", async ({
-  page,
-}) => {
-  await openExample(page, "prompt-input", "voice-problem");
-  const voice = page.getByRole("group", { name: "Voice conversation" });
-  await expect(
-    voice.getByRole("alert").filter({ hasText: "No microphone was found" })
-  ).toBeVisible();
-  // No time and no microphone to turn off: only another go, and the way out.
-  await expect(voice.getByRole("timer")).toHaveCount(0);
-  await expect(voice.getByRole("button", { name: "Mute" })).toHaveCount(0);
-  await voice.getByRole("button", { name: "Try again" }).click();
-  await expect(voice.getByRole("alert")).toHaveCount(0);
-  await expect(voice.getByRole("timer")).toBeVisible();
-});
+for (const [problem, words, retry] of [
+  ["Blocked", "Allow the microphone in the browser's settings.", true],
+  ["Missing", "No microphone was found.", true],
+  ["Connection", "The connection was lost.", true],
+  ["Unsupported", "This browser can't dictate.", false],
+  ["Timed out", "That's as long as one dictation can be.", false],
+] as const) {
+  test(`a voice stopped (${problem}) leaves the text at rest under a banner that says why${retry ? ", with another go" : ""}`, async ({
+    page,
+  }) => {
+    const said = await listenToLiveRegions(page);
+    await openExample(page, "prompt-input", "voice-problems");
+    await page.getByRole("button", { name: problem, exact: true }).click();
+    const alert = page.getByRole("alert");
+    await expect(alert).toHaveText(new RegExp(words, "u"));
+    // What was typed is kept, and can be written on.
+    const text = page.getByRole("textbox", { name: "Message" });
+    await expect(text).toHaveText("Before Monday:");
+    const again = page.getByRole("button", { name: "Try again" });
+    await expect(again).toHaveCount(retry ? 1 : 0);
+    if (retry) {
+      await again.focus();
+      await page.keyboard.press("Enter");
+      await expect(alert).toContainText("Tried 1 more.");
+    }
+    await page.getByRole("button", { name: "Dismiss" }).focus();
+    await page.keyboard.press("Enter");
+    await expect(alert).toHaveCount(0);
+    await expect(text).toBeFocused();
+    // The banner is its own announcement: nothing more is said of it.
+    expect(await said()).toEqual([]);
+  });
+}
+
+/** How many of the field's pixels are lit, and the colours it is lit in. */
+const fieldDrawn = async (page: Page) =>
+  await page.evaluate(() => {
+    const canvas = document.querySelector("canvas");
+    const pixels =
+      canvas?.getContext("2d")?.getImageData(0, 0, canvas.width, canvas.height)
+        .data ?? [];
+    const colours = new Set<string>();
+    let lit = 0;
+    for (let at = 0; at < pixels.length; at += 4) {
+      if ((pixels[at + 3] ?? 0) > 200) {
+        lit += 1;
+        colours.add(`${pixels[at]},${pixels[at + 1]},${pixels[at + 2]}`);
+      }
+    }
+    return { lit, colours: [...colours] };
+  });
+
+/** How many of the field's pixels are lit. */
+const fieldLit = async (page: Page) => {
+  const drawn = await fieldDrawn(page);
+  return drawn.lit;
+};
 
 test("the voice's field is drawn from the sound the product reads, a frame at a time", async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
-  await openExample(page, "prompt-input", "voice-problem");
-  const voice = page.getByRole("group", { name: "Voice conversation" });
-  await voice.getByRole("button", { name: "Try again" }).click();
-  await expect(voice.getByRole("timer")).toBeVisible();
+  await openExample(page, "prompt-input", "voice");
+  await expect(
+    page.getByRole("group", { name: "Voice conversation" })
+  ).toBeVisible();
   // Its pixels are there, and they change as the sound does.
-  const drawn = async () =>
-    await page.evaluate(() => {
-      const canvas = document.querySelector("canvas");
-      const pixels =
-        canvas
-          ?.getContext("2d")
-          ?.getImageData(0, 0, canvas.width, canvas.height).data ?? [];
-      let lit = 0;
-      for (let at = 3; at < pixels.length; at += 4) {
-        lit += (pixels[at] ?? 0) > 0 ? 1 : 0;
-      }
-      return lit;
-    });
-  await expect.poll(drawn).toBeGreaterThan(0);
-  const first = await drawn();
-  await expect.poll(drawn).not.toBe(first);
+  await expect.poll(async () => await fieldLit(page)).toBeGreaterThan(0);
+  const first = await fieldLit(page);
+  await expect.poll(async () => await fieldLit(page)).not.toBe(first);
+});
+
+test("in forced colours the voice's field is drawn in the system's text colour alone", async ({
+  page,
+}) => {
+  await page.emulateMedia({ forcedColors: "active" });
+  await openExample(page, "prompt-input", "voice");
+  await expect.poll(async () => await fieldLit(page)).toBeGreaterThan(0);
+  const ink = await page.evaluate(() => {
+    const probe = document.createElement("canvas").getContext("2d");
+    if (probe === null) {
+      return "";
+    }
+    probe.fillStyle = "CanvasText";
+    probe.fillRect(0, 0, 1, 1);
+    const [red, green, blue] = probe.getImageData(0, 0, 1, 1).data;
+    return `${red},${green},${blue}`;
+  });
+  const drawn = await fieldDrawn(page);
+  expect(drawn.colours).toEqual([ink]);
+});
+
+test("right to left, a conversation's row runs the other way: the time at the right, Close at the left", async ({
+  page,
+}) => {
+  await openExample(page, "prompt-input", "voice");
+  await page.evaluate(() => {
+    document.documentElement.dir = "rtl";
+  });
+  const voice = page.getByRole("group", { name: "Voice conversation" });
+  const [close, mute, field] = await Promise.all([
+    voice.getByRole("button", { name: "Close voice" }).boundingBox(),
+    voice.getByRole("button", { name: "Mute" }).boundingBox(),
+    page.locator("canvas").boundingBox(),
+  ]);
+  expect(close).not.toBeNull();
+  expect(mute).not.toBeNull();
+  expect(field).not.toBeNull();
+  if (close !== null && mute !== null && field !== null) {
+    expect(close.x).toBeLessThan(mute.x);
+    expect(mute.x).toBeLessThan(field.x);
+  }
+});
+
+test("while it listens the words typed before step back, and what the dictation settles is ink", async ({
+  page,
+}) => {
+  await openExample(page, "prompt-input", "dictation", { time: fixedTime });
+  const text = page.getByRole("textbox", { name: "Message" });
+  // The words marked as typed before the dictation, as the page draws them quiet.
+  const quiet = async () =>
+    await page.evaluate(() =>
+      [...(CSS.highlights.get("prompt-input-typed") ?? [])]
+        .map((range) => (range instanceof Range ? range.toString() : ""))
+        .join("|")
+    );
+  expect(await quiet()).toBe("");
+  await page.getByRole("button", { name: "Dictate" }).click();
+  await page.clock.runFor(2100);
+  await expect(text).toContainText("Before Monday: send the");
+  await expect.poll(quiet).toBe("Before Monday: ");
+  await page.getByRole("button", { name: "Done" }).click();
+  await expect.poll(quiet).toBe("");
 });
