@@ -2275,6 +2275,16 @@
           "target": "~/src/components/prompt-input-limit.ts"
         },
         {
+          "path": "src/components/prompt-input-voice-field.ts",
+          "type": "registry:file",
+          "target": "~/src/components/prompt-input-voice-field.ts"
+        },
+        {
+          "path": "src/components/prompt-input-voice-motion.ts",
+          "type": "registry:file",
+          "target": "~/src/components/prompt-input-voice-motion.ts"
+        },
+        {
           "path": "src/components/prompt-input.tsx",
           "type": "registry:file",
           "target": "~/src/components/prompt-input.tsx"

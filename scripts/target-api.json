@@ -1120,6 +1120,7 @@
       "PromptInputBanner",
       "PromptInputQueue",
       "PromptInputQueueItem",
+      "PromptInputVoice",
       "PromptInputMention",
       "PromptInputMentionContent",
       "PromptInputMentionItem",
@@ -1147,12 +1148,15 @@
       "PromptInputBannerProps",
       "PromptInputQueueProps",
       "PromptInputQueueItemProps",
+      "PromptInputVoiceProps",
       "PromptInputMentionProps",
       "PromptInputMentionContentProps",
       "PromptInputMentionItemProps",
       "PromptInputSpeechButtonProps"
     ],
-    "src/components/prompt-input-limit.ts": null
+    "src/components/prompt-input-limit.ts": null,
+    "src/components/prompt-input-voice-field.ts": null,
+    "src/components/prompt-input-voice-motion.ts": null
   },
   "radio-group": {
     "src/components/radio-group.tsx": [

@@ -121,7 +121,7 @@ With `loading` the prompt input stands still in the box it will have: the plus, 
 
 ## Dictation
 
-`PromptInputSpeechButton` starts a dictation, and while it listens the footer gives way to its bar: Cancel, the time it has run, the voice's `level` as a fine line of pixels whose middle stands taller with the voice, the microphone (off for a moment with `muted`, when the time waits) and Done where Submit stood. Escape cancels, from the bar as from the text, and Enter sends nothing while the bar stands where Submit was. While it listens the words in the text step back to the quiet colour. Words heard but not yet final go in `interim`: they show lighter still after the text, and are no part of the message until the product writes them. Started from the keyboard, focus goes to Done and comes back to the button as the bar goes; a pointer's press leaves it in the text. The product listens, with the recogniser it chooses (the browser's own, a service), writes what it hears through the PromptInput's `controller`, and takes it out again in `onCancel`; the button holds no recognition of its own.
+`PromptInputSpeechButton` starts a dictation, and while it listens the footer gives way to its bar: Cancel, the time it has run, the voice's `level` as a field of light that swells with the voice, the microphone (off for a moment with `muted`, when the time waits) and Done where Submit stood. Escape cancels, from the bar as from the text, and Enter sends nothing while the bar stands where Submit was. While it listens the words that were in the text before step back to the quiet colour, and what the dictation settles is drawn in ink. Words heard but not yet final go in `interim`: they show lighter after the text, and are no part of the message until the product writes them. Started from the keyboard, focus goes to Done and comes back to the button as the bar goes; a pointer's press leaves it in the text. The product listens, with the recogniser it chooses (the browser's own, a service), writes what it hears through the PromptInput's `controller`, and takes it out again in `onCancel`; the button holds no recognition of its own.
 
 <Stage path="prompt-input/dictation" label="Dictation" />
 
@@ -141,6 +141,18 @@ useDictation({ listening, onPhrase: (phrase) => controller.insert(phrase) });
   />
 </PromptInput>;
 ```
+
+## A spoken conversation
+
+`PromptInputVoice` stands in the card while a spoken conversation runs, in place of the body and the footer: the words of the turn (those not yet final lighter, in `interim`), and under them the time, the voice's field, the microphone and a close button. The turns pass by themselves between the person (`status="listening"`) and the other voice (`speaking`: its mark, `speaker`, in the time's place, its field a stop quieter), each said once. The close button, or Escape, runs `onClose`; the product draws the text again, which takes the focus. The product listens and speaks.
+
+<Stage path="prompt-input/voice" label="A spoken conversation" />
+
+The field is one canvas: a body of the brand's light that swells with the voice in place. `sample` is the product's reading of the sound now, read at each frame with no render; `level` does for a value already in state. A noise gate, the speaker's own loudness, an envelope and a spring stand between reading and drawing. With reduced motion it is a still band; in forced colours it takes the system's text colour. Its code is fetched as the first voice starts, and `PromptInputSpeechButton` draws the same field. A stretch not made out is a `note` under the words.
+
+What stops a voice is a `PromptInputBanner`: the card is back at its text, and the banner says why at once, with Try again where another go can work.
+
+<Stage path="prompt-input/voice-problems" label="What stops a voice" />
 
 ## With a message
 
@@ -325,6 +337,11 @@ const answer: Record<ChatStatus, MessageStatus> = {
       key: "Speech",
       value:
         "A toggle button; while it listens, a group named Listening with Cancel, a timer, Mute (pressed while off) and Done",
+    },
+    {
+      key: "Voice",
+      value:
+        "A group with a timer, Mute and Close voice; each turn is said once; Escape closes",
     },
     {
       key: "Failure",
@@ -513,6 +530,14 @@ const answer: Record<ChatStatus, MessageStatus> = {
   source="src/components/prompt-input.tsx"
   type="PromptInputNoteProps"
   label="PromptInputNote"
+/>
+
+### PromptInputVoice
+
+<Props
+  source="src/components/prompt-input.tsx"
+  type="PromptInputVoiceProps"
+  label="PromptInputVoice"
 />
 
 ### PromptInputBanner

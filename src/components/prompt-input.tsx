@@ -29,6 +29,9 @@
 //     <PromptInputMention triggers={[{ char: "@", type: "person", items: loadPeople }]} />
 //   </PromptInput>
 //
+// A spoken conversation stands in the card's parts' place: PromptInputVoice, the words of the turn
+// over the voice's level, the microphone and a close button, where the body and the footer were.
+//
 // While the answer comes a soft light travels along the card's top edge. PromptInputNote is the
 // band tucked under the card's foot: it says what the assistant is doing, in the caller's words,
 // and that a send failed, in the catalogue's, until the person types again.
@@ -156,7 +159,6 @@ import {
   iconVars,
   menuMarker,
   pixel,
-  pixelVars,
   ringInsetMarker,
 } from "../lib/vars.stylex";
 import { Alert, AlertAction, AlertTitle } from "./alert";
@@ -190,6 +192,8 @@ import type {
   DropdownMenuProps,
 } from "./dropdown-menu";
 import { refitOf, stageOf } from "./prompt-input-limit";
+import type { VoiceField, VoiceFieldMode } from "./prompt-input-voice-field";
+import type { VoiceReading } from "./prompt-input-voice-motion";
 import { Skeleton } from "./skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip";
 
@@ -717,6 +721,12 @@ export interface PromptInputSpeechButtonProps {
   /** Listening now. Pass it with `onListeningChange` to keep it in state. */
   listening?: boolean;
   /**
+   * The product is writing down what it heard, after Done: the bar stays for that moment, its
+   * field drains to its middle, and "Writing it down" is said once.
+   * @default false
+   */
+  settling?: boolean;
+  /**
    * Runs as a press turns listening on or off. The product listens, and writes the words through
    * the PromptInput's `controller`.
    */
@@ -731,11 +741,16 @@ export interface PromptInputSpeechButtonProps {
   /** Runs as the bar's microphone turns it off or on again. */
   onMutedChange?: (muted: boolean) => void;
   /**
-   * How loud the voice is now, from 0 to 1, as the product reads it from its microphone: the
-   * bar's line swells with it.
+   * How loud the voice is now, from 0 to 1, as the product reads it from its microphone many
+   * times a second: the bar's field of light swells with it.
    * @default 0
    */
   level?: number;
+  /**
+   * The sound now, read at each frame in place of `level`, with no render: its `level` from 0 to
+   * 1 and, for more, its energy in `bands` from low to high.
+   */
+  sample?: () => VoiceReading | undefined;
   /**
    * The words heard but not yet final, shown lighter after the text until the product writes
    * them through the `controller`. Not part of the message.
@@ -748,6 +763,43 @@ export interface PromptInputSpeechButtonProps {
    * @default false
    */
   disabled?: boolean;
+  /** Layout only. */
+  style?: LayoutStyle;
+}
+
+/** Every prop a PromptInputVoice takes. */
+export interface PromptInputVoiceProps {
+  /**
+   * Whose turn it is, said once as it starts: the person's, or the other voice's.
+   * @default "listening"
+   */
+  status?: "listening" | "speaking";
+  /** The words of this turn so far. */
+  children?: ReactNode;
+  /** The words heard but not yet final, shown lighter after them. */
+  interim?: string;
+  /**
+   * How loud the voice of this turn is now, from 0 to 1: the field swells with it.
+   * @default 0
+   */
+  level?: number;
+  /**
+   * The sound now, read at each frame in place of `level`, with no render: its `level` from 0 to
+   * 1 and, for more, its energy in `bands` from low to high.
+   */
+  sample?: () => VoiceReading | undefined;
+  /** A quiet line under the words while the voice goes on, said once; the field thins. */
+  note?: string;
+  /** The other voice's mark, in the time's place while it speaks. */
+  speaker?: ReactNode;
+  /** The microphone is off for a moment. Pair it with `onMutedChange`. */
+  muted?: boolean;
+  /** Runs as the microphone button turns it off or on again. */
+  onMutedChange?: (muted: boolean) => void;
+  /** Runs as the close button is pressed, or Escape: the product draws the text again. */
+  onClose: () => void;
+  /** Its name, in place of `promptInput.voice.label` ("Voice conversation"). */
+  "aria-label"?: string;
   /** Layout only. */
   style?: LayoutStyle;
 }
@@ -765,6 +817,8 @@ const NARROW = "@container prompt-input (width < 30rem)";
 // banner's own box that is the form at 26.5rem (the body and the strip's insets).
 const WIDE = "@container (width >= 24rem)";
 const BANNER_WIDE = "@container prompt-input (width >= 26.5rem)";
+// How bright the light over the card is while a voice is heard, set on the light at each frame.
+const LISTEN = "--prompt-input-listen";
 // Which way the working light travels: with the reading direction.
 const WAY = "--prompt-input-light-way";
 
@@ -774,6 +828,12 @@ const glow = stylex.keyframes({
   "0%": { opacity: 0 },
   "20%": { opacity: 1 },
   "100%": { opacity: 0 },
+});
+// A heard word resolves out of the system's pixels: seen through the grid, then whole.
+const resolve = stylex.keyframes({
+  "0%": { opacity: 0, maskImage: pixel.mask, maskSize: "3px 3px" },
+  "60%": { opacity: 1, maskImage: pixel.mask, maskSize: "3px 3px" },
+  "100%": { opacity: 1, maskImage: "none" },
 });
 // With reduced motion the halo stands still for its moment and is gone: a mark, no movement.
 const stay = stylex.keyframes({
@@ -842,6 +902,16 @@ const styles = stylex.create({
     transitionTimingFunction: duration.ease,
   },
   lightOn: { opacity: size.promptInputLightOpacity },
+  // While a voice is heard: the same light seen through the system's pixels, its ends faded, as
+  // bright as the voice is loud (the field sets LISTEN at each frame), and never travelling.
+  lightListening: {
+    opacity: `var(${LISTEN}, 0.2)`,
+    transitionDuration: "0s",
+    maskImage: `${pixel.mask}, linear-gradient(90deg, transparent, #000 ${space["8"]}, #000 calc(100% - ${space["8"]}), transparent)`,
+    maskSize: "3px 3px, 100% 100%",
+    maskRepeat: "repeat, no-repeat",
+    maskComposite: "intersect",
+  },
   // The card's own box inside the layer: the beams are placed against it.
   lightFrame: {
     position: "absolute",
@@ -1104,15 +1174,21 @@ const styles = stylex.create({
       pointerEvents: "none",
     },
   },
-  // While a dictation listens the words step back: the voice has the card.
-  editorListening: { color: colors.mutedForeground },
-  // What a dictation has heard but not yet settled on: lighter still, after the words, never part
-  // of them.
+  // While a dictation listens, the words that were there before it step back (the form marks
+  // them, `useTypedQuiet`); what the dictation settles is ink.
+  typedQuiet: {
+    "::highlight(prompt-input-typed)": { color: colors.mutedForeground },
+  },
+  // What a dictation has heard but not yet settled on: lighter, after the words, never part of
+  // them, and after it the mark of where the next word lands.
   interim: {
     "::after": {
       content: "' ' attr(data-interim)",
-      color: colors.mutedForeground,
-      opacity: size.opacityDisabled,
+      paddingInlineEnd: "1px",
+      borderInlineEndWidth: "2px",
+      borderInlineEndStyle: "solid",
+      borderInlineEndColor: colors.foreground,
+      color: `color-mix(in oklch, ${colors.mutedForeground} 60%, transparent)`,
     },
   },
   // The resting row is one line at every width: a placeholder too long for it ends in an ellipsis.
@@ -1395,39 +1471,84 @@ const styles = stylex.create({
     fontVariantNumeric: "tabular-nums",
     whiteSpace: "nowrap",
   },
-  // The voice's field, on the bar's centre line: a fine line of the system's pixels from end to
-  // end, and round its middle a body of the same pixels that stands a row or two taller with the
-  // voice. Nothing travels sideways. Every height is a whole number of the grid's rows, so the
-  // line and the body share one grid.
+  // The voice's field, on the bar's centre line between the time and the controls: one canvas
+  // (prompt-input-voice-field.ts). Its colour is the ink, which the field reads to know the
+  // ground it draws on, and draws in where colours are forced.
   level: {
-    [pixelVars.color]: "currentColor",
-    position: "relative",
     display: "grid",
     alignItems: "center",
     flexGrow: 1,
     minWidth: 0,
-    height: "27px",
-    color: { default: colors.mint, [FORCED]: "CanvasText" },
-    "::before": {
-      content: "''",
-      gridArea: "1 / 1",
-      height: "3px",
-      backgroundImage: pixel.fineFill,
-      backgroundSize: "3px 3px",
-      maskImage:
-        "linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent)",
-      opacity: size.opacityDisabled,
-    },
+    height: size.controlSm,
+    color: { default: colors.foreground, [FORCED]: "CanvasText" },
   },
-  voice: {
-    gridArea: "1 / 1",
-    backgroundImage: pixel.fineFill,
-    backgroundSize: "3px 3px",
-    maskImage:
-      "linear-gradient(90deg, transparent 12%, #000 38%, #000 62%, transparent 88%)",
+  canvas: { display: "block", width: "100%", height: size.controlSm },
+  // A spoken conversation, in the body's and the footer's place: its two rows are the card's own.
+  conversation: { display: "contents" },
+  // The words of the turn, where the text's words stand, in the text's size and line.
+  spoken: {
+    boxSizing: "border-box",
+    minWidth: 0,
+    maxHeight: size.promptInputHeight,
+    overflowY: "auto",
+    margin: 0,
+    paddingInline: space["4"],
+    paddingBlockStart: space["4"],
+    color: colors.foreground,
+    fontSize: { default: size.messageText, [TYPING]: size.inputTextTouch },
+    lineHeight: size.messageTextLine,
+    minHeight: `calc(${size.messageTextLine} + ${space["4"]})`,
+    overflowWrap: "anywhere",
   },
-  voiceMuted: { opacity: size.opacityDisabled },
-  loud: (height: string) => ({ height }),
+  spokenInterim: { color: colors.mutedForeground },
+  // A word as it is heard: it comes out of the dither, a few pixels of it first, then whole. With
+  // reduced motion it is simply there.
+  word: {
+    animationName: { default: resolve, [REDUCED]: "none" },
+    animationDuration: duration.hover,
+    animationTimingFunction: "steps(3, end)",
+    animationFillMode: "backwards",
+  },
+  // The words' box, which the note is placed against.
+  spokenRoom: { position: "relative", minWidth: 0 },
+  // Where the next word lands: a fine upright mark after the words.
+  spokenCaret: {
+    display: "inline-block",
+    width: "2px",
+    height: "1em",
+    marginInlineStart: "2px",
+    borderRadius: radius.full,
+    backgroundColor: "currentColor",
+    verticalAlign: "text-bottom",
+  },
+  // A note while the voice goes on: a quiet line in the room between the words and the foot row,
+  // which it never grows.
+  voiceNote: {
+    [iconVars.size]: size.iconSm,
+    position: "absolute",
+    top: "100%",
+    insetInline: space["4"],
+    display: "flex",
+    alignItems: "center",
+    gap: space["1"],
+    height: space["6"],
+    overflow: "hidden",
+    color: colors.mutedForeground,
+    fontSize: font.textXs,
+    lineHeight: font.textXsLine,
+    whiteSpace: "nowrap",
+  },
+  // The other voice's mark, in the time's place: as wide as a tool, so the field starts where it
+  // does beside the time.
+  speaker: {
+    display: "inline-grid",
+    placeItems: "center",
+    flexShrink: 0,
+    minWidth: size.controlSm,
+    height: size.controlSm,
+  },
+  // The time starts where the words do: there is no Cancel before it.
+  voiceTime: { paddingInlineStart: space["2"] },
   // The mention menu: a menu's panel under the caret, items with a mark, a name and a quiet line
   // under it.
   mentionPanel: {
@@ -1503,6 +1624,8 @@ interface PromptInputContextValue {
   setFooter: (footer: HTMLElement | null) => void;
   dictating: boolean;
   setDictating: (dictating: boolean) => void;
+  /** Tells the light over the card how loud the voice is now, 0 to 1 (at each frame, no render). */
+  heardAt: (level: number) => void;
   /** Sets what cancels the dictation that listens now: Escape anywhere in the form runs it. */
   setCancelDictation: (cancel: (() => void) | null) => void;
   /** The text's length now, a token as its label, and the most it may be. */
@@ -1854,7 +1977,7 @@ const focusHere = (form: HTMLFormElement | null) =>
 /** Puts focus on what stands in the text's place: a choice already made, else its first control. */
 const focusTakeover = (form: HTMLFormElement | null) => {
   const body = form?.querySelector<HTMLElement>(
-    '[data-slot="prompt-input-body"]'
+    '[data-slot="prompt-input-voice"], [data-slot="prompt-input-body"]'
   );
   (
     body?.querySelector<HTMLElement>("[aria-checked=true]") ??
@@ -1953,6 +2076,107 @@ const keepCaretInView = (card: HTMLElement | null) => {
       editor.scrollTop = editor.scrollHeight;
     }
   });
+};
+
+// The name the typed words are marked under while a dictation listens (CSS Custom Highlights).
+const TYPED = "prompt-input-typed";
+
+/** Where character `at` of `editor`'s text stands, through its tokens too. */
+const placeOf = (editor: HTMLElement, at: number): [Node, number] => {
+  const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT);
+  let left = at;
+  let last: [Node, number] = [editor, 0];
+  for (let node = walker.nextNode(); node !== null; node = walker.nextNode()) {
+    const length = node.textContent?.length ?? 0;
+    if (left <= length) {
+      return [node, left];
+    }
+    left -= length;
+    last = [node, length];
+  }
+  return last;
+};
+
+/**
+ * Where a place in a text stands after an edit: `before` and `after` are the text on either side
+ * of it. A place before the edit stays, one after it moves with it, one inside what was taken out
+ * goes to the edit's start. Text put in exactly at the place goes before it when `leading`
+ * (the start of a range, which the new text is then outside) and after it otherwise (its end).
+ */
+const moved = (
+  place: number,
+  before: string,
+  after: string,
+  leading: boolean
+) => {
+  const most = Math.min(before.length, after.length);
+  let head = 0;
+  while (head < most && before[head] === after[head]) {
+    head += 1;
+  }
+  let tail = 0;
+  while (
+    tail < most - head &&
+    before[before.length - 1 - tail] === after[after.length - 1 - tail]
+  ) {
+    tail += 1;
+  }
+  const end = before.length - tail;
+  if (place < head || (place === head && !leading)) {
+    return place;
+  }
+  return place >= end ? place + after.length - before.length : head;
+};
+
+/**
+ * While a dictation listens, the words that stood in the text as it began are marked, so they
+ * draw quiet and what the dictation settles draws in ink. The marked stretch moves with every
+ * edit: words typed before it push it on, and it never takes in what is written at its ends. A
+ * browser without CSS Custom Highlights draws them all in ink.
+ */
+const useTypedQuiet = (
+  card: { current: HTMLElement | null },
+  dictating: boolean,
+  value: TokenInputValue
+) => {
+  // The marked stretch, and the text it was last placed in.
+  const typed = useRef<{ start: number; end: number; text: string } | null>(
+    null
+  );
+  useEffect(() => {
+    const editor = card.current?.querySelector<HTMLElement>(
+      '[data-slot="prompt-input-textarea"]'
+    );
+    if (
+      !dictating ||
+      editor === null ||
+      editor === undefined ||
+      typeof Highlight === "undefined"
+    ) {
+      typed.current = null;
+      return nothing;
+    }
+    // Read from the value's own change: the text as the page holds it now.
+    const text = value.length === 0 ? "" : (editor.textContent ?? "");
+    const was = typed.current;
+    typed.current =
+      was === null
+        ? { start: 0, end: text.length, text }
+        : {
+            start: moved(was.start, was.text, text, true),
+            end: moved(was.end, was.text, text, false),
+            text,
+          };
+    const range = document.createRange();
+    range.setStart(...placeOf(editor, typed.current.start));
+    range.setEnd(...placeOf(editor, typed.current.end));
+    const marked = CSS.highlights.get(TYPED) ?? new Highlight();
+    marked.add(range);
+    CSS.highlights.set(TYPED, marked);
+    return () => {
+      marked.delete(range);
+    };
+  }, [card, dictating, value]);
 };
 
 /** A length as computed ("8px"), in pixels; 0 for one that is not ("normal"). */
@@ -2154,11 +2378,16 @@ const cardLook = ({
  */
 const Light = ({
   on,
+  listening,
   still,
   accent,
   success,
+  ref,
 }: {
   on: boolean;
+  /** A voice is heard: the light stands dithered over the card, and follows it. */
+  listening: boolean;
+  ref: Ref<HTMLSpanElement>;
   /** No light while the page loads. */
   still: boolean;
   accent: Accent;
@@ -2184,8 +2413,14 @@ const Light = ({
     <>
       <span
         aria-hidden="true"
+        ref={ref}
         data-slot="prompt-input-light"
-        {...stylex.props(styles.light, colour, on && styles.lightOn)}
+        {...stylex.props(
+          styles.light,
+          colour,
+          on && styles.lightOn,
+          listening && !on && styles.lightListening
+        )}
       >
         <span {...stylex.props(styles.lightFrame)}>
           <span {...stylex.props(styles.beam, styles.beamWide)}>
@@ -2213,21 +2448,27 @@ const Light = ({
 
 /**
  * Focus follows what the body holds: to a takeover's first control as it comes, back to the text
- * as it goes; only when focus was in the form, so a page of several forms never jumps.
+ * as it goes; only when the person is in the form (focus went into it, or a press or a key did),
+ * so nothing takes the focus as a page comes and a page of several forms never jumps.
  */
 const useTakeoverFocus = (
   shown: boolean,
   form: { current: HTMLFormElement | null },
   controller: TokenInputController
 ) => {
-  const before = useRef(shown);
+  // Unknown until the form has drawn once: what it starts with is no change, whether the text
+  // or something in its place (a conversation that is already running).
+  const before = useRef<boolean | null>(null);
   const inside = useRef(false);
   useEffect(() => {
-    if (before.current === shown) {
+    const was = before.current;
+    before.current = shown;
+    if (was === null || was === shown) {
       return;
     }
-    before.current = shown;
-    if (!inside.current && !focusHere(form.current)) {
+    // Only for the person who is in this form: never as the page comes, nor for a change made
+    // from outside while they are elsewhere.
+    if (!(inside.current && focusHere(form.current))) {
       return;
     }
     if (shown) {
@@ -2572,9 +2813,15 @@ export const PromptInput = ({
   const still = disabled || loading;
   const takeFiles = still ? undefined : attachments.value.add;
   const tall = useRowTall(compact && !loading, card, dictating);
+  useTypedQuiet(card, dictating, current);
   const success = useSuccessCount(status, words.succeeded);
   const drags = useFileDrags(form, takeFiles, globalDrop);
   const focusWatch = useTakeoverFocus(editorShown, form, controller);
+  // The light over the card follows a voice: the field tells how loud, at each frame.
+  const light = useRef<HTMLSpanElement | null>(null);
+  const heardAt = (level: number) => {
+    light.current?.style.setProperty(LISTEN, (0.18 + 0.17 * level).toFixed(3));
+  };
 
   const failedStatus = status === "error";
   useEffect(() => {
@@ -2748,6 +2995,9 @@ export const PromptInput = ({
       onKeyDown={onKeyDown}
       {...fileHandlers(takeFiles, drags.setOver)}
       onFocus={focusWatch.handleFocus}
+      // A press or a key in the form is the person's too, where a press focuses nothing (Safari).
+      onPointerDownCapture={focusWatch.handleFocus}
+      onKeyDownCapture={focusWatch.handleFocus}
       onBlur={focusWatch.handleBlur}
       {...stylex.props(styles.root, style)}
     >
@@ -2774,6 +3024,7 @@ export const PromptInput = ({
           setFooter,
           dictating,
           setDictating,
+          heardAt,
           setCancelDictation,
           length,
           maxLength,
@@ -2786,7 +3037,9 @@ export const PromptInput = ({
           <OutsideContext value>{outside.above}</OutsideContext>
           <div {...stylex.props(styles.room)}>
             <Light
+              ref={light}
               on={busy}
+              listening={dictating}
               still={loading}
               accent={accent}
               success={success}
@@ -3059,14 +3312,14 @@ export const PromptInputTextarea = ({
           {...props}
           data-slot="prompt-input-textarea"
           data-empty={state.empty ? "" : undefined}
-          data-interim={interim === "" ? undefined : interim}
+          data-interim={form?.dictating === true ? interim : undefined}
           {...stylex.props(
             styles.editor,
             compact && styles.compactEditor,
             state.empty && interim === "" && styles.placeholder,
             state.empty && compact && styles.compactPlaceholder,
-            form?.dictating === true && styles.editorListening,
-            interim !== "" && styles.interim,
+            styles.typedQuiet,
+            form?.dictating === true && styles.interim,
             scrollbarHidden,
             style
           )}
@@ -3431,46 +3684,15 @@ export const PromptInputActionAddAttachments = ({
   );
 };
 
-/**
- * How tall the voice's field stands for a level from 0 to 1: one row of its grid at rest, three for
- * ordinary speech, five at its loudest. Two rows a step, so it grows evenly from its middle.
- */
-const fieldHeight = (level: number) =>
-  `${3 + 6 * Math.round(2 * Math.min(Math.max(level, 0), 1))}px`;
-
 /** The time a dictation has run, as a clock reads it ("0:12"). */
 const clock = (seconds: number) =>
   `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 
-/**
- * A dictation's bar, in the footer's place while it listens: Cancel, the time it has run, the
- * voice's level as a field of pixels, the microphone (off for a moment, and on again), and Done
- * where Submit stood. A pointer's press leaves the focus in the text; the keyboard's goes to Done.
- * Escape cancels it, from the bar as from the text (the form hears it).
- */
-const Dictation = ({
-  compact,
-  level,
-  muted,
-  autoFocus,
-  onMutedChange,
-  onCancel,
-  onDone,
-}: {
-  compact: boolean;
-  level: number;
-  muted: boolean;
-  autoFocus: boolean;
-  onMutedChange: (muted: boolean) => void;
-  onCancel: () => void;
-  onDone: () => void;
-}) => {
-  const words = useI18n().promptInput.speechButton;
+/** The seconds a voice has run: the time runs while `running`, and waits while it is not. */
+const useSeconds = (running: boolean) => {
   const [seconds, setSeconds] = useState(0);
-  const [done, setDone] = useState<HTMLButtonElement | null>(null);
-  // The time runs while it listens, and waits while the microphone is off.
   useEffect(() => {
-    if (muted) {
+    if (!running) {
       return nothing;
     }
     const timer = setInterval(() => {
@@ -3479,7 +3701,162 @@ const Dictation = ({
     return () => {
       clearInterval(timer);
     };
-  }, [muted]);
+  }, [running]);
+  return seconds;
+};
+
+/**
+ * Fetches the field and draws it on `canvas` while the canvas is in view and the page is shown,
+ * and holds otherwise (out of view, under `display: none`, in a hidden tab). It is started again
+ * as reduced motion is turned on or off, so that is followed while a voice runs. What it returns
+ * sets how the field stands, and stops it, whether or not it had arrived.
+ */
+const drawVoice = (
+  canvas: HTMLCanvasElement,
+  sample: () => VoiceReading | undefined,
+  onLevel: (level: number) => void
+) => {
+  const held: {
+    field: VoiceField | null;
+    mode: VoiceFieldMode;
+    seen: boolean;
+    gone: boolean;
+  } = { field: null, mode: "listening", seen: false, gone: false };
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)");
+  const run = () => {
+    held.field?.run(held.seen && document.visibilityState === "visible");
+  };
+  const start = async () => {
+    const { startVoiceField } = await import("./prompt-input-voice-field");
+    if (held.gone) {
+      return;
+    }
+    held.field?.stop();
+    held.field = startVoiceField(canvas, {
+      sample,
+      still: reduced.matches,
+      onLevel,
+    });
+    held.field.mode(held.mode);
+    run();
+  };
+  const restart = () => {
+    void start();
+  };
+  const inView = new IntersectionObserver((entries) => {
+    held.seen = entries.at(-1)?.isIntersecting === true;
+    run();
+  });
+  inView.observe(canvas);
+  document.addEventListener("visibilitychange", run);
+  reduced.addEventListener("change", restart);
+  restart();
+  return {
+    mode: (mode: VoiceFieldMode) => {
+      held.mode = mode;
+      held.field?.mode(mode);
+    },
+    stop: () => {
+      held.gone = true;
+      held.field?.stop();
+      inView.disconnect();
+      document.removeEventListener("visibilitychange", run);
+      reduced.removeEventListener("change", restart);
+    },
+  };
+};
+
+/**
+ * The voice's field, for a dictation as for a conversation: a canvas the field draws on at each
+ * frame, from the product's sampler or, without one, the `level` it was last given. The field's
+ * code is fetched as the first voice starts. `mode` says how it stands: listening, the other
+ * voice speaking (a stop quieter), a stretch unheard (thinner), the microphone off (flat, dim), or
+ * written down (it drains to its middle).
+ */
+const Level = ({
+  level,
+  sample,
+  mode,
+}: {
+  level: number;
+  sample: (() => VoiceReading | undefined) | undefined;
+  mode: VoiceFieldMode;
+}) => {
+  const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
+  const [drawing, setDrawing] = useState<ReturnType<typeof drawVoice> | null>(
+    null
+  );
+  const heardAt = usePromptInput()?.heardAt;
+  // The newest sampler and level, read at each frame.
+  const now = useRef({ level, sample, heardAt });
+  useEffect(() => {
+    now.current = { level, sample, heardAt };
+  });
+  useEffect(() => {
+    if (canvas === null) {
+      return nothing;
+    }
+    const started = drawVoice(
+      canvas,
+      () => now.current.sample?.() ?? { level: now.current.level },
+      (heard) => now.current.heardAt?.(heard)
+    );
+    setDrawing(started);
+    return started.stop;
+  }, [canvas]);
+  useEffect(() => {
+    drawing?.mode(mode);
+  }, [drawing, mode]);
+  return (
+    <span aria-hidden="true" {...stylex.props(styles.level)}>
+      <canvas ref={setCanvas} {...stylex.props(styles.canvas)} />
+    </span>
+  );
+};
+
+/** How the field stands in a dictation's bar: written down first, then the microphone off. */
+const barMode = (settling: boolean, muted: boolean): VoiceFieldMode => {
+  if (settling) {
+    return "thinking";
+  }
+  return muted ? "muted" : "listening";
+};
+
+/**
+ * A dictation's bar, in the footer's place while it listens: Cancel, the time it has run, the
+ * voice's level as a field of pixels, the microphone (off for a moment, and on again), and Done
+ * where Submit stood. A pointer's press leaves the focus in the text; the keyboard's goes to Done.
+ * Escape cancels it, from the bar as from the text (the form hears it).
+ */
+const Dictation = ({
+  level,
+  sample,
+  settling,
+  muted,
+  autoFocus,
+  onMutedChange,
+  onCancel,
+  onDone,
+}: {
+  level: number;
+  sample: (() => VoiceReading | undefined) | undefined;
+  /** Done was pressed and the product writes it down: the field drains, the bar waits. */
+  settling: boolean;
+  muted: boolean;
+  autoFocus: boolean;
+  onMutedChange: (muted: boolean) => void;
+  onCancel: () => void;
+  onDone: () => void;
+}) => {
+  const words = useI18n().promptInput.speechButton;
+  const compact = usePromptInput()?.compact === true;
+  const seconds = useSeconds(!(muted || settling));
+  const [done, setDone] = useState<HTMLButtonElement | null>(null);
+  useEffect(() => {
+    if (settling) {
+      announce(words.settling);
+    }
+  }, [settling, words.settling]);
   useEffect(() => {
     if (autoFocus) {
       done?.focus();
@@ -3502,19 +3879,11 @@ const Dictation = ({
       <span role="timer" {...stylex.props(styles.time)}>
         {clock(seconds)}
       </span>
-      <span aria-hidden="true" {...stylex.props(styles.level)}>
-        <span
-          {...stylex.props(
-            styles.voice,
-            muted && styles.voiceMuted,
-            styles.loud(fieldHeight(muted ? 0 : level))
-          )}
-        />
-      </span>
+      <Level level={level} sample={sample} mode={barMode(settling, muted)} />
       {toolButton({
         "aria-label": words.mute,
         pressed: muted,
-        off: false,
+        off: settling,
         slot: "prompt-input-dictation-mute",
         onClick: () => {
           onMutedChange(!muted);
@@ -3523,7 +3892,7 @@ const Dictation = ({
       })}
       {toolButton({
         "aria-label": words.done,
-        off: false,
+        off: settling,
         slot: "prompt-input-dictation-done",
         variant: "default",
         ref: setDone,
@@ -3532,6 +3901,68 @@ const Dictation = ({
       })}
     </div>
   );
+};
+
+/**
+ * As the bar goes, focus comes back to the button that started it from the keyboard (`keyed`):
+ * only when the bar took the focus with it, never from where the person has gone since.
+ */
+const useFocusBack = (
+  dictating: boolean,
+  keyed: boolean,
+  mic: HTMLButtonElement | null
+) => {
+  useEffect(() => {
+    if (!dictating && keyed && document.activeElement === document.body) {
+      mic?.focus();
+    }
+  }, [dictating, keyed, mic]);
+};
+
+/** While `on`, Escape anywhere in the form runs `cancel`: the newest one, set at every draw. */
+const useEscape = (
+  form: PromptInputContextValue | null,
+  on: boolean,
+  cancel: () => void
+) => {
+  const setCancel = form?.setCancelDictation;
+  useEffect(() => {
+    if (!on || setCancel === undefined) {
+      return nothing;
+    }
+    setCancel(cancel);
+    return () => {
+      setCancel(null);
+    };
+  });
+};
+
+/** Draws its children in the form's footer, in place of what the footer holds. */
+const InFooter = ({ children }: { children: ReactNode }) => {
+  const footer = usePromptInput()?.footer ?? null;
+  return footer === null ? null : createPortal(children, footer);
+};
+
+/** Tells the form that a voice runs in it (`shown`), and the words it has not yet settled. */
+const useHeardInForm = (
+  form: PromptInputContextValue | null,
+  shown: boolean,
+  interim: string
+) => {
+  const setDictating = form?.setDictating;
+  const setInterim = form?.setInterim;
+  useEffect(() => {
+    setDictating?.(shown);
+    return () => {
+      setDictating?.(false);
+    };
+  }, [shown, setDictating]);
+  useEffect(() => {
+    setInterim?.(interim);
+    return () => {
+      setInterim?.("");
+    };
+  }, [interim, setInterim]);
 };
 
 /**
@@ -3546,6 +3977,8 @@ export const PromptInputSpeechButton = ({
   muted,
   onMutedChange,
   level = 0,
+  sample,
+  settling = false,
   interim = "",
   "aria-label": ariaLabel,
   disabled,
@@ -3560,29 +3993,8 @@ export const PromptInputSpeechButton = ({
   // The keyboard started it: focus goes to the bar, and back here as the bar goes.
   const [keyed, setKeyed] = useState(false);
   const [mic, setMic] = useState<HTMLButtonElement | null>(null);
-  const footer = form?.footer ?? null;
-  const setDictating = form?.setDictating;
-  const dictating = form?.dictating === true;
-  const setInterim = form?.setInterim;
-  const setCancel = form?.setCancelDictation;
-  useEffect(() => {
-    setDictating?.(on);
-    return () => {
-      setDictating?.(false);
-    };
-  }, [on, setDictating]);
-  useEffect(() => {
-    setInterim?.(on ? interim : "");
-    return () => {
-      setInterim?.("");
-    };
-  }, [on, interim, setInterim]);
-  useEffect(() => {
-    // Only when the bar took the focus with it: never from where the person has gone since.
-    if (!dictating && keyed && document.activeElement === document.body) {
-      mic?.focus();
-    }
-  }, [dictating, keyed, mic]);
+  useHeardInForm(form, on || settling, on ? interim : "");
+  useFocusBack(form?.dictating === true, keyed, mic);
   const listen = (next: boolean) => {
     if (next) {
       announce(words.listening);
@@ -3596,16 +4008,7 @@ export const PromptInputSpeechButton = ({
     onCancel?.();
     listen(false);
   };
-  // The newest cancel, while it listens in a form: what the form's Escape runs.
-  useEffect(() => {
-    if (!on || setCancel === undefined) {
-      return nothing;
-    }
-    setCancel(cancel);
-    return () => {
-      setCancel(null);
-    };
-  });
+  useEscape(form, on, cancel);
   const button = toolButton({
     "aria-label": ariaLabel ?? words.label,
     pressed: on,
@@ -3621,12 +4024,12 @@ export const PromptInputSpeechButton = ({
   return (
     <>
       {keptWhile(form?.loading === true, button)}
-      {on &&
-        footer !== null &&
-        createPortal(
+      {(on || settling) && (
+        <InFooter>
           <Dictation
-            compact={form?.compact === true}
             level={level}
+            sample={sample}
+            settling={settling && !on}
             muted={muted ?? ownMuted}
             autoFocus={keyed}
             onMutedChange={(next) => {
@@ -3637,10 +4040,183 @@ export const PromptInputSpeechButton = ({
             onDone={() => {
               listen(false);
             }}
-          />,
-          footer
-        )}
+          />
+        </InFooter>
+      )}
     </>
+  );
+};
+
+/** The words of a turn, each in its own span, keyed by its place: a new one resolves as it comes. */
+const resolving = (said: string) =>
+  said
+    .split(" ")
+    .filter((word) => word !== "")
+    .map((word, at) => (
+      <Fragment key={at}>
+        {at > 0 && " "}
+        <span {...stylex.props(styles.word)}>{word}</span>
+      </Fragment>
+    ));
+
+/**
+ * The words of the turn where the text stood, the unsettled ones lighter with the mark of where
+ * the next lands, and a note in the room under them, so the card keeps its height.
+ */
+const VoiceWords = ({
+  note,
+  interim,
+  children,
+  style,
+}: Pick<PromptInputVoiceProps, "note" | "children" | "style"> & {
+  interim: string;
+}) => (
+  <div {...stylex.props(styles.spokenRoom, style)}>
+    <p
+      data-slot="prompt-input-voice-words"
+      {...stylex.props(styles.spoken, scrollbarHidden)}
+    >
+      {typeof children === "string" ? resolving(children) : children}
+      {interim !== "" && (
+        <span {...stylex.props(styles.spokenInterim)}> {interim}</span>
+      )}
+      <span aria-hidden="true" {...stylex.props(styles.spokenCaret)} />
+    </p>
+    {!isBlank(note) && (
+      <span
+        data-slot="prompt-input-voice-note"
+        {...stylex.props(styles.voiceNote)}
+      >
+        <Icon icon={TriangleAlertIcon} />
+        {note}
+      </span>
+    )}
+  </div>
+);
+
+/** What leads the foot row: the other voice's mark while it speaks, else the time. */
+const VoiceLead = ({
+  speaker,
+  seconds,
+}: {
+  speaker: ReactNode;
+  seconds: number;
+}) =>
+  isBlank(speaker) ? (
+    <span role="timer" {...stylex.props(styles.time, styles.voiceTime)}>
+      {clock(seconds)}
+    </span>
+  ) : (
+    <span {...stylex.props(styles.speaker)}>{speaker}</span>
+  );
+
+/** How the field stands in a conversation: the other voice's turn first, then the person's. */
+const voiceMode = (
+  speaking: boolean,
+  off: boolean,
+  unheard: boolean
+): VoiceFieldMode => {
+  if (speaking) {
+    return "speaking";
+  }
+  if (off) {
+    return "muted";
+  }
+  return unheard ? "unheard" : "listening";
+};
+
+/**
+ * A spoken conversation, written in the PromptInput in place of its body and footer while it
+ * runs: the words of the turn where the text stood, and under them the time (or, while the other
+ * voice speaks, its mark), the voice's level as a field of light, the microphone and a close
+ * button. The turns pass by themselves, so there is no Done and no Cancel. The product listens and
+ * speaks; this part draws what it is told, and says each turn once.
+ */
+export const PromptInputVoice = ({
+  status = "listening",
+  children,
+  interim = "",
+  level = 0,
+  sample,
+  note,
+  speaker,
+  muted,
+  onMutedChange,
+  onClose,
+  "aria-label": ariaLabel,
+  style,
+}: PromptInputVoiceProps) => {
+  const words = useI18n().promptInput;
+  const form = usePromptInput();
+  const [ownMuted, setOwnMuted] = useState(false);
+  const off = muted ?? ownMuted;
+  const speaking = status === "speaking";
+  const seconds = useSeconds(!off);
+  const turn = speaking ? words.voice.speaking : words.voice.listening;
+  useEffect(() => {
+    announce(turn);
+  }, [turn]);
+  // A note is said once as it comes, through the page's one live region.
+  const noted = typeof note === "string" ? note : "";
+  useEffect(() => {
+    if (noted !== "") {
+      announce(noted);
+    }
+  }, [noted]);
+  // The light over the card stands while the voice runs, as for a dictation.
+  useHeardInForm(form, true, "");
+  // It stands in the text's place: said before the form's first look at what it holds, so a
+  // conversation already running as the page comes takes no focus, and the text takes it back
+  // as this goes.
+  const setEditorShown = form?.setEditorShown;
+  useLayoutEffect(() => {
+    setEditorShown?.(false);
+  }, [setEditorShown]);
+  // Escape anywhere in the form ends the voice, as the close button does.
+  useEscape(form, true, onClose);
+  return (
+    <div
+      role="group"
+      aria-label={ariaLabel ?? words.voice.label}
+      data-slot="prompt-input-voice"
+      data-status={status}
+      {...stylex.props(styles.conversation)}
+    >
+      <VoiceWords note={note} interim={interim} style={style}>
+        {children}
+      </VoiceWords>
+      <div data-slot="prompt-input-footer" {...stylex.props(styles.footer)}>
+        <div {...stylex.props(styles.dictation)}>
+          <VoiceLead
+            speaker={speaking ? speaker : undefined}
+            seconds={seconds}
+          />
+          <Level
+            level={level}
+            sample={sample}
+            mode={voiceMode(speaking, off, !isBlank(note))}
+          />
+          {toolButton({
+            "aria-label": words.speechButton.mute,
+            pressed: off,
+            off: false,
+            slot: "prompt-input-voice-mute",
+            onClick: () => {
+              setOwnMuted(!off);
+              onMutedChange?.(!off);
+            },
+            children: <Icon icon={MicIcon} />,
+          })}
+          {toolButton({
+            "aria-label": words.voice.close,
+            off: false,
+            slot: "prompt-input-voice-close",
+            onClick: onClose,
+            children: <Icon icon={XIcon} />,
+          })}
+        </div>
+      </div>
+    </div>
   );
 };
 

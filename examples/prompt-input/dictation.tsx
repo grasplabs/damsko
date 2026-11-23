@@ -14,10 +14,24 @@ import {
   PromptInputTools,
 } from "@grasp-os/ui/components/prompt-input";
 import { createTokenInputController } from "@ui-sdk/react/token-input";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const typed = "Before Monday: ";
 const heard = ["send", "the", "numbers", "to", "the", "board"];
+
+// A pretend voice, read a frame at a time as a product reads its microphone: syllables in
+// phrases, with a breath between them, and a little of the room under it.
+const sound = () => {
+  const seconds = performance.now() / 1000;
+  // Five syllables a second, each a quick rise, a slower fall and a gap, some stressed more;
+  // and a breath every few seconds.
+  const beat = (seconds * 5) % 1;
+  const stress =
+    0.45 + 0.55 * Math.abs(Math.sin(Math.floor(seconds * 5) * 2.4));
+  const breath = seconds % 3 < 2.5 ? 1 : 0;
+  const level = 0.02 + 0.7 * stress * breath * Math.exp(-5 * beat);
+  return { level, bands: [level, level * 0.8, level * 0.3] };
+};
 
 // Dictation: the product listens and writes what it hears through the controller; the prompt
 // input shows the bar while it does: Cancel, the time, the voice's level, the microphone and
@@ -28,6 +42,9 @@ export default function PromptInputDictation() {
   const [listening, setListening] = useState(false);
   const [muted, setMuted] = useState(false);
   const [words, setWords] = useState(0);
+  // After Done the product writes down what it heard: here, for a moment.
+  const [settling, setSettling] = useState(false);
+  const cancelled = useRef(false);
   const hearing = listening && !muted;
   useEffect(() => {
     if (!hearing) {
@@ -70,14 +87,23 @@ export default function PromptInputDictation() {
               setMuted(false);
               if (next) {
                 setWords(0);
+              } else if (cancelled.current) {
+                cancelled.current = false;
+              } else {
+                setSettling(true);
+                setTimeout(() => {
+                  setSettling(false);
+                }, 600);
               }
             }}
+            settling={settling}
             onCancel={() => {
+              cancelled.current = true;
               controller.setValue([typed]);
             }}
             muted={muted}
             onMutedChange={setMuted}
-            level={hearing ? 0.25 + 0.25 * (words % 3) : 0}
+            sample={sound}
             interim={hearing ? heard[words] : undefined}
           />
         </PromptInputTools>
