@@ -47,6 +47,7 @@ const styles = stylex.create({
     insetInlineStart: 0,
     pointerEvents: "none",
     borderRadius: radius.mark,
+    cornerShape: radius.shape,
     boxShadow: `0 0 0 ${size.hairline} ${colors.pine}`,
     backgroundColor: `color-mix(in oklch, ${colors.mint} 18%, transparent)`,
     transitionProperty: {

@@ -57,7 +57,7 @@ import {
   size as sizes,
   space,
 } from "../lib/tokens.stylex";
-import { slotProps } from "../lib/utils";
+import { className, slotProps } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { layerFooterMarker, motionVars } from "../lib/vars.stylex";
 import { Button } from "./button";
@@ -144,7 +144,7 @@ export const DialogTrigger = ({
 }: DialogTriggerProps) => (
   <TriggerPrimitive
     {...rest}
-    className={stylex.props(style).className}
+    className={className(style)}
     {...slotProps(asChild, children)}
   />
 );
@@ -498,7 +498,7 @@ export const DialogClose = ({
   asChild === true ? (
     <ClosePrimitive
       {...rest}
-      className={stylex.props(style).className}
+      className={className(style)}
       {...slotProps(asChild, children)}
     />
   ) : (

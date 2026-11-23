@@ -70,6 +70,7 @@ import {
 } from "../lib/tokens.stylex";
 import {
   BAYER_MATRIX,
+  className,
   DITHER_GEOMETRY,
   DITHER_LEVELS,
   ownValue,
@@ -426,8 +427,7 @@ const containerStyles = stylex.create({
 // system's ring on the drawing, never the browser's.
 const ringed = (svg: SVGSVGElement | null) => {
   const classes =
-    stylex.props(focusRing, containerStyles.ringRoom).className?.split(" ") ??
-    [];
+    className(focusRing, containerStyles.ringRoom)?.split(" ") ?? [];
   svg?.classList.add(...classes);
 };
 
@@ -525,7 +525,7 @@ export const ChartContainer = ({
             data={data}
             responsive
             // Recharts' wrapper takes a class: it fills the frame by plain CSS sizing.
-            className={stylex.props(containerStyles.fill).className}
+            className={className(containerStyles.fill)}
             margin={{
               top: chartInset.top,
               right: chartInset.right + room,
@@ -955,7 +955,7 @@ export const ChartArea = ({ dataKey, pattern = "none" }: ChartAreaProps) => {
       activeDot={{
         r: 4,
         strokeWidth: LINE,
-        className: stylex.props(lineStyles.dot).className,
+        className: className(lineStyles.dot),
       }}
       dot={false}
       isAnimationActive={!reduced}
@@ -995,8 +995,7 @@ export const ChartLine = ({ dataKey, variant = "solid" }: ChartLineProps) => {
       activeDot={{
         r: 4,
         strokeWidth: LINE,
-        className: stylex.props(lineStyles.dot, muted && lineStyles.dotMuted)
-          .className,
+        className: className(lineStyles.dot, muted && lineStyles.dotMuted),
       }}
       dot={false}
       isAnimationActive={!reduced}
@@ -1490,9 +1489,9 @@ const noBox: TextBox = { width: 0, height: 0 };
  */
 const measureText = (
   words: readonly string[],
-  className: string | undefined
+  look: string | undefined
 ): TextBox[] => {
-  const keyOf = (word: string) => `${className ?? ""}\n${word}`;
+  const keyOf = (word: string) => `${look ?? ""}\n${word}`;
   const fresh = new Map<string, { width: number; height: number }>();
   const missing = words.filter((word) => !measured.has(keyOf(word)));
   if (missing.length > 0) {
@@ -1503,7 +1502,7 @@ const measureText = (
     svg.setAttribute("visibility", "hidden");
     const texts = missing.map((word) => {
       const text = document.createElementNS(SVG, "text");
-      text.setAttribute("class", className ?? "");
+      text.setAttribute("class", look ?? "");
       text.textContent = word;
       svg.append(text);
       return text;
@@ -1537,7 +1536,7 @@ const measureText = (
  */
 const useTextBoxes = (
   words: readonly string[],
-  className: string | undefined
+  look: string | undefined
 ): TextBox[] => {
   const joined = words.join("\n");
   const [read, setRead] = useState<{
@@ -1550,10 +1549,7 @@ const useTextBoxes = (
       if (current) {
         setRead({
           joined,
-          boxes: measureText(
-            joined === "" ? [] : joined.split("\n"),
-            className
-          ),
+          boxes: measureText(joined === "" ? [] : joined.split("\n"), look),
         });
       }
     };
@@ -1568,7 +1564,7 @@ const useTextBoxes = (
     return () => {
       current = false;
     };
-  }, [joined, className]);
+  }, [joined, look]);
   return read?.joined === joined ? read.boxes : words.map(() => noBox);
 };
 
@@ -1589,7 +1585,7 @@ export const ChartLabels = () => {
   const keys = drawn.length > 0 ? drawn : Object.keys(config);
   const names = keys.map((key) => config[key]?.label ?? key);
   // Each name as this engine draws it, in the names' own type.
-  const boxes = useTextBoxes(names, stylex.props(labelStyles.name).className);
+  const boxes = useTextBoxes(names, className(labelStyles.name));
   const longest = Math.max(0, ...boxes.map((box) => box.width));
   const gap = Math.max(LABEL_GAP, ...boxes.map((box) => box.height + 2));
   // The room at the right, kept by the chart, for the longest name.
@@ -2186,7 +2182,7 @@ const pieStyles = stylex.create({
   swatch: {
     width: space[2],
     height: space[2],
-    borderRadius: 2,
+    borderRadius: radius.hairline,
     alignSelf: "center",
   },
   swatchTone: (colour: string) => ({
@@ -3083,11 +3079,11 @@ const useSankeyRoom = (
   const sides = [...starts, ...ends];
   const names = useTextBoxes(
     sides.map((node) => node.label),
-    stylex.props(sankeyStyles.name).className
+    className(sankeyStyles.name)
   );
   const values = useTextBoxes(
     sides.map((node) => valueFormatter(through.get(node.id) ?? 0)),
-    stylex.props(sankeyStyles.name, sankeyStyles.value).className
+    className(sankeyStyles.name, sankeyStyles.value)
   );
   const roomFor = (from: number, to: number) =>
     Math.max(

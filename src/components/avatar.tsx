@@ -32,6 +32,7 @@ import {
   size as sizes,
   space,
 } from "../lib/tokens.stylex";
+import { className } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 
 /**
@@ -367,7 +368,7 @@ export const AvatarImage = ({
       decoding="async"
       data-slot="avatar-image"
       data-no-zoom=""
-      className={stylex.props(styles.image, styles.fadeIn, style).className}
+      className={className(styles.image, styles.fadeIn, style)}
     />
   );
 

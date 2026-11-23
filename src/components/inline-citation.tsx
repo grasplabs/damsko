@@ -32,6 +32,7 @@ import {
   duration,
   font,
   media,
+  radius,
   size,
   space,
 } from "../lib/tokens.stylex";
@@ -226,7 +227,7 @@ const styles = stylex.create({
   },
   // Lit while the pointer is on the citation, or focus is on its chip.
   text: {
-    borderRadius: size.hairline,
+    borderRadius: radius.hairline,
     backgroundColor: {
       default: "transparent",
       [stylex.when.ancestor(":focus-within")]: colors.accent,

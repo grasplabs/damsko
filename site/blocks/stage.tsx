@@ -160,6 +160,7 @@ const styles = stylex.create({
     borderStyle: "none",
     cursor: "pointer",
     borderRadius: radius.mark,
+    cornerShape: radius.shape,
     transitionProperty: "color",
     transitionDuration: duration.hover,
     transitionTimingFunction: duration.ease,

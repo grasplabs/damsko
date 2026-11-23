@@ -1,6 +1,6 @@
 ---
 title: Marker
-description: A line in a conversation that marks what happened, a status, a note, or a word between two rules.
+description: A line in a conversation that marks what happened to the conversation, such as a day, a note, a status, or a word between two rules.
 ---
 
 <Head
@@ -10,7 +10,7 @@ description: A line in a conversation that marks what happened, a status, a note
 
 ## Between messages
 
-`Marker` holds a `MarkerIcon` and `MarkerContent`: a step the assistant took, the work under way, or a word between two rules. It stands between Messages in a conversation.
+`Marker` holds a `MarkerIcon` and `MarkerContent`: something that happened to the conversation itself, or a word between two rules. It stands between Messages. A step an assistant takes, or its work under way, is a [Trace](/components/trace) line.
 
 <Stage path="marker/demo" label="Between messages" />
 
@@ -26,11 +26,11 @@ For a day, where the unread messages start, or a span of work. Its words are ord
 
 <Stage path="marker/separator" label="Separators" />
 
-## Work under way
+## A status
 
-With `role="status"` its words are said as they change. Put a Spinner in its MarkerIcon, or its words in a Shimmer.
+With `role="status"` its words are said as they change: the conversation reconnecting, someone typing. Put a Spinner in its MarkerIcon, or its words in a Shimmer. An assistant's work under way is not a Marker: a [Trace](/components/trace) line with `status="running"` shimmers its title and says the line once when it ends.
 
-<Stage path="marker/status" live label="Work under way" />
+<Stage path="marker/status" live label="A status" />
 
 ## Rows with a rule
 
@@ -49,12 +49,13 @@ With `asChild`, the Marker draws the one link or button it is given: underlined,
 <Intent
   of="marker"
   always={[
-    "A line in a conversation that marks an event: a day, New messages, a step done, a checkpoint.",
-    '`role="status"` on work under way, so its words are said as they change.',
+    "A line that marks something about the conversation itself: a day, New messages, someone joined, a checkpoint.",
+    '`role="status"` on a line whose words change while it stands (Reconnecting), so they are said as they change.',
     "Words beside an icon: the icon is hidden from screen readers.",
   ]}
   never={[
     "A message: use Message, with a Bubble for its surface.",
+    'A step an assistant took, or its work under way: use a Trace line (`status="running"` while it works).',
     'A `role="separator"` on a separator with words: its words would not be read.',
     "An icon alone with no name: give it words or an `aria-label`.",
   ]}

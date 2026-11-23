@@ -407,6 +407,7 @@ const styles = stylex.create({
   wordAdded: {
     backgroundColor: colors.diffViewerAddedWord,
     borderRadius: radius.mark,
+    cornerShape: radius.shape,
     textDecoration: "underline",
     textDecorationColor: colors.success,
     textUnderlineOffset: space["1"],
@@ -414,6 +415,7 @@ const styles = stylex.create({
   wordRemoved: {
     backgroundColor: colors.diffViewerRemovedWord,
     borderRadius: radius.mark,
+    cornerShape: radius.shape,
     textDecoration: "line-through",
     textDecorationColor: colors.destructive,
   },
@@ -586,12 +588,14 @@ const styles = stylex.create({
     textDecorationColor: colors.success,
     textUnderlineOffset: space["1"],
     borderRadius: radius.mark,
+    cornerShape: radius.shape,
   },
   del: {
     backgroundColor: colors.diffViewerRemovedWord,
     textDecoration: "line-through",
     textDecorationColor: colors.destructive,
     borderRadius: radius.mark,
+    cornerShape: radius.shape,
   },
   empty: {
     paddingBlock: space["4"],

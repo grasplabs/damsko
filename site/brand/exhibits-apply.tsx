@@ -69,6 +69,7 @@ const s = stylex.create({
     overflow: "hidden",
     padding: { default: "5.5%", [media.maxSm]: "5%" },
     borderRadius: radius.mark,
+    cornerShape: radius.shape,
     backgroundColor: colors.brandNight,
     boxShadow: shadow.lg,
     colorScheme: "dark",
@@ -119,6 +120,7 @@ const s = stylex.create({
     aspectRatio: "16 / 9",
     padding: "7%",
     borderRadius: radius.mark,
+    cornerShape: radius.shape,
     boxShadow: shadow.lg,
     containerType: "inline-size",
   },
@@ -229,6 +231,7 @@ const s = stylex.create({
     color: colors.foreground,
     textDecorationLine: "none",
     borderRadius: radius.mark,
+    cornerShape: radius.shape,
   },
   face: {
     display: "grid",
@@ -236,6 +239,7 @@ const s = stylex.create({
     aspectRatio: "4 / 3",
     overflow: "hidden",
     borderRadius: radius.mark,
+    cornerShape: radius.shape,
     boxShadow: {
       default: shadow.sm,
       [media.hover]: { default: shadow.sm, ":hover": shadow.md },

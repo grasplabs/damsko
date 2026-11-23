@@ -131,6 +131,7 @@ const styles = stylex.create({
     width: size.avatarXs,
     height: size.avatarXs,
     borderRadius: radius.mark,
+    cornerShape: radius.shape,
     [iconVars.size]: `calc(${size.avatarXs} / 2)`,
   },
   default: {
@@ -198,6 +199,7 @@ const styles = stylex.create({
     minWidth: size.avatarXs,
     height: size.avatarXs,
     borderRadius: radius.mark,
+    cornerShape: radius.shape,
     fontSize: `max(10px, calc(${size.avatarXs} * 0.4))`,
   },
   countDefault: {

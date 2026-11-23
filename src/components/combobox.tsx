@@ -75,7 +75,7 @@ import {
 } from "../lib/tokens.stylex";
 // UI SDK places a popup in pixels: popup-gap and popup-gutter, as the generator writes them.
 import { popup } from "../lib/tokens.values";
-import { isDevelopment, isInvalid, warnUnnamed } from "../lib/utils";
+import { className, isDevelopment, isInvalid, warnUnnamed } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { iconVars, listMarker, motionVars } from "../lib/vars.stylex";
 
@@ -451,9 +451,6 @@ const targetStyles = {
   default: inputStyles.targetDefault,
   lg: inputStyles.targetLg,
 } as const;
-
-const className = (...parts: stylex.StyleXStyles[]) =>
-  stylex.props(...parts).className;
 
 const asItem = (entry: ComboboxItem | string): ComboboxItem =>
   typeof entry === "string" ? { value: entry, label: entry } : entry;

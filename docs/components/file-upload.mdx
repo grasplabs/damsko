@@ -30,19 +30,6 @@ Without `onUpload` the files go with the form. Without `multiple`, a new file ta
   label="Rows that carry on, and a button form"
 />
 
-## Image upload
-
-`ImageUpload` is one picture, the picture itself the control: a square well with soft corners showing it, or its `fallback` (initials) while there is none. Press it or drop a picture on it to change it; the remove stands at its corner on hover, on focus and always on touch. What it takes is in its tooltip, not a line of text. Given `onUpload`, the well shows the save: the new picture dimmed with a spinner, then kept, or a destructive edge with Try again. A failed save keeps the new picture under Try again, so trying again is plain; remove puts the old one back. `default` sits in a setting's row, `lg` on a page of its own.
-
-A file it refuses is said with why, under the well; in a Field's row without the file's name, as the person has just picked it.
-
-<Stage
-  path="file-upload/image-upload-setting"
-  label="Image upload in a setting's row"
-/>
-
-<Stage path="file-upload/image-upload" label="Image upload, large" />
-
 <Part title="Using it" />
 
 ## When to use it
@@ -56,7 +43,7 @@ A file it refuses is said with why, under the well; in a Field's row without the
   ]}
   never={[
     "Files added to a message to an assistant: use Prompt input with Attachment.",
-    "One picture someone sets (a logo, a face): use ImageUpload.",
+    "One picture someone sets (a logo, a face): use Image upload.",
   ]}
 />
 
@@ -117,14 +104,6 @@ A file it refuses is said with why, under the well; in a Field's row without the
   source="src/components/file-upload.tsx"
   type="FileUploadAction"
   label="FileUploadAction"
-/>
-
-### ImageUpload
-
-<Props
-  source="src/components/image-upload.tsx"
-  type="ImageUploadProps"
-  label="ImageUpload props"
 />
 
 </Reference>

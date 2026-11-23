@@ -69,6 +69,7 @@ export const kinds: Kind[] = [
       "tags-input",
       "inline-edit",
       "file-upload",
+      "image-upload",
       "field",
       "label",
       "form",

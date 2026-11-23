@@ -34,6 +34,7 @@ import {
   size,
   space,
 } from "../lib/tokens.stylex";
+import { className } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { focusMarker, motionVars } from "../lib/vars.stylex";
 
@@ -288,14 +289,14 @@ export const ResizableHandle = ({
     {...rest}
     // The separator runs across the group: a horizontal group's is upright.
     className={(state: HandleState) =>
-      stylex.props(
+      className(
         styles.handle,
         state.orientation === "horizontal" ? styles.across : styles.down,
         state.disabled && styles.still,
         focusMarker,
         focusCarrier,
         style
-      ).className
+      )
     }
   >
     {(state: HandleState) => (

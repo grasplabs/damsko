@@ -43,7 +43,7 @@ On a label, the icon says what kind of label it is.
 
 ## Removable
 
-`onRemove` adds a small button after the words that takes the badge away, as a filter or a chosen value does.
+`onRemove` adds a small button after the words that takes the badge away, as a filter or a chosen value does. Only a label takes it (`secondary`, `outline`): a status is not something a person takes away, and the type refuses it.
 
 <Stage path="badge/removable" label="Removable" />
 
@@ -73,7 +73,7 @@ A badge stands at the end of the row it describes, after the thing's name.
 
 ## As a link
 
-`asChild` draws a link as the badge: it stays a link, named by its words, with the keyboard's ring. Its words are its own, so `icon` and `loading` are not drawn: put an `<Icon />` in the link before its words.
+`asChild` draws a link as the badge: it stays a link, named by its words, with the keyboard's ring. A label drawn as a link is cut with an ellipsis as any label is, its whole text in its `title`. Its words are its own, so `icon` and `loading` are not drawn: put an `<Icon />` in the link before its words.
 
 <Stage path="badge/link" label="As a link" />
 

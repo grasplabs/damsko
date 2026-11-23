@@ -44,6 +44,7 @@ import {
   size,
   space,
 } from "../lib/tokens.stylex";
+import { className } from "../lib/utils";
 import { iconVars, motionVars } from "../lib/vars.stylex";
 import {
   InputGroup,
@@ -218,7 +219,7 @@ const styles = stylex.create({
     minHeight: { default: size.treeViewRow, [COARSE]: size.treeViewRowTouch },
     paddingInlineStart: LEAD,
     paddingInlineEnd: space.treeViewRowPadding,
-    borderRadius: radius.treeViewRowRadius,
+    borderRadius: `min(${radius.row}, calc(${size.treeViewRow} / 2))`,
     cornerShape: radius.shape,
     letterSpacing: size.treeViewTracking,
     // Chosen or current: a fill, which forced colours drop, so the system's highlight there.
@@ -536,7 +537,7 @@ const RowInside = ({
       tabIndex: -1,
       "data-tree-view-link": "",
       "aria-current": current ? "page" : undefined,
-      className: stylex.props(styles.link).className,
+      className: className(styles.link),
       children: inside,
     },
     node.render

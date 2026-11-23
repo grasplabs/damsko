@@ -30,7 +30,7 @@
 import * as stylex from "@stylexjs/stylex";
 import { renderElement } from "@ui-sdk/react/primitive";
 import { isValidElement } from "react";
-import type { MouseEvent, ReactNode } from "react";
+import type { MouseEvent, ReactElement, ReactNode } from "react";
 
 import { useI18n } from "../lib/i18n";
 import { Icon, LoaderIcon, XIcon } from "../lib/icons";
@@ -65,8 +65,11 @@ export type BadgeVariant =
 /** A status: `default` 22px, `sm` 18px for a dense table. A label: `default` 24px, `sm` 20px. */
 export type BadgeSize = "sm" | "default";
 
-/** Every prop a Badge takes. */
-export interface BadgeProps {
+/** A label's variants: what sorts or names something. */
+type BadgeLabelVariant = "secondary" | "outline";
+
+/** What every Badge takes, a status or a label. */
+interface BadgeOwnProps {
   /**
    * The status, in a word or two, in sentence case ("Needs review"). It says it, never the colour
    * alone. With `dot`, what happened or how many ("3 errors"); leave it out for the dot alone. With
@@ -83,6 +86,14 @@ export interface BadgeProps {
    * @default "default"
    */
   variant?: BadgeVariant;
+  /**
+   * Takes the badge away: shows a small button after the words that runs this. A label only
+   * (`secondary`, `outline`): a chosen value or a filter is taken away, a status is not. Its name is
+   * "Remove" and the words when they are text. Focus then moves to the next badge's remove button
+   * in the same row, or the one before when it was the last. When none is left, move focus
+   * yourself, to the field that adds them. Not drawn with `asChild` or `dot`.
+   */
+  onRemove?: () => void;
   /**
    * How serious something is: a dot in the variant's colour beside words in the text's colour,
    * for a page full of them (captured logs), in place of the tinted pill.
@@ -121,13 +132,6 @@ export interface BadgeProps {
    */
   asChild?: boolean;
   /**
-   * Takes the badge away: shows a small button after the words that runs this. Its name is "Remove"
-   * and the words when they are text. Focus then moves to the next badge's remove button in the
-   * same row, or the one before when it was the last. When none is left, move focus yourself, to
-   * the field that adds them. Not drawn with `asChild` or `dot`.
-   */
-  onRemove?: () => void;
-  /**
    * The dot's name when it stands alone (`dot`, no words). With words it is not said.
    * @default "Note", "Done", "Warning", "Error" or "Info", by variant (`badge.dot`)
    */
@@ -135,6 +139,18 @@ export interface BadgeProps {
   /** Layout only: margins and alignment. The look belongs to the badge. */
   style?: LayoutStyle;
 }
+
+/**
+ * Every prop a Badge takes. `onRemove` is a label's alone, so a status given one does not compile:
+ * shadcn's Badge has no remove at all, and what its kin take away (a Combobox's chips, a tag) is
+ * always a neutral label, never how something stands.
+ */
+export type BadgeProps =
+  | (BadgeOwnProps & {
+      variant?: Exclude<BadgeVariant, BadgeLabelVariant>;
+      onRemove?: never;
+    })
+  | (BadgeOwnProps & { variant: BadgeLabelVariant });
 
 const FORCED = media.forcedColors;
 const REDUCED = media.reducedMotion;
@@ -256,6 +272,15 @@ const styles = stylex.create({
     overflow: "hidden",
     textOverflow: "ellipsis",
   },
+  // A label drawn as the caller's element (a link): its words are the element's own text, which a
+  // flex box cannot cut, so it is one line box as tall as the label, cut with the same ellipsis.
+  labelLinked: {
+    display: "inline-block",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+  },
+  labelLinkedDefault: { lineHeight: sizes.badgeLabelHeight },
+  labelLinkedSm: { lineHeight: sizes.badgeLabelHeightSm },
   // With a remove button, the end is the button's own room.
   removable: {
     paddingInlineEnd: space["1"],
@@ -374,7 +399,7 @@ const dotLooks = {
 } as const;
 
 /** Whether the variant is a label (what sorts or names something), not a status. */
-const isLabel = (variant: BadgeVariant): variant is "secondary" | "outline" =>
+const isLabel = (variant: BadgeVariant): variant is BadgeLabelVariant =>
   variant === "secondary" || variant === "outline";
 
 // After a remove, the keyboard lands on a neighbour's remove button instead of the page: the next
@@ -505,13 +530,28 @@ const Inside = ({
   );
 };
 
-/** The pill's shape at its size: a label's one cut line, or a status that wraps. */
-const shapeOf = (label: boolean, size: BadgeSize) => {
+/** The pill's shape at its size: a label's one cut line (a link's too), or a status that wraps. */
+const shapeOf = (label: boolean, size: BadgeSize, linked: boolean) => {
   const small = size === "sm";
-  return label
-    ? [styles.label, small ? styles.labelSm : styles.labelDefault]
-    : [styles.badge, hyphenate, small ? styles.sm : styles.default];
+  if (!label) {
+    return [styles.badge, hyphenate, small ? styles.sm : styles.default];
+  }
+  return [
+    styles.label,
+    small ? styles.labelSm : styles.labelDefault,
+    linked && styles.labelLinked,
+    linked && (small ? styles.labelLinkedSm : styles.labelLinkedDefault),
+  ];
 };
+
+/** A linked label's whole text, for when it is cut: the plain label's words carry theirs. */
+const titleOf = (
+  label: boolean,
+  element: ReactElement<{ children?: ReactNode }> | undefined
+): string | undefined =>
+  label && typeof element?.props.children === "string"
+    ? element.props.children
+    : undefined;
 
 /** A short status or a label in a pill, or how serious something is as a dot. */
 export const Badge = ({
@@ -542,10 +582,12 @@ export const Badge = ({
       : undefined;
   const linked = element !== undefined;
   const label = isLabel(variant);
+  // Only a label is taken away.
+  const remove = label ? onRemove : undefined;
   const look = stylex.props(
-    shapeOf(label, size),
+    shapeOf(label, size, linked),
     pillLooks[variant],
-    onRemove !== undefined && !linked && styles.removable,
+    remove !== undefined && !linked && styles.removable,
     linked && styles.link,
     explained && styles.explained,
     (explained || linked) && focusRing,
@@ -555,6 +597,7 @@ export const Badge = ({
     "data-slot": "badge",
     "data-variant": variant,
     "data-loading": loading === true ? "" : undefined,
+    title: titleOf(label, element),
     ...look,
   };
   // Drawn as the caller's element (a link), the badge's look, mark and words go onto it.
@@ -566,7 +609,7 @@ export const Badge = ({
         // oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- the tooltip describes it, as a Key-value icon's does
         tabIndex={explained ? 0 : undefined}
       >
-        <Inside icon={icon} loading={loading} label={label} onRemove={onRemove}>
+        <Inside icon={icon} loading={loading} label={label} onRemove={remove}>
           {children}
         </Inside>
       </span>

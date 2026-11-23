@@ -35,12 +35,20 @@ description: One corner for almost everything, a squircle, so a curve meets its 
 
 </AllTokens>
 
+## Rows
+
+A row takes the row corner, `radius-row`: the one corner less the room a container keeps round its rows (20px less 4px, so 16px), capped at half the row's height, in the squircle. A menu or list item, an Item, a tree or sidebar row and a trigger that runs the width all take it, so a row reads the same wherever it stands.
+
+## Tiles and thin things
+
+A square tile takes the one corner capped at half its side, and the mark corner at 24px: Icon tile and Brand icon alike. A thing too thin for the mark corner (an 8px swatch, a highlight's edge) takes `radius-hairline`.
+
 ## Rules
 
 <Rules
   always={[
     "Write `corner-shape` after `corner`, so the squircle takes the radius.",
-    "Give a mark under 24px tall the mark corner.",
+    "Give a mark under 24px tall the mark corner, in the squircle like every other corner.",
     "Use the pill for a chip, a badge or the track of a switch, a slider or a progress bar, and the circle for an avatar or a dot.",
     "Give a segmented control the one corner on its track, and each segment the track's corner less its padding.",
   ]}

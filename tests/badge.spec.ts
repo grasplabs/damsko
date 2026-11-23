@@ -168,3 +168,23 @@ test.describe("on a touch screen", () => {
     expect(missed).toEqual([]);
   });
 });
+
+test("a label drawn as a link is cut like any label, its whole text in its title", async ({
+  page,
+}) => {
+  await openExample(page, "badge", "link");
+  const link = page.getByRole("link", { name: "Design systems and research" });
+  await expect(link).toHaveAttribute("title", "Design systems and research");
+  await expect(link).toHaveCSS("text-overflow", "ellipsis");
+  // Cut: its words are wider than the room it has.
+  expect(
+    await link.evaluate((element) => element.scrollWidth > element.clientWidth)
+  ).toBe(true);
+});
+
+test("a status has no remove button: only a label is taken away", async ({
+  page,
+}) => {
+  await openExample(page, "badge", "tones");
+  await expect(page.getByRole("button")).toHaveCount(0);
+});

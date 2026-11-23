@@ -156,6 +156,7 @@ const s = stylex.create({
     aspectRatio: "16 / 10",
     overflow: "hidden",
     borderRadius: radius.mark,
+    cornerShape: radius.shape,
     backgroundColor: colors.card,
     boxShadow: shadow.lg,
     colorScheme: "light",
