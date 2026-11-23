@@ -356,9 +356,8 @@ export const ContextContentHeader = ({
             </span>
           </div>
           <Progress
+            aria-label={words.progress}
             value={Math.min(share, 1) * 100}
-            label={words.progress}
-            showLabel={false}
           />
         </>
       )}

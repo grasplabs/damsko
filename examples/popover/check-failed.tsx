@@ -12,7 +12,7 @@ import {
 import { useState } from "react";
 
 // A stand-in for a check that finds a fault: it sends nothing, so it does not say "Not sent". Given
-// no errorLabel of its own, the button says the catalogue's neutral words, and the popover stays open.
+// no errorText of its own, the button says the catalogue's neutral words, and the popover stays open.
 const check = () =>
   new Promise((_, reject) =>
     setTimeout(() => {
@@ -48,7 +48,7 @@ export default function PopoverCheckFailed() {
             size="sm"
             variant="default"
             onClick={test}
-            loadingLabel="Testing"
+            loadingText="Testing"
           >
             Test
           </Button>

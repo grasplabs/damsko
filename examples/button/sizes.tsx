@@ -34,19 +34,14 @@ export default function ButtonSizes() {
       >
         Filter
       </Button>
-      <Button
-        size="sm"
-        variant="outline"
-        onClick={work}
-        successLabel="Exported"
-      >
+      <Button size="sm" variant="outline" onClick={work} successText="Exported">
         Export
       </Button>
-      <Button variant="outline" onClick={work} successLabel="Invited">
+      <Button variant="outline" onClick={work} successText="Invited">
         <Icon icon={PlusIcon} />
         Invite people
       </Button>
-      <Button size="lg" variant="default" onClick={work} successLabel="Started">
+      <Button size="lg" variant="default" onClick={work} successText="Started">
         Start the review
         <Icon icon={ArrowRightIcon} />
       </Button>

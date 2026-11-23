@@ -32,7 +32,7 @@ export default function ContextMenuAgent() {
             await Promise.resolve();
             throw new Error("no");
           }}
-          errorLabel="Could not share"
+          errorText="Could not share"
         >
           Share with the team
         </ContextMenuItem>

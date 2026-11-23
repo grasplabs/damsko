@@ -162,8 +162,8 @@ export const InlineEdit = ({
     }
   }
   const save = useAction(async (work: Promise<unknown>) => await work, {
-    successLabel: words.saved(draft.trim()),
-    errorLabel: words.error,
+    successText: words.saved(draft.trim()),
+    errorText: words.error,
   });
   const saving = save.status === "loading";
 

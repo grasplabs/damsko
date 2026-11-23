@@ -45,7 +45,7 @@ export default function DropdownMenuAgent() {
             await wait(300);
             throw new Error("The report could not be reached.");
           }}
-          errorLabel="Could not publish"
+          errorText="Could not publish"
         >
           Publish
         </DropdownMenuItem>
@@ -64,7 +64,7 @@ export default function DropdownMenuAgent() {
             await wait(300);
             log("trashed");
           }}
-          errorLabel="Could not move it"
+          errorText="Could not move it"
         >
           Move to trash
         </DropdownMenuItem>

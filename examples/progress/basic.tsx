@@ -1,4 +1,8 @@
-import { Progress } from "@grasp-os/ui/components/progress";
+import {
+  Progress,
+  ProgressLabel,
+  ProgressValue,
+} from "@grasp-os/ui/components/progress";
 import * as stylex from "@stylexjs/stylex";
 
 const layout = stylex.create({
@@ -7,6 +11,9 @@ const layout = stylex.create({
 
 export default function ProgressBasic() {
   return (
-    <Progress label="Exporting the report" value={60} style={layout.bar} />
+    <Progress value={60} style={layout.bar}>
+      <ProgressLabel>Exporting the report</ProgressLabel>
+      <ProgressValue />
+    </Progress>
   );
 }

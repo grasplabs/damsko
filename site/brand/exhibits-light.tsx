@@ -8,7 +8,7 @@ import {
 } from "@grasp-os/ui/components/chart";
 import { Shimmer } from "@grasp-os/ui/components/shimmer";
 import { Skeleton } from "@grasp-os/ui/components/skeleton";
-import { Slider } from "@grasp-os/ui/components/slider";
+import { Slider, SliderLabel } from "@grasp-os/ui/components/slider";
 import { DatabaseIcon, KeyIcon, LockIcon } from "@grasp-os/ui/lib/icons";
 import {
   colors,
@@ -338,10 +338,11 @@ export const Dither = () => (
       <div {...stylex.props(s.stage)}>
         <Slider
           variant="levels"
-          label={ditherWords.levelLabel}
           levels={ditherWords.levels}
           defaultValue="medium"
-        />
+        >
+          <SliderLabel>{ditherWords.levelLabel}</SliderLabel>
+        </Slider>
       </div>
       <figcaption {...stylex.props(s.tileCaption)}>
         <p {...stylex.props(s.tileName)}>{ditherWords.level}</p>

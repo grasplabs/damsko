@@ -129,7 +129,7 @@ The product gives every part its words once per root, in its language, through `
 ```tsx
 <MessageError onRetry={retry}>Could not answer. The calendar did not respond.</MessageError>
 <MessageActions aria-label="Answer actions">…</MessageActions>
-<Button onClick={saveName} errorLabel="Could not save. Your name is kept.">Save</Button>
+<Button onClick={saveName} errorText="Could not save. Your name is kept.">Save</Button>
 ```
 
 Each such prop wins over the catalogue for that instance only. Words it leaves out come from the catalogue, else English. Only words that differ from the catalogue need giving. A word the catalogue gives as a function (`count: (count) => …`) is given as a function, so each language pluralises.

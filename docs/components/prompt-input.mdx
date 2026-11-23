@@ -109,7 +109,7 @@ The banner, the queue and the note stand outside the card, so the PromptInput lo
 
 ## Queued messages
 
-`PromptInputQueue` is the panel above the card, its foot behind the card, for the messages written while an answer was still coming: its `label` on a fold ("2 queued"), and a `PromptInputQueueItem` for each, with its `actions` at the row's end. The product keeps the queue and what each action does. When an action takes its row off from the keyboard, focus goes on to the next row's first action, or the one before, and after the last row to the text.
+`PromptInputQueue` is the panel above the card, its foot behind the card, for the messages written while an answer was still coming: a `PromptInputQueueTrigger` that folds it, its words with the count ("2 queued"), and a `PromptInputQueueContent` with a `PromptInputQueueItem` for each, with its `actions` at the row's end. The product keeps the queue and what each action does. When an action takes its row off from the keyboard, focus goes on to the next row's first action, or the one before, and after the last row to the text.
 
 <Stage path="prompt-input/queue" label="Queued messages" />
 
@@ -556,6 +556,22 @@ const answer: Record<ChatStatus, MessageStatus> = {
   label="PromptInputQueue"
 />
 
+### PromptInputQueueTrigger
+
+<Props
+  source="src/components/prompt-input.tsx"
+  type="PromptInputQueueTriggerProps"
+  label="PromptInputQueueTrigger"
+/>
+
+### PromptInputQueueContent
+
+<Props
+  source="src/components/prompt-input.tsx"
+  type="PromptInputQueueContentProps"
+  label="PromptInputQueueContent"
+/>
+
 ### PromptInputQueueItem
 
 <Props
@@ -594,6 +610,14 @@ const answer: Record<ChatStatus, MessageStatus> = {
   source="src/components/prompt-input.tsx"
   type="PromptInputMentionContentProps"
   label="PromptInputMentionContent"
+/>
+
+### PromptInputMentionEmpty
+
+<Props
+  source="src/components/prompt-input.tsx"
+  type="PromptInputMentionEmptyProps"
+  label="PromptInputMentionEmpty"
 />
 
 ### PromptInputMentionItem

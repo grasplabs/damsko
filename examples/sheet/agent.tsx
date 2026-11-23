@@ -42,8 +42,8 @@ interface TaskProps {
   cancel: string;
   action: string;
   work: () => Promise<void>;
-  loadingLabel: string;
-  errorLabel: string;
+  loadingText: string;
+  errorText: string;
 }
 
 const Task = ({
@@ -53,8 +53,8 @@ const Task = ({
   cancel,
   action,
   work,
-  loadingLabel,
-  errorLabel,
+  loadingText,
+  errorText,
 }: TaskProps) => {
   const [open, setOpen] = useState(false);
   const [runWorking, setRunWorking] = useState(false);
@@ -80,8 +80,8 @@ const Task = ({
           <Button
             size="sm"
             onClick={run}
-            loadingLabel={loadingLabel}
-            errorLabel={errorLabel}
+            loadingText={loadingText}
+            errorText={errorText}
           >
             {action}
           </Button>
@@ -104,8 +104,8 @@ export default function SheetAgent() {
           await wait(300);
           log("reminded");
         }}
-        loadingLabel="Saving"
-        errorLabel="Could not save"
+        loadingText="Saving"
+        errorText="Could not save"
       />
       <Task
         trigger="Send report"
@@ -117,8 +117,8 @@ export default function SheetAgent() {
           await wait(300);
           throw new Error("The list could not be reached.");
         }}
-        loadingLabel="Sending"
-        errorLabel="Could not send"
+        loadingText="Sending"
+        errorText="Could not send"
       />
     </>
   );

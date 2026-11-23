@@ -48,7 +48,7 @@ export default function MessageStopped() {
           <MessageResponse>{text}</MessageResponse>
           <MessageActions>
             <CopyButton value={text} />
-            <MessageAction label="Write it again" onClick={again}>
+            <MessageAction aria-label="Write it again" onClick={again}>
               <Icon icon={RefreshCwIcon} />
             </MessageAction>
           </MessageActions>

@@ -73,8 +73,8 @@ export default function SheetBasic() {
           <Button
             size="sm"
             onClick={archiving}
-            loadingLabel="Archiving"
-            errorLabel="Not archived"
+            loadingText="Archiving"
+            errorText="Not archived"
           >
             Archive
           </Button>

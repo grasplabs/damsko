@@ -32,8 +32,8 @@ export default function ButtonGroupSplit() {
         <Button
           variant="ghost"
           onClick={merging}
-          successLabel="Merged"
-          errorLabel="Not merged"
+          successText="Merged"
+          errorText="Not merged"
         >
           Merge changes
         </Button>
@@ -47,13 +47,13 @@ export default function ButtonGroupSplit() {
           <DropdownMenuContent align="end">
             <DropdownMenuItem
               onSelect={way("Squashed and merged")}
-              errorLabel="Not merged"
+              errorText="Not merged"
             >
               Squash and merge
             </DropdownMenuItem>
             <DropdownMenuItem
               onSelect={way("Rebased and merged")}
-              errorLabel="Not merged"
+              errorText="Not merged"
             >
               Rebase and merge
             </DropdownMenuItem>

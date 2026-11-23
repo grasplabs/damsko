@@ -54,8 +54,8 @@ export default function DialogBasic() {
           <Button
             size="sm"
             onClick={publish}
-            loadingLabel="Publishing"
-            errorLabel="Could not publish"
+            loadingText="Publishing"
+            errorText="Could not publish"
           >
             Publish
           </Button>

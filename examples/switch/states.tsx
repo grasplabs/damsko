@@ -30,7 +30,7 @@ export default function SwitchState({
         <Switch
           defaultChecked={value === "on"}
           onSave={never}
-          errorLabel="Could not save"
+          errorText="Could not save"
           status={status}
         />
       </Field>

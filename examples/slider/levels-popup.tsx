@@ -6,7 +6,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@grasp-os/ui/components/popover";
-import { Slider } from "@grasp-os/ui/components/slider";
+import { Slider, SliderLabel } from "@grasp-os/ui/components/slider";
 import * as stylex from "@stylexjs/stylex";
 import { useState } from "react";
 
@@ -29,12 +29,13 @@ export default function SliderLevelsPopup() {
         <div {...stylex.props(layout.panel)}>
           <Slider
             variant="levels"
-            label="Effort"
             size="sm"
             levels={effort}
             value={level}
             onValueChange={setLevel}
-          />
+          >
+            <SliderLabel>Effort</SliderLabel>
+          </Slider>
         </div>
       </PopoverContent>
     </Popover>

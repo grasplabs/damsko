@@ -36,8 +36,8 @@ export default function ThemeToggleBasic() {
           <Button
             variant="default"
             onClick={save}
-            successLabel="Saved"
-            errorLabel="Not saved"
+            successText="Saved"
+            errorText="Not saved"
           >
             Save changes
           </Button>

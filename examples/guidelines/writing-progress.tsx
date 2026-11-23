@@ -27,18 +27,18 @@ export default function WritingProgress() {
           <Button
             variant="default"
             onClick={save}
-            loadingLabel="Saving"
-            successLabel="Saved"
-            errorLabel="Not saved"
+            loadingText="Saving"
+            successText="Saved"
+            errorText="Not saved"
           >
             Save changes
           </Button>
           <Button
             variant="outline"
             onClick={invite}
-            loadingLabel="Sending"
-            successLabel="Sent"
-            errorLabel="Not sent"
+            loadingText="Sending"
+            successText="Sent"
+            errorText="Not sent"
           >
             <Icon icon={SendIcon} />
             Send invite
@@ -50,18 +50,18 @@ export default function WritingProgress() {
           <Button
             variant="default"
             onClick={vague}
-            loadingLabel="Please wait"
-            successLabel="Done!"
-            errorLabel="Error"
+            loadingText="Please wait"
+            successText="Done!"
+            errorText="Error"
           >
             Save changes
           </Button>
           <Button
             variant="outline"
             onClick={blank}
-            loadingLabel="Please wait"
-            successLabel="Success"
-            errorLabel="Error"
+            loadingText="Please wait"
+            successText="Success"
+            errorText="Error"
           >
             <Icon icon={SendIcon} />
             Send invite

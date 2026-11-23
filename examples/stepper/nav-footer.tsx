@@ -19,7 +19,7 @@ export default function StepperNavFooter() {
       onNext={() => {
         setAt(Math.min(total - 1, at + 1));
       }}
-      finishLabel="Create agent"
+      finishText="Create agent"
     />
   );
 }

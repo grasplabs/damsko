@@ -13,9 +13,9 @@ export default function ConfirmationsFailed() {
     <HoldButton
       variant="destructive"
       onConfirm={removeMember}
-      loadingLabel="Removing"
-      successLabel="Removed"
-      errorLabel="Not removed"
+      loadingText="Removing"
+      successText="Removed"
+      errorText="Not removed"
     >
       Remove Jonas Weber
     </HoldButton>

@@ -1,4 +1,8 @@
-import { Progress } from "@grasp-os/ui/components/progress";
+import {
+  Progress,
+  ProgressLabel,
+  ProgressValue,
+} from "@grasp-os/ui/components/progress";
 import * as stylex from "@stylexjs/stylex";
 
 const layout = stylex.create({
@@ -8,9 +12,18 @@ const layout = stylex.create({
 export default function ProgressSizes() {
   return (
     <div {...stylex.props(layout.stack)}>
-      <Progress label="Small" size="sm" value={25} />
-      <Progress label="Medium" value={65} />
-      <Progress label="Large" size="lg" value={100} />
+      <Progress size="sm" value={25}>
+        <ProgressLabel>Small</ProgressLabel>
+        <ProgressValue />
+      </Progress>
+      <Progress value={65}>
+        <ProgressLabel>Medium</ProgressLabel>
+        <ProgressValue />
+      </Progress>
+      <Progress size="lg" value={100}>
+        <ProgressLabel>Large</ProgressLabel>
+        <ProgressValue />
+      </Progress>
     </div>
   );
 }

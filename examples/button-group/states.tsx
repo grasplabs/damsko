@@ -30,8 +30,8 @@ export default function ButtonGroupState({
         <Button
           variant="ghost"
           status={status}
-          successLabel="Sent"
-          errorLabel="Not sent"
+          successText="Sent"
+          errorText="Not sent"
           disabled={disabled}
         >
           Send
