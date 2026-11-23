@@ -1591,7 +1591,10 @@ interface RowElementProps {
   children: ReactNode;
 }
 
-/** A row's element as its tooltip's trigger: the trigger's props arrive here, merged onto the row. */
+/**
+ * A row's element as its tooltip's trigger: the trigger's props arrive here, merged onto the row,
+ * which keeps its own slot.
+ */
 const RowElement = ({
   tag,
   render,
@@ -1600,7 +1603,11 @@ const RowElement = ({
   children,
   ...trigger
 }: RowElementProps & Record<string, unknown>) => {
-  const { "aria-describedby": description, ...plain } = trigger;
+  const {
+    "aria-describedby": description,
+    "data-slot": _slot,
+    ...plain
+  } = trigger;
   return renderElement(
     tag,
     mergeProps(
