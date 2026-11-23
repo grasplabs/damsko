@@ -1,7 +1,8 @@
-// Small things every component shares: the style a caller may pass, the live region, a ref
+// Small things every component shares: the style a caller may pass, the live regions, a ref
 // helper, a measure after layout, asChild, the words among children, and the system's dither as
 // numbers.
 import * as stylex from "@stylexjs/stylex";
+import { announce as say, prepareAnnouncements } from "@ui-sdk/core";
 import { renderElement } from "@ui-sdk/react/primitive";
 import type { RenderProp } from "@ui-sdk/react/primitive";
 import { createContext, createElement, isValidElement, lazy, use } from "react";
@@ -368,27 +369,60 @@ let speaking = false;
 // screen reader to have taken it, so one said straight after another never cuts it off.
 const HOLD = 400;
 
-const regionOf = (politeness: Politeness): HTMLElement => {
-  let region = regions.get(politeness);
-  if (region?.isConnected !== true) {
-    region = document.createElement("p");
-    // The assertive region interrupts by aria-live alone, never as an alert: it stands on the page
-    // empty, or holds a message the page already shows, and neither is an alert of the page's own.
-    // The alert role means no more than this live setting to a screen reader.
-    if (politeness === "polite") {
-      region.setAttribute("role", "status");
+// When a message last came into a region from elsewhere (UI SDK's own: a toast, a field's error),
+// and what this queue last wrote, so its own words are not taken for another's.
+let othersSaidAt = Number.NEGATIVE_INFINITY;
+let ours = "";
+
+/** A message another part said into `region`: the next of ours waits its hold, so it never cuts that one off. */
+const heedOthers = (region: HTMLElement) => {
+  new MutationObserver(() => {
+    const text = region.textContent;
+    if (text !== "" && text !== ours) {
+      othersSaidAt = performance.now();
     }
-    region.setAttribute("aria-live", politeness);
-    region.setAttribute("aria-atomic", "true");
-    region.dataset.slot = "live-region";
-    // Visually hidden: present to a screen reader, never seen.
-    region.style.cssText =
-      "position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap";
-    document.body.append(region);
+  }).observe(region, { childList: true, characterData: true, subtree: true });
+};
+
+/**
+ * The page's two live regions, UI SDK's (`prepareAnnouncements`), so the page has one pair, there
+ * before anything is said. Its assertive one is `role="alert"`, an empty alert on every page: the
+ * role goes, and `aria-live="assertive"` with `aria-atomic`, all the role means to a screen reader,
+ * stays. Readied again before each message, in case the page lost them. Does nothing on the
+ * server, or where UI SDK speaks through an announcer of its own.
+ */
+export const readyLiveRegions = (): void => {
+  if (typeof document === "undefined" || document.body === null) {
+    return;
+  }
+  prepareAnnouncements(document);
+  for (const politeness of ["polite", "assertive"] as const) {
+    const region = document.querySelector<HTMLElement>(
+      politeness === "assertive"
+        ? '[data-ui-sdk-announcer="assertive"]'
+        : '[data-ui-sdk-announcer=""]'
+    );
+    if (region === null || regions.get(politeness) === region) {
+      continue;
+    }
+    if (politeness === "assertive") {
+      region.removeAttribute("role");
+    }
+    heedOthers(region);
     regions.set(politeness, region);
   }
-  return region;
 };
+
+// Ready from the start, so a screen reader knows the regions before their first message.
+if (typeof document !== "undefined") {
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", readyLiveRegions, {
+      once: true,
+    });
+  } else {
+    readyLiveRegions();
+  }
+}
 
 const sayNext = () => {
   const next = waiting.shift();
@@ -396,18 +430,33 @@ const sayNext = () => {
   if (next === undefined) {
     return;
   }
-  const region = regionOf(next.politeness);
+  readyLiveRegions();
+  const region = regions.get(next.politeness);
+  if (region === undefined) {
+    // UI SDK speaks through an announcer of its own: this goes there.
+    say(next.message, { priority: next.politeness });
+    setTimeout(sayNext, HOLD);
+    return;
+  }
+  // Another part's message is still being taken: this one waits until it has been.
+  const wait = othersSaidAt + HOLD - performance.now();
+  if (wait > 0) {
+    waiting.unshift(next);
+    setTimeout(sayNext, wait);
+    return;
+  }
   // Emptied first, so the same message twice in a row is said twice.
   region.textContent = "";
   requestAnimationFrame(() => {
+    ours = next.message;
     region.textContent = next.message;
     setTimeout(sayNext, HOLD);
   });
 };
 
 /**
- * Says `message` once to a screen reader, through one visually hidden live region for the whole
- * page (`data-slot="live-region"`), made on first use. A part never puts a live region beside
+ * Says `message` once to a screen reader, through the page's one pair of live regions, UI SDK's,
+ * readied as the page starts (`readyLiveRegions`). A part never puts a live region beside
  * itself, so nothing is added next to a button in a row. Messages said in quick succession wait
  * their turn, each said whole: polite ones in order, an assertive one ahead of the polite ones
  * still waiting. Does nothing on the server.

@@ -167,7 +167,7 @@ export const listenToLiveRegions = async (
               ? change.target
               : change.target.parentElement
           )
-          .filter((node) => node?.matches("[data-slot=live-region]") === true)
+          .filter((node) => node?.matches("[data-ui-sdk-announcer]") === true)
       );
       for (const region of regions) {
         const text = region?.textContent ?? "";

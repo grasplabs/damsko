@@ -12,13 +12,12 @@
 //   toast("Report archived", { action: { label: "Undo", onAction: restore } });
 //
 // F6 moves focus to the newest toast and back; Escape dismisses the focused one. A toast is
-// announced to a screen reader without taking focus, by UI SDK's own live regions, there before the
-// first toast and none of them an alert (`useQuietRegions`); what its action says when its work
-// failed is said by the page's one live region (lib/utils `announce`).
+// announced to a screen reader without taking focus, through the page's one pair of live regions,
+// there before the first toast and neither of them an alert (lib/utils `readyLiveRegions`), which
+// also say what its action says when its work failed (lib/utils `announce`).
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
-import { prepareAnnouncements } from "@ui-sdk/core";
 import {
   createToaster as createQueue,
   Toast as ToastPrimitive,
@@ -60,7 +59,7 @@ import {
   space,
 } from "../lib/tokens.stylex";
 import { durations } from "../lib/tokens.values";
-import { announce, isBlank } from "../lib/utils";
+import { announce, isBlank, readyLiveRegions } from "../lib/utils";
 import { iconVars, motionVars, toastRegionMarker } from "../lib/vars.stylex";
 import { Button } from "./button";
 import { Spinner } from "./spinner";
@@ -485,23 +484,6 @@ const useOneRegion = (queue: object, where: string) => {
 };
 
 /**
- * UI SDK's toast region readies its two live regions as it mounts (`prepareAnnouncements`), as a
- * screen reader may miss the first message of a region it did not know before: a status, and for
- * an error an alert, both empty on every page that has a Toaster. An alert that says nothing is no
- * alert, and a product's "no alert on the page" finds it. The assertive region keeps aria-live and
- * aria-atomic, all the alert role means to a screen reader, and loses the role. Readied here first,
- * so it is there to quiet whichever effect runs first. (UI SDK's own code; said upstream too.)
- */
-const useQuietRegions = () => {
-  useEffect(() => {
-    prepareAnnouncements(document);
-    document
-      .querySelector('[data-ui-sdk-announcer="assertive"]')
-      ?.removeAttribute("role");
-  }, []);
-};
-
-/**
  * A toast's action, as UI SDK's ToastAction hands it: a small outline Button that shows its work
  * while the action's Promise runs, and says `errorText` once it failed, once to a screen reader
  * through the page's live region. The toast stays then.
@@ -551,7 +533,11 @@ export const Toaster = ({
     align = "center";
   }
   useOneRegion(toaster ?? toast, position);
-  useQuietRegions();
+  // UI SDK's toast region readies the page's live regions as it mounts, its assertive one an
+  // alert: readied once more after it, so neither is (lib/utils `readyLiveRegions`).
+  useEffect(() => {
+    readyLiveRegions();
+  }, []);
   const top = side === "top";
   return (
     <RegionPrimitive
