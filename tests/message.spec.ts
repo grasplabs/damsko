@@ -254,19 +254,38 @@ test("a failure is an alert; Try again keeps the focus in the message, and Answe
   await expect.poll(async () => await timesHeard(page, "Answer ready")).toBe(1);
 });
 
-test("stopped, the words stay as written with Stopped under them and the actions offered", async ({
+test("stopped, the words stay as written with Stopped under them, on the actions' row, and the actions offered", async ({
   page,
 }) => {
   await openExample(page, "message", "stopped");
   const assistant = page.getByRole("article", { name: "Assistant" });
   await expect(assistant).toContainText("Support for a");
-  await expect(assistant.getByText("Stopped", { exact: true })).toBeVisible();
-  await expect(assistant.getByRole("button", { name: "Copy" })).toBeVisible();
+  const stopped = assistant
+    .getByText("Stopped", { exact: true })
+    .filter({ visible: true });
+  await expect(stopped).toHaveCount(1);
+  const copy = assistant.getByRole("button", { name: "Copy" });
+  await expect(copy).toBeVisible();
+  // One row: Stopped first, then the buttons, their middles level.
+  const [note, button] = await Promise.all([
+    stopped.boundingBox(),
+    copy.boundingBox(),
+  ]);
+  expect(
+    Math.abs(
+      (note?.y ?? 0) +
+        (note?.height ?? 0) / 2 -
+        ((button?.y ?? 0) + (button?.height ?? 0) / 2)
+    )
+  ).toBeLessThanOrEqual(1);
+  expect(note?.x ?? 0).toBeLessThan(button?.x ?? 0);
   await assistant.getByRole("button", { name: "Write it again" }).click();
   await expect(assistant).toContainText("a trade fair in March.", {
     timeout: 5000,
   });
-  await expect(assistant.getByText("Stopped", { exact: true })).toHaveCount(0);
+  await expect(
+    assistant.getByText("Stopped", { exact: true }).filter({ visible: true })
+  ).toHaveCount(0);
 });
 
 test("the skeleton is busy and hidden from screen readers", async ({
@@ -362,5 +381,29 @@ for (const theme of ["light", "dark"] as const) {
       return matches;
     });
     expect(same).toBe(true);
+  });
+}
+
+for (const theme of ["light", "dark"] as const) {
+  test(`an answer's words in Markdown stand in the body's ink, ${theme}`, async ({
+    page,
+  }) => {
+    await openExample(page, "message", "chat-text", { theme });
+    const words = page
+      .getByRole("article", { name: "Assistant" })
+      .getByText("Three suppliers changed their terms.");
+    await expect(words).toBeVisible();
+    const [ink, body] = await words.evaluate((node) => {
+      const probe = document.createElement("span");
+      probe.style.color = "var(--damsko-body-foreground)";
+      node.append(probe);
+      const pair = [
+        getComputedStyle(node).color,
+        getComputedStyle(probe).color,
+      ];
+      probe.remove();
+      return pair;
+    });
+    expect(ink).toBe(body);
   });
 }

@@ -314,12 +314,17 @@ const styles = stylex.create({
     fontFamily: font.sans,
     fontSize: size.messageText,
     lineHeight: size.messageTextLine,
-    color: colors.foreground,
+    color: colors.bodyForeground,
     whiteSpace: "pre-wrap",
     overflowWrap: "anywhere",
   },
+  // A stopped answer's one quiet line. With actions it stands on their row, before them
+  // (MessageActions draws it there): this one, under the words, is for an answer that has none.
   note: {
-    display: "inline-flex",
+    display: {
+      default: "inline-flex",
+      ":has(~ [data-slot=message-actions])": "none",
+    },
     alignItems: "center",
     alignSelf: "flex-start",
     gap: space["1"],
@@ -361,8 +366,20 @@ const styles = stylex.create({
     // The first icon stands under the first letter of the words; at the end, the last under the
     // bubble's edge.
     marginInlineStart: `calc(-1 * (${size.controlSm} - ${size.iconSm}) / 2)`,
+    // As wide as its buttons, not the column: its name belongs to them alone.
+    alignSelf: "flex-start",
+    maxWidth: "100%",
+  },
+  // After Stopped on the row, the actions start after its words, not under the first letter.
+  actionsStopped: { marginInlineStart: 0 },
+  // Stopped on the actions' row: a space-3 before the first button.
+  noteInRow: {
+    display: "inline-flex",
+    alignSelf: "center",
+    marginInlineEnd: `calc(${space["3"]} - ${space["1"]})`,
   },
   actionsEnd: {
+    alignSelf: "flex-end",
     marginInlineStart: 0,
     marginInlineEnd: `calc(-1 * (${size.controlSm} - ${size.iconSm}) / 2)`,
   },
@@ -664,7 +681,10 @@ export const MessageResponse = ({
   );
 };
 
-/** A named row of quiet buttons: hidden and out of reach (its room kept) while the answer is written. */
+/**
+ * A named row of quiet buttons: hidden and out of reach (its room kept) while the answer is
+ * written. A stopped answer's Stopped stands at its start.
+ */
 export const MessageActions = ({
   children,
   "aria-label": label,
@@ -681,11 +701,22 @@ export const MessageActions = ({
       inert={waiting}
       {...stylex.props(
         styles.actions,
+        status === "stopped" && styles.actionsStopped,
         align === "end" && styles.actionsEnd,
         waiting && styles.waiting,
         style
       )}
     >
+      {/* A stopped answer says so on this row, before its buttons, as the original did. */}
+      {status === "stopped" && (
+        <p
+          data-slot="message-stopped"
+          {...stylex.props(styles.note, styles.noteInRow)}
+        >
+          <Icon icon={SquareIcon} />
+          {words.stopped}
+        </p>
+      )}
       {children}
     </fieldset>
   );
