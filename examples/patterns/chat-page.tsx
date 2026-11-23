@@ -144,7 +144,7 @@ const layout = stylex.create({
   chip: {
     display: { default: "contents", [NARROW_BOX]: "none" },
   },
-  chipTyped: { display: "contents" },
+  chipWritten: { display: "contents" },
   // The Chats group's label, a button that folds it: its count and chevron at its end.
   fold: { display: "flex", alignItems: "center", gap: space["1"] },
   count: { marginInlineStart: "auto", fontVariantNumeric: "tabular-nums" },
@@ -557,14 +557,15 @@ type Status = NonNullable<PromptInputProps["status"]>;
  */
 const ChatBox = ({ run, state }: { run: ChatRun; state: ChatState }) => {
   const [failed, setFailed] = useState(state === "failed-send");
+  // Words in the box bring the model chip back in a narrow box (layout.chip).
+  const [written, setWritten] = useState(state === "failed-send");
   const [seen, setSeen] = useState(state);
   if (seen !== state) {
     setSeen(state);
     setFailed(state === "failed-send");
+    setWritten(state === "failed-send");
   }
   const { chip } = useModelChip();
-  // Something typed brings the model chip back in a narrow box (layout.chip).
-  const [typed, setTyped] = useState(state === "failed-send");
   const working = run.phase === "working" || run.phase === "answering";
   let status: Status = working ? "streaming" : "ready";
   if (failed) {
@@ -582,7 +583,7 @@ const ChatBox = ({ run, state }: { run: ChatRun; state: ChatState }) => {
       defaultValue={state === "failed-send" ? [unsent] : undefined}
       onValueChange={(value) => {
         setFailed(false);
-        setTyped(value.some((part) => part !== ""));
+        setWritten(value.some((part) => part !== ""));
       }}
       onSubmit={async ({ text }) => {
         await wait(700);
@@ -605,7 +606,7 @@ const ChatBox = ({ run, state }: { run: ChatRun; state: ChatState }) => {
           </PromptInputActionMenu>
         </PromptInputTools>
         <PromptInputTools style={layout.end}>
-          <span {...stylex.props(layout.chip, typed && layout.chipTyped)}>
+          <span {...stylex.props(layout.chip, written && layout.chipWritten)}>
             {chip}
           </span>
           <PromptInputSpeechButton />
