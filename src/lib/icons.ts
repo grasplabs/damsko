@@ -199,8 +199,9 @@ const styles = stylex.create({
   },
   filled: { stroke: "none" },
   solid: { fill: "currentColor" },
-  // Turned with `scale`, the property UI SDK turns a list item's icon with ([data-mirror] in right to
-  // left): both set the one value, so an icon in a menu or a list turns once, never twice.
+  // Turned with `scale`. Once a UI SDK item icon has been drawn, UI SDK's own rule turns every
+  // hidden [data-mirror] drawing on the page with `scale` in right to left, so any pointing icon
+  // (leading an item, at its end, or on its own) gets the one value from both and turns once.
   mirror: {
     scale: { default: null, ":dir(rtl)": "-1 1" },
   },
