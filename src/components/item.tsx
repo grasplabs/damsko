@@ -414,7 +414,7 @@ const styles = stylex.create({
     fontWeight: font.weightNormal,
     color: colors.mutedForeground,
   },
-  // In a side panel's card: at the row's end, on one line, cut with an ellipsis past 45% of it.
+  // In a side panel's card: at the row's end, within 45% of it; a long one wraps, never cut.
   detailXs: {
     marginInlineStart: {
       default: space["1"],
@@ -428,17 +428,17 @@ const styles = stylex.create({
       default: null,
       [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: "45%",
     },
-    overflow: {
+    overflowWrap: {
       default: null,
-      [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: "hidden",
+      [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: "anywhere",
     },
-    textOverflow: {
+    textAlign: {
       default: null,
-      [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: "ellipsis",
+      [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: "end",
     },
-    whiteSpace: {
+    textWrap: {
       default: null,
-      [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: "nowrap",
+      [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: "balance",
     },
   },
   description: {

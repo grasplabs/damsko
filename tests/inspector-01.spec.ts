@@ -98,3 +98,18 @@ test("with no sections it says what will stand there", async ({ page }) => {
     panel.getByText("Nothing has been read from it yet.", { exact: false })
   ).toBeVisible();
 });
+
+test("a long detail wraps at a phone's width: every word of it is shown", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openExample(page, "inspector-01", "basic");
+  const detail = page
+    .getByRole("list", { name: "Triggers" })
+    .getByText("Nov 23, 2026, 10:13 AM", { exact: true });
+  await expect(detail).toBeVisible();
+  const cut = await detail.evaluate(
+    (element) => element.scrollWidth > element.clientWidth
+  );
+  expect(cut).toBe(false);
+});

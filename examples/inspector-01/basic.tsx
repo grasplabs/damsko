@@ -89,6 +89,12 @@ export default function InspectorBasic() {
               name: "Every Monday at 08:00",
               detail: "Schedule",
             },
+            {
+              id: "last-run",
+              icon: PlayIcon,
+              name: "Last run",
+              detail: "Nov 23, 2026, 10:13 AM",
+            },
           ],
         },
         {
