@@ -297,6 +297,7 @@ const styles = stylex.create({
     [iconVars.stroke]: size.iconStroke,
     display: "inline-flex",
     flexShrink: 0,
+    marginInline: breadcrumbVars.separatorInset,
     color: breadcrumbVars.subtleForeground,
   },
   separatorAuto: {

@@ -27,7 +27,7 @@
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
-import { useState } from "react";
+import { Fragment, isValidElement, useState } from "react";
 import type { ReactNode } from "react";
 
 import {
@@ -58,6 +58,7 @@ import {
 } from "../../components/sidebar";
 import { Icon, PanelRightIcon } from "../../lib/icons";
 import { colors, font, media, size, space } from "../../lib/tokens.stylex";
+import { listOf } from "../../lib/utils";
 import type { LayoutStyle } from "../../lib/utils";
 
 /** The words an AppShell says, for a screen reader: English here; pass the product's as `labels`. */
@@ -82,6 +83,14 @@ const LABELS: AppShellLabels = {
   togglePanel: "Show or hide the panel",
 };
 
+/** The steps a caller wrote, one by one: lists and fragments of BreadcrumbItems opened up. */
+const stepsOf = (steps: ReactNode): ReactNode[] =>
+  listOf(steps).flatMap((step) =>
+    isValidElement<{ children?: ReactNode }>(step) && step.type === Fragment
+      ? stepsOf(step.props.children)
+      : [step]
+  );
+
 /** Every prop an AppShell takes. */
 export interface AppShellProps {
   /** The product's sidebar: its SidebarHeader, SidebarContent and SidebarFooter. */
@@ -89,9 +98,9 @@ export interface AppShellProps {
   /** The page. It scrolls under the header. */
   children: ReactNode;
   /**
-   * Where the page is, at the header's start: the steps before it, as BreadcrumbItems with a
-   * slash between each two (`<BreadcrumbSeparator>/</BreadcrumbSeparator>`). The shell draws the
-   * Breadcrumb round them, and the page itself (`title`) after them, a slash before it.
+   * Where the page is, at the header's start: the steps before it, as BreadcrumbItems and nothing
+   * between them. The shell draws the Breadcrumb round them, the page itself (`title`) after them,
+   * and every separator: a slash between each two steps.
    */
   breadcrumb?: ReactNode;
   /** The page's name: the breadcrumb's last step. */
@@ -153,6 +162,8 @@ const styles = stylex.create({
     [breadcrumbVars.foreground]: colors.sidebarForeground,
     [breadcrumbVars.mutedForeground]: colors.sidebarSecondaryForeground,
     [breadcrumbVars.subtleForeground]: colors.sidebarTertiaryForeground,
+    // Its slash stands as far from each step as the steps' words are from a chevron's box.
+    [breadcrumbVars.separatorInset]: space["1"],
     // Its foot a hairline across the card, in the card's own line, so it reads as a bar. Inside
     // the bar's row, which keeps its height. In forced colours the system's ink.
     position: "relative",
@@ -169,8 +180,6 @@ const styles = stylex.create({
       pointerEvents: "none",
     },
   },
-  // The slash between two steps, as far from each as the steps' words are from a chevron's box.
-  slash: { marginInline: space["1"] },
   where: {
     display: "flex",
     alignItems: "center",
@@ -277,32 +286,34 @@ const ShellPage = ({
     setOwn(next);
     onPanelOpenChange?.(next);
   };
-  // Where the page is: the steps before it, then the page itself, renamable in place.
-  const where = (breadcrumb !== undefined || title !== undefined) && (
+  // Where the page is: the steps before it, then the page itself, renamable in place, a slash
+  // between each two. The shell writes every separator, so each is the same.
+  const page = title !== undefined && (
+    <BreadcrumbItem>
+      {/* BreadcrumbPage repeats its words in a tooltip when cut: a field is never repeated. */}
+      {onRename === undefined ? (
+        <BreadcrumbPage>{title}</BreadcrumbPage>
+      ) : (
+        <span aria-current="page" {...stylex.props(styles.rename)}>
+          <InlineEdit
+            aria-label={words.rename}
+            value={title}
+            onSubmit={onRename}
+          />
+        </span>
+      )}
+    </BreadcrumbItem>
+  );
+  const steps = [...stepsOf(breadcrumb), page].filter((step) => step !== false);
+  const where = steps.length > 0 && (
     <Breadcrumb aria-label={words.breadcrumb}>
       <BreadcrumbList>
-        {breadcrumb}
-        {breadcrumb !== undefined && title !== undefined && (
-          <BreadcrumbSeparator>
-            <span {...stylex.props(styles.slash)}>/</span>
-          </BreadcrumbSeparator>
-        )}
-        {title !== undefined && (
-          <BreadcrumbItem>
-            {/* BreadcrumbPage repeats its words in a tooltip when cut: a field is never repeated. */}
-            {onRename === undefined ? (
-              <BreadcrumbPage>{title}</BreadcrumbPage>
-            ) : (
-              <span aria-current="page" {...stylex.props(styles.rename)}>
-                <InlineEdit
-                  aria-label={words.rename}
-                  value={title}
-                  onSubmit={onRename}
-                />
-              </span>
-            )}
-          </BreadcrumbItem>
-        )}
+        {steps.map((step, at) => (
+          <Fragment key={at}>
+            {at > 0 && <BreadcrumbSeparator>/</BreadcrumbSeparator>}
+            {step}
+          </Fragment>
+        ))}
       </BreadcrumbList>
     </Breadcrumb>
   );

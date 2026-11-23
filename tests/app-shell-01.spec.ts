@@ -300,3 +300,52 @@ test("on a phone the page fills the window in the card's own ground", async ({
     });
   expect(ground).toBe(card);
 });
+
+test("the shell writes every slash in its path, each as far from the step before it as from the one after", async ({
+  page,
+}) => {
+  await openExample(page, "page-header", "band");
+  const crumbs = page.getByRole("navigation", { name: "Breadcrumb" });
+  const path = await crumbs.evaluate((nav) => {
+    const parts = [
+      ...nav.querySelectorAll(
+        "[data-slot=breadcrumb-item], [data-slot=breadcrumb-separator]"
+      ),
+    ];
+    // Each part's ink: a step's words, a separator's slash, without the boxes round them.
+    const inks = parts.map((part) => {
+      const walk = document.createTreeWalker(part, NodeFilter.SHOW_TEXT);
+      const texts: Text[] = [];
+      while (walk.nextNode() !== null) {
+        if (
+          walk.currentNode instanceof Text &&
+          walk.currentNode.data.trim() !== ""
+        ) {
+          texts.push(walk.currentNode);
+        }
+      }
+      const words = document.createRange();
+      const first = texts.at(0);
+      const last = texts.at(-1);
+      if (first !== undefined && last !== undefined) {
+        words.setStart(first, 0);
+        words.setEnd(last, last.length);
+      }
+      return words.getBoundingClientRect();
+    });
+    return {
+      kinds: parts.map((part) =>
+        part.matches("[data-slot=breadcrumb-separator]")
+          ? (part.textContent ?? "")
+          : "step"
+      ),
+      gaps: inks
+        .slice(1)
+        .map((box, at) => Math.round(box.left - (inks[at]?.right ?? 0))),
+    };
+  });
+  // Notes / Reports / Finance: one slash between every two steps, none doubled.
+  expect(path.kinds).toEqual(["step", "/", "step", "/", "step"]);
+  // Every step and slash the same room apart, the slash the shell writes before the page too.
+  expect(new Set(path.gaps).size).toBe(1);
+});
