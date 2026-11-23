@@ -37,7 +37,7 @@ Under 640px only the parent stays, as a back link; `variant="back"` keeps that f
 
 ## Another separator
 
-`separator` draws what stands between every two steps, a slash for a path; a `BreadcrumbSeparator` with children of its own keeps them. Its three inks are `breadcrumbVars` (`breadcrumb.stylex.ts`), which a frame on another ground sets on itself, as the app shell's bar does.
+A `BreadcrumbSeparator` draws its children in place of the chevron: `<BreadcrumbSeparator>/</BreadcrumbSeparator>` between every two steps for a path of slashes, as the app shell's bar draws it. The path's three inks are `breadcrumbVars` (`breadcrumb.stylex.ts`), which a frame on another ground sets on itself, as the app shell's bar does.
 
 <Stage path="breadcrumb/separator" label="Another separator" />
 

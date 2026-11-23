@@ -90,8 +90,8 @@ export interface AppShellProps {
   children: ReactNode;
   /**
    * Where the page is, at the header's start: the steps before it, as BreadcrumbItems with a
-   * BreadcrumbSeparator between each two. The shell draws the Breadcrumb round them, and the page
-   * itself (`title`) after them.
+   * slash between each two (`<BreadcrumbSeparator>/</BreadcrumbSeparator>`). The shell draws the
+   * Breadcrumb round them, and the page itself (`title`) after them, a slash before it.
    */
   breadcrumb?: ReactNode;
   /** The page's name: the breadcrumb's last step. */
@@ -279,14 +279,13 @@ const ShellPage = ({
   };
   // Where the page is: the steps before it, then the page itself, renamable in place.
   const where = (breadcrumb !== undefined || title !== undefined) && (
-    <Breadcrumb
-      aria-label={words.breadcrumb}
-      separator={<span {...stylex.props(styles.slash)}>/</span>}
-    >
+    <Breadcrumb aria-label={words.breadcrumb}>
       <BreadcrumbList>
         {breadcrumb}
         {breadcrumb !== undefined && title !== undefined && (
-          <BreadcrumbSeparator />
+          <BreadcrumbSeparator>
+            <span {...stylex.props(styles.slash)}>/</span>
+          </BreadcrumbSeparator>
         )}
         {title !== undefined && (
           <BreadcrumbItem>

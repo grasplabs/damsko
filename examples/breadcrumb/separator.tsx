@@ -7,20 +7,20 @@ import {
   BreadcrumbSeparator,
 } from "@grasp-os/ui/components/breadcrumb";
 
-// One separator for the whole path: a slash between every two steps, as a product's bar draws its
-// path. A BreadcrumbSeparator with children of its own keeps them.
+// Another separator: a BreadcrumbSeparator draws its children in place of the chevron, here a
+// slash between every two steps, as the app shell's bar draws its path.
 export default function BreadcrumbSeparatorExample() {
   return (
-    <Breadcrumb separator="/">
+    <Breadcrumb>
       <BreadcrumbList>
         <BreadcrumbItem>
           <BreadcrumbLink href="#projects">Projects</BreadcrumbLink>
         </BreadcrumbItem>
-        <BreadcrumbSeparator />
+        <BreadcrumbSeparator>/</BreadcrumbSeparator>
         <BreadcrumbItem>
           <BreadcrumbLink href="#atlas">Atlas</BreadcrumbLink>
         </BreadcrumbItem>
-        <BreadcrumbSeparator />
+        <BreadcrumbSeparator>/</BreadcrumbSeparator>
         <BreadcrumbItem>
           <BreadcrumbPage>Settings</BreadcrumbPage>
         </BreadcrumbItem>

@@ -82,12 +82,6 @@ export interface BreadcrumbProps {
    */
   variant?: "auto" | "back";
   /**
-   * What stands between two steps, for every BreadcrumbSeparator that has no children of its own:
-   * `separator="/"` for a path with slashes.
-   * @default a chevron, mirrored right to left
-   */
-  separator?: ReactNode;
-  /**
    * The name of the path, as a screen reader and an agent say it.
    * @default "Breadcrumb"
    */
@@ -150,7 +144,7 @@ export interface BreadcrumbPageProps {
 export interface BreadcrumbSeparatorProps {
   /**
    * What stands between two steps; hidden from screen readers.
-   * @default the Breadcrumb's `separator`, a chevron
+   * @default a chevron, mirrored right to left
    */
   children?: ReactNode;
   /** Layout only. */
@@ -346,14 +340,10 @@ const styles = stylex.create({
 /** Whether the back form shows at every width (`back`), or only under 640px (`auto`). */
 const Back = createContext(false);
 
-/** What a separator with no children of its own shows: the Breadcrumb's `separator`. */
-const Between = createContext<ReactNode>(undefined);
-
 /** The path from the top of the site to the page you are on, on one line. */
 export const Breadcrumb = ({
   children,
   variant = "auto",
-  separator,
   "aria-label": label,
   style,
 }: BreadcrumbProps) => {
@@ -365,9 +355,7 @@ export const Breadcrumb = ({
       data-variant={variant}
       {...stylex.props(styles.nav, style)}
     >
-      <Back value={variant === "back"}>
-        <Between value={separator}>{children}</Between>
-      </Back>
+      <Back value={variant === "back"}>{children}</Back>
     </nav>
   );
 };
@@ -596,7 +584,6 @@ export const BreadcrumbSeparator = ({
   style,
 }: BreadcrumbSeparatorProps) => {
   const back = use(Back);
-  const between = use(Between);
   return (
     <li
       role="presentation"
@@ -608,7 +595,7 @@ export const BreadcrumbSeparator = ({
         style
       )}
     >
-      {children ?? between ?? <Icon icon={ChevronRightIcon} />}
+      {children ?? <Icon icon={ChevronRightIcon} />}
     </li>
   );
 };
