@@ -43,7 +43,7 @@ More in `CodeBlockActions` before the copy button, in the order given: Download 
 
 ## Long code
 
-Past `maxLines` on `CodeBlockContent`, 18 by default, it is folded under Show more, with a fade where it is cut. Show more is a Button: Enter or Space opens it, and again folds it. Past 1,000 lines or 50,000 characters the rest is plain, so a whole file pasted in never draws hundreds of thousands of coloured runs.
+Past `maxLines` on `CodeBlockContent`, 18 by default, it is folded under Show more, with a fade where it is cut. Show more is a Button: Enter or Space opens it, and again folds it. Code is highlighted for its first 10,000 characters, and a line over 1,000 characters stays plain while the lines round it are highlighted, so no block, whatever a model writes in it, holds the page.
 
 <Stage path="code-block/long" label="Long code" />
 

@@ -249,38 +249,33 @@ const aliasesOf = (alias: string | string[]): string[] => {
   return alias ? [alias] : [];
 };
 
-// How much of a block is highlighted. Past this many lines or characters the rest is plain: a run
-// is a node to draw, and a long file pasted whole would be hundreds of thousands of them.
-const HIGHLIGHT_LINES = 1000;
-const HIGHLIGHT_CHARS = 50_000;
+// How much of a block is highlighted. Prism's grammars are worse than linear on some text (an open
+// string or quote, a run of the characters a greedy pattern starts on): one line of 50,000
+// characters held the page for seconds, and so did 50,000 characters of short lines read at once.
+// So Prism reads at most HIGHLIGHT_LINE characters at a time, whole lines grouped up to it (the
+// worst grammar takes a few milliseconds on that), a longer line stays plain, and past
+// HIGHLIGHT_CHARS the block is plain: a run is also a node to draw, and a long file pasted whole
+// would be hundreds of thousands of them. Code from a model is untrusted, so the bounds hold for
+// any text.
+const HIGHLIGHT_LINE = 1000;
+const HIGHLIGHT_CHARS = 10_000;
 
-/** How much of `code` is highlighted: up to a line's end within both bounds. */
-const highlightedLength = (code: string): number => {
-  let end = -1;
-  for (let line = 0; line < HIGHLIGHT_LINES; line += 1) {
-    end = code.indexOf("\n", end + 1);
-    if (end === -1 || end > HIGHLIGHT_CHARS) {
-      break;
-    }
-  }
-  if (end === -1 && code.length <= HIGHLIGHT_CHARS) {
-    return code.length;
-  }
-  if (end === -1 || end > HIGHLIGHT_CHARS) {
-    return Math.max(code.lastIndexOf("\n", HIGHLIGHT_CHARS), 0);
-  }
-  return end;
-};
+/** One line as a plain run. */
+const plain = (text: string): Line => (text ? [{ text, types: [] }] : []);
 
-/**
- * The code as lines of runs. Without a grammar, each line is one plain run, and so is each line
- * past what is highlighted.
- */
-export const linesOf = (code: string, highlight: Highlight | null): Line[] => {
-  const segments: Segment[] = [];
+/** Lines of code read by Prism at once, as lines of runs. */
+const tokenized = (code: string, highlight: Highlight): Line[] => {
+  const lines: Line[] = [[]];
   const walk = (token: string | PrismToken, types: string[]) => {
     if (typeof token === "string") {
-      segments.push({ text: token, types });
+      for (const [index, part] of token.split("\n").entries()) {
+        if (index > 0) {
+          lines.push([]);
+        }
+        if (part) {
+          lines.at(-1)?.push({ text: part, types });
+        }
+      }
       return;
     }
     const inner = [...types, token.type, ...aliasesOf(token.alias)];
@@ -293,31 +288,54 @@ export const linesOf = (code: string, highlight: Highlight | null): Line[] => {
       walk(content, inner);
     }
   };
-  const highlighted = highlight ? highlightedLength(code) : 0;
-  if (highlight) {
-    for (const token of highlight.Prism.tokenize(
-      code.slice(0, highlighted),
-      highlight.grammar
-    )) {
-      walk(token, []);
-    }
+  for (const token of highlight.Prism.tokenize(code, highlight.grammar)) {
+    walk(token, []);
   }
-  segments.push({ text: code.slice(highlighted), types: [] });
-  const lines: Line[] = [[]];
-  for (const segment of segments) {
-    const parts = segment.text.split("\n");
-    for (const [index, part] of parts.entries()) {
-      if (index > 0) {
-        lines.push([]);
-      }
-      if (part) {
-        lines.at(-1)?.push({ text: part, types: segment.types });
-      }
-    }
-  }
+  return lines;
+};
+
+/**
+ * The code as lines of runs. Without a grammar, each line is one plain run; so is a line longer
+ * than Prism may read at once, and each line past what is highlighted.
+ */
+export const linesOf = (code: string, highlight: Highlight | null): Line[] => {
+  const texts = code.split("\n");
   // A last empty line from a trailing newline is not a line of code.
-  if (lines.length > 1 && lines.at(-1)?.length === 0) {
-    lines.pop();
+  if (texts.length > 1 && texts.at(-1) === "") {
+    texts.pop();
   }
+  if (!highlight) {
+    return texts.map(plain);
+  }
+  const lines: Line[] = [];
+  let left = HIGHLIGHT_CHARS;
+  let group: string[] = [];
+  let size = 0;
+  const read = () => {
+    if (group.length > 0) {
+      lines.push(...tokenized(group.join("\n"), highlight));
+    }
+    group = [];
+    size = 0;
+  };
+  for (const text of texts) {
+    const room = text.length + 1;
+    if (text.length <= HIGHLIGHT_LINE && room > left) {
+      // Past what is highlighted: this line and every one after it are plain.
+      left = 0;
+    }
+    if (left === 0 || text.length > HIGHLIGHT_LINE) {
+      read();
+      lines.push(plain(text));
+    } else {
+      if (size + room > HIGHLIGHT_LINE) {
+        read();
+      }
+      group.push(text);
+      size += room;
+      left -= room;
+    }
+  }
+  read();
   return lines;
 };
