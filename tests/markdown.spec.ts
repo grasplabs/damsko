@@ -530,7 +530,12 @@ test("with motion, the words come a few at a time, each fades in once, in order,
 }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await openExample(page, "markdown", "pace");
+  // The run that plays as the page opens ends first, so every span watched is of the next one.
+  const answer = page.locator("[data-slot=markdown]");
+  await expect(answer).not.toHaveAttribute("aria-busy", { timeout: 30_000 });
+  await expect(answer.locator("span[data-at]")).toHaveCount(0);
   await page.getByRole("button", { name: "Play again" }).click();
+  await expect(answer).toHaveAttribute("aria-busy", "true");
   const watched = await watchFades(page);
   // A word at a time: many small steps, never a whole paragraph at once.
   expect(watched.shown.length).toBeGreaterThan(60);
