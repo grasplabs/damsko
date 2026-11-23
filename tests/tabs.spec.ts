@@ -219,3 +219,20 @@ test.describe("on a touch screen", () => {
     }
   });
 });
+
+test("on the segmented track the first and last tab stand as far from its sides as from its top", async ({
+  page,
+}) => {
+  await openExample(page, "tabs", "segmented");
+  const list = page.getByRole("tablist").first();
+  const tabs = list.getByRole("tab");
+  const track = await list.boundingBox();
+  const first = await tabs.first().boundingBox();
+  const last = await tabs.last().boundingBox();
+  if (track === null || first === null || last === null) {
+    throw new Error("The track or its tabs are not drawn.");
+  }
+  const above = first.y - track.y;
+  expect(first.x - track.x).toBeCloseTo(above, 0);
+  expect(track.x + track.width - (last.x + last.width)).toBeCloseTo(above, 0);
+});
