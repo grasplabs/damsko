@@ -828,6 +828,9 @@ const NARROW = "@container prompt-input (width < 30rem)";
 // Inside an Alert, where its action stands beside its words: its body 24rem wide or more. For the
 // banner's own box that is the form at 26.5rem (the body and the strip's insets).
 const WIDE = "@container (width >= 24rem)";
+// A one-row voice too narrow to give its words about 10rem beside the field's own band: the row's
+// time, two tools, the band and their gaps take 14rem, and the card's sides 1.5rem more.
+const VOICE_ROW_NARROW = "@container prompt-input (width < 25.5rem)";
 const BANNER_WIDE = "@container prompt-input (width >= 26.5rem)";
 // How bright the light over the card is while a voice is heard, set on the light at each frame.
 const LISTEN = "--prompt-input-listen";
@@ -1561,6 +1564,47 @@ const styles = stylex.create({
   },
   // The time starts where the words do: there is no Cancel before it.
   voiceTime: { paddingInlineStart: space["2"] },
+  // In one row, where the text starts in its row.
+  compactVoiceTime: { paddingInlineStart: space["1"] },
+  // In one row the words stand on the row's one line, after the time and before the field: from
+  // the start as typed words stand, and once they run past their room the latest stay in view at
+  // its end (the line keeps its width and is placed at the room's end) and the start fades.
+  spokenRow: {
+    display: "flex",
+    justifyContent: "flex-end",
+    alignItems: "center",
+    alignSelf: "stretch",
+    flexGrow: 1,
+    flexBasis: 0,
+    minWidth: 0,
+    overflow: "hidden",
+    maskImage: {
+      default: "none",
+      ":is([data-over])": {
+        default: `linear-gradient(to right, transparent, black ${space["8"]})`,
+        ":dir(rtl)": `linear-gradient(to left, transparent, black ${space["8"]})`,
+      },
+    },
+  },
+  // Nothing heard yet: the words take no room, and the field has the row.
+  spokenRowEmpty: { flexGrow: 0 },
+  spokenLine: {
+    flexGrow: 1,
+    flexShrink: 0,
+    margin: 0,
+    color: colors.foreground,
+    fontSize: { default: size.messageText, [TYPING]: size.inputTextTouch },
+    lineHeight: size.messageTextLine,
+    whiteSpace: "nowrap",
+  },
+  // In one row the field has the room while nothing is heard; once words come, a short band of
+  // its own beside them, so a word never stands on the light, and on a narrow row none: the words
+  // are what matters, and the card's light still listens.
+  rowLevel: { flexBasis: size.promptInputVoiceBand },
+  rowLevelHeard: {
+    display: { default: "grid", [VOICE_ROW_NARROW]: "none" },
+    flexGrow: 0,
+  },
   // The mention menu: a menu's panel under the caret, items with a mark, a name and a quiet line
   // under it.
   mentionPanel: {
@@ -3800,10 +3844,15 @@ const Level = ({
   level,
   sample,
   mode,
+  row = false,
+  written = false,
 }: {
   level: number;
   sample: (() => VoiceReading | undefined) | undefined;
   mode: VoiceFieldMode;
+  /** In a one-row voice, beside its words once some are `written`. */
+  row?: boolean;
+  written?: boolean;
 }) => {
   const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
   const [drawing, setDrawing] = useState<ReturnType<typeof drawVoice> | null>(
@@ -3831,7 +3880,14 @@ const Level = ({
     drawing?.mode(mode);
   }, [drawing, mode]);
   return (
-    <span aria-hidden="true" {...stylex.props(styles.level)}>
+    <span
+      aria-hidden="true"
+      {...stylex.props(
+        styles.level,
+        row && styles.rowLevel,
+        row && written && styles.rowLevelHeard
+      )}
+    >
       <canvas ref={setCanvas} {...stylex.props(styles.canvas)} />
     </span>
   );
@@ -4082,9 +4138,23 @@ const resolving = (said: string) =>
       </Fragment>
     ));
 
+/** The turn's words, the unsettled ones lighter, then the mark of where the next lands. */
+const Spoken = ({
+  interim,
+  children,
+}: Pick<PromptInputVoiceProps, "children"> & { interim: string }) => (
+  <>
+    {typeof children === "string" ? resolving(children) : children}
+    {interim !== "" && (
+      <span {...stylex.props(styles.spokenInterim)}> {interim}</span>
+    )}
+    <span aria-hidden="true" {...stylex.props(styles.spokenCaret)} />
+  </>
+);
+
 /**
- * The words of the turn where the text stood, the unsettled ones lighter with the mark of where
- * the next lands, and a note in the room under them, so the card keeps its height.
+ * The words of the turn where the text stood, and a note in the room under them, so the card
+ * keeps its height.
  */
 const VoiceWords = ({
   note,
@@ -4099,11 +4169,7 @@ const VoiceWords = ({
       data-slot="prompt-input-voice-words"
       {...stylex.props(styles.spoken, scrollbarHidden)}
     >
-      {typeof children === "string" ? resolving(children) : children}
-      {interim !== "" && (
-        <span {...stylex.props(styles.spokenInterim)}> {interim}</span>
-      )}
-      <span aria-hidden="true" {...stylex.props(styles.spokenCaret)} />
+      <Spoken interim={interim}>{children}</Spoken>
     </p>
     {!isBlank(note) && (
       <span
@@ -4117,16 +4183,65 @@ const VoiceWords = ({
   </div>
 );
 
+/** A one-line room's ref: `data-over` while its line runs past it, for the fade at its start. */
+const watchOver = (room: HTMLElement | null) => {
+  const line = room?.firstElementChild;
+  if (room === null || room === undefined || !(line instanceof HTMLElement)) {
+    return nothing;
+  }
+  const read = () => {
+    room.toggleAttribute("data-over", line.scrollWidth > room.clientWidth + 1);
+  };
+  // The line keeps its own width once its words outgrow the room, so its size says when.
+  const observer = new ResizeObserver(read);
+  observer.observe(room);
+  observer.observe(line);
+  return () => {
+    observer.disconnect();
+  };
+};
+
+/** In one row, the turn's words on its one line beside the field (styles.spokenRow). */
+const VoiceLine = ({
+  heard,
+  interim,
+  children,
+  style,
+}: Pick<PromptInputVoiceProps, "children" | "style"> & {
+  heard: boolean;
+  interim: string;
+}) => (
+  <div
+    ref={watchOver}
+    {...stylex.props(styles.spokenRow, !heard && styles.spokenRowEmpty, style)}
+  >
+    <p
+      data-slot="prompt-input-voice-words"
+      {...stylex.props(styles.spokenLine)}
+    >
+      <Spoken interim={interim}>{children}</Spoken>
+    </p>
+  </div>
+);
+
 /** What leads the foot row: the other voice's mark while it speaks, else the time. */
 const VoiceLead = ({
   speaker,
   seconds,
+  compact,
 }: {
   speaker: ReactNode;
   seconds: number;
+  compact: boolean;
 }) =>
   isBlank(speaker) ? (
-    <span role="timer" {...stylex.props(styles.time, styles.voiceTime)}>
+    <span
+      role="timer"
+      {...stylex.props(
+        styles.time,
+        compact ? styles.compactVoiceTime : styles.voiceTime
+      )}
+    >
       {clock(seconds)}
     </span>
   ) : (
@@ -4152,8 +4267,10 @@ const voiceMode = (
  * A spoken conversation, written in the PromptInput in place of its body and footer while it
  * runs: the words of the turn where the text stood, and under them the time (or, while the other
  * voice speaks, its mark), the voice's level as a field of light, the microphone and a close
- * button. The turns pass by themselves, so there is no Done and no Cancel. The product listens and
- * speaks; this part draws what it is told, and says each turn once.
+ * button. In a `compact` PromptInput it is one row: the words on its line between the time and the
+ * field, the latest in view, and no note under them (it is still said). The turns pass by
+ * themselves, so there is no Done and no Cancel. The product listens and speaks; this part draws
+ * what it is told, and says each turn once.
  */
 export const PromptInputVoice = ({
   status = "listening",
@@ -4171,9 +4288,11 @@ export const PromptInputVoice = ({
 }: PromptInputVoiceProps) => {
   const words = useI18n().promptInput;
   const form = usePromptInput();
+  const compact = form?.compact === true;
   const [ownMuted, setOwnMuted] = useState(false);
   const off = muted ?? ownMuted;
   const speaking = status === "speaking";
+  const heard = !isBlank(children) || interim !== "";
   const seconds = useSeconds(!off);
   const turn = speaking ? words.voice.speaking : words.voice.listening;
   useEffect(() => {
@@ -4205,19 +4324,37 @@ export const PromptInputVoice = ({
       data-status={status}
       {...stylex.props(styles.conversation)}
     >
-      <VoiceWords note={note} interim={interim} style={style}>
-        {children}
-      </VoiceWords>
-      <div data-slot="prompt-input-footer" {...stylex.props(styles.footer)}>
-        <div {...stylex.props(styles.dictation)}>
+      {!compact && (
+        <VoiceWords note={note} interim={interim} style={style}>
+          {children}
+        </VoiceWords>
+      )}
+      <div
+        data-slot="prompt-input-footer"
+        {...stylex.props(styles.footer, compact && styles.compactFooter)}
+      >
+        <div
+          {...stylex.props(
+            styles.dictation,
+            compact && styles.compactDictation
+          )}
+        >
           <VoiceLead
             speaker={speaking ? speaker : undefined}
             seconds={seconds}
+            compact={compact}
           />
+          {compact && (
+            <VoiceLine heard={heard} interim={interim} style={style}>
+              {children}
+            </VoiceLine>
+          )}
           <Level
             level={level}
             sample={sample}
             mode={voiceMode(speaking, off, !isBlank(note))}
+            row={compact}
+            written={heard}
           />
           {toolButton({
             "aria-label": words.speechButton.mute,

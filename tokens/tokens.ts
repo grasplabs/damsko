@@ -3273,6 +3273,12 @@ export const groups: TokenGroup[] = [
             use: "The least width of a one-row prompt input's text: with less room beside the tools, the text takes the row and the tools go under it. The text never gives.",
           },
           {
+            name: "prompt-input-voice-band",
+            category: "size",
+            value: "96px",
+            use: "The voice's field in a one-row prompt input once words are heard: short, beside the words, so no word stands on the light.",
+          },
+          {
             name: "prompt-input-light",
             category: "colors",
             value:

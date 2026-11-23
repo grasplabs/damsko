@@ -879,6 +879,8 @@
   --damsko-prompt-input-mention-width: 18rem;
   /* The least width of a one-row prompt input's text: with less room beside the tools, the text takes the row and the tools go under it. The text never gives. */
   --damsko-prompt-input-field-min: 8rem;
+  /* The voice's field in a one-row prompt input once words are heard: short, beside the words, so no word stands on the light. */
+  --damsko-prompt-input-voice-band: 96px;
   /* The working light over a prompt input's top edge: lime, sea and mint in beams with gaps between, ending as it starts so it loops without a seam. */
   --damsko-prompt-input-light: linear-gradient(90deg, var(--damsko-brand-mint) 0%, var(--damsko-brand-sea) 12%, transparent 22%, var(--damsko-brand-lime) 34%, var(--damsko-brand-mint) 44%, transparent 54%, var(--damsko-brand-sea) 64%, var(--damsko-brand-lime) 76%, transparent 88%, var(--damsko-brand-mint) 100%);
   /* The working light in one accent colour, the colour set on the light's layer. */

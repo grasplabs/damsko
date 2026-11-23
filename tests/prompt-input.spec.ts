@@ -1283,6 +1283,37 @@ test("a spoken conversation stands in the card: its turns are said, and Close gi
   await expect(page.getByRole("textbox", { name: "Answer" })).toBeFocused();
 });
 
+test("in one row a spoken conversation is the row, its words on the line before the field, the latest in view", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 640 });
+  await openExample(page, "prompt-input", "voice-compact", {
+    time: fixedTime,
+  });
+  const voice = page.getByRole("group", { name: "Voice conversation" });
+  const card = page.getByRole("group").first();
+  await expect(voice).toBeVisible();
+  expect(await heightOf(card)).toBe(56);
+  // The other voice's words come, and the card stays one row.
+  await page.clock.runFor(6100);
+  const words = voice.locator("[data-slot=prompt-input-voice-words]");
+  await expect(words).toContainText("What slows the team down most?");
+  expect(await heightOf(card)).toBe(56);
+  // On the row's one line, between the other voice's mark and Mute; past their room, the newest
+  // stand at its end and the first are cut at its start.
+  const line = await words.boundingBox();
+  const room = await words.locator("..").boundingBox();
+  const mute = await voice.getByRole("button", { name: "Mute" }).boundingBox();
+  expect(line?.height).toBeLessThanOrEqual(24);
+  expect((room?.x ?? 0) + (room?.width ?? 0)).toBeLessThanOrEqual(mute?.x ?? 0);
+  expect(line?.x ?? 0).toBeLessThan(room?.x ?? 0);
+  expect(
+    Math.abs(
+      (line?.x ?? 0) + (line?.width ?? 0) - (room?.x ?? 0) - (room?.width ?? 0)
+    )
+  ).toBeLessThanOrEqual(1);
+});
+
 test("a spoken conversation takes the focus as it starts from the keyboard, and Escape ends it", async ({
   page,
 }) => {
