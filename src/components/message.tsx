@@ -103,7 +103,8 @@ export interface MessageProps {
   align?: Align;
   /**
    * For the assistant's message: `thinking` before it writes, `streaming` while it writes, `done`
-   * once written, `stopped` when stopped part way (its words kept, Stopped under them), `error`
+   * once written, `stopped` when stopped part way (its words kept, Stopped first on its actions'
+   * row, or under them with no actions), `error`
    * when it could not be written (put a MessageError in it). Said once to a screen reader as it
    * changes.
    * @default "done"
@@ -644,7 +645,8 @@ const Markdown = lazyPart(
 
 /**
  * The assistant's answer, drawn from Markdown, its words coming in smoothly while it is written;
- * Stopped under it when it was stopped part way.
+ * Stopped under it when it was stopped part way and has no actions (MessageActions says it on its
+ * row otherwise).
  */
 export const MessageResponse = ({
   children,
