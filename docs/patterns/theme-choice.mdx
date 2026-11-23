@@ -30,19 +30,13 @@ The server cannot read localStorage, so it draws the system's setting, and a lin
 </script>
 ```
 
-The element carries `suppressHydrationWarning`, as the script may have changed its `data-mode` before React woke.
+The element carries `suppressHydrationWarning`, as the script may have changed its `data-mode` before React woke. Until React wakes it does not know the kept mode either, so the switch keeps its room and is not shown: it never says System over a page drawn dark.
 
 ## The circle
 
-A person's own pick grows from the switch: the change is applied inside a View Transition, and the new page is clipped to a circle that starts at the middle of the switch and reaches the farthest corner of the window, in 300ms on the system's ease.
+A person's own pick grows from the switch: the change is applied inside a View Transition, and the new page is clipped to a circle that starts at the middle of the switch and reaches the farthest corner of the window, in 300ms on the system's ease. With reduced motion, and in a browser without View Transitions, the change is one frame. So is any change the person did not make: loading, the system's setting, another tab.
 
-```tsx
-const transition = document.startViewTransition(() => {
-  flushSync(apply);
-});
-```
-
-With reduced motion, and in a browser without View Transitions, the change is one frame. So is any change the person did not make: loading, the system's setting, another tab. The [Themes](/foundations/themes#the-change) foundation shows the three ways side by side.
+All of it is in the example's code above, to copy: `themeChangeCss` (the keyframes and the View Transition's rules, drawn once in a `<style>`), `changeTheme` (the guards for reduced motion and for a browser without View Transitions, the circle's centre and reach, and `startViewTransition` round a `flushSync`) and `middleOf`. The [Themes](/foundations/themes#the-change) foundation shows the three ways side by side, from the same code.
 
 ## Rules
 

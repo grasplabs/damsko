@@ -1,6 +1,5 @@
 "use client";
 
-import { Button } from "@grasp-os/ui/components/button";
 import {
   Source,
   SourceIcon,
@@ -10,11 +9,14 @@ import {
 } from "@grasp-os/ui/components/sources";
 import { FileDocIcon, FilePdfIcon, Icon } from "@grasp-os/ui/lib/icons";
 import type { IconData } from "@grasp-os/ui/lib/icons";
+import { focusRing, tapTarget } from "@grasp-os/ui/lib/styles";
 import {
   colors,
   duration,
   font,
+  media,
   radius,
+  size,
   space,
 } from "@grasp-os/ui/lib/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
@@ -30,16 +32,47 @@ const layout = stylex.create({
     lineHeight: font.textBaseLine,
     color: colors.bodyForeground,
   },
-  // A citation in the words, and a source's row: each takes the quiet fill while the other end of
-  // the pair is under the pointer or holds focus.
+  // A citation, as the original design drew it: a link to its row, a small box on the soft fill
+  // with the system's edge, its number in the quiet ink.
   cited: {
-    display: "inline-flex",
-    verticalAlign: "baseline",
+    position: "relative",
+    paddingBlock: 1,
+    paddingInline: space["1"],
     borderRadius: radius.mark,
     cornerShape: radius.shape,
-    transitionProperty: "background-color",
+    fontSize: font.textXs,
+    lineHeight: font.textXsLine,
+    fontWeight: font.weightMedium,
+    fontVariantNumeric: "tabular-nums",
+    whiteSpace: "nowrap",
+    textDecorationLine: "none",
+    color: {
+      default: colors.mutedForeground,
+      ":hover": { default: null, [media.hover]: colors.foreground },
+    },
+    backgroundColor: {
+      default: colors.muted,
+      ":hover": { default: null, [media.hover]: colors.accentHighlight },
+    },
+    boxShadow: size.borderStrong,
+    // Its edge is a shadow, which forced colours drop: a real one there.
+    borderWidth: { default: 0, [media.forcedColors]: 1 },
+    borderStyle: "solid",
+    borderColor: "currentColor",
+    transitionProperty: "background-color, color",
     transitionDuration: duration.hover,
     transitionTimingFunction: duration.ease,
+  },
+  // Lit with its row: the highlight fill and the ink, while the pointer or focus is on either end.
+  citedLit: {
+    color: {
+      default: colors.foreground,
+      [media.forcedColors]: "HighlightText",
+    },
+    backgroundColor: {
+      default: colors.accentHighlight,
+      [media.forcedColors]: "Highlight",
+    },
   },
   row: {
     borderRadius: radius.row,
@@ -48,7 +81,12 @@ const layout = stylex.create({
     transitionDuration: duration.hover,
     transitionTimingFunction: duration.ease,
   },
-  lit: { backgroundColor: colors.accent },
+  rowLit: {
+    backgroundColor: {
+      default: colors.accentHighlight,
+      [media.forcedColors]: "Highlight",
+    },
+  },
 });
 
 const sources: { id: string; title: string; origin: string; icon: IconData }[] =
@@ -106,19 +144,25 @@ export default function Citations() {
     const number = sources.findIndex((source) => source.id === id) + 1;
     const title = sources[number - 1]?.title ?? "";
     return (
-      <span {...stylex.props(layout.cited, lit === id && layout.lit)}>
-        <Button
-          variant="secondary"
-          size="xs"
-          aria-label={`Source ${number}: ${title}`}
-          {...light(id)}
-          onClick={() => {
-            goTo(id);
-          }}
-        >
-          {number}
-        </Button>
-      </span>
+      <a
+        href={`#${id}`}
+        aria-label={`Source ${number}: ${title}`}
+        {...light(id)}
+        onClick={(event) => {
+          // The list may be closed: it is opened first, then the row takes focus.
+          event.preventDefault();
+          goTo(id);
+        }}
+        {...stylex.props(
+          layout.cited,
+          lit === id && layout.citedLit,
+          focusRing
+        )}
+      >
+        {/* A finger's 44px, round the small box. */}
+        <span aria-hidden="true" {...stylex.props(tapTarget)} />
+        {number}
+      </a>
     );
   };
   return (
@@ -143,6 +187,7 @@ export default function Citations() {
             <div
               key={source.id}
               role="presentation"
+              id={source.id}
               ref={(node) => {
                 if (node === null) {
                   rows.current.delete(source.id);
@@ -151,12 +196,12 @@ export default function Citations() {
                 }
               }}
               {...light(source.id)}
-              {...stylex.props(layout.row, lit === source.id && layout.lit)}
+              {...stylex.props(layout.row, lit === source.id && layout.rowLit)}
             >
               <Source
                 title={`${index + 1}. ${source.title}`}
                 origin={source.origin}
-                href={`#${source.id}`}
+                href={`#file-${source.id}`}
               >
                 <SourceIcon>
                   <Icon icon={source.icon} />

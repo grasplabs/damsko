@@ -24,6 +24,7 @@ import {
 } from "@grasp-os/ui/components/sidebar";
 import { Icon, MessageSquareIcon } from "@grasp-os/ui/lib/icons";
 import { colors, font, size, space } from "@grasp-os/ui/lib/tokens.stylex";
+import { iconVars } from "@grasp-os/ui/lib/vars.stylex";
 import * as stylex from "@stylexjs/stylex";
 import { useRef, useState } from "react";
 
@@ -53,16 +54,21 @@ const layout = stylex.create({
     fontWeight: font.weightMedium,
     color: colors.foreground,
   },
-  // The field stands in the row's own box: as tall as a row, its words where the row's were.
+  // The field stands in the row's own box: as tall as a row, the row's icon where it was, and the
+  // field a small step after it, clear of its ring.
   renaming: {
+    [iconVars.size]: size.sidebarIcon,
     display: "flex",
     alignItems: "center",
     minHeight: size.sidebarMenuButtonHeight,
-    paddingInline: space["2"],
+    paddingInlineStart: space["2"],
+    color: colors.sidebarForeground,
     fontFamily: font.sans,
     fontSize: font.textSm,
     lineHeight: font.textSmLine,
   },
+  renamingIcon: { display: "flex", flexShrink: 0 },
+  field: { flexGrow: 1, minWidth: 0, marginInlineStart: space["1"] },
 });
 
 const first = [
@@ -92,10 +98,25 @@ export default function SidebarRows() {
                   {rows.map((row) => (
                     <SidebarMenuItem key={row.id}>
                       {renaming === row.id ? (
-                        <div {...stylex.props(layout.renaming)}>
+                        <div
+                          // The field takes focus as it opens, its name chosen.
+                          ref={(box) => {
+                            const field = box?.querySelector("input");
+                            field?.focus();
+                            field?.select();
+                          }}
+                          {...stylex.props(layout.renaming)}
+                        >
+                          <span
+                            aria-hidden="true"
+                            {...stylex.props(layout.renamingIcon)}
+                          >
+                            <Icon icon={MessageSquareIcon} />
+                          </span>
                           <InlineEdit
                             aria-label={`Name of ${row.name}`}
                             value={row.name}
+                            style={layout.field}
                             editing
                             onEditingChange={(editing) => {
                               if (!editing) {

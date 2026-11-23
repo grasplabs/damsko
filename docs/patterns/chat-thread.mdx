@@ -9,7 +9,7 @@ description: A thread's day lines, the line where the unread messages start, old
 
 A thread is a Message scroller whose rows are the messages and the lines between them. Each line is a Marker of the `separator` variant in a row of its own: one where the day changes, and one under the last message the person had read, which says Unread. The product knows the days and what was read; the scroller only draws the rows.
 
-Older messages are fetched a page at a time, once the oldest row drawn comes into view (`useMessageScrollerVisibility`). While they come, a Marker with `role="status"` says so over the log, not as a row of it. When the page is drawn above, the log holds the row being read where it is, at its very top too, and rows drawn above are not said as new.
+Older messages are fetched a page at a time, once the oldest row drawn comes into view (`useMessageScrollerVisibility`). While they come, a Marker with `role="status"` says so in a small box that floats over the log's top edge, as the jump button floats over its end: it is not a row and takes no room, so nothing being read moves when it shows or goes. When the page is drawn above, the log holds the row being read where it is, at its very top too, and rows drawn above are not said as new.
 
 <Stage
   path="patterns/chat-thread"
@@ -42,7 +42,7 @@ The limit: rows are never taken out again, so a thread a person reads back throu
   ]}
   never={[
     "A line that is a row's decoration: it is a row of its own, read in order.",
-    "The loading line as a row of the log: the log would hold on to it, not to the message being read.",
+    "The loading line as a row of the log, or in the room above it: the message being read would move.",
     "The whole history fetched to draw the latest page.",
     "Older messages said as new.",
   ]}

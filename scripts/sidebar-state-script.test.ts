@@ -26,6 +26,32 @@ const panelOf = (hidden: string | null) => {
   return panel;
 };
 
+// Its label, which says whether it is open, and its panel, whichever slot it is drawn with.
+const label = (expanded: string) => {
+  const element = {
+    expanded,
+    setAttribute: (_name: string, value: string) => {
+      element.expanded = value;
+    },
+  };
+  return element;
+};
+
+const fold = (
+  name: string,
+  slot: string,
+  panel: ReturnType<typeof panelOf>,
+  trigger: ReturnType<typeof label>
+) => ({
+  dataset: { sidebarFold: name },
+  querySelector: (query: string) => {
+    if (query === "[aria-expanded]") {
+      return trigger;
+    }
+    return query.includes(`[data-slot=${slot}]`) ? panel : null;
+  },
+});
+
 /**
  * Runs the script on a pretend page, with what is kept (the sidebar's own under "app", a group's
  * fold under "app:name") and how far the page is read. The page holds one sidebar, and two groups
@@ -35,9 +61,12 @@ const run = (kept: Record<string, string>, readyState: string) => {
   const sidebar = { dataset: { state: "expanded" } };
   const projects = panelOf(null);
   const teams = panelOf("");
+  const projectsLabel = label("true");
+  const teamsLabel = label("false");
   const folds = [
-    { dataset: { sidebarFold: "projects" }, querySelector: () => projects },
-    { dataset: { sidebarFold: "teams" }, querySelector: () => teams },
+    fold("projects", "collapsible-content", projects, projectsLabel),
+    // Drawn as the caller's own element (`asChild`): UI SDK's slot.
+    fold("teams", "collapsible-panel", teams, teamsLabel),
   ];
   const asked: string[] = [];
   let watching = 0;
@@ -66,6 +95,7 @@ const run = (kept: Record<string, string>, readyState: string) => {
     state: sidebar.dataset.state,
     projects: projects.hidden,
     teams: teams.hidden,
+    labels: [projectsLabel.expanded, teamsLabel.expanded],
     asked,
     watching,
   };
@@ -81,6 +111,7 @@ describe(sidebarStateScript, () => {
       state: "collapsed",
       projects: null,
       teams: "",
+      labels: ["true", "false"],
       asked: [SIDEBARS, FOLDS],
       watching: 0,
     });
@@ -98,6 +129,7 @@ describe(sidebarStateScript, () => {
       state: "expanded",
       projects: "until-found",
       teams: null,
+      labels: ["false", "true"],
     });
     expect(
       run({ "app:projects": "open", "app:teams": "shut" }, "complete")

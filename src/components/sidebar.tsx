@@ -1126,8 +1126,8 @@ const foldKey = (storageKey: string | undefined, name: string) =>
 /**
  * The head script that draws the kept state before the page wakes, as the theme's does: pass the
  * SidebarProvider's `storageKey`. It sets each of that provider's sidebars folded or open, and each
- * SidebarCollapsible's panel shown or hidden, as the parser reaches them, so nothing moves when
- * React takes over. Run once the page is read (a client router running it again), it sets them
+ * SidebarCollapsible's panel shown or hidden (its label saying so), as the parser reaches them, so
+ * nothing moves when React takes over. Run once the page is read (a client router running it again), it sets them
  * once and watches nothing.
  *
  *   <script is:inline set:html={sidebarStateScript("app-sidebar")} />                    Astro
@@ -1140,8 +1140,10 @@ export const sidebarStateScript = (storageKey: string): string =>
   "d=()=>{const v=g(k);" +
   'if(v)for(const e of document.querySelectorAll(w+"[data-slot=sidebar]"))e.dataset.state=v==="true"?"expanded":"collapsed";' +
   'for(const e of document.querySelectorAll(w+"[data-sidebar-fold]")){' +
-  'const f=g(k+":"+e.dataset.sidebarFold),p=e.querySelector("[data-slot=collapsible-content]");' +
-  'if(f&&p)p[f==="true"?"removeAttribute":"setAttribute"]("hidden","until-found");}};' +
+  'const f=g(k+":"+e.dataset.sidebarFold);if(!f)continue;' +
+  'const p=e.querySelector("[data-slot=collapsible-content],[data-slot=collapsible-panel]"),t=e.querySelector("[aria-expanded]");' +
+  'if(p)p[f==="true"?"removeAttribute":"setAttribute"]("hidden","until-found");' +
+  'if(t)t.setAttribute("aria-expanded",f);}};' +
   'if(document.readyState!=="loading"){d();return;}' +
   "const o=new MutationObserver(d);o.observe(document,{childList:true,subtree:true});" +
   'addEventListener("DOMContentLoaded",()=>{d();o.disconnect();},{once:true});' +
@@ -1692,6 +1694,13 @@ export interface SidebarCollapsibleProps {
 const awake = () => true;
 const asleep = () => false;
 
+/** What takes focus inside an element, in the page's order. */
+const stopsIn = (element: HTMLElement | null): HTMLElement[] => [
+  ...(element?.querySelectorAll<HTMLElement>(
+    "a[href], button, input, [tabindex]"
+  ) ?? []),
+];
+
 /**
  * A group that folds: a Collapsible whose state the sidebar keeps by `name`, as it keeps whether
  * it is open. The server and the waking page draw `defaultOpen`, and `sidebarStateScript` shows or
@@ -1719,6 +1728,30 @@ export const SidebarCollapsible = ({
   if (isAwake && start === "first") {
     setStart(kept !== undefined && kept !== defaultOpen ? "kept" : "same");
   }
+  // Drawn anew, the group's elements are new ones: focus that stood in it before the page woke
+  // (on its label, most often) is put back on the same stop, or on the first when that one is
+  // now folded away.
+  const box = useRef<HTMLDivElement>(null);
+  const stood = useRef(-1);
+  useLayoutEffect(() => {
+    const focused = document.activeElement;
+    stood.current =
+      focused instanceof HTMLElement
+        ? stopsIn(box.current).indexOf(focused)
+        : -1;
+  }, []);
+  useLayoutEffect(() => {
+    if (start !== "kept" || stood.current === -1) {
+      return;
+    }
+    const stops = stopsIn(box.current);
+    const stop = stops[stood.current];
+    stood.current = -1;
+    stop?.focus();
+    if (document.activeElement !== stop) {
+      stops[0]?.focus();
+    }
+  }, [start]);
   return (
     <Collapsible
       key={start === "kept" ? "kept" : "first"}
@@ -1731,6 +1764,7 @@ export const SidebarCollapsible = ({
       }}
     >
       <div
+        ref={box}
         data-slot="sidebar-collapsible"
         data-sidebar-fold={name}
         {...stylex.props(styles.collapsible)}
@@ -1757,6 +1791,9 @@ export const SidebarGroupLabel = ({
   drawn("div", asChild, children, rest, {
     "data-slot": "sidebar-group-label",
     "data-sidebar": "group-label",
+    // As a SidebarCollapsible's trigger, the head script may have set whether it says it is open
+    // before the page woke: that is not a fault.
+    suppressHydrationWarning: true,
     ...stylex.props(styles.groupLabel, focusRingInset, style),
   });
 

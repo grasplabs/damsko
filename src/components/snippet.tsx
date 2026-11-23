@@ -10,13 +10,16 @@
 // name; the field round it is a label for that button, so a press on the value presses it too. A
 // value longer than its room stays on one line and scrolls sideways inside the field, the end with
 // more fading; it is never broken and never cut short. While it is clipped the value is a Tab stop
-// before the button, so the arrow keys scroll to the rest of it. The timing, the check and the words are
+// before the button, a group named by the value, so the arrow keys scroll to the rest of it and
+// Home and End go to its ends. The timing, the check and the words are
 // CopyButton's, the same for every copy in the library.
 //
 // Every value is a token. A caller may set layout only (the `style` prop).
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
+import { useId } from "react";
+import type { KeyboardEvent } from "react";
 
 import { markScrollEdges, useScrollEdges } from "../hooks/use-scroll-edges";
 import { focusWithin } from "../lib/styles";
@@ -180,6 +183,16 @@ const styles = stylex.create({
   },
 });
 
+// The arrows scroll a focused box by themselves; Home and End go to the value's ends.
+const toEnds = (event: KeyboardEvent<HTMLSpanElement>) => {
+  if (event.key !== "Home" && event.key !== "End") {
+    return;
+  }
+  event.preventDefault();
+  const box = event.currentTarget;
+  box.scrollLeft = event.key === "Home" ? 0 : box.scrollWidth;
+};
+
 /** A value you can copy, as one quiet line with a copy button at its end. */
 export const Snippet = ({
   value,
@@ -192,10 +205,20 @@ export const Snippet = ({
   // The ends of the value with more beyond them are marked for the fade there. Clipped, the value
   // is a Tab stop of its own, so the keyboard's arrows scroll to the rest of it (WCAG 2.1.1); a
   // value that fits is none, and the button is the one stop.
+  const valueId = useId();
   const edges = useScrollEdges({
     onChange: (found, element) => {
       markScrollEdges(found, element);
       element.tabIndex = found.overflows ? 0 : -1;
+      // A stop has a role and a name: a group named by the value it holds. A value that fits is
+      // plain words.
+      if (found.overflows) {
+        element.setAttribute("role", "group");
+        element.setAttribute("aria-labelledby", valueId);
+      } else {
+        element.removeAttribute("role");
+        element.removeAttribute("aria-labelledby");
+      }
     },
   });
   const hasSwatch = swatch !== undefined && swatch !== "";
@@ -217,9 +240,12 @@ export const Snippet = ({
       ) : null}
       {/* Out of the tab order while the value fits (above): browsers differ on whether a box that
           could scroll is a Tab stop, so it is said here. */}
+      {/* oxlint-disable-next-line jsx-a11y/no-static-element-interactions -- it is a group, named, while it is a stop (above); the keys reach it only then */}
       <span
         ref={edges}
+        id={valueId}
         tabIndex={-1}
+        onKeyDown={toEnds}
         data-slot="snippet-value"
         dir="ltr"
         {...stylex.props(styles.value)}

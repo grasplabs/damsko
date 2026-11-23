@@ -309,6 +309,22 @@ test("the head script draws a kept fold before the page wakes, and waking moves 
   await expect(hiring).toBeVisible();
 });
 
+test("focus on a kept-folded group's label before the page wakes stays on it as it wakes", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("examples-sidebar-groups:projects", "false");
+  });
+  const wake = await openExampleAsleep(page, "sidebar", "groups");
+  const projects = page.getByRole("button", { name: "Projects", exact: true });
+  // Drawn as kept before waking: the label says the group is folded.
+  await expect(projects).toHaveAttribute("aria-expanded", "false");
+  await projects.focus();
+  await expect(projects).toBeFocused();
+  await wake();
+  await expect(projects).toBeFocused();
+});
+
 test("levels: a group's fold in a level is kept by its name too", async ({
   page,
 }) => {

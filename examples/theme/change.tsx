@@ -1,5 +1,5 @@
 // The three ways a theme can change, side by side to choose from: in one frame; a crossfade of the
-// whole page; or a reveal, a soft circle growing from the switch (./change-theme.ts). With reduced
+// whole page; or a reveal, a soft circle growing from the switch (../patterns/theme-choice.tsx). With reduced
 // motion, and where a browser has no View Transitions, every way is one frame.
 "use client";
 
@@ -10,8 +10,12 @@ import * as stylex from "@stylexjs/stylex";
 import { useState } from "react";
 import type { MouseEvent } from "react";
 
-import { changeTheme, middleOf, themeChangeCss } from "./change-theme";
-import type { ThemeChangeWay } from "./change-theme";
+import {
+  changeTheme,
+  middleOf,
+  themeChangeCss,
+} from "../patterns/theme-choice";
+import type { ThemeChangeWay } from "../patterns/theme-choice";
 import { ThemePanel } from "./panel";
 
 const ways: { id: ThemeChangeWay; label: string }[] = [

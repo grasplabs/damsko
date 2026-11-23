@@ -9,8 +9,8 @@ description: A row renamed where it stands, and a row's menu on a right press, a
 
 A row of a Sidebar is a link, so a press goes to its place. Two things are added round it, each from a part the library has.
 
-- **Rename.** A double press on the row, F2 while it holds focus, or Rename in its menu puts an Inline edit in the row's place, held open by the page (`editing`). Enter keeps the name, Escape leaves it as it was, and leaving the field keeps it too. When the field closes, focus goes back to the row.
-- **The row's menu.** A Context menu round the row opens on a right press, a long press on a touch screen, and the menu key or Shift+F10 while the row holds focus. `tabStop={false}`, as the link is the row's tab stop.
+- **Rename.** A double press on the row, F2 while it holds focus, or Rename in its menu puts an Inline edit in the row's place, held open by the page (`editing`). Enter keeps the name, Escape leaves it as it was, and leaving the field keeps it too. The row's icon stays where it was and the field stands a small step after it, as tall as the row, so the row does not jump. When the field closes, focus goes back to the row.
+- **The row's menu.** A Context menu round the row opens on a right press, a long press on a touch screen, and the menu key or Shift+F10 while the row holds focus. `tabStop={false}`, as the link is the row's tab stop: the area is then no group of its own, and the row is read once, as its link.
 
 <Stage path="patterns/sidebar-rows" label="Rename in place, and a row's menu" />
 

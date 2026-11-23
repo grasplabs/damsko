@@ -89,6 +89,12 @@ test("a clipped value is a Tab stop before the button, and the arrow keys scroll
   );
   await page.keyboard.press("Tab");
   await expect(value).toBeFocused();
+  // The stop has a role and a name: the value itself.
+  await expect(
+    page.getByRole("group", {
+      name: "workspace_8f3a2c91-d4e7-4b6a-905f-1c2d3e4b5a69",
+    })
+  ).toBeFocused();
   // The field shows the keyboard's ring for it.
   await expect
     .poll(
@@ -103,6 +109,18 @@ test("a clipped value is a Tab stop before the button, and the arrow keys scroll
   expect(await scrolled()).toBe(0);
   await page.keyboard.press("ArrowRight");
   await expect.poll(scrolled).toBeGreaterThan(0);
+  // End and Home go to the value's ends.
+  await page.keyboard.press("End");
+  await expect
+    .poll(
+      async () =>
+        await value.evaluate(
+          (node) => node.scrollWidth - node.clientWidth - node.scrollLeft
+        )
+    )
+    .toBeLessThanOrEqual(1);
+  await page.keyboard.press("Home");
+  await expect.poll(scrolled).toBe(0);
   await page.keyboard.press("Tab");
   await expect(
     page.getByRole("button", { name: "Copy the workspace ID" })
@@ -117,6 +135,7 @@ test("a value that fits is no Tab stop: the button is the one stop", async ({
   await expect(
     page.getByRole("button", { name: "Copy the install command" })
   ).toBeFocused();
+  await expect(page.getByRole("group")).toHaveCount(0);
 });
 
 test("the field has one fill: under the pointer and pressed, the button draws none of its own, and its icon goes from quiet to ink", async ({

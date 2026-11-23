@@ -21,14 +21,19 @@ import {
   useMessageScrollerVisibility,
 } from "@grasp-os/ui/components/message-scroller";
 import { Spinner } from "@grasp-os/ui/components/spinner";
-import { radius, size, space } from "@grasp-os/ui/lib/tokens.stylex";
+import {
+  colors,
+  radius,
+  shadow,
+  size,
+  space,
+} from "@grasp-os/ui/lib/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
 import { useEffect, useState } from "react";
 
 const layout = stylex.create({
   frame: {
-    display: "flex",
-    flexDirection: "column",
+    position: "relative",
     width: "100%",
     maxWidth: size.promptInputWidth,
     height: `calc(${size.popupHeight} * 1.4)`,
@@ -37,9 +42,25 @@ const layout = stylex.create({
     boxShadow: size.borderStrong,
     overflow: "hidden",
   },
-  // The line that says older messages are coming stands over the log, which takes the rest.
-  loading: { marginBlock: space["2"], marginInline: space["4"] },
-  log: { flexGrow: 1, height: "auto", minHeight: 0 },
+  // The line that says older messages are coming floats over the log's top edge, as the jump
+  // button floats over its end: it takes no room, so nothing being read moves when it shows.
+  loading: {
+    position: "absolute",
+    insetBlockStart: space["2"],
+    insetInline: 0,
+    zIndex: 1,
+    display: "flex",
+    justifyContent: "center",
+    pointerEvents: "none",
+  },
+  loadingBox: {
+    paddingBlock: space["1"],
+    paddingInline: space["3"],
+    borderRadius: radius.base,
+    cornerShape: radius.shape,
+    backgroundColor: colors.card,
+    boxShadow: shadow.sm,
+  },
 });
 
 interface Row {
@@ -107,14 +128,18 @@ const Thread = () => {
       {/* Over the log, not a row of it: the rows stay the messages and the lines between them,
           so the log holds the row being read in place when the page is drawn above it. */}
       {loading && (
-        <Marker role="status" style={layout.loading}>
-          <MarkerIcon>
-            <Spinner />
-          </MarkerIcon>
-          <MarkerContent>Loading earlier messages</MarkerContent>
-        </Marker>
+        <div {...stylex.props(layout.loading)}>
+          <div {...stylex.props(layout.loadingBox)}>
+            <Marker role="status">
+              <MarkerIcon>
+                <Spinner />
+              </MarkerIcon>
+              <MarkerContent>Loading earlier messages</MarkerContent>
+            </Marker>
+          </div>
+        </div>
       )}
-      <MessageScroller style={layout.log}>
+      <MessageScroller>
         <MessageScrollerViewport aria-label="Conversation about the north renewals">
           {/* Every row is the content's own child with a key of its own, the lines too. */}
           <MessageScrollerContent aria-busy={loading}>
