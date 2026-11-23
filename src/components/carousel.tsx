@@ -56,7 +56,7 @@ import {
 } from "../lib/tokens.stylex";
 import { className, listOf } from "../lib/utils";
 import type { LayoutStyle, Orientation } from "../lib/utils";
-import { motionVars } from "../lib/vars.stylex";
+import { motionVars, ringInsetMarker } from "../lib/vars.stylex";
 import { Button } from "./button";
 
 /** Every prop a Carousel takes. */
@@ -435,7 +435,8 @@ export const Carousel = ({
           {showIndicators && (
             <CarouselIndicatorGroup
               aria-label={words.pages(label)}
-              {...stylex.props(styles.dots)}
+              // The marks' targets touch: each ring is drawn inside its own (ringInsetMarker).
+              {...stylex.props(styles.dots, ringInsetMarker)}
             >
               {(group: CarouselIndicatorGroupState) =>
                 Array.from(

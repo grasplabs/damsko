@@ -359,11 +359,11 @@ export const ChainOfThoughtSearchResults = ({
   </span>
 );
 
-/** One search result: its site, in a quiet Badge (`default`, a plain fact, as shadcn's `secondary`). */
+/** One search result: its site, a label in a small `secondary` Badge, as shadcn's. */
 export const ChainOfThoughtSearchResult = ({
   children,
 }: ChainOfThoughtSearchResultProps) => (
-  <Badge size="sm" variant="default">
+  <Badge size="sm" variant="secondary">
     {children}
   </Badge>
 );

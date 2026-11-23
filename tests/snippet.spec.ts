@@ -232,3 +232,23 @@ test("a colour stands 12px in, a round of 12px, 8px before the words", async ({
     });
   expect(measured).toEqual({ start: 12, width: 12, height: 12, gap: 8 });
 });
+
+test("the field's ring is drawn inside the field, so it covers nothing beside it", async ({
+  page,
+}) => {
+  await openExample(page, "snippet", "basic");
+  await page.keyboard.press("Tab");
+  const button = page.getByRole("button", {
+    name: "Copy the install command",
+  });
+  await expect(button).toBeFocused();
+  // How far the ring reaches past the field's own edge: its width and its offset.
+  const reach = await button.evaluate((node) => {
+    const style = getComputedStyle(node.closest("label") ?? node);
+    return (
+      Number(style.outlineWidth.replace(/px$/u, "")) +
+      Number(style.outlineOffset.replace(/px$/u, ""))
+    );
+  });
+  expect(reach).toBeLessThanOrEqual(0);
+});

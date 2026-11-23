@@ -1,5 +1,5 @@
+import { Badge } from "@grasp-os/ui/components/badge";
 import { Button } from "@grasp-os/ui/components/button";
-import { Tag } from "@grasp-os/ui/components/tag";
 import {
   colors,
   font,
@@ -9,7 +9,7 @@ import {
   space,
 } from "@grasp-os/ui/lib/tokens.stylex";
 // Corners, scene: capped at half the height. Real parts in a row, shortest first. Each takes the one
-// corner, but never more than half its own height, so a tag and the small buttons come out as pills
+// corner, but never more than half its own height, so a label and the small buttons come out as pills
 // and only the tallest parts show the corner whole.
 import * as stylex from "@stylexjs/stylex";
 
@@ -79,7 +79,7 @@ export default function CornersCap() {
   return (
     <ul {...stylex.props(styles.stage)}>
       <li {...stylex.props(styles.part)}>
-        <Tag>Draft</Tag>
+        <Badge variant="secondary">Draft</Badge>
         <Facts tall={24} corner={12} />
       </li>
       <li {...stylex.props(styles.part)}>

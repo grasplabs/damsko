@@ -77,3 +77,24 @@ test("above the prompt input, a suggestion is sent as it is, as typed words are"
   await page.keyboard.press("Enter");
   await expect(page.getByText("Sent: Book a room")).toBeVisible();
 });
+
+test("a suggestion longer than its row stays in the row on one line, cut with an ellipsis, and keeps its whole name", async ({
+  page,
+}) => {
+  await openExample(page, "suggestion", "long");
+  const row = page.getByRole("group", { name: "Suggestions" });
+  const button = row.getByRole("button", {
+    name: "Compare this quarter's supplier costs with the last three",
+  });
+  expect(
+    await row.evaluate((element) => element.scrollWidth > element.clientWidth)
+  ).toBe(false);
+  const box = await button.boundingBox();
+  expect(box?.width).toBeLessThanOrEqual(240);
+  expect(box?.height).toBe(32);
+  expect(
+    await button
+      .getByText("Compare this quarter")
+      .evaluate((words) => getComputedStyle(words).textOverflow)
+  ).toBe("ellipsis");
+});

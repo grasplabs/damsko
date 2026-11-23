@@ -1,6 +1,6 @@
 ---
 title: Badge
-description: A small label of a word or two that shows the status of something.
+description: A word or two in a pill that shows the status of something, or a label that sorts or names it.
 ---
 
 <Head
@@ -11,9 +11,15 @@ description: A small label of a word or two that shows the status of something.
 
 ## Variants
 
-Each variant is a status, and the words say it too: `default`, `success`, `warning`, `destructive` and `info`.
+Five variants are a status, how something stands, and the words say it too: `default`, `success`, `warning`, `destructive` and `info`.
 
 <Stage path="badge/tones" label="Variants" />
+
+## Labels
+
+Two variants are a label, what sorts or names something ("Design", "Q3 plan"): `secondary` is the usual label; `outline` is quieter, beside labels that are chosen. A label says nothing about how the thing stands, so it has no colour of its own.
+
+<Stage path="badge/labels" label="Labels" />
 
 ## Sizes
 
@@ -21,11 +27,25 @@ Each variant is a status, and the words say it too: `default`, `success`, `warni
 
 <Stage path="badge/sizes" label="Sizes" />
 
+A label is a step taller, with its words a size up: `default`, 24px, beside body text; `sm`, 20px, in a dense row or a table.
+
+<Stage path="badge/label-sizes" label="A label's sizes" />
+
 ## With an icon
 
 An icon before the words makes a status quicker to find in a long list.
 
 <Stage path="badge/icon" label="With an icon" />
+
+On a label, the icon says what kind of label it is.
+
+<Stage path="badge/label-icon" label="A label with an icon" />
+
+## Removable
+
+`onRemove` adds a small button after the words that takes the badge away, as a filter or a chosen value does. Only a label takes it (`secondary`, `outline`): a status is not something a person takes away, and the type refuses it.
+
+<Stage path="badge/removable" label="Removable" />
 
 ## In a row
 
@@ -53,7 +73,7 @@ A badge stands at the end of the row it describes, after the thing's name.
 
 ## As a link
 
-`asChild` draws a link as the badge: it stays a link, named by its words, with the keyboard's ring. Its words are its own, so `icon` and `loading` are not drawn: put an `<Icon />` in the link before its words.
+`asChild` draws a link as the badge: it stays a link, named by its words, with the keyboard's ring. A label drawn as a link is cut with an ellipsis as any label is, its whole text in its `title`. Its words are its own, so `icon` and `loading` are not drawn: put an `<Icon />` in the link before its words.
 
 <Stage path="badge/link" label="As a link" />
 
@@ -78,6 +98,32 @@ Each variant, then the small size and an icon.
   ]}
 />
 
+A label has nothing to press; its remove button's hover and keyboard focus are forced from its own CSS.
+
+<States
+  path="badge/label-states"
+  choose={{
+    prop: "variant",
+    label: "Variant",
+    options: [
+      { id: "secondary", label: "Secondary" },
+      { id: "outline", label: "Outline" },
+    ],
+  }}
+  cells={[
+    { label: "Rest" },
+    { label: "Small", props: { size: "sm" } },
+    { label: "With an icon", props: { icon: true } },
+    { label: "Removable", props: { removable: true } },
+    { label: "Remove, hover", force: "hover", props: { removable: true } },
+    {
+      label: "Remove, keyboard focus",
+      force: "focus-visible",
+      props: { removable: true },
+    },
+  ]}
+/>
+
 <Part title="Using it" />
 
 ## When to use it
@@ -85,12 +131,14 @@ Each variant, then the small size and an icon.
 <Intent
   of="badge"
   always={[
-    "How something stands, in a word or two, beside what it describes.",
-    "A status in a word or two, in sentence case: Needs review, not NEEDS REVIEW.",
+    "How something stands, in a word or two, beside what it describes: `default`, `success`, `warning`, `destructive` or `info`.",
+    "What sorts or names something (Design, Q3 plan): `secondary`, or `outline` beside chosen ones.",
+    "A word or two in sentence case: Needs review, not NEEDS REVIEW.",
     "The same variant for the same status everywhere in the product.",
   ]}
   never={[
-    "A label that sorts or names something: use Tag.",
+    "A status variant for a label, or a label variant for a status.",
+    "Words that a label cuts off: say it shorter.",
     "Something to press: use Button; a link to follow goes in `asChild`.",
     "Mint for a badge: mint is for approving.",
     "Colour as the only difference between two statuses.",
@@ -106,24 +154,42 @@ Each variant, then the small size and an icon.
       group: "Size",
       key: "Height",
       value: "{badge-height}, {badge-height-sm}",
-      note: "default, small",
+      note: "a status: default, small",
     },
-    { group: "Size", key: "Padding", value: "{badge-padding} at each end" },
+    {
+      group: "Size",
+      key: "Height, label",
+      value: "{badge-label-height}, {badge-label-height-sm}",
+      note: "secondary and outline: default, small",
+    },
+    {
+      group: "Size",
+      key: "Padding",
+      value: "{badge-padding} at each end",
+      note: "a label {badge-label-padding}; {space-1} after a remove button",
+    },
     {
       group: "Size",
       key: "Icon",
-      value: "{badge-icon}, {space-1} before the words",
+      value: "{badge-icon}, stroke {icon-stroke}, {space-1} before the words",
+    },
+    {
+      group: "Size",
+      key: "Remove button",
+      value: "{icon-sm}, its cross {badge-icon}",
+      note: "{tap-target} to a finger on a touch screen",
     },
     {
       group: "Type and shape",
       key: "Words",
       value: "{text-xs}, {font-weight-medium}",
+      note: "a label {text-sm} / {text-sm-line}, {text-xs} / {text-xs-line} when small",
     },
     {
       group: "Type and shape",
       key: "Corner",
       value: "Half {badge-height}",
-      note: "round ends; rounded corners when it wraps",
+      note: "round ends; rounded corners when a status wraps. A label {radius-full}",
     },
     {
       group: "Colour",
@@ -157,9 +223,34 @@ Each variant, then the small size and an icon.
     },
     {
       group: "Colour",
+      key: "Secondary",
+      note: "fill, words",
+      tokens: ["badge-secondary", "foreground"],
+    },
+    {
+      group: "Colour",
+      key: "Outline",
+      note: "the system's edge, no fill; words",
+      tokens: ["border-strong", "foreground"],
+    },
+    {
+      group: "Colour",
       key: "Edge",
-      note: "the system's, on every variant",
+      note: "the system's, on every variant but secondary",
       tokens: ["border-strong"],
+    },
+    {
+      group: "Colour",
+      key: "Remove",
+      note: "the cross; ink on the secondary fill under a pointer",
+      tokens: ["muted-foreground", "badge-secondary"],
+    },
+    {
+      group: "Colour",
+      key: "Focus ring",
+      value: "{ring-width}, {ring-offset} out",
+      note: "on the remove button, a link and a badge with a tooltip",
+      tokens: ["ring"],
     },
   ]}
 />
@@ -173,6 +264,12 @@ Each variant, then the small size and an icon.
       value:
         "The mark turns once each {duration-spin}; with reduced motion it stands still",
     },
+    {
+      key: "Remove, hover",
+      value: "Cross and fill change, {duration-mark}",
+      note: "pointer only; reduced: at once",
+      tokens: ["ease"],
+    },
   ]}
 />
 <Rows
@@ -181,11 +278,22 @@ Each variant, then the small size and an icon.
     {
       key: "Press",
       value:
-        "None: a badge says, it does not do. Put an action in a button beside it; drawn as a link (`asChild`), it follows the link.",
+        "None: a badge says, it does not do. Put an action in a button beside it; drawn as a link (`asChild`), it follows the link. With `onRemove`, only its remove button does something.",
+    },
+    {
+      key: "Remove",
+      value:
+        "Runs `onRemove`; focus moves to the next badge's remove button, or the one before.",
+    },
+    {
+      key: "Last one",
+      value:
+        "When no badge is left, the caller moves focus, to the field that adds them.",
     },
     {
       key: "Long words",
-      value: "Wrap inside the pill, which grows; nothing is cut off.",
+      value:
+        "A status wraps inside the pill, which grows; nothing is cut off. A label stays on one line, cut off with an ellipsis when the row is too narrow, its whole text in its `title`.",
     },
     {
       key: "Forced colours",
@@ -206,6 +314,11 @@ Each variant, then the small size and an icon.
       key: "Tooltip",
       value:
         "A stop for the keyboard; the tooltip's words are its description, on hover and on focus",
+    },
+    {
+      key: "Remove",
+      value: "A `button` named Remove and the words",
+      note: "Remove alone when the words are not text; both from the I18nProvider (`badge.remove`, `badge.removeNamed`)",
     },
     {
       key: "Dot",

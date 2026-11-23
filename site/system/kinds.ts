@@ -166,7 +166,6 @@ export const kinds: Kind[] = [
       "heading",
       "avatar",
       "audio-player",
-      "tag",
       "kbd",
       "icon-tile",
       "brand-icon",
