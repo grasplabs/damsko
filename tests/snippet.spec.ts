@@ -107,8 +107,22 @@ test("a clipped value is a Tab stop before the button, and the arrow keys scroll
     .toBe("solid");
   const scrolled = async () => await value.evaluate((node) => node.scrollLeft);
   expect(await scrolled()).toBe(0);
+  // The browser glides to where an arrow sends it: the next key waits until that glide is over
+  // (`scrollend`, listened for before the key goes down), as a person's keys come far apart.
+  const glide = await value.evaluateHandle((node) => {
+    const ended = Promise.withResolvers<null>();
+    node.addEventListener(
+      "scrollend",
+      () => {
+        ended.resolve(null);
+      },
+      { once: true }
+    );
+    return { ended: ended.promise };
+  });
   await page.keyboard.press("ArrowRight");
-  await expect.poll(scrolled).toBeGreaterThan(0);
+  await glide.evaluate(async ({ ended }) => await ended);
+  expect(await scrolled()).toBeGreaterThan(0);
   // End and Home go to the value's ends.
   await page.keyboard.press("End");
   await expect
