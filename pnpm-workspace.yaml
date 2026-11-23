@@ -73,7 +73,9 @@ catalog:
   "@stylexjs/unplugin": 0.19.2
   babel-plugin-react-compiler: 1.0.0
   "@playwright/test": 1.65.0
-  # What Get started pins for an app beside Tailwind, which the install check builds.
+  # What Get started pins for the apps the install check builds from it: Vite's React plugin, and
+  # Tailwind for the app beside it. (Its Vite is the page's own: here the name is Vite+'s.)
+  "@vitejs/plugin-react": 6.3.0
   tailwindcss: 4.3.5
   "@tailwindcss/vite": 4.3.5
   shadcn: 4.23.0

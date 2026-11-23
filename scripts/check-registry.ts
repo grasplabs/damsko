@@ -4,7 +4,8 @@
 // named without a version; every import in an item's files resolves, installed, to a file of the
 // item or of an item it names, and every package it imports is one of its dependencies; and every
 // version in package.json comes from an exact pin in the catalog; and the docs' install commands
-// name items that exist, at the catalog's versions. Reads files only; no server.
+// name items that exist, at the catalog's versions, as are the versions Get started gives an app.
+// Reads files only; no server.
 //
 //   node scripts/check-registry.ts
 //
@@ -16,7 +17,7 @@ import nodePath from "node:path";
 import { registrySchema } from "shadcn/schema";
 import ts from "typescript6";
 
-import { packageExports } from "../site/start/get-started.ts";
+import { packageExports, versions } from "../site/start/get-started.ts";
 import {
   buildRegistry,
   catalog,
@@ -330,8 +331,14 @@ for (const page of [...docPages("docs"), "site/start/get-started.ts"]) {
       const pinned = /^(?<name>@?[^@\s]+)@(?<version>[^\s]+)$/u.exec(
         spec
       )?.groups;
-      // A workspace's own package has no version to pin.
-      if (
+      // A workspace's own package has no version to pin; one taken from the app's catalog is
+      // pinned there, in the versions Get started gives (checked below).
+      if (pinned?.name !== undefined && pinned.version === "catalog:") {
+        check(
+          pinned.name in versions,
+          `${page}: adds ${spec}, and Get started's versions (site/start/get-started.ts) have no ${pinned.name}`
+        );
+      } else if (
         pinned?.name !== undefined &&
         pinned.version?.startsWith("workspace:") !== true
       ) {
@@ -341,6 +348,30 @@ for (const page of [...docPages("docs"), "site/start/get-started.ts"]) {
         );
       }
     }
+  }
+}
+
+// The versions Get started gives an app (its catalog) are the ones Damsko is tested with, and name
+// every package an item brings: an app set up from the page, and the install check that follows
+// the page, build with these whatever is released upstream. Vite alone is the page's own: here
+// the name is Vite+'s.
+for (const [name, version] of Object.entries(versions)) {
+  check(
+    name === "vite"
+      ? /^\d+\.\d+\.\d+$/u.test(version)
+      : version === catalog[name],
+    `Get started's versions (site/start/get-started.ts): ${name} is ${version}, the catalog has ${catalog[name] ?? "it not at all"}`
+  );
+}
+for (const item of registry.items) {
+  for (const name of [
+    ...(item.dependencies ?? []),
+    ...(item.devDependencies ?? []),
+  ]) {
+    check(
+      name in versions,
+      `${item.name} names ${name}, which Get started's versions (site/start/get-started.ts) do not pin`
+    );
   }
 }
 
