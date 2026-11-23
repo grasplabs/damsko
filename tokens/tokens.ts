@@ -3455,7 +3455,13 @@ export const groups: TokenGroup[] = [
             name: "sidebar-card-radius",
             category: "radius",
             value: "calc({radius-row} + {space-2})",
-            use: "The corner of the page's card and of a floating sidebar, in the squircle: a row's corner plus the room the sidebar keeps round its rows, so the rows nest in it.",
+            use: "A floating sidebar's corner, in the squircle: a row's corner plus the room the sidebar keeps round its rows, so the rows nest in it.",
+          },
+          {
+            name: "sidebar-inset-radius",
+            category: "radius",
+            value: "12px",
+            use: "The corner of the page's card beside an inset sidebar: a plain round one, as the app's main surface was drawn. It holds no sidebar rows, so it does not nest round them.",
           },
           {
             name: "sidebar-card-gap",

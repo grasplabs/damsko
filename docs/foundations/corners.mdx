@@ -37,7 +37,7 @@ description: One corner for almost everything, a squircle, so a curve meets its 
 
 ## Rows
 
-A row takes the row corner, `radius-row`: the one corner less the room a container keeps round its rows (20px less 4px, so 16px), capped at half the row's height, in the squircle. A menu or list item, an Item, a tree or sidebar row and a trigger that runs the width all take it, so a row reads the same wherever it stands. What holds rows nests round them: a floating sidebar and the page card beside an inset one take a row's corner plus the 8px the sidebar keeps round its rows (`sidebar-card-radius`, 24px), in the squircle. A trigger inside a card is still a row and takes the row corner, in a Tool's card as on a Sources line.
+A row takes the row corner, `radius-row`: the one corner less the room a container keeps round its rows (20px less 4px, so 16px), capped at half the row's height, in the squircle. A menu or list item, an Item, a tree or sidebar row and a trigger that runs the width all take it, so a row reads the same wherever it stands. What holds rows nests round them: a floating sidebar takes a row's corner plus the 8px it keeps round its rows (`sidebar-card-radius`, 24px), in the squircle. The page card beside an inset sidebar holds no sidebar rows, so the rule does not reach it: it is the app's main surface and keeps its own plain 12px corner (`sidebar-inset-radius`). A trigger inside a card is still a row and takes the row corner, in a Tool's card as on a Sources line.
 
 ## Tiles and thin things
 

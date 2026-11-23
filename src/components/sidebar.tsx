@@ -320,10 +320,9 @@ const styles = stylex.create({
       default: null,
       [stylex.when.anySibling('[data-variant="inset"]', sidebarMarker)]: {
         default: null,
-        [media.lg]: radius.sidebarCardRadius,
+        [media.lg]: radius.sidebarInsetRadius,
       },
     },
-    cornerShape: radius.shape,
     // The line is a layer over what the card holds, so no bar's ground inside covers it.
     "::after": {
       content: {

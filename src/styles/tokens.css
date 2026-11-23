@@ -921,8 +921,10 @@
   --damsko-sidebar-icon: 16px;
   /* A button that is only an icon in the frame (the sidebar's toggle). */
   --damsko-sidebar-icon-button: var(--damsko-control-xs);
-  /* The corner of the page's card and of a floating sidebar, in the squircle: a row's corner plus the room the sidebar keeps round its rows, so the rows nest in it. */
+  /* A floating sidebar's corner, in the squircle: a row's corner plus the room the sidebar keeps round its rows, so the rows nest in it. */
   --damsko-sidebar-card-radius: calc(var(--damsko-radius-row) + var(--damsko-space-2));
+  /* The corner of the page's card beside an inset sidebar: a plain round one, as the app's main surface was drawn. It holds no sidebar rows, so it does not nest round them. */
+  --damsko-sidebar-inset-radius: 12px;
   /* The room round the page's card, on the sidebar's ground. */
   --damsko-sidebar-card-gap: 6px;
   /* The rows' letter spacing: a hair tighter than set. */
