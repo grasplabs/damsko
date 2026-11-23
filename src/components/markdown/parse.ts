@@ -347,13 +347,15 @@ export const definesAny = (source: string): boolean =>
   source.search(DEFINING) !== -1;
 
 /** What an answer defines: each name as the parser compares it, as it is written, and where it is defined. */
-type Defined = Map<string, { label: string; at: number }>;
+type Defined = Map<string, { written: string; at: number }>;
 
 /** `defined` with the name that `text` defines at `at`, unless it is defined: the first to define a name does. */
 const define = (defined: Defined, text: string, at: number) => {
   const label = DEFINES.exec(text)?.groups?.label ?? "";
   const name = nameOf(label);
-  return defined.has(name) ? defined : defined.set(name, { label, at });
+  return defined.has(name)
+    ? defined
+    : defined.set(name, { written: label, at });
 };
 
 /** The blank lines at the end of a piece, after the end of its last line with words. */
@@ -385,7 +387,7 @@ const blocksOf = (
   for (const { groups } of defined.size === 0 ? [] : text.matchAll(NAMED)) {
     const found = defined.get(nameOf(groups?.name ?? ""));
     if (found !== undefined && (found.at < from || found.at >= to)) {
-      names.add(`[${found.label}]: <>\n`);
+      names.add(`[${found.written}]: <>\n`);
     }
   }
   // A comment ends them, so no line of the piece is taken for more of the last. It stands before
