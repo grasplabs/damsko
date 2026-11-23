@@ -73,7 +73,8 @@ const styles = stylex.create({
     boxSizing: "border-box",
     width: sizes.iconTile,
     height: sizes.iconTile,
-    borderRadius: radius.iconTileRadius,
+    // The tile's corner, as BrandIcon's at the same size: the one corner capped at half.
+    borderRadius: `min(${radius.base}, calc(${sizes.iconTile} / 2))`,
     cornerShape: radius.shape,
     // Forced colours drop fills and shadows: an outline keeps the tile's square.
     outline: { default: "none", [media.forcedColors]: "1px solid CanvasText" },
@@ -109,7 +110,8 @@ const styles = stylex.create({
     [iconVars.size]: sizes.iconTileSmIcon,
     width: sizes.iconTileSm,
     height: sizes.iconTileSm,
-    borderRadius: radius.iconTileSmRadius,
+    borderRadius: radius.mark,
+    cornerShape: radius.shape,
   },
   // A lift for the small tile: the medium lift is drawn for a 40px square and stands too far out
   // of a row.

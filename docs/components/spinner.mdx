@@ -11,7 +11,7 @@ description: A small turning icon that shows something is loading or working.
 
 ## Sizes
 
-`sm` beside small text and in a button, `default` beside body text, `lg` alone in a panel.
+`sm` beside small text and in a button, which is what a spinner is without a size; `default` beside body text; `lg` alone in a panel.
 
 <Stage path="spinner/sizes" label="Sizes" />
 
@@ -34,10 +34,10 @@ Each size, and the colour of the words it stands beside.
 <States
   path="spinner/states"
   cells={[
-    { label: "Small", props: { size: "sm" } },
-    { label: "Default" },
+    { label: "Small" },
+    { label: "Default", props: { size: "default" } },
     { label: "Large", props: { size: "lg" } },
-    { label: "In muted words", props: { size: "sm", colour: "muted" } },
+    { label: "In muted words", props: { colour: "muted" } },
   ]}
 />
 

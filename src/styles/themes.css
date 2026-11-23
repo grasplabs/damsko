@@ -41,6 +41,7 @@
   --damsko-destructive-shadow-color: light-dark(oklch(0.52 0.175 28 / 0.1), oklch(0.52 0.175 28 / 0.2));
   --damsko-shadow-sm-destructive: 0 1px 2px var(--damsko-destructive-shadow-color), 0 2px 4px var(--damsko-destructive-shadow-color), 0 0 0 1px var(--damsko-destructive-border);
   --damsko-code-bg: light-dark(oklch(0.29 0.05 162 / 0.06), oklch(0.96 0.02 150 / 0.09));
+  --damsko-radius-row: calc(var(--damsko-radius) - var(--damsko-popup-padding));
   --damsko-border-strong-color: light-dark(oklch(0.173 0.028 169.36 / 0.06), oklch(0.96 0.02 150 / 0.1));
   --damsko-shadow-color-faint: light-dark(oklch(0.173 0.028 169.36 / 0.02), oklch(0 0 none / 0.2));
   --damsko-shadow-color-soft: light-dark(oklch(0.173 0.028 169.36 / 0.06), oklch(0 0 none / 0.4));
@@ -317,6 +318,7 @@
   --damsko-destructive-shadow-color: light-dark(oklch(0.52 0.175 28 / 0.1), oklch(0.52 0.175 28 / 0.2));
   --damsko-shadow-sm-destructive: 0 1px 2px var(--damsko-destructive-shadow-color), 0 2px 4px var(--damsko-destructive-shadow-color), 0 0 0 1px var(--damsko-destructive-border);
   --damsko-code-bg: light-dark(oklch(0.29 0.1 178 / 0.06), oklch(0.96 0.04 178 / 0.09));
+  --damsko-radius-row: calc(var(--damsko-radius) - var(--damsko-popup-padding));
   --damsko-border-strong-color: light-dark(oklch(0.173 0.056 178 / 0.06), oklch(0.96 0.04 178 / 0.1));
   --damsko-shadow-color-faint: light-dark(oklch(0.173 0.056 178 / 0.02), oklch(0 0 none / 0.2));
   --damsko-shadow-color-soft: light-dark(oklch(0.173 0.056 178 / 0.06), oklch(0 0 none / 0.4));
@@ -593,6 +595,7 @@
   --damsko-destructive-shadow-color: light-dark(oklch(0.52 0.175 28 / 0.1), oklch(0.52 0.175 28 / 0.2));
   --damsko-shadow-sm-destructive: 0 1px 2px var(--damsko-destructive-shadow-color), 0 2px 4px var(--damsko-destructive-shadow-color), 0 0 0 1px var(--damsko-destructive-border);
   --damsko-code-bg: light-dark(oklch(0.29 0.011 75 / 0.06), oklch(0.96 0.004 75 / 0.09));
+  --damsko-radius-row: calc(var(--damsko-radius) - var(--damsko-popup-padding));
   --damsko-border-strong-color: light-dark(oklch(0.173 0.006 75 / 0.06), oklch(0.96 0.004 75 / 0.1));
   --damsko-shadow-color-faint: light-dark(oklch(0.173 0.006 75 / 0.02), oklch(0 0 none / 0.2));
   --damsko-shadow-color-soft: light-dark(oklch(0.173 0.006 75 / 0.06), oklch(0 0 none / 0.4));

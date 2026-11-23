@@ -74,6 +74,7 @@ const styles = stylex.create({
     cursor: "pointer",
     listStyle: "none",
     borderRadius: radius.mark,
+    cornerShape: radius.shape,
     "::-webkit-details-marker": { display: "none" },
   },
   count: {

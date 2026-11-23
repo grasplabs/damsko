@@ -17,7 +17,7 @@ const layout = stylex.create({
 export default function SpinnerWithWords() {
   return (
     <p role="status" {...stylex.props(layout.row)}>
-      <Spinner size="sm" />
+      <Spinner />
       Loading the report
     </p>
   );

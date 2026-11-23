@@ -37,8 +37,6 @@ import type {
   PaginationLinkState,
   PaginationState,
 } from "@ui-sdk/react/pagination";
-import { renderElement } from "@ui-sdk/react/primitive";
-import type { RenderProp } from "@ui-sdk/react/primitive";
 import { createContext, isValidElement, use, useState } from "react";
 import type { ReactNode } from "react";
 
@@ -62,7 +60,7 @@ import {
   size,
   space,
 } from "../lib/tokens.stylex";
-import { listOf } from "../lib/utils";
+import { className, listOf, slotted } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { iconVars, motionVars } from "../lib/vars.stylex";
 import { buttonVariants } from "./button";
@@ -336,12 +334,9 @@ const styles = stylex.create({
   },
 });
 
-// UI SDK names its parts after its own primitive; each part here carries Pagination's own name. A step or
-// a page link is a link when the root has addresses (`getPageUrl`), else a button, as UI SDK draws it.
-const slotted =
-  (tag: string, slot: string, render?: RenderProp) =>
-  (props: Record<string, unknown>) =>
-    renderElement(tag, { ...props, "data-slot": slot }, render);
+// UI SDK names its parts after its own primitive; each part here carries Pagination's own name
+// (slotted). A step or a page link is a link when the root has addresses (`getPageUrl`), else a
+// button, as UI SDK draws it.
 
 /** Where the list stands, and what the root was told, for its parts. */
 interface Standing {
@@ -485,13 +480,13 @@ export const PaginationLink = ({
         element
       )}
       className={(state: PaginationLinkState) =>
-        stylex.props(
+        className(
           buttonVariants({
             variant: (isActive ?? state.current) ? "outline" : "ghost",
             size: "icon-xs",
           }),
           style
-        ).className
+        )
       }
     >
       {element === undefined ? children : undefined}

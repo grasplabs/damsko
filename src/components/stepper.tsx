@@ -315,7 +315,7 @@ const styles = stylex.create({
       default: "none",
       [stylex.when.ancestor(":focus-visible", stepMarker)]: {
         default: `${size.ringWidth} solid ${colors.ring}`,
-        [FORCED]: `calc(2 * ${size.ringWidth}) solid Highlight`,
+        [FORCED]: `calc(2 * ${size.lineStrong}) solid Highlight`,
       },
     },
     outlineOffset: size.ringOffset,
@@ -337,7 +337,7 @@ const styles = stylex.create({
       default: "none",
       [stylex.when.ancestor(":focus-visible", stepMarker)]: {
         default: `${size.ringWidth} solid ${colors.ring}`,
-        [FORCED]: `calc(2 * ${size.ringWidth}) solid Highlight`,
+        [FORCED]: `calc(2 * ${size.lineStrong}) solid Highlight`,
       },
     },
     outlineOffset: size.ringOffset,
@@ -447,7 +447,7 @@ const styles = stylex.create({
   dotError: {
     width: size.stepperDotActive,
     height: size.stepperDotActive,
-    borderRadius: 2,
+    borderRadius: radius.hairline,
     backgroundColor: { default: colors.destructive, [FORCED]: "CanvasText" },
     borderColor: { default: colors.destructive, [FORCED]: "CanvasText" },
   },
@@ -483,7 +483,7 @@ const styles = stylex.create({
   },
   // The hairline drawn in the middle of the segment's room; once done it fills that room.
   segLine: {
-    borderRadius: 1,
+    borderRadius: radius.full,
     backgroundColor: { default: colors.border, [FORCED]: "GrayText" },
     forcedColorAdjust: "none",
     transitionProperty: "background-color, width, height",
@@ -536,7 +536,7 @@ const styles = stylex.create({
   travelRoom: {
     position: "absolute",
     overflow: "hidden",
-    borderRadius: 1,
+    borderRadius: radius.full,
     display: { default: null, [FORCED]: "none" },
   },
   // The stretch itself: 40% of the line. Still under reduced motion, a short lit stretch at rest at
@@ -1364,12 +1364,12 @@ const NextButton = (props: NextButtonProps) => {
     return (
       <WithTooltip tip={reason ?? label}>
         <Button {...press} variant="ghost" size="icon-sm" aria-label={label}>
-          {loading ? <Spinner size="sm" /> : <Icon icon={ArrowRightIcon} />}
+          {loading ? <Spinner /> : <Icon icon={ArrowRightIcon} />}
         </Button>
       </WithTooltip>
     );
   }
-  const end = loading ? <Spinner size="sm" /> : <Icon icon={ArrowRightIcon} />;
+  const end = loading ? <Spinner /> : <Icon icon={ArrowRightIcon} />;
   return (
     <WithTooltip tip={bar ? (reason ?? label) : reason}>
       <Button
@@ -1377,7 +1377,7 @@ const NextButton = (props: NextButtonProps) => {
         variant={bar ? "ghost" : "default"}
         size={bar ? "sm" : "default"}
       >
-        {loading && finish && <Spinner size="sm" />}
+        {loading && finish && <Spinner />}
         {label}
         {!finish && end}
       </Button>

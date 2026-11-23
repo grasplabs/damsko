@@ -38,7 +38,7 @@ import {
   space,
 } from "../lib/tokens.stylex";
 import { popup, px } from "../lib/tokens.values";
-import { slotProps } from "../lib/utils";
+import { className, slotProps } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { motionVars } from "../lib/vars.stylex";
 
@@ -180,6 +180,7 @@ const styles = stylex.create({
       ":hover": { default: null, [HOVER]: "currentColor" },
     },
     borderRadius: radius.mark,
+    cornerShape: radius.shape,
     transitionProperty: "text-decoration-color",
     transitionDuration: motionVars.hover,
     transitionTimingFunction: duration.ease,
@@ -304,14 +305,14 @@ export const HoverCardTrigger = ({
   <TriggerPrimitive
     href={href}
     className={(state: HoverCardTriggerState) =>
-      stylex.props(
+      className(
         variant === "link" && [
           styles.trigger,
           state.open && styles.open,
           focusRingText,
         ],
         style
-      ).className
+      )
     }
     {...slotProps(asChild, children)}
   />

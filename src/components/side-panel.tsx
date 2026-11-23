@@ -57,7 +57,7 @@ import {
   space,
 } from "../lib/tokens.stylex";
 import { durations } from "../lib/tokens.values";
-import { isBlank } from "../lib/utils";
+import { className, isBlank } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { iconVars, motionVars, sidePanelCardMarker } from "../lib/vars.stylex";
 import { Button } from "./button";
@@ -870,13 +870,13 @@ const Views = ({ views, label, list, alone = false }: ViewsProps) => {
           value={view.value}
           title={folded ? view.label : undefined}
           className={(state: TabsTabState) =>
-            stylex.props(
+            className(
               headerStyles.tab,
               !state.selected && headerStyles.tabLive,
               state.selected && headerStyles.tabChosen,
               folded && headerStyles.tabFolded,
               focusRing
-            ).className
+            )
           }
         >
           <Icon icon={view.icon} />
@@ -1103,6 +1103,7 @@ const textStyles = stylex.create({
     insetInlineEnd: space["2"],
     zIndex: 1,
     borderRadius: radius.mark,
+    cornerShape: radius.shape,
     backgroundColor: { default: colors.card, [FORCED]: "Canvas" },
   },
 });

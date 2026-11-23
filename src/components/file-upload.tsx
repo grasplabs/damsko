@@ -33,7 +33,7 @@ import { createPortal } from "react-dom";
 
 import { useI18n, useLocale } from "../lib/i18n";
 import type { I18nCatalog } from "../lib/i18n";
-import { FileIcon, Icon, UploadIcon, XIcon } from "../lib/icons";
+import { FileIcon, Icon, UploadIcon, XIcon, fileMark } from "../lib/icons";
 import type { IconData } from "../lib/icons";
 import { fadeIn, focusRing, visuallyHidden } from "../lib/styles";
 import {
@@ -46,6 +46,7 @@ import {
   size,
   space,
 } from "../lib/tokens.stylex";
+import { className } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { iconVars, motionVars } from "../lib/vars.stylex";
 import { Button } from "./button";
@@ -470,7 +471,7 @@ const Row = ({
   return (
     <>
       <span aria-hidden="true" {...stylex.props(styles.fileIcon)}>
-        <Icon icon={FileIcon} />
+        <Icon icon={fileMark(file.type === "" ? undefined : file.type)} />
       </span>
       <span {...stylex.props(styles.words)}>
         <span id={nameId} {...stylex.props(styles.name)} title={file.name}>
@@ -483,7 +484,7 @@ const Row = ({
               styles.failed
           )}
         >
-          {told?.loading === true ? <Spinner size="sm" /> : null}
+          {told?.loading === true ? <Spinner /> : null}
           {metaLine(file, state, words, told, locale)}
         </span>
       </span>
@@ -783,7 +784,7 @@ export const FileUpload = ({
             ) : null}
           </span>
         ) : (
-          <FileInputDropzone className={stylex.props(styles.zone).className}>
+          <FileInputDropzone className={className(styles.zone)}>
             {fallback}
             <span aria-hidden="true" {...stylex.props(styles.zoneIcon)}>
               <Icon icon={UploadIcon} />

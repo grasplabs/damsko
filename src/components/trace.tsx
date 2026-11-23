@@ -80,7 +80,7 @@ import {
   size,
   space,
 } from "../lib/tokens.stylex";
-import { announce } from "../lib/utils";
+import { announce, className } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { iconVars, ringInsetMarker, traceCardMarker } from "../lib/vars.stylex";
 import { Shimmer } from "./shimmer";
@@ -346,7 +346,7 @@ const styles = stylex.create({
     paddingBlock: `calc(${ROOM})`,
     columnGap: space["2"],
     borderRadius: {
-      default: `min(${radius.base}, calc(${size.controlSm} / 2))`,
+      default: `min(${radius.row}, calc(${size.controlSm} / 2))`,
       [stylex.when.ancestor(":is(*)", traceCardMarker)]: radius.base,
     },
     lineHeight: font.textSmLine,
@@ -364,13 +364,6 @@ const styles = stylex.create({
     transform: {
       default: null,
       ":is([aria-expanded=true] > *)": "rotate(0.5turn)",
-    },
-  },
-  height: {
-    height: {
-      default: "var(--collapsible-panel-height)",
-      ":is([data-starting-style], [data-ending-style])": 0,
-      [media.noScript]: "auto",
     },
   },
 });
@@ -628,9 +621,7 @@ export const TraceCollapsibleContent = ({
   <CollapsiblePanel
     render={<div data-slot="trace-collapsible-content" />}
     hiddenUntilFound
-    className={
-      stylex.props(disclosureStyles.panel, styles.height, style).className
-    }
+    className={className(disclosureStyles.panel, disclosureStyles.quiet, style)}
   >
     <div
       data-slot="trace-collapsible-content-inner"

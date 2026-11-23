@@ -11,27 +11,27 @@ import * as stylex from "@stylexjs/stylex";
 
 import { layout } from "./layout";
 
-// Work under way: `role="status"`, so its words are said as they change. A Spinner or a Shimmer
-// shows that it is working.
+// A status of the conversation itself: `role="status"`, so its words are said as they change. An
+// assistant's own step or work under way is a Trace line, not a Marker.
 export default function MarkerStatus() {
   return (
     <div {...stylex.props(layout.column)}>
       <Marker role="status">
         <MarkerIcon>
-          <Spinner size="sm" />
+          <Spinner />
         </MarkerIcon>
-        <MarkerContent>Summarising the conversation</MarkerContent>
+        <MarkerContent>Reconnecting</MarkerContent>
       </Marker>
       <Marker role="status">
         <MarkerContent>
-          <Shimmer>Thinking</Shimmer>
+          <Shimmer>Mina is typing</Shimmer>
         </MarkerContent>
       </Marker>
       <Marker variant="separator" role="status">
         <MarkerIcon>
-          <Spinner size="sm" />
+          <Spinner />
         </MarkerIcon>
-        <MarkerContent>Running the checks</MarkerContent>
+        <MarkerContent>Syncing the conversation</MarkerContent>
       </Marker>
     </div>
   );

@@ -51,7 +51,7 @@ export default function AttachmentStates() {
       </Attachment>
       <Attachment state="uploading">
         <AttachmentMedia>
-          <Spinner size="sm" />
+          <Spinner />
         </AttachmentMedia>
         <AttachmentContent>
           <AttachmentTitle>design-system.zip</AttachmentTitle>

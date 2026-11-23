@@ -59,6 +59,7 @@ import {
   focusRing,
   focusRingInset,
   menuStyles,
+  segmentedStyles,
 } from "../lib/styles";
 import {
   colors,
@@ -66,11 +67,11 @@ import {
   font,
   media,
   radius,
-  shadow,
   size,
   space,
 } from "../lib/tokens.stylex";
 import { durations } from "../lib/tokens.values";
+import { className } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { focusMarker, iconVars, motionVars } from "../lib/vars.stylex";
 import { Button } from "./button";
@@ -126,8 +127,9 @@ export interface TabsListProps extends Omit<
   /** What the tabs are of, as a screen reader and an agent say it ("Project"). */
   "aria-label"?: string;
   /**
-   * `default` for a small switch in a toolbar, the chosen tab raised out of a soft track. `line`
-   * for the views of a page, with a line under the chosen tab.
+   * `default`, the chosen tab raised out of a soft track, for a few panels in a small place;
+   * `line` for the views of a page, with a line under the chosen tab. Either way a tab shows a
+   * panel: a switch that sets a value and shows nothing of its own is a ToggleGroup.
    * @default "default"
    */
   variant?: TabsVariant;
@@ -272,17 +274,14 @@ const styles = stylex.create({
       ":is([dir=rtl] *):is([data-under-start][data-under-end])": `linear-gradient(to left, ${fadeStart}, ${fadeEnd})`,
     },
   },
-  // Default: the tabs on a soft track, the chosen one raised out of it. The track's room above and
-  // below holds each tab's 44px target on a touch screen, so the row's scrolling never cuts it.
+  // Default: the tabs on the segmented track (segmentedStyles), the chosen one raised out of it.
+  // The track's room above and below holds each tab's 44px target on a touch screen, so the row's scrolling never cuts it.
   listDefault: {
     gap: space["1"],
     padding: {
       default: space["1"],
       [COARSE]: `calc((${size.tapTarget} - ${size.controlSm}) / 2) ${space["1"]}`,
     },
-    borderRadius: `min(${radius.base}, calc((${size.controlSm} + 2 * ${space["1"]}) / 2))`,
-    cornerShape: radius.shape,
-    backgroundColor: colors.muted,
     backgroundImage: "none",
     boxShadow: "none",
     marginInline: 0,
@@ -369,18 +368,6 @@ const styles = stylex.create({
       default: "transparent",
       ":hover": { default: null, [HOVER]: colors.accent },
     },
-  },
-  // Chosen: raised out of the track, with the edge and lift of a card, so the choice is a shape and
-  // not a colour alone. In dark a lift's shadow is lost on the dark ground and raised is barely
-  // lighter than the track, so there the fill also takes the pressed veil. Light is untouched.
-  segmentChosen: {
-    color: { default: colors.foreground, [FORCED]: "HighlightText" },
-    backgroundColor: { default: colors.tabBgSelected, [FORCED]: "Highlight" },
-    backgroundImage: {
-      default: `linear-gradient(light-dark(transparent, ${colors.accentActive}), light-dark(transparent, ${colors.accentActive}))`,
-      [FORCED]: "none",
-    },
-    boxShadow: shadow.sm,
   },
   targetSegment: {
     insetInline: 0,
@@ -842,6 +829,7 @@ export const TabsList = ({
       {...stylex.props(
         tabsRowMarker,
         styles.list,
+        !line && segmentedStyles.track,
         !line && styles.listDefault,
         style
       )}
@@ -890,19 +878,19 @@ const closeTab = (tab: HTMLElement | null, onClose: () => void) => {
 
 const tabClass =
   (segmented: boolean, closable: boolean) => (state: TabsTabState) =>
-    stylex.props(
+    className(
       styles.tab,
       segmented && styles.segment,
       !state.disabled && !state.selected && styles.live,
       segmented && !state.disabled && !state.selected && styles.segmentLive,
-      state.selected && (segmented ? styles.segmentChosen : styles.chosen),
+      state.selected && (segmented ? segmentedStyles.chosen : styles.chosen),
       state.disabled && styles.disabled,
       closable && (segmented ? styles.closeRoomSegment : styles.closeRoom),
       // A segment has its corner, so the ring follows it, inside: the row scrolls, so a ring
       // outside would be cut. A line tab runs edge to edge with no corner, so its ring goes
       // round its words instead, never as a square box round the whole tab.
       segmented ? focusRingInset : [focusMarker, focusCarrier]
-    ).className;
+    );
 
 /** One tab: a short noun for its view ("Activity"). */
 export const TabsTrigger = ({
@@ -999,7 +987,7 @@ export const TabsContent = ({
       render={(props: Record<string, unknown>) =>
         renderElement("div", { ...props, "data-slot": "tabs-content" })
       }
-      className={stylex.props(styles.panel, focusRing, style).className}
+      className={className(styles.panel, focusRing, style)}
     />
   );
 };
@@ -1125,6 +1113,7 @@ export const TabsNav = ({
   const list = stylex.props(
     tabsRowMarker,
     styles.list,
+    segmented && segmentedStyles.track,
     segmented && styles.listDefault
   );
   return (
@@ -1260,7 +1249,7 @@ const lookOf = (segmented: boolean, current: boolean) =>
     segmented && styles.segment,
     !current && styles.live,
     segmented && !current && styles.segmentLive,
-    current && (segmented ? styles.segmentChosen : styles.chosen),
+    current && (segmented ? segmentedStyles.chosen : styles.chosen),
     segmented ? focusRingInset : [focusMarker, focusCarrier]
   );
 

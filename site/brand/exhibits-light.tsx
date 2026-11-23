@@ -86,6 +86,7 @@ const s = stylex.create({
     aspectRatio: "16 / 10",
     objectFit: "cover",
     borderRadius: radius.mark,
+    cornerShape: radius.shape,
   },
   plateName: {
     margin: 0,

@@ -183,7 +183,7 @@ const styles = stylex.create({
     borderWidth: { default: 0, [FORCED]: 1 },
     borderStyle: "solid",
     borderColor: "CanvasText",
-    borderRadius: radius.base,
+    borderRadius: radius.row,
     cornerShape: radius.shape,
     fontFamily: "inherit",
     fontSize: font.textSm,
@@ -333,6 +333,7 @@ const styles = stylex.create({
     height: size.sourcesPileMark,
     marginInlineStart: `calc(-1 * ${size.sourcesPileOverlap})`,
     borderRadius: radius.mark,
+    cornerShape: radius.shape,
   },
   // Locked or gone: the mark stays, quieter.
   tileQuiet: { color: colors.subtleForeground, opacity: 0.72 },

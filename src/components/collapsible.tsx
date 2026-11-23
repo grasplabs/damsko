@@ -27,7 +27,7 @@ import type { ReactNode } from "react";
 import { ChevronDownIcon, Icon } from "../lib/icons";
 import { disclosureStyles, focusRing, tapTarget } from "../lib/styles";
 import { colors, font, media, shadow, space } from "../lib/tokens.stylex";
-import { slotProps } from "../lib/utils";
+import { className, slotProps } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 
 /** Every prop a Collapsible takes. */
@@ -85,8 +85,15 @@ export interface CollapsibleTriggerProps {
 
 /** Every prop a CollapsibleContent takes. */
 export interface CollapsibleContentProps {
-  /** What the panel holds. */
+  /** What the panel holds. With `asChild`, the one element drawn as the panel, holding it. */
   children: ReactNode;
+  /**
+   * Draws its one child element as the panel, with the panel's opening and none of its look (the
+   * small quiet words, the room above and below): for a part whose content keeps its own type.
+   * Give that element no padding of its own, which would show while it is closed.
+   * @default false
+   */
+  asChild?: boolean;
   /** Layout only: where it sits and how much room it takes. */
   style?: LayoutStyle;
 }
@@ -121,13 +128,6 @@ const styles = stylex.create({
   },
   fitWords: {
     flexGrow: 0,
-  },
-  height: {
-    height: {
-      default: "var(--collapsible-panel-height)",
-      ":is([data-starting-style], [data-ending-style])": 0,
-      [media.noScript]: "auto",
-    },
   },
 });
 
@@ -216,17 +216,25 @@ export const CollapsibleTrigger = ({
 /** What opens under the trigger. The browser's find opens it when it holds the words found. */
 export const CollapsibleContent = ({
   children,
+  asChild = false,
   style,
-}: CollapsibleContentProps) => (
-  // The class only: UI SDK writes the panel's measured height as its own inline style.
-  // The slot is set on the element drawn: UI SDK keeps a part's own data-slot over a prop.
-  <CollapsiblePanel
-    render={<div data-slot="collapsible-content" />}
-    hiddenUntilFound
-    className={
-      stylex.props(disclosureStyles.panel, styles.height, style).className
-    }
-  >
-    <div {...stylex.props(disclosureStyles.body)}>{children}</div>
-  </CollapsiblePanel>
-);
+}: CollapsibleContentProps) => {
+  const slot = slotProps(asChild, children);
+  return (
+    // The class only: UI SDK writes the panel's measured height as its own inline style.
+    // The slot is set on the element drawn: UI SDK keeps a part's own data-slot over a prop.
+    <CollapsiblePanel
+      render={slot.render ?? <div data-slot="collapsible-content" />}
+      hiddenUntilFound
+      className={className(
+        disclosureStyles.panel,
+        slot.render === undefined && disclosureStyles.quiet,
+        style
+      )}
+    >
+      {slot.render === undefined ? (
+        <div {...stylex.props(disclosureStyles.body)}>{children}</div>
+      ) : undefined}
+    </CollapsiblePanel>
+  );
+};

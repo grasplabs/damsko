@@ -47,6 +47,7 @@ import {
   size as sizes,
   space,
 } from "../lib/tokens.stylex";
+import { className } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { iconVars, motionVars } from "../lib/vars.stylex";
 import { useFieldControl } from "./field";
@@ -796,9 +797,7 @@ export const ImageUpload = ({
         onReject={reject}
         announcement={() => null}
       >
-        <FileInputDropzone
-          className={stylex.props(styles.zone, styles[size]).className}
-        >
+        <FileInputDropzone className={className(styles.zone, styles[size])}>
           <Well
             mounted={mounted}
             native={native}

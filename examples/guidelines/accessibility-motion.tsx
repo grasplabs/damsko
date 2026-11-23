@@ -41,7 +41,7 @@ export default function AccessibilityMotion() {
         </CollapsibleContent>
       </Collapsible>
       <p role="status" {...stylex.props(styles.working)}>
-        <Spinner size="sm" />
+        <Spinner />
         Loading the report
       </p>
     </div>

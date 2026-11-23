@@ -5,8 +5,8 @@
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
 //   <Spinner aria-label="Loading the report" />            alone: a status that says its label
-//   <p role="status"><Spinner /> Loading the report</p>    beside body text: they are the status
-//   <Button disabled><Spinner size="sm" /> Saving</Button> in a button: the button's words say it
+//   <p role="status"><Spinner /> Loading the report</p>    beside words: they are the status
+//   <Button disabled><Spinner /> Saving</Button>           in a button: the button's words say it
 //
 // A caller may set layout only (the `style` prop). A part round it may set `spinnerVars`.
 import * as stylex from "@stylexjs/stylex";
@@ -29,8 +29,9 @@ export interface SpinnerProps {
    */
   "aria-label"?: string;
   /**
-   * `sm` beside small text and in a button, `default` beside body text, `lg` alone in a panel.
-   * @default "default"
+   * `sm` beside small text and in a button, `default` beside body text, `lg` alone in a panel. A
+   * spinner most often stands in a control or beside small text, so `sm` is what it is without one.
+   * @default "sm"
    */
   size?: SpinnerSize;
   /** Layout only: margins and alignment. The look belongs to the spinner. */
@@ -77,7 +78,7 @@ const sizes = { sm: styles.sm, default: styles.default, lg: styles.lg };
 
 export const Spinner = ({
   "aria-label": label,
-  size: sized = "default",
+  size: sized = "sm",
   style,
 }: SpinnerProps) => {
   const spinner = (

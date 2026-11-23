@@ -38,8 +38,8 @@ import type { ReactNode } from "react";
 
 import { useI18n } from "../lib/i18n";
 import { Icon, TerminalIcon, TrashIcon } from "../lib/icons";
-import { focusRingInset, scrollbarHidden } from "../lib/styles";
-import { colors, font, media, radius, size, space } from "../lib/tokens.stylex";
+import { codeStyles, focusRingInset, scrollbarHidden } from "../lib/styles";
+import { colors, font, size, space } from "../lib/tokens.stylex";
 import { announce } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { Button } from "./button";
@@ -175,8 +175,6 @@ export interface TerminalContentProps {
 /** At most this much of the end of the output is drawn: a terminal shows its latest lines. */
 const MOST_SHOWN = 200_000;
 
-const FORCED = media.forcedColors;
-
 const styles = stylex.create({
   root: {
     display: "grid",
@@ -206,27 +204,12 @@ const styles = stylex.create({
     marginInlineEnd: `calc((${size.iconSm} - ${size.controlSm}) / 2)`,
     flexShrink: 0,
   },
-  // The output, on the code surface as a small CodeBlock draws it: the wash, the strong edge, the
-  // one corner, mono text that wraps, scrolling inside once it is as tall as a popup.
+  // The output, on the code surface (codeStyles): mono text that wraps, scrolling inside once it
+  // is as tall as a popup.
   content: {
-    boxSizing: "border-box",
-    minWidth: 0,
     maxHeight: size.popupHeight,
     overflowX: "hidden",
     overflowY: "auto",
-    paddingBlock: space["3"],
-    paddingInline: space["3"],
-    backgroundColor: colors.codeBlockBg,
-    boxShadow: size.borderStrong,
-    borderWidth: { default: 0, [FORCED]: 1 },
-    borderStyle: "solid",
-    borderColor: "CanvasText",
-    borderRadius: radius.base,
-    cornerShape: radius.shape,
-    color: colors.bodyForeground,
-    fontFamily: font.mono,
-    fontSize: font.textXs,
-    lineHeight: font.codeBlockLine,
     tabSize: 4,
   },
   pre: {
@@ -394,7 +377,7 @@ export const TerminalStatus = ({ children, style }: TerminalStatusProps) => {
   }
   return (
     <span data-slot="terminal-status" {...stylex.props(styles.status, style)}>
-      {children ?? <Spinner size="sm" />}
+      {children ?? <Spinner />}
     </span>
   );
 };
@@ -516,6 +499,8 @@ export const TerminalContent = ({ children, style }: TerminalContentProps) => {
         role={scrolls ? "region" : undefined}
         aria-label={scrolls ? words.output : undefined}
         {...stylex.props(
+          codeStyles.surface,
+          codeStyles.text,
           styles.content,
           scrollbarHidden,
           style,

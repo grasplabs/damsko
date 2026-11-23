@@ -112,3 +112,23 @@ test("a disabled trigger does nothing, stays focusable and keeps its rest fill u
   await trigger.click({ force: true });
   await expect(trigger).toHaveAttribute("aria-expanded", "false");
 });
+
+test("content drawn as its one child opens as a panel does, as that element", async ({
+  page,
+}) => {
+  await openExample(page, "collapsible", "as-child");
+  const trigger = page.getByRole("button", { name: "Who can see this" });
+  const list = page.getByRole("list", { name: "Who can see this" });
+  await expect(list).toBeHidden();
+  // The list itself is the panel: hidden until found, with its own items inside.
+  expect(
+    await page
+      .getByText("Everyone in Finance")
+      .evaluate((node) => node.closest("ul")?.getAttribute("hidden"))
+  ).toBe("until-found");
+  await trigger.click();
+  await expect(trigger).toHaveAttribute("aria-expanded", "true");
+  await expect(list.getByRole("listitem")).toHaveCount(2);
+  await trigger.click();
+  await expect(list).toBeHidden();
+});

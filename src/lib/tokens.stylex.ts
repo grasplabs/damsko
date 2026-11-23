@@ -301,18 +301,13 @@ export const radius = stylex.defineConsts({
   base: "var(--damsko-radius)",
   shape: "var(--damsko-radius-shape)",
   promptInputRadius: "var(--damsko-prompt-input-radius)",
+  row: "var(--damsko-radius-row)",
+  hairline: "var(--damsko-radius-hairline)",
   mark: "var(--damsko-radius-mark)",
   full: "var(--damsko-radius-full)",
   circle: "var(--damsko-radius-circle)",
   // Sidebar: sidebar sizes.
-  sidebarRadius: "var(--damsko-sidebar-radius)",
-  sidebarRadiusLg: "var(--damsko-sidebar-radius-lg)",
   sidebarCardRadius: "var(--damsko-sidebar-card-radius)",
-  // Tree: tree.
-  treeViewRowRadius: "var(--damsko-tree-view-row-radius)",
-  // Icon tile: icon tile.
-  iconTileRadius: "var(--damsko-icon-tile-radius)",
-  iconTileSmRadius: "var(--damsko-icon-tile-sm-radius)",
 });
 
 export const shadow = stylex.defineConsts({

@@ -39,6 +39,24 @@
 // answers, else the first. `storageKey` keeps the person's choice in localStorage, and
 // `sidebarStateScript` draws it before the page wakes. Nothing here knows a product: a profile, a
 // theme control or a working mark is the caller's, composed into the parts.
+//
+// An area of the product with a navigation of its own (its settings, one project) is a level: the
+// SidebarLevels between the header and the footer hold a SidebarLevel for each, one shown at a
+// time, by `value` (the router's). The others stay in the page, unseen and out of reach, so each
+// keeps its scroll place and its folded groups.
+//
+//   <SidebarLevels value={area}>
+//     <SidebarLevel value="main">
+//       <SidebarContent>…</SidebarContent>
+//     </SidebarLevel>
+//     <SidebarLevel value="settings">
+//       <SidebarLevelHeader>
+//         <SidebarMenu>…a SidebarMenuButton that leads back…</SidebarMenu>
+//         <SidebarLevelTitle><Icon icon={SettingsIcon} />Settings</SidebarLevelTitle>
+//       </SidebarLevelHeader>
+//       <SidebarContent aria-label="Settings">…</SidebarContent>
+//     </SidebarLevel>
+//   </SidebarLevels>
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
@@ -51,6 +69,7 @@ import {
   use,
   useEffect,
   useId,
+  useLayoutEffect,
   useRef,
   useState,
   useSyncExternalStore,
@@ -75,8 +94,8 @@ import {
   size,
   space,
 } from "../lib/tokens.stylex";
-import { px } from "../lib/tokens.values";
-import { listOf, slotProps, slotWords } from "../lib/utils";
+import { durations, px } from "../lib/tokens.values";
+import { announce, listOf, slotProps, slotWords } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { iconVars, motionVars } from "../lib/vars.stylex";
 import { Input } from "./input";
@@ -107,6 +126,17 @@ const BADGE = `calc(${font.textXsLine} + 2 * ${size.hairline})`;
 // Folded to its icons, a row is a square the row's height, in the middle of the rail.
 const SQUARE_MARGIN = `calc((${size.sidebarRailWidth} - 2 * ${space["2"]} - ${ROW}) / 2)`;
 const SQUARE_PADDING = `calc((${ROW} - ${ICON}) / 2)`;
+
+// How far a level travels as it moves in.
+const fromEnd = stylex.keyframes({
+  from: { opacity: 0, transform: `translateX(${space["4"]})` },
+  to: { opacity: 1, transform: "none" },
+});
+const fromStart = stylex.keyframes({
+  from: { opacity: 0, transform: `translateX(calc(-1 * ${space["4"]}))` },
+  to: { opacity: 1, transform: "none" },
+});
+
 const styles = stylex.create({
   // The row the sidebar and the page stand in: the window's height unless the frame sets its own.
   // What slides off the canvas is cut at its edges. Under an inset page, the sidebar's ground.
@@ -377,7 +407,8 @@ const styles = stylex.create({
     paddingBlockEnd: space["1"],
     paddingInline: size.sidebarRowInline,
     borderWidth: 0,
-    borderRadius: radius.sidebarRadius,
+    borderRadius: radius.row,
+    cornerShape: radius.shape,
     backgroundColor: "transparent",
     // Drawn as a button or a link (`asChild`), it answers the pointer as a row's words do.
     color: {
@@ -435,7 +466,8 @@ const styles = stylex.create({
     borderWidth: { default: 0, [FORCED]: size.hairline },
     borderStyle: "solid",
     borderColor: "ButtonText",
-    borderRadius: radius.sidebarRadius,
+    borderRadius: radius.row,
+    cornerShape: radius.shape,
     color: {
       default: colors.sidebarSecondaryForeground,
       [HOVER]: { default: null, ":hover": colors.sidebarForeground },
@@ -543,7 +575,8 @@ const styles = stylex.create({
     borderWidth: { default: 0, [FORCED]: size.hairline },
     borderStyle: "solid",
     borderColor: "transparent",
-    borderRadius: radius.sidebarRadius,
+    borderRadius: radius.row,
+    cornerShape: radius.shape,
     overflow: "hidden",
     color: {
       default: colors.sidebarSecondaryForeground,
@@ -598,7 +631,7 @@ const styles = stylex.create({
   },
   // A large row (a person, a workspace), in the words read first; it folds to its picture alone.
   lg: {
-    borderRadius: radius.sidebarRadiusLg,
+    borderRadius: radius.row,
     color: colors.sidebarForeground,
     height: {
       default: size.sidebarMenuButtonHeightLg,
@@ -648,6 +681,8 @@ const styles = stylex.create({
     paddingInlineStart: 0,
     paddingInlineEnd: 0,
     borderRadius: radius.full,
+    // A circle, as the original drew it: the rows' squircle does not reach it.
+    cornerShape: "round",
   },
   // The page you are on: ink laid flat over the ground, the words in the ink read first. In forced
   // colours a border marks it.
@@ -709,6 +744,7 @@ const styles = stylex.create({
     height: ICON,
     overflow: "hidden",
     borderRadius: radius.mark,
+    cornerShape: radius.shape,
   },
 
   // The rows under a row, their words in line with its words; folded to its icons, they go.
@@ -734,6 +770,63 @@ const styles = stylex.create({
     paddingInlineStart: `calc(${size.sidebarRowInline} + ${ICON} + ${size.sidebarIconGap})`,
   },
   subSm: { fontSize: font.textXs },
+
+  // The levels: the room between the header and the footer. The one shown fills it; what moves in
+  // is cut at its edges, so nothing shows over the page beside it.
+  levels: {
+    position: "relative",
+    display: "flex",
+    flexDirection: "column",
+    flexGrow: 1,
+    minWidth: 0,
+    minHeight: 0,
+    overflow: "clip",
+  },
+  // A level moves in from the way the person went (`data-entering`, set once the level has changed,
+  // never on the first paint): from the end going deeper, from the start going back. With reduced
+  // motion it is simply there.
+  level: {
+    display: "flex",
+    flexDirection: "column",
+    flexGrow: 1,
+    minWidth: 0,
+    minHeight: 0,
+    animationName: {
+      default: null,
+      ':is([data-entering="forward"])': {
+        default: fromEnd,
+        ":dir(rtl)": fromStart,
+      },
+      ':is([data-entering="back"])': {
+        default: fromStart,
+        ":dir(rtl)": fromEnd,
+      },
+    },
+    animationDuration: motionVars.ui,
+    animationTimingFunction: duration.ease,
+    animationFillMode: "both",
+  },
+  // Not shown: laid over the same room, so it keeps its size and its scroll place, unseen, and
+  // with `inert` out of reach of Tab, the pointer and a screen reader.
+  levelAway: {
+    position: "absolute",
+    inset: 0,
+    visibility: "hidden",
+  },
+  // The top of a level: the rows' inset, a hair under the sidebar's header.
+  levelHeader: {
+    flexShrink: 0,
+    paddingBlockStart: space["1"],
+  },
+  // A level's name in a row's box, in the ink read first: a heading, so nothing answers the pointer.
+  levelTitle: {
+    // Never pressed, so a row's height on a touch screen too, and no edge in forced colours.
+    height: ROW,
+    borderWidth: 0,
+    color: colors.sidebarForeground,
+    backgroundColor: "transparent",
+    cursor: "default",
+  },
 });
 
 // ---- State ---------------------------------------------------------------------------------------
@@ -1276,10 +1369,8 @@ interface PartProps {
 }
 
 /** A part's own element's props, less what the part sets itself. */
-type Own<Tag extends "a" | "button" | "div" | "li" | "nav" | "ul"> = Omit<
-  ComponentProps<Tag>,
-  "className" | "style" | "children"
->;
+type Own<Tag extends "a" | "button" | "div" | "h2" | "li" | "nav" | "ul"> =
+  Omit<ComponentProps<Tag>, "className" | "style" | "children">;
 
 /**
  * A part that is its element and its look (SidebarHeader, SidebarMenu, …): the element with
@@ -1876,3 +1967,260 @@ export const SidebarMenuSubButton = ({
     {children}
   </Row>
 );
+
+// ---- Levels --------------------------------------------------------------------------------------
+
+interface LevelsState {
+  /** The level shown. */
+  value: string;
+  setValue: (value: string) => void;
+  /** A SidebarLevel's element, kept under its value while it is in the page. */
+  register: (value: string, element: HTMLElement) => () => void;
+}
+
+const LevelsContext = createContext<LevelsState | null>(null);
+
+const useLevels = (name: string): LevelsState => {
+  const levels = use(LevelsContext);
+  if (levels === null) {
+    throw new Error(`${name} belongs inside a SidebarLevels.`);
+  }
+  return levels;
+};
+
+/** Whether focus can go to it now: drawn (not in a folded group), and not out of reach. */
+const inReach = (element: HTMLElement) =>
+  element.isConnected &&
+  element.checkVisibility({ visibilityProperty: true }) &&
+  element.closest("[inert]") === null;
+
+/**
+ * Where focus lands in a level it is moved into: what held it there before, on the way back; else
+ * the page you are on; else its first stop. One that cannot take focus now (its group folded,
+ * its row gone) is passed over.
+ */
+const landingIn = (level: HTMLElement, opener: HTMLElement | undefined) =>
+  [
+    opener !== undefined && level.contains(opener) ? opener : null,
+    level.querySelector<HTMLElement>('[aria-current="page"]'),
+    ...level.querySelectorAll<HTMLElement>("a[href], button:not(:disabled)"),
+  ].find((stop) => stop !== null && inReach(stop));
+
+/** Every prop a SidebarLevels takes. */
+export interface SidebarLevelsProps {
+  /** Its SidebarLevels, the main one first and each deeper one after it. */
+  children: ReactNode;
+  /**
+   * The level shown, when you keep it: the router's (`"settings"` under `/settings`). Pair it
+   * with `onValueChange` where a SidebarLevelTrigger changes it.
+   */
+  value?: string;
+  /** The level shown at first, when you do not keep it. One of `value` and `defaultValue` is needed. */
+  defaultValue?: string;
+  /** Runs with the level a SidebarLevelTrigger asks for. */
+  onValueChange?: (value: string) => void;
+  /** Layout only. */
+  style?: LayoutStyle;
+}
+
+/**
+ * The levels of a sidebar, between its header and its footer, which stay: the main list, and one
+ * for each area that has a navigation of its own. One is shown at a time, the one `value` names;
+ * the rest stay in the page, unseen and out of reach, each with its scroll place. A level moves in
+ * from the way the person went, by the order the levels stand in the page. When focus was in the
+ * level left, it goes to the new one's current row, and on the way back to what held it there
+ * before; the new level's name (its SidebarContent's) is said once.
+ */
+export const SidebarLevels = ({
+  children,
+  value: given,
+  defaultValue,
+  onValueChange,
+  style,
+}: SidebarLevelsProps) => {
+  const [own, setOwn] = useState(defaultValue);
+  const value = given ?? own;
+  if (value === undefined) {
+    throw new Error("SidebarLevels needs a `value` or a `defaultValue`.");
+  }
+  const setValue = (next: string) => {
+    setOwn(next);
+    onValueChange?.(next);
+  };
+
+  // Each level's element, by its value: wherever it stands under here, a wrapper round it or not.
+  const elements = useRef(new Map<string, HTMLElement>());
+  const register = (name: string, element: HTMLElement) => {
+    elements.current.set(name, element);
+    return () => {
+      if (elements.current.get(name) === element) {
+        elements.current.delete(name);
+      }
+    };
+  };
+  const shown = useRef(value);
+  // What held focus in each level as it was left, for the way back to it.
+  const held = useRef(new Map<string, HTMLElement>());
+  // The name waiting to be said: a level left again before it was said is never said.
+  const saying = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Before the browser paints the new level, and before it takes focus off what is now out of
+  // reach: whether focus was in the level left is read while it still says so.
+  useLayoutEffect(() => {
+    const before = shown.current;
+    shown.current = value;
+    const from = elements.current.get(before);
+    const to = elements.current.get(value);
+    if (before === value || to === undefined) {
+      return;
+    }
+    const back =
+      from !== undefined &&
+      // oxlint-disable-next-line no-bitwise -- the DOM's own flags
+      (from.compareDocumentPosition(to) & Node.DOCUMENT_POSITION_PRECEDING) !==
+        0;
+    if (from !== undefined) {
+      delete from.dataset.entering;
+    }
+    to.dataset.entering = back ? "back" : "forward";
+    const name = to
+      .querySelector('[data-slot="sidebar-content"]')
+      ?.getAttribute("aria-label");
+    clearTimeout(saying.current ?? undefined);
+    saying.current = null;
+    if (name !== null && name !== undefined) {
+      saying.current = setTimeout(() => {
+        announce(name);
+      }, durations.ui);
+    }
+    const active = document.activeElement;
+    if (!(active instanceof HTMLElement) || from?.contains(active) !== true) {
+      // Focus is elsewhere (the page, the footer's menu): it is not the levels' to move.
+      return;
+    }
+    held.current.set(before, active);
+    const target = landingIn(to, back ? held.current.get(value) : undefined);
+    held.current.delete(value);
+    // The level keeps the scroll place it was left with; only a ring the keys would show out of
+    // sight brings its row into view.
+    target?.focus({ preventScroll: true });
+    if (target?.matches(":focus-visible") === true) {
+      target.scrollIntoView({ block: "nearest" });
+    }
+  }, [value]);
+  useEffect(
+    () => () => {
+      clearTimeout(saying.current ?? undefined);
+    },
+    []
+  );
+
+  return (
+    // oxlint-disable-next-line react/jsx-no-constructed-context-values -- compiled
+    <LevelsContext value={{ value, setValue, register }}>
+      <div data-slot="sidebar-levels" {...stylex.props(styles.levels, style)}>
+        {children}
+      </div>
+    </LevelsContext>
+  );
+};
+
+/** Every prop a SidebarLevel takes. */
+export interface SidebarLevelProps extends PartProps {
+  /** Its SidebarLevelHeader, when it is not the main one, and its SidebarContent. */
+  children: ReactNode;
+  /** What the SidebarLevels' `value` calls it (`"main"`, `"settings"`). */
+  value: string;
+}
+
+/** One level: a navigation of its own between the header and the footer, shown while it is the SidebarLevels' `value`. */
+export const SidebarLevel = ({ children, value, style }: SidebarLevelProps) => {
+  const levels = useLevels("SidebarLevel");
+  const shown = levels.value === value;
+  return (
+    <div
+      ref={(element) =>
+        element === null ? undefined : levels.register(value, element)
+      }
+      data-slot="sidebar-level"
+      data-state={shown ? "active" : "inactive"}
+      inert={!shown}
+      onAnimationEnd={(event) => {
+        // Arrived: nothing is left that could run again when the sidebar is drawn anew.
+        if (event.target === event.currentTarget) {
+          delete event.currentTarget.dataset.entering;
+        }
+      }}
+      {...stylex.props(styles.level, !shown && styles.levelAway, style)}
+    >
+      {children}
+    </div>
+  );
+};
+
+/** Every prop a SidebarLevelHeader takes. */
+export interface SidebarLevelHeaderProps extends PartProps, Own<"div"> {
+  /** The row that leads back, in a SidebarMenu, then the SidebarLevelTitle. */
+  children: ReactNode;
+}
+
+/** The top of a level, which stays while its content scrolls: the way back, then its name. */
+export const SidebarLevelHeader = (props: SidebarLevelHeaderProps) =>
+  part("div", "level-header", [styles.group, styles.levelHeader], props);
+
+/** Every prop a SidebarLevelTitle takes: these, and the rest of an <h2>. */
+export interface SidebarLevelTitleProps extends PartProps, Own<"h2"> {
+  /**
+   * An `<Icon />` and the level's name, as bare text ("Settings"). Folded to its icons, the
+   * sidebar shows the icon alone.
+   */
+  children: ReactNode;
+}
+
+/** A level's name: a heading in a row's box, under the way back. */
+export const SidebarLevelTitle = ({
+  children,
+  style,
+  ...rest
+}: SidebarLevelTitleProps) => (
+  <h2
+    {...rest}
+    data-slot="sidebar-level-title"
+    data-sidebar="level-title"
+    {...stylex.props(styles.button, styles.levelTitle, style)}
+  >
+    {withLabel(children).parts}
+  </h2>
+);
+
+/** Every prop a SidebarLevelTrigger takes: a SidebarMenuButton's, and the level it shows. */
+export interface SidebarLevelTriggerProps extends Omit<
+  SidebarMenuButtonProps,
+  "value"
+> {
+  /** The level it shows: that SidebarLevel's `value`. */
+  value: string;
+}
+
+/**
+ * A row that shows another level, in a sidebar that keeps the level itself: a SidebarMenuButton, a
+ * link with `asChild`. The row into a level and the row that leads back are both one. Where the
+ * address says which level is shown, a plain SidebarMenuButton link does.
+ */
+export const SidebarLevelTrigger = ({
+  value,
+  onClick,
+  ...rest
+}: SidebarLevelTriggerProps) => {
+  const { setValue } = useLevels("SidebarLevelTrigger");
+  return (
+    <SidebarMenuButton
+      {...rest}
+      onClick={(event) => {
+        onClick?.(event);
+        if (!event.defaultPrevented) {
+          setValue(value);
+        }
+      }}
+    />
+  );
+};

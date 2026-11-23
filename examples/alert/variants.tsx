@@ -34,6 +34,12 @@ export default function AlertVariants() {
         <AlertTitle>The answers did not load</AlertTitle>
         <AlertDescription>Try again in a moment.</AlertDescription>
       </Alert>
+      <Alert variant="info">
+        <AlertTitle>Scores update once a day</AlertTitle>
+        <AlertDescription>
+          Reviews closed today count from tomorrow morning.
+        </AlertDescription>
+      </Alert>
     </div>
   );
 }

@@ -121,11 +121,12 @@ Half strength, no drag, no focus. Say why beside it.
   always={[
     "A number along a scale, with its value in its own units, or a range: the lowest and the highest.",
     "A label that says what it sets, and the value in its own units.",
-    "`levels`: how much of something in two to seven named steps whose order matters (effort, detail), lowest first.",
+    "`levels`: how much of something in two to seven named steps whose order matters (effort, detail), lowest first, as a control of its own: a settings row, a popover.",
   ]}
   never={[
     "An exact number someone must type: use a NumberField or an Input.",
     "A few named choices with no order between them: use a RadioGroup or a Select.",
+    "Effort chosen together with a model, in the model's own panel: that is ModelSelector's effort row, never a second control beside it.",
     "A setting that is on or off: use a Switch.",
     "A second readout of a level beside its heading: the track and its ends say it.",
   ]}

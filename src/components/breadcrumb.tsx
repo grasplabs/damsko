@@ -289,6 +289,7 @@ const styles = stylex.create({
     color: colors.foreground,
     fontWeight: font.weightMedium,
     borderRadius: radius.mark,
+    cornerShape: radius.shape,
   },
   // The chevron between steps, quieter than the words. Right to left the icon turns round itself.
   separator: {

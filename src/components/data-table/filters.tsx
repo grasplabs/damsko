@@ -31,6 +31,7 @@ import {
   size,
   space,
 } from "../../lib/tokens.stylex";
+import { className } from "../../lib/utils";
 import { iconVars } from "../../lib/vars.stylex";
 import { Select, SelectContent, SelectItem } from "../select";
 
@@ -310,11 +311,11 @@ const Segment = ({
         <ValuePrimitive
           placeholder={placeholder}
           className={(state: SelectValueState) =>
-            stylex.props(
+            className(
               styles.words,
               state.placeholder &&
                 (disabled ? styles.placeholderOff : styles.placeholder)
-            ).className
+            )
           }
         />
       </TriggerPrimitive>

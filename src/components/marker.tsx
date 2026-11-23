@@ -1,5 +1,5 @@
-// Marker: a line in a conversation that marks something that happened:
-// a status as the assistant works, a note, a row with a rule under it, or a word
+// Marker: a line in a conversation that marks something that happened to it:
+// a status of the conversation, a note, a row with a rule under it, or a word
 // in the middle of a hairline (a date, "New messages", a checkpoint).
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
@@ -7,12 +7,12 @@
 //     <MarkerContent>Today</MarkerContent>
 //   </Marker>
 //   <Marker role="status">
-//     <MarkerIcon><Spinner size="sm" /></MarkerIcon>
-//     <MarkerContent>Reading 4 files</MarkerContent>
+//     <MarkerIcon><Spinner /></MarkerIcon>
+//     <MarkerContent>Reconnecting</MarkerContent>
 //   </Marker>
 //
-// It says nothing by itself: give it `role="status"` when it stands for work under way, so its
-// words are said as they change. A separator's words are ordinary content; its lines are drawn,
+// It says nothing by itself: give it `role="status"` when its words change while it stands, so they
+// are said as they change. An assistant's step or work under way is a Trace line. A separator's words are ordinary content; its lines are drawn,
 // not read. Drawn as the caller's link or button (`asChild`), it is reached by Tab and named by its
 // words. Every value is a token. A caller may set layout only (the `style` prop).
 import * as stylex from "@stylexjs/stylex";
@@ -51,7 +51,7 @@ export interface MarkerProps {
    * @default false
    */
   asChild?: boolean;
-  /** `status` for work under way, said as its words change. */
+  /** `status` for a line whose words change while it stands (Reconnecting), said as they change. */
   role?: "status";
   /** Its name for a screen reader, when it has no words of its own (an icon only). */
   "aria-label"?: string;

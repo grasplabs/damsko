@@ -901,7 +901,7 @@ type Labels = Partial<Record<Exclude<ActionStatus, "idle">, string>>;
 /** A state's mark: the spinner while it works, a tick, the alert. */
 const Mark = ({ status }: { status: Exclude<ActionStatus, "idle"> }) => {
   if (status === "loading") {
-    return <Spinner size="sm" />;
+    return <Spinner />;
   }
   return <Icon icon={status === "success" ? CheckIcon : CircleAlertIcon} />;
 };
@@ -924,7 +924,7 @@ const spinning = (children: ReactNode) => {
           data-slot="button-spinner"
           {...stylex.props(statusStyles.place)}
         >
-          <Spinner size="sm" />
+          <Spinner />
         </span>
       );
 };
