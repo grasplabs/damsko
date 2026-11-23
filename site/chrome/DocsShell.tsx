@@ -248,6 +248,16 @@ const styles = stylex.create({
     textOverflow: "ellipsis",
   },
   count: { flexShrink: 0, fontVariantNumeric: "tabular-nums" },
+  barTrigger: {
+    display: {
+      default: "contents",
+      [media.lg]: {
+        default: "contents",
+        ':is([data-slot="sidebar-wrapper"]:has(> [data-slot="sidebar"][data-state="expanded"]) *)':
+          "none",
+      },
+    },
+  },
   // A run's pages stand a step in from its label, and a row's gap under it: Collapsible's panel
   // keeps a step of room above and below what it holds, which a list of rows takes back, and the
   // group's own gap goes with the panel, so a folded run is its label alone.
@@ -263,15 +273,6 @@ const styles = stylex.create({
 /** The kept choice of light, dark or system, for the header's ThemeToggle. */
 const useThemeChoice = (): ThemeMode =>
   useSyncExternalStore(watchChoice, currentChoice, () => "system");
-
-/** The header's trigger shows only where the sidebar's own does not: folded, or on a phone. */
-const BarTrigger = () => {
-  const { state, isMobile } = useSidebar();
-  if (!isMobile && state === "expanded") {
-    return null;
-  }
-  return <SidebarTrigger />;
-};
 
 /** The sidebar's trigger in its head, on a wide window (in the phone's sheet it would close it). */
 const HeadTrigger = () => {
@@ -458,7 +459,12 @@ export default function DocsShell({
       <SidebarInset>
         <div {...stylex.props(styles.frame)}>
           <header {...stylex.props(styles.header)}>
-            <BarTrigger />
+            {/* The header's trigger shows only where the sidebar's own does not: folded, or on a
+                phone. Its style reads the sidebar's state, which the head script sets before the
+                first paint, so a page loaded folded draws it in its first frame. */}
+            <span {...stylex.props(styles.barTrigger)}>
+              <SidebarTrigger />
+            </span>
             {!bleed && (
               <div {...stylex.props(styles.where)}>
                 <Breadcrumb>
