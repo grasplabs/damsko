@@ -15,14 +15,12 @@ import {
   bounded,
   groupSections,
   NOTHING,
-  openFence,
   parseMarkdown,
   readBlocks,
-  repair,
   schemeOf,
   sectionSaid,
-  tidy,
 } from "../src/components/markdown/parse.ts";
+import { openFence, repair, tidy } from "../src/components/markdown/repair.ts";
 import { isRecord, readJson } from "./json.ts";
 
 describe(parseMarkdown, () => {
@@ -97,9 +95,10 @@ describe(repair, () => {
     }
   });
 
+  // What is held back is held back alone: the space before it stays, so nothing shown goes.
   test("a short bracket at the very end waits, as it may yet open a link", () => {
-    expect(repair("See [the gui").text).toBe("See");
-    expect(repair("see [1]").text).toBe("see");
+    expect(repair("See [the gui").text).toBe("See ");
+    expect(repair("see [1]").text).toBe("see ");
     expect(repair("**under 3% [2").text).toBe("**under 3%**");
   });
 
@@ -109,20 +108,23 @@ describe(repair, () => {
     expect(repair("- [x] Sent").text).toBe("- [x] Sent");
   });
 
-  test("a table is a table from its head, and a row waits for its line", () => {
-    expect(repair("| Team | Open |\n").text).toBe(
+  test("a table's head waits for its row of dashes, and a row for its line", () => {
+    expect(repair("| Team | Open |\n").text).toBe("");
+    expect(repair("| Team | Open |\n| --- | -").text).toBe("");
+    expect(repair("| Team | Open |\n| --- | --- |\n").text).toBe(
       "| Team | Open |\n| --- | --- |\n"
     );
     expect(repair("| Team | Open |\n| --- | --- |\n| Sup").text).toBe(
       "| Team | Open |\n| --- | --- |\n"
     );
-    // A body row that ends with its last pipe is whole before its line ends.
     expect(repair("| Team | Open |\n| --- | --- |\n| Sales | 2 |").text).toBe(
-      "| Team | Open |\n| --- | --- |\n| Sales | 2 |"
+      "| Team | Open |\n| --- | --- |\n"
     );
-    expect(
-      parseMarkdown(repair("| Team | Open |\n").text).children[0]?.type
-    ).toBe("table");
+  });
+
+  test("two rows with no dashes between are words, shown once the second is whole", () => {
+    expect(repair("| a |\n| b").text).toBe("");
+    expect(repair("| a |\n| b |\n").text).toBe("| a |\n| b |\n");
   });
 
   test("bold, emphasis and code left open are closed while written", () => {
@@ -202,16 +204,18 @@ describe("repair, where remend's own tests found it wanting", () => {
   });
 
   test("a tag or a bare address not yet closed waits, and so does a section's opening", () => {
-    expect(repair('Hello <div class="foo').text).toBe("Hello");
-    expect(repair("See <https://exa").text).toBe("See");
+    expect(repair('Hello <div class="foo').text).toBe("Hello ");
+    expect(repair("See <https://exa").text).toBe("See ");
     expect(repair("Done.\n\n<details>\n<summary>The lo").text).toBe(
       "Done.\n\n"
     );
   });
 
-  test("a bracket or a note still being written waits, one after another", () => {
+  test("a bracket or a note still being written waits", () => {
     expect(repair("[link1 and [link2").text).toBe("");
-    expect(repair("on the rota [the wiki][ro").text).toBe("on the rota");
+    expect(repair("on the rota [the wiki][ro").text).toBe(
+      "on the rota [the wiki]"
+    );
     expect(repair("as the note says[^ol").text).toBe("as the note says");
   });
 
@@ -465,7 +469,7 @@ describe("an answer streamed in chunks", () => {
         const shown = repair(bounded(text.slice(0, chunk * 100))).text;
         const repaired = now();
         if (blocks) {
-          ({ kept } = readBlocks(shown, kept, true));
+          ({ kept } = readBlocks(shown, kept));
         }
         repairing += repaired - start;
         reading += now() - repaired;
@@ -1648,43 +1652,14 @@ describe("what an answer refers to", () => {
     );
   });
 
-  test("while written, a note or a reference whose definition is still to come is one already", () => {
-    const { blocks } = readBlocks(
-      "A claim[^1] and [the wiki][wiki].",
-      NOTHING,
-      true
-    );
-    expect(shapeOf(blocks[0]?.node ?? { type: "none" })).toBe(
-      "paragraph(text,footnoteReference,text,linkReference(text),text)"
-    );
-    expect(
-      shapeOf(
-        readBlocks("A claim[^1].", NOTHING).blocks[0]?.node ?? { type: "none" }
-      )
-    ).toBe("paragraph(text)");
+  test("a note or a reference whose definition has not arrived is its words as written", () => {
+    const source = "A claim[^1], [the wiki][wiki], m[0][1] and [x][].";
+    const [node] = readBlocks(source, NOTHING).blocks;
+    expect(shapeOf(node?.node ?? { type: "none" })).toBe("paragraph(text)");
+    expect(wordsOf(node?.node ?? { type: "none" })).toBe(source);
   });
 
-  test("a list item's `>` before a number and a label or nothing says greater than, and a strike is two tildes", () => {
-    for (const comparison of [
-      "- > 25: rich",
-      "- >= 10: high",
-      "- > $100: expensive",
-      "1. > 5 ms",
-      "  - > 25–30: rich; you need strong growth",
-      "> - > 5 ms",
-    ]) {
-      expect(wordsOf(boundedTree(comparison))).toBe(
-        comparison.replace(/^(?:> )?[ \t]*(?:-|\d\.)[ \t]+/u, "")
-      );
-    }
-    // A quote that starts with a number stays a quote, and code stays code.
-    for (const other of [
-      "- > 2024 was the year we grew.",
-      "Example:\n\n    - > 5 items",
-      "```\n- > 25: rich\n```",
-    ]) {
-      expect(bounded(other)).toBe(other);
-    }
+  test("a strike is two tildes", () => {
     expect(
       shapeOf(
         parseMarkdown("20~25°C and ~~gone~~").children[0] ?? { type: "none" }

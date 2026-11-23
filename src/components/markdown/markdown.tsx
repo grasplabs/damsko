@@ -9,9 +9,10 @@
 //   <Markdown components={{ code: MyCode }}>{answer}</Markdown>  the host draws elements, by name
 //
 // While it streams, what is half-written is made whole (parse.ts, repair): bold is bold from its
-// first letter, a table is a table from its first row, an open fence is code still being written,
-// and a link still being written keeps the room its arrow will take. Nothing flickers or re-flows
-// when a mark closes. The words come as they are given: pacing them is the message's job.
+// first letter, a table is a table from its row of dashes, an open fence is code still being written,
+// and a link is its words until its address is whole, then the link in their place. Nothing shown
+// is taken back, and nothing flickers or re-flows when a mark closes. The words come as they are
+// given: pacing them is the message's job.
 //
 // It knows no router and no citation: the host draws any link it wants to (`renderLink`, or a part
 // around it through MarkdownLinkProvider), and any element it wants to (`components`, keyed by HTML
@@ -76,13 +77,10 @@ import {
   encodedUrl,
   groupSections,
   NOTHING,
-  openFence,
   parseMarkdown,
   readBlocks,
-  repair,
   schemeOf,
   sectionSaid,
-  tidy,
 } from "./parse";
 import type {
   FootnoteDefinition,
@@ -96,6 +94,7 @@ import type {
   RootContent,
   TableNode,
 } from "./parse";
+import { openFence, repair, tidy } from "./repair";
 
 /** A link in the answer, as the host's renderer sees it. */
 export interface MarkdownLink {
@@ -217,8 +216,8 @@ export interface MarkdownProps {
    * link through `<Link asChild>`, a button that asks before leaving, a citation). Return undefined
    * for Markdown's own: http, https and mailto as a Link, anything else as its words; a picture is
    * never loaded unless the host draws it. Footnote marks and their way back stay Markdown's own.
-   * While an answer streams, it is never handed a link or a picture still being written, whose
-   * address can still grow: that one is held back, words and all, until its address is whole.
+   * While an answer streams, it is never handed a link or a picture whose address can still grow:
+   * until the stream has proven it whole, it is its words, and then the host's link in their place.
    */
   renderLink?: MarkdownLinkRenderer;
   /**
@@ -512,8 +511,8 @@ const ProvidedLinks = createContext<MarkdownLinkRenderer | null>(null);
 /**
  * Draws some of the links of every Markdown inside it, so no page writes a `renderLink` for them: a
  * product's citations, its own scheme. A Markdown asks its own `renderLink` first, then this; a link
- * neither draws is Markdown's own. While an answer streams, a link inside it is held back until its
- * address has arrived, so a citation never shows first as words.
+ * neither draws is Markdown's own. While an answer streams, a link inside it is its words until its
+ * address is whole, and only then handed here, so it is never handed half of one.
  */
 export const MarkdownLinkProvider = ({
   renderLink,
@@ -528,8 +527,11 @@ export const MarkdownLinkProvider = ({
 type Size = NonNullable<MarkdownProps["size"]>;
 
 interface Context {
-  /** Each link definition's target and title, by its identifier. */
-  definitions: Map<string, { url: string; title: string | undefined }>;
+  /** Each link definition's target and title, and where it ends in the source, by its identifier. */
+  definitions: Map<
+    string,
+    { url: string; title: string | undefined; end: number }
+  >;
   /** The page's own drawing of a link, when it has one. */
   renderLink: MarkdownLinkRenderer | undefined;
   /** The links a part around Markdown draws (MarkdownLinkProvider). */
@@ -538,6 +540,8 @@ interface Context {
   kept: number;
   /** While written: where the stream's own words end, the marks after a bare address apart. */
   ends: number;
+  /** While written: the bare address the stream ends on, which may still grow. */
+  ending: PhrasingContent | undefined;
   /** Where the block being drawn starts in the source: its nodes' places count from there. */
   base: number;
   footnotes: Map<string, number>;
@@ -565,8 +569,6 @@ interface Context {
   references: Map<RootContent, number>;
   /** Each table's name: the words of the heading above it. */
   tableNames: Map<RootContent, string>;
-  /** The notes the answer defines: a mark of one not yet defined (still coming) leads nowhere yet. */
-  noted: Set<string>;
   /** The caller's elements, by name (`components`). */
   components: MarkdownComponents;
   /** The parts that draw a phrase and a block, handed down so the parts above can draw them. */
@@ -736,9 +738,9 @@ const Phrasing = ({
   ));
 
 /**
- * Whether a link still being written will get an arrow, as far as its address tells yet: none so
- * far (a reference whose definition is still to come, or the first letters of a web address), or a
- * web address. One that starts any other way (mailto:) gets none, so no room is kept.
+ * Whether a link still being written will get Link's arrow, as far as its address tells yet: none
+ * so far (a reference whose definition is still to come, or the first letters of a web address),
+ * or a web address. One that starts any other way (mailto:) gets none, so no room is kept.
  */
 const isComing = (url: string | undefined) =>
   url === undefined ||
@@ -747,10 +749,7 @@ const isComing = (url: string | undefined) =>
   /^https?:\/\//u.test(url);
 
 /** A link node's address and title, from itself or the definition it refers to. */
-const targetOf = (
-  node: Linked | Pictured,
-  context: Context
-): { url: string | undefined; title: string | undefined } => {
+const targetOf = (node: Linked | Pictured, context: Context) => {
   if (node.type === "link" || node.type === "image") {
     return { url: node.url, title: node.title ?? undefined };
   }
@@ -772,28 +771,48 @@ const isAutolink = (node: Linked) => {
   );
 };
 
-/**
- * Whether a link or a picture is still being written, so its address may still grow: repair closed
- * it (it ends past what the stream gave), or it is a bare address the stream ends on. Half of an
- * address (`https://i`) is another site's, so nothing is drawn from it that loads or leads anywhere.
- */
-const isWriting = (node: Linked | Pictured, context: Context) => {
-  if (!context.streaming) {
+/** A bare address, no mark round it (`www.…`, `https://…`, `name@host`; `<https://…>` has two). */
+const isBare = (node: Linked | Pictured) => {
+  if (node.type !== "link" || !isAutolink(node)) {
     return false;
   }
-  const start = node.position?.start.offset ?? 0;
-  const end = node.position?.end.offset ?? 0;
-  const [only] = node.type === "link" ? node.children : [];
-  // A bare address is its own words, no mark round it (`<https://…>` has two).
-  const bare = only?.type === "text" && only.value.length === end - start;
-  return bare
-    ? context.base + end >= context.ends
-    : context.base + end > context.kept;
+  const start = node.position?.start.offset;
+  return (
+    start === undefined || node.children[0]?.position?.start.offset === start
+  );
 };
 
-/** Whether the host draws links: the page's own `renderLink`, or a part around Markdown. */
-const isHosted = (context: Context) =>
-  context.renderLink !== undefined || context.provided !== null;
+/**
+ * A link's or a picture's address and title, once the stream has proven the address whole, or
+ * null: the one place an address is handed on, to the host's `renderLink`, a provider,
+ * `components.a` or `components.img`, or Markdown's own Link. Half of one (`https://i`) is another
+ * site's, so nothing that loads or leads anywhere is drawn from it. Proven means something the
+ * stream gave stands after the address: the link's own closing mark (not one repair added); after a
+ * bare address, a character it cannot run on into (the marks it leaves off its end apart); after a
+ * reference's definition, its line's end. Once written, every address is whole.
+ */
+const handedOf = (
+  node: Linked | Pictured,
+  context: Context
+): { url: string; title: string | undefined } | null => {
+  const { url, title } = targetOf(node, context);
+  const target = url === undefined ? null : { url, title };
+  if (!context.streaming || target === null) {
+    return target;
+  }
+  const end = context.base + (node.position?.end.offset ?? 0);
+  if (node.type === "linkReference" || node.type === "imageReference") {
+    const definition = context.definitions.get(node.identifier);
+    return end <= context.kept &&
+      (definition?.end ?? context.kept) < context.kept
+      ? target
+      : null;
+  }
+  if (isBare(node)) {
+    return node === context.ending ? null : target;
+  }
+  return end <= context.kept ? target : null;
+};
 
 /** What the host draws for a link: the page's own first, then the part around Markdown. */
 const hosted = (
@@ -813,6 +832,12 @@ const hosted = (
   return drawn === undefined ? context.provided?.(asked) : drawn;
 };
 
+/** Whether Markdown draws its links itself, with Link: no host and no `components.a` may. */
+const drawsOwnLinks = (context: Context) =>
+  context.renderLink === undefined &&
+  context.provided === null &&
+  context.components.a === undefined;
+
 const LinkInline = ({
   node,
   context,
@@ -820,35 +845,17 @@ const LinkInline = ({
   node: Linked;
   context: Context;
 }): ReactNode => {
-  const coming = isWriting(node, context);
-  // Where the host draws links (`renderLink`, or a part around Markdown through
-  // MarkdownLinkProvider), such a link is held back, words and all, until its address has arrived:
-  // the host is never handed half of one, and a citation's number never shows as words first, then
-  // turns into its mark.
-  if (coming && isHosted(context)) {
-    return null;
-  }
-  const { url, title } = targetOf(node, context);
   const words = (
     <Phrasing nodes={node.children} context={{ ...context, inLink: true }} />
   );
-  if (url !== undefined) {
-    const drawn = hosted(context, {
-      href: url,
-      title,
-      children: words,
-      type: isAutolink(node) ? "autolink" : "link",
-    });
-    if (drawn !== undefined) {
-      return drawn;
-    }
-  }
-  // Markdown's own link waits for its whole address: half of one (`https://exa`) would lead to
-  // another site. Until then, its words, with the room its arrow will take, so the words after it
-  // never move when the address is whole.
-  const href = coming || url === undefined ? null : safeHref(encodedUrl(url));
-  if (href === null || context.inLink) {
-    return context.streaming && !context.inLink && isComing(url) ? (
+  const handed = handedOf(node, context);
+  // Its address not yet whole: its words, and the link in their place once it is. Where Markdown
+  // draws the link itself, the room Link's arrow will take is kept, so nothing after it moves.
+  if (handed === null) {
+    return context.streaming &&
+      !context.inLink &&
+      drawsOwnLinks(context) &&
+      isComing(targetOf(node, context).url) ? (
       <>
         <span aria-hidden="true" {...stylex.props(styles.linkLead)} />
         {words}
@@ -857,6 +864,20 @@ const LinkInline = ({
     ) : (
       words
     );
+  }
+  const { url, title } = handed;
+  const drawn = hosted(context, {
+    href: url,
+    title,
+    children: words,
+    type: isAutolink(node) ? "autolink" : "link",
+  });
+  if (drawn !== undefined) {
+    return drawn;
+  }
+  const href = safeHref(encodedUrl(url));
+  if (href === null || context.inLink) {
+    return words;
   }
   const Custom = context.components.a;
   if (Custom !== undefined) {
@@ -875,7 +896,7 @@ const LinkInline = ({
 
 // A picture is never loaded (no request leaves for it) unless the host draws it (`renderLink`, type
 // `image`, or `components.img` for one at an http or https address); otherwise it is shown by its
-// words and leads to the picture when it may.
+// words and leads to the picture when it may. Until its address is whole, it is its words.
 const PictureInline = ({
   node,
   context,
@@ -883,15 +904,13 @@ const PictureInline = ({
   node: Pictured;
   context: Context;
 }): ReactNode => {
-  // Still being written: held back where the host draws pictures, as a link is, and otherwise its
-  // words, which load nothing and lead nowhere, until its address is whole.
-  const coming = isWriting(node, context);
-  if (coming && isHosted(context)) {
-    return null;
-  }
-  const { url, title } = targetOf(node, context);
   const alt = node.alt ?? "";
-  if (!coming && url !== undefined && url !== "") {
+  const handed = handedOf(node, context);
+  if (handed === null) {
+    return alt;
+  }
+  const { url, title } = handed;
+  if (url !== "") {
     const drawn = hosted(context, {
       href: url,
       title,
@@ -902,7 +921,7 @@ const PictureInline = ({
       return drawn;
     }
   }
-  const href = coming || url === undefined ? null : safeHref(encodedUrl(url));
+  const href = safeHref(encodedUrl(url));
   const Picture = context.components.img;
   if (Picture !== undefined && href !== null && /^https?:/u.test(href)) {
     return <Picture node={node} src={href} alt={alt} title={title} />;
@@ -931,16 +950,6 @@ const NoteMark = ({
   }
   if (context.inLink) {
     return String(number);
-  }
-  // Its note is still coming: its number, leading nowhere yet.
-  if (!context.noted.has(node.identifier)) {
-    return (
-      <sup {...stylex.props(styles.footnoteMark)}>
-        <span aria-label={context.words.footnote(number)}>
-          {String(number)}
-        </span>
-      </sup>
-    );
   }
   // Each reference has its own id; the note leads back to the first.
   const nth = context.references.get(node);
@@ -1391,40 +1400,38 @@ const Block = ({
 };
 
 /**
- * What the tree refers to from anywhere in it: link targets, the notes in reading order, and each
- * reference to a note counted in the order it is drawn (the answer, then the notes at its foot), so
- * each has its own id and drawing it twice (StrictMode) changes nothing.
+ * What the tree refers to from anywhere in it: link targets and where each definition ends, the
+ * notes in reading order, numbered by where each is first referred to (a note's mark is one only
+ * once its note is defined, so no number moves when the answer is whole), and each reference to a
+ * note counted in the order it is drawn (the answer, then the notes at its foot), so each has its
+ * own id and drawing it twice (StrictMode) changes nothing.
  */
-const gather = (nodes: RootContent[], written: boolean) => {
-  const definitions = new Map<
-    string,
-    { url: string; title: string | undefined }
-  >();
+const gather = (placed: Placed[]) => {
+  const definitions: Context["definitions"] = new Map();
   const found = new Map<string, FootnoteDefinition>();
-  const order: string[] = [];
-  eachNode(nodes, (node) => {
-    if (node.type === "definition") {
-      definitions.set(node.identifier, {
-        url: node.url,
-        title: node.title ?? undefined,
-      });
-    } else if (node.type === "footnoteDefinition") {
-      found.set(node.identifier, node);
-    } else if (
-      node.type === "footnoteReference" &&
-      !order.includes(node.identifier)
-    ) {
-      order.push(node.identifier);
-    }
-  });
-  const notes = order.flatMap((id) => {
+  const order = new Set<string>();
+  for (const { node: block, base } of placed) {
+    eachNode([block], (node) => {
+      if (node.type === "definition") {
+        definitions.set(node.identifier, {
+          url: node.url,
+          title: node.title ?? undefined,
+          end: base + (node.position?.end.offset ?? 0),
+        });
+      } else if (node.type === "footnoteDefinition") {
+        found.set(node.identifier, node);
+      } else if (node.type === "footnoteReference") {
+        order.add(node.identifier);
+      }
+    });
+  }
+  const notes = [...order].flatMap((id) => {
     const note = found.get(id);
     return note === undefined ? [] : [note];
   });
-  // Each note numbered by where it is first referred to. While the answer is written, a note whose
-  // words have not arrived yet has its number too, so no number moves when they do.
-  const numbered = written ? order : notes.map((note) => note.identifier);
-  const footnotes = new Map(numbered.map((id, index) => [id, index + 1]));
+  const footnotes = new Map(
+    notes.map((note, index) => [note.identifier, index + 1])
+  );
   // A reference inside a link is drawn as its number only, with no id: it is not counted.
   const references = new Map<RootContent, number>();
   const counted = new Map<string, number>();
@@ -1436,7 +1443,9 @@ const gather = (nodes: RootContent[], written: boolean) => {
     }
   };
   eachNode(
-    nodes.filter((node) => node.type !== "footnoteDefinition"),
+    placed
+      .map(({ node }) => node)
+      .filter((node) => node.type !== "footnoteDefinition"),
     count
   );
   eachNode(notes, count);
@@ -1492,6 +1501,26 @@ const Notes = ({
     })}
   </ol>
 );
+
+/**
+ * The bare address the stream's own words `own` end on, in the block still being written, if they
+ * do (handedOf): it may still grow. Found by its words, as the parser places some bare addresses
+ * nowhere in the source.
+ */
+const endingAddress = (
+  block: RootContent | undefined,
+  own: string
+): PhrasingContent | undefined => {
+  const bare: Linked[] = [];
+  eachNode(block === undefined ? [] : [block], (node) => {
+    if (node.type === "link" && isBare(node)) {
+      bare.push(node);
+    }
+  });
+  const last = bare.at(-1);
+  const [words] = last?.children ?? [];
+  return words?.type === "text" && own.endsWith(words.value) ? last : undefined;
+};
 
 /** What GitHub leaves off the end of a bare address, as words after it (`see https://example.com.`). */
 const AFTER_ADDRESS = new Set("!\"'),.:;?_*~");
@@ -1585,7 +1614,7 @@ const useBlocks = (shown: string, live: boolean): Placed[] => {
     }
     return parseMarkdown(shown).children.map((node) => ({ node, base: 0 }));
   }
-  const read = readBlocks(shown, kept, live);
+  const read = readBlocks(shown, kept);
   if (read.kept !== kept) {
     setKept(read.kept);
   }
@@ -1702,10 +1731,7 @@ export const Markdown = ({
   );
   const provided = use(ProvidedLinks);
   const all = useBlocks(shown, streaming);
-  const { definitions, notes, references, footnotes } = gather(
-    all.map(({ node }) => node),
-    streaming
-  );
+  const { definitions, notes, references, footnotes } = gather(all);
   const placed = all.filter(
     ({ node }) =>
       node.type !== "definition" && node.type !== "footnoteDefinition"
@@ -1720,9 +1746,11 @@ export const Markdown = ({
     provided,
     kept,
     ends,
+    ending: streaming
+      ? endingAddress(lastBlock, shown.slice(0, ends))
+      : undefined,
     base: 0,
     footnotes,
-    noted: new Set(notes.map((note) => note.identifier)),
     components,
     prefix,
     streaming,

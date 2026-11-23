@@ -2072,6 +2072,11 @@
           "path": "src/components/markdown/parse.ts",
           "type": "registry:file",
           "target": "~/src/components/markdown/parse.ts"
+        },
+        {
+          "path": "src/components/markdown/repair.ts",
+          "type": "registry:file",
+          "target": "~/src/components/markdown/repair.ts"
         }
       ]
     },

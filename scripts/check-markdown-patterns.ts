@@ -1,8 +1,9 @@
 // Markdown reads untrusted text, so none of its patterns may backtrack without bound. Every regular
-// expression in src/components/markdown/ is read here, and it fails when one has either shape that
-// backtracks super-linearly: a repeated group holding a quantifier (`(?:a+)*`, `(?: {0,3}> ?)*`), or
-// two unbounded quantifiers side by side over characters they share (`[ \t]*\s*`, `.*:.*`), with
-// nothing between them that must match. Such a pattern is written as a scanner instead; the few
+// expression in src/components/markdown/ is read here, and it fails when one has a shape that costs
+// more than its length: a repeated group holding a quantifier (`(?:a+)*`, `(?: {0,3}> ?)*`); two
+// unbounded quantifiers side by side over characters they share (`[ \t]*\s*`, `.*:.*`), with
+// nothing between them that must match; or an unbounded quantifier searched for from every place up
+// to the input's end (`[*_]+$`). Such a pattern is written as a scanner instead; the few
 // kept are listed in ALLOWED, each with the one line that proves it linear. A pattern built at run
 // time (`new RegExp(…)`) cannot be read here, so it is not allowed at all.
 //
@@ -278,6 +279,21 @@ const holdsQuantifier = (node: Node): boolean =>
   (node.atom.kind === "group" &&
     node.atom.alternatives.flat().some(holdsQuantifier));
 
+/**
+ * A pattern that is not anchored at its start, ends at the input's end (`$`) and repeats without
+ * bound is tried from every place and runs to the end from each (`[*_]+$` on a run of stars and a
+ * letter): the square of the length. Such a search belongs in a loop from the end, or in a window.
+ */
+const searchedToEnd = (source: string): string[] =>
+  !source.startsWith("^") &&
+  source.endsWith("$") &&
+  !source.endsWith("\\$") &&
+  read(source, false)
+    .flat()
+    .some((node) => node.max === Number.POSITIVE_INFINITY)
+    ? ["searched from every place to the end"]
+    : [];
+
 /** What is wrong with a sequence of nodes and every sequence inside it, as words. */
 const shapesOf = (sequence: Node[]): string[] => {
   const found: string[] = [];
@@ -365,6 +381,7 @@ for (const name of readdirSync(folder).filter((file) =>
     }
     const shapes = [
       ...new Set(read(source, flags.includes("s")).flatMap(shapesOf)),
+      ...searchedToEnd(source),
     ];
     if (shapes.length === 0) {
       continue;

@@ -291,8 +291,8 @@ const now = () => {
   return (user + system) / 1000;
 };
 
-/** How long one measure runs at least, in milliseconds: past the timer's grain. */
-const FLOOR = 5;
+/** How long one measure runs at least, in milliseconds: past the timer's grain and a busy machine's jitter. */
+const FLOOR = 10;
 
 /** What `run` costs a call, in milliseconds of the processor: it is run again until FLOOR has passed. */
 const costOf = (run: () => void) => {

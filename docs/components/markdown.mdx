@@ -17,7 +17,7 @@ Headings, lists, a table (Table, scrolling sideways in its own box), code in a s
 
 ## While it is written
 
-`streaming`: what is half-written at the end is drawn as what it will be. A table is a table from its head, code shows as it comes in a CodeBlock that says it is being written, a link still being written is its words with its arrow's room kept, and bold is bold from its first letter. What is only the start of a mark waits for its words: a list's number, a task's box, a fence, a tag, a bracket that may open a link. A note's mark is its number before the note arrives at the end, and a section that folds is one from its summary. Nothing flickers or re-flows when a mark closes. The words come as they are given: pacing them is the message's job. A screen reader hears each block once it is finished, never each word; `live="off"` keeps it silent, for words beside the answer that another part already says (Reasoning's thoughts).
+`streaming`: what is half-written at the end is drawn as what it will be, and what was shown is only ever added to. A table is a table from its row of dashes, code shows as it comes in a CodeBlock that says it is being written, a link is its words until its address is whole (with its arrow's room kept) and then the link in their place, and bold is bold from its first letter. What is only the start of a mark waits for its words: a list's number, a task's box, a fence, a tag, a bracket that may open a link. A note or a reference to a link is shown as written until its definition arrives, as it is should none come, and a section that folds is one from its summary. Nothing flickers or re-flows when a mark closes. The words come as they are given: pacing them is the message's job. A screen reader hears each block once it is finished, never each word; `live="off"` keeps it silent, for words beside the answer that another part already says (Reasoning's thoughts).
 
 <Stage path="markdown/streaming" label="While it is written" />
 
@@ -112,7 +112,7 @@ Its links may come from a page the agent read. Raw HTML is text, never HTML, and
 
 ## The host's links
 
-Markdown knows no router and no citation. `renderLink` draws every link and picture, any scheme, before the filter, and gets its address as written, its scheme, its title, its words and its `type` (`link`, `autolink` or `image`); undefined leaves it to Markdown. Here a link out asks first, and a path inside the product goes through the product's router as Link's child (`asChild`). A part around Markdown can draw links for every Markdown inside it with `MarkdownLinkProvider`: here the product's `cite:` links are numbered chips. The page's own `renderLink` is asked first. While an answer is written, no part of the host's is handed half an address: where `renderLink` or a provider draws links, a link or picture still being written is held back until its address has arrived, so a citation never shows first as words.
+Markdown knows no router and no citation. `renderLink` draws every link and picture, any scheme, before the filter, and gets its address as written, its scheme, its title, its words and its `type` (`link`, `autolink` or `image`); undefined leaves it to Markdown. Here a link out asks first, and a path inside the product goes through the product's router as Link's child (`asChild`). A part around Markdown can draw links for every Markdown inside it with `MarkdownLinkProvider`: here the product's `cite:` links are numbered chips. The page's own `renderLink` is asked first. While an answer is written, no part of the host's is handed half an address: a link or picture still being written is its words until the stream has shown its address whole (its closing mark, or for a bare address the character after it), and then the host's link in their place.
 
 ```tsx
 <MarkdownLinkProvider
@@ -185,13 +185,13 @@ Against the specifications it reads, example by example, and against streams. Th
       group: "While it is written",
       key: "Answers",
       value:
-        "10 answers as a model writes them, 3,090 prefixes, every third character: a raw mark shows at 4 and something is taken back at 1, all one star inside a word that CommonMark pairs with a later one (5*3 … 2*2)",
+        "72 answers as a model writes them, 47,285 prefixes, every character: what was shown is only ever added to, but at 1 (5*3 … 2*2, a star inside a word that CommonMark pairs with a later one); a raw mark shows at 1,594 prefixes in 4 episodes, all that star or a note shown as written until it arrives",
     },
     {
       group: "While it is written",
       key: "Streamdown's tests",
       value:
-        "966 inputs of their tests, each a half-written answer: Markdown shows the same as remend for 821, fewer raw marks for 96, holds back a mark or a bracket still being written for 43 (remend shows it), and more raw marks for 6: a star inside a word, or a bracket that ran past its line, which it leaves as words",
+        "966 inputs of their tests, each a half-written answer: Markdown shows the same as remend for 790, fewer raw marks for 112, holds back a mark or a bracket still being written for 53 (remend shows it), and other words for 11: a star inside a word or a bracket that ran past its line, which it leaves as words, and a note shown as written until it is defined",
     },
     {
       group: "Untrusted text",

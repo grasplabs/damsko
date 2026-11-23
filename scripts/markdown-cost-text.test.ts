@@ -6,7 +6,8 @@
 //   pnpm exec vp test scripts/markdown-cost-text.test.ts
 import { describe, expect, test } from "vitest";
 
-import { bounded, repair, tidy } from "../src/components/markdown/parse.ts";
+import { bounded } from "../src/components/markdown/parse.ts";
+import { repair, tidy } from "../src/components/markdown/repair.ts";
 import { GATE_TEST, weighAll } from "./markdown-cost.ts";
 
 describe("what an answer costs", () => {

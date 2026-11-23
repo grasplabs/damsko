@@ -257,6 +257,119 @@ const treeOf = (source: string, budget: Budget): MarkdownRoot => {
   return givenBack(parsed(stood), source, long);
 };
 
+const isSpaceOrTab = (char: string | undefined) =>
+  char === " " || char === "\t";
+const isDigit = (char: string | undefined) =>
+  char !== undefined && char >= "0" && char <= "9";
+
+/** Past the spaces and tabs in `line` from `at`. */
+const blankFrom = (line: string, at: number): number => {
+  let end = at;
+  while (isSpaceOrTab(line[end])) {
+    end += 1;
+  }
+  return end;
+};
+
+/**
+ * Where a list item's mark at `at` ends (`-`, `*`, `+`, or a number of at most nine digits and
+ * `.` or `)`) before a space, a tab or the line's end; -1 for none.
+ */
+const itemMarkEnd = (line: string, at: number): number => {
+  let end = at;
+  while (end <= at + 9 && isDigit(line[end])) {
+    end += 1;
+  }
+  const bullet = line[at] === "-" || line[at] === "*" || line[at] === "+";
+  const number =
+    end > at && end <= at + 9 && (line[end] === "." || line[end] === ")");
+  if (!bullet && !number) {
+    return -1;
+  }
+  end += 1;
+  return end === line.length || isSpaceOrTab(line[end]) ? end : -1;
+};
+
+/**
+ * The marks of the quotes and list items that open a line: where they end, with the spaces round
+ * them, and how many there are.
+ */
+const containersOf = (line: string) => {
+  for (let at = 0, count = 0; ; count += 1) {
+    const mark = blankFrom(line, at);
+    const end = line[mark] === ">" ? mark + 1 : itemMarkEnd(line, mark);
+    if (end === -1) {
+      return { end: mark, count };
+    }
+    at = end;
+  }
+};
+export const containersEnd = (line: string) => containersOf(line).end;
+
+/** Where a line's quote marks end (each with one space after it at most), and how many there are. */
+const quotesOf = (line: string) => {
+  let depth = 0;
+  for (let at = 0; ; depth += 1) {
+    const mark = blankFrom(line, at);
+    if (line[mark] !== ">") {
+      return { end: at, depth };
+    }
+    at = mark + (isSpaceOrTab(line[mark + 1]) ? 2 : 1);
+  }
+};
+
+/** A fence's run, once a line's containers are passed: a backtick fence's words hold no backtick. */
+const FENCE_RUN = /^(?:`{3,}(?![^`\n]*`)|~{3,})/u;
+
+/** Where the fences stand after a line: the run of the one still open ("" for none), its depth in quotes and how far in it is. */
+interface Fences {
+  open: string;
+  depth: number;
+  indent: number;
+}
+
+/**
+ * Whether `line` is code (a fence's own line, or one inside a fence), however deep in quotes and
+ * lists the fence stands, given where the fences stood before it, which it moves on. A fence in a
+ * quote or a list item ends with it: at a line with fewer quote marks, or with words less far in.
+ */
+const isCode = (fences: Fences, line: string): boolean => {
+  const quotes = quotesOf(line);
+  const inner = line.slice(quotes.end);
+  const words = containersEnd(line);
+  const rest = line.slice(words);
+  const run = FENCE_RUN.exec(rest)?.[0] ?? "";
+  if (
+    fences.open !== "" &&
+    quotes.depth >= fences.depth &&
+    (inner.trim() === "" ||
+      inner.length - inner.trimStart().length >= fences.indent)
+  ) {
+    if (
+      run.startsWith(fences.open.charAt(0)) &&
+      run.length >= fences.open.length &&
+      rest.slice(run.length).trim() === ""
+    ) {
+      fences.open = "";
+    }
+    return true;
+  }
+  fences.open = run;
+  fences.depth = quotes.depth;
+  fences.indent = words - quotes.end;
+  return run !== "";
+};
+
+/** Which lines are code, and the run of the fence still open at the end ("" for none). */
+export const codeLines = (lines: readonly string[]) => {
+  if (!lines.some((line) => line.includes("``") || line.includes("~~"))) {
+    return { code: [], open: "" };
+  }
+  const fences = { open: "", depth: 0, indent: 0 };
+  const code = lines.map((line) => isCode(fences, line));
+  return { code, open: fences.open };
+};
+
 /** Where a piece starts: its place, its line (from 0), and whether it is plain lines. */
 interface Start {
   from: number;
@@ -322,9 +435,23 @@ const plainBlocks = (text: string): Node[] => {
   return blocks;
 };
 
+/** Whether a name is as the parser compares names: no capital, no space but one between words. */
+const isCompared = (name: string) => {
+  let before = 32;
+  for (let at = 0; at < name.length; at += 1) {
+    const code = name.codePointAt(at) ?? 0;
+    const plain = (code > 32 && code < 65) || (code > 90 && code < 127);
+    if (!plain && (code !== 32 || before === 32)) {
+      return false;
+    }
+    before = code;
+  }
+  return before !== 32;
+};
+
 /** A name as the parser compares names: its spaces one each, in one case. Most are so as written. */
 const nameOf = (name: string) =>
-  /^[!-@[-~]+(?: [!-@[-~]+)*$/u.test(name)
+  isCompared(name)
     ? name
     : name
         .replaceAll(/[\t\n\r ]+/gu, " ")
@@ -333,33 +460,103 @@ const nameOf = (name: string) =>
         .toUpperCase()
         .toLowerCase();
 
-/** How a line starts that defines a link's target or a note: its name in brackets, a colon. */
-const DEFINES = /^ {0,3}\[(?<label>(?:[^\]\\]|\\.)+)\]:/u;
-const DEFINING = new RegExp(
-  DEFINES.source.replace("]\\\\]", "]\\\\\\n]"),
-  "gmu"
-);
-/** A name in brackets, as a link or a note may be referred to. */
-const NAMED = /\[(?<name>(?:[^[\]\\]|\\.)+)\]/gu;
+const isEnd = (char: string | undefined) =>
+  char === undefined || char === "\n" || char === "\r";
+
+/**
+ * The name a definition of a link's target or a note starts with at `at` in `text` (at most three
+ * spaces, the name in brackets, a colon: `[name]: …`, `[^1]: …`), as it is written, or null. On
+ * its line, unless `lines`: a name may run on over lines.
+ */
+const definedAt = (text: string, at: number, lines = false): string | null => {
+  let start = at;
+  while (start < at + 3 && text[start] === " ") {
+    start += 1;
+  }
+  if (text[start] !== "[") {
+    return null;
+  }
+  let end = start + 1;
+  while (end < text.length && text[end] !== "]") {
+    if (text[end] === "\\") {
+      // An escape is of a character on the line.
+      end += isEnd(text[end + 1]) ? text.length : 2;
+    } else if (!lines && isEnd(text[end])) {
+      return null;
+    } else {
+      end += 1;
+    }
+  }
+  return end > start + 1 && end < text.length && text[end + 1] === ":"
+    ? text.slice(start + 1, end)
+    : null;
+};
+
+/** Each definition's name in `source` (see definedAt), as written, and where its line starts. */
+const definitionsIn = (source: string): [string, number][] => {
+  const found: [string, number][] = [];
+  for (let at = 0; at < source.length;) {
+    const label = definedAt(source, at);
+    if (label !== null) {
+      found.push([label, at]);
+    }
+    const end = source.indexOf("\n", at);
+    at = end === -1 ? source.length : end + 1;
+  }
+  return found;
+};
 
 /** Whether a line of `source` looks to define a link's target or a note: `[name]: …`, `[^1]: …`. */
 export const definesAny = (source: string): boolean =>
-  source.search(DEFINING) !== -1;
+  definitionsIn(source).length > 0;
 
 /** What an answer defines: each name as the parser compares it, as it is written, and where it is defined. */
 type Defined = Map<string, { written: string; at: number }>;
 
-/** `defined` with the name that `text` defines at `at`, unless it is defined: the first to define a name does. */
-const define = (defined: Defined, text: string, at: number) => {
-  const label = DEFINES.exec(text)?.groups?.label ?? "";
+/** `defined` with the name `label`, defined at `at`, unless it is defined: the first to define a name does. */
+const define = (defined: Defined, label: string, at: number) => {
   const name = nameOf(label);
   return defined.has(name)
     ? defined
     : defined.set(name, { written: label, at });
 };
 
-/** The blank lines at the end of a piece, after the end of its last line with words. */
-const TRAILING_BLANK = /(?<eol>\r\n?|\n)(?:[ \t]*(?:\r\n?|\n))+$/u;
+/** The names in brackets in `text`, as a link or a note may be referred to: from each `[` to the next bracket. */
+const namesIn = (text: string): string[] => {
+  const names: string[] = [];
+  let open = -1;
+  for (let at = 0; at < text.length; at += 1) {
+    const char = text[at];
+    if (char === "\\") {
+      at += 1;
+    } else if (char === "[") {
+      open = at;
+    } else if (char === "]" && open !== -1) {
+      if (at > open + 1) {
+        names.push(text.slice(open + 1, at));
+      }
+      open = -1;
+    }
+  }
+  return names;
+};
+
+/** `text` without the blank lines at its end, after the end of its last line with words. */
+const withoutBlankEnd = (text: string): string => {
+  let last = text.length;
+  while (last > 0 && " \t\r\n".includes(text[last - 1] ?? "")) {
+    last -= 1;
+  }
+  let eol = last;
+  while (text[eol] === " " || text[eol] === "\t") {
+    eol += 1;
+  }
+  const after = eol + (text.startsWith("\r\n", eol) ? 2 : 1);
+  // Only blank lines, each ended: what an ended line leaves after it.
+  return after < text.length && isEnd(text.at(-1))
+    ? text.slice(0, after)
+    : text;
+};
 
 /**
  * The blocks of the piece from `start` to `to`, and whether it ends in code or HTML that nothing
@@ -381,11 +578,11 @@ const blocksOf = (
   // Without the blank lines at its end, which would be the code's own.
   const text =
     to < source.length
-      ? source.slice(from, to).replace(TRAILING_BLANK, "$<eol>")
+      ? withoutBlankEnd(source.slice(from, to))
       : source.slice(from);
   const names = new Set<string>();
-  for (const { groups } of defined.size === 0 ? [] : text.matchAll(NAMED)) {
-    const found = defined.get(nameOf(groups?.name ?? ""));
+  for (const name of defined.size === 0 ? [] : namesIn(text)) {
+    const found = defined.get(nameOf(name));
     if (found !== undefined && (found.at < from || found.at >= to)) {
       names.add(`[${found.written}]: <>\n`);
     }
@@ -443,6 +640,19 @@ const RAW_HTML: [RegExp, RegExp][] = [
   [/^<!\[CDATA\[/u, /\]\]>/u],
 ];
 
+/** Whether `line` closes a fence opened with `run`: at most three spaces in, as long a run of its mark or longer, nothing after. */
+const closesFence = (line: string, run: string) => {
+  let at = 0;
+  while (at < 3 && line[at] === " ") {
+    at += 1;
+  }
+  let length = 0;
+  while (line[at + length] === run[0]) {
+    length += 1;
+  }
+  return length >= run.length && /^[ \t]*$/u.test(line.slice(at + length));
+};
+
 /**
  * Where the code or HTML ends that starts at `from` and that the parser, reading as far as `to`,
  * found nothing to close: after the first line from `to` on that closes the fence it opens with,
@@ -451,14 +661,13 @@ const RAW_HTML: [RegExp, RegExp][] = [
 const closedAt = (source: string, from: number, to: number): number => {
   const first = source.slice(from, from + 1024).trimStart();
   const run = /^(?:`{3,}|~{3,})/u.exec(first)?.[0] ?? "";
-  const ends =
-    run === ""
-      ? RAW_HTML.find(([opening]) => opening.test(first))?.[1]
-      : new RegExp(`^ {0,3}${run[0]}{${run.length},}[ \\t]*$`, "u");
-  let at = ends === undefined ? source.length : to;
+  const html = RAW_HTML.find(([opening]) => opening.test(first))?.[1];
+  const ends = (line: string) =>
+    run === "" ? html?.test(line) === true : closesFence(line, run);
+  let at = run === "" && html === undefined ? source.length : to;
   while (at < source.length) {
     const { end, next } = lineAt(source, at);
-    if (ends?.test(source.slice(at, end)) === true) {
+    if (ends(source.slice(at, end))) {
       return next;
     }
     at = next;
@@ -530,8 +739,8 @@ const rootOf = (
     return treeOf(source, budget);
   }
   const guessed: Defined = new Map(outer);
-  for (const found of source.matchAll(DEFINING)) {
-    define(guessed, found[0], found.index + found[0].indexOf("["));
+  for (const [label, at] of definitionsIn(source)) {
+    define(guessed, label, source.indexOf("[", at));
   }
   const before = { ...budget };
   let blocks = readWith(source, guessed, budget);
@@ -540,7 +749,7 @@ const rootOf = (
     each(block, (node) => {
       if (node.type === "definition" || node.type === "footnoteDefinition") {
         const at = startOf(node);
-        define(defined, source.slice(at, at + 1024), at);
+        define(defined, definedAt(source, at, true) ?? "", at);
       }
     });
   }
@@ -663,818 +872,6 @@ export const encodedUrl = (url: string): string =>
     }
   );
 
-// ---- Repair: an answer still being written, made whole --------------------------------------------
-//
-// Half-written Markdown flips the layout when its closing mark arrives: `**bol` is stars and then
-// bold, a table is a paragraph of pipes and then a table. So while an answer streams, what is open
-// at the end of the block being written is treated as closed (bold, emphasis, strike-through, code
-// in a sentence, a link), a table is a table from its first whole row, and what is only the start of
-// something waits for its words: a last line that is only a mark (a `#`, a fence, a list mark, a
-// task's box, half a table row, a definition's name), a bracket that may yet open a link, a tag or
-// a bare address not yet closed by its `>`, a section's opening not yet whole. A body row that ends
-// with its last pipe is whole before its line ends. The shape is right from the first character,
-// and nothing re-flows.
-//
-// Only the end is touched: the result is the source up to `kept`, then what closes it. So a place in
-// the source before `kept` is the same place in the result.
-
-/** The source made whole: `text` is `source.slice(0, kept)` and then the marks that close it. */
-export interface Repaired {
-  text: string;
-  kept: number;
-}
-
-/** The marks of the quotes and list items that open a line, with the spaces round them. */
-const CONTAINERS = /^(?:[ \t]*(?:>|(?:[-*+]|\d{1,9}[.)])(?=[ \t]|$)))*[ \t]*/u;
-/** A fence's run, once a line's containers are passed: a backtick fence's words hold no backtick. */
-const FENCE_RUN = /^(?:`{3,}(?![^`\n]*`)|~{3,})/u;
-
-/** A line's quote marks. */
-const QUOTES = /^(?:[ \t]*>[ \t]?)*/u;
-
-/** Where the fences stand after a line: the run of the one still open ("" for none), its depth in quotes and how far in it is. */
-interface Fences {
-  open: string;
-  depth: number;
-  indent: number;
-}
-
-/**
- * Whether `line` is code (a fence's own line, or one inside a fence), however deep in quotes and
- * lists the fence stands, given where the fences stood before it, which it moves on. A fence in a
- * quote or a list item ends with it: at a line with fewer quote marks, or with words less far in.
- */
-const isCode = (fences: Fences, line: string): boolean => {
-  const quotes = QUOTES.exec(line)?.[0] ?? "";
-  const inner = line.slice(quotes.length);
-  const depth = quotes.split(">").length - 1;
-  const rest = line.replace(CONTAINERS, "");
-  const run = FENCE_RUN.exec(rest)?.[0] ?? "";
-  if (
-    fences.open !== "" &&
-    depth >= fences.depth &&
-    (inner.trim() === "" ||
-      inner.length - inner.trimStart().length >= fences.indent)
-  ) {
-    if (
-      run.startsWith(fences.open.charAt(0)) &&
-      run.length >= fences.open.length &&
-      rest.slice(run.length).trim() === ""
-    ) {
-      fences.open = "";
-    }
-    return true;
-  }
-  fences.open = run;
-  fences.depth = depth;
-  fences.indent = line.length - rest.length - quotes.length;
-  return run !== "";
-};
-
-/** Which lines are code, and the run of the fence still open at the end ("" for none). */
-const codeLines = (lines: readonly string[]) => {
-  if (!lines.some((line) => line.includes("``") || line.includes("~~"))) {
-    return { code: [], open: "" };
-  }
-  const fences = { open: "", depth: 0, indent: 0 };
-  const code = lines.map((line) => isCode(fences, line));
-  return { code, open: fences.open };
-};
-
-// As an answer streams, it is repaired again for every chunk, each time a little longer. What
-// came before its last blank line outside code is settled: no mark is open across it. So the
-// answer is read for its fences once, on from where the last repair stopped when it goes on from
-// the same text, and only what follows that blank line is repaired. Each chunk costs its own lines.
-
-/** How far the answer last repaired was read: its whole lines, the fences after them, and where what follows its last blank line outside code starts. */
-const settled = {
-  text: "",
-  fences: { open: "", depth: 0, indent: 0 },
-  at: 0,
-};
-
-/** Where what follows the last blank line outside code in `source`'s whole lines starts (0 for none). */
-const settledAt = (source: string): number => {
-  if (!source.startsWith(settled.text)) {
-    settled.text = "";
-    settled.fences = { open: "", depth: 0, indent: 0 };
-    settled.at = 0;
-  }
-  let at = settled.text.length;
-  for (
-    let end = source.indexOf("\n", at);
-    end !== -1;
-    end = source.indexOf("\n", at)
-  ) {
-    const line = source.slice(at, end);
-    if (!isCode(settled.fences, line) && line.trim() === "") {
-      settled.at = end + 1;
-    }
-    at = end + 1;
-  }
-  settled.text = source.slice(0, at);
-  return settled.at;
-};
-
-/** Whether `source` ends inside a fence that has not been closed. */
-export const openFence = (source: string): boolean =>
-  codeLines(source.split("\n")).open !== "";
-
-// A last line still being typed that so far is only a mark, at any depth: a heading's hashes, a
-// list's bullet or number, a quote's angle, a rule or a heading's underline, the start of a fence;
-// a task's box before its words; a note's name before its words, and a link's definition until its
-// line ends (it is never drawn, and half of one, `[rota]: https://… "On-c`, would be words).
-const ONLY_A_MARK =
-  /^[ \t]*(?:>[ \t]*)*(?:#{1,6}|[-=*_+]+|\d{1,9}[.)]?|`+|~+)?[ \t]*$/u;
-const TASK_START =
-  /^[ \t]*(?:>[ \t]*)*(?:[-*+]|\d{1,9}[.)])[ \t]+\[(?:[ xX](?:\][ \t]*)?)?$/u;
-const DEFINITION_START =
-  /^ {0,3}\[(?:\^[^\]\s]*\]?:?[ \t]*|[^\]\n^][^\]\n]*\]:.*)$/u;
-// A table's row: it starts with a pipe. (An answer's tables do; a pipe inside a sentence is not one.)
-const ROW = /^\s{0,3}\|/u;
-const DELIMITER_CELL = /^:?-+:?$/u;
-
-/** Whether a line is a table's row of dashes (`| --- | :-: |`): read cell by cell, in one pass. */
-const isDelimiter = (line: string): boolean => {
-  const inner = line.trim().replace(/^\|/u, "").replace(/\|$/u, "");
-  return (
-    inner !== "" &&
-    inner.split("|").every((cell) => DELIMITER_CELL.test(cell.trim()))
-  );
-};
-
-/** How many cells a row has. */
-const cellsOf = (row: string): number => {
-  const inner = row.trim().replace(/^\|/u, "").replace(/\|$/u, "");
-  return inner.split(/(?<!\\)\|/u).length;
-};
-
-/**
- * Whether a last row not yet ended is whole all the same: a body row (the table's head and its row
- * of dashes above it) that ends with a pipe after as many cells as its head has. It is drawn at
- * once, rather than waiting for its line to end through a pause in the stream.
- */
-const isWholeRow = (lines: readonly string[], line: string) => {
-  const end = line.trimEnd();
-  if (!end.endsWith("|") || end.endsWith("\\|")) {
-    return false;
-  }
-  let first = lines.length;
-  while (first > 0 && ROW.test(lines[first - 1] ?? "")) {
-    first -= 1;
-  }
-  const head = lines[first] ?? "";
-  return (
-    lines.length - first >= 2 &&
-    isDelimiter(lines[first + 1] ?? "") &&
-    cellsOf(end) === cellsOf(head)
-  );
-};
-
-/** A section's opening (Sections, below): `<details>`, then its `<summary>` on the next line or the same one, and nothing after. */
-const OPENING =
-  /^<details(?<attributes>(?:\s+[a-z][a-z-]*(?:="[^"\n]*")?)*)\s*>[ \t]*\n?[ \t]*<summary>(?<summary>[^\n]*?)<\/summary>[ \t]*$/u;
-const CLOSING = /^<\/details>[ \t]*$/u;
-
-/** The longest line that waits to be whole as a link's definition; past it, it is words. */
-const MAX_DEFINITION = 256;
-/** The longest opening of a section that waits to be whole; past it, it is words. */
-const MAX_OPENING = 400;
-
-/**
- * The end of the source with what would show as marks for now taken off: a half-typed last line (a
- * line that is only a mark, the first line of a fence, a table row not yet ended), and a section's
- * opening not yet whole (it is drawn as a section once it is).
- */
-const withoutHalfLine = (source: string): number => {
-  const start = source.lastIndexOf("\n") + 1;
-  const line = source.slice(start);
-  const before = source.slice(0, start).split("\n").slice(0, -1);
-  if (codeLines(before).open !== "") {
-    // Inside a fence every line is code, but backticks or tildes alone may be the fence closing.
-    return /^[ \t]*(?:>[ \t]*)*(?:`+|~+)[ \t]*$/u.test(line)
-      ? start
-      : source.length;
-  }
-  const blank = source.lastIndexOf("\n\n");
-  const opening = blank === -1 ? 0 : blank + 2;
-  const block = source.slice(opening);
-  if (
-    block.startsWith("<details") &&
-    block.length <= MAX_OPENING &&
-    block.trimEnd().split("\n").length <= 2 &&
-    !OPENING.test(block.trimEnd())
-  ) {
-    return opening;
-  }
-  if (line === "") {
-    return source.length;
-  }
-  if (ROW.test(line) && isWholeRow(before, line)) {
-    return source.length;
-  }
-  return ONLY_A_MARK.test(line) ||
-    TASK_START.test(line) ||
-    (DEFINITION_START.test(line) && line.length <= MAX_DEFINITION) ||
-    FENCE_RUN.test(line.replace(CONTAINERS, "")) ||
-    ROW.test(line)
-    ? start
-    : source.length;
-};
-
-/**
- * A table whose row of dashes has not arrived (or not all of it): the row of dashes it will have,
- * so its head is a table's head from the moment it is whole. What to add, or null.
- */
-const tableHead = (text: string): string | null => {
-  const lines = text.split("\n");
-  // The text ends with whole lines only (withoutHalfLine): the last entry is "".
-  const whole = lines.at(-1) === "" ? lines.slice(0, -1) : lines;
-  const last = whole.at(-1) ?? "";
-  const before = whole.at(-2) ?? "";
-  // A head: a row with no row above it.
-  if (!ROW.test(last) || isDelimiter(last) || ROW.test(before)) {
-    return null;
-  }
-  return `${text.endsWith("\n") ? "" : "\n"}|${" --- |".repeat(cellsOf(last))}\n`;
-};
-
-/** A list item's mark among a line's containers. */
-const ITEM = /(?:^|[ \t>])(?:[-*+]|\d{1,9}[.)])(?=[ \t]|$)/u;
-const HEADING = /^#{1,6}(?:[ \t]|$)/u;
-
-/** A line's containers, its words after them, its depth in quotes, and whether it ends a block (blank, or code). */
-const shapeOf = (line: string, code: boolean) => {
-  const marks = CONTAINERS.exec(line)?.[0] ?? "";
-  const rest = line.slice(marks.length);
-  return {
-    marks,
-    rest,
-    depth: marks.split(">").length - 1,
-    ends: code || rest.trim() === "",
-  };
-};
-
-/**
- * Where the block of words still being written at the end starts, past the marks that open it:
- * bold or a link never runs from one block into the next. Read back from the end: a blank line or a
- * line of code ends a block, a heading is a block of its own line, and a line starts one where it
- * starts a list item or enters or leaves a quote.
- */
-const leafStart = (lines: readonly string[], code: readonly boolean[]) => {
-  // A line just begun with nothing on it yet ends nothing: the block may go on on it.
-  const begun = lines.at(-1) === "" ? lines.length - 1 : lines.length;
-  const starts: number[] = [];
-  let at = 0;
-  for (const line of lines.slice(0, begun)) {
-    starts.push(at);
-    at += line.length + 1;
-  }
-  let index = begun - 1;
-  let line = shapeOf(lines[index] ?? "", code[index] === true);
-  if (index < 0 || line.ends) {
-    return Math.max(at - 1, 0);
-  }
-  while (index > 0 && !ITEM.test(line.marks) && !HEADING.test(line.rest)) {
-    const above = shapeOf(lines[index - 1] ?? "", code[index - 1] === true);
-    if (above.ends || HEADING.test(above.rest) || above.depth !== line.depth) {
-      break;
-    }
-    index -= 1;
-    line = above;
-  }
-  return (starts[index] ?? 0) + line.marks.length;
-};
-
-/** The length of the run of one character at `at`. */
-const runAt = (block: string, at: number): number => {
-  let run = 1;
-  while (block[at + run] === block[at]) {
-    run += 1;
-  }
-  return run;
-};
-
-/** How a link's tail (`(address "title")`) read from its parenthesis ends. */
-type Tail =
-  // Whole: the place after its closing parenthesis.
-  | { end: number }
-  // Running to the end of the block: what closes it.
-  | { close: string }
-  // Not a link's tail after all (`[a](b c)` is words).
-  | null;
-
-const isGap = (char: string | undefined) =>
-  char === " " || char === "\t" || char === "\n";
-
-/** The first place from `at` on that is not a space or a line break. */
-const gapsFrom = (block: string, at: number): number => {
-  let next = at;
-  while (isGap(block[next])) {
-    next += 1;
-  }
-  return next;
-};
-
-/**
- * Where a link's address that starts at `start` ends, and what closes the link should the block
- * end there: in angle brackets (`<a b>`), or with its parentheses balanced, as `wiki/Foo_(bar)`
- * has. Null when it is words: a line break in angle brackets, or parentheses left open before a
- * space.
- */
-const addressEnd = (
-  block: string,
-  start: number
-): { at: number; close: string } | null => {
-  let at = start;
-  if (block[at] === "<") {
-    at += 1;
-    while (at < block.length && block[at] !== ">") {
-      if (block[at] === "\n" || block[at] === "<") {
-        return null;
-      }
-      at += block[at] === "\\" ? 2 : 1;
-    }
-    return at < block.length ? { at: at + 1, close: ")" } : { at, close: ">)" };
-  }
-  let depth = 0;
-  while (at < block.length && (block.codePointAt(at) ?? 0) > 32) {
-    const char = block[at];
-    if (char === ")" && depth === 0) {
-      break;
-    }
-    depth += char === "(" ? 1 : 0;
-    depth -= char === ")" ? 1 : 0;
-    at += char === "\\" ? 2 : 1;
-  }
-  // Still coming, its own parentheses close before the link's.
-  return depth > 0 && at < block.length
-    ? null
-    : { at, close: ")".repeat(depth + 1) };
-};
-
-/** What closes a title that opens with `mark`. */
-const TITLE_ENDS: Record<string, string> = { '"': '"', "'": "'", "(": ")" };
-
-/** The rest of a link's tail from its title's opening mark at `start`, which `end` closes. */
-const titleTail = (block: string, start: number, end: string): Tail => {
-  let at = start + 1;
-  while (at < block.length && block[at] !== end) {
-    at += block[at] === "\\" ? 2 : 1;
-  }
-  if (at >= block.length) {
-    return { close: `${end})` };
-  }
-  at = gapsFrom(block, at + 1);
-  if (at >= block.length) {
-    return { close: ")" };
-  }
-  return block[at] === ")" ? { end: at + 1 } : null;
-};
-
-/**
- * A link's tail, read as CommonMark reads it from the character after `](`: spaces, the address,
- * spaces, a title in quotes or parentheses, spaces, and the closing parenthesis.
- */
-const tailAt = (block: string, from: number): Tail => {
-  const address = addressEnd(block, gapsFrom(block, from));
-  if (address === null) {
-    return null;
-  }
-  const gap = gapsFrom(block, address.at);
-  if (gap >= block.length) {
-    return { close: address.close };
-  }
-  if (block[gap] === ")") {
-    return { end: gap + 1 };
-  }
-  const end = TITLE_ENDS[block[gap] ?? ""];
-  // A title needs a space before it.
-  return end === undefined || gap === address.at
-    ? null
-    : titleTail(block, gap, end);
-};
-
-/** Past how many `](` that open no link's tail a block's links are no longer read: no answer has that many. */
-const MAX_NOT_LINKS = 32;
-
-/**
- * The links in `block`, outside code: the one cut off at its end (where its `[` is, and what closes
- * it), and the block with every link's address and title masked, so nothing in them is read as a
- * mark. A bracket with no `](` after it is words, as a range's `[0, 1)` is.
- */
-const linksIn = (
-  block: string
-): { open: { at: number; close: string } | null; masked: string } => {
-  const parts: string[] = [];
-  let done = 0;
-  let bracket = -1;
-  let code = 0;
-  let misses = 0;
-  let at = 0;
-  const mask = (to: number) => {
-    parts.push(block.slice(done, at + 2), "x".repeat(to - at - 2));
-    done = to;
-  };
-  while (at < block.length) {
-    const char = block[at];
-    if (char === "\\") {
-      at += 2;
-    } else if (char === "`") {
-      const run = runAt(block, at);
-      // Code in a sentence opens with a run of backticks and closes with a run as long.
-      if (code === 0) {
-        code = run;
-      } else if (code === run) {
-        code = 0;
-      }
-      at += run;
-    } else if (code === 0 && char === "[") {
-      bracket = at;
-      at += 1;
-    } else if (
-      code === 0 &&
-      char === "]" &&
-      block[at + 1] === "(" &&
-      misses < MAX_NOT_LINKS
-    ) {
-      const tail = tailAt(block, at + 2);
-      if (tail === null) {
-        misses += 1;
-        at += 1;
-      } else if ("end" in tail) {
-        // Everything between the parentheses; the closing one stays.
-        mask(tail.end - 1);
-        at = tail.end;
-      } else {
-        mask(block.length);
-        const open =
-          bracket === -1 || block[bracket + 1] === "^"
-            ? null
-            : { at: bracket, close: tail.close };
-        return { open, masked: parts.join("") };
-      }
-    } else {
-      at += 1;
-    }
-  }
-  parts.push(block.slice(done));
-  return { open: null, masked: parts.join("") };
-};
-
-/** A run of one mark left open: how many of its marks are still open, and how it was written. */
-interface Run {
-  mark: string;
-  left: number;
-  length: number;
-  both: boolean;
-  weak: boolean;
-}
-
-/** The character before `at` and the one at `at`, whole even where it takes two units (an emoji). */
-const charBefore = (text: string, at: number): string | undefined => {
-  const code = text.codePointAt(at - 1) ?? 0;
-  return code >= 0xdc_00 && code <= 0xdf_ff && at >= 2
-    ? text.slice(at - 2, at)
-    : text[at - 1];
-};
-const charAt = (text: string, at: number): string | undefined => {
-  const code = text.codePointAt(at);
-  return code === undefined ? undefined : String.fromCodePoint(code);
-};
-
-/** Space and punctuation as CommonMark reads them round a run of marks; a line's ends are space. */
-const isSpace = (char: string | undefined) =>
-  char === undefined || /\s/u.test(char);
-const isPunctuation = (char: string | undefined) =>
-  char !== undefined && /[\p{P}\p{S}]/u.test(char);
-const isLetter = (char: string | undefined) =>
-  char !== undefined && /^[A-Za-z\d]$/u.test(char);
-
-/**
- * A run that may close: as CommonMark matches it, it closes the latest open runs of its mark as far
- * as its marks go (a run of three never pairs with one of one or two that may open and close, the
- * rule of three; a strike only with a strike as long), and what was opened inside them is words.
- * How many of its marks are left.
- */
-const closeWith = (open: Run[], closer: Omit<Run, "left" | "weak">) => {
-  let left = closer.length;
-  while (left > 0) {
-    const index = open.findLastIndex(
-      (run) =>
-        run.mark === closer.mark &&
-        (closer.mark === "~"
-          ? run.length === closer.length
-          : !(
-              (run.both || closer.both) &&
-              (run.length + closer.length) % 3 === 0 &&
-              (run.length % 3 !== 0 || closer.length % 3 !== 0)
-            ))
-    );
-    const opener = open[index];
-    if (opener === undefined) {
-      break;
-    }
-    open.splice(index + 1);
-    const used = Math.min(opener.left, left);
-    opener.left -= used;
-    left -= used;
-    if (opener.left === 0) {
-      open.pop();
-    }
-  }
-  return left;
-};
-
-/**
- * Whether the run of `run` marks at `at` may open and close, by what stands on each side, as
- * CommonMark reads it; and whether it stands inside a word of letters and digits.
- */
-const sidesOf = (words: string, at: number, run: number) => {
-  const before = charBefore(words, at);
-  const after = charAt(words, at + run);
-  const left =
-    !isSpace(after) &&
-    (!isPunctuation(after) || isSpace(before) || isPunctuation(before));
-  const right =
-    !isSpace(before) &&
-    (!isPunctuation(before) || isSpace(after) || isPunctuation(after));
-  const underscore = words[at] === "_";
-  const opens = underscore ? left && (!right || isPunctuation(before)) : left;
-  const closes = underscore ? right && (!left || isPunctuation(after)) : right;
-  return {
-    opens,
-    closes,
-    weak:
-      opens &&
-      closes &&
-      ((isLetter(before) && isLetter(after)) ||
-        (isPunctuation(before) && isPunctuation(after))),
-  };
-};
-
-/** A whole tag or bare address (`<b>`, `<https://…>`): the marks in it are its own. */
-const TAG =
-  /^<(?:[A-Za-z][\w+.-]{1,31}:[^\s<>]*|[\w.!#$%&'*+/=?^`{|}~-]+@[\dA-Za-z.-]+|\/?[A-Za-z][\w-]*(?:\s[^<>]*)?)>/u;
-
-/** How far past `at` an escape or a whole tag runs, whose marks are its own: 0 for neither. */
-const ownAt = (words: string, at: number) => {
-  if (words[at] === "\\") {
-    return 1;
-  }
-  return words[at] === "<"
-    ? (TAG.exec(words.slice(at, at + 1024))?.[0].length ?? 1) - 1
-    : 0;
-};
-
-/** A run of marks, read against those still open: it closes what it can, and opens what is left. */
-/** The most runs of marks a block of words leaves open: no answer leaves more than a few. */
-const MAX_OPEN = 32;
-
-const delimit = (open: Run[], words: string, at: number, run: number) => {
-  const mark = words[at] ?? "";
-  const { opens, closes, weak } = sidesOf(words, at, run);
-  const both = opens && closes;
-  const rest = closes ? closeWith(open, { mark, length: run, both }) : run;
-  // Past MAX_OPEN runs left open, one more is words: each run is weighed against those still open,
-  // so it costs no more than they do, however many marks a block holds.
-  if (rest > 0 && opens && open.length < MAX_OPEN) {
-    // A run like one still open did not close it (`**这句话。**接着`: CommonMark closes no run
-    // between a mark of punctuation and a letter): neither is closed, as neither will be.
-    const twin = open.find(
-      (other) => other.mark === mark && other.length === run && !other.weak
-    );
-    if (twin !== undefined) {
-      twin.weak = true;
-    }
-    open.push({
-      mark,
-      left: rest,
-      length: run,
-      both,
-      weak: weak || twin !== undefined,
-    });
-  }
-};
-
-/**
- * The runs of marks left open in a block's words, outermost first, and the run of backticks that
- * code in a sentence is open with ("" for none). Runs are read as CommonMark reads them, by what
- * stands on each side: `snake_case` and `5 * 3` are words. A run inside a word of letters and
- * digits (`5*3`) may close one, but is left open, not closed: it is most likely words.
- */
-const openMarks = (block: string) => {
-  // A link's address and title are its own: an underscore or star in them is no mark.
-  const links = linksIn(block);
-  const words = links.masked;
-  const open: Run[] = [];
-  let code = "";
-  let at = 0;
-  while (at < words.length) {
-    const char = words[at] ?? "";
-    const run = "*_~`".includes(char) ? runAt(words, at) : 1;
-    if (char === "`") {
-      // Code in a sentence opens with a run of backticks and closes with a run as long.
-      if (code === "") {
-        code = char.repeat(run);
-      } else if (code.length === run) {
-        code = "";
-      }
-    } else if (code === "") {
-      const own = ownAt(words, at);
-      at += own;
-      if (own === 0 && "*_~".includes(char) && (char !== "~" || run === 2)) {
-        delimit(open, words, at, run);
-      }
-    }
-    at += run;
-  }
-  return { open, code, link: links.open };
-};
-
-/** What closes the marks left open (`openMarks`): code in a sentence, a link, then the runs, innermost first. */
-const closingOf = ({ open, code }: { open: Run[]; code: string }, link = "") =>
-  code +
-  link +
-  open
-    .filter((run) => !run.weak)
-    .toReversed()
-    .map((run) => run.mark.repeat(run.left))
-    .join("");
-
-/** `block` without the marks at its very end (stars, underscores, tildes, backticks), unless escaped. */
-const withoutEndMarks = (block: string): string => {
-  let end = block.length;
-  while (end > 0 && "*_~`".includes(block[end - 1] ?? "x")) {
-    end -= 1;
-  }
-  let slashes = 0;
-  while (block[end - 1 - slashes] === "\\") {
-    slashes += 1;
-  }
-  return block.slice(0, slashes % 2 === 1 ? end + 1 : end);
-};
-
-/** A link's words, a bracket deep at most: no answer's link words are longer. */
-const LABEL = "(?:[^[\\]()`\\n]|\\[[^[\\]()`\\n]*\\]){0,40}";
-// A bracket at the very end that may yet open a link, held back while it is written so its marks
-// never show: short, on its line, no parenthesis or code in it (`[2`, `[the weekly report]`,
-// `[the wiki][wi`). Once it has run on past that, it is words, shown as they are
-// (`[0, 1) is half-open`).
-const PENDING = new RegExp(`!?\\[${LABEL}(?:\\](?:\\[${LABEL}\\]?)?)?$`, "u");
-// What a stopped answer may end with that goes: a citation cut before its address (`[2`, `[12]`).
-const CUT_CITATION = /!?\[[^\s[\]()`]{0,12}\]?$/u;
-// A list item's mark, then the start of a task's box: `- [ `, `1. [x]`.
-const TASK_MARK = /^[ \t]*(?:[-*+]|\d{1,9}[.)])[ \t]+$/u;
-const TASK_BOX = /^\[[ xX]?\]?$/u;
-// A tag or a bare address at the very end, not yet closed by its `>`: `<det`, `<a href="…`,
-// `<https://exa`. It may be a comparison (`a <b`): past a line's worth, it is words.
-const HALF_TAG =
-  /<(?:\/?(?:[A-Za-z][\w-]*(?:[ \t][^<>\n]*)?)?|[A-Za-z][\w+.-]*:[^\s<>]*|[\w.!#$%&'*+/=?^`{|}~-]+@[^\s<>]*)$/u;
-
-/** How far back from the end a bracket or a tag still being written is looked for. */
-const ENDING = 128;
-
-/**
- * Where a bracket `pattern` finds at the end of `block` starts (its `!` with it), or -1: never an
- * escaped one or a task's box, nor a note's (`[^1`) unless `notes`.
- */
-const endingBracket = (
-  block: string,
-  pattern: RegExp,
-  notes = false
-): number => {
-  const offset = Math.max(0, block.length - ENDING);
-  const found = pattern.exec(block.slice(offset));
-  if (found === null) {
-    return -1;
-  }
-  const at = offset + found.index;
-  const bracket = block[at] === "!" ? at + 1 : at;
-  const line = block.slice(block.lastIndexOf("\n", at - 1) + 1, at);
-  const task = TASK_BOX.test(found[0]) && TASK_MARK.test(line);
-  return block[bracket - 1] === "\\" ||
-    (block[bracket + 1] === "^" && !notes) ||
-    task
-    ? -1
-    : at;
-};
-
-/** Where a tag or a bare address still being written at the end of `block` starts, or -1. */
-const endingTag = (block: string): number => {
-  const offset = Math.max(0, block.length - ENDING / 2);
-  const found = HALF_TAG.exec(block.slice(offset));
-  const at = found === null ? -1 : offset + found.index;
-  return at === -1 || block[at - 1] === "\\" ? -1 : at;
-};
-
-// A last line that is a rule of stars or underlines: words, not marks left open.
-const RULE = /^\s{0,3}(?<mark>[*_])(?:\s*\k<mark>){2,}\s*$/u;
-
-/** The block of words being written at the end of `text`, and where it starts; null in a fence or a table's row. */
-const lastBlockOf = (text: string) => {
-  const lines = text.split("\n");
-  const { code, open } = codeLines(lines);
-  const line = lines.at(-1) ?? "";
-  if (open !== "" || ROW.test(line) || RULE.test(line)) {
-    return null;
-  }
-  const from = leafStart(lines, code);
-  return { from, block: text.slice(from) };
-};
-
-/** `source`, made whole, where nothing before it is open: the block or blocks after a blank line. */
-const repairedOf = (source: string): Repaired => {
-  const kept = withoutHalfLine(source);
-  const text = source.slice(0, kept);
-  const head = tableHead(text);
-  if (head !== null) {
-    return { text: text + head, kept };
-  }
-  const last = lastBlockOf(text);
-  if (last === null) {
-    return { text, kept };
-  }
-  const { from } = last;
-  // Marks at the very end (a star that may become two, a mark with no words yet) wait, and so does
-  // a bracket that may yet open a link and a tag not yet closed.
-  const whole = withoutEndMarks(last.block);
-  let body = whole;
-  const marks = openMarks(body);
-  const inCode = marks.code !== "";
-  const link = inCode ? null : marks.link;
-  // One after another: `[a [b`, `see [the wiki][wi`.
-  for (let round = link === null && !inCode ? 0 : 3; round < 3; round += 1) {
-    const ends = [endingBracket(body, PENDING, true), endingTag(body)].filter(
-      (at) => at !== -1
-    );
-    if (ends.length === 0) {
-      break;
-    }
-    body = withoutEndMarks(body.slice(0, Math.min(...ends)).trimEnd());
-  }
-  const close = closingOf(
-    body === whole ? marks : openMarks(body),
-    link?.close
-  );
-  // A closing mark closes only right after a word, so the space before it goes.
-  const end = from + (close === "" ? body : body.trimEnd()).length;
-  return { text: text.slice(0, end) + close, kept: Math.min(kept, end) };
-};
-
-/**
- * `source`, as much as has arrived of an answer, made whole (see above). Inside an open fence it is
- * all code still coming in, and is left as it is but for a half-typed closing.
- */
-export const repair = (source: string): Repaired => {
-  const from = settledAt(source);
-  if (from === 0) {
-    return repairedOf(source);
-  }
-  const tail = repairedOf(source.slice(from));
-  return { text: source.slice(0, from) + tail.text, kept: from + tail.kept };
-};
-
-/**
- * An answer cut off part way (stopped), tidied once it will not be written further: a link still
- * being written at its end goes, its words with it (`[2`, `[the report](https://ex`), and bold,
- * emphasis, strike-through or code left open are closed. Nothing else is touched, so an answer
- * that ended whole comes back as it was; inside an open fence the code simply ends.
- */
-export const tidy = (source: string): string => {
-  // A task's box with no words yet is what it is: no link to cut.
-  if (TASK_START.test(source.slice(source.lastIndexOf("\n") + 1))) {
-    return source;
-  }
-  const last = lastBlockOf(source);
-  if (last === null) {
-    return source;
-  }
-  const { from } = last;
-  let text = source;
-  let body = last.block;
-  const marks = openMarks(body);
-  const inCode = marks.code !== "";
-  const link = inCode ? null : marks.link;
-  let cut = inCode || link !== null ? -1 : endingBracket(body, CUT_CITATION);
-  if (link !== null) {
-    // The link from its bracket on, and the bang of an image before it.
-    cut = body[link.at - 1] === "!" ? link.at - 1 : link.at;
-  }
-  if (cut !== -1) {
-    text = text.slice(0, from + cut).trimEnd();
-    body = text.slice(from);
-  }
-  // Marks at the very end close nothing yet: they go, and what they would close is closed below.
-  const bare = withoutEndMarks(body);
-  const close = closingOf(openMarks(bare));
-  if (close === "") {
-    return text;
-  }
-  // A closing mark closes only right after a word, so the space before it goes.
-  return text.slice(0, from) + bare.trimEnd() + close;
-};
-
 // ---- Bounds: what no answer needs, taken out before the parse ------------------------------------
 //
 // The parser recurses into every quote and list it opens, so a hostile answer, or a model's runaway,
@@ -1482,25 +879,12 @@ export const tidy = (source: string): string => {
 // answer, so a quote or a list deeper than MAX_DEPTH on a line is words from there: a backslash
 // undoes the first mark past it, and it shows as the character it is. Code in a fence is left as it
 // is. (A long paragraph's cost is bounded in the parse: see MAX_INLINE.)
-//
-// And one thing a model writes means what it says, not Markdown: a list item that is `>` and a
-// number, then a label or nothing (`- > 25: expensive`, `- >= 10 ms`), says "greater than", so its
-// `>` is a character, not a quote. A quote that starts with a number and goes on in words
-// (`- > 2024 was the year…`) stays a quote, and code stays code.
 
 /** The deepest quote or list a line opens. */
 const MAX_DEPTH = 32;
 
 const FOOTNOTE_START = /^\[\^[^\]\s]+\]:/u;
 const ORDERED = /^\d{1,9}[.)](?:[ \t]|$)/u;
-/**
- * A list item's mark, in quotes or not, at most three spaces in (four is code), then `>` or `>=`, a
- * number or a price (a range, a percentage, a short unit), then a colon or the line's end: greater
- * than.
- */
-const GREATER_THAN =
-  /^(?<item>(?: {0,3}> ?)* {0,3}(?:[-*+]|\d{1,9}[.)])[ \t]+)>(?==?[ \t]*\$?\d[\d.,]*(?:[ \t]?[-–][ \t]?\$?\d[\d.,]*)?%?(?:[ \t]?[A-Za-z]{1,5})?[ \t]*(?::|$))/u;
-
 /**
  * Where a backslash undoes the first container mark past MAX_DEPTH that opens `line` (quotes, list
  * items, footnotes), or -1. Indentation counts as a level for every two columns, as a nested list
@@ -1542,10 +926,7 @@ const depthOver = (line: string): number => {
   }
 };
 
-/**
- * `source` within the bounds above: the same answer, its quotes and lists past MAX_DEPTH words, and
- * a list item's greater-than a character.
- */
+/** `source` within the bounds above: the same answer, its quotes and lists past MAX_DEPTH words. */
 export const bounded = (source: string): string => {
   const lines = source.split("\n");
   const { code } = codeLines(lines);
@@ -1555,9 +936,7 @@ export const bounded = (source: string): string => {
         return line;
       }
       const over = depthOver(line);
-      const within =
-        over === -1 ? line : `${line.slice(0, over)}\\${line.slice(over)}`;
-      return within.replace(GREATER_THAN, "$<item>\\>");
+      return over === -1 ? line : `${line.slice(0, over)}\\${line.slice(over)}`;
     })
     .join("\n");
 };
@@ -1567,9 +946,9 @@ export const bounded = (source: string): string => {
 // Reading the whole answer again for every few words that arrive costs more the longer it gets. But
 // only its last block can still change: the blocks before it are finished. So they are kept as they
 // were read, with the source they were read from and the names they define, and only what follows
-// them is read again, with those names. While the answer is written, a note or a reference to a link
-// whose definition has not arrived yet (`[^1]`, `[the wiki][wiki]`; models put them at the end) is
-// one already, so its marks never show: a note's number with nothing to lead to yet, a link's words.
+// them is read again, with those names. A note or a reference to a link whose definition has not
+// arrived yet (`[^1]`, `[the wiki][wiki]`) is what it is until then: the words as written, which
+// `m[0][1]` or a citation `[1][2]` that nothing defines stays.
 
 /** A block of the answer, and where it starts in the source: its nodes' places count from there. */
 export interface Placed {
@@ -1589,40 +968,15 @@ export interface Kept {
   defined?: Defined;
 }
 
-/** A note referred to, a full reference's name, a collapsed reference's: `[^1]`, `[…][wiki]`, `[wiki][]`. */
-const REFERRED =
-  /\[\^(?<note>[^\]\s]+)\]|\]\[(?<name>[^\]\n]+)\]|\[(?<own>[^\]\n]+)\]\[\]/gu;
-
-/** The names `source` refers to that neither it nor `defined` defines, as if defined before it: no address yet. */
-const comingIn = (source: string, defined: Defined): Defined => {
-  const own: Defined = new Map();
-  for (const found of source.matchAll(DEFINING)) {
-    define(own, found[0], 0);
-  }
-  const coming: Defined = new Map(defined);
-  for (const { groups } of source.matchAll(REFERRED)) {
-    const label =
-      groups?.note === undefined
-        ? (groups?.name ?? groups?.own ?? "")
-        : `^${groups.note}`;
-    if (!own.has(nameOf(label))) {
-      define(coming, `[${label}]:`, -1);
-    }
-  }
-  return coming;
-};
-
 export const NOTHING: Kept = { text: "", blocks: [] };
 
 /**
- * The blocks of `shown`, given what was kept from reading less of it, and what to keep now; while it
- * is `written`, with the names it refers to before their definitions arrive. `kept` comes back as it
- * was given when nothing more is finished.
+ * The blocks of `shown`, given what was kept from reading less of it, and what to keep now. `kept`
+ * comes back as it was given when nothing more is finished.
  */
 export const readBlocks = (
   shown: string,
-  kept: Kept,
-  written = false
+  kept: Kept
 ): { blocks: Placed[]; kept: Kept } => {
   // Other words than those kept (a new answer in the same place): start again.
   const held = shown.startsWith(kept.text) ? kept : NOTHING;
@@ -1634,11 +988,10 @@ export const readBlocks = (
     shift: 0,
   };
   const defined = held.defined ?? new Map();
-  const read = guarded(
-    tail,
-    budget,
-    written ? comingIn(tail, defined) : defined
-  ).children.map((node) => ({ node, base }));
+  const read = guarded(tail, budget, defined).children.map((node) => ({
+    node,
+    base,
+  }));
   const blocks = [...held.blocks, ...read];
   const cut = read.at(-1)?.node.position?.start.offset;
   const spent = budget.spent + base;
@@ -1658,7 +1011,7 @@ export const readBlocks = (
     for (const { node } of read.slice(0, -1)) {
       if (node.type === "definition" || node.type === "footnoteDefinition") {
         const at = startOf(node);
-        define(more, tail.slice(at, at + 1024), -1);
+        define(more, definedAt(tail, at, true) ?? "", -1);
       }
     }
     return {
@@ -1692,6 +1045,64 @@ export const readBlocks = (
 // its closing still to come, and so it stays once the answer is tidied (stopped, or streamed here).
 // An answer drawn whole with an opening nothing closes shows it as text. Sections may hold sections.
 
+const isWhite = (char: string | undefined) =>
+  char !== undefined && /\s/u.test(char);
+
+/**
+ * A section's opening (Sections, below), read: `<details>` and its attributes, then its
+ * `<summary>` on the next line or the same one, and nothing after; or null.
+ */
+const openingOf = (
+  text: string
+): { attributes: string; summary: string } | null => {
+  if (!text.startsWith("<details")) {
+    return null;
+  }
+  let at = "<details".length;
+  for (;;) {
+    let name = at;
+    while (isWhite(text[name])) {
+      name += 1;
+    }
+    if (name === at || !/^[a-z]$/u.test(text[name] ?? "")) {
+      break;
+    }
+    let end = name + 1;
+    while (/^[a-z-]$/u.test(text[end] ?? "")) {
+      end += 1;
+    }
+    if (text.startsWith('="', end)) {
+      const quote = text.indexOf('"', end + 2);
+      if (quote === -1 || text.slice(end, quote).includes("\n")) {
+        return null;
+      }
+      end = quote + 1;
+    }
+    at = end;
+  }
+  let close = at;
+  while (isWhite(text[close])) {
+    close += 1;
+  }
+  let summary = blankFrom(text, close + 1);
+  summary = blankFrom(text, summary + (text[summary] === "\n" ? 1 : 0));
+  if (text[close] !== ">" || !text.startsWith("<summary>", summary)) {
+    return null;
+  }
+  let end = text.length;
+  while (isSpaceOrTab(text[end - 1])) {
+    end -= 1;
+  }
+  const words = text.slice(summary + "<summary>".length, end);
+  return words.endsWith("</summary>") && !words.includes("\n")
+    ? {
+        attributes: text.slice("<details".length, at),
+        summary: words.slice(0, -"</summary>".length),
+      }
+    : null;
+};
+const CLOSING = /^<\/details>[ \t]*$/u;
+
 /** One block of the answer, or a section holding its own. */
 export type Grouped =
   | { type: "block"; placed: Placed }
@@ -1714,19 +1125,19 @@ const summaryOf = (text: string): PhrasingContent[] => {
 };
 
 interface Frame {
-  opening: RegExpExecArray;
+  opening: NonNullable<ReturnType<typeof openingOf>>;
   key: Placed;
   children: Grouped[];
 }
 
 const sectionOf = ({ opening, key, children }: Frame): Grouped => {
-  const summaryText = (opening.groups?.summary ?? "").trim();
+  const summaryText = opening.summary.trim();
   return {
     type: "section",
     summary: summaryOf(summaryText),
     summaryText,
     // `<details open>` stands open at first, as GitHub draws it.
-    open: /(?:^|\s)open(?:\s|=|$)/u.test(opening.groups?.attributes ?? ""),
+    open: /(?:^|\s)open(?:\s|=|$)/u.test(opening.attributes),
     children,
     key,
   };
@@ -1747,7 +1158,7 @@ export const groupSections = (
   const into = () => open.at(-1)?.children ?? root;
   for (const block of blocks) {
     const html = htmlOf(block);
-    const opening = html === null ? null : OPENING.exec(html);
+    const opening = html === null ? null : openingOf(html);
     const frame = open.length > 0 && past === 0 ? open.at(-1) : undefined;
     if (opening !== null && open.length < MAX_DEPTH) {
       open.push({ opening, key: block, children: [] });

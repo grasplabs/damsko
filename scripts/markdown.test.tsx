@@ -690,46 +690,64 @@ describe("components", () => {
     ]);
   });
 
-  test("while written, no caller's part is handed half an address: not `a`, `img`, `renderLink` or a provider", () => {
-    // Half of an address (`https://i`, `https://bare.exa`) is another site's: a picture drawn from
-    // it loads from there, a link leads there.
-    const answer =
-      "A chart: ![chart](https://images.example.com/q3.png), [the report](https://example.com/q3), <https://auto.example.com/x> and https://bare.example.com/path now.";
-    const handed = new Set<string | undefined>();
-    const hand: MarkdownLinkRenderer = (link) => {
-      handed.add(link.href);
-    };
-    for (let at = 1; at <= answer.length; at += 1) {
-      const source = answer.slice(0, at);
-      draw(source, {
-        streaming: true,
-        components: {
-          a: ({ href, children }) => {
-            handed.add(href);
-            return <i>{children}</i>;
+  test(
+    "while written, no caller's part is handed half an address: not `a`, `img`, `renderLink` or a provider",
+    () => {
+      // Half of an address (`https://i`, `https://bare.exa`) is another site's: a picture drawn from
+      // it loads from there, a link leads there. Each kind of address, a character at a time: a
+      // picture, a link, one in angle brackets, a bare one and a bare `www.`, and pictures and links
+      // by reference to a definition of any length, its address on its line or the next.
+      const long = `https://images.example.com/${"x".repeat(260)}.png`;
+      const answer = [
+        "A chart: ![chart](https://images.example.com/q3.png), [the report](https://example.com/q3), <https://auto.example.com/x> and https://bare.example.com/path now, or visit www.example.org today.",
+        "![c][c] and [d][d].",
+        `[c]: ${long}`,
+        "[d]:\n  https://next-line.example.com/d",
+        "",
+        "Then visit www.example.org",
+      ].join("\n\n");
+      const handed = new Set<string | undefined>();
+      const hand: MarkdownLinkRenderer = (link) => {
+        handed.add(link.href);
+      };
+      for (let at = 1; at <= answer.length; at += 1) {
+        const source = answer.slice(0, at);
+        draw(source, {
+          streaming: true,
+          components: {
+            a: ({ href, children }) => {
+              handed.add(href);
+              return <i>{children}</i>;
+            },
+            img: ({ src }) => {
+              handed.add(src);
+              return null;
+            },
           },
-          img: ({ src }) => {
-            handed.add(src);
-            return null;
-          },
-        },
-      });
-      draw(source, { streaming: true, renderLink: hand });
-      renderToStaticMarkup(
-        <MarkdownLinkProvider renderLink={hand}>
-          <Markdown streaming>{source}</Markdown>
-        </MarkdownLinkProvider>
+        });
+        draw(source, { streaming: true, renderLink: hand });
+        renderToStaticMarkup(
+          <MarkdownLinkProvider renderLink={hand}>
+            <Markdown streaming>{source}</Markdown>
+          </MarkdownLinkProvider>
+        );
+      }
+      expect(handed).toStrictEqual(
+        new Set([
+          "https://images.example.com/q3.png",
+          "https://example.com/q3",
+          "https://auto.example.com/x",
+          "https://bare.example.com/path",
+          // As the host's renderLink is handed it, and as `a` is (its address checked).
+          "http://www.example.org",
+          "http://www.example.org/",
+          long,
+          "https://next-line.example.com/d",
+        ])
       );
-    }
-    expect(handed).toStrictEqual(
-      new Set([
-        "https://images.example.com/q3.png",
-        "https://example.com/q3",
-        "https://auto.example.com/x",
-        "https://bare.example.com/path",
-      ])
-    );
-  });
+    },
+    SLOW_TEST
+  );
 
   test("a missing cell is handed an empty cell's node", () => {
     const nodes: string[] = [];
@@ -769,14 +787,20 @@ describe("links' titles and notes while written", () => {
     );
   });
 
-  test("a note's mark is its number before the note arrives, leading nowhere yet", () => {
-    const html = draw("A claim[^1] and more.", { streaming: true });
-    expect(html).toMatch(
-      /<sup\b[^>]*><span aria-label="Footnote 1">1<\/span><\/sup>/u
+  test("a note's mark and a reference are their words as written until their definitions arrive", () => {
+    const before = draw("A claim[^1] in [the wiki][wiki], m[0][1] and [x][].", {
+      streaming: true,
+    });
+    expect(textOf(before)).toBe(
+      "A claim[^1] in [the wiki][wiki], m[0][1] and [x][]."
     );
-    expect(textOf(html)).not.toContain("[^1]");
-    expect(anchors(html)).toStrictEqual([]);
-    expect(textOf(draw("A claim[^1] and more."))).toContain("[^1]");
+    expect(anchors(before)).toStrictEqual([]);
+    const after = draw(
+      "A claim[^1] in [the wiki][wiki].\n\n[^1]: The note.\n[wiki]: https://example.com/wiki\n",
+      { streaming: true }
+    );
+    expect(after).toMatch(/<sup\b[^>]*>.*Footnote 1.*<\/sup>/u);
+    expect(anchors(after)).toContain("https://example.com/wiki");
   });
 
   test("a section is one from its summary while written, and stays so once tidied", () => {

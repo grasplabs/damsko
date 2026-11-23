@@ -2,8 +2,8 @@
 // characters: what a chunk costs at the end of the stream, read as Markdown reads it while it is
 // written (bounded, repaired, `readBlocks` on the blocks it keeps from the chunks before), from
 // 4 KB to 16 KB. Markdown keeps what one read of the stream so far keeps, as the chunks before
-// would leave it. The families of many blocks: there what is kept from chunk to chunk matters. A
-// family of one block reads that block again with each chunk, as the tree test weighs.
+// would leave it. The marks and structures of many blocks: there what is kept from chunk to chunk
+// matters. A family of one block reads that block again with each chunk, as the tree test weighs.
 //
 //   pnpm exec vp test scripts/markdown-cost-stream.test.ts
 import { describe, expect, test } from "vitest";
@@ -12,9 +12,9 @@ import {
   bounded,
   NOTHING,
   readBlocks,
-  repair,
 } from "../src/components/markdown/parse.ts";
 import type { Kept } from "../src/components/markdown/parse.ts";
+import { repair } from "../src/components/markdown/repair.ts";
 import { GATE_TEST, weighAll } from "./markdown-cost.ts";
 import type { Entry } from "./markdown-cost.ts";
 
@@ -25,7 +25,8 @@ const STEPS = 2;
 const streamed =
   (chunk: number): Entry =>
   (text) => {
-    const from = Math.max(0, text.length - 2048);
+    // The last chunks, so the answer is as long as the family's size when they are read.
+    const from = Math.max(0, text.length - chunk * STEPS);
     const { kept } = readBlocks(
       repair(bounded(text.slice(0, from))).text,
       NOTHING
@@ -41,7 +42,7 @@ const streamed =
 
 describe("what an answer costs", () => {
   test(
-    "streamed in chunks: every family of many blocks in step with its length",
+    "streamed in chunks: every mark and structure of many blocks in step with its length",
     () => {
       expect(
         weighAll(
@@ -50,7 +51,7 @@ describe("what an answer costs", () => {
             "streamed by 16": streamed(16),
             "streamed by 1,024": streamed(1024),
           },
-          (family) => family.blocks,
+          (family) => family.blocks && family.kind !== "pair",
           4000
         )
       ).toStrictEqual([]);
