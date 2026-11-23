@@ -35,7 +35,8 @@ const drawnMenus = async (page: Page): Promise<DrawnRow[][]> =>
     const baselineOf = (text: Text): number => {
       const range = document.createRange();
       range.selectNodeContents(text);
-      const [box] = range.getClientRects();
+      // Firefox gives the keys' direction marks boxes of their own, with no height: skipped.
+      const box = [...range.getClientRects()].find((each) => each.height > 0);
       const style = text.parentElement && getComputedStyle(text.parentElement);
       if (context === null || style === null || box === undefined) {
         return Number.NaN;
