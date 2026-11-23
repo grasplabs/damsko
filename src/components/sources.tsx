@@ -4,6 +4,8 @@
 // a row, then the count ("3 sources"). Pressed, the list opens under it: one row per source, at
 // least a large control tall, its mark on a tile, its title, and where it lives in a quiet line
 // under the title; the whole row takes the press. A source is not a step: no seat and no dots.
+// A source may say more: the number its citations carry in the answer (`index`), after its title,
+// and the passage the answer used (`quote`), under where it lives.
 //
 //   <Sources>
 //     <SourcesTrigger count={2}>
@@ -141,6 +143,16 @@ export interface SourceProps {
    * @default "open"
    */
   access?: SourceAccess;
+  /**
+   * Its number, as its citations in the answer carry it: shown after the title. Screen readers
+   * skip it: the list's own order says it.
+   */
+  index?: number;
+  /**
+   * The passage the answer used, in the source's own words: up to two lines under where it lives.
+   * A source that cannot be opened shows none.
+   */
+  quote?: string;
   /** Its mark: a SourceIcon. */
   children?: ReactNode;
   /** Where it sits and how wide it is. */
@@ -276,9 +288,11 @@ const styles = stylex.create({
     flexGrow: 1,
     minWidth: 0,
   },
-  // The title's row: where it lives takes the next one.
-  titleRow: { display: "block" },
+  // The title's row, a body line tall: where it lives takes the next one.
+  titleRow: { display: "block", lineHeight: font.textBaseLine },
   title: {
+    fontSize: font.textSm,
+    lineHeight: font.textSmLine,
     // Its own run of words: a lock after it keeps the line's direction, so in a right-to-left
     // page it stands at the title's left.
     unicodeBidi: "isolate",
@@ -295,16 +309,38 @@ const styles = stylex.create({
     verticalAlign: "-2px",
     color: colors.mutedForeground,
   },
+  // Its number straight after the title's last word, also when the title wraps.
+  index: {
+    unicodeBidi: "isolate",
+    marginInlineStart: space["2"],
+    whiteSpace: "nowrap",
+    fontSize: font.textXs,
+    lineHeight: font.textXsLine,
+    fontVariantNumeric: "tabular-nums",
+    color: colors.subtleForeground,
+  },
   // Where it lives, a hair under the title.
   where: {
     display: "block",
-    marginBlockStart: `calc(${space["1"]} / 2 - ${space["1"]})`,
+    marginBlockStart: `calc(${space["1"]} / 2)`,
     fontSize: font.textXs,
     lineHeight: font.textXsLine,
     color: colors.mutedForeground,
     overflowWrap: "anywhere",
   },
   gone: { color: colors.destructive },
+  // The passage the answer used: two lines at most, in the body's ink.
+  quote: {
+    display: "-webkit-box",
+    marginBlockStart: `calc(${space["1"]} / 2)`,
+    overflow: "hidden",
+    fontSize: font.textXs,
+    lineHeight: font.textXsLine,
+    color: colors.bodyForeground,
+    overflowWrap: "anywhere",
+    WebkitBoxOrient: "vertical",
+    WebkitLineClamp: 2,
+  },
   tile: {
     position: "relative",
     display: "inline-grid",
@@ -414,6 +450,49 @@ export const SourcesContent = ({ children, style }: SourcesContentProps) => {
   );
 };
 
+/** Under a source's title: where it lives, with what keeps it shut, then the passage used. */
+const SourceNotes = ({
+  access,
+  where,
+  quote,
+}: {
+  access: SourceAccess;
+  where: string | undefined;
+  quote: string | undefined;
+}) => {
+  const words = useI18n().sources;
+  let note = where;
+  if (access === "gone") {
+    note = where === undefined ? words.gone : `${where}. ${words.gone}`;
+  } else if (access === "locked") {
+    note = where === undefined ? words.locked : `${where} · ${words.locked}`;
+  }
+  return (
+    <>
+      {note !== undefined && (
+        <>
+          {/* A comma a screen reader says between title and note; the eye has the line. */}
+          <span {...stylex.props(visuallyHidden)}>, </span>
+          <span
+            data-slot="source-where"
+            {...stylex.props(styles.where, access === "gone" && styles.gone)}
+          >
+            {note}
+          </span>
+        </>
+      )}
+      {access === "open" && quote !== undefined && quote !== "" && (
+        <>
+          <span {...stylex.props(visuallyHidden)}>, </span>
+          <span data-slot="source-quote" {...stylex.props(styles.quote)}>
+            {quote}
+          </span>
+        </>
+      )}
+    </>
+  );
+};
+
 /** One source: a line with its mark, its title and where it lives, in a link or a button that opens it. */
 export const Source = ({
   title,
@@ -421,6 +500,8 @@ export const Source = ({
   onOpen,
   origin,
   access = "open",
+  index,
+  quote,
   children,
   style,
 }: SourceProps) => {
@@ -431,12 +512,6 @@ export const Source = ({
   const host = citedSource(href)?.host;
   const where = host ?? (origin === "" ? undefined : origin);
   const live = access === "open" && (safe !== null || onOpen !== undefined);
-  let note: ReactNode = where;
-  if (access === "gone") {
-    note = where === undefined ? words.gone : `${where}. ${words.gone}`;
-  } else if (access === "locked") {
-    note = where === undefined ? words.locked : `${where} · ${words.locked}`;
-  }
   // The mark's tile beside the line: a tile is wider than a line's mark seat.
   const line = (
     <>
@@ -456,22 +531,17 @@ export const Source = ({
                   <Icon icon={LockIcon} />
                 </span>
               )}
-            </span>
-            {note !== undefined && (
-              <>
-                {/* A comma a screen reader says between title and note; the eye has the line. */}
-                <span {...stylex.props(visuallyHidden)}>, </span>
+              {index !== undefined && (
                 <span
-                  data-slot="source-where"
-                  {...stylex.props(
-                    styles.where,
-                    access === "gone" && styles.gone
-                  )}
+                  aria-hidden="true"
+                  data-slot="source-index"
+                  {...stylex.props(styles.index)}
                 >
-                  {note}
+                  {index}
                 </span>
-              </>
-            )}
+              )}
+            </span>
+            <SourceNotes access={access} where={where} quote={quote} />
           </TraceTitle>
           {safe !== null && live && (
             <span {...stylex.props(visuallyHidden)}> {words.newTab}</span>
