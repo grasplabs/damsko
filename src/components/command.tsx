@@ -1313,7 +1313,7 @@ const CommandRoot = ({
       autoHighlight
       loop
       onAction={run}
-      pendingAnnouncement={catalog.useAction.loading}
+      pendingAnnouncement={catalog.action.loading}
       {...stylex.props(commandMarker, styles.root, bare && styles.bare, style)}
     >
       {/* A function, so UI SDK does not look for its own CommandList among the children: not finding

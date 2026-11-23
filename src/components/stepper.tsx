@@ -361,6 +361,7 @@ const styles = stylex.create({
   },
   // A name wraps on a narrow row; it is never cut short.
   name: {
+    minWidth: 0,
     overflowWrap: "break-word",
     textWrap: "balance",
     transitionProperty: "color",

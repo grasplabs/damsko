@@ -19,10 +19,11 @@ Two steps: the CSS, and two attributes the product writes.
 pnpm dlx shadcn@4.23.0 add @damsko/theme-toggle
 ```
 
-Import `styles/tokens.css` and then `styles/themes.css` once, as a product's `@grasp-os/ui/styles.css` does. Every colour token is a `--damsko-` variable; `data-mode` (`light`, `dark` or `system`) and `data-theme` (`evergreen`, `pine` or `paper`) on an element restate them for it and everything inside:
+Import `styles/tokens.css` and then `styles/themes.css` once, at the app's root ([Get started](/get-started#light-and-dark)). Every colour token is a `--damsko-` variable; `data-mode` (`light`, `dark` or `system`) and `data-theme` (`evergreen`, `pine` or `paper`) on an element restate them for it and everything inside:
 
 ```tsx
-import "@grasp-os/ui/styles.css";
+import "@grasp-os/ui/styles/tokens.css";
+import "@grasp-os/ui/styles/themes.css";
 
 <html data-mode={mode} data-theme={theme}>
   …

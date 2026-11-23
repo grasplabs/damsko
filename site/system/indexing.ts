@@ -49,6 +49,21 @@ const fixedHeaders = fixedNames
   .map((name) => `${name}\n  Cache-Control: no-cache\n`)
   .join("");
 
+/**
+ * The registry (dist/r, scripts/registry-dist.ts). /r/<name>.json is main as last deployed and
+ * changes with every deploy: kept for five minutes, then asked for again. /r/<commit>/<name>.json
+ * never serves another commit's files: kept for a year. The second rule takes the first one's
+ * header off before it sets its own, as Cloudflare's _headers would otherwise join the two.
+ */
+const registryHeaders = [
+  "/r/*",
+  "  Cache-Control: public, max-age=300, must-revalidate",
+  "/r/:commit/*",
+  "  ! Cache-Control",
+  "  Cache-Control: public, max-age=31536000, immutable",
+  "",
+].join("\n");
+
 export const headersFile = indexable
-  ? fixedHeaders
-  : `/*\n  X-Robots-Tag: noindex, nofollow\n${fixedHeaders}`;
+  ? `${fixedHeaders}${registryHeaders}`
+  : `/*\n  X-Robots-Tag: noindex, nofollow\n${fixedHeaders}${registryHeaders}`;

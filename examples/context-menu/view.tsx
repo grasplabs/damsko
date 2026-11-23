@@ -1,3 +1,5 @@
+"use client";
+
 import {
   ContextMenu,
   ContextMenuCheckboxItem,
@@ -17,6 +19,7 @@ import {
   space,
 } from "@grasp-os/ui/lib/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
+import { useState } from "react";
 
 const layout = stylex.create({
   board: {
@@ -42,7 +45,11 @@ const layout = stylex.create({
   },
 });
 
+// The page holds each choice: the menu's items are taken out when it closes.
 export default function ContextMenuView() {
+  const [finished, setFinished] = useState(true);
+  const [compact, setCompact] = useState(false);
+  const [sort, setSort] = useState<string | null>("due");
   return (
     <ContextMenu>
       <ContextMenuTrigger aria-label="Launch board">
@@ -52,12 +59,17 @@ export default function ContextMenuView() {
       </ContextMenuTrigger>
       {/* Settings for how a board looks: two on or off, and one choice of order. */}
       <ContextMenuContent>
-        <ContextMenuCheckboxItem defaultChecked>
+        <ContextMenuCheckboxItem
+          checked={finished}
+          onCheckedChange={setFinished}
+        >
           Show finished tasks
         </ContextMenuCheckboxItem>
-        <ContextMenuCheckboxItem>Compact cards</ContextMenuCheckboxItem>
+        <ContextMenuCheckboxItem checked={compact} onCheckedChange={setCompact}>
+          Compact cards
+        </ContextMenuCheckboxItem>
         <ContextMenuSeparator />
-        <ContextMenuRadioGroup defaultValue="due">
+        <ContextMenuRadioGroup value={sort} onValueChange={setSort}>
           <ContextMenuLabel>Sort by</ContextMenuLabel>
           <ContextMenuRadioItem value="due">Due date</ContextMenuRadioItem>
           <ContextMenuRadioItem value="priority">Priority</ContextMenuRadioItem>

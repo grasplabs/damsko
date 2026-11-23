@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "@grasp-os/ui/components/button";
 import {
   DropdownMenu,
@@ -11,6 +13,7 @@ import {
 } from "@grasp-os/ui/components/dropdown-menu";
 import { space } from "@grasp-os/ui/lib/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
+import { useState } from "react";
 
 const layout = stylex.create({
   row: { display: "flex", alignItems: "center", gap: space[2] },
@@ -20,6 +23,8 @@ const layout = stylex.create({
 // over alone. A More menu may list the same words twice as well (a report opened here or in a new
 // tab).
 export default function DropdownMenuSameWords() {
+  const [sidebar, setSidebar] = useState(true);
+  const [inspector, setInspector] = useState(false);
   return (
     <div {...stylex.props(layout.row)}>
       <DropdownMenu>
@@ -29,14 +34,22 @@ export default function DropdownMenuSameWords() {
         <DropdownMenuContent>
           <DropdownMenuGroup>
             <DropdownMenuLabel>Sidebar</DropdownMenuLabel>
-            <DropdownMenuCheckboxItem defaultChecked>
+            <DropdownMenuCheckboxItem
+              checked={sidebar}
+              onCheckedChange={setSidebar}
+            >
               Pinned
             </DropdownMenuCheckboxItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
             <DropdownMenuLabel>Inspector</DropdownMenuLabel>
-            <DropdownMenuCheckboxItem>Pinned</DropdownMenuCheckboxItem>
+            <DropdownMenuCheckboxItem
+              checked={inspector}
+              onCheckedChange={setInspector}
+            >
+              Pinned
+            </DropdownMenuCheckboxItem>
           </DropdownMenuGroup>
         </DropdownMenuContent>
       </DropdownMenu>

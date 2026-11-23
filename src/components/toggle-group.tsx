@@ -136,7 +136,7 @@ const styles = stylex.create({
   // Across its box (fullWidth). Its items share the width, each growing from its own words' width,
   // so every word shows while they fit (equal parts would cut "Extra high" beside "Low"), and each
   // giving up room, down to an ellipsis, where they do not.
-  fullWidth: { display: "flex", width: "100%" },
+  fullWidth: { display: "flex", width: "100%", minWidth: 0 },
   shared: { flexGrow: 1, flexShrink: 1, flexBasis: "auto", minWidth: 0 },
   // An item's words in its share: one line, an ellipsis where they do not fit.
   words: {

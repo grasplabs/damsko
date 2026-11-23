@@ -5,7 +5,7 @@
 //   - every stylesheet the page links is inlined, keeping only the rules whose classes the page uses
 //     (StyleX's sheet holds every component's rules; the book needs few of them);
 //   - the fonts (Geist, Geist Serif, Geist Mono: SIL Open Font License 1.1) are embedded as base64,
-//     and their licence (public/fonts/OFL.txt) travels with them, in full, at the end of the file;
+//     and their licence (src/styles/fonts/OFL.txt) travels with them, in full, at the end of the file;
 //   - every local file a style or the markup names becomes data; a link to another page of the site
 //     becomes its full address on damsko.joingrasp.com;
 //   - every script, preload and icon link is dropped.
@@ -138,7 +138,7 @@ export const assemble = (out: string): number => {
     .replace("</head>", `<style>${css}</style></head>`)
     .replace(
       "</body>",
-      `<pre id="font-licence" hidden>${escapeHtml(readFileSync(join(out, "fonts", "OFL.txt"), "utf-8"))}</pre></body>`
+      `<pre id="font-licence" hidden>${escapeHtml(readFileSync(new URL("../../src/styles/fonts/OFL.txt", import.meta.url), "utf-8"))}</pre></body>`
     )
     .replace("<!doctype html>", `<!doctype html>\n${notice}`)
     .replace("<!DOCTYPE html>", `<!DOCTYPE html>\n${notice}`);

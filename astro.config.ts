@@ -9,7 +9,6 @@
 //   pnpm run preview   that build on port 4519
 //
 // No lock file: any number of these can run, from any folders, on different ports.
-import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import {
   lstatSync,
@@ -33,6 +32,8 @@ import { defineConfig } from "astro/config";
 import { Features } from "lightningcss";
 import type { Plugin } from "vite";
 
+import { version as damskoVersion } from "./scripts/build-registry.ts";
+import { commitSha } from "./scripts/registry-dist.ts";
 import { brandBookFile } from "./site/brand/book-file";
 import { brokenPages, describe } from "./site/system/broken.ts";
 import { root } from "./site/system/content.ts";
@@ -262,8 +263,6 @@ const crawlerFiles: AstroIntegration = {
   },
 };
 
-const FULL_SHA = /^[0-9a-f]{40}$/iu;
-
 /** Every file under a folder, at any depth. */
 const filesIn = (folder: string): string[] =>
   readdirSync(folder, { recursive: true, withFileTypes: true })
@@ -274,31 +273,9 @@ const filesIn = (folder: string): string[] =>
 const pagesIn = (folder: string): string[] =>
   filesIn(folder).filter((file) => file.endsWith(".html"));
 
-/** The build's commit: WORKERS_CI_COMMIT_SHA when it is a full SHA (a manual Workers Builds deploy put
- * the branch name there), else git's HEAD, else "unknown". */
-export const commitSha = (
-  env: Record<string, string | undefined> = process.env
-): string => {
-  const fromCi = env.WORKERS_CI_COMMIT_SHA ?? "";
-  if (FULL_SHA.test(fromCi)) {
-    return fromCi.toLowerCase();
-  }
-  try {
-    const head = execFileSync("git", ["rev-parse", "HEAD"], {
-      encoding: "utf-8",
-      stdio: ["ignore", "pipe", "ignore"],
-    }).trim();
-    if (FULL_SHA.test(head)) {
-      return head;
-    }
-  } catch {
-    // Not a git checkout: the build says so in version.json.
-  }
-  return "unknown";
-};
-
-/** version.json: the commit the build is of, so a release can prove the site serves it.
- * Cloudflare's Workers Builds names it in WORKERS_CI_COMMIT_SHA. */
+/** version.json: the commit the build is of and Damsko's version, so a release can prove the site
+ * serves it and a product can see that its pin is behind (README.md, "Pin a version").
+ * Cloudflare's Workers Builds names the commit in WORKERS_CI_COMMIT_SHA. */
 const versionFile: AstroIntegration = {
   name: "damsko:version-file",
   hooks: {
@@ -306,7 +283,7 @@ const versionFile: AstroIntegration = {
       const sha = commitSha();
       writeFileSync(
         nodePath.join(fileURLToPath(dir), "version.json"),
-        `${JSON.stringify({ sha })}\n`
+        `${JSON.stringify({ sha, version: damskoVersion })}\n`
       );
       logger.info(`version.json written: ${sha}`);
     },

@@ -24,6 +24,7 @@ const NamedFor = ({
   const words = useI18n().audioPlayer;
   return (
     <I18nProvider
+      locale="en-GB"
       catalog={{
         audioPlayer: {
           ...words,

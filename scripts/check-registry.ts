@@ -1,5 +1,6 @@
 // The registry holds: registry.json is what scripts/build-registry.ts writes now and matches
-// shadcn's schema; every file is `registry:file` with the target `~/<its path>`; npm packages are
+// shadcn's schema; every file is `registry:file` with the target `~/<its path>` (a font's with
+// `.base64` after it, as it is carried); every item says its version and its licence; npm packages are
 // named without a version; every import in an item's files resolves, installed, to a file of the
 // item or of an item it names, and every package it imports is one of its dependencies; and every
 // version in package.json comes from an exact pin in the catalog; and the docs' install commands
@@ -15,6 +16,7 @@ import nodePath from "node:path";
 import { registrySchema } from "shadcn/schema";
 import ts from "typescript6";
 
+import { packageExports } from "../site/start/get-started.ts";
 import {
   buildRegistry,
   catalog,
@@ -22,6 +24,8 @@ import {
   packageOf,
   registryText,
   root,
+  targetOf,
+  version as damskoVersion,
 } from "./build-registry.ts";
 import { readJson, stringsAt } from "./json.ts";
 
@@ -101,6 +105,31 @@ const docPages = (dir: string): string[] =>
       return path.endsWith(".mdx") ? [path] : [];
     }
   );
+
+/** Where the docs' exports map leads an import of the package: a file, null (refused) or nowhere. */
+const resolved = (address: string): string | null | undefined => {
+  for (const [pattern, target] of Object.entries(packageExports)) {
+    const [before, after] = pattern.split("*");
+    if (after === undefined) {
+      if (address === pattern) {
+        return target;
+      }
+    } else if (
+      before !== undefined &&
+      address.startsWith(before) &&
+      address.endsWith(after) &&
+      address.length >= before.length + after.length
+    ) {
+      return (
+        target?.replace(
+          "*",
+          address.slice(before.length, address.length - after.length)
+        ) ?? null
+      );
+    }
+  }
+  return undefined;
+};
 
 const failures: string[] = [];
 let checks = 0;
@@ -224,10 +253,18 @@ for (const item of registry.items) {
       `${item.name}: ${spec} names a version; list packages by name, so a project's catalog: stands`
     );
   }
+  check(
+    exactVersion.test(damskoVersion) && item.meta.version === damskoVersion,
+    `${item.name}: meta.version must be package.json's version, an exact one`
+  );
+  check(
+    item.meta.license.length > 0,
+    `${item.name}: meta.license must say what licence its files are under`
+  );
   for (const file of item.files) {
     check(
-      file.type === "registry:file" && file.target === `~/${file.path}`,
-      `${item.name}: ${file.path} must be registry:file with the target ~/${file.path}`
+      file.type === "registry:file" && file.target === targetOf(file.path),
+      `${item.name}: ${file.path} must be registry:file with the target ${targetOf(file.path)}`
     );
     const text = readFileSync(nodePath.join(root, file.path), "utf-8");
     check(text.length > 0, `${item.name}: ${file.path} is empty`);
@@ -274,7 +311,11 @@ for (const page of [...docPages("docs"), "site/start/get-started.ts"]) {
       command.groups?.version === catalog.shadcn,
       `${page}: runs shadcn@${command.groups?.version}, the catalog has ${catalog.shadcn}`
     );
-    for (const name of (command.groups?.names ?? "").trim().split(/\s+/u)) {
+    for (const name of (command.groups?.names ?? "")
+      .trim()
+      .split(/\s+/u)
+      // A flag (--overwrite, --yes) is not an item.
+      .filter((word) => !word.startsWith("--"))) {
       const item = /^@damsko\/(?<item>[\w-]+)$/u.exec(name)?.groups?.item;
       check(
         item !== undefined && items.has(item),
@@ -282,12 +323,18 @@ for (const page of [...docPages("docs"), "site/start/get-started.ts"]) {
       );
     }
   }
-  for (const command of text.matchAll(/\bpnpm add (?<packages>[^"`\\\n]+)/gu)) {
+  for (const command of text.matchAll(
+    /\bpnpm add (?<packages>[^"'`\\\n]+)/gu
+  )) {
     for (const spec of (command.groups?.packages ?? "").split(/\s+/u)) {
       const pinned = /^(?<name>@?[^@\s]+)@(?<version>[^\s]+)$/u.exec(
         spec
       )?.groups;
-      if (pinned?.name !== undefined) {
+      // A workspace's own package has no version to pin.
+      if (
+        pinned?.name !== undefined &&
+        pinned.version?.startsWith("workspace:") !== true
+      ) {
         check(
           pinned.version === catalog[pinned.name],
           `${page}: pins ${spec}, the catalog has ${pinned.name} ${catalog[pinned.name] ?? "not at all"}`
@@ -296,6 +343,47 @@ for (const page of [...docPages("docs"), "site/start/get-started.ts"]) {
     }
   }
 }
+
+// The exports map the docs give a product's packages/ui (site/start/get-started.ts) reaches every
+// file an app imports, each at one address: a new .tsx in lib/ or a fourth folder component fails
+// here until the map names it. README.md carries the same map.
+for (const item of registry.items) {
+  for (const { path } of item.files) {
+    // What an app imports: a component and its .stylex.ts, a block, lib/, hooks/ and the
+    // stylesheets. A component's helper, a declaration and a font are reached only by the
+    // files beside them.
+    const imported =
+      /^src\/components\/[^/]+\//u.test(path) ||
+      /^src\/components\/[^/]+(?:\.stylex\.ts|\.tsx)$/u.test(path) ||
+      /^src\/blocks\/.+\.tsx$/u.test(path) ||
+      /^src\/(?:lib|hooks)\/[^/]+(?<!\.d)\.tsx?$/u.test(path) ||
+      /^src\/styles\/[^/]+\.css$/u.test(path);
+    if (!imported) {
+      continue;
+    }
+    const inFolder = /^src\/components\/(?<folder>[^/]+)\//u.exec(path)?.groups
+      ?.folder;
+    // A folder component is imported by its index alone; a font, by fonts.css.
+    const address =
+      inFolder === undefined
+        ? `./${path.slice("src/".length).replace(/\.tsx?$/u, "")}`
+        : `./components/${inFolder}`;
+    const expected =
+      inFolder === undefined
+        ? `./${path}`
+        : `./src/components/${inFolder}/index.ts`;
+    check(
+      resolved(address) === expected,
+      `the docs' exports map (site/start/get-started.ts, packageExports) gives ${address} as ${String(resolved(address))}, not ${expected}`
+    );
+  }
+}
+check(
+  readFileSync(nodePath.join(root, "README.md"), "utf-8").includes(
+    JSON.stringify({ exports: packageExports }, null, 2).slice(2, -2)
+  ),
+  "README.md's exports map is not the docs' (site/start/get-started.ts, packageExports): copy it there"
+);
 
 if (failures.length > 0) {
   for (const message of failures) {

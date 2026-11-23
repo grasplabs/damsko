@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import type { Locator, Page } from "@playwright/test";
 
-import { listenToLiveRegions, openExample } from "./example.ts";
+import { fixedTime, listenToLiveRegions, openExample } from "./example.ts";
 
 const holdsFocus = async (element: Locator): Promise<boolean> =>
   await element.evaluate((node) => node.contains(document.activeElement));
@@ -136,6 +136,21 @@ test("while its action works it stays open, and it closes once the work is done"
   await page.mouse.click(5, 5);
   await expect(dialog).toBeVisible();
   await expect(dialog).toBeHidden();
+});
+
+test("an action's own loading words are said as its work starts", async ({
+  page,
+}) => {
+  const said = await listenToLiveRegions(page);
+  await openExample(page, "dialog", "basic", { time: fixedTime });
+  await page.clock.pauseAt(new Date(fixedTime.getTime() + 60_000));
+  await page.getByRole("button", { name: "Publish report" }).click();
+  await page.clock.runFor(500);
+  const dialog = page.getByRole("dialog", { name: "Publish the report" });
+  await dialog.getByRole("button", { name: "Publish", exact: true }).click();
+  // Well inside the second a press with no words of its own waits, and the 1.2s the work takes.
+  await page.clock.runFor(200);
+  expect(await said()).toStrictEqual(["Publishing"]);
 });
 
 test("a failed action says so and keeps it open", async ({ page }) => {

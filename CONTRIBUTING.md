@@ -15,7 +15,7 @@ Four layers, each built on the one before:
 | `site/` | The Astro site that renders `docs/` and `examples/` (`astro.config.ts`), with its own layout, search and Markdown twins for agents. |
 | `scripts/` | Repository tooling, run by Node directly: the registry generator (`build-registry.ts`), the static gates (`gates.ts`), the tree guard (`guard.ts`), the hooks' checks, the specs' server (`serve.ts`) and the unit tests (`*.test.ts`). |
 | `tests/` | The browser specs, Playwright Test against the built site: one per component, and one per rule that holds across the library. |
-| `registry.json` | The shadcn registry's source, written by `scripts/build-registry.ts` and checked by `scripts/check-registry.ts`; `pnpm build` runs `shadcn build` on it into `dist/r/`. |
+| `registry.json` | The shadcn registry's source, written by `scripts/build-registry.ts` and checked by `scripts/check-registry.ts`; `pnpm build` runs `scripts/registry-dist.ts`, which builds it into `dist/r/` and again into `dist/r/<commit>/`, with each item's version, commit and licence in its `meta`. |
 
 The site and the registry deploy together as static files to https://damsko.joingrasp.com (`wrangler.jsonc`).
 
@@ -87,4 +87,6 @@ Trunk-based, as in the product repository: branch from `main` as `<type>/<kebab-
 
 ## Release
 
-The site and the registry are built from `main`; no CI job deploys them. A release is a tag (`v0.1.0`, …) on `main`, with its entry in [CHANGELOG.md](CHANGELOG.md) moved from Unreleased to the version; products sync to a release and name it in their sync commit.
+The site and the registry are built from `main`; no CI job deploys them. A version of Damsko is a commit; the durable way to install one is to build the registry from it (`node scripts/registry-dist.ts <folder>` in a checkout, then `node scripts/serve.ts --dir <folder>`), and a product's record of which it has is its own `components.json` and sync commit. The site adds a convenience: a deploy serves the registry at `/r/{name}.json` and the same files at `/r/<commit>/{name}.json`, an address that never serves another commit's files, and `version.json` names the commit and the version served. It serves the current commit only (README, "Pin a version and update").
+
+A release is a tag (`v0.1.0`, …) on `main`, with its entry in [CHANGELOG.md](CHANGELOG.md) moved from Unreleased to the version and `version` in `package.json` raised with it (`pnpm generate` writes it into every registry item); products name the commit and the version in their sync commit.

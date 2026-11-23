@@ -76,11 +76,14 @@ jobs:
 
   # The registry as a product installs it: every item added by name with the
   # stock shadcn CLI from the registry built here, served on 127.0.0.1, into
-  # a fresh project; byte for byte, only the packages the items name, and it
-  # type-checks (scripts/check-install.ts). Its own job: it installs from npm.
+  # a fresh workspace; byte for byte, only the packages the items name, it
+  # type-checks, and the two apps Get started describes are built from that
+  # page's own code and opened in Chromium: the fonts load, the base is
+  # applied, the mode follows a choice, the words follow a runtime catalogue
+  # (scripts/check-install.ts). Its own job: it installs from npm.
   install:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -98,6 +101,7 @@ jobs:
       # The check installs into a fresh project with pnpm itself, as a product does: Corepack
       # provides the version package.json pins.
       - run: corepack enable
+      - run: vp exec playwright install --with-deps chromium
       - run: node scripts/check-install.ts
 
   # The browser specs (tests/*.spec.ts) against the built site, in four

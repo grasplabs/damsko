@@ -80,11 +80,11 @@
   --damsko-code-bg: light-dark(oklch(0.29 0.05 162 / 0.06), oklch(0.96 0.02 150 / 0.09));
   /* Type: families. */
   /* Everything that is not a title: interface, body, labels. */
-  --damsko-font-sans: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
+  --damsko-font-sans: "Geist", "Geist Variable", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
   /* Titles, figures and names in a list, at weight 400 only. */
   --damsko-font-serif: "Geist Serif", Georgia, serif;
   /* Code, token names and anything typed exactly. */
-  --damsko-font-mono: "Geist Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --damsko-font-mono: "Geist Mono", "Geist Mono Variable", ui-monospace, "SF Mono", Menlo, monospace;
   /* Type: sizes. */
   /* The smallest text there is: tags, labels, chips, code. */
   --damsko-text-xs: 0.8125rem;
@@ -366,6 +366,8 @@
   --damsko-duration-work: 1200ms;
   /* How long a result (Saved, Could not save) stays on a control before it returns. */
   --damsko-duration-hold: 1600ms;
+  /* How long work with no loading words of its own runs before a screen reader is told it is working. Work over sooner says only how it went: a copy never says it is working. */
+  --damsko-loading-delay: 1000ms;
   /* One turn of a spinner: slow enough to read as calm. Constant motion, so linear. */
   --damsko-duration-spin: 1500ms;
   /* How long a hold-to-confirm button is pressed and held before it acts: the fill crosses it in this time. */

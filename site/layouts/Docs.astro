@@ -24,7 +24,8 @@ import "../../src/styles/tokens.css";
 import "../../src/styles/themes.css";
 // The docs frame's own tokens: its grid, the stage's ground.
 import "../system/styles/tokens.css";
-import "../styles/fonts.css";
+// The fonts, as a product gets them from the registry's `fonts` item.
+import "../../src/styles/fonts.css";
 import "../system/styles/base.css";
 // A page on paper: no shell, its full length (print only).
 import "../system/styles/print.css";
@@ -32,6 +33,10 @@ import "../system/styles/site.css";
 import "../system/styles/prose.css";
 import "../system/styles/blocks.css";
 
+// The three small files every page preloads, at the addresses the build gives them.
+import geistCommon from "../../src/styles/fonts/geist-common.woff2?url";
+import geistMonoCommon from "../../src/styles/fonts/geist-mono-common.woff2?url";
+import geistSerifCommon from "../../src/styles/fonts/geist-serif-common.woff2?url";
 import markSvg from "../../public/brand/grasp-mark-ink.svg?raw";
 import DocsShell from "../chrome/DocsShell.tsx";
 import { navGroups } from "../chrome/nav";
@@ -133,9 +138,9 @@ const rail = headings.filter((heading) => heading.depth === 2 || heading.depth =
     <ClientRouter />
     <title>{`${title} - ${libraryName}`}</title>
     <SiteIcons />
-    <link rel="preload" href="/fonts/geist-common.woff2" as="font" type="font/woff2" crossorigin />
-    <link rel="preload" href="/fonts/geist-serif-common.woff2" as="font" type="font/woff2" crossorigin />
-    <link rel="preload" href="/fonts/geist-mono-common.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={geistCommon} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={geistSerifCommon} as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href={geistMonoCommon} as="font" type="font/woff2" crossorigin />
     {description && <meta name="description" content={description} />}
     {/* The one address of this page: without a trailing slash (astro.config.ts, trailingSlash). */}
     {!bare && <link rel="canonical" href={route === "/" ? "/" : route.replace(/\/$/u, "")} />}

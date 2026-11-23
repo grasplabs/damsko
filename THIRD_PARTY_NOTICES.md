@@ -68,7 +68,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ## Geist, Geist Mono and Geist Serif
 
-The fonts in `public/fonts/` (subsets of Geist, Geist Mono and Geist Serif, from https://github.com/vercel/geist-font), which the docs site serves and the brand book's one-file download embeds, are under the SIL Open Font License 1.1. The licence travels with them: `public/fonts/OFL.txt`, and in full at the end of the brand book's download.
+The fonts in `src/styles/fonts/` (subsets of Geist, Geist Mono and Geist Serif, from https://github.com/vercel/geist-font), which the registry's `fonts` item installs, the docs site serves and the brand book's one-file download embeds, are under the SIL Open Font License 1.1, not Damsko's licence. The licence travels with them: `src/styles/fonts/OFL.txt`, installed beside the files, and in full at the end of the brand book's download.
 
 ```text
 Geist, Geist Mono:
