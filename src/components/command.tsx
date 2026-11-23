@@ -4,7 +4,6 @@
 // and the list Select and Combobox share (lib/styles listStyles). The list is always shown; typing
 // ranks it. CommandDialog puts it in a dialog's panel over the page, opened by its trigger or
 // mod+k.
-// Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
 //   <Command items={commands} onAction={(value) => run(value)}>
 //     <CommandInput aria-label="Search actions" placeholder="Search actions" />

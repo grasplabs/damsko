@@ -2,7 +2,6 @@
 // in StyleX, built on UI SDK's Tabs. Two looks, on the list:
 // `default`, the tabs on a soft track with the chosen one raised; `line`, words in muted
 // on one hairline that turn ink, a line under the chosen one that glides to the next.
-// Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
 //   <Tabs defaultValue="overview">
 //     <TabsList aria-label="Project" variant="line">

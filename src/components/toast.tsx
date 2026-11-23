@@ -6,7 +6,6 @@
 // Only a toast that stays (a loading one, or one given no time) has a close button, in its corner:
 // nothing else in sight would put it away. Newer toasts stack in front; the stack opens under a
 // pointer or focus. Place it once; call `toast()` from anywhere.
-// Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
 //   <Toaster />
 //   toast.success("Report shared", { description: "Everyone on the team can read it." });

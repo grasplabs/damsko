@@ -2,7 +2,6 @@
 // is the row: an avatar, and a column of a header, the surface and a footer, at the start of the
 // line or, with `align="end"`, at its end. The surface is a Bubble for the person's words, or the
 // assistant's answer drawn from Markdown across the column (MessageResponse).
-// Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
 //   <Message align="end">
 //     <MessageContent>

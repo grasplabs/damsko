@@ -2,7 +2,6 @@
 // StyleX: a small card with its picture or a mark for its kind, its name and a line
 // about it, and its actions. A prompt input shows them above its text and a message under its
 // words; neither is known here.
-// Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
 //   <AttachmentGroup aria-label="Files to send">
 //     {files.map((file) => (

@@ -2,7 +2,6 @@
 // SDK's Drawer: a raised panel with the one corner on its top, a handle to drag it by, a body that
 // scrolls between the title and actions that stay put. A drag down, Escape or a press on the shade
 // closes it; with `snapPoints` it rests at more than one height, and the handle steps through them.
-// Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
 //   <Drawer>
 //     <DrawerTrigger asChild><Button>Set a reminder</Button></DrawerTrigger>

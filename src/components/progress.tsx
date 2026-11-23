@@ -2,7 +2,6 @@
 // under way when how far is unknown, in StyleX,
 // built on UI SDK's Progress: a round track in three
 // heights, the primary colour for what is done, and a ring in three sizes.
-// Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
 //   <Progress label="Exporting the report" value={60} />
 //   <Progress label="Connecting" value={null} />                  under way, how far unknown

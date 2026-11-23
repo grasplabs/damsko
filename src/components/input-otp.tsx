@@ -3,7 +3,6 @@
 // One native input holds the code, so paste, autofill from a text message, undo and the form all
 // work as they do for any field; the squares only draw it. Each square has Input's look, and the
 // one typing goes to takes the focus edge.
-// Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
 //   <InputOTP maxLength={6} onComplete={verify} aria-label="Verification code">
 //     <InputOTPGroup>

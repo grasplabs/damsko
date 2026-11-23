@@ -1,10 +1,7 @@
-// PromptInput: where a person writes to an assistant, after shadcn's Prompt Input pattern
-// (apps/v4/content/docs/ai-elements/base/prompt-input.mdx and its demo), whose parts keep the AI
-// Elements names its migration keeps, in StyleX on UI SDK's Token Input and Trigger Menu. A card
-// with the files on top (Attachment), then the text, then a footer of tools (Button, DropdownMenu),
-// Submit at the end. Enter sends and Shift+Enter starts a line; an input method's Enter never
-// sends, and Enter in an open suggestion menu chooses the suggestion.
-// Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
+// PromptInput: where a person writes to an assistant, in StyleX on UI SDK's Token Input and Trigger
+// Menu. A card with the files on top (Attachment), then the text, then a footer of tools (Button,
+// DropdownMenu), Submit at the end. Enter sends and Shift+Enter starts a line; an input method's
+// Enter never sends, and Enter in an open suggestion menu chooses the suggestion.
 //
 //   <PromptInput onSubmit={({ text, files, tokens }) => send(text, files, tokens)} status={status}>
 //     <PromptInputHeader>
@@ -46,11 +43,11 @@
 // slot: in place of the text the caller may put a question or a dictation, and focus follows it
 // there and back. Every value is a token.
 //
-// shadcn draws the pattern as an InputGroup with addons above and below a textarea. Damsko's
-// InputGroup is a field's box (an input's hairline and corner, no room inside, its addons padded as
-// a field's), so the card here keeps the composer's own look, and its tools are Buttons, not
-// InputGroupButtons (which set themselves in from a field's edge). The text is Token Input's editor,
-// not a textarea, so a mention is a token; the length limit's sums are in prompt-input-limit.ts.
+// The card is not an InputGroup with addons above and below a textarea: Damsko's InputGroup is a
+// field's box (an input's hairline and corner, no room inside, its addons padded as a field's), so
+// the card here keeps the composer's own look, and its tools are Buttons, not InputGroupButtons
+// (which set themselves in from a field's edge). The text is Token Input's editor, not a textarea,
+// so a mention is a token; the length limit's sums are in prompt-input-limit.ts.
 "use client";
 
 import * as stylex from "@stylexjs/stylex";

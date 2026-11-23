@@ -2,7 +2,6 @@
 // in StyleX, built on UI SDK's
 // HoverCard: the popup's raised surface with the one corner, placed beside the link and kept inside
 // the window. The link stays a link: a press or a tap follows it.
-// Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
 //   <HoverCard>
 //     <HoverCardTrigger href="/people/amara">Amara Okafor</HoverCardTrigger>

@@ -3,7 +3,6 @@
 // Menubar and Menu: a quiet bar with the system's edge, triggers drawn as a list's items, and its
 // menus in the raised panel the dropdown menu has, with items, checkbox and radio items, and
 // submenus of their own.
-// Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
 //   <Menubar aria-label="Editor">
 //     <MenubarMenu>

@@ -2,7 +2,6 @@
 // a Trace with a TraceCollapsible for the run, whose line counts what passed and failed, and
 // one for each suite, open when it has a failure; each test a TraceLine, a failed one opening on its
 // error on the code surface.
-// Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
 //   <TestResults summary={{ passed: 12, failed: 1, skipped: 1, total: 14, duration: 1840 }}>
 //     <TestResultsHeader />

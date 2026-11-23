@@ -2,7 +2,6 @@
 // one quiet surface with the system's bevel, and ghost Buttons of one size inside it. A plain
 // `role="group"`, named by `aria-label`: UI SDK has no primitive for it, and it is not a toolbar, so
 // Tab reaches every button.
-// Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
 //   <ButtonGroup aria-label="Text alignment">
 //     <Button variant="ghost" size="icon" aria-label="Align left"><Icon icon={TextAlignStartIcon} /></Button>

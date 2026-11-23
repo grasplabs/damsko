@@ -2,7 +2,6 @@
 // in StyleX, built on UI SDK's
 // Select: closed, it is an Input (the same fill, hairline, heights and corner), so a select and a
 // field stand level in one form; open, it is a popup on the raised ground.
-// Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
 //   <Field>
 //     <FieldLabel>Role</FieldLabel>
