@@ -1312,3 +1312,43 @@ test("levels: on a phone the sheet shows the level, and Back and focus stay insi
   await expect(opener).toBeFocused();
   await expect(sheet).toBeVisible();
 });
+
+test("a floating sidebar nests round its rows in the squircle; the page card beside an inset one keeps its plain corner", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await openExample(page, "sidebar", "floating");
+  // The sidebar's own card is the part of it that carries the edge.
+  const floating = await page
+    .getByRole("complementary")
+    .locator("xpath=descendant-or-self::*")
+    .evaluateAll((elements) => {
+      const edged = elements.find(
+        (element) => getComputedStyle(element).borderTopWidth !== "0px"
+      );
+      if (edged === undefined) {
+        return null;
+      }
+      const look = getComputedStyle(edged);
+      return [
+        look.borderTopLeftRadius,
+        look.getPropertyValue("corner-top-left-shape"),
+      ];
+    });
+  // A row's 16px corner plus the 8px the sidebar keeps round its rows.
+  expect(floating?.[0]).toBe("24px");
+  expect(floating?.[1]).not.toBe("round");
+  expect(floating?.[1]).not.toBe("superellipse(1)");
+
+  await openExample(page, "sidebar", "inset");
+  // The app's main surface holds no sidebar rows: the original's plain 12px corner.
+  const inset = await page.getByRole("main").evaluate((element) => {
+    const look = getComputedStyle(element);
+    return [
+      look.borderTopLeftRadius,
+      look.getPropertyValue("corner-top-left-shape"),
+    ];
+  });
+  expect(inset[0]).toBe("12px");
+  expect(["round", "superellipse(1)"]).toContain(inset[1]);
+});

@@ -178,7 +178,7 @@ const styles = stylex.create({
       insetInline: 0,
       bottom: 0,
       height: 2,
-      borderRadius: 2,
+      borderRadius: radius.hairline,
       backgroundColor: {
         default: "transparent",
         ":is([aria-selected=true])": {
@@ -200,7 +200,7 @@ const styles = stylex.create({
     bottom: 0,
     width: 0,
     height: 2,
-    borderRadius: 2,
+    borderRadius: radius.hairline,
     backgroundColor: colors.mint,
     opacity: {
       default: 0,
