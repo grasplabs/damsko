@@ -100,6 +100,25 @@ test("resting on a theme's tile, or tabbing to it, shows that theme; leaving put
   await expect.poll(async () => await themeOf(themes)).toBe("pine");
 });
 
+test("focus on a theme's tile tells the caller that theme, and leaving it tells it none", async ({
+  page,
+}) => {
+  await open(page, "preview");
+  const themes = page.getByRole("radiogroup", { name: "Colours" });
+  const shown = page.getByRole("status");
+  await expect(shown).toHaveText("Showing the chosen theme");
+  // Tab reaches the chosen tile: focus alone, no pointer and no choice made.
+  await page.getByRole("button", { name: "Before the picker" }).focus();
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Tab");
+  await expect(
+    themes.getByRole("radio", { name: /^Evergreen/u })
+  ).toBeFocused();
+  await expect(shown).toHaveText("Showing evergreen");
+  await page.keyboard.press("Tab");
+  await expect(shown).toHaveText("Showing the chosen theme");
+});
+
 test("the picker offers the modes and the caller's themes as two named groups", async ({
   page,
 }) => {
