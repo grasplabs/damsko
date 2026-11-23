@@ -562,3 +562,11 @@ test("with truncate, words too long for the room stay on one line and are cut, a
       .evaluate((words) => words.scrollWidth > words.clientWidth)
   ).toBe(false);
 });
+
+test("a button keeps the room its longest words need, failure's too: Export is as wide as Not exported", async ({
+  page,
+}) => {
+  await openExample(page, "button", "sizes");
+  const box = await page.getByRole("button", { name: "Export" }).boundingBox();
+  expect(box?.width).toBeCloseTo(134, 0);
+});
