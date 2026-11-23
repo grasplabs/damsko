@@ -46,9 +46,8 @@ import { useI18n } from "../lib/i18n";
 import {
   keepBodyPut,
   layerStyles,
-  shadeStyles,
+  shadeProps,
   useLayerBody,
-  watchShade,
 } from "../lib/layer";
 import {
   focusRing,
@@ -187,7 +186,6 @@ const FADE = space["6"];
 const lowerRest = ":is([data-snap-point]):not([data-expanded])";
 
 const styles = stylex.create({
-  // The shade over the page. UI SDK sets its opacity as the panel moves.
   // The panel (layerStyles' panel): the one corner on its top. As wide as the window up to
   // drawer-width, in the middle; as tall as its content up to drawer-height.
   panel: {
@@ -336,10 +334,7 @@ export const DrawerContent = ({
   const snaps = use(SnapsContext);
   return (
     <>
-      <BackdropPrimitive
-        render={<div ref={watchShade} data-slot="drawer-overlay" />}
-        {...stylex.props(shadeStyles.shade)}
-      />
+      <BackdropPrimitive {...shadeProps("drawer-overlay")} />
       <ContentPrimitive
         {...rest}
         {...stylex.props(

@@ -6,7 +6,7 @@
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
-import { useState } from "react";
+import { createElement, useState } from "react";
 
 import {
   colors,
@@ -212,12 +212,16 @@ export const watchPanel = (element: HTMLElement | null) => {
 // button, its work done), that swallowed the person's next press for the whole leave. UI SDK reads
 // the shade's own box, so a shade that was not pressed leaves with none: its scrim is drawn by its
 // ::before, over the window whatever its box, and the next press goes through.
+//
+// The fix belongs in UI SDK: layers.js should record why a layer closed and swallow a press during
+// its leave only when an outside press closed it. Once it does, this whole section goes and every
+// shade is a plain fixed box again.
 
 // UI SDK marks a closing shade `data-closed` until it goes, and `data-ending-style` only while its own
 // fade runs, which may end before its panel's.
 const leavingUnpressed = ":is([data-closed]:not([data-shade-pressed]))";
 
-export const shadeStyles = stylex.create({
+const shadeStyles = stylex.create({
   shade: {
     position: "fixed",
     inset: { default: 0, [leavingUnpressed]: "0 auto auto 0" },
@@ -236,18 +240,37 @@ export const shadeStyles = stylex.create({
 });
 
 /**
- * A shade's ref, with shadeStyles' shade: as its layer closes, whether the last press or key before
- * was a press on the shade (`data-shade-pressed`), so only the shade that closed its layer keeps its
- * box as it leaves. The observer runs once the event that closed it is through.
+ * Marks the shade `data-shade-pressed` as its layer closes when a press on it is what closed it, so
+ * only that shade keeps its box as it leaves. A press on the shade that ends with the layer still
+ * open (an alert dialog's, which a press outside never closes) is forgotten once it is over, so a
+ * close that follows by any other road (a call, a screen reader's click, a phone's back) leaves no
+ * box behind. Returns the clean-up, as a ref callback's.
  */
-export const watchShade = (element: HTMLElement | null) => {
+const watchShade = (element: HTMLElement | null) => {
   if (element === null) {
     return keep;
   }
   const view = element.ownerDocument.defaultView;
   let pressed = false;
+  let check: ReturnType<typeof setTimeout> | undefined;
   const heard = (event: Event) => {
     pressed = event.type === "pointerdown" && event.target === element;
+  };
+  // UI SDK closes on the press's down, its up or (by touch) its click; React marks the shade closed
+  // in a microtask after. A task later, a shade still open was pressed in vain.
+  const over = (event: Event) => {
+    if (event instanceof PointerEvent && event.pointerType === "touch") {
+      return;
+    }
+    clearTimeout(check);
+    check = setTimeout(() => {
+      if (element.dataset.closed === undefined) {
+        pressed = false;
+      }
+    }, 0);
+  };
+  const cancelled = () => {
+    pressed = false;
   };
   const settle = new MutationObserver(() => {
     element.toggleAttribute(
@@ -259,14 +282,36 @@ export const watchShade = (element: HTMLElement | null) => {
     attributes: true,
     attributeFilter: ["data-closed"],
   });
-  view?.addEventListener("pointerdown", heard, true);
-  view?.addEventListener("keydown", heard, true);
+  const listened = [
+    ["pointerdown", heard],
+    ["keydown", heard],
+    ["pointerup", over],
+    ["click", over],
+    ["pointercancel", cancelled],
+  ] as const;
+  for (const [type, listener] of listened) {
+    view?.addEventListener(type, listener, true);
+  }
   return () => {
+    clearTimeout(check);
     settle.disconnect();
-    view?.removeEventListener("pointerdown", heard, true);
-    view?.removeEventListener("keydown", heard, true);
+    for (const [type, listener] of listened) {
+      view?.removeEventListener(type, listener, true);
+    }
   };
 };
+
+/**
+ * Everything a layer's shade takes, for its Backdrop part, so no shade can have the look without
+ * the watch that lets the next press through: its element (named `slot`), the scrim and the
+ * caller's own styles after it (a fade).
+ *
+ *   <DialogBackdrop {...shadeProps("dialog-overlay", styles.fade)} />
+ */
+export const shadeProps = (slot: string, ...style: stylex.StyleXStyles[]) => ({
+  render: createElement("div", { ref: watchShade, "data-slot": slot }),
+  ...stylex.props(shadeStyles.shade, style),
+});
 
 // ---- The scrolling body -------------------------------------------------------------------------
 

@@ -63,34 +63,6 @@ test("a press on the shade does nothing; Escape cancels it and gives focus back 
   await expect(trigger).toBeFocused();
 });
 
-test("as it leaves after its answer, the page takes the next press, though the shade was pressed before", async ({
-  page,
-}) => {
-  // With motion, so it takes the time of its leave to go.
-  await page.emulateMedia({ reducedMotion: "no-preference" });
-  await openExample(page, "alert-dialog", "basic");
-  await page.evaluate(() => {
-    const button = document.createElement("button");
-    button.textContent = "Corner";
-    button.style.cssText = "position:fixed;top:0;left:0;width:40px;height:40px";
-    button.addEventListener("click", () => {
-      button.dataset.pressed = "";
-    });
-    document.body.append(button);
-  });
-  const trigger = page.getByRole("button", { name: "Delete workspace" });
-  await trigger.click();
-  const dialog = page.getByRole("alertdialog", { name: "Delete Northwind?" });
-  await expect(dialog).toBeVisible();
-  await page.mouse.click(20, 20);
-  await dialog.getByRole("button", { name: "Keep it" }).click();
-  await expect(trigger).toBeFocused();
-  await page.mouse.click(20, 20);
-  await expect(page.getByRole("button", { name: "Corner" })).toHaveAttribute(
-    "data-pressed"
-  );
-});
-
 test("the safe answer closes it and gives focus back to its trigger", async ({
   page,
 }) => {

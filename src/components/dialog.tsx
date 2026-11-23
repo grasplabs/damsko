@@ -47,10 +47,9 @@ import { useI18n } from "../lib/i18n";
 import { Icon, XIcon } from "../lib/icons";
 import {
   layerStyles,
-  shadeStyles,
+  shadeProps,
   useLayerBody,
   watchPanel,
-  watchShade,
 } from "../lib/layer";
 import { focusRingInset, scrollbarHidden } from "../lib/styles";
 import {
@@ -294,7 +293,6 @@ const look = stylex.create({
 /** The dialog's look, for the panels built like it: Alert dialog's and Command's. */
 export const dialogStyles = {
   ...look,
-  overlay: [shadeStyles.shade, look.overlay],
   panel: [layerStyles.panel, look.panel],
   title: [layerStyles.title, look.title],
   description: layerStyles.description,
@@ -344,10 +342,7 @@ export const DialogContent = ({
   const { close } = useI18n().dialog;
   return (
     <>
-      <BackdropPrimitive
-        render={<div ref={watchShade} data-slot="dialog-overlay" />}
-        {...stylex.props(styles.overlay)}
-      />
+      <BackdropPrimitive {...shadeProps("dialog-overlay", styles.overlay)} />
       <ContentPrimitive
         {...mergeProps(rest, { ref: watchPanel })}
         {...stylex.props(

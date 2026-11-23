@@ -85,7 +85,7 @@ import type {
 import { useI18n } from "../lib/i18n";
 import { EllipsisIcon, Icon, LoaderIcon, SearchIcon } from "../lib/icons";
 import type { IconData } from "../lib/icons";
-import { watchPanel } from "../lib/layer";
+import { shadeProps, watchPanel } from "../lib/layer";
 import {
   listStyles,
   menuStyles,
@@ -1447,7 +1447,13 @@ export const CommandDialog = ({
           </Button>
         </DialogTrigger>
       )}
-      <DialogBackdrop {...stylex.props(dialogStyles.overlay, styles.fade)} />
+      <DialogBackdrop
+        {...shadeProps(
+          "command-dialog-overlay",
+          dialogStyles.overlay,
+          styles.fade
+        )}
+      />
       <DialogContentPrimitive
         ref={watchPalette}
         render={<div data-slot="command-dialog" />}

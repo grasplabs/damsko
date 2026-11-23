@@ -44,7 +44,7 @@ import type { ComponentProps, ReactNode } from "react";
 
 import { useReturnFocus } from "../hooks/use-return-focus";
 import { useI18n } from "../lib/i18n";
-import { watchBody, watchPanel, watchShade } from "../lib/layer";
+import { shadeProps, watchBody, watchPanel } from "../lib/layer";
 import { focusRingInset, scrollbarHidden } from "../lib/styles";
 import { space } from "../lib/tokens.stylex";
 import { className, slotProps } from "../lib/utils";
@@ -199,8 +199,7 @@ export const AlertDialogContent = ({
   return (
     <>
       <BackdropPrimitive
-        render={<div ref={watchShade} data-slot="alert-dialog-overlay" />}
-        {...stylex.props(dialogStyles.overlay)}
+        {...shadeProps("alert-dialog-overlay", dialogStyles.overlay)}
       />
       <ContentPrimitive
         initialFocus={safe}
