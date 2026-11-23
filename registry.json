@@ -150,7 +150,6 @@
         "@ui-sdk/react"
       ],
       "registryDependencies": [
-        "@damsko/button",
         "@damsko/hooks",
         "@damsko/lib"
       ],
@@ -1906,10 +1905,13 @@
         "@ui-sdk/react"
       ],
       "registryDependencies": [
+        "@damsko/alert",
         "@damsko/attachment",
         "@damsko/button",
+        "@damsko/collapsible",
         "@damsko/dropdown-menu",
         "@damsko/lib",
+        "@damsko/skeleton",
         "@damsko/tooltip"
       ],
       "docs": "https://damsko.joingrasp.com/components/prompt-input",

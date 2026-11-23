@@ -872,6 +872,30 @@
   --damsko-attachment-thumb: var(--damsko-control-default);
   /* The width of the menu that opens at the caret when @ or / is typed. */
   --damsko-prompt-input-mention-width: 18rem;
+  /* The least width of a one-row prompt input's text: with less room beside the tools, the text takes the row and the tools go under it. The text never gives. */
+  --damsko-prompt-input-field-min: 8rem;
+  /* The working light over a prompt input's top edge: lime, sea and mint in beams with gaps between, ending as it starts so it loops without a seam. */
+  --damsko-prompt-input-light: linear-gradient(90deg, var(--damsko-brand-mint) 0%, var(--damsko-brand-sea) 12%, transparent 22%, var(--damsko-brand-lime) 34%, var(--damsko-brand-mint) 44%, transparent 54%, var(--damsko-brand-sea) 64%, var(--damsko-brand-lime) 76%, transparent 88%, var(--damsko-brand-mint) 100%);
+  /* The working light in one accent colour, the colour set on the light's layer. */
+  --damsko-prompt-input-tint: linear-gradient(90deg, currentColor 0%, color-mix(in oklch, currentColor 55%, transparent) 14%, transparent 24%, currentColor 36%, color-mix(in oklch, currentColor 30%, transparent) 50%, transparent 58%, currentColor 68%, color-mix(in oklch, currentColor 45%, transparent) 82%, currentColor 100%);
+  /* Success: a soft glow round a prompt input's card in the colour set on it, mint by default. It fades out; it never draws a line. */
+  --damsko-prompt-input-halo: 0 0 10px 2px color-mix(in oklch, currentColor 45%, transparent), 0 3px 18px 3px color-mix(in oklch, currentColor 25%, transparent);
+  /* The success halo, from nothing to full and out again: a moment, played once. */
+  --damsko-prompt-input-halo-time: 1.2s;
+  /* A prompt input's card over what scrolls behind it (variant="glass"): the card's colour most of the way, over a blur. */
+  --damsko-prompt-input-glass: color-mix(in oklch, var(--damsko-card) 86%, transparent);
+  /* The backdrop filter that goes with prompt-input-glass. */
+  --damsko-prompt-input-glass-blur: blur(14px) saturate(1.5);
+  /* How strongly the working light shows round the card: soft, never a hard ring. */
+  --damsko-prompt-input-light-opacity: 0.9;
+  /* How long the working light takes to come up or go. */
+  --damsko-prompt-input-light-in: 280ms;
+  /* The widest beam of the working light, once along the edge. A continuous sign of life: it may loop longer than a transition. */
+  --damsko-prompt-input-beam: 6s;
+  /* The quickest beam of the working light. */
+  --damsko-prompt-input-beam-fast: 4.4s;
+  /* The slowest beam of the working light: it breathes, it does not race. */
+  --damsko-prompt-input-beam-slow: 7s;
   /* Message: message. */
   /* The widest a person's message grows across the conversation, so it reads as theirs. */
   --damsko-message-bubble-width: 80%;

@@ -188,6 +188,10 @@
   --damsko-table-of-contents-tick-active: var(--damsko-space-5);
   --damsko-table-of-contents-tick-gap: var(--damsko-space-2);
   --damsko-attachment-thumb: var(--damsko-control-default);
+  --damsko-prompt-input-light: linear-gradient(90deg, var(--damsko-brand-mint) 0%, var(--damsko-brand-sea) 12%, transparent 22%, var(--damsko-brand-lime) 34%, var(--damsko-brand-mint) 44%, transparent 54%, var(--damsko-brand-sea) 64%, var(--damsko-brand-lime) 76%, transparent 88%, var(--damsko-brand-mint) 100%);
+  --damsko-prompt-input-tint: linear-gradient(90deg, currentColor 0%, color-mix(in oklch, currentColor 55%, transparent) 14%, transparent 24%, currentColor 36%, color-mix(in oklch, currentColor 30%, transparent) 50%, transparent 58%, currentColor 68%, color-mix(in oklch, currentColor 45%, transparent) 82%, currentColor 100%);
+  --damsko-prompt-input-halo: 0 0 10px 2px color-mix(in oklch, currentColor 45%, transparent), 0 3px 18px 3px color-mix(in oklch, currentColor 25%, transparent);
+  --damsko-prompt-input-glass: color-mix(in oklch, var(--damsko-card) 86%, transparent);
   --damsko-message-text: var(--damsko-text-sm);
   --damsko-sidebar: light-dark(oklch(0.962 0.006 165.08), oklch(0.173 0.028 169.36));
   --damsko-sidebar-menu-button-height: var(--damsko-control-sm);
@@ -465,6 +469,10 @@
   --damsko-table-of-contents-tick-active: var(--damsko-space-5);
   --damsko-table-of-contents-tick-gap: var(--damsko-space-2);
   --damsko-attachment-thumb: var(--damsko-control-default);
+  --damsko-prompt-input-light: linear-gradient(90deg, var(--damsko-brand-mint) 0%, var(--damsko-brand-sea) 12%, transparent 22%, var(--damsko-brand-lime) 34%, var(--damsko-brand-mint) 44%, transparent 54%, var(--damsko-brand-sea) 64%, var(--damsko-brand-lime) 76%, transparent 88%, var(--damsko-brand-mint) 100%);
+  --damsko-prompt-input-tint: linear-gradient(90deg, currentColor 0%, color-mix(in oklch, currentColor 55%, transparent) 14%, transparent 24%, currentColor 36%, color-mix(in oklch, currentColor 30%, transparent) 50%, transparent 58%, currentColor 68%, color-mix(in oklch, currentColor 45%, transparent) 82%, currentColor 100%);
+  --damsko-prompt-input-halo: 0 0 10px 2px color-mix(in oklch, currentColor 45%, transparent), 0 3px 18px 3px color-mix(in oklch, currentColor 25%, transparent);
+  --damsko-prompt-input-glass: color-mix(in oklch, var(--damsko-card) 86%, transparent);
   --damsko-message-text: var(--damsko-text-sm);
   --damsko-sidebar: light-dark(oklch(0.942 0.018 172), oklch(0.215 0.058 178));
   --damsko-sidebar-menu-button-height: var(--damsko-control-sm);
@@ -742,6 +750,10 @@
   --damsko-table-of-contents-tick-active: var(--damsko-space-5);
   --damsko-table-of-contents-tick-gap: var(--damsko-space-2);
   --damsko-attachment-thumb: var(--damsko-control-default);
+  --damsko-prompt-input-light: linear-gradient(90deg, var(--damsko-brand-mint) 0%, var(--damsko-brand-sea) 12%, transparent 22%, var(--damsko-brand-lime) 34%, var(--damsko-brand-mint) 44%, transparent 54%, var(--damsko-brand-sea) 64%, var(--damsko-brand-lime) 76%, transparent 88%, var(--damsko-brand-mint) 100%);
+  --damsko-prompt-input-tint: linear-gradient(90deg, currentColor 0%, color-mix(in oklch, currentColor 55%, transparent) 14%, transparent 24%, currentColor 36%, color-mix(in oklch, currentColor 30%, transparent) 50%, transparent 58%, currentColor 68%, color-mix(in oklch, currentColor 45%, transparent) 82%, currentColor 100%);
+  --damsko-prompt-input-halo: 0 0 10px 2px color-mix(in oklch, currentColor 45%, transparent), 0 3px 18px 3px color-mix(in oklch, currentColor 25%, transparent);
+  --damsko-prompt-input-glass: color-mix(in oklch, var(--damsko-card) 86%, transparent);
   --damsko-message-text: var(--damsko-text-sm);
   --damsko-sidebar: light-dark(oklch(0.952 0.011 85), oklch(0.205 0.006 75));
   --damsko-sidebar-menu-button-height: var(--damsko-control-sm);

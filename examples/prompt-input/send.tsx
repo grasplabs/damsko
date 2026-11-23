@@ -4,6 +4,7 @@ import {
   PromptInput,
   PromptInputBody,
   PromptInputFooter,
+  PromptInputNote,
   PromptInputSubmit,
   PromptInputTextarea,
 } from "@grasp-os/ui/components/prompt-input";
@@ -45,12 +46,14 @@ const Case = ({
       <PromptInputFooter>
         <PromptInputSubmit onStop={onStop} />
       </PromptInputFooter>
+      <PromptInputNote />
     </PromptInput>
   </div>
 );
 
 // Submit by status: off while there is nothing to send; Send once there is; a spinner once sent;
-// Stop while the answer streams, which ends it and brings Send back; and Send again after a failure.
+// Stop while the answer streams, which ends it and brings Send back; and Send again after a
+// failure, which the band under the card says.
 export default function PromptInputSend() {
   const [working, setWorking] = useState(true);
   return (
