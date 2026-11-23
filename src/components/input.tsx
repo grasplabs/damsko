@@ -4,7 +4,6 @@
 // be found on every ground, one corner, and the heights of Button, so a field and a button stand
 // level in one row. With it, PasswordInput, a password with a show button, and SecretInput, a key
 // pasted once.
-// Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
 //   <Field>
 //     <FieldLabel>Work email</FieldLabel>

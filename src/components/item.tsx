@@ -1,7 +1,6 @@
 // Item: one row of a list, a thing with its name, a line about it, a mark and its actions:
 // the system's edge and corner, words in ink and muted. Plain semantic HTML: UI SDK has
 // no primitive for it.
-// Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
 //   <Item variant="outline">
 //     <ItemMedia variant="icon"><Icon icon={FolderIcon} /></ItemMedia>

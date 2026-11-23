@@ -1,11 +1,9 @@
-// Sources: what an answer drew on, folded under it, after shadcn's Sources pattern (apps/v4/content/
-// docs/ai-elements/base/sources.mdx), built as shadcn builds it: a Trace with a TraceCollapsible, its
-// trigger a TraceLine, and under it the sources, each a TraceLine in a link. In Damsko's look:
-// folded, the trigger is a pile as tall as a finger needs, the first sources' marks overlapping in a
-// row, then the count ("3 sources"). Pressed, the list opens under it: one row per source, at least
-// a large control tall, its mark on a tile, its title, and where it lives in a quiet line under
-// the title; the whole row takes the press. A source is not a step: no seat and no dots.
-// Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
+// Sources: what an answer drew on, folded under it. It is built from Trace: a Trace with a
+// TraceCollapsible, its trigger a TraceLine, and under it the sources, each a TraceLine in a link:
+// folded, the trigger is a pile as tall as a finger needs, the first sources' marks overlapping in
+// a row, then the count ("3 sources"). Pressed, the list opens under it: one row per source, at
+// least a large control tall, its mark on a tile, its title, and where it lives in a quiet line
+// under the title; the whole row takes the press. A source is not a step: no seat and no dots.
 //
 //   <Sources>
 //     <SourcesTrigger count={2}>

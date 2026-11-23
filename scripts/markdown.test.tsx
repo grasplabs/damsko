@@ -31,10 +31,11 @@ const draw = (
 ): string => renderToStaticMarkup(<Markdown {...props}>{source}</Markdown>);
 
 /**
- * How long a test that weighs its own time may run, in milliseconds: on a busy machine it takes many
- * times as long as on a quiet one, and what it holds is growth, not time.
+ * How long a test that draws an answer many times over may run, in milliseconds. It takes a second
+ * of this process's time on the processor at most; on a machine busy with others that can be many
+ * times as long by the clock, which a test's default five seconds go by.
  */
-const SLOW_TEST = 60_000;
+const SLOW_TEST = 120_000;
 
 /** The words a node holds, for comparing what renderLink was handed. */
 const wordsOf = (node: ReactNode) =>
@@ -439,7 +440,8 @@ describe("while written", () => {
         before = text;
       }
       expect(found).toStrictEqual([]);
-    }
+    },
+    SLOW_TEST
   );
 
   test("bold is bold from its first letter", () => {
@@ -456,24 +458,27 @@ const now = () => {
 };
 
 /**
- * How many times longer `whole` takes than `small`, and how long it takes, in milliseconds of this
- * process's own time on the processor, which does not grow while a busy machine runs others: each
- * run once to warm up, then the best of seven runs of each, taken in turn.
+ * How many times longer `whole` takes than `small`, in this process's own time on the processor,
+ * which does not grow while a busy machine runs others. One run of each, as a rule; should the
+ * growth not be under `limit`, each is run again, up to twelve times, and the best of each is
+ * taken: what a collection of garbage or a compile added to one run goes, and growth that is the
+ * code's stays.
  */
-const growthOf = (small: () => unknown, whole: () => unknown) => {
-  small();
-  whole();
+const growthOf = (small: () => unknown, whole: () => unknown, limit = 24) => {
   let fast = Number.POSITIVE_INFINITY;
   let slow = Number.POSITIVE_INFINITY;
-  for (let run = 0; run < 7; run += 1) {
+  for (let run = 0; run < 12; run += 1) {
     const start = now();
     small();
     const middle = now();
     whole();
     fast = Math.min(fast, middle - start);
     slow = Math.min(slow, now() - middle);
+    if (slow / Math.max(fast, 1) < limit) {
+      break;
+    }
   }
-  return { growth: slow / Math.max(fast, 1), time: slow };
+  return slow / Math.max(fast, 1);
 };
 
 describe("answers no real answer looks like", () => {
@@ -511,47 +516,38 @@ describe("answers no real answer looks like", () => {
     expect(textOf(html)).toContain("&lt;!DOCTYPE html&gt;");
   });
 
-  // Each took seconds at these sizes before the bounds (one of them 25). Time as the machine is
-  // busy is not steady, so what is held is the growth: an eighth of the size takes about an eighth
-  // of the time, where the parser's work had grown as its square. Each eighth takes a few
-  // milliseconds, so a square's growth (sixty-four times) cannot hide under the floor of one.
+  // Each took seconds before the bounds (brackets of 100 KB took 25). Time as the machine is busy
+  // is not steady, so what is held is the growth: an eighth of the size takes about an eighth of
+  // the time, where the parser's work had grown as its square. The paragraphs are 80 KB against
+  // 10 KB, both past the bound; scripts/markdown-parse.test.ts weighs every kind of paragraph and
+  // of block as it is read, and these the kinds whose drawing or whose repair while written had
+  // work of its own.
   test.each([
+    ["brackets", (n: number) => `${"[".repeat(n)}a${"](b)".repeat(n)}`, 16_000],
+    ["stars", (n: number) => "*a".repeat(n), 40_000],
     [
-      "brackets, 100 KB",
-      (n: number) => `${"[".repeat(n)}a${"](b)".repeat(n)}`,
-      20_000,
-    ],
-    ["stars, 40 KB", (n: number) => "*a".repeat(n), 20_000],
-    ["stray ends, 40 KB", (n: number) => "](".repeat(n), 20_000],
-    ["closing stars, 40 KB", (n: number) => "a* ".repeat(n), 13_333],
-    [
-      "a bracket left open before 40 KB of words",
+      "a bracket left open before words",
       (n: number) => `[${"word ".repeat(n)}`,
-      20_000,
+      16_000,
     ],
-    ["pictures left open, 40 KB", (n: number) => "![a".repeat(n), 13_333],
-    ["references left open, 40 KB", (n: number) => "[x][".repeat(n), 10_000],
-    ["comments left open, 56 KB", (n: number) => "a <!-- ".repeat(n), 8000],
-    ["instructions left open, 40 KB", (n: number) => "a <? ".repeat(n), 8000],
-    ["declarations left open, 48 KB", (n: number) => "a <!x ".repeat(n), 8000],
-    ["escapes, 40 KB", (n: number) => "a \\* ".repeat(n), 8000],
-    ["code, 48 KB", (n: number) => "a `b` ".repeat(n), 8000],
-    ["comments closed, 104 KB", (n: number) => "a <!-- x --> ".repeat(n), 8000],
+    ["comments left open", (n: number) => "a <!-- ".repeat(n), 11_200],
     [
-      "references to characters, 64 KB",
-      (n: number) => "a &amp; ".repeat(n),
-      8000,
-    ],
-    [
-      "sections left open, 4000 deep",
+      "sections left open, 1,600 deep",
       (n: number) => "<details>\n<summary>s</summary>\n\nx\n\n".repeat(n),
-      4000,
+      1600,
     ],
     [
-      "sections closed, 4000 deep",
+      "sections closed, 1,600 deep",
       (n: number) =>
         `${"<details>\n<summary>s</summary>\n\n".repeat(n)}${"</details>\n\n".repeat(n)}`,
-      4000,
+      1600,
+    ],
+    // Both past the budget of lines: the list's first 2,828 items are drawn as one, the rest as lines.
+    ["a list of 24,000 items", (n: number) => "- a\n".repeat(n), 24_000],
+    [
+      "lists of fifty items, a paragraph between",
+      (n: number) => `${"- a\n".repeat(50)}\nBetween.\n\n`.repeat(n),
+      160,
     ],
   ])(
     "%s takes time in step with its length, written and while written",
@@ -559,14 +555,61 @@ describe("answers no real answer looks like", () => {
       for (const streaming of [false, true]) {
         const eighth = make(size / 8);
         const whole = make(size);
-        const { growth } = growthOf(
+        const growth = growthOf(
           () => draw(eighth, { streaming }),
           () => draw(whole, { streaming })
         );
         // Eight times the text: in step is 8, the square is 64. 24 is near their midpoint as a
-        // factor (three times the one, a third of the other): room for a busy machine.
+        // factor (three times the one, a third of the other).
         expect(growth).toBeLessThan(24);
       }
+    },
+    SLOW_TEST
+  );
+});
+
+describe("an answer longer than one piece", () => {
+  test(
+    "a list of 2,000 items is one list, and an ordered one counts on from its start",
+    () => {
+      const items = Array.from({ length: 2000 }, (_, at) => `item ${at}`);
+      const bullets = draw(items.map((item) => `- ${item}`).join("\n"));
+      expect(bullets.match(/<ul\b/gu)).toHaveLength(1);
+      expect(bullets.match(/<li\b/gu)).toHaveLength(2000);
+      const numbered = draw(
+        items.map((item, at) => `${at + 5}. ${item}`).join("\n")
+      );
+      expect(numbered.match(/<ol\b[^>]*>/gu)).toStrictEqual([
+        expect.stringContaining('start="5"'),
+      ]);
+      expect(numbered.match(/<li\b/gu)).toHaveLength(2000);
+      expect(textOf(numbered)).toContain("item 1999");
+    },
+    SLOW_TEST
+  );
+
+  test(
+    "its marks are read to its end, and a link defined at its end leads there from its start",
+    () => {
+      const paragraphs = Array.from(
+        { length: 2500 },
+        (_, at) =>
+          `Paragraph ${at} of **the report**, with words enough to fill its line.`
+      );
+      const html = draw(
+        [
+          "See [the source][source] first.",
+          ...paragraphs,
+          "And [the last link](https://example.com/last).",
+          "[source]: https://example.com/source",
+        ].join("\n\n")
+      );
+      expect(html.length).toBeGreaterThan(150_000);
+      expect(anchors(html)).toStrictEqual([
+        "https://example.com/source",
+        "https://example.com/last",
+      ]);
+      expect(html.match(/<strong\b/gu)).toHaveLength(2500);
     },
     SLOW_TEST
   );

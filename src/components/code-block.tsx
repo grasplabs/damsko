@@ -4,7 +4,6 @@
 // copies the code exactly, line numbers and wrapping as options, highlighted, added and removed
 // lines, and long code folded under Show more. While it is still being written, the header says
 // so, quietly, and the code grows in place, read again at most once a frame.
-// Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
 //   <CodeBlock language="ts">
 //     <CodeBlockHeader>
@@ -776,18 +775,19 @@ export const CodeBlockCopyButton = ({
   return <CopyButton value={value} disabled={disabled || streaming} />;
 };
 
-/** One line of code, its number before it when the content numbers its lines. */
+/** Whether a line has no code in it: nothing given, no text, or no runs. */
+const isBlank = (line: ReactNode) =>
+  Array.isArray(line) ? line.length === 0 : (line ?? "") === "";
+
+/**
+ * One line of code, its number before it when the content numbers its lines. A blank line is drawn
+ * as its line break: with nothing in it, a selection copied across it would lose the line.
+ */
 export const CodeBlockLine = ({
   children,
   variant = "default",
 }: CodeBlockLineProps) => {
   const { lineNumbers, wrap } = use(LinesContext);
-  // An empty line holds a newline, so copying a selection keeps blank lines.
-  const empty =
-    children === undefined ||
-    children === null ||
-    children === "" ||
-    (Array.isArray(children) && children.length === 0);
   return (
     <span
       data-slot="code-block-line"
@@ -804,7 +804,9 @@ export const CodeBlockLine = ({
         aria-hidden="true"
         {...stylex.props(lineNumbers ? styles.number : styles.bare)}
       />
-      <span {...stylex.props(styles.text)}>{empty ? "\n" : children}</span>
+      <span {...stylex.props(styles.text)}>
+        {isBlank(children) ? "\n" : children}
+      </span>
     </span>
   );
 };

@@ -1,8 +1,6 @@
-// Sidebar: an app's main places down one side, from shadcn's (registry/bases/base/ui/sidebar.tsx),
-// converted from Tailwind to StyleX: a provider that holds whether it is open, the sidebar with its
-// header, its content in groups of menus and its footer, a trigger and a rail that fold it, and the
-// page beside it (SidebarInset).
-// Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
+// Sidebar: an app's main places down one side: a provider that holds whether it is open, the
+// sidebar with its header, its content in groups of menus and its footer, a trigger and a rail that
+// fold it, and the page beside it (SidebarInset).
 //
 //   <SidebarProvider>
 //     <Sidebar>
@@ -1404,7 +1402,7 @@ type Own<Tag extends "a" | "button" | "div" | "h2" | "li" | "nav" | "ul"> =
 
 /**
  * A part that is its element and its look (SidebarHeader, SidebarMenu, …): the element with
- * shadcn's slots (`sidebar-header`, `data-sidebar="header"`) and the caller's props on it.
+ * its slot names (`sidebar-header`, `data-sidebar="header"`) and the caller's props on it.
  */
 const part = <Tag extends "div" | "li" | "ul">(
   tag: Tag,

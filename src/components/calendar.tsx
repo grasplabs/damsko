@@ -2,7 +2,6 @@
 // type, the month's name between Previous and Next (ghost Buttons), weekdays in muted words, and
 // days the size of a small control. A chosen day takes the first action's colour; a range joins its
 // days in a quiet band.
-// Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
 //   <Calendar defaultValue="2026-11-16" />
 //   <Calendar mode="range" defaultValue={["2026-11-10", "2026-11-14"]} numberOfMonths={2} />

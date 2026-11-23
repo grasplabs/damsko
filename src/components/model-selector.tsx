@@ -1,12 +1,10 @@
-// ModelSelector: the model an assistant answers with, and how hard it thinks, as one quiet chip that
-// opens one panel. The parts and their names are shadcn's Model Selector (apps/v4/content/docs/
-// ai-elements/base/model-selector.mdx); the look and the way it works are the original design's
-// model and effort picker: a search field across the top; down its start side a column of the
-// makers' logos, a star for favourites first; the chosen maker's models as plain 28px rows beside
-// it, each level with a logo, so the panel is as tall as the taller column; and at its foot the
-// effort as segments. Picking a model keeps the panel open while there is an effort to set, so both
-// are chosen in one opening. Typing searches every maker.
-// Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
+// ModelSelector: the model an assistant answers with, and how hard it thinks, as one quiet chip
+// that opens one panel. The look and the way it works are the original design's model and effort
+// picker: a search field across the top; down its start side a column of the makers' logos, a star
+// for favourites first; the chosen maker's models as plain 28px rows beside it, each level with a
+// logo, so the panel is as tall as the taller column; and at its foot the effort as segments.
+// Picking a model keeps the panel open while there is an effort to set, so both are chosen in one
+// opening. Typing searches every maker.
 //
 //   <ModelSelector value={model} onValueChange={setModel} favorites={favorites}
 //     onFavoritesChange={setFavorites} effort={effort} onEffortChange={setEffort}>

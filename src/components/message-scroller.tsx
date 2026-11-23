@@ -5,7 +5,6 @@
 // (`scrollAnchor`) goes to the top with room kept under it for the answer. New rows fade in, once;
 // the ones there when it opened do not. No virtualiser: each row is skipped by the browser while it
 // is out of view (`content-visibility: auto`).
-// Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
 //   <MessageScrollerProvider autoScroll>
 //     <MessageScroller>

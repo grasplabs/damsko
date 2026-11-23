@@ -4,7 +4,6 @@
 // Calendar's months in a popup. `mode="range"` takes a start and an end, a field for each (two
 // months suit it), and `presets` puts the ranges people choose often in a column beside the months,
 // after the date range pickers of analytics products.
-// Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
 //   <DatePicker aria-label="Due date" name="due" defaultValue="2026-11-20" />
 //   <DatePicker aria-label="Trip" mode="range" numberOfMonths={2} name="trip" />

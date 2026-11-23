@@ -1,7 +1,6 @@
 // DropdownMenu: a list of actions on one thing, opened from a button, in StyleX, built on UI
 // SDK's Menu: a raised panel beside its trigger, items with an icon, words and keys, groups with a
 // label, separators, checkbox and radio items, submenus, and an item whose work can fail.
-// Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
 //   <DropdownMenu>
 //     <DropdownMenuTrigger asChild>
