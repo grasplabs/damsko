@@ -21,27 +21,23 @@ import {
   DatabaseIcon,
   Icon,
 } from "@grasp-os/ui/lib/icons";
-import { colors, size } from "@grasp-os/ui/lib/tokens.stylex";
+import { texture } from "@grasp-os/ui/lib/styles";
+import { size } from "@grasp-os/ui/lib/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
 
 const layout = stylex.create({
   box: { width: "100%", maxWidth: size.sidePanelWidth, height: 420 },
-  // The product's own cover: here a soft wash of the muted ground, fading down from the top.
-  cover: {
-    width: "100%",
-    height: "100%",
-    backgroundImage: `linear-gradient(to bottom, ${colors.muted}, transparent)`,
-  },
 });
 
-// A cover behind the head of the one thing the page is about. Here no bar stands above the head
+// A cover behind the head of the one thing the page is about: here the system's faint dither of
+// light (lib's `texture`), as a page header's banner draws it. Here no bar stands above the head
 // (no actions, no close, no views), so the cover starts at the head's own top.
 export default function SidePanelCover() {
   return (
     <div {...stylex.props(layout.box)}>
       <SidePanel
         aria-label="Report details"
-        cover={<div {...stylex.props(layout.cover)} />}
+        cover={<span aria-hidden="true" {...stylex.props(texture)} />}
       >
         <SidePanelHeader
           icon={<IconTile icon={ChartColumnIcon} variant="tinted" />}

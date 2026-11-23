@@ -1120,8 +1120,8 @@
   /* Page header: page header. */
   /* The width of a page title's placeholder while the page loads. */
   --damsko-page-title-wait: 280px;
-  /* How strongly the dither shows behind an inspector's head: a texture you find, not a pattern you see. */
-  --damsko-page-header-dither-strength: 0.3;
+  /* How strongly the faint dither of light shows behind the head of the one thing a page is about (a banner, a side panel's cover): a texture you find, not a pattern you see. */
+  --damsko-texture-strength: 0.3;
   /* Stepper: stepper. */
   /* The circle that marks a step in a stepper: a chip's height. */
   --damsko-stepper-mark: var(--damsko-chip);

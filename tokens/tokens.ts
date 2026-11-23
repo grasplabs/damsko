@@ -4177,10 +4177,10 @@ export const groups: TokenGroup[] = [
             use: "The width of a page title's placeholder while the page loads.",
           },
           {
-            name: "page-header-dither-strength",
+            name: "texture-strength",
             category: "size",
             value: "0.3",
-            use: "How strongly the dither shows behind an inspector's head: a texture you find, not a pattern you see.",
+            use: "How strongly the faint dither of light shows behind the head of the one thing a page is about (a banner, a side panel's cover): a texture you find, not a pattern you see.",
           },
         ],
       },

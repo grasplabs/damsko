@@ -197,3 +197,30 @@ test("a long text opens to its full height by its corner button, which says whet
   await expect(button).toHaveAttribute("aria-expanded", "false");
   expect(await topOf(last)).toBe(shut);
 });
+
+test("a cover can be the system's faint dither, and a section's action is muted at rest", async ({
+  page,
+}) => {
+  await openExample(page, "side-panel", "cover");
+  const dither = await page
+    .getByRole("complementary", { name: "Report details" })
+    .evaluate((panel) => {
+      const cover = panel.querySelector("[data-slot=side-panel-cover] > *");
+      return cover === null ? "" : getComputedStyle(cover).maskImage;
+    });
+  expect(dither).not.toBe("none");
+  await openExample(page, "side-panel", "basic");
+  const add = page.getByRole("button", { name: "Add", exact: true });
+  const [ink, muted] = await add.evaluate((button) => {
+    const probe = document.createElement("span");
+    probe.style.color = "var(--damsko-muted-foreground)";
+    button.append(probe);
+    const pair = [
+      getComputedStyle(button).color,
+      getComputedStyle(probe).color,
+    ];
+    probe.remove();
+    return pair;
+  });
+  expect(ink).toBe(muted);
+});
