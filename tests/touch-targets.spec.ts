@@ -33,6 +33,7 @@ const known = new Set([
   "markdown/host-links: Source 2",
   "markdown/sections-cases: BUTTON",
   "page-header/band: Notes",
+  "page-header/band: Reports",
   "tooltip/link: Reports",
 ]);
 
