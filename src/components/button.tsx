@@ -493,24 +493,36 @@ const targetStyles = stylex.create({
   },
   lg: { insetBlock: 0 },
   "icon-xs": {
-    inset: {
+    insetBlock: {
+      default: 0,
+      [COARSE]: `calc((${sizes.controlXs} - ${sizes.tapTarget}) / 2)`,
+    },
+    insetInline: {
       default: 0,
       [COARSE]: `calc((${sizes.controlXs} - ${sizes.tapTarget}) / 2)`,
     },
   },
   "icon-sm": {
-    inset: {
+    insetBlock: {
+      default: 0,
+      [COARSE]: `calc((${sizes.controlSm} - ${sizes.tapTarget}) / 2)`,
+    },
+    insetInline: {
       default: 0,
       [COARSE]: `calc((${sizes.controlSm} - ${sizes.tapTarget}) / 2)`,
     },
   },
   icon: {
-    inset: {
+    insetBlock: {
+      default: 0,
+      [COARSE]: `calc((${sizes.controlDefault} - ${sizes.tapTarget}) / 2)`,
+    },
+    insetInline: {
       default: 0,
       [COARSE]: `calc((${sizes.controlDefault} - ${sizes.tapTarget}) / 2)`,
     },
   },
-  "icon-lg": { inset: 0 },
+  "icon-lg": { insetBlock: 0, insetInline: 0 },
 });
 
 // Each variant at rest; its hover and press are in liveStyles, left out while it cannot be pressed.
