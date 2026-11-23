@@ -33,6 +33,7 @@
 import * as stylex from "@stylexjs/stylex";
 import { mergeProps } from "@ui-sdk/react/primitive";
 import {
+  Fragment,
   createContext,
   createElement,
   isValidElement,
@@ -408,6 +409,25 @@ const styles = stylex.create({
         sizes.sidePanelTextLine,
     },
   },
+  // In a side panel's card: the name on one line, cut with an ellipsis so its detail stays whole.
+  nameXs: {
+    minWidth: {
+      default: null,
+      [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: 0,
+    },
+    overflow: {
+      default: null,
+      [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: "hidden",
+    },
+    textOverflow: {
+      default: null,
+      [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: "ellipsis",
+    },
+    whiteSpace: {
+      default: null,
+      [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: "nowrap",
+    },
+  },
   // On the title's line, after a space and a little more room: quieter, not bolder.
   detail: {
     marginInlineStart: space["1"],
@@ -740,25 +760,45 @@ const TitleWords = ({ children }: { children: ReactNode }): ReactNode => {
   );
 };
 
+/**
+ * An xs row's words: its name in a span of its own, so in a side panel's card the name, not what
+ * follows it, gives way with an ellipsis when the row runs out of room.
+ */
+const isWords = (part: ReactNode): part is string | number =>
+  typeof part === "string" || typeof part === "number";
+
+const nameFirst = (children: ReactNode): ReactNode => {
+  const parts = [children].flat();
+  const words = parts.filter(isWords);
+  if (words.length === 0) {
+    return children;
+  }
+  return createElement(
+    Fragment,
+    null,
+    <span {...stylex.props(styles.nameXs)}>{words.join("")}</span>,
+    ...parts.filter((part) => !isWords(part))
+  );
+};
+
 /** Its name, in a few words ("Spring launch"). */
-export const ItemTitle = ({ children, style }: ItemTitleProps) => (
-  <span
-    data-slot="item-title"
-    {...stylex.props(
-      styles.title,
-      use(RowSize) === "xs" && styles.titleXs,
-      style
-    )}
-  >
-    {use(RowLoading) && isBlank(children) ? (
-      <span {...stylex.props(waits.title)}>
-        <Skeleton />
-      </span>
-    ) : (
-      <TitleWords>{children}</TitleWords>
-    )}
-  </span>
-);
+export const ItemTitle = ({ children, style }: ItemTitleProps) => {
+  const dense = use(RowSize) === "xs";
+  return (
+    <span
+      data-slot="item-title"
+      {...stylex.props(styles.title, dense && styles.titleXs, style)}
+    >
+      {use(RowLoading) && isBlank(children) ? (
+        <span {...stylex.props(waits.title)}>
+          <Skeleton />
+        </span>
+      ) : (
+        <TitleWords>{dense ? nameFirst(children) : children}</TitleWords>
+      )}
+    </span>
+  );
+};
 
 /**
  * A quieter word or two on the title's line, after the name: a role, "you", a count ("Admin"). In

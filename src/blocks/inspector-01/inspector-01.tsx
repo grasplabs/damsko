@@ -158,13 +158,6 @@ const styles = stylex.create({
   none: { color: colors.mutedForeground },
   // The lock after a name: quiet, beside the words.
   mark: { display: "inline-flex", color: colors.subtleForeground },
-  // The name gives way to its detail: on one line, cut with an ellipsis when the row runs out.
-  name: {
-    minWidth: 0,
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
-  },
 });
 
 /** A missing value: null, undefined, false or empty words. */
@@ -217,7 +210,7 @@ const Row = ({ row, words }: { row: InspectorRow; words: InspectorLabels }) => {
       )}
       <ItemContent>
         <ItemTitle>
-          <span {...stylex.props(styles.name)}>{row.name}</span>
+          {row.name}
           {row.locked !== undefined && (
             <span {...stylex.props(styles.mark)}>
               <Icon icon={LockIcon} label={row.locked} />
