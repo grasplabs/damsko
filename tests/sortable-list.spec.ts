@@ -1,11 +1,7 @@
 import { expect, test } from "@playwright/test";
 import type { Locator, Page } from "@playwright/test";
 
-import { listenToLiveRegions, openExample, settled } from "./example.ts";
-
-// WebKit on a Mac moves Tab only between fields unless Option is held.
-const tab = (browserName: string) =>
-  browserName === "webkit" ? "Alt+Tab" : "Tab";
+import { listenToLiveRegions, openExample, settled, tab } from "./example.ts";
 
 /** The last thing said in the page's live regions. */
 const lastSaid = async (said: () => Promise<string[]>) => {
@@ -146,40 +142,227 @@ test("a quick run of moves is said as where the item is now, never as every step
   expect(steps.length).toBeLessThan(6);
 });
 
-test("a drag near the window's edge scrolls it, so an item goes past what one screen shows", async ({
-  page,
-}) => {
-  await page.setViewportSize({ width: 390, height: 140 });
-  await openExample(page, "sortable-list", "basic");
-  const list = page.getByRole("list", { name: "Onboarding steps, in order" });
-  const handle = page.getByRole("button", { name: "Move Welcome" });
-  await handle.scrollIntoViewIfNeeded();
+// UI SDK's auto-scroll moves at most 18px a frame, slower the shallower the pointer is in an
+// edge's band.
+const mostAFrame = 18;
+
+/** Where a list is scrolled: the page, at a window too short for it, or a box of its own. */
+const scrollers = [
+  {
+    name: "the page",
+    example: "basic",
+    list: "Onboarding steps, in order",
+    viewport: { width: 390, height: 140 },
+  },
+  {
+    name: "its box",
+    example: "scrolling",
+    list: "Columns, in order",
+    viewport: { width: 390, height: 600 },
+  },
+] as const;
+
+/** A hand on a handle: pressed, moved to a height in steps, then lifted. */
+interface Hand {
+  moveTo: (y: number) => Promise<void>;
+  lift: () => Promise<void>;
+}
+
+/** Presses a handle with a mouse, or with a real finger (Chromium's touch input). */
+const pressWith = async (
+  page: Page,
+  handle: Locator,
+  pointer: "mouse" | "finger"
+): Promise<Hand> => {
   const box = await handle.boundingBox();
-  const x = (box?.x ?? 0) + (box?.width ?? 0) / 2;
-  const y = (box?.y ?? 0) + (box?.height ?? 0) / 2;
-  await page.mouse.move(x, y);
-  await page.mouse.down();
-  for (let step = 1; step <= 10; step += 1) {
-    // oxlint-disable-next-line no-await-in-loop -- one move after the other, as a hand moves
-    await page.mouse.move(x, y + ((136 - y) * step) / 10);
+  if (box === null) {
+    throw new Error("the handle is not drawn");
   }
-  // Held at the bottom edge, the page scrolls on to its end and the item goes with it.
-  await expect
-    .poll(async () => await page.evaluate(() => scrollY))
-    .toBeGreaterThan(0);
-  await expect
-    .poll(
-      async () =>
-        await page.evaluate(
-          () =>
-            scrollY + innerHeight >= document.documentElement.scrollHeight - 1
-        )
-    )
-    .toBe(true);
-  await page.mouse.move(x, 138);
-  await page.mouse.up();
-  await expect(list.getByRole("listitem").last()).toHaveText("Welcome");
-});
+  const x = box.x + box.width / 2;
+  let y = box.y + box.height / 2;
+  const steps = async (to: number, step: (at: number) => Promise<void>) => {
+    const from = y;
+    for (let index = 1; index <= 10; index += 1) {
+      // oxlint-disable-next-line no-await-in-loop -- one move after the other, as a hand moves
+      await step(from + ((to - from) * index) / 10);
+    }
+    y = to;
+  };
+  if (pointer === "mouse") {
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    return {
+      moveTo: async (to) => {
+        await steps(to, async (at) => {
+          await page.mouse.move(x, at);
+        });
+      },
+      lift: async () => {
+        await page.mouse.up();
+      },
+    };
+  }
+  const session = await page.context().newCDPSession(page);
+  const touch = async (
+    type: "touchStart" | "touchMove" | "touchEnd",
+    at: number
+  ) => {
+    await session.send("Input.dispatchTouchEvent", {
+      type,
+      touchPoints: type === "touchEnd" ? [] : [{ x, y: at }],
+    });
+  };
+  await touch("touchStart", y);
+  return {
+    moveTo: async (to) => {
+      await steps(to, async (at) => {
+        await touch("touchMove", at);
+      });
+    },
+    lift: async () => {
+      await touch("touchEnd", y);
+    },
+  };
+};
+
+/**
+ * Opens a scroller's example at its end or its start and starts keeping, every frame, how far
+ * what scrolls the list is scrolled and how tall it is. Returns the list, its edges on screen,
+ * its greatest scroll and what reads the frames.
+ */
+const watchScroll = async (
+  page: Page,
+  where: (typeof scrollers)[number],
+  at: "start" | "end"
+) => {
+  await page.setViewportSize(where.viewport);
+  await openExample(page, "sortable-list", where.example);
+  const list = page.getByRole("list", { name: where.list });
+  const found = await list.evaluate((element, end) => {
+    let node = element.parentElement;
+    while (
+      node !== null &&
+      !/auto|scroll/u.test(getComputedStyle(node).overflowY)
+    ) {
+      node = node.parentElement;
+    }
+    const scroller =
+      node ?? document.scrollingElement ?? document.documentElement;
+    const greatest = scroller.scrollHeight - scroller.clientHeight;
+    scroller.scrollTop = end === "end" ? greatest : 0;
+    const frames: [number, number][] = [];
+    window.scrollFrames = frames;
+    const keep = () => {
+      frames.push([scroller.scrollTop, scroller.scrollHeight]);
+      requestAnimationFrame(keep);
+    };
+    keep();
+    window.addEventListener(
+      "keydown",
+      () => {
+        window.scrollAtKey = scroller.scrollTop;
+      },
+      { capture: true }
+    );
+    const rect =
+      node === null
+        ? { top: 0, bottom: innerHeight }
+        : node.getBoundingClientRect();
+    return {
+      greatest,
+      top: Math.max(0, rect.top),
+      bottom: Math.min(innerHeight, rect.bottom),
+    };
+  }, at);
+  const frames = async () =>
+    await page.evaluate(() => window.scrollFrames ?? []);
+  // How far it is scrolled now.
+  const scrolled = async () => {
+    const all = await frames();
+    return all.at(-1)?.[0] ?? 0;
+  };
+  return { list, ...found, frames, scrolled };
+};
+
+declare global {
+  interface Window {
+    /** Each frame's scroll and height of what scrolls a list (`watchScroll`). */
+    scrollFrames?: [number, number][];
+    /** Where it was scrolled when a key went down. */
+    scrollAtKey?: number;
+  }
+}
+
+/** The most a scroll moved from one frame to the next. */
+const fastest = (frames: [number, number][]) =>
+  Math.max(
+    0,
+    ...frames
+      .slice(1)
+      .map(([top], index) => Math.abs(top - (frames[index]?.[0] ?? top)))
+  );
+
+for (const where of scrollers) {
+  for (const pointer of ["mouse", "finger"] as const) {
+    for (const edge of ["bottom", "top"] as const) {
+      test(`a drag held at the ${edge} edge of ${where.name} scrolls it at most ${mostAFrame}px a frame, to its end and no further, and makes nothing taller, by a ${pointer}`, async ({
+        page,
+      }) => {
+        const down = edge === "bottom";
+        const watched = await watchScroll(page, where, down ? "start" : "end");
+        const items = watched.list.getByRole("listitem");
+        const item = down ? items.first() : items.last();
+        const name = await item.textContent();
+        const hand = await pressWith(page, item.getByRole("button"), pointer);
+        await hand.moveTo(down ? watched.bottom - 3 : watched.top + 3);
+        // Held there for two seconds, as a person waits for the list to come.
+        await page.waitForTimeout(2000);
+        const frames = await watched.frames();
+        const [, height] = frames[0] ?? [0, 0];
+        expect(fastest(frames)).toBeLessThanOrEqual(mostAFrame);
+        expect(Math.max(...frames.map(([top]) => top))).toBeLessThanOrEqual(
+          watched.greatest
+        );
+        expect(Math.min(...frames.map(([top]) => top))).toBeGreaterThanOrEqual(
+          0
+        );
+        expect(frames.every(([, tall]) => tall === height)).toBe(true);
+        expect(frames.at(-1)?.[0]).toBeCloseTo(down ? watched.greatest : 0, 0);
+        await hand.lift();
+        await expect(down ? items.last() : items.first()).toHaveText(
+          name ?? ""
+        );
+      });
+    }
+
+    test(`Escape during a drag at an edge of ${where.name} stops its scroll within a frame, by a ${pointer}`, async ({
+      page,
+    }) => {
+      const watched = await watchScroll(page, where, "start");
+      const items = watched.list.getByRole("listitem");
+      const hand = await pressWith(
+        page,
+        items.first().getByRole("button"),
+        pointer
+      );
+      // Just inside the edge's band, so it scrolls slowly and is far from its end at Escape.
+      const band = Math.min(48, (watched.bottom - watched.top) / 3);
+      await hand.moveTo(watched.bottom - band + 4);
+      await expect.poll(watched.scrolled).toBeGreaterThan(0);
+      await page.keyboard.press("Escape");
+      const atKey = await page.evaluate(() => window.scrollAtKey ?? 0);
+      expect(atKey).toBeLessThan(watched.greatest);
+      await page.waitForTimeout(500);
+      const now = await watched.scrolled();
+      expect(Math.abs(now - atKey)).toBeLessThanOrEqual(mostAFrame);
+      await hand.lift();
+      await expect(items.first().getByRole("button")).not.toHaveAttribute(
+        "aria-pressed",
+        "true"
+      );
+    });
+  }
+}
 
 test("Escape puts a moved item back where it was, and Tab does too and moves on", async ({
   browserName,

@@ -678,6 +678,14 @@ export const buttonVariants = ({
 }: { variant?: ButtonVariant; size?: ButtonSize } = {}): stylex.StyleXStyles =>
   lookOf(variant, size, true);
 
+/**
+ * A button's touch target, for an element drawn with `buttonVariants`: an empty `aria-hidden`
+ * span inside it that a finger reaches on a touch screen.
+ */
+export const buttonTarget = (
+  size: ButtonSize = "default"
+): stylex.StyleXStyles => [styles.target, targetStyles[size]];
+
 // ---- The parts -------------------------------------------------------------------------------------
 
 /** The words an agent is told before its press runs, when it must ask. */
@@ -777,10 +785,7 @@ const Inside = ({
         {...stylex.props(styles.sheen, pressable && styles.sheenLive)}
       />
     )}
-    <span
-      aria-hidden="true"
-      {...stylex.props(styles.target, targetStyles[size])}
-    />
+    <span aria-hidden="true" {...stylex.props(buttonTarget(size))} />
   </>
 );
 

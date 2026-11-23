@@ -1,11 +1,7 @@
 import { expect, test } from "@playwright/test";
 import type { Locator } from "@playwright/test";
 
-import { openExample } from "./example.ts";
-
-// WebKit on a Mac moves Tab only between fields unless Option is held.
-const tab = (browserName: string) =>
-  browserName === "webkit" ? "Alt+Tab" : "Tab";
+import { openExample, tab } from "./example.ts";
 
 /** What a field's box looks like: the properties Input, Select and Native select share. */
 const look = async (control: Locator) =>

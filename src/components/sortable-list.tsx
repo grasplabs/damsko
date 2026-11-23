@@ -48,7 +48,8 @@ import {
 } from "../lib/tokens.stylex";
 import { announce, className } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
-import { buttonVariants } from "./button";
+import { buttonTarget, buttonVariants } from "./button";
+import { ghostVars } from "./button.stylex";
 
 /** Why the order changed: a pointer's drag, the keyboard, or code. */
 export type SortableListChangeReason = ReorderReason;
@@ -181,10 +182,15 @@ const sortableList = definePrimitive({
 
     // A pointer's drag near the top or bottom of what scrolls (the list's box, the page) scrolls
     // it, so an item goes past what one screen shows. UI SDK scrolls only while it drags a copy of
-    // the item; here the item itself is dragged, so the scroll is followed here: the item keeps
-    // under the pointer by what scrolled (--drag-scroll), and the drag finds its place again as
-    // the content moves under a still pointer.
-    // The one drag's scrolling at a time: a new press ends the last one's, as does the list going.
+    // the item; here the item itself is dragged, so that a field in it keeps what was typed and it
+    // never goes sideways, and the scroll is followed here. UI SDK's createAutoScroll is the one
+    // frame loop: it runs while the real pointer is in an edge's band, at most its speed a frame,
+    // slower the shallower the pointer is in, and the browser keeps each scroll within its end.
+    // After each scroll the item keeps under the still pointer by what scrolled (--drag-scroll) and
+    // finds its place again. Its translate is held within the list (--drag-min, --drag-max), so it
+    // never makes the page or the box taller than it is. It all stops once the drag is over, for
+    // whatever reason: put down, Escape, the pointer lost, the item gone, the list gone.
+    // The one drag's scrolling at a time: a new press ends the last one's.
     let stopScrolling: (() => void) | undefined;
     context.onDestroy(() => {
       stopScrolling?.();
@@ -198,56 +204,93 @@ const sortableList = definePrimitive({
       }
       const doc = item.ownerDocument;
       const { top } = list.getBoundingClientRect();
-      let x = down.clientX;
       let y = down.clientY;
-      const dragged = () => context.store.get().moving?.pointer === true;
-      const scroller = createAutoScroll({
-        ignore: () => item,
-        onScroll: () => {
-          doc.dispatchEvent(
-            new PointerEvent("pointermove", {
-              pointerId: down.pointerId,
-              pointerType: down.pointerType,
-              isPrimary: down.isPrimary,
-              buttons: 1,
-              clientX: x,
-              clientY: y,
-              bubbles: true,
-            })
-          );
-        },
-      });
-      const moved = (event: PointerEvent) => {
-        if (event.pointerId !== down.pointerId) {
+      let dragging = false;
+      const dragged = () => {
+        const { moving } = context.store.get();
+        return moving?.pointer === true && moving.key === key;
+      };
+      // The item may stand from the list's top to its bottom, wherever the order being shown puts
+      // it. Worked out from that order, not read from where it is drawn, so it holds in the very
+      // frame the order changes in.
+      const hold = () => {
+        const order = context.store.get().moving?.order ?? [];
+        const gap =
+          Number(getComputedStyle(list).rowGap.replace(/px$/u, "")) || 0;
+        let before = 0;
+        for (const other of order.slice(0, order.indexOf(key))) {
+          before += (context.element("item", other)?.offsetHeight ?? 0) + gap;
+        }
+        item.style.setProperty("--drag-min", `${-before}px`);
+        item.style.setProperty(
+          "--drag-max",
+          `${list.clientHeight - before - item.offsetHeight}px`
+        );
+      };
+      // The place under the pointer: past every other item whose middle is above it.
+      const placeAt = () =>
+        [...list.children].filter((other) => {
+          if (other === item) {
+            return false;
+          }
+          const rect = other.getBoundingClientRect();
+          return rect.top + rect.height / 2 < y;
+        }).length;
+      const scrolled = () => {
+        if (!dragging) {
           return;
         }
-        x = event.clientX;
-        y = event.clientY;
-        if (dragged()) {
-          scroller.update(x, y);
-        }
+        item.style.setProperty(
+          "--drag-scroll",
+          `${top - list.getBoundingClientRect().top}px`
+        );
+        hold();
+        reorder.moveTo(placeAt());
       };
-      const scrolled = () => {
-        if (dragged()) {
-          item.style.setProperty(
-            "--drag-scroll",
-            `${top - list.getBoundingClientRect().top}px`
-          );
-        }
-      };
+      const scroller = createAutoScroll({
+        ignore: () => item,
+        onScroll: scrolled,
+      });
+      // Everything below ends with the drag, by this one signal.
       const listening = new AbortController();
+      const { signal } = listening;
       const stop = () => {
+        listening.abort();
+      };
+      const unsubscribe = context.store.subscribe(() => {
+        if (!dragging) {
+          return;
+        }
+        if (dragged()) {
+          hold();
+        } else {
+          stop();
+        }
+      });
+      signal.addEventListener("abort", () => {
         stopScrolling = undefined;
         scroller.stop();
-        item.style.removeProperty("--drag-scroll");
-        listening.abort();
+        unsubscribe();
+        for (const name of ["--drag-scroll", "--drag-min", "--drag-max"]) {
+          item.style.removeProperty(name);
+        }
+      });
+      const moved = (event: PointerEvent) => {
+        if (event.pointerId !== down.pointerId || !dragged()) {
+          return;
+        }
+        if (!dragging) {
+          dragging = true;
+          hold();
+        }
+        y = event.clientY;
+        scroller.update(event.clientX, y);
       };
       const ended = (event: PointerEvent) => {
         if (event.pointerId === down.pointerId) {
           stop();
         }
       };
-      const { signal } = listening;
       doc.addEventListener("pointermove", moved, { signal });
       doc.addEventListener("pointerup", ended, { signal });
       doc.addEventListener("pointercancel", ended, { signal });
@@ -319,12 +362,15 @@ const sortableList = definePrimitive({
 
 // ---- The look --------------------------------------------------------------------------------------
 
-const COARSE = media.pointerCoarse;
 const FORCED = media.forcedColors;
+const HOVER = media.hover;
 const REDUCED = media.reducedMotion;
 
 const styles = stylex.create({
+  // No item is a scroll anchor: as the order changes under a drag, the browser would scroll
+  // against it.
   list: {
+    overflowAnchor: "none",
     display: "flex",
     flexDirection: "column",
     gap: space[1],
@@ -362,31 +408,34 @@ const styles = stylex.create({
   },
   // Dragged: it follows the pointer up and down the list, never sideways.
   dragging: {
-    transform: "translateY(calc(var(--drag-y, 0px) + var(--drag-scroll, 0px)))",
+    // Held within the list, so it never makes what scrolls taller.
+    transform:
+      "translateY(clamp(var(--drag-min), var(--drag-y, 0px) + var(--drag-scroll, 0px), var(--drag-max)))",
     // Its words are not selected as it is dragged over.
     userSelect: "none",
   },
   // The grip: Button's ghost icon button (buttonVariants), which a finger drags the item by;
-  // anywhere else on the item a finger scrolls the page.
+  // anywhere else on the item a finger scrolls the page. Its ink is quiet until the pointer comes.
   grip: {
+    [ghostVars.ink]: {
+      default: colors.mutedForeground,
+      ":hover": { default: null, [HOVER]: colors.foreground },
+    },
     cursor: { default: "grab", ":active": "grabbing" },
     touchAction: "none",
     userSelect: "none",
   },
-  // Up from the keyboard: the press's fill stays while it is moved.
+  // Up: the press's fill stays while it is moved, and the press does not shrink it as it is
+  // dragged.
   handleMoving: {
+    [ghostVars.ink]: colors.foreground,
     backgroundColor: colors.accentActive,
-    color: colors.foreground,
+    transform: "none",
   },
   handleDisabled: {
     opacity: size.opacityDisabled,
     backgroundColor: "transparent",
     cursor: "default",
-  },
-  // A finger needs 44px round the grip on a touch screen.
-  target: {
-    position: "absolute",
-    inset: { default: 0, [COARSE]: `calc((100% - ${size.tapTarget}) / 2)` },
   },
 });
 
@@ -504,7 +553,7 @@ export const SortableListHandle = ({
         ),
       children: (
         <>
-          <span aria-hidden="true" {...stylex.props(styles.target)} />
+          <span aria-hidden="true" {...stylex.props(buttonTarget("icon-sm"))} />
           <Icon icon={GripVerticalIcon} />
         </>
       ),

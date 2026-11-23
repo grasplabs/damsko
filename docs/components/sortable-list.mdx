@@ -36,6 +36,12 @@ A `disabled` item cannot be picked up. It does not hold its place: the others mo
   label="Items that cannot be picked up"
 />
 
+## In a box that scrolls
+
+Held near the top or bottom edge of the box the list stands in, or of the window, a drag scrolls it; the item stays under the pointer and within the list.
+
+<Stage path="sortable-list/scrolling" live label="In a box that scrolls" />
+
 ## Right to left
 
 The handle stands at the line's start. Up and Down move an item in every language.
@@ -144,7 +150,7 @@ The handle stands at the line's start. Up and Down move an item in every languag
       group: "Pointer",
       key: "Near an edge",
       value:
-        "A drag near the top or bottom of what scrolls (the page, or a box the list stands in) scrolls it; the item stays under the pointer.",
+        "A drag near the top or bottom of what scrolls (the page, or a box the list stands in) scrolls it, faster the closer to the edge, up to a steady pace, and stops at its end; the item stays under the pointer, within the list. Putting it down, Escape or losing the pointer stops it at once.",
     },
     {
       group: "Touch",
