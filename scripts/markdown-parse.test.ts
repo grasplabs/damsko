@@ -813,6 +813,16 @@ describe("a block of more lines than any answer's", () => {
     ["a line with no spaces", (n: number) => "a".repeat(n), 160_000],
     ["blank lines", counted(() => "\n"), 16_000],
     [
+      "blank lines in a list",
+      (n: number) => `- a\n${"\n".repeat(n)}- b\n`,
+      16_000,
+    ],
+    [
+      "blank lines in indented code",
+      (n: number) => `    a\n${"\n".repeat(n)}    b\n`,
+      16_000,
+    ],
+    [
       "code of many lines",
       (n: number) => `\`\`\`\n${"a\n".repeat(n)}\`\`\`\n`,
       16_000,
@@ -1003,6 +1013,23 @@ describe("a block of more lines than any answer's", () => {
       "HTML of many lines",
       (n: number) =>
         `<table>\n${counted((at) => `<tr><td>${at}</td></tr>\nwords *not* read\n`)(n)}</table>\n\nAfter **it**.\n`,
+    ],
+    [
+      "blank lines in a list",
+      (n: number) => `- a\n${"\n".repeat(n)}- b\n\n  More of b.\n`,
+    ],
+    [
+      "blank lines in indented code",
+      (n: number) => `    a\n${"\n".repeat(n)}    b\n\nAfter.\n`,
+    ],
+    [
+      "HTML that holds lines of a quote's mark alone",
+      (n: number) =>
+        `<div>\n${counted((at) => `>\nline ${at}\n`)(n)}\nAfter **it**.\n`,
+    ],
+    [
+      "a quote of paragraphs parted by lines of its mark alone",
+      counted((at) => `> paragraph ${at}\n>\n>\n`),
     ],
     ["notes", counted((at) => `Words[^${at}].\n\n[^${at}]: Note ${at}.\n\n`)],
     [
