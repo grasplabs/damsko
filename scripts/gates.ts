@@ -4,7 +4,8 @@
  * React Compiler, as the product builds it, and every component is
  * its target API, has a spec, an example and a page under its own name, and
  * knows nothing of the product, every file compiles
- * against ES2023's library, and the diff engine gives jsdiff's answers. Each runs
+ * against ES2023's library, the diff engine gives jsdiff's answers, and no
+ * pattern in Markdown can backtrack without bound. Each runs
  * in its own process; all run, then any failure fails the whole.
  *
  * usage: node scripts/gates.ts
@@ -26,6 +27,7 @@ const gates: readonly (readonly string[])[] = [
   ["scripts/check-product-knowledge.ts"],
   ["scripts/check-es2023.ts"],
   ["scripts/check-diff-engine.ts"],
+  ["scripts/check-markdown-patterns.ts"],
 ];
 
 const failed = gates.filter(
