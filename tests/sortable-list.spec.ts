@@ -233,10 +233,13 @@ const pressWith = async (
 const watchScroll = async (
   page: Page,
   where: (typeof scrollers)[number],
-  at: "start" | "end"
+  at: "start" | "end",
+  open = true
 ) => {
-  await page.setViewportSize(where.viewport);
-  await openExample(page, "sortable-list", where.example);
+  if (open) {
+    await page.setViewportSize(where.viewport);
+    await openExample(page, "sortable-list", where.example);
+  }
   const list = page.getByRole("list", { name: where.list });
   const found = await list.evaluate((element, end) => {
     let node = element.parentElement;
@@ -302,10 +305,38 @@ const fastest = (frames: [number, number][]) =>
       .map(([top], index) => Math.abs(top - (frames[index]?.[0] ?? top)))
   );
 
+/**
+ * The list's end at the edge it was dragged to is in view, at most one frame's scroll inside it:
+ * the scroll stopped there, or where what scrolls ends.
+ */
+const expectEndInView = async (
+  watched: Awaited<ReturnType<typeof watchScroll>>,
+  edge: "top" | "bottom"
+) => {
+  const box = await watched.list.boundingBox();
+  if (box === null) {
+    throw new Error("the list is not drawn");
+  }
+  const now = await watched.scrolled();
+  if (edge === "bottom") {
+    expect(box.y + box.height).toBeLessThanOrEqual(watched.bottom + 0.5);
+    if (now < watched.greatest) {
+      expect(box.y + box.height).toBeGreaterThan(
+        watched.bottom - mostAFrame - 1
+      );
+    }
+    return;
+  }
+  expect(box.y).toBeGreaterThanOrEqual(watched.top - 0.5);
+  if (now > 0) {
+    expect(box.y).toBeLessThan(watched.top + mostAFrame + 1);
+  }
+};
+
 for (const where of scrollers) {
   for (const pointer of ["mouse", "finger"] as const) {
     for (const edge of ["bottom", "top"] as const) {
-      test(`a drag held at the ${edge} edge of ${where.name} scrolls it at most ${mostAFrame}px a frame, to its end and no further, and makes nothing taller, by a ${pointer}`, async ({
+      test(`a drag held at the ${edge} edge of ${where.name} scrolls it at most ${mostAFrame}px a frame, until the list's end is in view and no further, and makes nothing taller, by a ${pointer}`, async ({
         page,
       }) => {
         const down = edge === "bottom";
@@ -327,7 +358,14 @@ for (const where of scrollers) {
           0
         );
         expect(frames.every(([, tall]) => tall === height)).toBe(true);
-        expect(frames.at(-1)?.[0]).toBeCloseTo(down ? watched.greatest : 0, 0);
+        // Never a frame against the drag: while its item moves the list anchors no scroll, so the
+        // browser does not scroll back as the order changes.
+        const against = frames.slice(1).filter(([top], index) => {
+          const last = frames[index]?.[0] ?? top;
+          return down ? top < last : top > last;
+        });
+        expect(against).toStrictEqual([]);
+        await expectEndInView(watched, down ? "bottom" : "top");
         await hand.lift();
         await expect(down ? items.last() : items.first()).toHaveText(
           name ?? ""
@@ -363,6 +401,138 @@ for (const where of scrollers) {
     });
   }
 }
+
+for (const [edge, room] of [
+  ["bottom", "after"],
+  ["top", "before"],
+] as const) {
+  test(`on a page that goes on ${room} the list, a drag held at the ${edge} edge stops once the list's end is in view`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 140 });
+    await openExample(page, "sortable-list", "basic");
+    // A page far longer than the list, past its end.
+    await page.evaluate((where) => {
+      document.body.style.flexDirection = "column";
+      const more = document.createElement("div");
+      more.style.height = "3000px";
+      more.style.flexShrink = "0";
+      document.body[where === "after" ? "append" : "prepend"](more);
+    }, room);
+    const down = edge === "bottom";
+    // Already open, with the page made longer.
+    const watched = await watchScroll(
+      page,
+      scrollers[0],
+      down ? "start" : "end",
+      false
+    );
+    const items = watched.list.getByRole("listitem");
+    const item = down ? items.first() : items.last();
+    const name = await item.textContent();
+    const hand = await pressWith(page, item.getByRole("button"), "mouse");
+    await hand.moveTo(down ? watched.bottom - 3 : watched.top + 3);
+    await page.waitForTimeout(2000);
+    const frames = await watched.frames();
+    expect(fastest(frames)).toBeLessThanOrEqual(mostAFrame);
+    // Far from the page's end: the scroll stopped at the list's.
+    const now = await watched.scrolled();
+    expect(down ? watched.greatest - now : now).toBeGreaterThan(2000);
+    await expectEndInView(watched, edge);
+    await hand.lift();
+    await expect(down ? items.last() : items.first()).toHaveText(name ?? "");
+  });
+}
+
+/** Scrolls the box round a list so that its row `index` is the first on screen. */
+const scrollRowToTop = async (list: Locator, index: number) => {
+  await list.evaluate((element, at) => {
+    let box = element.parentElement;
+    while (
+      box !== null &&
+      !/auto|scroll/u.test(getComputedStyle(box).overflowY)
+    ) {
+      box = box.parentElement;
+    }
+    const row = element.children.item(at);
+    if (box === null || row === null) {
+      return;
+    }
+    box.scrollTop +=
+      row.getBoundingClientRect().top - box.getBoundingClientRect().top - 2;
+    // Each frame's scroll of the box from here on.
+    const frames: [number, number][] = [];
+    window.scrollFrames = frames;
+    const keep = () => {
+      frames.push([box.scrollTop, box.scrollHeight]);
+      requestAnimationFrame(keep);
+    };
+    keep();
+  }, index);
+};
+
+for (const added of [
+  "a row at its start",
+  "a first row grown taller",
+] as const) {
+  test(`at rest, ${added} leaves a row on screen where it was`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 600 });
+    await openExample(page, "sortable-list", "scrolling");
+    const list = page.getByRole("list", { name: "Columns, in order" });
+    await scrollRowToTop(list, 5);
+    await settled(page);
+    const row = list.getByRole("listitem").nth(5);
+    const name = (await row.textContent()) ?? "";
+    const before = await row.boundingBox();
+    await list.evaluate((element, what) => {
+      const first = element.children.item(0);
+      if (!(first instanceof HTMLElement)) {
+        return;
+      }
+      if (what === "a row at its start") {
+        element.prepend(first.cloneNode(true));
+      } else {
+        first.style.minHeight = `${first.offsetHeight + 60}px`;
+      }
+    }, added);
+    await settled(page);
+    // The same row, now sixth or seventh.
+    const after = await list
+      .getByRole("listitem")
+      .filter({ hasText: name })
+      .boundingBox();
+    expect(after?.y).toBeCloseTo(before?.y ?? Number.NaN, 0);
+  });
+}
+
+test("while an item is moved, the list is no scroll anchor: the page stays as the order changes under it", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 600 });
+  await openExample(page, "sortable-list", "scrolling");
+  const list = page.getByRole("list", { name: "Columns, in order" });
+  // The fourth row the first on screen, the one the browser would anchor to.
+  await scrollRowToTop(list, 3);
+  const handle = list.getByRole("listitem").nth(3).getByRole("button");
+  await handle.evaluate((element) => {
+    if (element instanceof HTMLElement) {
+      element.focus({ preventScroll: true });
+    }
+  });
+  await page.keyboard.press("Space");
+  await expect(list).toHaveCSS("overflow-anchor", "none");
+  for (let step = 0; step < 3; step += 1) {
+    // oxlint-disable-next-line no-await-in-loop -- one move after the other
+    await page.keyboard.press("ArrowDown");
+  }
+  await page.waitForTimeout(300);
+  const frames = await page.evaluate(() => window.scrollFrames ?? []);
+  expect(new Set(frames.map(([top]) => top)).size).toBe(1);
+  await page.keyboard.press("Space");
+  await expect(list).toHaveCSS("overflow-anchor", "auto");
+});
 
 test("Escape puts a moved item back where it was, and Tab does too and moves on", async ({
   browserName,

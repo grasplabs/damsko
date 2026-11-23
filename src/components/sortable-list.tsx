@@ -182,10 +182,11 @@ const sortableList = definePrimitive({
 
     // A pointer's drag near the top or bottom of what scrolls (the list's box, the page) scrolls
     // it, so an item goes past what one screen shows. UI SDK scrolls only while it drags a copy of
-    // the item; here the item itself is dragged, so that a field in it keeps what was typed and it
-    // never goes sideways, and the scroll is followed here. UI SDK's createAutoScroll is the one
+    // the item; here the item itself is dragged, so that a native select in it keeps its choice and
+    // it never goes sideways, and the scroll is followed here. UI SDK's createAutoScroll is the one
     // frame loop: it runs while the real pointer is in an edge's band, at most its speed a frame,
-    // slower the shallower the pointer is in, and the browser keeps each scroll within its end.
+    // slower the shallower the pointer is in, and stops once the list's own end is on screen (past
+    // it there is nowhere to drop) or what scrolls is at its end.
     // After each scroll the item keeps under the still pointer by what scrolled (--drag-scroll) and
     // finds its place again. Its translate is held within the list (--drag-min, --drag-max), so it
     // never makes the page or the box taller than it is. It all stops once the drag is over, for
@@ -236,6 +237,29 @@ const sortableList = definePrimitive({
           const rect = other.getBoundingClientRect();
           return rect.top + rect.height / 2 < y;
         }).length;
+      // The part of the screen the list can show: the window, cut by every box round it that
+      // scrolls or clips.
+      const shown = () => {
+        let from = 0;
+        let to = doc.defaultView?.innerHeight ?? 0;
+        for (let node = list.parentElement; node; node = node.parentElement) {
+          if (getComputedStyle(node).overflowY !== "visible") {
+            const rect = node.getBoundingClientRect();
+            from = Math.max(from, rect.top);
+            to = Math.min(to, rect.bottom);
+          }
+        }
+        return { from, to };
+      };
+      // Whether more of the list lies past the edge the pointer is nearer: past the list's own end
+      // there is nowhere to drop, so a scroll stops once that end is on screen.
+      const more = () => {
+        const { from, to } = shown();
+        const rect = list.getBoundingClientRect();
+        return y > (from + to) / 2
+          ? rect.bottom > to + 0.5
+          : rect.top < from - 0.5;
+      };
       const scrolled = () => {
         if (!dragging) {
           return;
@@ -249,7 +273,12 @@ const sortableList = definePrimitive({
       };
       const scroller = createAutoScroll({
         ignore: () => item,
-        onScroll: scrolled,
+        onScroll: () => {
+          scrolled();
+          if (!more()) {
+            scroller.stop();
+          }
+        },
       });
       // Everything below ends with the drag, by this one signal.
       const listening = new AbortController();
@@ -284,7 +313,11 @@ const sortableList = definePrimitive({
           hold();
         }
         y = event.clientY;
-        scroller.update(event.clientX, y);
+        if (more()) {
+          scroller.update(event.clientX, y);
+        } else {
+          scroller.stop();
+        }
       };
       const ended = (event: PointerEvent) => {
         if (event.pointerId === down.pointerId) {
@@ -300,7 +333,9 @@ const sortableList = definePrimitive({
     return { reorder, scrollWhileDragging };
   },
   slots: (slot) => ({
-    root: slot({}),
+    root: slot<object, { moving: boolean }>({
+      state: (state) => ({ moving: state.moving !== null }),
+    }),
     item: slot<
       ItemProps,
       { moving: boolean; dragging: boolean; place: number | undefined }
@@ -367,10 +402,7 @@ const HOVER = media.hover;
 const REDUCED = media.reducedMotion;
 
 const styles = stylex.create({
-  // No item is a scroll anchor: as the order changes under a drag, the browser would scroll
-  // against it.
   list: {
-    overflowAnchor: "none",
     display: "flex",
     flexDirection: "column",
     gap: space[1],
@@ -378,6 +410,12 @@ const styles = stylex.create({
     margin: 0,
     padding: 0,
     listStyle: "none",
+  },
+  // While an item is moved, no item is a scroll anchor: as the order changes under it, the browser
+  // would scroll against the move. At rest the list keeps the page's place as any content does, when
+  // something is added above a row on screen.
+  listMoving: {
+    overflowAnchor: "none",
   },
   // An item: its handle at the start, then what it holds, on the ground it stands on.
   item: {
@@ -477,7 +515,8 @@ export const SortableList = ({
     {},
     {
       "aria-label": ariaLabel,
-      ...stylex.props(styles.list, style),
+      className: (state: { moving: boolean }) =>
+        className(styles.list, state.moving && styles.listMoving, style),
       children,
     },
     "ul"
