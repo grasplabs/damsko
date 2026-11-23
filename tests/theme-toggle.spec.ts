@@ -203,3 +203,18 @@ test.describe("on a phone", () => {
     expect(tops[2]).toBeGreaterThan(tops[0] ?? 0);
   });
 });
+
+test("the keyboard's ring is drawn inside the chosen segment, clear of its neighbours", async ({
+  page,
+}) => {
+  await open(page, "basic");
+  const group = page.getByRole("radiogroup", { name: "Theme" });
+  await page.keyboard.press("Tab");
+  await expect(group.getByRole("radio", { name: "Light" })).toBeFocused();
+  const segment = group.locator("label").filter({
+    has: page.getByRole("radio", { name: "Light" }),
+  });
+  await expect(segment).toHaveCSS("outline-style", "solid");
+  await expect(segment).toHaveCSS("outline-width", "2px");
+  await expect(segment).toHaveCSS("outline-offset", "-2px");
+});

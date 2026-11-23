@@ -90,7 +90,7 @@ import {
   space,
 } from "../lib/tokens.stylex";
 import { popup } from "../lib/tokens.values";
-import { announce, listOf, nothing, textOf } from "../lib/utils";
+import { announce, className, listOf, nothing, textOf } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { motionVars } from "../lib/vars.stylex";
 import { BrandIcon } from "./brand-icon";
@@ -958,11 +958,11 @@ const Rail = ({
         label={label}
         aria-label={label}
         className={(state: ListboxItemState) =>
-          stylex.props(
+          className(
             styles.maker,
             state.selected && styles.makerChosen,
             focusRing
-          ).className ?? ""
+          ) ?? ""
         }
       >
         {children}
@@ -1182,12 +1182,12 @@ export const ModelSelectorFavorite = ({
 
 /** A row's look, by whether it is the chosen model and where the keys or the pointer are. */
 const rowClass = (chosen: boolean, state: CommandItemState) =>
-  stylex.props(
+  className(
     styles.row,
     chosen && styles.rowChosen,
     state.highlighted && listStyles.itemHighlighted,
     state.disabled && listStyles.itemDisabled
-  ).className ?? "";
+  ) ?? "";
 
 /** Whether a child is a logo, which stands before the words. */
 const isLogo = (child: ReactNode) =>

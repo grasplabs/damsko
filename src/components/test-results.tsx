@@ -43,7 +43,8 @@ import {
   XIcon,
 } from "../lib/icons";
 import type { IconData } from "../lib/icons";
-import { colors, font, media, radius, size, space } from "../lib/tokens.stylex";
+import { codeStyles } from "../lib/styles";
+import { colors, space } from "../lib/tokens.stylex";
 import type { LayoutStyle } from "../lib/utils";
 import { Progress } from "./progress";
 import {
@@ -270,26 +271,10 @@ const styles = stylex.create({
     display: "grid",
     minWidth: 0,
   },
-  // A failure's error, on the code surface as a small CodeBlock draws it: the wash, the strong
-  // edge, the one corner, mono text that wraps.
+  // A failure's error, on the code surface (codeStyles): mono text that wraps.
   error: {
     display: "grid",
     rowGap: space["2"],
-    boxSizing: "border-box",
-    minWidth: 0,
-    paddingBlock: space["3"],
-    paddingInline: space["3"],
-    backgroundColor: colors.codeBlockBg,
-    boxShadow: size.borderStrong,
-    borderWidth: { default: 0, [media.forcedColors]: 1 },
-    borderStyle: "solid",
-    borderColor: "CanvasText",
-    borderRadius: radius.base,
-    cornerShape: radius.shape,
-    color: colors.bodyForeground,
-    fontFamily: font.mono,
-    fontSize: font.textXs,
-    lineHeight: font.codeBlockLine,
   },
   errorMessage: {
     margin: 0,
@@ -556,7 +541,10 @@ export const Test = ({
 
 /** A failed test's error, on the code surface: its message, then its stack. */
 export const TestError = ({ children, style }: TestErrorProps) => (
-  <div data-slot="test-error" {...stylex.props(styles.error, style)}>
+  <div
+    data-slot="test-error"
+    {...stylex.props(codeStyles.surface, codeStyles.text, styles.error, style)}
+  >
     {children}
   </div>
 );

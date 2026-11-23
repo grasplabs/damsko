@@ -484,6 +484,7 @@
         "@stylexjs/stylex"
       ],
       "registryDependencies": [
+        "@damsko/empty",
         "@damsko/lib",
         "@damsko/message",
         "@damsko/message-scroller"
@@ -951,7 +952,7 @@
       "name": "drawer",
       "type": "registry:ui",
       "title": "Drawer",
-      "description": "A panel that slides up from the bottom for a short task on a phone.",
+      "description": "A panel dragged up from the bottom of a phone, which rests at more than one height or is pulled away.",
       "dependencies": [
         "@stylexjs/stylex",
         "@ui-sdk/core",
@@ -1231,7 +1232,7 @@
       "name": "image-upload",
       "type": "registry:ui",
       "title": "Image upload",
-      "description": "Image upload",
+      "description": "One picture someone sets, such as a logo or a face, changed by pressing the picture itself.",
       "dependencies": [
         "@stylexjs/stylex",
         "@ui-sdk/core",
@@ -1244,6 +1245,7 @@
         "@damsko/spinner",
         "@damsko/tooltip"
       ],
+      "docs": "https://damsko.joingrasp.com/components/image-upload",
       "files": [
         {
           "path": "src/components/image-upload.tsx",
@@ -1594,6 +1596,7 @@
       ],
       "registryDependencies": [
         "@damsko/code-block",
+        "@damsko/collapsible",
         "@damsko/lib",
         "@damsko/link",
         "@damsko/separator",
@@ -1622,7 +1625,7 @@
       "name": "marker",
       "type": "registry:ui",
       "title": "Marker",
-      "description": "A line in a conversation that marks what happened, a status, a note, or a word between two rules.",
+      "description": "A line in a conversation that marks what happened to the conversation, such as a day, a note, a status, or a word between two rules.",
       "dependencies": [
         "@stylexjs/stylex",
         "@ui-sdk/core",

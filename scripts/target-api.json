@@ -1442,6 +1442,11 @@
       "SidebarMenuSub",
       "SidebarMenuSubItem",
       "SidebarMenuSubButton",
+      "SidebarLevels",
+      "SidebarLevel",
+      "SidebarLevelHeader",
+      "SidebarLevelTitle",
+      "SidebarLevelTrigger",
       "SidebarProviderProps",
       "SidebarProps",
       "SidebarTriggerProps",
@@ -1464,7 +1469,12 @@
       "SidebarMenuSkeletonProps",
       "SidebarMenuSubProps",
       "SidebarMenuSubItemProps",
-      "SidebarMenuSubButtonProps"
+      "SidebarMenuSubButtonProps",
+      "SidebarLevelsProps",
+      "SidebarLevelProps",
+      "SidebarLevelHeaderProps",
+      "SidebarLevelTitleProps",
+      "SidebarLevelTriggerProps"
     ],
     "src/components/sidebar.stylex.ts": null
   },

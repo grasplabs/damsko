@@ -27,7 +27,7 @@ const known = new Set([
   "container/settings: BUTTON",
   "field/legend: BUTTON",
   "field/sets: BUTTON",
-  "file-upload/image-upload-setting: Change picture",
+  "image-upload/setting: Change picture",
   "inspector-01/facts: northwind.example",
   "markdown/host-links: Source 1",
   "markdown/host-links: Source 2",

@@ -55,7 +55,7 @@ import {
   size as sizes,
   space,
 } from "../lib/tokens.stylex";
-import { slotProps } from "../lib/utils";
+import { className, slotProps } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { motionVars } from "../lib/vars.stylex";
 import { cardLinkMarker, cardVars } from "./card.stylex";
@@ -701,7 +701,7 @@ export const CardLink = ({
       "data-slot": "card-link",
       "aria-label": ariaLabel,
       "aria-describedby": describedBy,
-      className: stylex.props(
+      className: className(
         cardLinkMarker,
         styles.card,
         hyphenate,
@@ -710,7 +710,7 @@ export const CardLink = ({
         styles.link,
         focusRing,
         style
-      ).className,
+      ),
       children: slot.children,
     },
     slot.render

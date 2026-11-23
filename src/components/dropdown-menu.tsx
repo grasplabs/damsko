@@ -43,12 +43,11 @@ import {
   MenuShortcutPart,
   MenuSubContentPart,
   MenuSubTriggerPart,
-  slotted,
 } from "../lib/menu";
 import type { MenuKind } from "../lib/menu";
 import { menuStyles, scrollbarHidden } from "../lib/styles";
 import { popup } from "../lib/tokens.values";
-import { slotProps } from "../lib/utils";
+import { slotProps, slotted } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { menuMarker } from "../lib/vars.stylex";
 import { Button } from "./button";

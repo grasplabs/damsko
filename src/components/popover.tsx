@@ -50,7 +50,7 @@ import {
   space,
 } from "../lib/tokens.stylex";
 import { popup } from "../lib/tokens.values";
-import { slotProps } from "../lib/utils";
+import { className, slotProps } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { motionVars, toastRegionMarker } from "../lib/vars.stylex";
 import { popoverMarker } from "./popover.stylex";
@@ -114,7 +114,7 @@ export interface PopoverProps extends Omit<
 }
 
 // The Toaster's region, by the marker it carries.
-const TOASTER = `.${stylex.props(toastRegionMarker).className ?? ""}`;
+const TOASTER = `.${className(toastRegionMarker) ?? ""}`;
 
 /**
  * Whether the popover is asked to close because focus went into the Toaster: a toast's action
@@ -187,7 +187,7 @@ export const PopoverTrigger = ({
   <TriggerPrimitive
     {...rest}
     controller={handle}
-    className={stylex.props(style).className}
+    className={className(style)}
     {...slotProps(asChild, children)}
   />
 );
@@ -218,7 +218,7 @@ export const PopoverAnchor = ({
     {
       ref: value?.setAnchor,
       "data-slot": "popover-anchor",
-      className: stylex.props(style).className,
+      className: className(style),
       children: slot.children,
     },
     slot.render
@@ -570,7 +570,7 @@ export const PopoverClose = ({
   <ClosePrimitive
     {...rest}
     data-slot="popover-close"
-    className={stylex.props(style).className}
+    className={className(style)}
     {...slotProps(asChild, children)}
   />
 );

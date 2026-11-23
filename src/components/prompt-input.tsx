@@ -144,6 +144,7 @@ import { popup } from "../lib/tokens.values";
 import {
   announce,
   assignRef,
+  className,
   isBlank,
   isDevelopment,
   isThenable,
@@ -3811,13 +3812,13 @@ export const PromptInputMentionItem = ({
     label={label}
     disabled={disabled}
     className={(state: TriggerMenuItemState) =>
-      stylex.props(
+      className(
         menuStyles.item,
         styles.mentionItem,
         state.highlighted && menuStyles.highlighted,
         state.disabled && menuStyles.disabled,
         style
-      ).className
+      )
     }
   >
     {icon !== undefined && (

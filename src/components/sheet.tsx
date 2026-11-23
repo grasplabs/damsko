@@ -54,7 +54,7 @@ import {
   size as sizes,
   space,
 } from "../lib/tokens.stylex";
-import { slotProps } from "../lib/utils";
+import { className, slotProps } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { layerFooterMarker, motionVars } from "../lib/vars.stylex";
 import { Button } from "./button";
@@ -185,7 +185,7 @@ export const SheetTrigger = ({
 }: SheetTriggerProps) => (
   <TriggerPrimitive
     {...rest}
-    className={stylex.props(style).className}
+    className={className(style)}
     {...slotted("sheet-trigger", asChild, children)}
   />
 );
@@ -503,7 +503,7 @@ export const SheetClose = ({
   asChild === true ? (
     <ClosePrimitive
       {...rest}
-      className={stylex.props(style).className}
+      className={className(style)}
       {...slotted("sheet-close", asChild, children)}
     />
   ) : (

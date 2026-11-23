@@ -22,7 +22,7 @@ import type { KeyboardEvent, ReactNode } from "react";
 import { useI18n } from "../lib/i18n";
 import { CheckIcon, Icon, MonitorIcon, MoonIcon, SunIcon } from "../lib/icons";
 import type { IconData } from "../lib/icons";
-import { focusRing, focusWithin } from "../lib/styles";
+import { focusRing, focusWithin, segmentedStyles } from "../lib/styles";
 import {
   colors,
   duration,
@@ -34,7 +34,7 @@ import {
   space,
 } from "../lib/tokens.stylex";
 import type { LayoutStyle } from "../lib/utils";
-import { iconVars, motionVars } from "../lib/vars.stylex";
+import { iconVars, motionVars, ringInsetMarker } from "../lib/vars.stylex";
 
 /** How a person chose to see it: light, dark, or whatever the system says. */
 export const themeModes = ["light", "dark", "system"] as const;
@@ -110,7 +110,7 @@ const HOVER = media.hover;
 const COARSE = media.pointerCoarse;
 
 // A segment's corner nests inside the track's: the one corner less the track's padding.
-const SEGMENT_CORNER = `calc(${radius.base} - ${space[1]})`;
+const SEGMENT_CORNER = `calc(${radius.base} - ${space.toggleTrackPadding})`;
 
 const styles = stylex.create({
   root: {
@@ -177,37 +177,23 @@ const styles = stylex.create({
   },
   swapIn: { opacity: 1, filter: "none", transform: "none" },
 
-  // ---- The segmented control: three equal segments, the pill moves by a whole segment ----
-  // The track takes the one corner in the system's squircle, as Toggle group's and Tabs' do; the
-  // pill and each segment nest inside it, the track's corner less its padding.
+  // ---- The segmented control: three equal segments on the segmented track (segmentedStyles), the
+  // pill, drawn as the track's chosen one, moves by a whole segment ----
+  // The pill and each segment nest inside the track, the track's corner less its padding.
   segments: {
     [iconVars.size]: size.iconSm,
     [iconVars.stroke]: size.iconStroke,
     position: "relative",
     display: "inline-grid",
     gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-    padding: space[1],
-    backgroundColor: colors.accent,
-    borderRadius: radius.base,
-    cornerShape: radius.shape,
-    borderWidth: { default: 0, [FORCED]: 1 },
-    borderStyle: "solid",
-    borderColor: "CanvasText",
   },
   pill: {
     position: "absolute",
-    insetBlock: space[1],
-    insetInlineStart: space[1],
-    width: `calc((100% - 2 * ${space[1]}) / 3)`,
-    backgroundColor: colors.card,
+    insetBlock: space.toggleTrackPadding,
+    insetInlineStart: space.toggleTrackPadding,
+    width: `calc((100% - 2 * ${space.toggleTrackPadding}) / 3)`,
     borderRadius: SEGMENT_CORNER,
     cornerShape: radius.shape,
-    boxShadow: shadow.sm,
-    // In forced colours the fill is dropped: the chosen segment is ringed in the system's highlight.
-    borderWidth: { default: 0, [FORCED]: 2 },
-    borderStyle: "solid",
-    borderColor: "Highlight",
-    boxSizing: "border-box",
     transitionProperty: "transform",
     transitionDuration: motionVars.mark,
     transitionTimingFunction: duration.ease,
@@ -252,7 +238,10 @@ const styles = stylex.create({
     transitionDuration: duration.hover,
     WebkitTapHighlightColor: "transparent",
   },
-  segmentOn: { color: colors.foreground },
+  // Over the pill, which in forced colours is the system's highlight.
+  segmentOn: {
+    color: { default: colors.foreground, [FORCED]: "HighlightText" },
+  },
   // The radio itself: native, so the browser gives the keys (arrows, right to left) and a screen
   // reader its place in the group. It covers its label, unseen; the label draws it.
   native: {
@@ -597,13 +586,18 @@ const Segmented = ({
     {
       role: "radiogroup",
       "aria-label": label,
-      ...stylex.props(styles.segments),
+      // The segments touch: each one's ring is drawn just inside it (ringInsetMarker).
+      ...stylex.props(segmentedStyles.track, styles.segments, ringInsetMarker),
       children: (
         <>
           {chosen !== -1 && (
             <span
               aria-hidden="true"
-              {...stylex.props(styles.pill, pills[chosen])}
+              {...stylex.props(
+                segmentedStyles.chosen,
+                styles.pill,
+                pills[chosen]
+              )}
             />
           )}
           {themeModes.map((each) => (
@@ -611,7 +605,7 @@ const Segmented = ({
               key={each}
               {...stylex.props(
                 styles.segment,
-                each === mode && styles.segmentOn,
+                each === mode && segmentedStyles.chosenWords,
                 focusWithin
               )}
             >
