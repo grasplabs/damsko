@@ -42,7 +42,7 @@ const styles = stylex.create({
     fontFamily: font.sans,
     fontSize: font.textSm,
     lineHeight: font.textSmLine,
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
     boxShadow: size.borderStrong,
   },

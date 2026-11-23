@@ -10,7 +10,7 @@ const layout = stylex.create({
     display: "grid",
     gap: space["4"],
     padding: space["6"],
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     backgroundColor: colors.card,
     boxShadow: shadow.sm,
   },

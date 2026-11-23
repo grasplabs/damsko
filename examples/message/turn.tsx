@@ -48,7 +48,7 @@ const layout = stylex.create({
     width: "100%",
     maxWidth: size.promptInputWidth,
     height: size.popupHeight,
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
     boxShadow: size.borderStrong,
     overflow: "hidden",

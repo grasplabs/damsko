@@ -130,7 +130,7 @@ const styles = stylex.create({
     maxWidth: "7.5rem",
     height: 52,
     backgroundColor: colors.muted,
-    borderRadius: radius.mark,
+    borderRadius: radius.sm,
     cornerShape: radius.shape,
   },
   raised: {
@@ -138,14 +138,14 @@ const styles = stylex.create({
     width: 32,
     height: 32,
     backgroundColor: colors.card,
-    borderRadius: radius.mark,
+    borderRadius: radius.sm,
     cornerShape: radius.shape,
   },
   swatch: {
     display: "block",
     width: 36,
     height: 36,
-    borderRadius: radius.mark,
+    borderRadius: radius.sm,
     cornerShape: radius.shape,
     boxShadow: `inset 0 0 0 1px ${siteColors.chipRing}`,
   },
@@ -226,7 +226,7 @@ const styles = stylex.create({
       ":is([aria-expanded=true])": colors.card,
     },
     borderWidth: 0,
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
     boxShadow: {
       default: "none",
@@ -272,7 +272,7 @@ const styles = stylex.create({
     color: colors.foreground,
     backgroundColor: colors.card,
     borderWidth: 0,
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
     boxShadow: `${size.borderStrong}, ${shadow.md}`,
     opacity: { default: 0, ":popover-open": 1 },
@@ -318,7 +318,7 @@ const styles = stylex.create({
       ":hover": { default: null, [media.hover]: colors.accent },
     },
     borderWidth: 0,
-    borderRadius: `calc(${radius.base} - ${space["1"]})`,
+    borderRadius: `calc(${radius.xl} - ${space["1"]})`,
     cornerShape: radius.shape,
     // The one ring, inside the item, as the theme's menu draws it.
     outlineStyle: { default: "none", ":focus-visible": "solid" },
@@ -344,7 +344,7 @@ function Sample({ kind, entry }: { kind: SampleKind; entry: TokenEntry }) {
       const whole =
         entry.name === "radius-full" || entry.name === "radius-circle";
       const style: CSSProperties = {
-        borderRadius: shape ? "var(--damsko-radius)" : v(entry),
+        borderRadius: shape ? "var(--damsko-radius-xl)" : v(entry),
         // A pill and a circle are round by their radius alone, as the parts that use them are: the
         // squircle laid over them drew a rounded rectangle and a rounded square.
         cornerShape: shape

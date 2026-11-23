@@ -37,7 +37,7 @@ const layout = stylex.create({
     width: "100%",
     maxWidth: size.promptInputWidth,
     height: `calc(${size.popupHeight} * 1.4)`,
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
     boxShadow: size.borderStrong,
     overflow: "hidden",
@@ -56,7 +56,7 @@ const layout = stylex.create({
   loadingBox: {
     paddingBlock: space["1"],
     paddingInline: space["3"],
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
     backgroundColor: colors.card,
     boxShadow: shadow.sm,

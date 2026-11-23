@@ -13,7 +13,7 @@ const look = stylex.create({
   frame: {
     width: "100%",
     maxWidth: 384,
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
     boxShadow: size.borderStrong,
     backgroundColor: colors.card,
@@ -33,7 +33,7 @@ const look = stylex.create({
     placeItems: "center",
     width: 120,
     height: 80,
-    borderRadius: radius.mark,
+    borderRadius: radius.sm,
     cornerShape: radius.shape,
     backgroundColor: colors.muted,
     borderWidth: { default: 0, [media.forcedColors]: 1 },

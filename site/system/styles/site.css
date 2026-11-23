@@ -108,7 +108,7 @@
     line-height: var(--damsko-text-xs-line);
     color: var(--damsko-muted-foreground);
     background: var(--damsko-card);
-    border-radius: var(--damsko-radius-mark);
+    border-radius: var(--damsko-radius-sm);
     corner-shape: var(--damsko-radius-shape);
     box-shadow: var(--damsko-border-strong);
   }
@@ -248,7 +248,7 @@
     );
     list-style: none;
     cursor: pointer;
-    border-radius: var(--damsko-radius-mark);
+    border-radius: var(--damsko-radius-sm);
     corner-shape: var(--damsko-radius-shape);
   }
   .site-onpage > summary::-webkit-details-marker {
@@ -341,7 +341,7 @@
     cursor: pointer;
     background: none;
     border: 0;
-    border-radius: var(--damsko-radius-mark);
+    border-radius: var(--damsko-radius-sm);
     corner-shape: var(--damsko-radius-shape);
     transition: color var(--damsko-duration-hover) var(--damsko-ease);
   }
@@ -466,7 +466,7 @@
     padding-top: var(--damsko-space-5);
     color: var(--damsko-foreground);
     text-decoration: none;
-    border-radius: var(--damsko-radius-mark);
+    border-radius: var(--damsko-radius-sm);
     corner-shape: var(--damsko-radius-shape);
   }
   .site-pager-link[data-side="next"] {
@@ -545,7 +545,7 @@
     margin-inline-end: var(--damsko-space-1);
     color: var(--damsko-muted-foreground);
     text-decoration: none;
-    border-radius: var(--damsko-radius-mark);
+    border-radius: var(--damsko-radius-sm);
     corner-shape: var(--damsko-radius-shape);
     opacity: 0;
     transition:
@@ -625,7 +625,7 @@
     color: var(--damsko-body-foreground);
     background: var(--damsko-card);
     border: 0;
-    border-radius: var(--damsko-radius);
+    border-radius: var(--damsko-radius-xl);
     corner-shape: var(--damsko-radius-shape);
     outline: 0;
     box-shadow: var(--damsko-shadow-lg);
@@ -776,7 +776,7 @@
       calc(var(--frame-mark) + var(--damsko-space-3));
     color: var(--damsko-body-foreground);
     text-decoration: none;
-    border-radius: calc(var(--damsko-radius) - var(--damsko-space-1));
+    border-radius: var(--damsko-radius-lg);
     corner-shape: var(--damsko-radius-shape);
   }
   .site-search-results [role="option"][aria-selected="true"] {
@@ -968,7 +968,7 @@
     padding: var(--damsko-space-5);
     color: var(--damsko-body-foreground);
     background: var(--damsko-destructive-subtle);
-    border-radius: var(--damsko-radius);
+    border-radius: var(--damsko-radius-xl);
     corner-shape: var(--damsko-radius-shape);
     box-shadow: var(--damsko-border-strong);
   }

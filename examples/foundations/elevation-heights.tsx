@@ -77,7 +77,7 @@ const styles = stylex.create({
   // The list lies in the page: raised, with the edge only.
   sheet: {
     minWidth: 0,
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
     backgroundColor: colors.card,
     boxShadow: size.borderStrong,
@@ -123,7 +123,7 @@ const styles = stylex.create({
     rowGap: space["2"],
     minWidth: 0,
     padding: space["4"],
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
     justifyItems: "start",
     backgroundColor: colors.card,
@@ -135,7 +135,7 @@ const styles = stylex.create({
     rowGap: space["2"],
     minWidth: 0,
     padding: space["5"],
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
     backgroundColor: colors.card,
     boxShadow: shadow.lg,

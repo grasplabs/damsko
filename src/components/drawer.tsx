@@ -193,7 +193,7 @@ const styles = stylex.create({
   panel: {
     position: "relative",
     marginInline: "auto",
-    borderRadius: `${radius.base} ${radius.base} 0 0`,
+    borderRadius: `${radius.xl} ${radius.xl} 0 0`,
     width: { default: `min(${sizes.drawerWidth}, 100%)`, [PHONE]: "100%" },
     height: "fit-content",
     maxHeight: `min(${sizes.drawerHeight}, var(--visual-viewport-height, 100dvh) - ${sizes.dialogGutter})`,
@@ -224,7 +224,7 @@ const styles = stylex.create({
     marginBlockStart: space["1"],
     padding: 0,
     borderWidth: 0,
-    borderRadius: radius.mark,
+    borderRadius: radius.sm,
     cornerShape: radius.shape,
     backgroundColor: "transparent",
     cursor: { default: "grab", ":active": "grabbing" },

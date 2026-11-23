@@ -12,7 +12,7 @@ const look = stylex.create({
   frame: {
     width: 160,
     maxWidth: "100%",
-    borderRadius: radius.mark,
+    borderRadius: radius.sm,
     cornerShape: radius.shape,
     boxShadow: size.borderStrong,
     backgroundColor: colors.card,

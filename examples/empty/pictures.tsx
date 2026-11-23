@@ -18,7 +18,7 @@ const layout = stylex.create({
   place: {
     display: "grid",
     minHeight: 200,
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
     backgroundColor: colors.card,
     boxShadow: size.borderStrong,

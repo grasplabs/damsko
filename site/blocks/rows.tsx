@@ -54,7 +54,7 @@ const styles = stylex.create({
     color: colors.foreground,
     cursor: "pointer",
     listStyle: "none",
-    borderRadius: radius.mark,
+    borderRadius: radius.sm,
     cornerShape: radius.shape,
     "::-webkit-details-marker": { display: "none" },
   },

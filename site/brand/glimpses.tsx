@@ -29,7 +29,7 @@ const s = stylex.create({
   light: {
     position: "absolute",
     inset: "22% 16% 16%",
-    borderRadius: radius.hairline,
+    borderRadius: radius.xs,
     backgroundImage: `linear-gradient(90deg, ${colors.brandPaper} 0 14.3%, ${colors.brandLime} 14.3% 28.6%, ${colors.brandSea} 28.6% 42.9%, ${colors.brandMint} 42.9% 57.1%, ${colors.brandPine} 57.1% 71.4%, ${colors.brandInk} 71.4% 85.7%, ${colors.brandNight} 85.7%)`,
   },
   serif: {
@@ -79,7 +79,7 @@ const s = stylex.create({
   },
   tile: (tone: string) => ({
     backgroundColor: tone,
-    borderRadius: radius.hairline,
+    borderRadius: radius.xs,
   }),
   icon: {
     display: "grid",
@@ -105,7 +105,7 @@ const s = stylex.create({
   bar: (width: string) => ({
     width,
     height: 3,
-    borderRadius: radius.hairline,
+    borderRadius: radius.xs,
     backgroundColor: `color-mix(in oklch, ${colors.primaryForegroundOnColor} 70%, transparent)`,
   }),
   pill: {
@@ -132,13 +132,13 @@ const s = stylex.create({
     width: "56%",
     height: "64%",
     padding: "8%",
-    borderRadius: radius.mark,
+    borderRadius: radius.sm,
     backgroundColor: colors.brandPaper,
   },
   cardBar: (width: string) => ({
     width,
     height: 3,
-    borderRadius: radius.hairline,
+    borderRadius: radius.xs,
     backgroundColor: colors.brandInk,
   }),
 });

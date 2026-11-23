@@ -38,7 +38,7 @@ const layout = stylex.create({
     position: "relative",
     paddingBlock: 1,
     paddingInline: space["1"],
-    borderRadius: radius.mark,
+    borderRadius: radius.sm,
     cornerShape: radius.shape,
     fontSize: font.textXs,
     lineHeight: font.textXsLine,
@@ -75,7 +75,7 @@ const layout = stylex.create({
     },
   },
   row: {
-    borderRadius: radius.row,
+    borderRadius: radius.lg,
     cornerShape: radius.shape,
     transitionProperty: "background-color",
     transitionDuration: duration.hover,

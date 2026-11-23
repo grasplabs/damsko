@@ -415,21 +415,21 @@ const sizeStyles = stylex.create({
     minWidth: sizes.controlXs,
     paddingBlock: `calc((${sizes.controlXs} - ${font.textSmLine}) / 2)`,
     paddingInline: space["2"],
-    borderRadius: `min(${radius.base}, calc(${sizes.controlXs} / 2))`,
+    borderRadius: `min(${radius.xl}, calc(${sizes.controlXs} / 2))`,
   },
   sm: {
     minHeight: sizes.controlSm,
     minWidth: sizes.controlSm,
     paddingBlock: `calc((${sizes.controlSm} - ${font.textSmLine}) / 2)`,
     paddingInline: space["3"],
-    borderRadius: `min(${radius.base}, calc(${sizes.controlSm} / 2))`,
+    borderRadius: `min(${radius.xl}, calc(${sizes.controlSm} / 2))`,
   },
   default: {
     minHeight: sizes.controlDefault,
     minWidth: sizes.controlDefault,
     paddingBlock: `calc((${sizes.controlDefault} - ${font.textSmLine}) / 2)`,
     paddingInline: space["3"],
-    borderRadius: `min(${radius.base}, calc(${sizes.controlDefault} / 2))`,
+    borderRadius: `min(${radius.xl}, calc(${sizes.controlDefault} / 2))`,
   },
   lg: {
     // The large size's icon is the default one, with words or without.
@@ -438,28 +438,28 @@ const sizeStyles = stylex.create({
     minWidth: sizes.controlLg,
     paddingBlock: `calc((${sizes.controlLg} - ${font.textSmLine}) / 2)`,
     paddingInline: space["4"],
-    borderRadius: `min(${radius.base}, calc(${sizes.controlLg} / 2))`,
+    borderRadius: `min(${radius.xl}, calc(${sizes.controlLg} / 2))`,
   },
   "icon-xs": {
     minHeight: sizes.controlXs,
     width: sizes.controlXs,
     paddingBlock: `calc((${sizes.controlXs} - ${font.textSmLine}) / 2)`,
     paddingInline: 0,
-    borderRadius: `min(${radius.base}, calc(${sizes.controlXs} / 2))`,
+    borderRadius: `min(${radius.xl}, calc(${sizes.controlXs} / 2))`,
   },
   "icon-sm": {
     minHeight: sizes.controlSm,
     width: sizes.controlSm,
     paddingBlock: `calc((${sizes.controlSm} - ${font.textSmLine}) / 2)`,
     paddingInline: 0,
-    borderRadius: `min(${radius.base}, calc(${sizes.controlSm} / 2))`,
+    borderRadius: `min(${radius.xl}, calc(${sizes.controlSm} / 2))`,
   },
   icon: {
     minHeight: sizes.controlDefault,
     width: sizes.controlDefault,
     paddingBlock: `calc((${sizes.controlDefault} - ${font.textSmLine}) / 2)`,
     paddingInline: 0,
-    borderRadius: `min(${radius.base}, calc(${sizes.controlDefault} / 2))`,
+    borderRadius: `min(${radius.xl}, calc(${sizes.controlDefault} / 2))`,
   },
   "icon-lg": {
     [iconVars.size]: sizes.iconDefault,
@@ -467,7 +467,7 @@ const sizeStyles = stylex.create({
     width: sizes.controlLg,
     paddingBlock: `calc((${sizes.controlLg} - ${font.textSmLine}) / 2)`,
     paddingInline: 0,
-    borderRadius: `min(${radius.base}, calc(${sizes.controlLg} / 2))`,
+    borderRadius: `min(${radius.xl}, calc(${sizes.controlLg} / 2))`,
   },
 });
 

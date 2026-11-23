@@ -36,7 +36,7 @@ const styles = stylex.create({
     width: "100%",
     maxWidth: "26rem",
     padding: space["6"],
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
     backgroundColor: colors.card,
     boxShadow: shadow.sm,

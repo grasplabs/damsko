@@ -175,7 +175,7 @@ const compare = stylex.create({
     minWidth: 0,
     overflowY: "auto",
     overscrollBehavior: "auto",
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
     boxShadow: size.borderStrong,
   },

@@ -156,7 +156,7 @@ const styles = stylex.create({
     borderWidth: size.hairline,
     borderStyle: "solid",
     borderColor: { default: colors.border, [media.forcedColors]: "CanvasText" },
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
   },
   // The header's row in the card: Trace's row runs over the card's edge, a step of room round its line.

@@ -253,7 +253,7 @@ const styles = stylex.create({
     // Translucent, with the page softened behind it; a faint lift separates it from a dark page.
     backdropFilter: size.tooltipBlur,
     boxShadow: shadow.sm,
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
     fontFamily: font.sans,
     fontSize: font.textXs,

@@ -31,7 +31,7 @@ const styles = stylex.create({
     margin: 0,
     paddingBlock: space["2"],
     paddingInline: space["3"],
-    borderRadius: `min(${radius.base}, ${space["4"]})`,
+    borderRadius: `min(${radius.xl}, ${space["4"]})`,
     cornerShape: radius.shape,
     backgroundColor: colors.muted,
     color: colors.bodyForeground,

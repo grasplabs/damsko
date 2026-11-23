@@ -345,7 +345,7 @@ const styles = stylex.create({
     paddingBlock: `calc(${ROOM})`,
     columnGap: space["2"],
     // A row's corner, in a card too: a trigger there is still a row, as a Sources trigger is.
-    borderRadius: `min(${radius.row}, calc(${size.controlSm} / 2))`,
+    borderRadius: `min(${radius.lg}, calc(${size.controlSm} / 2))`,
     lineHeight: font.textSmLine,
     fontWeight: font.weightNormal,
     color: {

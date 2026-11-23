@@ -270,7 +270,7 @@ const styles = stylex.create({
   end: { flexDirection: "row-reverse" },
   // The assistant's takes focus from code only (after Try again): the ring for words, keyboard only.
   start: {
-    borderRadius: radius.mark,
+    borderRadius: radius.sm,
     cornerShape: radius.shape,
   },
   avatar: {

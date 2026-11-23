@@ -237,7 +237,7 @@ const styles = stylex.create({
     margin: 0,
     padding: 0,
     borderWidth: 0,
-    borderRadius: `calc(${radius.base} / 2)`,
+    borderRadius: `calc(${radius.xl} / 2)`,
     cornerShape: radius.shape,
     backgroundColor: "transparent",
     color: "inherit",
@@ -448,7 +448,7 @@ const styles = stylex.create({
   dotError: {
     width: size.stepperDotActive,
     height: size.stepperDotActive,
-    borderRadius: radius.hairline,
+    borderRadius: radius.xs,
     backgroundColor: { default: colors.destructive, [FORCED]: "CanvasText" },
     borderColor: { default: colors.destructive, [FORCED]: "CanvasText" },
   },

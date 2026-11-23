@@ -268,7 +268,7 @@ const styles = stylex.create({
     color: colors.bodyForeground,
     backgroundColor: colors.popover,
     boxShadow: shadow.popupShadow,
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
     fontFamily: font.sans,
     // Opened inside its trigger's parent (it is not portalled), it would take that parent's text:

@@ -13,7 +13,7 @@ const look = stylex.create({
     maxWidth: "100%",
     height: size.tapTarget,
     overflow: "hidden",
-    borderRadius: radius.mark,
+    borderRadius: radius.sm,
     cornerShape: radius.shape,
     boxShadow: size.borderStrong,
     backgroundColor: colors.card,

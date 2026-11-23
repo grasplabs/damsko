@@ -39,7 +39,7 @@ const styles = stylex.create({
     height: size.kbdHeight,
     minWidth: size.kbdHeight,
     paddingInline: space.kbdPadding,
-    borderRadius: radius.mark,
+    borderRadius: radius.sm,
     cornerShape: radius.shape,
     fontFamily: font.sans,
     fontSize: font.textXs,

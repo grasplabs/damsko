@@ -175,7 +175,7 @@ const styles = stylex.create({
     borderWidth: { default: 0, [media.forcedColors]: 1 },
     borderStyle: "solid",
     borderColor: "CanvasText",
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
     backgroundColor: colors.muted,
   },

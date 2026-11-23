@@ -137,7 +137,7 @@
       /* Scrolls by touch, wheel and keys (it takes focus), with no bar of its own. */
       scrollbar-width: none;
       margin: var(--damsko-space-6) 0;
-      border-radius: var(--damsko-radius);
+      border-radius: var(--damsko-radius-xl);
       corner-shape: var(--damsko-radius-shape);
       box-shadow: var(--damsko-border-strong);
     }
@@ -197,7 +197,7 @@
       width: var(--damsko-control-sm);
       height: var(--damsko-control-sm);
       padding: 0;
-      border-radius: var(--damsko-radius);
+      border-radius: var(--damsko-radius-xl);
       corner-shape: var(--damsko-radius-shape);
       font-size: var(--damsko-text-sm);
       line-height: var(--damsko-text-sm-line);

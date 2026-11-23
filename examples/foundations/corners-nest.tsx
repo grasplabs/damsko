@@ -38,7 +38,7 @@ const styles = stylex.create({
     width: "100%",
     maxWidth: "26rem",
     padding: space["3"],
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
     backgroundColor: colors.card,
     boxShadow: shadow.md,
@@ -80,8 +80,8 @@ const styles = stylex.create({
     transitionTimingFunction: duration.ease,
   },
   // The panel's corner less the room between them: the two curves share a centre.
-  nested: { borderRadius: `calc(${radius.base} - ${space["3"]})` },
-  same: { borderRadius: radius.base },
+  nested: { borderRadius: `calc(${radius.xl} - ${space["3"]})` },
+  same: { borderRadius: radius.xl },
   file: { display: "grid", minWidth: 0 },
   name: {
     margin: 0,

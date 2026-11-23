@@ -280,7 +280,7 @@ const styles = stylex.create({
     borderWidth: { default: 0, [FORCED]: 1 },
     borderStyle: "solid",
     borderColor: "currentColor",
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
     backgroundColor: colors.popover,
     boxShadow: shadow.popupShadow,

@@ -162,7 +162,7 @@ const styles = stylex.create({
     minWidth: `calc(${sizes.controlLg} - 2 * ${space.toggleTrackPadding})`,
   },
   item: {
-    borderRadius: `calc(${radius.base} - ${space.toggleTrackPadding})`,
+    borderRadius: `calc(${radius.xl} - ${space.toggleTrackPadding})`,
   },
   // An icon alone: square.
   square: { paddingInline: 0 },

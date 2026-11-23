@@ -531,7 +531,7 @@ const styles = stylex.create({
     justifyContent: "center",
     width: space[10],
     height: space[10],
-    borderRadius: radius.mark,
+    borderRadius: radius.sm,
     cornerShape: radius.shape,
     color: colors.foreground,
     backgroundColor: colors.muted,

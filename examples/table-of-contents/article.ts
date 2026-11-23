@@ -272,7 +272,7 @@ export const look = stylex.create({
     overflowY: "auto",
     paddingBlock: space["6"],
     paddingInline: { default: space["5"], [media.sm]: space["8"] },
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
     backgroundColor: colors.card,
     boxShadow: size.borderStrong,
@@ -387,7 +387,7 @@ export const look = stylex.create({
     listStyle: "none",
     paddingInline: space["1"],
     marginInline: `calc(-1 * ${space["1"]})`,
-    borderRadius: radius.mark,
+    borderRadius: radius.sm,
     cornerShape: radius.shape,
   },
   foldHeading: {
@@ -428,7 +428,7 @@ export const look = stylex.create({
     paddingBlock: 0,
     paddingInline: space["1"],
     borderWidth: 0,
-    borderRadius: radius.mark,
+    borderRadius: radius.sm,
     cornerShape: radius.shape,
     backgroundColor: "transparent",
     color: {

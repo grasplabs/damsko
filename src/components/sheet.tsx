@@ -214,7 +214,7 @@ const styles = stylex.create({
     height: `calc(100% - 2 * ${INSET})`,
     marginBlock: INSET,
     marginInline: INSET,
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     // It slides in from its side and back out to it (UI SDK marks the first and last frame), in
     // the library's open time; with reduced motion it is there and gone at once.
     translate: {

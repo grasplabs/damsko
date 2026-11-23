@@ -91,7 +91,7 @@ const styles = stylex.create({
   row: {
     display: "grid",
     minWidth: 0,
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
     backgroundColor: colors.card,
     boxShadow: shadow.sm,
@@ -110,7 +110,7 @@ const styles = stylex.create({
     flexShrink: 0,
     width: size.controlSm,
     height: size.controlSm,
-    borderRadius: radius.mark,
+    borderRadius: radius.sm,
     cornerShape: radius.shape,
     backgroundColor: colors.muted,
     color: colors.foreground,

@@ -52,7 +52,7 @@ const styles = stylex.create({
   frame: {
     position: "relative",
     overflow: "hidden",
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
     boxShadow: size.borderStrong,
     isolation: "isolate",
@@ -113,7 +113,7 @@ const styles = stylex.create({
     WebkitTapHighlightColor: "transparent",
     // No press scale here: a stop has no edge of its own inside the one gradient, so a scale only
     // shook its words. The press is answered by the words crossing to "Copied" at once.
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
   },
   // On the light stops the ring is the light's own ink: the focus green would sit on a green.

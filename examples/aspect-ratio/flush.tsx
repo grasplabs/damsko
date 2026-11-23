@@ -14,7 +14,7 @@ const look = stylex.create({
     width: "100%",
     maxWidth: 320,
     overflow: "hidden",
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
     boxShadow: size.borderStrong,
     backgroundColor: colors.card,

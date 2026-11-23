@@ -220,7 +220,7 @@ const styles = stylex.create({
     borderWidth: { default: 0, [FORCED]: 1 },
     borderStyle: "solid",
     borderColor: "CanvasText",
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
     backgroundColor: colors.card,
     boxShadow: shadow.md,

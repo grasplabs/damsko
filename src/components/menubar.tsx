@@ -326,7 +326,7 @@ const styles = stylex.create({
     borderWidth: { default: 0, [FORCED]: size.hairline },
     borderStyle: "solid",
     borderColor: "CanvasText",
-    borderRadius: `min(${radius.base}, calc((${size.controlSm} + 2 * ${space[1]}) / 2))`,
+    borderRadius: `min(${radius.xl}, calc((${size.controlSm} + 2 * ${space[1]}) / 2))`,
     cornerShape: radius.shape,
     boxShadow: size.borderStrong,
     fontFamily: font.sans,
@@ -344,7 +344,7 @@ const styles = stylex.create({
     paddingInline: space[3],
     paddingBlock: 0,
     borderWidth: 0,
-    borderRadius: `min(calc(${radius.base} - ${space[1]}), calc(${size.controlSm} / 2))`,
+    borderRadius: `min(calc(${radius.xl} - ${space[1]}), calc(${size.controlSm} / 2))`,
     cornerShape: radius.shape,
     backgroundColor: {
       default: "transparent",

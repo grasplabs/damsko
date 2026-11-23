@@ -153,7 +153,7 @@ const stylex = () => {
     "// Every StyleX name refers to its CSS custom property in styles/tokens.css; no value is written",
     "// here. Constants (not defineVars) because the variables already exist: StyleX inlines",
     "// `var(--damsko-…)` at build time and emits no second set of properties. Load tokens.css once",
-    "// on the page. One object per category: `colors.primary`, `space[4]`, `radius.base`.",
+    "// on the page. One object per category: `colors.primary`, `space[4]`, `radius.lg`.",
     'import * as stylex from "@stylexjs/stylex";',
   ];
   for (const category of CATEGORIES) {

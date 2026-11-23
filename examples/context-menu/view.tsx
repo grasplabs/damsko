@@ -30,7 +30,7 @@ const layout = stylex.create({
     aspectRatio: "16 / 10",
     boxSizing: "border-box",
     padding: space[4],
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
     boxShadow: size.borderStrong,
     // Its edge is a shadow, which forced colours drop: a real one there.

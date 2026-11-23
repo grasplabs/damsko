@@ -135,7 +135,7 @@ const styles = stylex.create({
     minWidth: 0,
     paddingBlock: space["3"],
     paddingInline: space["4"],
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
     // No border and no shadow: the tint is the edge. In forced colours a real border draws it.
     borderWidth: { default: 0, [FORCED]: 1 },
@@ -164,7 +164,7 @@ const styles = stylex.create({
     [iconVars.size]: size.iconSm,
     columnGap: 0,
     padding: space["3"],
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     boxShadow: size.borderStrong,
   },
   default: { backgroundColor: colors.alertBgDefault },

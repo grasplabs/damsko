@@ -36,7 +36,7 @@ const styles = stylex.create({
     color: "inherit",
     textDecorationLine: "none",
     boxShadow: `inset 0 1px 0 ${colors.border}`,
-    borderRadius: radius.mark,
+    borderRadius: radius.sm,
     cornerShape: radius.shape,
   },
   number: {

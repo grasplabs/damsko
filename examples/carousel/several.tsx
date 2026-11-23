@@ -21,7 +21,7 @@ const layout = stylex.create({
     placeItems: "center",
     boxSizing: "border-box",
     aspectRatio: "1",
-    borderRadius: radius.base,
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
     backgroundColor: colors.muted,
     boxShadow: size.borderStrong,

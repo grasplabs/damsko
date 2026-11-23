@@ -130,26 +130,26 @@ const styles = stylex.create({
   xs: {
     width: size.avatarXs,
     height: size.avatarXs,
-    borderRadius: radius.mark,
+    borderRadius: radius.sm,
     cornerShape: radius.shape,
     [iconVars.size]: `calc(${size.avatarXs} / 2)`,
   },
   sm: {
     width: size.avatarSm,
     height: size.avatarSm,
-    borderRadius: `min(${radius.base}, calc(${size.avatarSm} / 2))`,
+    borderRadius: `min(${radius.xl}, calc(${size.avatarSm} / 2))`,
     [iconVars.size]: `calc(${size.avatarSm} / 2)`,
   },
   default: {
     width: size.avatarDefault,
     height: size.avatarDefault,
-    borderRadius: `min(${radius.base}, calc(${size.avatarDefault} / 2))`,
+    borderRadius: `min(${radius.xl}, calc(${size.avatarDefault} / 2))`,
     [iconVars.size]: `calc(${size.avatarDefault} / 2)`,
   },
   lg: {
     width: size.avatarLg,
     height: size.avatarLg,
-    borderRadius: `min(${radius.base}, calc(${size.avatarLg} / 2))`,
+    borderRadius: `min(${radius.xl}, calc(${size.avatarLg} / 2))`,
     [iconVars.size]: `calc(${size.avatarLg} / 2)`,
   },
   // A brand with no mark: its first letter on the tile's quiet ground, the letter at half the
@@ -198,26 +198,26 @@ const styles = stylex.create({
   countXs: {
     minWidth: size.avatarXs,
     height: size.avatarXs,
-    borderRadius: radius.mark,
+    borderRadius: radius.sm,
     cornerShape: radius.shape,
     fontSize: `max(10px, calc(${size.avatarXs} * 0.4))`,
   },
   countSm: {
     minWidth: size.avatarSm,
     height: size.avatarSm,
-    borderRadius: `min(${radius.base}, calc(${size.avatarSm} / 2))`,
+    borderRadius: `min(${radius.xl}, calc(${size.avatarSm} / 2))`,
     fontSize: `max(10px, calc(${size.avatarSm} * 0.4))`,
   },
   countDefault: {
     minWidth: size.avatarDefault,
     height: size.avatarDefault,
-    borderRadius: `min(${radius.base}, calc(${size.avatarDefault} / 2))`,
+    borderRadius: `min(${radius.xl}, calc(${size.avatarDefault} / 2))`,
     fontSize: `max(10px, calc(${size.avatarDefault} * 0.4))`,
   },
   countLg: {
     minWidth: size.avatarLg,
     height: size.avatarLg,
-    borderRadius: `min(${radius.base}, calc(${size.avatarLg} / 2))`,
+    borderRadius: `min(${radius.xl}, calc(${size.avatarLg} / 2))`,
     fontSize: `max(10px, calc(${size.avatarLg} * 0.4))`,
   },
 });
