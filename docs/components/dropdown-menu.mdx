@@ -56,7 +56,7 @@ Two items may say the same words: each is its own, told apart by its group's lab
 
 ## Submenus
 
-A DropdownMenuSub holds the actions that share one verb; Right opens it and Left closes it (the other way round in right-to-left text).
+A DropdownMenuSub holds the actions that share one verb; Right opens it and Left closes it (the other way round in right-to-left text). Its first item stands level with the item that opened it, and its words start past an icon only when one of its own items has one.
 
 <Stage path="dropdown-menu/submenu" label="Submenus" />
 
@@ -156,13 +156,13 @@ The trigger is a Button: hover, keyboard focus and pressed are forced from its o
       group: "Items",
       key: "Icon",
       value: "{icon-sm}, stroke {icon-stroke}",
-      note: "in the words' colour",
+      note: "in the words' colour, centred on the row; where one item of a menu has one, the words of the others start past it, and a submenu decides for its own items",
     },
     {
       group: "Items",
       key: "Keys",
-      value: "{text-xs} / {text-xs-line}, {font-weight-normal}",
-      note: "at the end",
+      value: "{text-xs}, {font-weight-normal}",
+      note: "at the end, on the words' baseline; the row stays as tall as one without keys",
       tokens: ["muted"],
     },
     {

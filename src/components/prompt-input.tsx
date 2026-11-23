@@ -152,12 +152,7 @@ import {
   nothing,
 } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
-import {
-  iconVars,
-  menuMarker,
-  pixel,
-  ringInsetMarker,
-} from "../lib/vars.stylex";
+import { iconVars, pixel, ringInsetMarker } from "../lib/vars.stylex";
 import { Alert, AlertAction, AlertTitle } from "./alert";
 import {
   Attachment,
@@ -1629,12 +1624,11 @@ const styles = stylex.create({
     lineHeight: font.textXsLine,
     fontWeight: font.weightNormal,
   },
-  // The chevron at a kind's end, which the reading direction turns.
+  // The chevron at a kind's end; it turns with the reading direction itself (Icon).
   mentionInto: {
     display: "flex",
     marginInlineStart: "auto",
     color: colors.mutedForeground,
-    transform: { default: null, ":dir(rtl)": "scaleX(-1)" },
   },
   // The menu's words when it has no rows. It stays in the menu, wordless, while there are rows,
   // and takes no room then.
@@ -4706,7 +4700,6 @@ export const PromptInputMentionContent = ({
           {...props}
           data-slot="prompt-input-mention-content"
           {...stylex.props(
-            menuMarker,
             menuStyles.panel,
             menuStyles.motion,
             styles.mentionPanel,
