@@ -264,6 +264,7 @@ const styles = stylex.create({
     flexGrow: 1,
     minHeight: 0,
     borderRadius: "inherit",
+    cornerShape: "inherit",
     backgroundColor: colors.sidebar,
     color: colors.sidebarText,
     fontFamily: font.sans,
