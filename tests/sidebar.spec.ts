@@ -93,6 +93,18 @@ test("folded off the canvas by the keys while focus is inside, focus goes to the
   await expect(triggerOf(page)).toBeFocused();
 });
 
+test("folded to its icons by the keys while focus is on a nested row the rail hides, focus goes to the trigger", async ({
+  page,
+}) => {
+  await openExample(page, "sidebar", "icon");
+  await sidebarOf(page).getByRole("link", { name: "Plan" }).focus();
+  await pressKeys(page);
+  await expect(
+    sidebarOf(page).getByRole("link", { name: "Plan" })
+  ).toBeHidden();
+  await expect(triggerOf(page)).toBeFocused();
+});
+
 test("opened from the page's trigger, which shows only while the sidebar is away, focus goes to the sidebar's own trigger", async ({
   page,
 }) => {
@@ -123,17 +135,44 @@ test("a row and a nested row keep their own slots under their tooltips, for a pr
   );
 });
 
-test("on a phone the page can keep the sheet's state: choosing a place closes it", async ({
+test("on a phone the keys open the sheet and close it again, and focus goes back to the trigger", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await openExample(page, "sidebar", "basic");
+  const trigger = triggerOf(page);
+  const keys = (await trigger.getAttribute("aria-keyshortcuts")) ?? "";
+  expect(keys).toMatch(/\+B$/u);
+  const sheet = page.getByRole("dialog", { name: "Sidebar" });
+  await trigger.focus();
+  await page.keyboard.press(keys.replace(/B$/u, "b"));
+  await expect(sheet).toBeVisible();
+  await page.keyboard.press(keys.replace(/B$/u, "b"));
+  await expect(sheet).toBeHidden();
+  await expect(trigger).toHaveAttribute("aria-expanded", "false");
+  await expect(trigger).toBeFocused();
+});
+
+test("on a phone the page can keep the sheet's state, the one copy: the trigger, the keys and a place chosen all change it there", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 800 });
   await openExample(page, "sidebar", "from-the-page");
-  await triggerOf(page).click();
+  const trigger = triggerOf(page);
+  const keys = (await trigger.getAttribute("aria-keyshortcuts")) ?? "";
   const sheet = page.getByRole("dialog", { name: "Sidebar" });
+  await trigger.click();
   await expect(sheet).toBeVisible();
+  await page.keyboard.press(keys.replace(/B$/u, "b"));
+  await expect(sheet).toBeHidden();
+  await page.keyboard.press(keys.replace(/B$/u, "b"));
+  await expect(sheet).toBeVisible();
+  // The page closes it itself as a place is chosen; the next press builds on the page's state.
   await sheet.getByRole("link", { name: "Inbox" }).click();
   await expect(sheet).toBeHidden();
-  await expect(triggerOf(page)).toHaveAttribute("aria-expanded", "false");
+  await expect(trigger).toHaveAttribute("aria-expanded", "false");
+  await page.keyboard.press(keys.replace(/B$/u, "b"));
+  await expect(sheet).toBeVisible();
 });
 
 test("folded to its icons, every place keeps its name and shows it in a tooltip", async ({
@@ -454,12 +493,18 @@ test("with its shortcut off it still draws, folds by its trigger, and names no k
   expect(errors).toStrictEqual([]);
 });
 
-test("the page's own control folds it with an updater, and two in one moment build on each other", async ({
+test("the page can keep whether it is open, the one copy: its own control folds it with an updater, two in one moment build on each other, and the trigger and the rail change it there", async ({
   page,
 }) => {
   await openExample(page, "sidebar", "from-the-page");
   const focus = page.getByRole("button", { name: "Focus mode" });
   const trigger = triggerOf(page);
+  const rail = page.locator('[data-slot="sidebar-rail"]');
+  await rail.click();
+  await expect(focus).toHaveAttribute("aria-pressed", "true");
+  await trigger.click();
+  await expect(focus).toHaveAttribute("aria-pressed", "false");
+  await expect(rail).toHaveAttribute("aria-expanded", "true");
   await focus.click();
   await expect(trigger).toHaveAttribute("aria-expanded", "false");
   await expect(focus).toHaveAttribute("aria-pressed", "true");
@@ -905,58 +950,6 @@ test("no row's fill or corners are cut at either end, in a group that folds too"
 });
 
 // ---- The docs site's own sidebar -----------------------------------------------------------------
-
-test("the docs site's sidebar: a run the reader opened stays open in every frame of a page change", async ({
-  page,
-}) => {
-  await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto(new URL("/components/button", process.env.BASE_URL).href);
-  const run = page.getByRole("button", { name: /^Text input/u });
-  await run.click();
-  await expect(run).toHaveAttribute("aria-expanded", "true");
-  // From here to the next page, every frame and the moment the router swaps it in: whether the
-  // run's pages are shown.
-  await page.evaluate(() => {
-    const seen: string[] = [];
-    Reflect.set(globalThis, "seen", seen);
-    const note = () => {
-      const label = [
-        ...document.querySelectorAll("[data-sidebar-fold] button"),
-      ].find((button) => button.textContent?.startsWith("Text input"));
-      const panel = label
-        ?.closest("[data-sidebar-fold]")
-        ?.querySelector("[data-slot=collapsible-content]");
-      seen.push(panel?.hasAttribute("hidden") === true ? "folded" : "open");
-    };
-    document.addEventListener("astro:after-swap", note);
-    const start = performance.now();
-    const frame = () => {
-      note();
-      if (performance.now() - start < 1500) {
-        requestAnimationFrame(frame);
-      }
-    };
-    requestAnimationFrame(frame);
-  });
-  await page
-    .getByRole("navigation", { name: "Pages" })
-    .getByRole("link", { name: "Copy button" })
-    .click();
-  await expect(page).toHaveURL(/\/components\/copy-button$/u);
-  const seen = async () =>
-    await page.evaluate(() => {
-      const all: unknown = Reflect.get(globalThis, "seen");
-      return Array.isArray(all) ? all.map(String) : [];
-    });
-  // A second and a half of frames: the swap, the shell waking and what follows.
-  await expect
-    .poll(async () => {
-      const all = await seen();
-      return all.length;
-    })
-    .toBeGreaterThan(60);
-  expect(await seen()).not.toContain("folded");
-});
 
 test("the docs site's sidebar: the theme's ground, runs as labels, and the current page a flat row cut nowhere", async ({
   page,

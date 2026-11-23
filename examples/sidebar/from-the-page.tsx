@@ -76,15 +76,20 @@ const FocusMode = () => {
   );
 };
 
-// The page's own control folds and opens it through `useSidebar`: `setOpen` takes a value or, as
-// React's setState, an updater, which builds on the state the calls before it left. On a phone the
-// page keeps the sheet's state (`openMobile`, `onOpenMobileChange`), and choosing a place closes it.
+// The page keeps the sidebar's state: whether it is open (`open`, `onOpenChange`, as from a cookie
+// read on the server) and, on a phone, whether its sheet is (`openMobile`, `onOpenMobileChange`);
+// choosing a place closes the sheet. The page's own control folds and opens it through
+// `useSidebar`: `setOpen` takes a value or, as React's setState, an updater, which builds on the
+// state the calls before it left.
 export default function SidebarFromThePage() {
+  const [open, setOpen] = useState(true);
   const [menu, setMenu] = useState(false);
   return (
     <div {...stylex.props(layout.frame)}>
       <SidebarProvider
         style={layout.provider}
+        open={open}
+        onOpenChange={setOpen}
         openMobile={menu}
         onOpenMobileChange={setMenu}
       >

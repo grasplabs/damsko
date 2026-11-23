@@ -31,13 +31,14 @@
 // named by the I18nProvider's `sidebar.name`, its content a navigation named `sidebar.main`.
 // It folds away whole, off the canvas; `collapsible="icon"` folds it down to its icons instead,
 // where each row's words show in a tooltip. A row's words longer than the row end in an ellipsis,
-// and its tooltip shows them whole. Under the lg breakpoint it is a Sheet from its side, which holds Tab inside
-// and gives focus back to the trigger. Cmd+B on a Mac, Ctrl+B elsewhere, folds and opens it from
-// anywhere on the page (`keyboardShortcut`); where a page holds several, the one holding focus
-// answers, else the first. `storageKey` keeps the person's choice in localStorage, and
-// `sidebarStateScript` draws it before the page wakes. A group that folds is a SidebarCollapsible,
-// a Collapsible by a `name`, whose fold is kept and drawn the same way. Nothing here knows a
-// product: a profile, a theme control or a working mark is the caller's, composed into the parts.
+// and its tooltip shows them whole. Under the lg breakpoint it is a Sheet from its side, which
+// holds Tab inside and gives focus back to the trigger. Cmd+B on a Mac, Ctrl+B elsewhere, folds and
+// opens it, or the sheet, from anywhere on the page (`keyboardShortcut`); where a page holds
+// several, the one holding focus answers, else the first. `storageKey` keeps the person's choice
+// in localStorage, and `sidebarStateScript` draws it before the page wakes. A group that folds is a
+// SidebarCollapsible, a Collapsible by a `name`, whose fold is kept and drawn the same way. Nothing
+// here knows a product: a profile, a theme control or a working mark is the caller's, composed
+// into the parts.
 //
 // The provider's row is the window's height unless its `style` gives the frame's, and under lg
 // (the window's width) the sidebar is a Sheet fixed to the window. In a box of its own, such as a
@@ -132,6 +133,34 @@ const BADGE = `calc(${font.textXsLine} + 2 * ${size.hairline})`;
 // Folded to its icons, a row is a square the row's height, in the middle of the rail.
 const SQUARE_MARGIN = `calc((${size.sidebarRailWidth} - 2 * ${space["2"]} - ${ROW}) / 2)`;
 const SQUARE_PADDING = `calc((${ROW} - ${ICON}) / 2)`;
+// The sidebar's state as its parts read it: one that folds to its icons, folded off the canvas,
+// and folded to its icons. Each a function the compiler calls, as it reads the styles: a call of
+// `stylex.when` itself has no value when the page runs.
+const iconSidebar = () =>
+  stylex.when.ancestor('[data-collapsible="icon"]', sidebarMarker);
+const folded = () =>
+  stylex.when.ancestor('[data-state="collapsed"]', sidebarMarker);
+const onRail = () =>
+  stylex.when.ancestor(
+    '[data-state="collapsed"][data-collapsible="icon"]',
+    sidebarMarker
+  );
+// The aside's width: the sidebar's, none folded off the canvas, `rail` folded to its icons.
+const asideWidth = (rail: string) => ({
+  default: size.sidebarWidth,
+  ':is([data-state="collapsed"][data-collapsible="offcanvas"])': 0,
+  ':is([data-state="collapsed"][data-collapsible="icon"])': rail,
+});
+// A row's room at its end, for an action or a badge beside it while its words show; on the rail,
+// `railed`.
+const endRoom = (railed: string | number) => ({
+  default: size.sidebarRowInline,
+  ":has(~ [data-slot=sidebar-menu-action], ~ [data-slot=sidebar-menu-badge])": {
+    default: `calc(${ACTION} + ${space["2"]})`,
+    [onRail()]: railed,
+  },
+  [onRail()]: railed,
+});
 
 // How far a level travels as it moves in.
 const fromEnd = stylex.keyframes({
@@ -163,12 +192,7 @@ const styles = stylex.create({
     display: { default: "flex", [BELOW]: "none" },
     flexShrink: 0,
     alignSelf: "stretch",
-    width: {
-      default: size.sidebarWidth,
-      ':is([data-state="collapsed"][data-collapsible="offcanvas"])': 0,
-      ':is([data-state="collapsed"][data-collapsible="icon"])':
-        size.sidebarRailWidth,
-    },
+    width: asideWidth(size.sidebarRailWidth),
     color: colors.sidebarForeground,
     transitionProperty: "width",
     transitionDuration: motionVars.ui,
@@ -176,11 +200,7 @@ const styles = stylex.create({
   },
   // Floating, the panel stands in by space-2: the rail grows by as much on each side.
   asideFloating: {
-    width: {
-      default: size.sidebarWidth,
-      ':is([data-state="collapsed"][data-collapsible="offcanvas"])': 0,
-      ':is([data-state="collapsed"][data-collapsible="icon"])': `calc(${size.sidebarRailWidth} + 2 * ${space["2"]})`,
-    },
+    width: asideWidth(`calc(${size.sidebarRailWidth} + 2 * ${space["2"]})`),
   },
   // Never folding: as wide as the sidebar, on a phone too, beside what it stands with.
   asideFixed: {
@@ -210,14 +230,13 @@ const styles = stylex.create({
     width: size.sidebarWidth,
     visibility: {
       default: null,
-      [stylex.when.ancestor('[data-state="collapsed"]', sidebarMarker)]:
-        "hidden",
+      [folded()]: "hidden",
     },
   },
   offcanvasStart: {
     translate: {
       default: null,
-      [stylex.when.ancestor('[data-state="collapsed"]', sidebarMarker)]: {
+      [folded()]: {
         default: "-100% 0",
         ":dir(rtl)": "100% 0",
       },
@@ -369,10 +388,7 @@ const styles = stylex.create({
     paddingBlock: space["2"],
     overflow: {
       default: "auto",
-      [stylex.when.ancestor(
-        '[data-state="collapsed"][data-collapsible="icon"]',
-        sidebarMarker
-      )]: "hidden",
+      [onRail()]: "hidden",
     },
     overscrollBehavior: "contain",
   },
@@ -432,17 +448,11 @@ const styles = stylex.create({
     textDecoration: "none",
     opacity: {
       default: 1,
-      [stylex.when.ancestor(
-        '[data-state="collapsed"][data-collapsible="icon"]',
-        sidebarMarker
-      )]: 0,
+      [onRail()]: 0,
     },
     marginBlockStart: {
       default: 0,
-      [stylex.when.ancestor(
-        '[data-state="collapsed"][data-collapsible="icon"]',
-        sidebarMarker
-      )]: `calc(-1 * ${ROW})`,
+      [onRail()]: `calc(-1 * ${ROW})`,
     },
     transitionProperty: "margin-block-start, opacity",
     transitionDuration: motionVars.ui,
@@ -455,10 +465,7 @@ const styles = stylex.create({
     position: "absolute",
     display: {
       default: "flex",
-      [stylex.when.ancestor(
-        '[data-state="collapsed"][data-collapsible="icon"]',
-        sidebarMarker
-      )]: "none",
+      [onRail()]: "none",
     },
     alignItems: "center",
     justifyContent: "center",
@@ -530,51 +537,24 @@ const styles = stylex.create({
     // Folded to its icons: a square the row's height, in the middle of the rail, its words cut away.
     width: {
       default: "100%",
-      [stylex.when.ancestor(
-        '[data-state="collapsed"][data-collapsible="icon"]',
-        sidebarMarker
-      )]: ROW,
+      [onRail()]: ROW,
     },
     height: {
       default: ROW,
       [COARSE]: size.tapTarget,
-      [stylex.when.ancestor(
-        '[data-state="collapsed"][data-collapsible="icon"]',
-        sidebarMarker
-      )]: ROW,
+      [onRail()]: ROW,
     },
     marginBlock: 0,
     marginInline: {
       default: 0,
-      [stylex.when.ancestor(
-        '[data-state="collapsed"][data-collapsible="icon"]',
-        sidebarMarker
-      )]: SQUARE_MARGIN,
+      [onRail()]: SQUARE_MARGIN,
     },
     paddingBlock: 0,
     paddingInlineStart: {
       default: size.sidebarRowInline,
-      [stylex.when.ancestor(
-        '[data-state="collapsed"][data-collapsible="icon"]',
-        sidebarMarker
-      )]: SQUARE_PADDING,
+      [onRail()]: SQUARE_PADDING,
     },
-    // Room at its end for an action or a badge beside it, while its words show.
-    paddingInlineEnd: {
-      default: size.sidebarRowInline,
-      ":has(~ [data-slot=sidebar-menu-action], ~ [data-slot=sidebar-menu-badge])":
-        {
-          default: `calc(${ACTION} + ${space["2"]})`,
-          [stylex.when.ancestor(
-            '[data-state="collapsed"][data-collapsible="icon"]',
-            sidebarMarker
-          )]: SQUARE_PADDING,
-        },
-      [stylex.when.ancestor(
-        '[data-state="collapsed"][data-collapsible="icon"]',
-        sidebarMarker
-      )]: SQUARE_PADDING,
-    },
+    paddingInlineEnd: endRoom(SQUARE_PADDING),
     borderWidth: { default: 0, [FORCED]: size.hairline },
     borderStyle: "solid",
     borderColor: "transparent",
@@ -609,8 +589,12 @@ const styles = stylex.create({
       default: null,
       ':is(:disabled, [aria-disabled="true"])': "none",
     },
-    transitionProperty:
-      "color, background-color, width, height, padding, margin",
+    // Its box moves only in a sidebar that folds to its icons, as it folds and opens.
+    transitionProperty: {
+      default: "color, background-color",
+      [iconSidebar()]:
+        "color, background-color, width, height, padding, margin",
+    },
     transitionDuration: duration.hover,
   },
   // A row's own words: longer than the row, they end in an ellipsis before its end, its action or
@@ -625,10 +609,7 @@ const styles = stylex.create({
     height: {
       default: size.controlXs,
       [COARSE]: size.tapTarget,
-      [stylex.when.ancestor(
-        '[data-state="collapsed"][data-collapsible="icon"]',
-        sidebarMarker
-      )]: ROW,
+      [onRail()]: ROW,
     },
     fontSize: font.textXs,
   },
@@ -638,33 +619,13 @@ const styles = stylex.create({
     color: colors.sidebarForeground,
     height: {
       default: size.sidebarMenuButtonHeightLg,
-      [stylex.when.ancestor(
-        '[data-state="collapsed"][data-collapsible="icon"]',
-        sidebarMarker
-      )]: ROW,
+      [onRail()]: ROW,
     },
     paddingInlineStart: {
       default: size.sidebarRowInline,
-      [stylex.when.ancestor(
-        '[data-state="collapsed"][data-collapsible="icon"]',
-        sidebarMarker
-      )]: 0,
+      [onRail()]: 0,
     },
-    paddingInlineEnd: {
-      default: size.sidebarRowInline,
-      ":has(~ [data-slot=sidebar-menu-action], ~ [data-slot=sidebar-menu-badge])":
-        {
-          default: `calc(${ACTION} + ${space["2"]})`,
-          [stylex.when.ancestor(
-            '[data-state="collapsed"][data-collapsible="icon"]',
-            sidebarMarker
-          )]: 0,
-        },
-      [stylex.when.ancestor(
-        '[data-state="collapsed"][data-collapsible="icon"]',
-        sidebarMarker
-      )]: 0,
-    },
+    paddingInlineEnd: endRoom(0),
   },
   outline: {
     backgroundColor: {
@@ -705,10 +666,7 @@ const styles = stylex.create({
     insetInlineEnd: space["2"],
     display: {
       default: "flex",
-      [stylex.when.ancestor(
-        '[data-state="collapsed"][data-collapsible="icon"]',
-        sidebarMarker
-      )]: "none",
+      [onRail()]: "none",
     },
     alignItems: "center",
     justifyContent: "center",
@@ -754,10 +712,7 @@ const styles = stylex.create({
   sub: {
     display: {
       default: "flex",
-      [stylex.when.ancestor(
-        '[data-state="collapsed"][data-collapsible="icon"]',
-        sidebarMarker
-      )]: "none",
+      [onRail()]: "none",
     },
     flexDirection: "column",
     gap: size.sidebarRowGap,
@@ -963,8 +918,9 @@ const applied = (
 
 /**
  * A state the caller may keep (`given`, with its `onChange`) or leave to the provider, else
- * `fallback`. An updater builds on the call before it in the same event (two in one event apply
- * twice, as React's setState): what was set and not drawn yet is held until the change is drawn.
+ * `fallback`; kept by the caller, the caller's is the only copy. An updater builds on the call
+ * before it in the same task (two in one event apply twice, as React's setState): what was set is
+ * held until the task ends, whether or not the caller took it.
  */
 const useHeld = (
   given: boolean | undefined,
@@ -974,28 +930,38 @@ const useHeld = (
   const [own, setOwn] = useState<boolean>();
   const value = given ?? own ?? fallback;
   const unseen = useRef<boolean | null>(null);
-  useEffect(() => {
-    unseen.current = null;
-  });
   const set = (next: boolean | ((now: boolean) => boolean)) => {
     const now = applied(next, unseen.current ?? value);
+    if (unseen.current === null) {
+      queueMicrotask(() => {
+        unseen.current = null;
+      });
+    }
     unseen.current = now;
-    setOwn(now);
+    if (given === undefined) {
+      setOwn(now);
+    }
     onChange?.(now);
   };
   return [value, set] as const;
 };
 
-/** Whether focus can go to it now: drawn (not in a folded group), and not out of reach. */
-const inReach = (element: HTMLElement) =>
+/**
+ * Whether focus can be on an element now: in the page, drawn (not in a folded group, not a nested
+ * row or an action the rail hides), not out of reach (`inert`), and not in a sidebar folded off the
+ * canvas, which is still drawn while it slides away.
+ */
+const inReach = (element: Element) =>
   element.isConnected &&
   element.checkVisibility({ visibilityProperty: true }) &&
-  element.closest("[inert]") === null;
+  element.closest(
+    '[inert], [data-slot="sidebar"][data-collapsible="offcanvas"][data-state="collapsed"]'
+  ) === null;
 
 /**
  * Where focus lands in a level it is moved into, or in a sidebar that opened while what held it went:
- * what held it there before, on the way back to a level; else the page you are on; else its first stop. One that cannot take focus now (its group folded,
- * its row gone) is passed over.
+ * what held it there before, on the way back to a level; else the page you are on; else its first
+ * stop. One that cannot take focus now (its group folded, its row gone) is passed over.
  */
 const landingIn = (level: HTMLElement, opener?: HTMLElement) =>
   [
@@ -1003,13 +969,6 @@ const landingIn = (level: HTMLElement, opener?: HTMLElement) =>
     level.querySelector<HTMLElement>('[aria-current="page"]'),
     ...level.querySelectorAll<HTMLElement>("a[href], button:not(:disabled)"),
   ].find((stop) => stop !== null && inReach(stop));
-
-/** Whether focus can stay on an element: in the page, and not in a sidebar folded off the canvas. */
-const reachable = (element: Element) =>
-  element.isConnected &&
-  element.closest(
-    '[data-slot="sidebar"][data-collapsible="offcanvas"][data-state="collapsed"]'
-  ) === null;
 
 /** Every prop a SidebarProvider takes. */
 export interface SidebarProviderProps {
@@ -1080,14 +1039,14 @@ export const SidebarProvider = ({
   const element = useRef<HTMLDivElement | null>(null);
 
   // What held focus as the trigger, the rail or the keys folded or opened it. Once the change is
-  // drawn, if that went out of reach (folded off the canvas with it, or a trigger in the page that
-  // shows only while the sidebar is away), focus goes to a trigger still in reach, else to the
-  // open sidebar's current row.
+  // drawn, if that went out of reach (folded away with it, hidden on the rail, or a trigger in the
+  // page that shows only while the sidebar is away), focus goes to a trigger still in reach, else
+  // to the open sidebar's current row.
   const held = useRef<Element | null>(null);
   useEffect(() => {
     const before = held.current;
     held.current = null;
-    if (before === null || reachable(before)) {
+    if (before === null || inReach(before)) {
       return;
     }
     const wrapper = element.current;
@@ -1095,7 +1054,7 @@ export const SidebarProvider = ({
       ...(wrapper?.querySelectorAll<HTMLElement>(
         '[data-slot="sidebar-trigger"]'
       ) ?? []),
-    ].find(reachable);
+    ].find(inReach);
     const sidebar = wrapper?.querySelector<HTMLElement>(
       '[data-slot="sidebar"]'
     );
@@ -1118,6 +1077,8 @@ export const SidebarProvider = ({
   );
   useShortcut(shortcut === "" ? null : shortcut, toggleSidebar, {
     when: () => answers(element.current),
+    // The sidebar's own layer: on a narrow window its sheet, so the keys close it as they opened it.
+    layer: () => document.querySelector(`#${id}`) ?? element.current,
     description: toggle,
   });
 
@@ -1274,6 +1235,7 @@ export const Sidebar = ({
       <Sheet open={openMobile} onOpenChange={setOpenMobile}>
         <SheetContent side={side} showCloseButton={false} aria-label={label}>
           <div
+            id={id}
             data-slot="sidebar"
             data-sidebar="sidebar"
             data-mobile="true"
