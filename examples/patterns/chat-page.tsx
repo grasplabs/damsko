@@ -15,6 +15,10 @@ import {
   ChainOfThoughtStep,
 } from "@grasp-os/ui/components/chain-of-thought";
 import type { ChainOfThoughtStepStatus } from "@grasp-os/ui/components/chain-of-thought";
+import {
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@grasp-os/ui/components/collapsible";
 import { CopyButton } from "@grasp-os/ui/components/copy-button";
 import {
   DropdownMenu,
@@ -30,6 +34,8 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from "@grasp-os/ui/components/empty";
+import { MarkdownLinkProvider } from "@grasp-os/ui/components/markdown";
+import type { MarkdownLink } from "@grasp-os/ui/components/markdown";
 import {
   Message,
   MessageActions,
@@ -51,11 +57,17 @@ import {
 } from "@grasp-os/ui/components/message-scroller";
 import {
   PromptInput,
+  PromptInputActionAddAttachments,
+  PromptInputActionMenu,
+  PromptInputActionMenuContent,
+  PromptInputActionMenuTrigger,
   PromptInputBody,
   PromptInputFooter,
   PromptInputNote,
+  PromptInputSpeechButton,
   PromptInputSubmit,
   PromptInputTextarea,
+  PromptInputTools,
 } from "@grasp-os/ui/components/prompt-input";
 import type { PromptInputProps } from "@grasp-os/ui/components/prompt-input";
 import {
@@ -65,6 +77,7 @@ import {
   SelectValue,
 } from "@grasp-os/ui/components/select";
 import {
+  SidebarCollapsible,
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
@@ -89,13 +102,19 @@ import {
   Icon,
   InboxIcon,
   LinkIcon,
-  MessageSquareIcon,
+  ChevronDownIcon,
   RefreshCwIcon,
   ThumbsDownIcon,
   ThumbsUpIcon,
   TrashIcon,
 } from "@grasp-os/ui/lib/icons";
-import { colors, radius, size, space } from "@grasp-os/ui/lib/tokens.stylex";
+import {
+  colors,
+  font,
+  radius,
+  size,
+  space,
+} from "@grasp-os/ui/lib/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
 import { useEffect, useState } from "react";
 
@@ -111,6 +130,34 @@ import {
 } from "./chat-page-data";
 
 const layout = stylex.create({
+  // A citation's number after its claim: a small box on the soft fill with the system's edge.
+  cited: {
+    marginInlineStart: space["1"],
+    paddingBlock: 1,
+    paddingInline: space["1"],
+    borderRadius: radius.sm,
+    cornerShape: radius.shape,
+    fontSize: font.textXs,
+    lineHeight: font.textXsLine,
+    fontWeight: font.weightMedium,
+    fontVariantNumeric: "tabular-nums",
+    color: colors.mutedForeground,
+    backgroundColor: colors.muted,
+    boxShadow: size.borderStrong,
+  },
+  // In the box's one row: the voice and Send together at its end, a space-2 apart.
+  end: { gridArea: "end", marginInlineStart: "auto" },
+  apart: { marginInlineStart: space["1"] },
+  // The Chats group's label, a button that folds it: its count and chevron at its end.
+  fold: { display: "flex", alignItems: "center", gap: space["1"] },
+  count: { marginInlineStart: "auto", fontVariantNumeric: "tabular-nums" },
+  chevron: {
+    display: "inline-flex",
+    transform: {
+      default: null,
+      ":is([aria-expanded=false] *)": "rotate(-0.25turn)",
+    },
+  },
   stage: { display: "grid", rowGap: space["3"], width: "100%" },
   switch: { width: "14rem" },
   // The app's window: the whole screen on its own page, a tall stage in the docs.
@@ -370,7 +417,9 @@ const AssistantTurn = ({
                 </ChainOfThoughtContent>
               </ChainOfThought>
               {phase === "working" || shown === "" ? null : (
-                <MessageResponse streaming={writing}>{shown}</MessageResponse>
+                <MarkdownLinkProvider renderLink={citation}>
+                  <MessageResponse streaming={writing}>{shown}</MessageResponse>
+                </MarkdownLinkProvider>
               )}
               {settled && shown !== "" ? <AnswerSources gone={gone} /> : null}
             </div>
@@ -412,6 +461,20 @@ const AssistantTurn = ({
       </MessageContent>
     </Message>
   );
+};
+
+/** The answer's citations, `[n](cite:n)`: number n after its claim, the source in the list under it. */
+const citation = (link: MarkdownLink) => {
+  const n = link.scheme === "cite" ? Number(link.href.slice(5)) : Number.NaN;
+  return Number.isInteger(n) && n > 0 ? (
+    <span
+      role="note"
+      aria-label={`Source ${n}`}
+      {...stylex.props(layout.cited)}
+    >
+      {n}
+    </span>
+  ) : undefined;
 };
 
 /** The chat's messages: the question and its answer, then anything typed here with its reply. */
@@ -532,7 +595,18 @@ const ChatBox = ({ run, state }: { run: ChatRun; state: ChatState }) => {
         />
       </PromptInputBody>
       <PromptInputFooter>
-        <PromptInputSubmit onStop={run.stop} />
+        <PromptInputTools>
+          <PromptInputActionMenu>
+            <PromptInputActionMenuTrigger />
+            <PromptInputActionMenuContent>
+              <PromptInputActionAddAttachments />
+            </PromptInputActionMenuContent>
+          </PromptInputActionMenu>
+        </PromptInputTools>
+        <PromptInputTools style={layout.end}>
+          <PromptInputSpeechButton />
+          <PromptInputSubmit onStop={run.stop} style={layout.apart} />
+        </PromptInputTools>
       </PromptInputFooter>
       <PromptInputNote />
     </PromptInput>
@@ -573,29 +647,42 @@ const ChatSidebar = ({ current }: { current: string }) => (
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>
-    <SidebarGroup>
-      <SidebarGroupLabel>Chats</SidebarGroupLabel>
-      <SidebarGroupContent>
-        <SidebarMenu>
-          {chats.map((chat) => (
-            <SidebarMenuItem key={chat.id}>
-              <SidebarMenuButton asChild isActive={chat.id === current}>
-                <a href={`#chat-${chat.id}`}>
-                  <Icon icon={MessageSquareIcon} />
-                  {chat.title}
-                  {chat.working === true && <AgentIndicator />}
-                </a>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <a href="#chats">All chats</a>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarGroupContent>
-    </SidebarGroup>
+    <SidebarCollapsible name="chats">
+      <SidebarGroup>
+        <CollapsibleTrigger asChild>
+          <SidebarGroupLabel asChild>
+            <button type="button" {...stylex.props(layout.fold)}>
+              Chats
+              <span {...stylex.props(layout.count)}>{chats.length}</span>
+              <span aria-hidden="true" {...stylex.props(layout.chevron)}>
+                <Icon icon={ChevronDownIcon} />
+              </span>
+            </button>
+          </SidebarGroupLabel>
+        </CollapsibleTrigger>
+        <CollapsibleContent>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {chats.map((chat) => (
+                <SidebarMenuItem key={chat.id}>
+                  <SidebarMenuButton asChild isActive={chat.id === current}>
+                    <a href={`#chat-${chat.id}`}>
+                      {chat.title}
+                      {chat.working === true && <AgentIndicator />}
+                    </a>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <a href="#chats">All chats</a>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </CollapsibleContent>
+      </SidebarGroup>
+    </SidebarCollapsible>
   </SidebarContent>
 );
 
