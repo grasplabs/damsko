@@ -312,6 +312,7 @@ export const radius = stylex.defineConsts({
   circle: "var(--damsko-radius-circle)",
   // Sidebar: sidebar sizes.
   sidebarCardRadius: "var(--damsko-sidebar-card-radius)",
+  sidebarInsetRadius: "var(--damsko-sidebar-inset-radius)",
 });
 
 export const shadow = stylex.defineConsts({

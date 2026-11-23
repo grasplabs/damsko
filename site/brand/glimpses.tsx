@@ -29,7 +29,7 @@ const s = stylex.create({
   light: {
     position: "absolute",
     inset: "22% 16% 16%",
-    borderRadius: 2,
+    borderRadius: radius.hairline,
     backgroundImage: `linear-gradient(90deg, ${colors.brandPaper} 0 14.3%, ${colors.brandLime} 14.3% 28.6%, ${colors.brandSea} 28.6% 42.9%, ${colors.brandMint} 42.9% 57.1%, ${colors.brandPine} 57.1% 71.4%, ${colors.brandInk} 71.4% 85.7%, ${colors.brandNight} 85.7%)`,
   },
   serif: {
@@ -77,7 +77,10 @@ const s = stylex.create({
     width: "44%",
     aspectRatio: "1",
   },
-  tile: (tone: string) => ({ backgroundColor: tone, borderRadius: 2 }),
+  tile: (tone: string) => ({
+    backgroundColor: tone,
+    borderRadius: radius.hairline,
+  }),
   icon: {
     display: "grid",
     [iconVars.size]: "clamp(1.5rem, 3.4vw, 2.25rem)",
@@ -102,7 +105,7 @@ const s = stylex.create({
   bar: (width: string) => ({
     width,
     height: 3,
-    borderRadius: 2,
+    borderRadius: radius.hairline,
     backgroundColor: `color-mix(in oklch, ${colors.primaryForegroundOnColor} 70%, transparent)`,
   }),
   pill: {
@@ -119,7 +122,7 @@ const s = stylex.create({
   dot: {
     width: 4,
     height: 4,
-    borderRadius: 1,
+    borderRadius: radius.full,
     backgroundColor: colors.brandMint,
   },
   card: {
@@ -129,13 +132,13 @@ const s = stylex.create({
     width: "56%",
     height: "64%",
     padding: "8%",
-    borderRadius: 4,
+    borderRadius: radius.mark,
     backgroundColor: colors.brandPaper,
   },
   cardBar: (width: string) => ({
     width,
     height: 3,
-    borderRadius: 2,
+    borderRadius: radius.hairline,
     backgroundColor: colors.brandInk,
   }),
 });

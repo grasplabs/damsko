@@ -10,4 +10,5 @@
 export const cornerFallbacks: Record<string, string> = {
   radius: "9px",
   "radius-mark": "4px",
+  "sidebar-card-radius": "11px",
 };
