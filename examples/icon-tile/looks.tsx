@@ -21,7 +21,7 @@ export default function IconTileLooks() {
   return (
     <div {...stylex.props(layout.row)}>
       <IconTile icon={CircleUserIcon} aria-label="Person" />
-      <IconTile icon={ChartColumnIcon} variant="tint" aria-label="Report" />
+      <IconTile icon={ChartColumnIcon} variant="tinted" aria-label="Report" />
       <IconTile icon={WandSparklesIcon} variant="gradient" aria-label="Agent" />
     </div>
   );

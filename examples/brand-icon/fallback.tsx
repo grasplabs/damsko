@@ -9,7 +9,7 @@ const layout = stylex.create({
   row: { display: "flex", alignItems: "center", gap: space["3"] },
 });
 
-const sizes = ["sm", "default", "lg", "xl"] as const;
+const sizes = ["xs", "sm", "default", "lg"] as const;
 
 // A brand with no mark ("Acme CRM"): `label` alone, with no `logo`, and the tile shows its
 // first letter on its quiet ground, in the same squircle as a mark beside it, at every size.

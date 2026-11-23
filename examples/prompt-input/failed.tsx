@@ -7,9 +7,7 @@ import {
   PromptInputNote,
   PromptInputSubmit,
   PromptInputTextarea,
-  PromptInputTools,
 } from "@grasp-os/ui/components/prompt-input";
-import { useState } from "react";
 
 const offline = async () =>
   await new Promise((_, reject) => {
@@ -18,25 +16,14 @@ const offline = async () =>
     }, 600);
   });
 
-// A send that fails puts the words back, says so, and Submit sends again. The failure line is the
-// page's: here a note in the card while the status is `error`. In one row (`compact`), as a chat's
-// foot has it, the note folds the card: the words keep the whole width, the note goes under them.
+// A send that fails loses nothing: the words stay where they were, the band under the card says
+// so (PromptInputNote, in the catalogue's words) and Submit sends again. The band goes as the
+// person types on.
 export default function PromptInputFailed() {
-  const [failed, setFailed] = useState(false);
   return (
     <PromptInput
-      compact
-      status={failed ? "error" : "ready"}
       defaultValue={["Which invoices are still unpaid this quarter?"]}
-      onSubmit={async () => {
-        setFailed(false);
-        try {
-          await offline();
-        } catch (error) {
-          setFailed(true);
-          throw error;
-        }
-      }}
+      onSubmit={offline}
     >
       <PromptInputBody>
         <PromptInputTextarea
@@ -45,15 +32,9 @@ export default function PromptInputFailed() {
         />
       </PromptInputBody>
       <PromptInputFooter>
-        <PromptInputTools>
-          {failed && (
-            <PromptInputNote>
-              Could not send. Your message is kept.
-            </PromptInputNote>
-          )}
-        </PromptInputTools>
         <PromptInputSubmit />
       </PromptInputFooter>
+      <PromptInputNote />
     </PromptInput>
   );
 }

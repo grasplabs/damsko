@@ -11,7 +11,7 @@ const colours = stylex.create({
 // One spinner in one state. The docs draw it at each size, and in the colour of the words it
 // stands in. It has no hover, focus or press: it says something is working, it is not pressed.
 export default function SpinnerState({
-  size = "default",
+  size = "sm",
   colour = "ink",
 }: {
   size?: SpinnerSize;

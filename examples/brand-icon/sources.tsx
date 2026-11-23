@@ -51,7 +51,7 @@ export default function BrandIconsSources() {
     <ul {...stylex.props(layout.list)}>
       {sources.map((source) => (
         <li key={source.brand} {...stylex.props(layout.row)}>
-          <BrandIcon {...logos[source.brand]} size="lg" decorative />
+          <BrandIcon {...logos[source.brand]} size="default" decorative />
           <span {...stylex.props(layout.words)}>
             <span {...stylex.props(layout.name)}>{source.name}</span>
             <span {...stylex.props(layout.detail)}>{source.detail}</span>

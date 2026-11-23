@@ -17,7 +17,7 @@ import { colors, font, media } from "../lib/tokens.stylex";
 import type { LayoutStyle } from "../lib/utils";
 
 /** A title's size on the type scale, from the largest: an opening title down to a section's. */
-export type HeadingSize = "xl" | "lg" | "md" | "sm" | "xs" | "2xs";
+export type HeadingSize = "xl" | "lg" | "default" | "sm" | "xs" | "2xs";
 
 /** Every prop a Heading takes. */
 export interface HeadingProps {
@@ -26,10 +26,10 @@ export interface HeadingProps {
   /** Its level in the page's outline, so levels never skip: h1 once per page. */
   level: 1 | 2 | 3 | 4;
   /**
-   * The look: `xl` 44px, an opening title (32px on a phone); `lg` 32px, a page title; `md` 24px,
+   * The look: `xl` 44px, an opening title (32px on a phone); `lg` 32px, a page title; `default` 24px,
    * a section; `sm` 20px, a card or panel; `xs` 18px in the sans, a component's own title; `2xs`
    * 14px in the sans, a section's title inside a page or panel (the size of its words).
-   * Defaults by level: 1 is `lg`, 2 is `md`, 3 is `sm`, 4 is `xs`.
+   * Defaults by level: 1 is `lg`, 2 is `default`, 3 is `sm`, 4 is `xs`.
    */
   size?: HeadingSize;
   /** An id, so a link or `aria-labelledby` can point at it. */
@@ -59,7 +59,7 @@ const styles = stylex.create({
     },
   },
   lg: { fontSize: font.headingLg, lineHeight: font.headingLgLine },
-  md: { fontSize: font.headingMd, lineHeight: font.headingMdLine },
+  default: { fontSize: font.headingMd, lineHeight: font.headingMdLine },
   sm: { fontSize: font.headingSm, lineHeight: font.headingSmLine },
   xs: {
     fontFamily: font.sans,
@@ -81,7 +81,7 @@ const styles = stylex.create({
 
 const bySize: Record<HeadingProps["level"], HeadingSize> = {
   1: "lg",
-  2: "md",
+  2: "default",
   3: "sm",
   4: "xs",
 };
@@ -104,7 +104,7 @@ export const Heading = ({
         size !== "xs" && size !== "2xs" && styles.serif,
         size === "xl" && styles.xl,
         size === "lg" && styles.lg,
-        size === "md" && styles.md,
+        size === "default" && styles.default,
         size === "sm" && styles.sm,
         size === "xs" && styles.xs,
         size === "2xs" && styles["2xs"],

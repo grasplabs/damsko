@@ -26,7 +26,7 @@ export default function ItemGridExample() {
       {apps.map((app) => (
         <Item key={app.name} variant="outline" size="xs" href={`#${app.brand}`}>
           <ItemMedia align="center">
-            <BrandIcon {...logos[app.brand]} size="default" decorative />
+            <BrandIcon {...logos[app.brand]} size="sm" decorative />
           </ItemMedia>
           <ItemContent>
             <ItemTitle>{app.name}</ItemTitle>

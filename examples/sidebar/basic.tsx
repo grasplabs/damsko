@@ -110,7 +110,7 @@ const layout = stylex.create({
   organisation: {
     overflow: "hidden",
     textOverflow: "ellipsis",
-    color: colors.sidebarTextSecondary,
+    color: colors.sidebarSecondaryForeground,
     fontSize: font.textXs,
     lineHeight: font.sidebarNoteLine,
     fontWeight: font.weightNormal,
@@ -119,7 +119,7 @@ const layout = stylex.create({
   chevrons: {
     display: "inline-flex",
     flexShrink: 0,
-    color: colors.sidebarTextTertiary,
+    color: colors.sidebarTertiaryForeground,
   },
   bar: { display: "flex", padding: space["2"] },
 });

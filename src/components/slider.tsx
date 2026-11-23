@@ -114,7 +114,7 @@ interface SliderDefaultOwnProps {
    */
   onValueChange?: SliderPrimitiveProps["onValueChange"];
   /** Runs once a drag or a key press ends. */
-  onValueCommit?: SliderPrimitiveProps["onValueCommit"];
+  onValueCommitted?: SliderPrimitiveProps["onValueCommit"];
   /**
    * The lowest value.
    * @default 0
@@ -158,11 +158,11 @@ interface SliderLevelsProps {
   onValueChange?: ((value: string) => void) | undefined;
   label: string;
   /**
-   * Hides `label` from the eye (a screen reader still says it), when the words round it name it.
-   * Levels only.
-   * @default false
+   * Shows `label` over the track. Set `false` when the words round it name it: a screen reader
+   * still says it. Levels only.
+   * @default true
    */
-  labelHidden?: boolean;
+  showLabel?: boolean;
   /**
    * The last level is its own state while chosen (the working light in the dots, a wave, the thumb
    * aglow): `true`, `false`, or `"auto"`, on for four levels or more (a short scale's last step is
@@ -184,7 +184,11 @@ interface SliderLevelsProps {
 type SliderDefaultProps = SliderDefaultOwnProps &
   Omit<
     SliderPrimitiveProps,
-    keyof SliderDefaultOwnProps | "className" | "children" | "render"
+    | keyof SliderDefaultOwnProps
+    | "onValueCommit"
+    | "className"
+    | "children"
+    | "render"
   >;
 
 /** Every prop a Slider takes: a scale of numbers (the rest of UI SDK's Slider too), or of levels. */
@@ -391,6 +395,7 @@ const DefaultSlider = ({
   orientation = "horizontal",
   style,
   disabled = false,
+  onValueCommitted,
   ...rest
 }: SliderDefaultProps) => {
   const start = rest.value ?? rest.defaultValue ?? 0;
@@ -398,6 +403,7 @@ const DefaultSlider = ({
   const slider = (
     <SliderPrimitive
       {...rest}
+      onValueCommit={onValueCommitted}
       orientation={orientation}
       disabled={disabled}
       {...stylex.props(styles.slider, !labelled && style)}
@@ -1203,7 +1209,7 @@ const LevelsSlider = ({
   defaultValue,
   onValueChange,
   label,
-  labelHidden = false,
+  showLabel = true,
   top = "auto",
   size: sliderSize = "default",
   disabled = false,
@@ -1234,7 +1240,7 @@ const LevelsSlider = ({
           {...stylex.props(
             levelStyles.label,
             large && levelStyles.labelDefault,
-            labelHidden && visuallyHidden
+            !showLabel && visuallyHidden
           )}
         >
           {label}
@@ -1266,7 +1272,7 @@ const LevelsSlider = ({
         {...stylex.props(
           levelStyles.label,
           large && levelStyles.labelDefault,
-          labelHidden && visuallyHidden
+          !showLabel && visuallyHidden
         )}
       >
         {label}
