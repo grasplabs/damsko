@@ -41,6 +41,7 @@ import type {
   ChangeEvent,
   ComponentProps,
   PointerEvent as ReactPointerEvent,
+  ReactElement,
   ReactNode,
   RefObject,
 } from "react";
@@ -56,6 +57,7 @@ import {
   size,
   space,
 } from "../lib/tokens.stylex";
+import { warnUnnamed } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { motionVars } from "../lib/vars.stylex";
 import { FieldDescription, FieldLabel } from "./field";
@@ -87,7 +89,7 @@ interface SliderDefaultOwnProps {
   /**
    * Its SliderLabel: what it sets, in sentence case ("Volume"). It names a single thumb, and a
    * range's group. Leave it out inside a Field: its FieldLabel names the slider. Levels: a quiet
-   * word above the track, or `aria-label` in its place.
+   * word above the track, the SliderLabel written straight in it, or `aria-label` in its place.
    */
   children?: ReactNode;
   /** One sentence under it: what the number changes. A screen reader says it after the name. */
@@ -183,7 +185,7 @@ interface SliderLevelsBase {
  * @when levels, with a SliderLabel
  */
 interface SliderLevelsLabelled extends SliderLevelsBase {
-  children: ReactNode;
+  children: ReactElement<SliderLabelProps>;
   "aria-label"?: never;
 }
 
@@ -1287,6 +1289,10 @@ const LevelsSlider = ({
     disabled
   );
   const large = sliderSize === "default";
+  // In development, say so when nothing names it: no SliderLabel, no aria-label.
+  useEffect(() => {
+    warnUnnamed("Slider", input.current);
+  }, []);
 
   if (levels.length < 2) {
     // No scale to choose on: its name as ever, and the line in the room the track and its ends

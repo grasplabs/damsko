@@ -291,3 +291,17 @@ test("levels: the top level is its own state; below it the dots stand still", as
       .evaluate((thumb) => getComputedStyle(thumb).boxShadow);
   expect(await glow("Effort at Max")).not.toBe(await glow("Effort at High"));
 });
+
+test("levels: its SliderLabel names it over the track, and with no words over the track its aria-label does", async ({
+  page,
+}) => {
+  await openExample(page, "slider", "levels");
+  const named = page.getByRole("slider", { name: "Effort" });
+  await expect(named).toHaveCount(1);
+  await page.getByText("Effort", { exact: true }).click();
+  await expect(named).toBeFocused();
+  await openExample(page, "slider", "levels-sheet");
+  await expect(page.getByRole("slider", { name: /^Effort at /u })).toHaveCount(
+    5
+  );
+});

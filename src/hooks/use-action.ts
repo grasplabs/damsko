@@ -26,7 +26,7 @@ import { announce, announceWork } from "../lib/utils";
 export type ActionStatus = "idle" | "loading" | "success" | "error";
 
 /** The words of an action's life. Each one left out is the catalogue's (`useAction`). */
-export interface ActionLabels {
+export interface ActionText {
   /** Said while it works ("Saving"). */
   loadingText?: string;
   /** Shown and said once it worked ("Saved"). */
@@ -56,7 +56,7 @@ export interface Action<Args extends unknown[], Result> {
   run: (...args: Args) => Promise<ActionResult<Result>>;
 }
 
-export interface ActionOptions extends ActionLabels {
+export interface ActionOptions extends ActionText {
   /** Called with the error when the work fails, after the button has said so. */
   onError?: (error: unknown) => void;
 }

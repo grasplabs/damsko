@@ -8,7 +8,7 @@
 
 import { useI18n } from "../lib/i18n";
 import { useAction } from "./use-action";
-import type { ActionLabels } from "./use-action";
+import type { ActionText } from "./use-action";
 
 /**
  * Copies `text` when run, or what `text()` gives at that moment: loading, then success or error for
@@ -16,7 +16,7 @@ import type { ActionLabels } from "./use-action";
  */
 export const useCopy = (
   text: string | (() => string),
-  labels: ActionLabels = {}
+  given: ActionText = {}
 ) => {
   const words = useI18n().copyButton;
   return useAction(
@@ -26,9 +26,9 @@ export const useCopy = (
       return copied;
     },
     {
-      ...labels,
-      successText: labels.successText ?? words.copied,
-      errorText: labels.errorText ?? words.copyError,
+      ...given,
+      successText: given.successText ?? words.copied,
+      errorText: given.errorText ?? words.copyError,
     }
   );
 };

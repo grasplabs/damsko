@@ -392,7 +392,7 @@ export interface I18nCatalog {
     /** The name of a range's start field, from the picker's name. */
     rangeStart: (field: string) => string;
     /**
-     * A range's calendar button's name, with the chosen range said after it (`triggerText`
+     * A range's calendar button's name, with the chosen range said after it (`triggerLabel`
      * replaces the whole name). Apart from `select`: other languages say dates in the plural.
      */
     rangeTrigger: string;

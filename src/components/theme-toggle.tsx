@@ -63,13 +63,8 @@ export const isThemeMode = (value: unknown): value is ThemeMode =>
 export const isThemeId = (value: unknown): value is ThemeId =>
   themeIds.some((id) => id === value);
 
-/** Every prop a ThemeToggle takes. */
-export interface ThemeToggleProps {
-  /**
-   * `segmented` for a header or a menu; `icon` where there is no room; `picker` on a settings page.
-   * @default "segmented"
-   */
-  variant?: "segmented" | "icon" | "picker";
+/** What every ThemeToggle takes, whatever its variant. */
+interface ThemeToggleBase {
   /**
    * The icon button's size.
    * @default "default"
@@ -102,14 +97,44 @@ export interface ThemeToggleProps {
    * @default "fill"
    */
   tileSize?: "fill" | "default";
+  /** Layout only: where it sits. */
+  style?: LayoutStyle;
+}
+
+/**
+ * A segmented control or an icon button, named by its `aria-label`.
+ * @when segmented or icon
+ */
+interface ThemeToggleNamed extends ThemeToggleBase {
+  /**
+   * `segmented` for a header or a menu; `icon` where there is no room; `picker` on a settings page.
+   * @default "segmented"
+   */
+  variant?: "segmented" | "icon";
   /**
    * Its name, said with the choice: the name of the group of modes.
    * @default "Theme" (I18nProvider themeToggle.label)
    */
   "aria-label"?: string;
-  /** Layout only: where it sits. */
-  style?: LayoutStyle;
+  heading?: never;
 }
+
+/**
+ * A picker: its heading over the modes names their group.
+ * @when picker
+ */
+interface ThemeTogglePicker extends ThemeToggleBase {
+  variant: "picker";
+  /**
+   * The heading over the modes, which names their group.
+   * @default "Theme" (I18nProvider themeToggle.label)
+   */
+  heading?: string;
+  "aria-label"?: never;
+}
+
+/** Every prop a ThemeToggle takes. */
+export type ThemeToggleProps = ThemeToggleNamed | ThemeTogglePicker;
 
 const REDUCED = media.reducedMotion;
 const FORCED = media.forcedColors;
@@ -817,13 +842,15 @@ const Picker = ({
 }) => {
   const modesName = useId();
   const themesName = useId();
+  const modesHeading = useId();
+  const themesHeading = useId();
   const modes = usePart(
     themeToggleAgent,
     "group",
     {},
     {
       role: "radiogroup",
-      "aria-label": modeLabel,
+      "aria-labelledby": modesHeading,
       ...stylex.props(
         styles.tiles,
         tileSize === "default" && styles.tilesDefault
@@ -875,15 +902,19 @@ const Picker = ({
   return (
     <>
       <div {...stylex.props(styles.group)}>
-        <p {...stylex.props(styles.groupLabel)}>{modeLabel}</p>
+        <p id={modesHeading} {...stylex.props(styles.groupLabel)}>
+          {modeLabel}
+        </p>
         {modes}
       </div>
       {themes.length > 0 && (
         <div {...stylex.props(styles.group)}>
-          <p {...stylex.props(styles.groupLabel)}>{themeLabel}</p>
+          <p id={themesHeading} {...stylex.props(styles.groupLabel)}>
+            {themeLabel}
+          </p>
           <div
             role="radiogroup"
-            aria-label={themeLabel}
+            aria-labelledby={themesHeading}
             {...stylex.props(
               styles.tiles,
               tileSize === "default" && styles.tilesDefault
@@ -927,10 +958,11 @@ export const ThemeToggle = ({
   showThemes = true,
   tileSize = "fill",
   "aria-label": labelGiven,
+  heading,
   style,
 }: ThemeToggleProps) => {
   const { themeToggle: words } = useI18n();
-  const label = labelGiven ?? words.label;
+  const label = heading ?? labelGiven ?? words.label;
   const wordsOf = (each: ThemeMode): ModeWords => words[each];
   const shownThemes = showThemes ? themes : [];
   const chooseTheme = (next: ThemeId) => {

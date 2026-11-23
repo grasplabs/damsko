@@ -682,14 +682,10 @@ export interface PromptInputMentionProps {
 export interface PromptInputMentionContentProps {
   /**
    * Rows of your own, as PromptInputMentionItems, drawn in place of the rows of the trigger's
-   * `items` (which every trigger has). Without them it draws the trigger's items.
+   * `items` (which every trigger has), and a PromptInputMentionEmpty for what it says while nothing
+   * matches. Without rows it draws the trigger's items.
    */
   children?: ReactNode;
-  /**
-   * The words while nothing matches.
-   * @default `promptInput.mentionEmpty`
-   */
-  emptyText?: string;
   /**
    * The words when the items could not be loaded.
    * @default `promptInput.mentionsError`
@@ -697,6 +693,15 @@ export interface PromptInputMentionContentProps {
   errorText?: string;
   /** Layout only. */
   style?: LayoutStyle;
+}
+
+/** Every prop a PromptInputMentionEmpty takes. */
+export interface PromptInputMentionEmptyProps {
+  /**
+   * The words while nothing matches.
+   * @default `promptInput.mentionEmpty`
+   */
+  children?: ReactNode;
 }
 
 /** Every prop a PromptInputMentionItem takes. */
@@ -4501,8 +4506,8 @@ const DataRows = ({ items }: { items: TriggerMenuData<unknown> }) =>
 const menuWords = (
   state: { status: TriggerMenuContentState["status"]; loading?: boolean },
   words: { error: string; loading: string },
-  rest: string
-) => {
+  rest: ReactNode
+): ReactNode => {
   if (state.status === "error") {
     return words.error;
   }
@@ -4511,10 +4516,37 @@ const menuWords = (
     : rest;
 };
 
+/** Where the menu is, for its PromptInputMentionEmpty: its state and its own words for it. */
+const MentionMenuContext = createContext<
+  | {
+      state: TriggerMenuContentState;
+      said: { error: string; loading: string };
+    }
+  | undefined
+>(undefined);
+
+/** What the menu says while nothing matches; and while its items load, or when they failed. */
+export const PromptInputMentionEmpty = ({
+  children,
+}: PromptInputMentionEmptyProps) => {
+  const menu = use(MentionMenuContext);
+  const words = useI18n().promptInput;
+  if (menu === undefined) {
+    throw new Error(
+      "PromptInputMentionEmpty must be used within a PromptInputMentionContent."
+    );
+  }
+  return (
+    // Its own words when the loader failed, where UI SDK would say nothing matched.
+    <TriggerMenuEmpty {...stylex.props(styles.mentionEmpty)}>
+      {menuWords(menu.state, menu.said, children ?? words.mentionEmpty)}
+    </TriggerMenuEmpty>
+  );
+};
+
 /** The menu: a menu's panel at the caret, its items, and what it says when it has none. */
 export const PromptInputMentionContent = ({
   children,
-  emptyText,
   errorText,
   style,
 }: PromptInputMentionContentProps) => {
@@ -4523,6 +4555,9 @@ export const PromptInputMentionContent = ({
     error: errorText ?? words.mentionsError,
     loading: words.mentionsLoading,
   };
+  const parts = partsOf(children);
+  const empty = parts.find((part) => isPart(part, PromptInputMentionEmpty));
+  const rows = parts.filter((part) => !isPart(part, PromptInputMentionEmpty));
   return (
     <TriggerMenuContent
       side="bottom"
@@ -4545,18 +4580,16 @@ export const PromptInputMentionContent = ({
       )}
     >
       {(state: TriggerMenuContentState) => (
-        <>
-          {/* Its own words when the loader failed, where UI SDK would say nothing matched. */}
-          <TriggerMenuEmpty {...stylex.props(styles.mentionEmpty)}>
-            {menuWords(state, said, emptyText ?? words.mentionEmpty)}
-          </TriggerMenuEmpty>
+        // oxlint-disable-next-line react/jsx-no-constructed-context-values -- compiled
+        <MentionMenuContext value={{ state, said }}>
+          {empty ?? <PromptInputMentionEmpty />}
           <TriggerMenuList
             data-slot="prompt-input-mention"
             {...stylex.props(styles.mentionList)}
           >
-            {children ?? <DataRows items={state.items} />}
+            {rows.length > 0 ? rows : <DataRows items={state.items} />}
           </TriggerMenuList>
-        </>
+        </MentionMenuContext>
       )}
     </TriggerMenuContent>
   );
@@ -4612,7 +4645,7 @@ export const PromptInputMention = ({
       }}
     >
       <TriggerMenuStatus {...stylex.props(visuallyHidden)}>
-        {(state: TriggerMenuStatusState) =>
+        {(state: TriggerMenuStatusState): ReactNode =>
           menuWords(
             state,
             said,

@@ -14,6 +14,7 @@ import {
   SidePanelContent,
   SidePanelHeader,
   SidePanelSection,
+  SidePanelSectionAdd,
 } from "@grasp-os/ui/components/side-panel";
 import {
   ClockIcon,
@@ -35,7 +36,7 @@ export default function SidePanelViewsOnly() {
     <div {...stylex.props(layout.box)}>
       <SidePanel aria-label="About this note" defaultValue="links">
         <SidePanelHeader
-          viewsText="About this note"
+          viewsLabel="About this note"
           views={[
             { value: "links", label: "Links", icon: LinkIcon },
             { value: "comments", label: "Comments", icon: MessageCircleIcon },
@@ -78,15 +79,17 @@ export default function SidePanelViewsOnly() {
           <SidePanelSection
             title="Comments"
             description="What people said about it."
-            emptyText="No comments yet"
-          />
+          >
+            <SidePanelSectionAdd>No comments yet</SidePanelSectionAdd>
+          </SidePanelSection>
         </SidePanelContent>
         <SidePanelContent value="history">
           <SidePanelSection
             title="History"
             description="Its changes, the newest first."
-            emptyText="No changes yet"
-          />
+          >
+            <SidePanelSectionAdd>No changes yet</SidePanelSectionAdd>
+          </SidePanelSection>
         </SidePanelContent>
       </SidePanel>
     </div>

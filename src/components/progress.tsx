@@ -81,6 +81,15 @@ export interface ProgressLabelProps {
   children: ReactNode;
 }
 
+/** Every prop a ProgressValue takes. */
+export interface ProgressValueProps {
+  /**
+   * What it shows, from the formatted value ("40%") and the value itself. Left out, the formatted
+   * value.
+   */
+  children?: (formatted: string, value: number | null) => ReactNode;
+}
+
 /** Every prop a ProgressCircle takes: a Progress's, drawn as a ring. */
 export interface ProgressCircleProps {
   /** How far the task has come, from 0 to `max`. `null` while how far is unknown: the ring turns. */
@@ -346,12 +355,13 @@ export const ProgressLabel = ({ children }: ProgressLabelProps) => (
 );
 
 /** How far it has come, at the end of the label's line: the percentage, unseen by a screen reader, which hears the bar's own value. */
-export const ProgressValue = () =>
+export const ProgressValue = ({ children }: ProgressValueProps) =>
   use(KnownContext) ? (
-    <ProgressValuePrimitive
-      aria-hidden="true"
-      {...stylex.props(styles.value)}
-    />
+    <ProgressValuePrimitive aria-hidden="true" {...stylex.props(styles.value)}>
+      {children === undefined
+        ? undefined
+        : (state): ReactNode => children(state.text, state.value)}
+    </ProgressValuePrimitive>
   ) : null;
 
 export const Progress = ({

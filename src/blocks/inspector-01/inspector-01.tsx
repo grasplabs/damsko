@@ -40,6 +40,7 @@ import {
   SidePanelContent,
   SidePanelHeader,
   SidePanelSection,
+  SidePanelSectionAdd,
   SidePanelText,
 } from "../../components/side-panel";
 import type { SidePanelView } from "../../components/side-panel";
@@ -268,12 +269,11 @@ const Section = ({
     content === undefined
   ) {
     return (
-      <SidePanelSection
-        title={section.title}
-        description={section.description}
-        emptyText={section.emptyText ?? words.addTo(section.title)}
-        onAdd={handleAdd}
-      />
+      <SidePanelSection title={section.title} description={section.description}>
+        <SidePanelSectionAdd onClick={handleAdd}>
+          {section.emptyText ?? words.addTo(section.title)}
+        </SidePanelSectionAdd>
+      </SidePanelSection>
     );
   }
   const add = handleAdd !== undefined && (
@@ -366,7 +366,7 @@ export const Inspector = ({
           actions={actions}
           onClose={onClose}
           views={views}
-          viewsText={words.views}
+          viewsLabel={words.views}
         />
         {tabs.length > 0
           ? tabs.map((view) => (
