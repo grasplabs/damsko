@@ -31,10 +31,11 @@ export type MarkdownRoot = ReturnType<typeof fromMarkdown>;
 // Across blocks: every item of a list moves every later event of the whole answer (mdast's
 // prepareList, 19 s for a list of 400 KB), and every line given to a quote or an item without its
 // mark looks through the lines before it (micromark's document): up to 60 ns times the lines
-// squared. So an answer is read in pieces, each by itself, and their blocks stand one after the
-// other. A piece ends, once it has PIECE lines, where the parser starts anew whatever came before:
-// at a line at the margin after a blank line, that is no list item (which would go on in a list
-// before it). One block has no such place, and is bounded as readWith says.
+// squared, and each more for every quote and item it opens. So an answer is read in pieces, each by
+// itself, and their blocks stand one after the other. A line weighs one, or as many quotes and
+// list items as it opens. A piece ends, once it weighs PIECE, where the parser starts anew
+// whatever came before: at a line at the margin after a blank line, that is no list item (which
+// would go on in a list before it). One block has no such place, and is bounded as readWith says.
 
 /** The longest paragraph, heading or table cell read for its marks. */
 const MAX_INLINE = 8000;
@@ -42,10 +43,10 @@ const MAX_INLINE = 8000;
 const FREE_MARKS = 128;
 /** What the paragraphs with more marks may cost in one read, each its marks squared. */
 const MAX_COST = 6_000_000;
-/** How many lines a piece holds before it ends where the next block starts. */
+/** What a piece's lines weigh before it ends where the next block starts. */
 const PIECE = 64;
-/** What the pieces may cost in one read, each its lines squared: half a second at the costliest. */
-const MAX_LINES = 8_000_000;
+/** What the pieces may cost in one read, each its weight squared: a tenth of a second at the costliest. */
+const MAX_LINES = 2_000_000;
 
 /** Every construct the parser reads inside a paragraph, by name: off while the blocks are found. */
 const INLINE =
@@ -306,6 +307,12 @@ const containersOf = (line: string) => {
 };
 export const containersEnd = (line: string) => containersOf(line).end;
 
+/**
+ * What a line weighs in a piece: one, or as many quotes and list items as it opens, as each is
+ * more for the parser to carry from line to line.
+ */
+const weightOf = (line: string) => Math.max(1, containersOf(line).count);
+
 /** Where a line's quote marks end (each with one space after it at most), and how many there are. */
 const quotesOf = (line: string) => {
   let depth = 0;
@@ -392,22 +399,26 @@ const lineAt = (source: string, at: number) => {
 };
 
 /**
- * Where the piece that starts at `start` ends: where a block starts once it has PIECE lines (see
- * above), and at any line (`cut`) once it has `max`.
+ * Where the piece that starts at `start` ends: where a block starts once it weighs PIECE lines (see
+ * above), and at any line (`cut`) once it weighs `max`; each line weighs one, or as many quotes
+ * and list items as it opens (weightOf).
  */
 const pieceAt = (source: string, start: Start, max: number) => {
   let blank = false;
   let deep = false;
   let at = start.from;
-  for (let lines = 0; at < source.length; lines += 1) {
+  for (let lines = 0, weight = 0; at < source.length; lines += 1) {
     const { end, next } = lineAt(source, at);
     const text = source.slice(at, end);
     const starts = blank && !deep && MARGIN.test(text);
-    if (starts ? start.plain || lines >= PIECE : lines >= max && !start.plain) {
+    if (
+      starts ? start.plain || weight >= PIECE : weight >= max && !start.plain
+    ) {
       return { to: at, cut: !starts, lines };
     }
     blank = /^[ \t]*$/u.test(text);
     deep = blank ? deep : DEEP.test(text);
+    weight += weightOf(text);
     at = next;
   }
   return { to: source.length, cut: false, lines: 0 };
@@ -676,9 +687,9 @@ const closedAt = (source: string, from: number, to: number): number => {
 };
 
 /**
- * The blocks of `source`, read piece by piece, with the names `defined` holds. A piece of more
- * than PIECE lines, those of IN_STEP blocks apart, spends their square from MAX_LINES, and is
- * no longer than what is left allows. One that ended for its length ended inside a block, unless
+ * The blocks of `source`, read piece by piece, with the names `defined` holds. A piece that weighs
+ * more than PIECE, the lines of IN_STEP blocks apart, spends its weight squared from MAX_LINES, and
+ * weighs no more than what is left allows. One that ended for its length ended inside a block, unless
  * that defined a link: the lines after it are plain lines, up to where the next block starts. And
  * the parser says whether a piece ended where it may: one whose last block is code or HTML that
  * runs to its very end ended inside that block, which is then read by itself, to its own end.
@@ -705,11 +716,15 @@ const readWith = (source: string, defined: Defined, budget: Budget) => {
       open || piece.lines === 0
         ? source.slice(start.from, from).split(EOL).length - 1
         : piece.lines;
+    let weight = 0;
+    for (const line of source.slice(start.from, from).split(EOL)) {
+      weight += weightOf(line);
+    }
     const counted = whole.reduce(
       (sum, node) => sum - (IN_STEP.has(node.type) ? linesOf(node) : 0),
-      lines
+      weight - 1
     );
-    left -= counted > PIECE ? counted ** 2 : 0;
+    left = Math.max(0, left - (counted > PIECE ? counted ** 2 : 0));
     for (const block of whole) {
       blocks.push(block);
     }
@@ -878,7 +893,8 @@ export const encodedUrl = (url: string): string =>
 // could exhaust the stack with a few thousand `- ` or `>` on a line. None of that is in a real
 // answer, so a quote or a list deeper than MAX_DEPTH on a line is words from there: a backslash
 // undoes the first mark past it, and it shows as the character it is. Code in a fence is left as it
-// is. (A long paragraph's cost is bounded in the parse: see MAX_INLINE.)
+// is. (A long paragraph's cost is bounded in the parse: see MAX_INLINE.) And a NUL is the
+// replacement character, as the parser reads it, so each character of the source is one it reads.
 
 /** The deepest quote or list a line opens. */
 const MAX_DEPTH = 32;
@@ -928,7 +944,7 @@ const depthOver = (line: string): number => {
 
 /** `source` within the bounds above: the same answer, its quotes and lists past MAX_DEPTH words. */
 export const bounded = (source: string): string => {
-  const lines = source.split("\n");
+  const lines = source.replaceAll("\0", "\uFFFD").split("\n");
   const { code } = codeLines(lines);
   return lines
     .map((line, index) => {

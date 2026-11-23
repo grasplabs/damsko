@@ -542,7 +542,7 @@ describe("answers no real answer looks like", () => {
         `${"<details>\n<summary>s</summary>\n\n".repeat(n)}${"</details>\n\n".repeat(n)}`,
       1600,
     ],
-    // Both past the budget of lines: the list's first 2,828 items are drawn as one, the rest as lines.
+    // Both past the budget of lines: the list's first 1,414 items are drawn as one, the rest as lines.
     ["a list of 24,000 items", (n: number) => "- a\n".repeat(n), 24_000],
     [
       "lists of fifty items, a paragraph between",
@@ -570,20 +570,20 @@ describe("answers no real answer looks like", () => {
 
 describe("an answer longer than one piece", () => {
   test(
-    "a list of 2,000 items is one list, and an ordered one counts on from its start",
+    "a list of 1,000 items is one list, and an ordered one counts on from its start",
     () => {
-      const items = Array.from({ length: 2000 }, (_, at) => `item ${at}`);
+      const items = Array.from({ length: 1000 }, (_, at) => `item ${at}`);
       const bullets = draw(items.map((item) => `- ${item}`).join("\n"));
       expect(bullets.match(/<ul\b/gu)).toHaveLength(1);
-      expect(bullets.match(/<li\b/gu)).toHaveLength(2000);
+      expect(bullets.match(/<li\b/gu)).toHaveLength(1000);
       const numbered = draw(
         items.map((item, at) => `${at + 5}. ${item}`).join("\n")
       );
       expect(numbered.match(/<ol\b[^>]*>/gu)).toStrictEqual([
         expect.stringContaining('start="5"'),
       ]);
-      expect(numbered.match(/<li\b/gu)).toHaveLength(2000);
-      expect(textOf(numbered)).toContain("item 1999");
+      expect(numbered.match(/<li\b/gu)).toHaveLength(1000);
+      expect(textOf(numbered)).toContain("item 999");
     },
     SLOW_TEST
   );

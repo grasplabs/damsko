@@ -1061,16 +1061,16 @@ describe("an answer of more lines than any answer's", () => {
       const source = `${counted((at) => `- item ${at} is **here**\n`)(5000)}\nAfter **it**.\n`;
       const [list, plain, after] = parseMarkdown(source).children;
       const items = list?.type === "list" ? list.children : [];
-      // The square of 2,828 is the last under 8,000,000.
-      expect(items).toHaveLength(2828);
+      // The square of 1,414 is the last under 2,000,000.
+      expect(items).toHaveLength(1414);
       expect(shapeOf(items.at(-1) ?? { type: "none" })).toBe(
         "listItem(paragraph(text,strong(text)))"
       );
       expect(
         countOf(plain ?? { type: "none" }, ["text", "break"])
       ).toStrictEqual({
-        text: 2172,
-        break: 2171,
+        text: 3586,
+        break: 3585,
       });
       expect(wordsOf(plain ?? { type: "none" })).toContain(
         "- item 4999 is **here**"
@@ -1084,11 +1084,11 @@ describe("an answer of more lines than any answer's", () => {
   );
 
   test(
-    "a list of 2,000 items is one list, and what follows it is read for its marks",
+    "a list of 1,000 items is one list, and what follows it is read for its marks",
     () => {
-      const source = `${counted((at) => `- item ${at}\n`)(2000)}\nAfter **it**.\n`;
+      const source = `${counted((at) => `- item ${at}\n`)(1000)}\nAfter **it**.\n`;
       const [list, after] = parseMarkdown(source).children;
-      expect(list?.type === "list" && list.children).toHaveLength(2000);
+      expect(list?.type === "list" && list.children).toHaveLength(1000);
       expect(shapeOf(after ?? { type: "none" })).toBe(
         "paragraph(text,strong(text),text)"
       );
@@ -1600,11 +1600,11 @@ describe("while a long block is written", () => {
       for (const [list, ...rest] of written(source, 6007)) {
         const items = list?.children?.length ?? 0;
         expect(items).toBeGreaterThanOrEqual(before);
-        expect(items).toBeLessThanOrEqual(2828);
+        expect(items).toBeLessThanOrEqual(1414);
         expect(rest.every((block) => !hasMarks(block))).toBeTruthy();
         before = items;
       }
-      expect(before).toBe(2828);
+      expect(before).toBe(1414);
     },
     SLOW_TEST
   );
