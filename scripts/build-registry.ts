@@ -13,7 +13,9 @@
 // - lib (src/lib, registry:lib), hooks (src/hooks, registry:hook), tokens (src/styles: the CSS
 //   variables, the themes and the base, registry:lib) and fonts (src/styles/fonts.css and
 //   src/styles/fonts/: the faces, their files, their licence and the script that unpacks them,
-//   registry:lib).
+//   registry:lib);
+// - all: no file, every other item by name (registry:item), so one command installs or updates
+//   every item.
 //
 // The shape the stock shadcn CLI installs byte for byte: every file is `registry:file` with the
 // target `~/<its path>`, so it lands at the same path under a project's root (src/… in src/…),
@@ -198,7 +200,7 @@ export const packageOf = (specifier: string) => {
 };
 
 /** Packages a project already has as a React project; never added as dependencies. */
-const provided = new Set(["react", "react-dom"]);
+export const provided = new Set(["react", "react-dom"]);
 
 /** The pnpm catalog (pnpm-workspace.yaml): every version, pinned once. */
 export const catalog = stringsAt(
@@ -220,16 +222,26 @@ export const version =
 const dependencies = stringsAt(manifest, "dependencies");
 const devDependencies = stringsAt(manifest, "devDependencies");
 
-/** The peers an npm package needs beside it (`@ui-sdk/react` needs `@ui-sdk/core`), React aside. */
-const peersOf = (name: string): string[] => {
-  const path = nodePath.join(root, "node_modules", name, "package.json");
+/**
+ * The peers an npm package needs beside it (`@ui-sdk/react` needs `@ui-sdk/core`), React aside:
+ * required ones only, since an optional peer is the project's choice. `from` is the folder whose
+ * node_modules holds the package.
+ */
+export const peersOf = (name: string, from = root): string[] => {
+  const path = nodePath.join(from, "node_modules", name, "package.json");
   if (!existsSync(path)) {
     return [];
   }
   const own: unknown = JSON.parse(readFileSync(path, "utf-8"));
-  return Object.keys(stringsAt(own, "peerDependencies")).filter(
-    (peer) => !provided.has(peer) && !peer.startsWith("@types/")
-  );
+  const meta = isRecord(own) ? own.peerDependenciesMeta : undefined;
+  return Object.keys(stringsAt(own, "peerDependencies")).filter((peer) => {
+    const said = isRecord(meta) ? meta[peer] : undefined;
+    return (
+      !provided.has(peer) &&
+      !peer.startsWith("@types/") &&
+      !(isRecord(said) && said.optional === true)
+    );
+  });
 };
 
 /** The page's title and sentence, from docs/components/<name>.mdx, when it has one. */
@@ -268,7 +280,15 @@ export type ItemType =
   | "registry:ui"
   | "registry:block"
   | "registry:lib"
-  | "registry:hook";
+  | "registry:hook"
+  | "registry:item";
+
+/**
+ * The item that is every other item: no file of its own, each item by name, so one command
+ * installs or updates them all (`shadcn add @damsko/all --overwrite`). The stock CLI's own
+ * `--all` means shadcn's registry, never this one.
+ */
+export const allItem = "all";
 
 export interface RegistryItem {
   name: string;
@@ -423,11 +443,25 @@ export const buildRegistry = () => {
     };
   });
 
+  // A component or block named "all" would share its name with this: check-registry.ts fails then.
+  const every: RegistryItem = {
+    name: allItem,
+    type: "registry:item",
+    title: "All",
+    description:
+      "Every item of the registry in one install, for a product that has them all: each component, block, lib, hooks, the tokens and the fonts, by name. Add it with --overwrite to update them all at once; then unpack the fonts (node src/styles/fonts/unpack.mjs).",
+    registryDependencies: items.map((item) => `${namespace}/${item.name}`),
+    meta: { version, license },
+    files: [],
+  };
+
   const registry = {
     $schema: "https://ui.shadcn.com/schema/registry.json",
     name: "damsko",
     homepage,
-    items,
+    items: [...items, every].toSorted((one, other) =>
+      one.name.localeCompare(other.name)
+    ),
   };
   return { registry, problems };
 };

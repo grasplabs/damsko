@@ -182,7 +182,6 @@ export const versions: Record<string, string> = {
   "@hugeicons/react": "1.1.10",
   "@stylexjs/stylex": "0.19.2",
   "@tanstack/react-table": "9.3.1",
-  "@types/mdast": "4.0.4",
   "@types/prismjs": "1.26.6",
   "@types/react": "19.3.0",
   "@types/react-dom": "19.3.0",
@@ -244,6 +243,61 @@ const registryAddress = `${siteAddress}/r/{name}.json`;
 const firstApp =
   'import { Button } from "@grasp-os/ui/components/button";\n\nexport default function App() {\n  return <Button variant="default">Save changes</Button>;\n}';
 
+/** The first page beside Tailwind: the button placed by an element of the page's own. */
+const placedApp =
+  'import { Button } from "@grasp-os/ui/components/button";\n\nexport default function App() {\n  return (\n    <div className="flex justify-end p-4">\n      <Button variant="default">Save changes</Button>\n    </div>\n  );\n}';
+
+/**
+ * shadcn's colour variables, each with the token that means the same (`--damsko-` and the name):
+ * a fill and its words (`primary`, `primary-foreground`), and the words of a card, a popover, a
+ * secondary or an accent, which Damsko gives no token of their own. scripts/check-registry.ts
+ * fails on a token tokens.css does not define, and on a fill and its words that the token
+ * generator does not measure as text (tokens/tokens.ts, contrastPairs).
+ */
+export const shadcnColours: Record<string, string> = {
+  background: "background",
+  foreground: "foreground",
+  card: "card",
+  "card-foreground": "foreground",
+  popover: "popover",
+  "popover-foreground": "foreground",
+  primary: "primary",
+  "primary-foreground": "primary-foreground",
+  secondary: "secondary",
+  "secondary-foreground": "foreground",
+  muted: "muted",
+  "muted-foreground": "muted-foreground",
+  accent: "accent",
+  "accent-foreground": "foreground",
+  destructive: "destructive",
+  border: "border",
+  input: "input",
+  ring: "ring",
+  "chart-1": "chart-1",
+  "chart-2": "chart-2",
+  "chart-3": "chart-3",
+  "chart-4": "chart-4",
+  "chart-5": "chart-5",
+  sidebar: "sidebar",
+  "sidebar-foreground": "sidebar-foreground",
+  "sidebar-primary": "primary",
+  "sidebar-primary-foreground": "primary-foreground",
+  "sidebar-accent": "sidebar-accent",
+  "sidebar-accent-foreground": "sidebar-foreground",
+  "sidebar-border": "sidebar-border",
+  "sidebar-ring": "ring",
+};
+
+const shadcnBridge = [
+  "/* After tokens.css, in place of the kit's light and dark values. */",
+  ":root,",
+  ".dark {",
+  ...Object.entries(shadcnColours).map(
+    ([name, token]) => `  --${name}: var(--damsko-${token});`
+  ),
+  "}",
+].join("\n");
+
 /** The fonts are unpacked once, where they were installed, and committed. */
 const unpack = "node src/styles/fonts/unpack.mjs";
 
@@ -253,7 +307,12 @@ const unpack = "node src/styles/fonts/unpack.mjs";
  */
 export const pinned = "v0.1.0";
 
+/** Every item, in one command: @damsko/all is every other item. */
 const everyItemAgain =
+  "pnpm dlx shadcn@4.23.0 add @damsko/all --overwrite --yes";
+
+/** The same for a product that has some of the items: each by name, still in one command. */
+const someItemsAgain =
   "pnpm dlx shadcn@4.23.0 add @damsko/tokens @damsko/fonts @damsko/lib @damsko/hooks @damsko/button --overwrite --yes";
 
 /**
@@ -628,12 +687,30 @@ export const sections: Section[] = [
             lang: "css",
             does: { kind: "write", file: "apps/web/src/index.css" },
           },
+        ],
+      },
+      {
+        slug: "place-it-with-a-class",
+        name: "Place it with a class",
+        note: "A Damsko component takes no class: its style prop takes a StyleX style (stylex.create's), so className on one is a type error. On a page still on Tailwind, an element of the page's own around the component places it and sizes it: the row below puts the button at its end, and a Skeleton, a line as wide as what holds it, takes its width from a div with w-40 round it. A page that moves to StyleX adds @stylexjs/stylex to its app and passes its own styles to style instead. The whole of apps/web/src/App.tsx, then build it.",
+        blocks: [
+          {
+            code: placedApp,
+            lang: "tsx",
+            does: { kind: "write", file: "apps/web/src/App.tsx" },
+          },
           {
             code: "pnpm build",
             lang: "bash",
             does: { kind: "run", in: "apps/web" },
           },
         ],
+      },
+      {
+        slug: "shadcns-variables",
+        name: "shadcn's variables, from the tokens",
+        note: "For a kit on shadcn's theme beside the components, while it stays: each of its colour variables read from the token that means the same, after tokens.css, so its pages stand on the ground, ink and hairlines Damsko's components do. One rule for light and dark: the tokens follow data-mode themselves. A fill and its words go as a pair: --primary-foreground is --damsko-primary-foreground, which turns dark where --damsko-primary turns light; --damsko-primary-foreground-on-color stays near white, for a fill that stays dark in both modes, and pairs with none of these. shadcn's --destructive is words and marks; a fill that deletes is --damsko-destructive-fill, with --damsko-destructive-fill-foreground on it. A card, a popover, a secondary and an accent have no words of their own: theirs are --damsko-foreground. Damsko's token check measures every pair here, light and dark, in every theme, and fails one below 4.5 to 1.",
+        blocks: [{ code: shadcnBridge, lang: "css" }],
       },
     ],
   },
@@ -748,19 +825,20 @@ export const sections: Section[] = [
       {
         slug: "install-and-update",
         name: "Install and update",
-        note: "Every item the product has, all at once: never one item alone (the items share lib/ and the tokens), and never shadcn add --all, which installs from shadcn's own registry. Then unpack the fonts, review the diff and commit it, the six font files with it. To update, change the tag in components.json and run it again.",
+        note: "Every item the product has, all at once: never one item alone (the items share lib/ and the tokens). @damsko/all is every item of the registry, so one name installs them all and, with --overwrite, updates them all; never shadcn add --all, which installs from shadcn's own registry. A product that has only some names each of them in one command (the second block), in place of @damsko/all here and in the drift check below; what they build on comes with them. Then unpack the fonts, review the diff and commit it, the six font files with it. To update, change the tag in components.json and run it again.",
         blocks: [
           {
             code: `${everyItemAgain}\n${unpack}`,
             lang: "bash",
             does: { kind: "run", in: "." },
           },
+          { code: someItemsAgain, lang: "bash" },
         ],
       },
       {
         slug: "check-for-drift",
         name: "Check for drift",
-        note: "In the product's own checks, with its work committed: the same install again, the fonts unpacked, then two questions. The fonts' own check fails while a font is packed, missing or not the file that was installed; it is what keeps the fonts in place, whatever builds the app. The last line fails when the product's copy is not the pin's, new and changed files alike (git diff alone misses a file git does not track yet). The files are never edited in the product: a change is a pull request in Damsko, then an update.",
+        note: "In the product's own checks, with its work committed: the same install again, the fonts unpacked, then two questions. The fonts' own check fails while a font is packed, missing or not the file that was installed; it is what keeps the fonts in place, whatever builds the app. The last line fails when the product's copy is not the pin's, new and changed files alike (git diff alone misses a file git does not track yet). A check that holds the package's manifest to the product's catalog reads devDependencies as well as dependencies: an item lists a package that only gives types there (code-block's @types/prismjs). The files are never edited in the product: a change is a pull request in Damsko, then an update.",
         blocks: [
           {
             code: `${everyItemAgain}\n${unpack}\n${unpack} --check\ntest -z "$(git status --porcelain)"`,

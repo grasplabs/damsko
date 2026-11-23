@@ -43,7 +43,6 @@
     "@stylexjs/babel-plugin": "catalog:",
     "@stylexjs/unplugin": "catalog:",
     "@types/babel__core": "catalog:",
-    "@types/mdast": "catalog:",
     "@types/node": "catalog:",
     "@types/prismjs": "catalog:",
     "@types/react": "catalog:",

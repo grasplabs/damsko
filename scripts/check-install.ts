@@ -1,9 +1,9 @@
 // The registry installs as a product installs it, from the registry built here and served on
-// 127.0.0.1. Two parts.
+// 127.0.0.1. Three parts.
 //
-// Every item: added by name with the stock shadcn CLI into a fresh workspace's packages/ui with
-// the product's catalog and strict TypeScript flags, as a product pins a version: from
-// /r/<tag>/, written as the site's build writes it (scripts/registry-dist.ts) from the archive a
+// Every item: added by one name, @damsko/all (every item by name, no file of its own), with the
+// stock shadcn CLI into a fresh workspace's packages/ui with the product's catalog and strict
+// TypeScript flags, as a product pins a version: from /r/<tag>/, written as the site's build writes it (scripts/registry-dist.ts) from the archive a
 // release carries (as .github/workflows/release.yml packs it), at a stand-in for the release's
 // address, and served alone, with no latest beside it, so an item's own dependencies can only
 // have come from the version. A release with no archive is passed over; one whose archive is not
@@ -11,11 +11,17 @@
 // - the fonts arrive packed, their check says so, and their script unpacks them;
 // - the installed src/ is then Damsko's src/ byte for byte (nothing missing, nothing extra,
 //   nothing written anywhere else), and every item says its version, commit and licence;
-// - Get started's drift check passes on the committed tree, and the fonts' check fails on a font
-//   that was altered;
+// - Get started's update and drift check (@damsko/all again) pass on the committed tree, and the
+//   fonts' check fails on a font that was altered;
 // - the CLI added exactly the packages the items name, each left at the catalog's version;
 // - the tree type-checks twice: as the package it is installed in, and as an app that imports
 //   every file sees it (a declaration only a reference brings must still arrive).
+//
+// Then each item alone, into an empty workspace package of its own, a few at once: it brings
+// exactly its files and those of every item it builds on, the CLI adds exactly the packages those
+// items name, every package a file imports is declared, every package the item names is used by
+// its own files (imported, a required peer of one, or the types of one with none), and it
+// type-checks. So an item's npm dependencies are exact and minimal, each on its own.
 //
 // Get started, as written: every block of the page that says what it does
 // (site/start/get-started.ts, `does`) is carried out in the page's order in an empty folder: its
@@ -31,8 +37,9 @@
 // (scripts/check-install-app.tsx) to show the rest in a browser: the three font families from
 // their six files, the reset applied, the mode following a person's choice and kept, and the
 // components' words following a catalogue built while rendering, as one object per language.
-// Beside Tailwind, where the reset is left out, a part of the app that is not Damsko's
-// (scripts/check-install-own.tsx) is drawn before anything of Damsko's is there and again after,
+// Beside Tailwind, the page's button stands in a row of the page's own, placed by its Tailwind
+// classes, since a component takes no class; and with the reset left out, a part of the app that
+// is not Damsko's (scripts/check-install-own.tsx) is drawn before anything of Damsko's is there and again after,
 // and must be the same pixels with the same computed styles. With a Geist of its own (Fontsource's,
 // as an older kit loads it), the app is built by the bundler called directly, with no package
 // script, and must load that Geist and no file of Damsko's Geist, with Geist Serif and Geist Mono
@@ -55,13 +62,14 @@ import {
   rmSync,
   writeFileSync,
 } from "node:fs";
-import { tmpdir } from "node:os";
+import { availableParallelism, tmpdir } from "node:os";
 import nodePath from "node:path";
 import { text } from "node:stream/consumers";
 import { parseArgs } from "node:util";
 
 import { chromium } from "@playwright/test";
 import type { Page } from "@playwright/test";
+import type { RegistryItem } from "shadcn/schema";
 import { parse, stringify } from "yaml";
 
 import {
@@ -72,9 +80,17 @@ import {
   siteAddress,
 } from "../site/start/get-started.ts";
 import type { Block } from "../site/start/get-started.ts";
-import { namespace, root, version as damskoVersion } from "./build-registry.ts";
+import {
+  allItem,
+  namespace,
+  packageOf,
+  peersOf,
+  root,
+  targetOf,
+  version as damskoVersion,
+} from "./build-registry.ts";
 import { isRecord, readJson, stringsAt } from "./json.ts";
-import { registryItems } from "./registry-deps.ts";
+import { modulesOf, registryItems, withDependencies } from "./registry-deps.ts";
 import {
   archiveName,
   packRegistry,
@@ -372,7 +388,12 @@ const drift = async () => {
   ) {
     return;
   }
-  for (const block of stepOf("pin-and-update", "check-for-drift")) {
+  // The page's update, then its drift check: both run @damsko/all again, and leave the tree as
+  // every item installed it.
+  for (const block of [
+    ...stepOf("pin-and-update", "install-and-update"),
+    ...stepOf("pin-and-update", "check-for-drift"),
+  ]) {
     // oxlint-disable-next-line no-await-in-loop -- a page is followed one block after the other
     await carryOut(block, project, versions.url);
   }
@@ -387,8 +408,20 @@ const drift = async () => {
   writeFileSync(font, bytes);
 };
 
-/** Every item, into a workspace package with the product's catalog and flags. */
-const everyItem = async () => {
+/** The packages a workspace package starts with: React, its types and TypeScript. */
+const startsWith = ["@types/react", "@types/react-dom", "react", "react-dom"];
+
+/**
+ * A workspace with the product's catalog and pnpm settings, and in it packages/ui with the
+ * product's flags and components.json, at the version Get started pins: its line of
+ * components.json, carried out at the versions' own server. Returns the package's folder, or
+ * undefined when the page no longer says how to pin.
+ */
+const workspaceAt = async (
+  dir: string,
+  start: Record<string, string>,
+  own: Record<string, unknown> = {}
+): Promise<string | undefined> => {
   const here: unknown = parse(
     readFileSync(nodePath.join(root, "pnpm-workspace.yaml"), "utf-8")
   );
@@ -400,7 +433,7 @@ const everyItem = async () => {
     "catalog",
   ]);
   write(
-    workspace,
+    dir,
     "pnpm-workspace.yaml",
     stringify({
       packages: ["packages/*"],
@@ -409,37 +442,28 @@ const everyItem = async () => {
           settings.has(key)
         )
       ),
+      ...own,
     })
   );
   const manifest = readJson(nodePath.join(root, "package.json"));
-  write(workspace, "package.json", {
+  write(dir, "package.json", {
     name: "install-check",
     private: true,
     type: "module",
     // The same pnpm as here.
     packageManager: isRecord(manifest) ? manifest.packageManager : undefined,
   });
-  const start = Object.fromEntries(
-    [
-      "@types/react",
-      "@types/react-dom",
-      "react",
-      "react-dom",
-      "shadcn",
-      "typescript",
-    ].map((name) => [name, "catalog:"])
-  );
-  write(project, "package.json", {
+  const ui = nodePath.join(dir, "packages/ui");
+  write(ui, "package.json", {
     name: "@grasp-os/ui",
     private: true,
     type: "module",
     exports: packageExports,
     devDependencies: start,
   });
-  write(project, "tsconfig.json", { compilerOptions: flags, include: ["src"] });
-  // baseColor "" keeps the CLI off shadcn's own site. The registry's address is the page's, for a
-  // pinned version: its line of components.json, carried out below at the versions' own server.
-  write(project, "components.json", {
+  write(ui, "tsconfig.json", { compilerOptions: flags, include: ["src"] });
+  // baseColor "" keeps the CLI off shadcn's own site.
+  write(ui, "components.json", {
     $schema: "https://ui.shadcn.com/schema.json",
     style: "new-york",
     rsc: false,
@@ -456,19 +480,31 @@ const everyItem = async () => {
   const pin = stepOf("pin-and-update", "pin-a-version");
   if (pin.length === 0) {
     failures.push("Get started no longer says how to pin a version");
-    return;
+    return undefined;
   }
   for (const block of pin) {
     // oxlint-disable-next-line no-await-in-loop -- a page is followed one block after the other
-    await carryOut(block, project, versions.url);
+    await carryOut(block, ui, versions.url);
+  }
+  return ui;
+};
+
+/** Every item, into a workspace package with the product's catalog and flags. */
+const everyItem = async () => {
+  const start = Object.fromEntries(
+    [...startsWith, "shadcn", "typescript"].map((name) => [name, "catalog:"])
+  );
+  if ((await workspaceAt(workspace, start)) === undefined) {
+    return;
   }
   const before = new Set(readdirSync(project));
   if (!(await run("pnpm", ["install"], workspace))) {
     return;
   }
-  // Every item by name, in one command, as a product syncs: never `--all`, which means shadcn's
-  // own registry. From the version's address, where no latest is served: what an item builds on
-  // came from the version too, or the install fails.
+  // Every item by one name, @damsko/all, as a product that has them all syncs: never `--all`,
+  // which means shadcn's own registry. From the version's address, where no latest is served:
+  // what an item builds on came from the version too, or the install fails. The tree is then held
+  // to every item's files below, so `all` is shown to bring every one.
   const items = registryItems();
   await run(
     "pnpm",
@@ -476,7 +512,7 @@ const everyItem = async () => {
       "exec",
       "shadcn",
       "add",
-      ...items.map((item) => `${namespace}/${item.name}`),
+      `${namespace}/${allItem}`,
       "--overwrite",
       "--yes",
     ],
@@ -551,6 +587,198 @@ const everyItem = async () => {
   console.log(
     `install: ${items.length} items, ${installed.size} files installed into ${project}`
   );
+};
+
+/** Whether an npm package, installed under `from`, gives its own types: no, when it is not there. */
+const bringsTypes = (name: string, from: string) => {
+  const folder = nodePath.join(from, "node_modules", name);
+  if (!existsSync(nodePath.join(folder, "package.json"))) {
+    return false;
+  }
+  const manifest = readJson(nodePath.join(folder, "package.json"));
+  return (
+    (isRecord(manifest) &&
+      (manifest.types !== undefined ||
+        manifest.typings !== undefined ||
+        JSON.stringify(manifest.exports ?? null).includes('"types"'))) ||
+    existsSync(nodePath.join(folder, "index.d.ts"))
+  );
+};
+
+/** Said of one item installed alone. */
+type Say = (message: string) => void;
+
+/**
+ * The files and packages of an item installed alone are exactly those of the items it brings.
+ * Returns the files installed and the packages the package declares.
+ */
+const heldToWhatItBrings = (
+  ui: string,
+  brought: RegistryItem[],
+  start: Record<string, string>,
+  said: Say
+) => {
+  const expected = new Set(
+    brought.flatMap((each) =>
+      (each.files ?? []).map((file) => targetOf(file.path).slice("~/".length))
+    )
+  );
+  const installed = filesUnder(nodePath.join(ui, "src")).map(
+    (file) => `src/${file}`
+  );
+  for (const file of expected) {
+    if (!installed.includes(file)) {
+      said(`${file} was not installed`);
+    }
+  }
+  for (const file of installed) {
+    if (!expected.has(file)) {
+      said(`${file} was installed, and no item it brings has it`);
+    }
+  }
+
+  const manifest = readJson(nodePath.join(ui, "package.json"));
+  const declared = new Set([
+    ...Object.keys(stringsAt(manifest, "dependencies")),
+    ...Object.keys(stringsAt(manifest, "devDependencies")),
+  ]);
+  const named = new Set(
+    brought.flatMap((each) => [
+      ...(each.dependencies ?? []),
+      ...(each.devDependencies ?? []),
+    ])
+  );
+  for (const name of declared) {
+    if (!(name in start || named.has(name))) {
+      said(`the CLI added ${name}, which no item it brings names`);
+    }
+  }
+  for (const name of named) {
+    if (!declared.has(name)) {
+      said(`${name} is named, and the CLI did not add it`);
+    }
+  }
+
+  return { installed, declared };
+};
+
+/**
+ * Every package a file imports is declared, and every package an item names is one its own files
+ * use.
+ */
+const usesWhatItNames = (
+  item: RegistryItem,
+  ui: string,
+  { installed, declared }: { installed: string[]; declared: Set<string> },
+  said: Say
+) => {
+  /** The packages files import, by name. */
+  const importedBy = (files: string[]) =>
+    new Set(
+      files.flatMap((file) =>
+        modulesOf(file, readFileSync(nodePath.join(ui, file), "utf-8"))
+          .filter(
+            (specifier) =>
+              !(specifier.startsWith(".") || specifier.startsWith("node:"))
+          )
+          .map((specifier) => packageOf(specifier))
+      )
+    );
+  for (const name of importedBy(installed)) {
+    if (!declared.has(name)) {
+      said(`a file imports ${name}, which the package does not declare`);
+    }
+  }
+  const own = importedBy(
+    (item.files ?? []).map((file) => targetOf(file.path).slice("~/".length))
+  );
+  for (const name of item.dependencies ?? []) {
+    if (
+      !(
+        own.has(name) ||
+        [...own].some((used) => peersOf(used, ui).includes(name))
+      )
+    ) {
+      said(
+        `names ${name}, which none of its files imports and none of their packages needs beside it`
+      );
+    }
+  }
+  for (const name of item.devDependencies ?? []) {
+    const typed = name.replace(/^@types\//u, "");
+    if (
+      !(name.startsWith("@types/") && own.has(typed) && !bringsTypes(typed, ui))
+    ) {
+      said(
+        `names ${name}, which gives no types to a package its files import that has none of its own`
+      );
+    }
+  }
+};
+
+/**
+ * One item alone, into an empty workspace package of its own, as a product that wants only it
+ * installs it. It holds when the files are exactly the item's and those of every item it builds
+ * on, however deep; the packages the CLI added are exactly the ones those items name; every
+ * package a file imports is one the package declares (React is the app's); every package the item
+ * names is one its own files use (imported, a required peer of one imported, or the types of one
+ * that brings none); and the tree type-checks with the product's flags.
+ */
+const alone = async (item: RegistryItem, start: Record<string, string>) => {
+  const dir = nodePath.join(scratch, "alone", item.name);
+  // Every item brings lib, and lib Hugeicons' 24,000 files: linked once into pnpm's global
+  // virtual store, not again into each of the hundred folders. Resolution is pnpm's as ever: a
+  // package reaches only what it declares.
+  const ui = await workspaceAt(dir, start, { enableGlobalVirtualStore: true });
+  if (
+    ui === undefined ||
+    !(await run("pnpm", ["install"], dir)) ||
+    !(await run(
+      nodePath.join(root, "node_modules/.bin/shadcn"),
+      ["add", `${namespace}/${item.name}`, "--yes"],
+      ui
+    ))
+  ) {
+    return;
+  }
+  const said = (message: string) => {
+    failures.push(`${item.name}, installed alone: ${message}`);
+  };
+  const byName = new Map(registryItems().map((each) => [each.name, each]));
+  const brought = withDependencies([item.name]).flatMap((name) => {
+    const found = byName.get(name);
+    return found === undefined ? [] : [found];
+  });
+
+  const { installed, declared } = heldToWhatItBrings(ui, brought, start, said);
+  usesWhatItNames(item, ui, { installed, declared }, said);
+
+  if (installed.some((file) => /\.tsx?$/u.test(file))) {
+    await run(
+      nodePath.join(root, "node_modules/.bin/tsc"),
+      ["--noEmit", "-p", "tsconfig.json"],
+      ui
+    );
+  }
+};
+
+/** Every item alone, a few at once: each in its own folder, sharing pnpm's store. */
+const eachAlone = async () => {
+  const start = Object.fromEntries(
+    startsWith.map((name) => [name, "catalog:"])
+  );
+  const queue = registryItems().filter((item) => item.name !== allItem);
+  const count = queue.length;
+  const worker = async () => {
+    for (let item = queue.shift(); item !== undefined; item = queue.shift()) {
+      // oxlint-disable-next-line no-await-in-loop -- each worker takes one item after the other
+      await alone(item, start);
+    }
+  };
+  await Promise.all(
+    Array.from({ length: Math.min(8, availableParallelism()) }, worker)
+  );
+  console.log(`install: ${count} items, each installed alone and type-checked`);
 };
 
 /** Carries a section of the page out, block after block; stops at the first that fails. */
@@ -684,8 +912,15 @@ const inBrowser = async (
   }
 };
 
-/** The app the page's blocks built, as the page left it: one button, drawn by its own styles. */
-const checkPage = async (label: string, app: string) => {
+/**
+ * The app the page's blocks built, as the page left it: one button, drawn by its own styles;
+ * `placed`, in a row of the page's own whose Tailwind classes put it at the row's end.
+ */
+const checkPage = async (
+  label: string,
+  app: string,
+  { placed = false } = {}
+) => {
   const dist = nodePath.join(app, "dist");
   const built = filesUnder(dist);
   const css = built
@@ -730,6 +965,25 @@ const checkPage = async (label: string, app: string) => {
         fonts.size > 0,
       `the button is not drawn in Geist (${seen.button.family}; loaded: ${seen.loaded.join(", ")})`
     );
+    if (placed) {
+      // Where the row's classes put it: at the row's end, inside its padding.
+      const row = await page
+        .getByRole("button", { name: "Save changes" })
+        .evaluate((element) => {
+          const holder = element.parentElement ?? element;
+          const style = getComputedStyle(holder);
+          const gap =
+            holder.getBoundingClientRect().right -
+            element.getBoundingClientRect().right;
+          return { display: style.display, gap, padding: style.paddingRight };
+        });
+      expect(
+        row.display === "flex" &&
+          row.padding === "16px" &&
+          Math.abs(row.gap - 16) < 0.5,
+        `the element round the button is not placed by its Tailwind classes (${JSON.stringify(row)})`
+      );
+    }
   });
 };
 
@@ -865,24 +1119,21 @@ const ownPart = async (label: string, app: string) => {
 const besideTailwind = async (product: string) => {
   const app = nodePath.join(product, "apps/web");
   const label = "the app beside Tailwind";
-  const pageApp = pagesOwn("in-a-workspace-package", "apps/web/src/App.tsx");
   const pageStyles = pagesOwn("beside-tailwind", "apps/web/src/index.css");
-  if (pageApp === undefined || pageStyles === undefined) {
+  if (
+    pageStyles === undefined ||
+    pagesOwn("beside-tailwind", "apps/web/src/App.tsx") === undefined
+  ) {
     failures.push(
       `${label}: Get started no longer writes the app's page or styles`
     );
     return;
   }
-  // The page's own app again, in the place the check's took.
-  if (
-    !(
-      (await carryOut(pageApp, product)) &&
-      (await follow("beside-tailwind", product))
-    )
-  ) {
+  // The page's own app again, in the place the check's took: the button placed with a class.
+  if (!(await follow("beside-tailwind", product))) {
     return;
   }
-  await checkPage(label, app);
+  await checkPage(label, app, { placed: true });
 
   write(
     app,
@@ -1069,6 +1320,7 @@ const thePage = async () => {
 
 try {
   await everyItem();
+  await eachAlone();
   await thePage();
 } finally {
   await served.close();
