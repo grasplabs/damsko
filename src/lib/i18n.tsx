@@ -656,6 +656,8 @@ export interface I18nCatalog {
       label: string;
       listening: string;
       mute: string;
+      /** Said once as the product writes down what it heard, after Done. */
+      settling: string;
     };
     /** Submit's name while the answer comes. */
     stop: string;
@@ -1348,6 +1350,7 @@ const english: I18nCatalog = {
       label: "Dictate",
       listening: "Listening",
       mute: "Mute",
+      settling: "Writing it down",
     },
     stop: "Stop",
     submit: "Send",

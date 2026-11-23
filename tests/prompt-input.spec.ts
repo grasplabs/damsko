@@ -536,8 +536,12 @@ test("while it listens the footer is a bar: Cancel, the time, the microphone and
   await page.clock.runFor(3000);
   await expect(bar.getByRole("timer")).toHaveText("0:02");
 
-  // Done keeps what was heard, and the footer is back.
+  // Done keeps what was heard: the bar waits while it is written down, its field draining and
+  // its controls off, and then the footer is back.
   await bar.getByRole("button", { name: "Done" }).click();
+  await expect(bar.getByRole("button", { name: "Done" })).toBeDisabled();
+  await expect(bar.getByRole("button", { name: "Mute" })).toBeDisabled();
+  await page.clock.runFor(700);
   await expect(bar).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Send" })).toBeVisible();
   await expect(text).toContainText("send the");
@@ -596,7 +600,7 @@ test("a word heard but not yet final shows lighter after the text, and is no par
       const heard = element.dataset.interim ?? "";
       return {
         shown: heard !== "" && after.content === `" ${heard}"`,
-        lighter: Number(after.opacity) < 1,
+        lighter: after.color !== getComputedStyle(element).color,
         written: (element.textContent ?? "").trimEnd().endsWith(heard),
       };
     });
@@ -604,6 +608,7 @@ test("a word heard but not yet final shows lighter after the text, and is no par
     .poll(look)
     .toEqual({ shown: true, lighter: true, written: false });
   await page.getByRole("button", { name: "Done" }).click();
+  await page.clock.runFor(700);
   await expect(text).not.toHaveAttribute("data-interim");
 });
 
@@ -1240,7 +1245,12 @@ test("a spoken conversation stands in the card: its turns are said, and Close gi
   await page.clock.runFor(6000);
   await expect(voice.getByRole("timer")).toBeVisible();
   await expect(voice).toContainText("Waiting");
-  await expect.poll(said).toEqual(["Speaking", "Listening"]);
+  await expect
+    .poll(async () => {
+      const heard = await said();
+      return heard.slice(0, 2);
+    })
+    .toEqual(["Speaking", "Listening"]);
 
   // Off for a moment: the time waits.
   const mute = voice.getByRole("button", { name: "Mute" });
@@ -1403,6 +1413,109 @@ test("while it listens the words typed before step back, and what the dictation 
   await page.clock.runFor(2100);
   await expect(text).toContainText("Before Monday: send the");
   await expect.poll(quiet).toBe("Before Monday: ");
+  // Words typed before them push the marked ones on: they are not marked themselves.
+  await text.focus();
+  await page.keyboard.press("Control+Home");
+  await page.keyboard.type("NEW ");
+  await expect(text).toContainText("NEW Before Monday: send the");
+  await expect.poll(quiet).toBe("Before Monday: ");
   await page.getByRole("button", { name: "Done" }).click();
+  await page.clock.runFor(700);
   await expect.poll(quiet).toBe("");
+});
+
+test("a conversation that is already running as the page comes takes no focus", async ({
+  page,
+}) => {
+  await openExample(page, "prompt-input", "voice");
+  const voice = page.getByRole("group", { name: "Voice conversation" });
+  await expect(voice.getByRole("button", { name: "Mute" })).toBeVisible();
+  // Its field is drawn, so the page is awake; the focus is still the page's own.
+  await expect.poll(async () => await fieldLit(page)).toBeGreaterThan(0);
+  expect(
+    await page.evaluate(() => document.activeElement === document.body)
+  ).toBe(true);
+});
+
+test("the voice's field holds while it is out of view or not shown, and goes on as it comes back", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await openExample(page, "prompt-input", "voice");
+  await expect.poll(async () => await fieldLit(page)).toBeGreaterThan(0);
+  // How many frames the page asks for in a moment: none while nothing draws.
+  const frames = async () =>
+    await page.evaluate(async () => {
+      const done = Promise.withResolvers<number>();
+      let asked = 0;
+      const ask = globalThis.requestAnimationFrame;
+      globalThis.requestAnimationFrame = (frame) => {
+        asked += 1;
+        return ask(frame);
+      };
+      setTimeout(() => {
+        globalThis.requestAnimationFrame = ask;
+        done.resolve(asked);
+      }, 300);
+      return await done.promise;
+    });
+  expect(await frames()).toBeGreaterThan(3);
+  // The form, moved and hidden as a page would: by its element, as nothing names it while hidden.
+  const place = async (margin: string, display: string) => {
+    await page.evaluate(
+      ([marginNow, displayNow]) => {
+        const answer = document.querySelector("form");
+        if (answer !== null) {
+          answer.style.marginBlockStart = marginNow ?? "";
+          answer.style.display = displayNow ?? "";
+        }
+      },
+      [margin, display]
+    );
+  };
+  await place("300vh", "");
+  await expect.poll(frames).toBe(0);
+  await place("", "none");
+  await expect.poll(frames).toBe(0);
+  await place("", "");
+  await expect.poll(frames).toBeGreaterThan(3);
+});
+
+test("a note while the voice goes on is said once, and the card keeps its height", async ({
+  page,
+}) => {
+  const said = await listenToLiveRegions(page);
+  await openExample(page, "prompt-input", "voice", { time: fixedTime });
+  const card = page.getByRole("group").first();
+  expect(await heightOf(card)).toBe(102);
+  // The person's turn, two words in: a part was not made out.
+  await page.clock.runFor(9100);
+  const note = page
+    .getByRole("group", { name: "Voice conversation" })
+    .getByText("A part couldn't be made out.");
+  await expect(note).toBeVisible();
+  expect(await heightOf(card)).toBe(102);
+  await page.clock.runFor(2000);
+  await expect(note).toHaveCount(0);
+  const heard = await said();
+  expect(
+    heard.filter((words) => words === "A part couldn't be made out.")
+  ).toHaveLength(1);
+});
+
+test("while a voice is heard a dithered light stands over the card, and goes with it", async ({
+  page,
+}) => {
+  await openExample(page, "prompt-input", "dictation");
+  // The light is decoration, so it is read as it is drawn: how see-through its layer is.
+  const light = async () =>
+    await page.evaluate(() => {
+      const layer = document.querySelector("form span[aria-hidden]");
+      return layer === null ? "" : getComputedStyle(layer).opacity;
+    });
+  expect(await light()).toBe("0");
+  await page.getByRole("button", { name: "Dictate" }).click();
+  await expect.poll(async () => Number(await light())).toBeGreaterThan(0.1);
+  await page.getByRole("button", { name: "Cancel dictation" }).click();
+  await expect.poll(light).toBe("0");
 });

@@ -27,8 +27,6 @@ export interface VoiceShape {
   low: number;
   mid: number;
   high: number;
-  /** Where the sound's weight sits from low to high, 0 to 1: the light leans with it. */
-  centroid: number;
 }
 
 /** A rise is followed in about this long, in seconds. */
@@ -77,8 +75,6 @@ const clamp = (value: number, low = 0, high = 1) =>
 export interface Follower {
   /** Takes the raw value and the seconds since the last one; gives the drawn value. */
   step: (raw: number, dt: number) => number;
-  /** The envelope before the spring, for a check that plots both. */
-  envelope: () => number;
   /** Back to rest at once. */
   reset: () => void;
 }
@@ -133,7 +129,6 @@ export const follower = (): Follower => {
       }
       return drawn;
     },
-    envelope: () => envelope,
     reset: () => {
       envelope = 0;
       drawn = 0;
@@ -159,8 +154,6 @@ const mean = (bands: ArrayLike<number>, from: number, to: number) => {
 /** The whole sound's way from raw to drawn: the level and three groups of bands. */
 export interface Shaper {
   step: (reading: VoiceReading | undefined, dt: number) => VoiceShape;
-  /** The level's envelope before the spring. */
-  envelope: () => number;
   reset: () => void;
 }
 
@@ -170,7 +163,6 @@ export const shaper = (): Shaper => {
   const low = follower();
   const mid = follower();
   const high = follower();
-  let centroid = 0.5;
   return {
     step: (reading, dt) => {
       const raw = reading?.level ?? 0;
@@ -183,33 +175,24 @@ export const shaper = (): Shaper => {
           low: low.step(raw, dt),
           mid: mid.step(raw, dt),
           high: high.step(raw * 0.4, dt),
-          centroid,
         };
       }
       const { lowEnd, midEnd } = groups(bands.length);
       const lows = mean(bands, 0, lowEnd);
       const mids = mean(bands, lowEnd, midEnd);
       const highs = mean(bands, midEnd, bands.length);
-      const total = lows + mids + highs;
-      // The centroid moves slowly, so the lean is a drift, never a flicker.
-      const target = total > 0.02 ? (mids * 0.5 + highs) / total : 0.5;
-      centroid +=
-        (target - centroid) * (1 - Math.exp(-clamp(dt, 0, 0.1) / 0.18));
       return {
         level: drawnLevel,
         low: low.step(lows, dt),
         mid: mid.step(mids, dt),
         high: high.step(highs, dt),
-        centroid,
       };
     },
-    envelope: () => level.envelope(),
     reset: () => {
       level.reset();
       low.reset();
       mid.reset();
       high.reset();
-      centroid = 0.5;
     },
   };
 };

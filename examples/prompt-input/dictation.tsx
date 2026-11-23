@@ -14,7 +14,7 @@ import {
   PromptInputTools,
 } from "@grasp-os/ui/components/prompt-input";
 import { createTokenInputController } from "@ui-sdk/react/token-input";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const typed = "Before Monday: ";
 const heard = ["send", "the", "numbers", "to", "the", "board"];
@@ -23,8 +23,13 @@ const heard = ["send", "the", "numbers", "to", "the", "board"];
 // phrases, with a breath between them, and a little of the room under it.
 const sound = () => {
   const seconds = performance.now() / 1000;
-  const syllable = Math.max(0, Math.sin(seconds * 8)) ** 2;
-  const level = 0.05 + (0.5 + 0.4 * Math.sin(seconds * 1.3)) * syllable;
+  // Five syllables a second, each a quick rise, a slower fall and a gap, some stressed more;
+  // and a breath every few seconds.
+  const beat = (seconds * 5) % 1;
+  const stress =
+    0.45 + 0.55 * Math.abs(Math.sin(Math.floor(seconds * 5) * 2.4));
+  const breath = seconds % 3 < 2.5 ? 1 : 0;
+  const level = 0.02 + 0.7 * stress * breath * Math.exp(-5 * beat);
   return { level, bands: [level, level * 0.8, level * 0.3] };
 };
 
@@ -37,6 +42,9 @@ export default function PromptInputDictation() {
   const [listening, setListening] = useState(false);
   const [muted, setMuted] = useState(false);
   const [words, setWords] = useState(0);
+  // After Done the product writes down what it heard: here, for a moment.
+  const [settling, setSettling] = useState(false);
+  const cancelled = useRef(false);
   const hearing = listening && !muted;
   useEffect(() => {
     if (!hearing) {
@@ -79,9 +87,18 @@ export default function PromptInputDictation() {
               setMuted(false);
               if (next) {
                 setWords(0);
+              } else if (cancelled.current) {
+                cancelled.current = false;
+              } else {
+                setSettling(true);
+                setTimeout(() => {
+                  setSettling(false);
+                }, 600);
               }
             }}
+            settling={settling}
             onCancel={() => {
+              cancelled.current = true;
               controller.setValue([typed]);
             }}
             muted={muted}

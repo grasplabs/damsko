@@ -13,11 +13,17 @@
 // Values are read from the host's sampler at each frame and never pass through React. With reduced
 // motion it is a still band whose brightness steps with the level at most four times a second. In
 // forced colours it is drawn in the canvas's own colour, the system's text.
+import { BAYER_MATRIX } from "../lib/utils";
 import { shaper } from "./prompt-input-voice-motion";
 import type { VoiceReading, VoiceShape } from "./prompt-input-voice-motion";
 
 /** What the field is doing, from the dictation's phase. */
-export type VoiceFieldMode = "listening" | "speaking" | "unheard" | "muted";
+export type VoiceFieldMode =
+  | "listening"
+  | "speaking"
+  | "unheard"
+  | "muted"
+  | "thinking";
 
 /** A field being drawn. */
 export interface VoiceField {
@@ -33,6 +39,8 @@ export interface VoiceFieldOptions {
   sample: () => VoiceReading | undefined;
   /** Reduced motion: a still band, stepping with the level at most four times a second. */
   still: boolean;
+  /** Called at each frame with the drawn level, 0 to 1: the card's light follows it. */
+  onLevel?: (level: number) => void;
 }
 
 /** The grid: one dot in every PITCH square, from DOT_MIN across: the system's fine pixel grid. */
@@ -42,13 +50,12 @@ const DOT_MIN = 1.5;
 const REST_HALF = 3;
 const LOUD_HALF = 14;
 /**
- * Half the body's width, as a share of the band's: at rest, and how much more at its loudest. The
+ * Half the body's width, as a share of the band's. The
  * body spans the whole band, end to end, at every level (the band fills the bar's room between the
  * time and the controls); the voice moves its height and brightness. A
  * little past half, so its tapering tail meets the band's ends rather than stopping short of them.
  */
 const REST_WIDTH = 0.58;
-const LOUD_WIDTH = 0;
 /** The rest's breath: one slow swell every few seconds, so at silence it barely moves. */
 const BREATH = 7;
 /** The centre line's half width, in pixels: where the brightest stop lives. */
@@ -56,12 +63,9 @@ const CENTRE_LINE = 2.4;
 /** Where along the body (as a share of its half width) the high bands sparkle: its two ends. */
 const SPARKLE_FROM = 0.72;
 
-/** Bayer's 4×4 threshold, 0 to 1, by cell. */
-const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5].map(
-  (value) => (value + 0.5) / 16
-);
+/** Bayer's 4×4 threshold, 0 to 1, by cell: the system's one dither (lib/utils.ts). */
 const threshold = (column: number, row: number) =>
-  BAYER[(row % 4) * 4 + (column % 4)] ?? 0.5;
+  ((BAYER_MATRIX[row % 4]?.[column % 4] ?? 7.5) + 0.5) / 16;
 
 /** A steady hash for a cell, 0 to 1. */
 const hash = (a: number, b: number) => {
@@ -117,8 +121,6 @@ const quietOf = (grade: string[]) =>
 interface Scene {
   sound: VoiceShape;
   seconds: number;
-  /** How open the band is, 0 to 1. */
-  scale: number;
   middle: number;
   breathing: boolean;
   voice: number;
@@ -142,6 +144,7 @@ const PRESENCE: Record<VoiceFieldMode, number> = {
   speaking: 1,
   unheard: 1,
   muted: 0.4,
+  thinking: 1,
 };
 /** How much of the voice reaches it: all while it listens (or the other voice speaks), half when a stretch is unheard. */
 const VOICE: Record<VoiceFieldMode, number> = {
@@ -149,6 +152,7 @@ const VOICE: Record<VoiceFieldMode, number> = {
   speaking: 1,
   unheard: 0.5,
   muted: 0,
+  thinking: 0,
 };
 
 /** Eases a value toward its goal at a steady pace: from one end to the other in `seconds`. */
@@ -181,8 +185,7 @@ const columnLook = (across: number, scene: Scene): Look => {
   const along = 1 - 0.45 * shaped * across ** 2.6;
   return {
     // Loudness swells it more than linearly, so a stressed syllable stands out of the phrase.
-    half:
-      (restHalf + heard ** 1.3 * (LOUD_HALF - REST_HALF)) * taper * scene.scale,
+    half: (restHalf + heard ** 1.3 * (LOUD_HALF - REST_HALF)) * taper,
     // How flat the top is, so how much of it is solid: flatter at rest, and with the low bands.
     flat: 3.2 - 1.4 * Math.min(1, heard * 2) + 0.8 * sound.low * scene.voice,
     // Calm at rest, the brightest stop when the voice is up.
@@ -337,11 +340,13 @@ export const startVoiceField = (
   const ctx = context2d;
   const shape = shaper();
   let mode: VoiceFieldMode = "listening";
-  let sound: VoiceShape = { level: 0, low: 0, mid: 0, high: 0, centroid: 0.5 };
+  let sound: VoiceShape = { level: 0, low: 0, mid: 0, high: 0 };
   // Smoothed scalars: how present the field is, how much of the voice reaches it, and how thin
   // it is.
   const presence = { now: 0, goal: 1 };
   const voice = { now: 1, goal: 1 };
+  // How much of its width is left: writing it down drains it to its middle.
+  const length = { now: 1, goal: 1 };
   const thin = { now: 0, goal: 0 };
   let stillStep = 0;
   let grade = gradeOf(canvas);
@@ -381,14 +386,13 @@ export const startVoiceField = (
       sound,
       seconds: (now - begun) / 1000,
       middle: height / 2,
-      scale: 1,
       breathing: mode !== "muted" && !options.still,
       voice: voice.now,
       thin: thin.now,
       lift: options.still ? stillStep * 0.35 : 0,
     };
-    // One body, centred, its width following the level.
-    const reach = width * (REST_WIDTH + LOUD_WIDTH * sound.level * voice.now);
+    // One body, centred; writing it down drains it to its middle.
+    const reach = width * REST_WIDTH * length.now;
     const centreColumn = (columns - 1) / 2;
     if (presence.now > 0.002 && reach > PITCH) {
       for (let column = 0; column < columns; column += 1) {
@@ -449,11 +453,10 @@ export const startVoiceField = (
       width,
       height
     );
-    canvas.dataset.drawn = String(Number(canvas.dataset.drawn ?? "0") + 1);
   };
 
   // The sound is read while it listens, and while the other voice speaks (a conversation).
-  const listening = () => mode !== "muted";
+  const listening = () => mode !== "muted" && mode !== "thinking";
 
   const tick = (now: number) => {
     const dt = last === 0 ? 1 / 60 : Math.min(0.1, (now - last) / 1000);
@@ -462,8 +465,10 @@ export const startVoiceField = (
     // Muted is flat and dim within 160ms.
     ease(presence, dt, 0.16);
     ease(voice, dt, 0.16);
+    ease(length, dt, 0.3);
     ease(thin, dt, 0.3);
     paint(now);
+    options.onLevel?.(sound.level * voice.now * presence.now);
   };
 
   /** Reduced motion: the band alone, its brightness one of four steps, at most four times a second. */
@@ -471,11 +476,13 @@ export const startVoiceField = (
     const reading = listening() ? options.sample() : undefined;
     const raw = shape.step(reading, 0.25);
     stillStep = Math.round(raw.level * 3) / 3;
-    sound = { level: 0, low: 0, mid: 0, high: 0, centroid: 0.5 };
+    sound = { level: 0, low: 0, mid: 0, high: 0 };
     presence.now = presence.goal;
     voice.now = 0;
+    length.now = length.goal;
     thin.now = thin.goal;
     paint(performance.now());
+    options.onLevel?.(stillStep);
   };
 
   const loop = (now: number) => {
@@ -512,6 +519,8 @@ export const startVoiceField = (
   });
   const scheme = matchMedia("(prefers-color-scheme: dark)");
   scheme.addEventListener("change", recolour);
+  const forced = matchMedia("(forced-colors: active)");
+  forced.addEventListener("change", recolour);
   // Sizing the canvas clears it, and the observer runs after the frame was drawn: drawn again at
   // once, so no frame is bare while the band opens or closes.
   const resized = new ResizeObserver(() => {
@@ -528,6 +537,7 @@ export const startVoiceField = (
   const goals = (next: VoiceFieldMode) => {
     presence.goal = PRESENCE[next];
     voice.goal = VOICE[next];
+    length.goal = next === "thinking" ? 0 : 1;
     thin.goal = next === "unheard" ? 1 : 0;
   };
   goals(mode);
@@ -547,6 +557,7 @@ export const startVoiceField = (
       run(false);
       themeWatch.disconnect();
       scheme.removeEventListener("change", recolour);
+      forced.removeEventListener("change", recolour);
       resized.disconnect();
     },
   };

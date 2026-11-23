@@ -23,8 +23,13 @@ const turns = [
 // A pretend voice, read a frame at a time as a product reads its microphone.
 const sound = () => {
   const seconds = performance.now() / 1000;
-  const syllable = Math.max(0, Math.sin(seconds * 8)) ** 2;
-  const level = 0.05 + (0.5 + 0.4 * Math.sin(seconds * 1.3)) * syllable;
+  // Five syllables a second, each a quick rise, a slower fall and a gap, some stressed more;
+  // and a breath every few seconds.
+  const beat = (seconds * 5) % 1;
+  const stress =
+    0.45 + 0.55 * Math.abs(Math.sin(Math.floor(seconds * 5) * 2.4));
+  const breath = seconds % 3 < 2.5 ? 1 : 0;
+  const level = 0.02 + 0.7 * stress * breath * Math.exp(-5 * beat);
   return { level, bands: [level, level * 0.8, level * 0.3] };
 };
 
@@ -65,6 +70,9 @@ export default function PromptInputVoiceExample() {
           status={turn.status}
           sample={sound}
           interim={listening ? turn.words[said] : undefined}
+          note={
+            listening && said === 2 ? "A part couldn't be made out." : undefined
+          }
           speaker={<AgentIndicator />}
           muted={muted}
           onMutedChange={setMuted}

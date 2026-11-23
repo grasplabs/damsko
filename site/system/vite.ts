@@ -95,14 +95,7 @@ const componentFolder = (id: string) => {
 // first example. The Model selector's stack (Command, Popover, Toggle group, the makers' marks) and
 // the working line's (Agent indicator, Shimmer) were eight requests and 32KB of a first visit to
 // the prompt input's page.
-const examplesApart = new Set([
-  "prompt-input/compact",
-  "prompt-input/glass",
-  "prompt-input/model",
-  "prompt-input/voice",
-  "prompt-input/voice-problems",
-  "prompt-input/working",
-]);
+const examplesApart = new Set(["prompt-input"]);
 
 /**
  * "examples/button/states.tsx" → "examples-button": one chunk per example folder, with what lies in
@@ -119,10 +112,11 @@ const exampleFolder = (id: string) => {
   if (!(match && id.startsWith(`${root}examples/`))) {
     return null;
   }
-  const example = `${match[1]}/${(match[2] ?? "").replace(/\.tsx$/u, "")}`;
-  return examplesApart.has(example)
-    ? `examples-${example.replace("/", "-")}`
-    : `examples-${match[1]}`;
+  const [, folder = "", file = ""] = match;
+  // An example of an apart folder; what its examples share (a `.ts` beside them) stays one chunk.
+  return examplesApart.has(folder) && /^[a-z0-9-]+\.tsx$/u.test(file)
+    ? `examples-${folder}-${file.replace(/\.tsx$/u, "")}`
+    : `examples-${folder}`;
 };
 
 /**
