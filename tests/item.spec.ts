@@ -82,15 +82,17 @@ for (const [at, [role, name, reason]] of (
   test(`a ${role} row out of use (${name}) is read and reached by Tab, and nothing presses it`, async ({
     page,
     context,
+    browserName,
   }) => {
     await openExample(page, "item", "disabled");
     const row = page.getByRole(role, { name });
     await expect(row).toHaveAttribute("aria-disabled", "true");
     await expect(row).toHaveAccessibleDescription(reason);
-    // Reached by Tab, in its place.
+    // Reached by Tab, in its place (WebKit on a Mac moves Tab only between fields unless Option is
+    // held).
     for (let stop = 0; stop <= at; stop += 1) {
       // oxlint-disable-next-line no-await-in-loop -- one Tab after another
-      await page.keyboard.press("Tab");
+      await page.keyboard.press(browserName === "webkit" ? "Alt+Tab" : "Tab");
     }
     await expect(row).toBeFocused();
     // No light under the pointer.
