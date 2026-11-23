@@ -35,7 +35,7 @@ When `onSubmit` returns a promise, the field waits, read only, and says that it 
 
 ## Kept open by the page
 
-A page that holds `editing` decides when the field closes: one that keeps it open, as here, has each Enter save and the field stay for the next value.
+A page that holds `editing` decides when the field closes: one that keeps it open, as here, has each Enter save and the field stay for the next value. A field that is open from the start takes no focus, so the page does not jump to it; one that opens later takes it.
 
 <Stage path="inline-edit/kept-open" label="Kept open by the page" />
 

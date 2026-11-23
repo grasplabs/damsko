@@ -54,14 +54,6 @@ const left = async (page: Page) =>
     );
   });
 
-const moved = async (page: Page) =>
-  await page.evaluate(() =>
-    [...document.querySelectorAll("*")].reduce(
-      (sum, element) => sum + element.scrollTop,
-      document.scrollingElement?.scrollTop ?? 0
-    )
-  );
-
 for (const width of [1440, 390]) {
   test.describe(`at ${width}`, () => {
     test.use({ viewport: { width, height: 900 } });
@@ -85,16 +77,18 @@ test.describe("at 1440", () => {
       await page.goto(new URL(path, process.env.BASE_URL).href);
       await page.waitForLoadState("load");
       await page.mouse.move(720, 450);
-      let last = -1;
-      for (let still = 0, turn = 0; turn < 200 && still < 3; turn += 1) {
+      // Turn after turn until the end is reached: where the page stands is asked each turn, never
+      // whether the last turn moved it. A turn's scroll lands when the page gets to it, which on a
+      // busy machine is after the next question, and three such turns once read as the end.
+      for (let turn = 0; turn < 200; turn += 1) {
+        // oxlint-disable-next-line no-await-in-loop -- turn after turn
+        if ((await left(page)) <= 2) {
+          break;
+        }
         // oxlint-disable-next-line no-await-in-loop -- turn after turn
         await page.mouse.wheel(0, 1200);
-        // oxlint-disable-next-line no-await-in-loop -- turn after turn
-        const now = await moved(page);
-        still = now === last ? still + 1 : 0;
-        last = now;
       }
-      expect(await left(page)).toBeLessThanOrEqual(2);
+      await expect.poll(async () => await left(page)).toBeLessThanOrEqual(2);
     });
   }
 });
