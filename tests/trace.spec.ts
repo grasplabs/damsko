@@ -329,18 +329,22 @@ test("a subagent's row names the run and its model, and opens on its tool calls,
   await expect(found).toBeHidden();
 });
 
-test("a running step stands its working mark in its dot's place", async ({
-  page,
-}) => {
-  await openExample(page, "trace", "steps");
-  const marks = await page
-    .getByText("Searched the web", { exact: true })
-    .evaluate((title) => {
-      const trace = title.closest("[data-slot=trace]");
-      return [...(trace?.querySelectorAll("[data-slot=trace-icon]") ?? [])].map(
-        (icon) => icon.querySelector("[data-slot=agent-indicator]") !== null
-      );
-    });
-  // One running step, one working mark.
-  expect(marks.filter(Boolean)).toHaveLength(1);
-});
+for (const [component, example] of [
+  ["trace", "steps"],
+  ["trace", "script"],
+  ["chain-of-thought", "script"],
+] as const) {
+  test(`one working mark in a trace, on its last running step: ${component}/${example}`, async ({
+    page,
+  }) => {
+    await openExample(page, component, example);
+    // The working mark is drawn as the Agent indicator's pixels; it is decoration, so count what shows.
+    const shown = await page.evaluate(
+      () =>
+        [...document.querySelectorAll("[data-slot=agent-indicator]")].filter(
+          (mark) => mark.getClientRects().length > 0
+        ).length
+    );
+    expect(shown).toBe(1);
+  });
+}
