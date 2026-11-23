@@ -1,5 +1,5 @@
 /**
- * Commits on main name only the people who wrote them: no AI co-author
+ * Commits on main name only the people who wrote them: no AI or bot co-author
  * trailers, "Generated with" footers or links to an agent's session. The
  * commit-msg hook checks each commit; CI checks the PR description and every
  * commit of the PR and its title, because the squash commit on main is the
@@ -15,13 +15,22 @@ import { readFileSync } from "node:fs";
 
 /** AI coding tools and their makers, as they appear in names, emails and bot logins. */
 const aiTools =
-  "claude|anthropic|openai|chatgpt|codex|copilot|cursor|gemini|google-labs-jules|aider|devin|windsurf|codeium|opencode|ampcode|warp\\.dev|warp-agent|openhands|all-hands|charm\\.land|amazon-q-developer|factory-droid";
+  "claude|anthropic|openai|chatgpt|codex|copilot|cursor|capy|gemini|google-labs-jules|aider|devin|windsurf|codeium|opencode|ampcode|warp\\.dev|warp-agent|openhands|all-hands|charm\\.land|amazon-q-developer|factory-droid";
 
 /** Co-authors that are AI tools, by name, email or bot login. */
 const aiCoAuthor = new RegExp(
   `^\\s*co-authored-by:.*\\b(?:${aiTools})\\b`,
   "iu"
 );
+
+/**
+ * Co-authors that are bots, whatever their name: a GitHub App's login ends in "[bot]", and an agent
+ * that commits through one (capy-ai[bot]) is a co-author nobody listed above. The dependency bot is
+ * no agent: its own pull requests carry its name and pass.
+ */
+const botCoAuthor = /^\s*co-authored-by:.*\[bot\]/iu;
+const dependencyBot =
+  /^\s*co-authored-by:\s*(?:renovate|dependabot)\[bot\]\s/iu;
 
 /**
  * Footers and trailers agents add to what they write. A footer opens its
@@ -47,7 +56,9 @@ export const findAiAttribution = (
     .map((line, index) => ({ line: index + 1, text: line.trim() }))
     .filter(
       ({ text: line }) =>
-        aiCoAuthor.test(line) || aiFooters.some((footer) => footer.test(line))
+        aiCoAuthor.test(line) ||
+        (botCoAuthor.test(line) && !dependencyBot.test(line)) ||
+        aiFooters.some((footer) => footer.test(line))
     );
 
 if (import.meta.main) {
