@@ -439,6 +439,15 @@ const watchFades = async (page: Page): Promise<Watched> =>
         };
         let props: unknown = null;
         let anchors: { node: Element; top: number; left: number }[] = [];
+        // Where a part stands in the answer (the page round it may centre it as it grows).
+        const placeOf = (node: Element) => {
+          const box = node.getBoundingClientRect();
+          const root = answer?.getBoundingClientRect();
+          return {
+            top: box.top - (root?.top ?? 0),
+            left: box.left - (root?.left ?? 0),
+          };
+        };
         let quiet = 0;
         // When each word's fade began: its start, less any delay it was given to carry on.
         const fades = (spans: HTMLElement[]) => {
@@ -470,8 +479,7 @@ const watchFades = async (page: Page): Promise<Watched> =>
                 if (node === null || node === undefined) {
                   return [];
                 }
-                const box = node.getBoundingClientRect();
-                return [{ node, top: box.top, left: box.left }];
+                return [{ node, ...placeOf(node) }];
               }
             );
           }
@@ -491,11 +499,11 @@ const watchFades = async (page: Page): Promise<Watched> =>
             finished(paragraph);
           }
           for (const { node, top, left } of anchors) {
-            const box = node.getBoundingClientRect();
+            const now = placeOf(node);
             seen.moved = Math.max(
               seen.moved,
-              Math.abs(box.top - top),
-              Math.abs(box.left - left)
+              Math.abs(now.top - top),
+              Math.abs(now.left - left)
             );
           }
           const busy = answer?.getAttribute("aria-busy") === "true";
@@ -540,7 +548,9 @@ test("with motion, the words come a few at a time, each fades in once, in order,
   // Spans only while a block is written: few at once, none once it is done.
   expect(watched.most).toBeLessThan(120);
   expect(watched.left).toBe(0);
-  await expect(page.getByText("expect the finance desk's queue")).toBeVisible();
+  await expect(
+    page.getByRole("blockquote").getByText("expect the finance desk's queue")
+  ).toBeVisible();
 });
 
 test("with motion, nothing already shown moves, and a finished block is not drawn again", async ({
@@ -551,7 +561,7 @@ test("with motion, nothing already shown moves, and a finished block is not draw
   await page.getByRole("button", { name: "250 tokens/s" }).click();
   const watched = await watchFades(page);
   expect(watched.moved).toBeLessThan(0.5);
-  // Once with its fading words, once more as plain text when they have faded: never per word.
+  // Once more as plain text when its last words have faded: never per word or per frame.
   expect(watched.redrawn).toBeLessThanOrEqual(2);
 });
 
@@ -604,8 +614,9 @@ test("with motion, a screen reader hears each finished block once, never a word 
   await expect(answer.getByRole("paragraph").first()).toContainText(
     "Support closed 58 requests and Sales"
   );
+  // The spans add nothing to the tree: words run on as text, apart only where a mark is.
   expect(await answer.getByRole("paragraph").first().ariaSnapshot()).toMatch(
-    /^- paragraph: Support closed 58 requests and Sales/u
+    /^- paragraph:\n {2}- text: Support closed\n {2}- strong: 58 requests\n {2}- text: and Sales closed 33,/u
   );
   await expect(answer).not.toHaveAttribute("aria-busy");
   // Each block once, whole: a heading, a paragraph, a list, a table's name, a quote.
@@ -617,13 +628,13 @@ test("with motion, a screen reader hears each finished block once, never a word 
     .toContain("Next week the rule covers refunds too");
   // From the run started here: the one that played as the page opened may have begun to speak.
   const all = await said();
-  const heard = all.slice(all.lastIndexOf("What changed this week"));
+  const from = all.findLastIndex((words) =>
+    words.startsWith("What changed this week")
+  );
+  const heard = all.slice(from);
+  expect(from).toBeGreaterThanOrEqual(0);
   expect(heard.length).toBeLessThan(12);
-  expect(
-    heard.some((words) =>
-      words.includes(
-        "Support closed 58 requests and Sales closed 33, so the queue is the shortest it has been since March."
-      )
-    )
-  ).toBe(true);
+  expect(heard.join(" ")).toContain(
+    "Support closed 58 requests and Sales closed 33, so the queue is the shortest it has been since March."
+  );
 });

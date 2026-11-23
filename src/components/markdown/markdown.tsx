@@ -1432,10 +1432,11 @@ const GroupedBlock = ({
   );
 };
 
-/** A finished block as it was drawn, and the source it was drawn from. */
+/** A finished block as it was drawn, the source it was drawn from, and whether as plain text. */
 interface Drawn {
   from: number;
   text: string;
+  plain: boolean;
   element: ReactNode;
 }
 
@@ -1459,15 +1460,15 @@ const placeOf = ({ node, base }: Placed) => {
 const noSubscribe = () => nothing;
 
 /**
- * The answer's blocks, each drawn once it is finished and settled, and then never again: a block
- * drawn as before (its source, and what it is drawn with, the same) is the same element, which
- * React passes over. So as an answer is written, only the block being written (and one whose words
- * are still fading in) is drawn again, however long the answer grows.
+ * The answer's blocks, each drawn once it is finished (with its words still fading in), once more
+ * as plain text when they have (`settled`), and then never again: a block drawn as before (its
+ * source, and what it is drawn with, the same) is the same element, which React passes over. So as
+ * an answer is written, only the block being written is drawn again, however long the answer grows.
  */
 const useDrawnBlocks = (
   groups: Grouped[],
   shown: string,
-  settled: number,
+  { finished, settled }: { finished: number; settled: number },
   reveal: Reveal | null,
   context: Context,
   settings: readonly unknown[]
@@ -1478,14 +1479,17 @@ const useDrawnBlocks = (
     settings.every((value, index) => Object.is(value, drawn.settings[index]));
   const drawing = groups.map(
     (grouped, index): { element: ReactNode; kept: Drawn | undefined } => {
-      // Finished, and its words faded in: drawn as plain text, once.
-      const done = index < settled;
+      // Its words have faded in: plain text.
+      const plain = reveal === null || index < settled;
       const place =
-        done && grouped.type === "block" ? placeOf(grouped.placed) : null;
+        index < finished && grouped.type === "block"
+          ? placeOf(grouped.placed)
+          : null;
       const before = same ? drawn.blocks[index] : undefined;
       if (
         place !== null &&
         before !== undefined &&
+        before.plain === plain &&
         before.from === place.from &&
         before.text.length === place.to - place.from &&
         shown.startsWith(before.text, place.from)
@@ -1496,7 +1500,7 @@ const useDrawnBlocks = (
         <GroupedBlock
           key={index}
           grouped={grouped}
-          context={reveal === null || done ? context : { ...context, reveal }}
+          context={plain ? context : { ...context, reveal }}
         />
       );
       return {
@@ -1507,6 +1511,7 @@ const useDrawnBlocks = (
             : {
                 from: place.from,
                 text: shown.slice(place.from, place.to),
+                plain,
                 element,
               },
       };
@@ -1585,10 +1590,8 @@ export const Markdown = ({
   const tableNames = nameTables(blocks);
   useSaidBlocks(blocks, streaming, live === "polite", tableNames, words.table);
   const groups = groupSections(placed);
-  const settled = useSettled(
-    streaming ? Math.max(groups.length - 1, 0) : groups.length,
-    streaming
-  );
+  const finished = streaming ? Math.max(groups.length - 1, 0) : groups.length;
+  const settled = useSettled(finished, streaming);
   const context: Context = {
     definitions,
     renderLink,
@@ -1619,17 +1622,24 @@ export const Markdown = ({
     Inline,
     Block,
   };
-  const drawn = useDrawnBlocks(groups, shown, settled, reveal, context, [
-    renderLink,
-    provided,
-    answerSize,
-    headingLevel,
-    softBreaks,
-    codeMaxLines,
-    words,
-    prefix,
-    written,
-  ]);
+  const drawn = useDrawnBlocks(
+    groups,
+    shown,
+    { finished, settled },
+    reveal,
+    context,
+    [
+      renderLink,
+      provided,
+      answerSize,
+      headingLevel,
+      softBreaks,
+      codeMaxLines,
+      words,
+      prefix,
+      written,
+    ]
+  );
   return (
     <div
       data-slot="markdown"
