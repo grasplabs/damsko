@@ -63,7 +63,10 @@ export interface SuggestionProps {
    * @default false
    */
   disabled?: boolean;
-  /** Where it sits. */
+  /**
+   * Where it sits and how much room it takes. It lands on the suggestion's outermost element, the
+   * box that holds it to the row's width; the button fills that box.
+   */
   style?: LayoutStyle;
 }
 
@@ -90,8 +93,10 @@ const styles = stylex.create({
   },
   // A suggestion's room in the row: as wide as its words, so the row scrolls before one shrinks, and
   // never wider than the row, so one longer than all of it is cut (Button's `truncate`).
+  // One column the button fills, so a width given by `style` is the button's too.
   suggestion: {
-    display: "inline-flex",
+    display: "inline-grid",
+    gridTemplateColumns: "minmax(0, 1fr)",
     flexShrink: 0,
     minWidth: 0,
     maxWidth: "100%",

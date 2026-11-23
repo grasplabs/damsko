@@ -12,8 +12,10 @@
 // closes it or goes up to its parent (mirrored right to left), Home and End jump, a letter finds the
 // next item that starts with it, Enter runs, Space chooses, `*` opens every branch beside the
 // focused one. A screen reader hears each item's level, whether it is open, and whether it is chosen.
-// A row's buttons take no part in those keys: they show on the row that holds focus or the pointer,
-// one Tab from it, and Tab never walks every row's.
+// A row's buttons take no part in those keys, nor in the row's name. They are drawn only for the row
+// under the pointer and the row that holds focus (on a touch screen, the rows in view), so a tree of
+// thousands of rows mounts no buttons; and only the focused row's are in the Tab order, one Tab
+// from it.
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
@@ -26,8 +28,23 @@ import {
   TreeItemLabel as LabelPrimitive,
 } from "@ui-sdk/react/tree";
 import type { TreeItemData } from "@ui-sdk/react/tree";
-import { useRef, useState } from "react";
-import type { KeyboardEvent, MouseEvent, ReactElement, ReactNode } from "react";
+import {
+  createContext,
+  use,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
+import type {
+  FocusEvent,
+  KeyboardEvent,
+  MouseEvent,
+  PointerEvent,
+  ReactElement,
+  ReactNode,
+} from "react";
 
 import { useI18n } from "../lib/i18n";
 import {
@@ -79,9 +96,10 @@ export interface TreeNode {
   badge?: ReactNode;
   /**
    * The row's buttons, at its end: small icon Buttons, each with its own name ("Rename notes.md").
-   * They show while the row is pointed at or holds focus (always on a touch screen), keeping their
-   * room so the row never moves; Tab from the row goes to them. A press or a key on one is the
-   * button's: the row is not chosen, opened or moved from.
+   * They are drawn while the row is pointed at or holds focus (on a touch screen, while it is in
+   * view), after its words; Tab from the focused row goes to them, and no other row's are in the Tab
+   * order. A press or a key on one is the button's: the row is not chosen, opened or moved from. They
+   * are no part of the row's name.
    */
   actions?: ReactNode;
   /**
@@ -337,33 +355,12 @@ const styles = stylex.create({
     letterSpacing: "normal",
     fontVariantNumeric: "tabular-nums",
   },
-  // The row's buttons, after its words and its badge; they keep their room, shown or not. They are
-  // seen while the row is pointed at, its item holds focus, focus is on one of them or one's menu is
-  // open. Only the buttons of the item with the tree's Tab stop are in the Tab order (the others are
-  // hidden, not only clear): Tab from a row goes to its own buttons and then out of the tree. That
-  // cannot hang on focus itself, which is nowhere for a moment as it moves. A touch screen has no
-  // pointer to show them: always there.
+  // The row's buttons, after its words and its badge.
   actions: {
     display: "inline-flex",
     alignItems: "center",
     gap: space["1"],
     flexShrink: 0,
-    visibility: {
-      default: "hidden",
-      ':is([data-slot=tree-view-item][tabindex="0"] > * > *)': "visible",
-      ":is([data-slot=tree-view-item] > :hover > *)": "visible",
-      ":focus-within": "visible",
-      ":has([aria-expanded=true])": "visible",
-      [COARSE]: "visible",
-    },
-    opacity: {
-      default: 0,
-      ":is([data-slot=tree-view-item]:focus > * > *)": 1,
-      ":is([data-slot=tree-view-item] > :hover > *)": 1,
-      ":focus-within": 1,
-      ":has([aria-expanded=true])": 1,
-      [COARSE]: 1,
-    },
   },
   // With no badge before them the buttons take the row's end themselves.
   actionsAtEnd: { marginInlineStart: "auto" },
@@ -571,9 +568,182 @@ const isLinked = (node: TreeNode) =>
 const filled = (slot: ReactNode) =>
   slot !== undefined && slot !== null && slot !== false;
 
-/** A press or a key on a row's button is the button's: the row is not chosen, opened or moved from. */
+// ---- A row's buttons -------------------------------------------------------------------------------
+
+/**
+ * Which rows draw their buttons: the one under a pointer, the one that holds focus and, on a touch
+ * screen, the ones in view. Each row asks for itself, so a change draws two rows anew, not the tree.
+ */
+const createShown = () => {
+  let hovered: string | null = null;
+  let focused: string | null = null;
+  let seen: ReadonlySet<string> = new Set();
+  const asked = new Set<() => void>();
+  const tell = () => {
+    for (const ask of asked) {
+      ask();
+    }
+  };
+  return {
+    subscribe: (ask: () => void) => {
+      asked.add(ask);
+      return () => {
+        asked.delete(ask);
+      };
+    },
+    shows: (value: string) =>
+      value === hovered || value === focused || seen.has(value),
+    hover: (value: string | null) => {
+      if (value !== hovered) {
+        hovered = value;
+        tell();
+      }
+    },
+    focus: (value: string | null) => {
+      if (value !== focused) {
+        focused = value;
+        tell();
+      }
+    },
+    see: (values: ReadonlySet<string>) => {
+      seen = values;
+      tell();
+    },
+  };
+};
+
+const ShownContext = createContext(createShown());
+
+/** The item an event came from: its element and its value. */
+const itemOf = (target: EventTarget | null) => {
+  const item =
+    target instanceof Element ? target.closest("[role=treeitem]") : null;
+  return item instanceof HTMLElement
+    ? { item, value: item.dataset.value ?? null }
+    : { item: null, value: null };
+};
+
+/** What takes focus among a row's buttons. */
+const STOPS =
+  "button:not(:disabled), a[href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]";
+
+const stopsOf = (actions: Element | null | undefined) => [
+  ...(actions?.querySelectorAll<HTMLElement>(STOPS) ?? []),
+];
+
+/** An item's own buttons, not those of the items nested in it. */
+const actionsOf = (item: Element | null) =>
+  item?.querySelector(":scope > * > [data-tree-view-actions]");
+
+/**
+ * Tab from the focused row goes to its first button: its buttons hold no Tab stop of their own, so
+ * no other row's are walked on the way out of the tree.
+ */
+const tabToActions = (event: KeyboardEvent<HTMLElement>) => {
+  const { item } = itemOf(event.target);
+  if (event.key !== "Tab" || event.shiftKey || event.target !== item) {
+    return;
+  }
+  const [first] = stopsOf(actionsOf(item));
+  if (first) {
+    event.preventDefault();
+    first.focus();
+  }
+};
+
+/**
+ * A press or a key on a row's button is the button's: the row is not chosen, opened or moved from.
+ * Tab goes on to the row's next button; from the last, out of the tree.
+ */
 const keep = (event: MouseEvent<HTMLElement> | KeyboardEvent<HTMLElement>) => {
   event.stopPropagation();
+  if (!("key" in event) || event.key !== "Tab" || event.shiftKey) {
+    return;
+  }
+  const stops = stopsOf(event.currentTarget);
+  const at =
+    event.target instanceof HTMLElement ? stops.indexOf(event.target) : -1;
+  const next = at === -1 ? undefined : stops[at + 1];
+  if (next) {
+    event.preventDefault();
+    next.focus();
+  }
+};
+
+/**
+ * Where focus goes when the row whose button held it is taken out: the row after it, else the one
+ * before, which is its parent when it was the only one.
+ */
+const rowBeside = (item: Element) => {
+  const rows = [
+    ...(item
+      .closest("[role=tree]")
+      ?.querySelectorAll<HTMLElement>("[role=treeitem]") ?? []),
+  ];
+  const at = rows.findIndex((row) => row.isSameNode(item));
+  return rows.slice(at + 1).find((row) => !item.contains(row)) ?? rows[at - 1];
+};
+
+/**
+ * A row's buttons, drawn while the tree says so (createShown). None is a Tab stop: Tab reaches them
+ * from their own row (tabToActions, keep). Pressing one that takes its row out of the tree leaves
+ * focus on the row beside it.
+ */
+const RowActions = ({
+  value,
+  atEnd,
+  children,
+}: {
+  value: string;
+  atEnd: boolean;
+  children: ReactNode;
+}) => {
+  const shown = use(ShownContext);
+  const drawn = useSyncExternalStore(
+    shown.subscribe,
+    () => shown.shows(value),
+    () => false
+  );
+  const span = useRef<HTMLSpanElement>(null);
+  // After every draw, since the buttons are the caller's and may change.
+  useLayoutEffect(() => {
+    for (const stop of stopsOf(span.current)) {
+      stop.tabIndex = -1;
+    }
+  });
+  if (!drawn) {
+    return null;
+  }
+  return (
+    // oxlint-disable-next-line jsx-a11y/no-static-element-interactions -- it only keeps its buttons' presses and keys from the row; the buttons are the controls
+    <span
+      ref={(element) => {
+        span.current = element;
+        return () => {
+          span.current = null;
+          const item = element?.closest("[role=treeitem]");
+          if (!item || element?.contains(document.activeElement) !== true) {
+            return;
+          }
+          // Focus was on one of these buttons as they went. If the row went with them, the row
+          // beside it takes focus; if it stayed, the row itself.
+          const beside = rowBeside(item);
+          queueMicrotask(() => {
+            const to = item.isConnected ? item : beside;
+            if (to instanceof HTMLElement && to.isConnected) {
+              to.focus();
+            }
+          });
+        };
+      }}
+      data-tree-view-actions=""
+      onClick={keep}
+      onKeyDown={keep}
+      {...stylex.props(styles.actions, atEnd && styles.actionsAtEnd)}
+    >
+      {children}
+    </span>
+  );
 };
 
 /**
@@ -585,10 +755,13 @@ const RowInside = ({
   node,
   current,
   query,
+  nameId,
 }: {
   node: TreeNode;
   current: boolean;
   query: string;
+  /** The id of the row's words, which name its item; its badge takes `${nameId}-badge`. */
+  nameId: string;
 }) => {
   const inside = (
     <>
@@ -597,11 +770,13 @@ const RowInside = ({
           <Icon icon={node.icon} />
         </span>
       )}
-      <span {...stylex.props(styles.words)}>
+      <span id={nameId} {...stylex.props(styles.words)}>
         <Marked words={node.label} query={query} />
       </span>
       {filled(node.badge) && (
-        <span {...stylex.props(styles.badge)}>{node.badge}</span>
+        <span id={`${nameId}-badge`} {...stylex.props(styles.badge)}>
+          {node.badge}
+        </span>
       )}
     </>
   );
@@ -622,17 +797,9 @@ const RowInside = ({
           )
         : inside}
       {filled(node.actions) && (
-        // oxlint-disable-next-line jsx-a11y/no-static-element-interactions -- it only keeps its buttons' presses and keys from the row; the buttons are the controls
-        <span
-          onClick={keep}
-          onKeyDown={keep}
-          {...stylex.props(
-            styles.actions,
-            !filled(node.badge) && styles.actionsAtEnd
-          )}
-        >
+        <RowActions value={node.value} atEnd={!filled(node.badge)}>
           {node.actions}
-        </span>
+        </RowActions>
       )}
     </>
   );
@@ -684,12 +851,22 @@ const Chevron = (
   </span>
 );
 
-const itemElement = (props: Record<string, unknown>) =>
-  renderElement("div", { ...props, "data-slot": "tree-view-item" });
-
-/** An item that cannot be chosen says nothing of being chosen. */
-const fixedItemElement = (props: Record<string, unknown>) =>
-  itemElement({ ...props, "aria-selected": undefined });
+/**
+ * An item's element. It is named by its row's words and its badge, never by its row's buttons; one
+ * that cannot be chosen says nothing of being chosen.
+ */
+const itemElement = (props: Record<string, unknown>, node: TreeNode) => {
+  const nameId = String(props["aria-labelledby"]);
+  return renderElement("div", {
+    ...props,
+    "data-slot": "tree-view-item",
+    "data-value": node.value,
+    "aria-labelledby": filled(node.badge)
+      ? `${nameId} ${nameId}-badge`
+      : nameId,
+    ...(node.selectable === false ? { "aria-selected": undefined } : {}),
+  });
+};
 
 interface ItemsProps {
   nodes: TreeNode[];
@@ -712,22 +889,30 @@ const Items = ({ nodes, current, query, guides, nested = false }: ItemsProps) =>
         branch={branch || undefined}
         disabled={node.disabled}
         label={node.label}
-        render={node.selectable === false ? fixedItemElement : itemElement}
+        render={(props: Record<string, unknown>) => itemElement(props, node)}
         {...stylex.props(styles.item, guided && styles.guided)}
       >
         {guided ? <Guide last={index === nodes.length - 1} /> : null}
-        <LabelPrimitive {...stylex.props(styles.row, styles.focusRow)}>
-          {branch ? (
-            <IndicatorPrimitive render={Chevron} />
-          ) : (
-            <span aria-hidden="true" {...stylex.props(styles.spacer)} />
+        <LabelPrimitive
+          // The row takes the label's states for its look; the label's id goes to the row's words,
+          // so the row's buttons are no part of the item's name.
+          render={({ id, ...row }: Record<string, unknown>) => (
+            <div {...row} data-tree-view-row="">
+              {branch ? (
+                <IndicatorPrimitive render={Chevron} />
+              ) : (
+                <span aria-hidden="true" {...stylex.props(styles.spacer)} />
+              )}
+              <RowInside
+                node={node}
+                current={current === node.value}
+                query={query}
+                nameId={String(id)}
+              />
+            </div>
           )}
-          <RowInside
-            node={node}
-            current={current === node.value}
-            query={query}
-          />
-        </LabelPrimitive>
+          {...stylex.props(styles.row, styles.focusRow)}
+        />
         {branch && (
           <GroupPrimitive {...stylex.props(styles.group)}>
             <Items
@@ -842,6 +1027,45 @@ const useFilterFolds = (
   return { now, change };
 };
 
+/**
+ * On a touch screen no pointer rests on a row, so the rows in view draw their buttons: one observer
+ * for the tree, told of rows as they come and go.
+ */
+const useRowsInView = (
+  tree: HTMLElement | null,
+  shown: ReturnType<typeof createShown>
+) => {
+  useEffect(() => {
+    const seen = new Set<string>();
+    const sight = new IntersectionObserver((entries) => {
+      for (const { target, isIntersecting } of entries) {
+        const { value } = itemOf(target);
+        if (value !== null && isIntersecting && target.isConnected) {
+          seen.add(value);
+        } else if (value !== null) {
+          seen.delete(value);
+        }
+      }
+      shown.see(new Set(seen));
+    });
+    // Watching a row again is nothing; a row that left is forgotten when it is next reported.
+    const watch = () => {
+      for (const row of tree?.querySelectorAll("[data-tree-view-row]") ?? []) {
+        sight.observe(row);
+      }
+    };
+    const rows = new MutationObserver(watch);
+    if (tree !== null && window.matchMedia("(pointer: coarse)").matches) {
+      watch();
+      rows.observe(tree, { childList: true, subtree: true });
+    }
+    return () => {
+      sight.disconnect();
+      rows.disconnect();
+    };
+  }, [tree, shown]);
+};
+
 const treeElement = (props: Record<string, unknown>) =>
   renderElement("div", { ...props, "data-slot": "tree-view" });
 
@@ -925,8 +1149,14 @@ export const TreeView = ({
             onExpandedChange(next);
           }),
       };
+  // Which rows draw their buttons (createShown), from where the pointer and focus are.
+  // oxlint-disable-next-line react/hook-use-state -- a store made once, never replaced
+  const [shownRows] = useState(createShown);
+  const [treeNode, setTreeNode] = useState<HTMLElement | null>(null);
+  useRowsInView(treeNode, shownRows);
   const tree = (
     <TreePrimitive
+      ref={setTreeNode}
       aria-label={label}
       items={data}
       mode={selectionMode}
@@ -944,16 +1174,38 @@ export const TreeView = ({
       current={current}
       expandOnPress={expandOnPress}
       disabled={disabled}
-      onKeyDown={followLink}
+      onKeyDown={(event: KeyboardEvent<HTMLElement>) => {
+        followLink(event);
+        tabToActions(event);
+      }}
+      onPointerOver={(event: PointerEvent<HTMLElement>) => {
+        // A finger rests on nothing: the rows in view have theirs (useRowsInView).
+        if (event.pointerType !== "touch") {
+          shownRows.hover(itemOf(event.target).value);
+        }
+      }}
+      onPointerLeave={() => {
+        shownRows.hover(null);
+      }}
+      onFocus={(event: FocusEvent<HTMLElement>) => {
+        shownRows.focus(itemOf(event.target).value);
+      }}
+      onBlur={(event: FocusEvent<HTMLElement>) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) {
+          shownRows.focus(null);
+        }
+      }}
       render={treeElement}
       {...stylex.props(styles.tree)}
     >
-      <Items
-        nodes={shown}
-        current={current}
-        query={query}
-        guides={showIndentGuides}
-      />
+      <ShownContext value={shownRows}>
+        <Items
+          nodes={shown}
+          current={current}
+          query={query}
+          guides={showIndentGuides}
+        />
+      </ShownContext>
     </TreePrimitive>
   );
   if (!filterable) {

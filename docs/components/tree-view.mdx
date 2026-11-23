@@ -53,7 +53,7 @@ A node's `href`, or `render` for a router's own link, makes its row a link (`cur
 
 ## Buttons on a row, and folders that only open
 
-A node's `actions` are its row's buttons: small icon Buttons, each named for its row ("Rename notes.md"). They show while the row is pointed at or holds focus, and always on a touch screen, keeping their room so the row never moves. Tab from a row goes to its buttons and then out of the tree, never through every row's; a press or a key on a button is the button's, so the row is not chosen or opened. `selectable: false` makes a node one that opens and runs but is never chosen, as the folder here: the choice is always a file.
+A node's `actions` are its row's buttons: small icon Buttons, each named for its row ("Rename notes.md"). They are drawn only for the row under the pointer and the row that holds focus, and on a touch screen for the rows in view, so a tree of thousands of rows mounts none of them; a long name may wrap as they come. Only the focused row's buttons are in the Tab order: Tab from a row goes to its buttons and then out of the tree, never through another row's. A press or a key on a button is the button's, so the row is not chosen or opened, and the buttons are no part of the row's name. When a button takes its own row out, focus goes to the row after it, else the one before. `selectable: false` makes a node one that opens and runs but is never chosen, as the folder here: the choice is always a file.
 
 <Stage path="tree-view/actions" live label="Buttons on a row" />
 
@@ -217,13 +217,13 @@ One row in each state; hover and keyboard focus are forced from the tree's own C
       group: "Pointer",
       key: "A row's buttons",
       value:
-        "`actions` show on the row under the pointer or with focus, always on a touch screen; a press on one leaves the row as it was.",
+        "`actions` are drawn for the row under the pointer and the focused row, on a touch screen for the rows in view; a press on one leaves the row as it was.",
     },
     {
       group: "Keyboard",
       key: "A row's buttons",
       value:
-        "Tab from a row goes to its buttons, then out of the tree; the tree's keys do nothing on a button.",
+        "Tab from a row goes to its own buttons, then out of the tree; no other row's are Tab stops, and the tree's keys do nothing on a button. A button that removes its row leaves focus on the row after it, else the one before.",
     },
     {
       group: "Choosing",
@@ -251,6 +251,10 @@ One row in each state; hover and keyboard focus are forced from the tree's own C
       key: "Role",
       value: "`tree` of `treeitem`s, named by `aria-label`",
       note: "WAI-ARIA's tree view",
+    },
+    {
+      key: "Name",
+      value: "An item's words and its badge; never its row's buttons",
     },
     { key: "Levels", value: "`aria-level`, and `aria-expanded` on a branch" },
     {

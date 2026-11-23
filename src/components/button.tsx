@@ -958,10 +958,6 @@ const spinning = (children: ReactNode) => {
       );
 };
 
-/**
- * The words, and over them the state's mark; with words for a state, every state stacked in one
- * cell. Mounted only while it shows, a mark never turns unseen.
- */
 /** The content with each run of words in a box that cuts them with an ellipsis (`truncate`). */
 const cutWords = (children: ReactNode): ReactNode[] =>
   listOf(children).map((child, index): ReactNode =>
@@ -975,6 +971,10 @@ const cutWords = (children: ReactNode): ReactNode[] =>
     )
   );
 
+/**
+ * The words, and over them the state's mark; with words for a state, every state stacked in one
+ * cell. Mounted only while it shows, a mark never turns unseen.
+ */
 const Status = ({
   status,
   labels,

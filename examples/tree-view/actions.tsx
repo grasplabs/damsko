@@ -26,41 +26,44 @@ const layout = stylex.create({
 });
 
 // Each row has its buttons at its end (`actions`): there while the row is pointed at or holds focus,
-// one Tab from the row, and a press or a key on one leaves the row as it was. The folder only opens
-// (`selectable: false`), so the chosen item is always a file.
+// one Tab from the row, and a press or a key on one leaves the row as it was. Delete takes the file
+// out: focus goes to the row after it. The folder only opens (`selectable: false`), so the chosen
+// item is always a file.
 export default function TreeActions() {
   const [said, setSaid] = useState("Nothing yet");
-  const buttons = (name: string, removable = true) => (
-    <>
-      <Button
-        variant="ghost"
-        size="icon-xs"
-        aria-label={`Rename ${name}`}
-        onClick={() => {
-          setSaid(`Renaming ${name}`);
-        }}
-      >
-        <Icon icon={PencilIcon} />
-      </Button>
-      {removable && (
+  const [files, setFiles] = useState(["notes.md", "budget.xlsx", "plan.md"]);
+  const rename = (name: string) => (
+    <Button
+      variant="ghost"
+      size="icon-xs"
+      aria-label={`Rename ${name}`}
+      onClick={() => {
+        setSaid(`Renaming ${name}`);
+      }}
+    >
+      <Icon icon={PencilIcon} />
+    </Button>
+  );
+  const file = (name: string): TreeNode => ({
+    value: `reports/${name}`,
+    label: name,
+    icon: FileIcon,
+    actions: (
+      <>
+        {rename(name)}
         <Button
           variant="ghost"
           size="icon-xs"
           aria-label={`Delete ${name}`}
           onClick={() => {
+            setFiles((all) => all.filter((each) => each !== name));
             setSaid(`Deleted ${name}`);
           }}
         >
           <Icon icon={TrashIcon} />
         </Button>
-      )}
-    </>
-  );
-  const file = (value: string, label: string): TreeNode => ({
-    value,
-    label,
-    icon: FileIcon,
-    actions: buttons(label),
+      </>
+    ),
   });
   const items: TreeNode[] = [
     {
@@ -68,13 +71,11 @@ export default function TreeActions() {
       label: "reports",
       icon: FolderIcon,
       selectable: false,
-      actions: buttons("reports", false),
-      children: [
-        file("reports/notes.md", "notes.md"),
-        file("reports/budget.xlsx", "budget.xlsx"),
-      ],
+      badge: String(files.length),
+      actions: rename("reports"),
+      children: files.map(file),
     },
-    file("readme.md", "readme.md"),
+    { value: "readme.md", label: "readme.md", icon: FileIcon },
   ];
   return (
     <div {...stylex.props(layout.panel)}>
@@ -90,10 +91,11 @@ export default function TreeActions() {
         size="sm"
         style={layout.after}
         onClick={() => {
+          setFiles(["notes.md", "budget.xlsx", "plan.md"]);
           setSaid("Nothing yet");
         }}
       >
-        Clear
+        Put back
       </Button>
     </div>
   );
