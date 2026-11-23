@@ -209,6 +209,17 @@ test("a cover can be the system's faint dither, and a section's action is muted 
       return cover === null ? "" : getComputedStyle(cover).maskImage;
     });
   expect(dither).not.toBe("none");
+  // Under a cover the sections stand straight in the panel: a row runs its width.
+  const panel = await page
+    .getByRole("complementary", { name: "Report details" })
+    .boundingBox();
+  const row = await page
+    .getByText("Delivery lead", { exact: true })
+    .evaluate(
+      (name) =>
+        name.closest("[data-slot=item]")?.getBoundingClientRect().width ?? 0
+    );
+  expect(row).toBeCloseTo(panel?.width ?? 0, 0);
   await openExample(page, "side-panel", "basic");
   const add = page.getByRole("button", { name: "Add", exact: true });
   const [ink, muted] = await add.evaluate((button) => {
