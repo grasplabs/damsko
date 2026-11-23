@@ -299,7 +299,12 @@ export const isDevelopment = process.env.NODE_ENV !== "production";
  */
 export const warnUnnamed = (
   part: string,
-  control: HTMLInputElement | HTMLButtonElement | HTMLTextAreaElement | null
+  control:
+    | HTMLInputElement
+    | HTMLButtonElement
+    | HTMLTextAreaElement
+    | HTMLSelectElement
+    | null
 ) => {
   if (!(isDevelopment && control)) {
     return;
