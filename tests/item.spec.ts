@@ -227,3 +227,31 @@ for (const theme of ["light", "dark"] as const) {
     expect(accent).toBe(true);
   });
 }
+
+test("in a side panel's card an xs row's detail stays whole on one line, and its name gives way", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 240, height: 600 });
+  await openExample(page, "item", "tools");
+  const row = page
+    .getByRole("list", { name: "Tools" })
+    .getByRole("listitem")
+    .nth(0);
+  const detail = row.getByText("Read only", { exact: true });
+  await expect(detail).toBeVisible();
+  const whole = await detail.evaluate((element) => {
+    const range = document.createRange();
+    range.selectNodeContents(element);
+    const lines = new Set(
+      [...range.getClientRects()].map((rect) => Math.round(rect.top))
+    );
+    return lines.size === 1 && element.scrollWidth <= element.clientWidth;
+  });
+  expect(whole).toBe(true);
+  const name = row.getByText("Customer records", { exact: true });
+  await expect(name).toBeVisible();
+  const givesWay = await name.evaluate(
+    (element) => element.scrollWidth > element.clientWidth
+  );
+  expect(givesWay).toBe(true);
+});
