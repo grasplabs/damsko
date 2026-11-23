@@ -428,42 +428,46 @@ describe("a paragraph longer than any answer's", () => {
     SLOW_TEST
   );
 
-  test("a long one is its own characters, in its place in a list, a quote, a table, a heading and a note", () => {
-    const long = `words *not* \\* \`code\` [x](y) &amp; <!-- ${"word ".repeat(1700)}end`;
-    const cases = [
-      [
-        `- one\n- ${long}\n- three`,
-        "list(listItem(paragraph(text)),listItem(paragraph(text)),listItem(paragraph(text)))",
-      ],
-      [`> ${long}\n> ${long}\n\nafter`, "root"],
-      [`| a | b |\n| - | - |\n| ${long} | x |\n| c | d |`, "root"],
-      [`# ${long}`, "heading(text)"],
-      [`x[^1]\n\n[^1]: ${long}`, "root"],
-    ] as const;
-    expect(
-      shapeOf(parseMarkdown(cases[0][0]).children[0] ?? { type: "none" })
-    ).toBe(cases[0][1]);
-    expect(
-      parseMarkdown(cases[1][0]).children.map((node) => shapeOf(node))
-    ).toStrictEqual(["blockquote(paragraph(text))", "paragraph(text)"]);
-    expect(
-      shapeOf(parseMarkdown(cases[2][0]).children[0] ?? { type: "none" })
-    ).toBe(
-      "table(tableRow(tableCell(text),tableCell(text)),tableRow(tableCell(text),tableCell(text)),tableRow(tableCell(text),tableCell(text)))"
-    );
-    expect(
-      shapeOf(parseMarkdown(cases[3][0]).children[0] ?? { type: "none" })
-    ).toBe(cases[3][1]);
-    expect(
-      parseMarkdown(cases[4][0]).children.map((node) => shapeOf(node))
-    ).toStrictEqual([
-      "paragraph(text,footnoteReference)",
-      "footnoteDefinition(paragraph(text))",
-    ]);
-    for (const [source] of cases) {
-      expect(wordsOf(parseMarkdown(source))).toContain(long);
-    }
-  });
+  test(
+    "a long one is its own characters, in its place in a list, a quote, a table, a heading and a note",
+    () => {
+      const long = `words *not* \\* \`code\` [x](y) &amp; <!-- ${"word ".repeat(1700)}end`;
+      const cases = [
+        [
+          `- one\n- ${long}\n- three`,
+          "list(listItem(paragraph(text)),listItem(paragraph(text)),listItem(paragraph(text)))",
+        ],
+        [`> ${long}\n> ${long}\n\nafter`, "root"],
+        [`| a | b |\n| - | - |\n| ${long} | x |\n| c | d |`, "root"],
+        [`# ${long}`, "heading(text)"],
+        [`x[^1]\n\n[^1]: ${long}`, "root"],
+      ] as const;
+      expect(
+        shapeOf(parseMarkdown(cases[0][0]).children[0] ?? { type: "none" })
+      ).toBe(cases[0][1]);
+      expect(
+        parseMarkdown(cases[1][0]).children.map((node) => shapeOf(node))
+      ).toStrictEqual(["blockquote(paragraph(text))", "paragraph(text)"]);
+      expect(
+        shapeOf(parseMarkdown(cases[2][0]).children[0] ?? { type: "none" })
+      ).toBe(
+        "table(tableRow(tableCell(text),tableCell(text)),tableRow(tableCell(text),tableCell(text)),tableRow(tableCell(text),tableCell(text)))"
+      );
+      expect(
+        shapeOf(parseMarkdown(cases[3][0]).children[0] ?? { type: "none" })
+      ).toBe(cases[3][1]);
+      expect(
+        parseMarkdown(cases[4][0]).children.map((node) => shapeOf(node))
+      ).toStrictEqual([
+        "paragraph(text,footnoteReference)",
+        "footnoteDefinition(paragraph(text))",
+      ]);
+      for (const [source] of cases) {
+        expect(wordsOf(parseMarkdown(source))).toContain(long);
+      }
+    },
+    SLOW_TEST
+  );
 
   test("a short one beside it is still read for its marks", () => {
     const tree = parseMarkdown(
@@ -507,22 +511,26 @@ describe("a paragraph longer than any answer's", () => {
     SLOW_TEST
   );
 
-  test("a paragraph dense with marks is read for them while the budget lasts, and a paragraph of few marks after it too", () => {
-    // 2,000 marks: its square is two thirds of the budget.
-    const dense = "*a* ".repeat(1000).trim();
-    const short = "Some **bold** and [a link](https://example.com).";
-    const tree = parseMarkdown([dense, dense, short, dense].join("\n\n"));
-    expect(tree.children.map((node) => hasMarks(node))).toStrictEqual([
-      true,
-      false,
-      true,
-      false,
-    ]);
-    expect(shapeOf(tree.children[2] ?? { type: "none" })).toBe(
-      "paragraph(text,strong(text),text,link(text),text)"
-    );
-    expect(wordsOf(tree.children[1] ?? { type: "none" })).toBe(dense);
-  });
+  test(
+    "a paragraph dense with marks is read for them while the budget lasts, and a paragraph of few marks after it too",
+    () => {
+      // 2,000 marks: its square is two thirds of the budget.
+      const dense = "*a* ".repeat(1000).trim();
+      const short = "Some **bold** and [a link](https://example.com).";
+      const tree = parseMarkdown([dense, dense, short, dense].join("\n\n"));
+      expect(tree.children.map((node) => hasMarks(node))).toStrictEqual([
+        true,
+        false,
+        true,
+        false,
+      ]);
+      expect(shapeOf(tree.children[2] ?? { type: "none" })).toBe(
+        "paragraph(text,strong(text),text,link(text),text)"
+      );
+      expect(wordsOf(tree.children[1] ?? { type: "none" })).toBe(dense);
+    },
+    SLOW_TEST
+  );
 
   // Text made at random in every place a paragraph can stand, each past the bound: whatever its
   // characters (marks, escapes, tags, tabs, two-unit characters, the character that stands in for
@@ -743,24 +751,28 @@ describe("a long answer of ordinary blocks", () => {
     SLOW_TEST
   );
 
-  test("a link or a note defined in another piece of it is still one", () => {
-    const words = "Words.\n\n".repeat(200);
-    const source = [
-      "Start [the wiki][wiki], [a\\*b] and a note[^1].\n\n",
-      words,
-      "Later [the wiki][wiki], [wiki] and a note[^1], but [not defined].\n\n",
-      "> [quoted]: https://example.com/quoted\n\n",
-      words,
-      "End [quoted], [two lines] and [the wiki][wiki].\n\n",
-      "```\n[code]: https://example.com/not-defined\n```\n\n",
-      "And [code] is words.\n\n",
-      "[wiki]: https://example.com/wiki\n[a\\*b]: /starred\n",
-      "[two lines]:\n  https://example.com/two\n[^1]: The note.\n",
-    ].join("");
-    const tree = parseMarkdown(source);
-    expect(tree.children).toStrictEqual(wholeTree(source).children);
-    expect(tree.position).toStrictEqual(wholeTree(source).position);
-  });
+  test(
+    "a link or a note defined in another piece of it is still one",
+    () => {
+      const words = "Words.\n\n".repeat(200);
+      const source = [
+        "Start [the wiki][wiki], [a\\*b] and a note[^1].\n\n",
+        words,
+        "Later [the wiki][wiki], [wiki] and a note[^1], but [not defined].\n\n",
+        "> [quoted]: https://example.com/quoted\n\n",
+        words,
+        "End [quoted], [two lines] and [the wiki][wiki].\n\n",
+        "```\n[code]: https://example.com/not-defined\n```\n\n",
+        "And [code] is words.\n\n",
+        "[wiki]: https://example.com/wiki\n[a\\*b]: /starred\n",
+        "[two lines]:\n  https://example.com/two\n[^1]: The note.\n",
+      ].join("");
+      const tree = parseMarkdown(source);
+      expect(tree.children).toStrictEqual(wholeTree(source).children);
+      expect(tree.position).toStrictEqual(wholeTree(source).position);
+    },
+    SLOW_TEST
+  );
 });
 
 /** `unit` again and again from 0 up, `count` times. */
@@ -855,38 +867,46 @@ describe("an answer of more lines than any answer's", () => {
     SLOW_TEST
   );
 
-  test("a list of 5,000 items is a list as far as the budget goes, and plain lines after, every word kept", () => {
-    const source = `${counted((at) => `- item ${at} is **here**\n`)(5000)}\nAfter **it**.\n`;
-    const [list, plain, after] = parseMarkdown(source).children;
-    const items = list?.type === "list" ? list.children : [];
-    // The square of 2,828 is the last under 8,000,000.
-    expect(items).toHaveLength(2828);
-    expect(shapeOf(items.at(-1) ?? { type: "none" })).toBe(
-      "listItem(paragraph(text,strong(text)))"
-    );
-    expect(countOf(plain ?? { type: "none" }, ["text", "break"])).toStrictEqual(
-      {
+  test(
+    "a list of 5,000 items is a list as far as the budget goes, and plain lines after, every word kept",
+    () => {
+      const source = `${counted((at) => `- item ${at} is **here**\n`)(5000)}\nAfter **it**.\n`;
+      const [list, plain, after] = parseMarkdown(source).children;
+      const items = list?.type === "list" ? list.children : [];
+      // The square of 2,828 is the last under 8,000,000.
+      expect(items).toHaveLength(2828);
+      expect(shapeOf(items.at(-1) ?? { type: "none" })).toBe(
+        "listItem(paragraph(text,strong(text)))"
+      );
+      expect(
+        countOf(plain ?? { type: "none" }, ["text", "break"])
+      ).toStrictEqual({
         text: 2172,
         break: 2171,
-      }
-    );
-    expect(wordsOf(plain ?? { type: "none" })).toContain(
-      "- item 4999 is **here**"
-    );
-    // What follows the block is read as ever.
-    expect(shapeOf(after ?? { type: "none" })).toBe(
-      "paragraph(text,strong(text),text)"
-    );
-  });
+      });
+      expect(wordsOf(plain ?? { type: "none" })).toContain(
+        "- item 4999 is **here**"
+      );
+      // What follows the block is read as ever.
+      expect(shapeOf(after ?? { type: "none" })).toBe(
+        "paragraph(text,strong(text),text)"
+      );
+    },
+    SLOW_TEST
+  );
 
-  test("a list of 2,000 items is one list, and what follows it is read for its marks", () => {
-    const source = `${counted((at) => `- item ${at}\n`)(2000)}\nAfter **it**.\n`;
-    const [list, after] = parseMarkdown(source).children;
-    expect(list?.type === "list" && list.children).toHaveLength(2000);
-    expect(shapeOf(after ?? { type: "none" })).toBe(
-      "paragraph(text,strong(text),text)"
-    );
-  });
+  test(
+    "a list of 2,000 items is one list, and what follows it is read for its marks",
+    () => {
+      const source = `${counted((at) => `- item ${at}\n`)(2000)}\nAfter **it**.\n`;
+      const [list, after] = parseMarkdown(source).children;
+      expect(list?.type === "list" && list.children).toHaveLength(2000);
+      expect(shapeOf(after ?? { type: "none" })).toBe(
+        "paragraph(text,strong(text),text)"
+      );
+    },
+    SLOW_TEST
+  );
 
   // No piece ends inside a block, so each is the tree the parser reads whole: a blank line in
   // code, in a comment, in a list or in a quote ends none.
@@ -1061,16 +1081,20 @@ describe("an answer of more lines than any answer's", () => {
     SLOW_TEST
   );
 
-  test("a list 500 deep keeps every item's words, in lists as deep as a real answer's", () => {
-    const tree = boundedTree(stairs(500));
-    const words = wordsOf(tree);
-    expect(
-      Array.from({ length: 500 }, (_, depth) => `item ${depth}`).filter(
-        (item) => !words.includes(item)
-      )
-    ).toStrictEqual([]);
-    expect(countOf(tree, ["list"]).list).toBe(32);
-  });
+  test(
+    "a list 500 deep keeps every item's words, in lists as deep as a real answer's",
+    () => {
+      const tree = boundedTree(stairs(500));
+      const words = wordsOf(tree);
+      expect(
+        Array.from({ length: 500 }, (_, depth) => `item ${depth}`).filter(
+          (item) => !words.includes(item)
+        )
+      ).toStrictEqual([]);
+      expect(countOf(tree, ["list"]).list).toBe(32);
+    },
+    SLOW_TEST
+  );
 
   // Lines made at random of every kind of block, some answers of few kinds with no blank line
   // between them, so the pieces end in the middle of anything: every line's word is drawn, in order.
@@ -1213,17 +1237,21 @@ describe("while a long block is written", () => {
     SLOW_TEST
   );
 
-  test("a paragraph of 300 short lines never turns", () => {
-    const source = lines(300, (n) => `Line ${n} with **bold**.\n`);
-    for (const blocks of written(source, 997)) {
-      expect(blocks).toHaveLength(1);
-      expect(
-        countOf(blocks[0] ?? { type: "none" }, ["strong"]).strong
-      ).toBeGreaterThanOrEqual(
-        wordsOf(blocks[0] ?? { type: "none" }).split("\n").length - 1
-      );
-    }
-  });
+  test(
+    "a paragraph of 300 short lines never turns",
+    () => {
+      const source = lines(300, (n) => `Line ${n} with **bold**.\n`);
+      for (const blocks of written(source, 997)) {
+        expect(blocks).toHaveLength(1);
+        expect(
+          countOf(blocks[0] ?? { type: "none" }, ["strong"]).strong
+        ).toBeGreaterThanOrEqual(
+          wordsOf(blocks[0] ?? { type: "none" }).split("\n").length - 1
+        );
+      }
+    },
+    SLOW_TEST
+  );
 
   test(
     "a list written past the budget keeps its items a list, and the lines after them plain",

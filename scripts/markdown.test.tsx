@@ -569,42 +569,50 @@ describe("answers no real answer looks like", () => {
 });
 
 describe("an answer longer than one piece", () => {
-  test("a list of 2,000 items is one list, and an ordered one counts on from its start", () => {
-    const items = Array.from({ length: 2000 }, (_, at) => `item ${at}`);
-    const bullets = draw(items.map((item) => `- ${item}`).join("\n"));
-    expect(bullets.match(/<ul\b/gu)).toHaveLength(1);
-    expect(bullets.match(/<li\b/gu)).toHaveLength(2000);
-    const numbered = draw(
-      items.map((item, at) => `${at + 5}. ${item}`).join("\n")
-    );
-    expect(numbered.match(/<ol\b[^>]*>/gu)).toStrictEqual([
-      expect.stringContaining('start="5"'),
-    ]);
-    expect(numbered.match(/<li\b/gu)).toHaveLength(2000);
-    expect(textOf(numbered)).toContain("item 1999");
-  });
+  test(
+    "a list of 2,000 items is one list, and an ordered one counts on from its start",
+    () => {
+      const items = Array.from({ length: 2000 }, (_, at) => `item ${at}`);
+      const bullets = draw(items.map((item) => `- ${item}`).join("\n"));
+      expect(bullets.match(/<ul\b/gu)).toHaveLength(1);
+      expect(bullets.match(/<li\b/gu)).toHaveLength(2000);
+      const numbered = draw(
+        items.map((item, at) => `${at + 5}. ${item}`).join("\n")
+      );
+      expect(numbered.match(/<ol\b[^>]*>/gu)).toStrictEqual([
+        expect.stringContaining('start="5"'),
+      ]);
+      expect(numbered.match(/<li\b/gu)).toHaveLength(2000);
+      expect(textOf(numbered)).toContain("item 1999");
+    },
+    SLOW_TEST
+  );
 
-  test("its marks are read to its end, and a link defined at its end leads there from its start", () => {
-    const paragraphs = Array.from(
-      { length: 2500 },
-      (_, at) =>
-        `Paragraph ${at} of **the report**, with words enough to fill its line.`
-    );
-    const html = draw(
-      [
-        "See [the source][source] first.",
-        ...paragraphs,
-        "And [the last link](https://example.com/last).",
-        "[source]: https://example.com/source",
-      ].join("\n\n")
-    );
-    expect(html.length).toBeGreaterThan(150_000);
-    expect(anchors(html)).toStrictEqual([
-      "https://example.com/source",
-      "https://example.com/last",
-    ]);
-    expect(html.match(/<strong\b/gu)).toHaveLength(2500);
-  });
+  test(
+    "its marks are read to its end, and a link defined at its end leads there from its start",
+    () => {
+      const paragraphs = Array.from(
+        { length: 2500 },
+        (_, at) =>
+          `Paragraph ${at} of **the report**, with words enough to fill its line.`
+      );
+      const html = draw(
+        [
+          "See [the source][source] first.",
+          ...paragraphs,
+          "And [the last link](https://example.com/last).",
+          "[source]: https://example.com/source",
+        ].join("\n\n")
+      );
+      expect(html.length).toBeGreaterThan(150_000);
+      expect(anchors(html)).toStrictEqual([
+        "https://example.com/source",
+        "https://example.com/last",
+      ]);
+      expect(html.match(/<strong\b/gu)).toHaveLength(2500);
+    },
+    SLOW_TEST
+  );
 });
 
 describe("footnotes", () => {
