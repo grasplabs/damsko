@@ -414,7 +414,7 @@ const styles = stylex.create({
     fontWeight: font.weightNormal,
     color: colors.mutedForeground,
   },
-  // In a side panel's card: at the row's end, within 45% of it; a long one wraps, never cut.
+  // In a side panel's card: at the row's end, whole and on one line; the name gives way to it.
   detailXs: {
     marginInlineStart: {
       default: space["1"],
@@ -424,21 +424,9 @@ const styles = stylex.create({
       default: null,
       [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: 0,
     },
-    maxWidth: {
+    whiteSpace: {
       default: null,
-      [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: "45%",
-    },
-    overflowWrap: {
-      default: null,
-      [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: "anywhere",
-    },
-    textAlign: {
-      default: null,
-      [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: "end",
-    },
-    textWrap: {
-      default: null,
-      [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: "balance",
+      [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: "nowrap",
     },
   },
   description: {

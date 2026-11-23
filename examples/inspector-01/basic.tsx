@@ -95,6 +95,12 @@ export default function InspectorBasic() {
               name: "Last run",
               detail: "Nov 23, 2026, 10:13 AM",
             },
+            {
+              id: "first-run",
+              icon: PlayIcon,
+              name: "First run, started by hand from the shared reports mailbox",
+              detail: "Nov 16, 2026, 9:02 AM",
+            },
           ],
         },
         {
