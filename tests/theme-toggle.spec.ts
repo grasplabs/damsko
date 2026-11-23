@@ -80,6 +80,26 @@ test("the icon button goes to the next mode, and its name says where it is and w
   await expect(button).toHaveAccessibleName("Theme, Dark. Switch to System");
 });
 
+test("resting on a theme's tile, or tabbing to it, shows that theme; leaving puts the chosen one back", async ({
+  page,
+}) => {
+  await open(page, "picker");
+  const themes = page.getByRole("radiogroup", { name: "Colours" });
+  const evergreen = themes.getByRole("radio", { name: /^Evergreen/u });
+  await expect.poll(async () => await themeOf(themes)).toBe("evergreen");
+  await themes.getByRole("radio", { name: /^Pine/u }).hover();
+  await expect.poll(async () => await themeOf(themes)).toBe("pine");
+  // Shown, not chosen.
+  await expect(evergreen).toBeChecked();
+  await page.mouse.move(2, 2);
+  await expect.poll(async () => await themeOf(themes)).toBe("evergreen");
+  // The keyboard: an arrow chooses, as a radio group does, so the theme under focus is the chosen one.
+  await evergreen.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(themes.getByRole("radio", { name: /^Pine/u })).toBeChecked();
+  await expect.poll(async () => await themeOf(themes)).toBe("pine");
+});
+
 test("the picker offers the modes and the caller's themes as two named groups", async ({
   page,
 }) => {

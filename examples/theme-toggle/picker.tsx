@@ -11,12 +11,18 @@ import "../../src/styles/themes.css";
 import { layout, themes } from "./layout";
 
 // On a settings page: each mode, and each theme the product offers, as a miniature of the
-// interface. The example holds both and writes them on its subtree.
+// interface. The example holds both and writes them on its subtree; while a theme's tile is rested
+// on, it writes that one instead (`onThemePreview`), and the chosen one again on leaving.
 export default function ThemeTogglePicker() {
   const [mode, setMode] = useState<ThemeMode>("system");
   const [theme, setTheme] = useState<ThemeId>("evergreen");
+  const [preview, setPreview] = useState<ThemeId>();
   return (
-    <div data-mode={mode} data-theme={theme} {...stylex.props(layout.scope)}>
+    <div
+      data-mode={mode}
+      data-theme={preview ?? theme}
+      {...stylex.props(layout.scope)}
+    >
       <div {...stylex.props(layout.ground, layout.wide)}>
         <ThemeToggle
           variant="picker"
@@ -26,6 +32,7 @@ export default function ThemeTogglePicker() {
           theme={theme}
           themes={themes}
           onThemeChange={setTheme}
+          onThemePreview={setPreview}
         />
         <Card>
           <CardTitle>Spring launch</CardTitle>
