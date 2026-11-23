@@ -40,7 +40,7 @@ In a narrow head a long name would wrap and make the head taller. The trigger's 
 
 ## Checkbox and radio items
 
-Options that stay set: a tick marks what is on, a dot the chosen one, and the menu stays open.
+Options that stay set: a tick marks what is on, a dot the chosen one, and the menu stays open. Hold each choice in the page (`checked` with `onCheckedChange`, `value` with `onValueChange`): a menu's items are taken out when it closes, so one kept only in the menu is forgotten by the next opening.
 
 <Stage path="dropdown-menu/choices" label="Checkbox and radio items" />
 
@@ -306,7 +306,7 @@ The trigger is a Button: hover, keyboard focus and pressed are forced from its o
     {
       key: "Working",
       value:
-        "`loadingLabel` said as the work starts; `errorLabel` said when it fails",
+        "`loadingLabel` said once the work has run a second; `errorLabel` said when it fails",
     },
     {
       key: "Contrast",

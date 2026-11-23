@@ -190,7 +190,8 @@ export interface MenubarCheckboxItemProps {
   /** On now. Pass it with `onCheckedChange` to keep it in state. */
   checked?: boolean;
   /**
-   * On at first, when you do not keep it in state.
+   * On each time the menu opens, when you do not keep it in state: the menu's items are taken out
+   * as it closes, so a choice that must last is `checked` with `onCheckedChange`.
    * @default false
    */
   defaultChecked?: boolean;
@@ -220,7 +221,10 @@ export interface MenubarRadioGroupProps {
   style?: LayoutStyle;
   /** The chosen option's value. Pass it with `onValueChange` to keep it in state. */
   value?: string | null;
-  /** The option chosen at first, when you do not keep it in state. */
+  /**
+   * The option chosen each time the menu opens, when you do not keep it in state: a choice that
+   * must last is `value` with `onValueChange`.
+   */
   defaultValue?: string | null;
   /** Runs when another option is chosen; `details.cancel()` keeps the choice as it is. */
   onValueChange?: ValueChange;
