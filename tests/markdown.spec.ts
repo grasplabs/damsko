@@ -340,3 +340,68 @@ test("a task's box is round at the corner, its tick the icon's own size", async 
   });
   expect(box).toEqual({ round: true, radius: "6px", tick: 16 });
 });
+
+test("a closed section's words are found by find in page, which opens it", async ({
+  page,
+}) => {
+  await openExample(page, "markdown", "sections");
+  const toggle = page.getByRole("button", { name: "The policy's limits" });
+  const words = page.getByText("Meals: €40 a day.");
+  await expect(words).toBeHidden();
+  expect(
+    await words.evaluate((node) =>
+      node.closest("[hidden]")?.getAttribute("hidden")
+    )
+  ).toBe("until-found");
+  // What the browser's find does when it lands on hidden words.
+  await words.evaluate((node) => {
+    node
+      .closest("[hidden]")
+      ?.dispatchEvent(new Event("beforematch", { bubbles: true }));
+  });
+  await expect(toggle).toHaveAttribute("aria-expanded", "true");
+  await expect(words).toBeVisible();
+});
+
+test("a section written open stands open from the first paint, without opening", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  // Every height the open section's words are seen at, from the first frame they are drawn in.
+  await page.addInitScript(() => {
+    const seen = new Set<number>();
+    let frames = 0;
+    const watch = () => {
+      for (const node of document.querySelectorAll("p")) {
+        if (node.textContent.includes("The claim's approver decides")) {
+          const panel = node.parentElement?.parentElement;
+          if (panel) {
+            seen.add(Math.round(panel.getBoundingClientRect().height));
+            frames += 1;
+            document.documentElement.dataset.seenHeights = [...seen].join(" ");
+            document.documentElement.dataset.seenFrames = String(frames);
+          }
+        }
+      }
+      requestAnimationFrame(watch);
+    };
+    requestAnimationFrame(watch);
+  });
+  await openExample(page, "markdown", "sections");
+  const toggle = page.getByRole("button", { name: "Who decides" });
+  await expect(toggle).toHaveAttribute("aria-expanded", "true");
+  await expect(
+    page.getByText("The claim's approver decides, never the agent.")
+  ).toBeVisible();
+  // Past the time an opening takes: thirty frames of it drawn.
+  await expect
+    .poll(async () =>
+      Number(await page.locator("html").getAttribute("data-seen-frames"))
+    )
+    .toBeGreaterThan(30);
+  // One height, never a climb from nothing.
+  await expect(page.locator("html")).toHaveAttribute(
+    "data-seen-heights",
+    /^[1-9]\d*$/u
+  );
+});

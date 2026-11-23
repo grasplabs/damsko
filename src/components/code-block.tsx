@@ -37,7 +37,12 @@ import type { ReactNode } from "react";
 
 import { markScrollEdges, useScrollEdges } from "../hooks/use-scroll-edges";
 import { useI18n } from "../lib/i18n";
-import { focusCarrier, scrollbarHidden, visuallyHidden } from "../lib/styles";
+import {
+  codeStyles,
+  focusCarrier,
+  scrollbarHidden,
+  visuallyHidden,
+} from "../lib/styles";
 import {
   colors,
   duration,
@@ -201,15 +206,6 @@ const styles = stylex.create({
     minWidth: 0,
     width: "100%",
     overflow: "hidden",
-    backgroundColor: colors.codeBlockBg,
-    // The edge (drawn outside, so it adds no size): with the wash, the box reads by both.
-    boxShadow: size.borderStrong,
-    borderRadius: radius.base,
-    cornerShape: radius.shape,
-    color: colors.bodyForeground,
-    borderWidth: { default: 0, [FORCED]: 1 },
-    borderStyle: "solid",
-    borderColor: "CanvasText",
   },
   // The header: the title or the language at the start, the copy button at the end, a hairline
   // under it, clear of the code. On a touch screen it is a finger tall and the button stands a
@@ -676,6 +672,7 @@ export const CodeBlock = ({
       data-size={sized}
       data-streaming={streaming || undefined}
       {...stylex.props(
+        codeStyles.surface,
         styles.box,
         variant === "destructive" && styles.destructive,
         stylex.defaultMarker(),

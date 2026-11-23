@@ -111,3 +111,27 @@ test("with nothing after a checkpoint, its button is out of use but keeps focus,
   await expect(page.getByText("Update the docs to match.")).toBeVisible();
   await expect(restore).toBeEnabled();
 });
+
+test("what stands under the empty state's words keeps its own width, a step under them", async ({
+  page,
+}) => {
+  await openExample(page, "chat", "empty-suggestions");
+  const log = page.getByRole("log", {
+    name: "Conversation with the assistant",
+  });
+  const sentence = await log
+    .getByText("Ask anything, or start from one of these.")
+    .boundingBox();
+  const first = await log
+    .getByRole("button", { name: "Summarise this week" })
+    .boundingBox();
+  const last = await log
+    .getByRole("button", { name: "Plan the launch review" })
+    .boundingBox();
+  if (sentence === null || first === null || last === null) {
+    throw new Error("the empty state was not drawn");
+  }
+  // Wider than the words' own measure, and 8px under the sentence.
+  expect(last.x + last.width - first.x).toBeGreaterThan(400);
+  expect(Math.round(first.y - (sentence.y + sentence.height))).toBe(8);
+});

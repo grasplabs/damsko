@@ -1,7 +1,7 @@
 // Chat: the thread of a conversation with an assistant: each turn a Message
 // inside a MessageScroller that follows the reply while the person stays at the end, the person's
 // own turn its scroll anchor, so a new question settles near the top and the reply streams in under
-// it; an empty state before the first turn; and the PromptInput under the thread. It composes and
+// it; an Empty before the first turn; and the PromptInput under the thread. It composes and
 // owns no scrolling: that is MessageScroller's.
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
 //
@@ -26,11 +26,17 @@
 import * as stylex from "@stylexjs/stylex";
 import type { ReactNode } from "react";
 
-import { Icon } from "../lib/icons";
 import type { IconData } from "../lib/icons";
-import { colors, font, size, space } from "../lib/tokens.stylex";
+import { space } from "../lib/tokens.stylex";
+import { isBlank } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
-import { iconVars } from "../lib/vars.stylex";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "./empty";
 import { Message } from "./message";
 import type { MessageStatus } from "./message";
 import {
@@ -141,39 +147,21 @@ const styles = stylex.create({
     borderRadius: "inherit",
     cornerShape: "inherit",
   },
-  // Before the first turn: centred in the view, quiet.
+  // Before the first turn: an Empty, centred in the room the thread leaves.
   empty: {
-    [iconVars.size]: size.iconDefault,
     display: "flex",
     flexGrow: 1,
     flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
-    gap: space["2"],
     boxSizing: "border-box",
-    padding: space["8"],
-    textAlign: "center",
+    padding: space["4"],
   },
-  emptyIcon: {
-    display: "inline-flex",
-    color: colors.mutedForeground,
-  },
-  emptyWords: {
-    display: "grid",
-    gap: space["1"],
-  },
-  emptyTitle: {
-    margin: 0,
-    fontSize: font.textSm,
-    lineHeight: font.textSmLine,
-    fontWeight: font.weightMedium,
-    color: colors.foreground,
-  },
-  emptyDescription: {
-    margin: 0,
-    fontSize: font.textSm,
-    lineHeight: font.textSmLine,
-    color: colors.mutedForeground,
+  // What stands under the words, at its own width: a step under the sentence, inside the room the
+  // Empty keeps at its foot.
+  more: {
+    maxWidth: "100%",
+    marginBlockStart: `calc(${space["2"]} - ${space["4"]})`,
   },
 });
 
@@ -235,7 +223,7 @@ export const ChatMessage = ({
   </MessageScrollerItem>
 );
 
-/** What stands in the thread before the first turn: a mark, a title and a sentence, centred. */
+/** What stands in the thread before the first turn: an Empty, its mark, title and sentence centred. */
 export const ChatEmptyState = ({
   title,
   description,
@@ -244,21 +232,15 @@ export const ChatEmptyState = ({
   style,
 }: ChatEmptyStateProps) => (
   <div data-slot="chat-empty-state" {...stylex.props(styles.empty, style)}>
-    {icon !== undefined && (
-      <span aria-hidden="true" {...stylex.props(styles.emptyIcon)}>
-        <Icon icon={icon} />
-      </span>
-    )}
-    {(title !== undefined || description !== undefined) && (
-      <div {...stylex.props(styles.emptyWords)}>
-        {title !== undefined && (
-          <p {...stylex.props(styles.emptyTitle)}>{title}</p>
-        )}
+    <Empty size="sm">
+      <EmptyHeader>
+        <EmptyMedia icon={icon} />
+        <EmptyTitle>{title}</EmptyTitle>
         {description !== undefined && (
-          <p {...stylex.props(styles.emptyDescription)}>{description}</p>
+          <EmptyDescription>{description}</EmptyDescription>
         )}
-      </div>
-    )}
-    {children}
+      </EmptyHeader>
+    </Empty>
+    {!isBlank(children) && <div {...stylex.props(styles.more)}>{children}</div>}
   </div>
 );

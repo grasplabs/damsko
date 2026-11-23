@@ -54,7 +54,7 @@ import {
   size,
   space,
 } from "../lib/tokens.stylex";
-import { listOf } from "../lib/utils";
+import { className, listOf } from "../lib/utils";
 import type { LayoutStyle, Orientation } from "../lib/utils";
 import { motionVars, ringInsetMarker } from "../lib/vars.stylex";
 import { Button } from "./button";
@@ -446,9 +446,7 @@ export const Carousel = ({
                       key={index}
                       page={index + 1}
                       aria-label={words.page(index + 1)}
-                      className={
-                        stylex.props(styles.dot, focusRing).className ?? ""
-                      }
+                      className={className(styles.dot, focusRing) ?? ""}
                     >
                       {(state: CarouselIndicatorState) => (
                         <span

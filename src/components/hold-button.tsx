@@ -480,7 +480,10 @@ const styles = stylex.create({
       forcedColorAdjust: "none",
       backgroundRepeat: "no-repeat",
       backgroundPosition: "var(--hold-button-start) 100%",
-      backgroundSize: { default: "0% 100%", [FORCED]: `0% ${sizes.ringWidth}` },
+      backgroundSize: {
+        default: "0% 100%",
+        [FORCED]: `0% ${sizes.lineStrong}`,
+      },
       transitionProperty: "background-size",
       // Let go, it runs back; with reduced motion it is simply empty again. While held it fills
       // over the hold's own time even then: it is the timer, as a progress bar is, not a decoration.
@@ -495,7 +498,7 @@ const styles = stylex.create({
     "::before": {
       backgroundSize: {
         default: "100% 100%",
-        [FORCED]: `100% ${sizes.ringWidth}`,
+        [FORCED]: `100% ${sizes.lineStrong}`,
       },
       transitionDuration: "var(--hold-button-time)",
       transitionTimingFunction: "linear",

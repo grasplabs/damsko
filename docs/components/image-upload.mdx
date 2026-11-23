@@ -1,0 +1,54 @@
+---
+title: Image upload
+description: One picture someone sets, such as a logo or a face, changed by pressing the picture itself.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/image-upload"
+  use={'import { ImageUpload } from "@grasp-os/ui/components/image-upload";'}
+/>
+
+## In a setting's row
+
+`ImageUpload` is one picture, the picture itself the control: a square well with soft corners showing it, or its `fallback` (initials) while there is none. Press it or drop a picture on it to change it; the remove stands at its corner on hover, on focus and always on touch. What it takes is in its tooltip, not a line of text.
+
+A file it refuses is said with why, under the well; in a Field's row without the file's name, as the person has just picked it.
+
+<Stage path="image-upload/setting" label="In a setting's row" />
+
+## Large, and saving
+
+`size="lg"` stands on a page of its own. Given `onUpload`, the well shows the save: the new picture dimmed with a spinner, then kept, or a destructive edge with Try again. A failed save keeps the new picture under Try again, so trying again is plain; remove puts the old one back.
+
+<Stage path="image-upload/basic" label="Large, and saving" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="image-upload"
+  always={[
+    "One picture that stands for something: a workspace's logo, a person's face.",
+    "A `fallback` (initials) for while there is none.",
+    "`onUpload` when the picture is saved as it is chosen, so the well shows the save and Try again.",
+  ]}
+  never={[
+    "Files that belong to a form, or more than one: use File upload.",
+    "Files added to a message to an assistant: use Prompt input with Attachment.",
+    "Showing a person's picture with nothing to change: use Avatar.",
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/image-upload.tsx"
+  type="ImageUploadProps"
+  label="ImageUpload props"
+/>
+
+</Reference>

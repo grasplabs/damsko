@@ -68,7 +68,7 @@ test("an image upload's new picture shows under the product's policy", async ({
   page,
 }) => {
   await underPolicy(page);
-  await openExample(page, "file-upload", "image-upload");
+  await openExample(page, "image-upload", "basic");
   const chooser = await pickerFrom(page, async () => {
     await page.getByRole("button", { name: /^Change/u }).click();
   });

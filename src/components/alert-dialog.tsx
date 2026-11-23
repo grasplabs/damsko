@@ -48,7 +48,7 @@ import { useI18n } from "../lib/i18n";
 import { watchBody, watchPanel } from "../lib/layer";
 import { focusRingInset, scrollbarHidden } from "../lib/styles";
 import { space } from "../lib/tokens.stylex";
-import { slotProps } from "../lib/utils";
+import { className, slotProps } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { layerFooterMarker } from "../lib/vars.stylex";
 import { Button } from "./button";
@@ -132,7 +132,7 @@ export const AlertDialogTrigger = ({
 }: AlertDialogTriggerProps) => (
   <TriggerPrimitive
     {...rest}
-    className={stylex.props(style).className}
+    className={className(style)}
     {...slotProps(asChild, children)}
   />
 );

@@ -10,6 +10,7 @@ for (const theme of ["light", "dark"] as const) {
     await expect(page.getByRole("status")).toHaveText([
       /How the score is worked out/u,
       /The export is ready/u,
+      /Scores update once a day/u,
     ]);
     await expect(page.getByRole("alert")).toHaveText([
       /Almost at this month's limit/u,
