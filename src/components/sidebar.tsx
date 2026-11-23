@@ -1194,61 +1194,48 @@ export const Sidebar = ({
     useSidebarState("Sidebar");
   const label = named ?? name;
   const floating = variant === "floating";
+  // Its ground parts it from the page; in forced colours a line does, on the page's side.
+  const edge =
+    variant === "sidebar" &&
+    (side === "start" ? styles.edgeStart : styles.edgeEnd);
 
+  let sidebar: ReactNode;
   if (collapsible === "none") {
-    return (
-      <SideContext value={side}>
-        <aside
-          aria-label={label}
-          data-slot="sidebar"
-          data-side={side}
-          data-variant={variant}
-          data-collapsible="none"
-          {...stylex.props(styles.aside, styles.asideFixed, style)}
+    sidebar = (
+      <aside
+        aria-label={label}
+        data-slot="sidebar"
+        data-side={side}
+        data-variant={variant}
+        data-collapsible="none"
+        {...stylex.props(styles.aside, styles.asideFixed, style)}
+      >
+        <div
+          data-sidebar="sidebar"
+          {...stylex.props(styles.ground, styles.inner, edge)}
         >
+          {children}
+        </div>
+      </aside>
+    );
+  } else if (isMobile) {
+    sidebar = (
+      <Sheet open={openMobile} onOpenChange={setOpenMobile}>
+        <SheetContent side={side} showCloseButton={false} aria-label={label}>
           <div
+            data-slot="sidebar"
             data-sidebar="sidebar"
-            {...stylex.props(
-              styles.ground,
-              styles.inner,
-              variant === "sidebar" &&
-                (side === "start" ? styles.edgeStart : styles.edgeEnd)
-            )}
+            data-mobile="true"
+            data-side={side}
+            {...stylex.props(styles.ground, styles.sheet)}
           >
             {children}
           </div>
-        </aside>
-      </SideContext>
+        </SheetContent>
+      </Sheet>
     );
-  }
-
-  if (isMobile) {
-    return (
-      <SideContext value={side}>
-        <Sheet
-          open={openMobile}
-          onOpenChange={(open) => {
-            setOpenMobile(open);
-          }}
-        >
-          <SheetContent side={side} showCloseButton={false} aria-label={label}>
-            <div
-              data-slot="sidebar"
-              data-sidebar="sidebar"
-              data-mobile="true"
-              data-side={side}
-              {...stylex.props(styles.ground, styles.sheet)}
-            >
-              {children}
-            </div>
-          </SheetContent>
-        </Sheet>
-      </SideContext>
-    );
-  }
-
-  return (
-    <SideContext value={side}>
+  } else {
+    sidebar = (
       <aside
         aria-label={label}
         data-slot="sidebar"
@@ -1275,8 +1262,7 @@ export const Sidebar = ({
               side === "start" &&
               styles.offcanvasStart,
             floating && styles.roomy,
-            variant === "sidebar" &&
-              (side === "start" ? styles.edgeStart : styles.edgeEnd)
+            edge
           )}
         >
           <div
@@ -1291,9 +1277,14 @@ export const Sidebar = ({
           </div>
         </div>
       </aside>
-    </SideContext>
-  );
+    );
+  }
+  return <SideContext value={side}>{sidebar}</SideContext>;
 };
+
+/** A button's title: its name, and its keys when it has them. */
+const titled = (label: string, keys: SidebarState["keys"]) =>
+  keys === undefined ? label : `${label} (${keys.text})`;
 
 /** Every prop a SidebarTrigger takes. */
 export interface SidebarTriggerProps {
@@ -1331,7 +1322,7 @@ export const SidebarTrigger = ({
       aria-expanded={isMobile ? openMobile : open}
       aria-controls={isMobile ? undefined : id}
       aria-keyshortcuts={keys?.aria}
-      title={keys === undefined ? label : `${label} (${keys.text})`}
+      title={titled(label, keys)}
       onClick={(event) => {
         onClick?.(event);
         toggleSidebar();
@@ -1366,7 +1357,7 @@ export const SidebarRail = ({ style }: SidebarRailProps) => {
       aria-controls={id}
       aria-keyshortcuts={keys?.aria}
       tabIndex={-1}
-      title={keys === undefined ? toggle : `${toggle} (${keys.text})`}
+      title={titled(toggle, keys)}
       onClick={toggleSidebar}
       {...stylex.props(
         styles.rail,
@@ -1514,6 +1505,12 @@ interface SlotPartProps extends PartProps {
   asChild?: boolean;
 }
 
+/** A part's props, with `type="button"` when it draws its own button rather than the caller's. */
+const asButton = <Rest extends object>(
+  asChild: boolean | undefined,
+  rest: Rest
+) => (asChild === true ? rest : { type: "button", ...rest });
+
 /** A part's own element, or with `asChild` the caller's, with the part's props merged onto it. */
 const drawn = (
   tag: string,
@@ -1569,14 +1566,8 @@ const withLabel = (children: ReactNode) => {
 
 /** Whether a row's own words run past their box. */
 const isCut = (row: HTMLElement | null) => {
-  const label = row?.querySelector<HTMLElement>(
-    ':scope > [data-slot="sidebar-menu-label"]'
-  );
-  return (
-    label !== null &&
-    label !== undefined &&
-    label.scrollWidth > label.clientWidth
-  );
+  const label = row?.querySelector(':scope > [data-slot="sidebar-menu-label"]');
+  return (label?.scrollWidth ?? 0) > (label?.clientWidth ?? 0);
 };
 
 interface RowElementProps {
@@ -1820,17 +1811,11 @@ export const SidebarGroupAction = ({
   style,
   ...rest
 }: SidebarGroupActionProps) =>
-  drawn(
-    "button",
-    asChild,
-    children,
-    asChild === true ? rest : { type: "button", ...rest },
-    {
-      "data-slot": "sidebar-group-action",
-      "data-sidebar": "group-action",
-      ...stylex.props(styles.action, styles.groupAction, focusRingInset, style),
-    }
-  );
+  drawn("button", asChild, children, asButton(asChild, rest), {
+    "data-slot": "sidebar-group-action",
+    "data-sidebar": "group-action",
+    ...stylex.props(styles.action, styles.groupAction, focusRingInset, style),
+  });
 
 /** Every prop a SidebarGroupContent takes. */
 export interface SidebarGroupContentProps extends PartProps, Own<"div"> {
@@ -1928,10 +1913,7 @@ export const SidebarMenuButton = ({
     <Row
       tag="button"
       asChild={asChild}
-      base={mergeProps(
-        asChild === true ? rest : { type: "button", ...rest },
-        own
-      )}
+      base={mergeProps(asButton(asChild, rest), own)}
       tooltip={tooltip}
     >
       {children}
@@ -1959,23 +1941,17 @@ export const SidebarMenuAction = ({
   style,
   ...rest
 }: SidebarMenuActionProps) =>
-  drawn(
-    "button",
-    asChild,
-    children,
-    asChild === true ? rest : { type: "button", ...rest },
-    {
-      "data-slot": "sidebar-menu-action",
-      "data-sidebar": "menu-action",
-      ...stylex.props(
-        styles.action,
-        styles.menuAction,
-        showOnHover && styles.showOnHover,
-        focusRingInset,
-        style
-      ),
-    }
-  );
+  drawn("button", asChild, children, asButton(asChild, rest), {
+    "data-slot": "sidebar-menu-action",
+    "data-sidebar": "menu-action",
+    ...stylex.props(
+      styles.action,
+      styles.menuAction,
+      showOnHover && styles.showOnHover,
+      focusRingInset,
+      style
+    ),
+  });
 
 /** Every prop a SidebarMenuBadge takes. */
 export interface SidebarMenuBadgeProps extends PartProps, Own<"div"> {
