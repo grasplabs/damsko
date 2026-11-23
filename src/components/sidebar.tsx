@@ -249,6 +249,7 @@ const styles = stylex.create({
   },
   floating: {
     borderRadius: radius.sidebarCardRadius,
+    cornerShape: radius.shape,
     borderWidth: size.hairline,
     borderStyle: "solid",
     borderColor: { default: colors.border, [FORCED]: "CanvasText" },
@@ -263,6 +264,7 @@ const styles = stylex.create({
     flexGrow: 1,
     minHeight: 0,
     borderRadius: "inherit",
+    cornerShape: "inherit",
     backgroundColor: colors.sidebar,
     color: colors.sidebarForeground,
     fontFamily: font.sans,
@@ -318,7 +320,7 @@ const styles = stylex.create({
       default: null,
       [stylex.when.anySibling('[data-variant="inset"]', sidebarMarker)]: {
         default: null,
-        [media.lg]: radius.sidebarCardRadius,
+        [media.lg]: radius.sidebarInsetRadius,
       },
     },
     // The line is a layer over what the card holds, so no bar's ground inside covers it.
@@ -333,6 +335,7 @@ const styles = stylex.create({
       position: "absolute",
       inset: 0,
       borderRadius: "inherit",
+      cornerShape: "inherit",
       boxShadow: {
         default: `inset 0 0 0 ${size.hairline} ${colors.sidebarCardBorder}`,
         [FORCED]: `inset 0 0 0 ${size.hairline} CanvasText`,
