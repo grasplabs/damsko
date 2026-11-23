@@ -100,6 +100,9 @@ export default function InspectorBasic() {
               icon: PlayIcon,
               name: "First run, started by hand from the shared reports mailbox",
               detail: "Nov 16, 2026, 9:02 AM",
+              onClick: () => {
+                setRunning(true);
+              },
             },
           ],
         },

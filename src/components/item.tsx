@@ -519,6 +519,29 @@ const styles = stylex.create({
       cornerShape: "inherit",
     },
   },
+  // In a side panel's card the press is the title's flex row, so its name gives way as the title's.
+  pressXs: {
+    display: {
+      default: null,
+      [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: "flex",
+    },
+    flexGrow: {
+      default: null,
+      [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: 1,
+    },
+    alignItems: {
+      default: null,
+      [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: "center",
+    },
+    gap: {
+      default: null,
+      [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: space["2"],
+    },
+    minWidth: {
+      default: null,
+      [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: 0,
+    },
+  },
   // Lists: a real list, the rows one under another, 8px apart, or 4px either side of a hairline.
   group: {
     display: "grid",
@@ -716,6 +739,7 @@ export const ItemContent = ({ children, style }: ItemContentProps) => (
 /** The title's words, as the row's stretched press when the row is a link or a button. */
 const TitleWords = ({ children }: { children: ReactNode }): ReactNode => {
   const press = use(TitlePress);
+  const dense = use(RowSize) === "xs";
   if (press === undefined) {
     return children;
   }
@@ -723,7 +747,7 @@ const TitleWords = ({ children }: { children: ReactNode }): ReactNode => {
   const own = {
     "data-row-press": "",
     "aria-describedby": `${id}-description`,
-    ...stylex.props(styles.press),
+    ...stylex.props(styles.press, dense && styles.pressXs),
   };
   // The caller's element (a router's link) carries the title alone; the row holds its other parts.
   if (element !== undefined) {
@@ -760,48 +784,27 @@ const TitleWords = ({ children }: { children: ReactNode }): ReactNode => {
   );
 };
 
-/**
- * A quieter word or two on the title's line, after the name: a role, "you", a count ("Admin"). In
- * the muted ink at the regular weight; it wraps with the title, never cut off. Put it in the
- * ItemTitle. On an `xs` row in a side panel's card it stands at the row's end instead, on one line.
- */
-export const ItemDetail = ({ children, style }: ItemDetailProps) => {
-  const dense = use(RowSize) === "xs";
-  return isBlank(children) ? null : (
-    <>
-      {" "}
-      <span
-        data-slot="item-detail"
-        {...stylex.props(styles.detail, dense && styles.detailXs, style)}
-      >
-        {children}
-      </span>
-    </>
-  );
-};
+const isWords = (part: ReactNode): boolean =>
+  typeof part === "string" || typeof part === "number";
 
 /**
- * An xs row's words: everything before its ItemDetail, in order, in a span of its own (the title
- * is a flex row there), so in a side panel's card the name, not the detail, gives way with an
- * ellipsis when the row runs out of room. With no ItemDetail among them, the words as written.
+ * An xs row's words: the name (the words before its first element) in a span of its own, in order,
+ * so in a side panel's card, where the title is a flex row, the name alone gives way with an
+ * ellipsis and what follows it (a mark, the detail) stays whole. A name not written as words
+ * first is left as written.
  */
 const nameFirst = (children: ReactNode): ReactNode => {
   const parts = [children].flat();
-  const detail = parts.findIndex(
-    (part) => isValidElement(part) && part.type === ItemDetail
-  );
-  if (detail < 1) {
+  const first = parts.findIndex((part) => !isWords(part));
+  const end = first === -1 ? parts.length : first;
+  if (end === 0) {
     return children;
   }
   return createElement(
     Fragment,
     null,
-    createElement(
-      "span",
-      stylex.props(styles.nameXs),
-      ...parts.slice(0, detail)
-    ),
-    ...parts.slice(detail)
+    createElement("span", stylex.props(styles.nameXs), ...parts.slice(0, end)),
+    ...parts.slice(end)
   );
 };
 
@@ -821,6 +824,26 @@ export const ItemTitle = ({ children, style }: ItemTitleProps) => {
         <TitleWords>{dense ? nameFirst(children) : children}</TitleWords>
       )}
     </span>
+  );
+};
+
+/**
+ * A quieter word or two on the title's line, after the name: a role, "you", a count ("Admin"). In
+ * the muted ink at the regular weight; it wraps with the title, never cut off. Put it in the
+ * ItemTitle. On an `xs` row in a side panel's card it stands at the row's end instead, on one line.
+ */
+export const ItemDetail = ({ children, style }: ItemDetailProps) => {
+  const dense = use(RowSize) === "xs";
+  return isBlank(children) ? null : (
+    <>
+      {" "}
+      <span
+        data-slot="item-detail"
+        {...stylex.props(styles.detail, dense && styles.detailXs, style)}
+      >
+        {children}
+      </span>
+    </>
   );
 };
 
