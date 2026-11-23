@@ -217,7 +217,7 @@
       "name": "badge",
       "type": "registry:ui",
       "title": "Badge",
-      "description": "A small label of a word or two that shows the status of something.",
+      "description": "A word or two in a pill that shows the status of something, or a label that sorts or names it.",
       "dependencies": [
         "@stylexjs/stylex",
         "@ui-sdk/core",
@@ -2582,26 +2582,6 @@
       ]
     },
     {
-      "name": "tag",
-      "type": "registry:ui",
-      "title": "Tag",
-      "description": "A short label that sorts or names something, in a word or two.",
-      "dependencies": [
-        "@stylexjs/stylex"
-      ],
-      "registryDependencies": [
-        "@damsko/lib"
-      ],
-      "docs": "https://damsko.joingrasp.com/components/tag",
-      "files": [
-        {
-          "path": "src/components/tag.tsx",
-          "type": "registry:file",
-          "target": "~/src/components/tag.tsx"
-        }
-      ]
-    },
-    {
       "name": "tags-input",
       "type": "registry:ui",
       "title": "Tags input",
@@ -2612,9 +2592,10 @@
         "@ui-sdk/react"
       ],
       "registryDependencies": [
+        "@damsko/badge",
+        "@damsko/combobox",
         "@damsko/input",
-        "@damsko/lib",
-        "@damsko/tag"
+        "@damsko/lib"
       ],
       "docs": "https://damsko.joingrasp.com/components/tags-input",
       "files": [

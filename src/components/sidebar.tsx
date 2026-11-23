@@ -163,7 +163,7 @@ const styles = stylex.create({
       ':is([data-state="collapsed"][data-collapsible="icon"])':
         size.sidebarRailWidth,
     },
-    color: colors.sidebarText,
+    color: colors.sidebarForeground,
     transitionProperty: "width",
     transitionDuration: motionVars.ui,
     transitionTimingFunction: duration.ease,
@@ -264,7 +264,7 @@ const styles = stylex.create({
     minHeight: 0,
     borderRadius: "inherit",
     backgroundColor: colors.sidebar,
-    color: colors.sidebarText,
+    color: colors.sidebarForeground,
     fontFamily: font.sans,
     fontSize: font.textSm,
     lineHeight: font.textSmLine,
@@ -378,7 +378,7 @@ const styles = stylex.create({
     flexShrink: 0,
     height: size.hairline,
     marginInline: space["2"],
-    backgroundColor: { default: colors.sidebarRule, [FORCED]: "CanvasText" },
+    backgroundColor: { default: colors.sidebarBorder, [FORCED]: "CanvasText" },
   },
   input: { display: "flex", flexDirection: "column" },
 
@@ -412,8 +412,11 @@ const styles = stylex.create({
     backgroundColor: "transparent",
     // Drawn as a button or a link (`asChild`), it answers the pointer as a row's words do.
     color: {
-      default: colors.sidebarTextSecondary,
-      [HOVER]: { default: null, ":is(button, a):hover": colors.sidebarText },
+      default: colors.sidebarSecondaryForeground,
+      [HOVER]: {
+        default: null,
+        ":is(button, a):hover": colors.sidebarForeground,
+      },
     },
     cursor: { default: null, ":is(button, a)": "pointer" },
     fontFamily: font.sans,
@@ -466,8 +469,8 @@ const styles = stylex.create({
     borderRadius: radius.row,
     cornerShape: radius.shape,
     color: {
-      default: colors.sidebarTextSecondary,
-      [HOVER]: { default: null, ":hover": colors.sidebarText },
+      default: colors.sidebarSecondaryForeground,
+      [HOVER]: { default: null, ":hover": colors.sidebarForeground },
     },
     backgroundColor: {
       default: "transparent",
@@ -576,8 +579,8 @@ const styles = stylex.create({
     cornerShape: radius.shape,
     overflow: "hidden",
     color: {
-      default: colors.sidebarTextSecondary,
-      [HOVER]: { default: null, ":hover": colors.sidebarText },
+      default: colors.sidebarSecondaryForeground,
+      [HOVER]: { default: null, ":hover": colors.sidebarForeground },
     },
     backgroundColor: {
       default: "transparent",
@@ -629,7 +632,7 @@ const styles = stylex.create({
   // A large row (a person, a workspace), in the words read first; it folds to its picture alone.
   lg: {
     borderRadius: radius.row,
-    color: colors.sidebarText,
+    color: colors.sidebarForeground,
     height: {
       default: size.sidebarMenuButtonHeightLg,
       [stylex.when.ancestor(
@@ -684,7 +687,7 @@ const styles = stylex.create({
   // The page you are on: ink laid flat over the ground, the words in the ink read first. In forced
   // colours a border marks it.
   active: {
-    color: colors.sidebarText,
+    color: colors.sidebarForeground,
     backgroundColor: colors.sidebarAccent,
     borderColor: { default: "transparent", [FORCED]: "Highlight" },
   },
@@ -712,10 +715,10 @@ const styles = stylex.create({
     paddingInline: size.sidebarCountInline,
     borderWidth: size.hairline,
     borderStyle: "solid",
-    borderColor: { default: colors.sidebarRule, [FORCED]: "CanvasText" },
+    borderColor: { default: colors.sidebarBorder, [FORCED]: "CanvasText" },
     borderRadius: radius.full,
     backgroundColor: colors.sidebarCard,
-    color: colors.sidebarTextSecondary,
+    color: colors.sidebarSecondaryForeground,
     fontSize: font.textXs,
     lineHeight: font.textXsLine,
     fontWeight: font.weightMedium,
@@ -820,7 +823,7 @@ const styles = stylex.create({
     // Never pressed, so a row's height on a touch screen too, and no edge in forced colours.
     height: ROW,
     borderWidth: 0,
-    color: colors.sidebarText,
+    color: colors.sidebarForeground,
     backgroundColor: "transparent",
     cursor: "default",
   },

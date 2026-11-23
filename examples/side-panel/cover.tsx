@@ -44,7 +44,7 @@ export default function SidePanelCover() {
         cover={<div {...stylex.props(layout.cover)} />}
       >
         <SidePanelHeader
-          icon={<IconTile icon={ChartColumnIcon} variant="tint" />}
+          icon={<IconTile icon={ChartColumnIcon} variant="tinted" />}
           title="Quarterly delivery review"
           description="How each project moved this quarter, against its plan."
           meta={["By Jonas Weber", "Updated Tuesday"]}

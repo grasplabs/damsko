@@ -42,8 +42,8 @@ const layout = stylex.create({
   controls: { display: "flex", flexWrap: "wrap", gap: space["2"] },
 });
 
-// The marks alone (hideLabels): nine steps of a setup wizard's foot, each step's name its tooltip
-// on hover and on focus, and the same with names. Back to step 3 from step 6, every step up to the furthest reached
+// The marks alone (`showLabels={false}`): nine steps of a setup wizard's foot, each step's name
+// its tooltip on hover and on focus, and the same with names. Back to step 3 from step 6, every step up to the furthest reached
 // (reached) is a way there, forward as well as back. Docs and the stepper spec
 // (tests/stepper.spec.ts).
 export default function StepperMarks() {
@@ -59,7 +59,7 @@ export default function StepperMarks() {
         <p {...stylex.props(layout.name)}>Reached step 6, back on step 3</p>
         <Stepper
           aria-label="Setting up Grasp"
-          hideLabels
+          showLabels={false}
           value={at}
           reached={furthest}
           onValueChange={go}
@@ -105,7 +105,7 @@ export default function StepperMarks() {
         <p {...stylex.props(layout.name)}>In progress</p>
         <Stepper
           aria-label="Setting up Grasp"
-          hideLabels
+          showLabels={false}
           value={3}
           loading
           steps={steps}
@@ -115,7 +115,7 @@ export default function StepperMarks() {
         <p {...stylex.props(layout.name)}>Failed on Data</p>
         <Stepper
           aria-label="Setting up Grasp"
-          hideLabels
+          showLabels={false}
           value={5}
           steps={steps.map((step, index) =>
             index === 5 ? { ...step, status: "error" as const } : step

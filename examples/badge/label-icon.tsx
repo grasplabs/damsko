@@ -1,4 +1,4 @@
-import { Tag } from "@grasp-os/ui/components/tag";
+import { Badge } from "@grasp-os/ui/components/badge";
 import { LinkIcon, SettingsIcon } from "@grasp-os/ui/lib/icons";
 import { space } from "@grasp-os/ui/lib/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
@@ -12,13 +12,15 @@ const layout = stylex.create({
   },
 });
 
-export default function TagIcon() {
+export default function BadgeLabelIcon() {
   return (
     <div {...stylex.props(layout.row)}>
-      <Tag icon={LinkIcon}>Shared</Tag>
-      <Tag icon={SettingsIcon} variant="outline">
+      <Badge variant="secondary" icon={LinkIcon}>
+        Shared
+      </Badge>
+      <Badge icon={SettingsIcon} variant="outline">
         Automated
-      </Tag>
+      </Badge>
     </div>
   );
 }

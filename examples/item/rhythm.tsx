@@ -119,7 +119,7 @@ export default function ItemRhythm() {
             <ItemGroup aria-label="Providers">
               <Item size="xs">
                 <ItemMedia align="center">
-                  <BrandIcon {...logos.chatgpt} size="sm" decorative />
+                  <BrandIcon {...logos.chatgpt} size="xs" decorative />
                 </ItemMedia>
                 <ItemContent>
                   <ItemTitle>OpenAI</ItemTitle>
@@ -133,7 +133,7 @@ export default function ItemRhythm() {
               <ItemSeparator />
               <Item size="xs">
                 <ItemMedia align="center">
-                  <BrandIcon {...logos.claude} size="sm" decorative />
+                  <BrandIcon {...logos.claude} size="xs" decorative />
                 </ItemMedia>
                 <ItemContent>
                   <ItemTitle>Anthropic</ItemTitle>

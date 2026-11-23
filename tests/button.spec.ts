@@ -217,7 +217,7 @@ for (const theme of ["light", "dark"] as const) {
     const look = await failed.evaluate((element) => {
       const probe = document.createElement("span");
       probe.style.color = "var(--damsko-destructive)";
-      probe.style.backgroundColor = "var(--damsko-secondary)";
+      probe.style.backgroundColor = "var(--damsko-control)";
       probe.style.boxShadow = "var(--damsko-error-border)";
       element.after(probe);
       const want = getComputedStyle(probe);
@@ -530,4 +530,35 @@ test("a page that runs the work itself gives the status, and the button shows it
   );
   await expect(page.getByRole("button", { name: "Saved" })).toBeVisible();
   expect(await widthOf(page, "Saved")).toBe(before);
+});
+
+test("with truncate, words too long for the room stay on one line and are cut, and the next control stays in view", async ({
+  page,
+}) => {
+  await openExample(page, "button", "truncate");
+  const narrow = page.getByRole("group", { name: "Narrow head" });
+  const name = narrow.getByRole("button", { name: "Quarterly planning" });
+  const more = narrow.getByRole("button", { name: "More actions" });
+  const boxes = await Promise.all(
+    [narrow, name, more].map(async (part) => await part.boundingBox())
+  );
+  const [head, cut, next] = boxes;
+  expect(cut?.height).toBe(32);
+  expect((next?.x ?? 0) + (next?.width ?? 0)).toBeLessThanOrEqual(
+    (head?.x ?? 0) + (head?.width ?? 0)
+  );
+  // The words are cut where the button ends, with an ellipsis.
+  expect(
+    await name.getByText("Quarterly planning").evaluate((words) => ({
+      cut: words.scrollWidth > words.clientWidth,
+      ellipsis: getComputedStyle(words).textOverflow,
+    }))
+  ).toEqual({ cut: true, ellipsis: "ellipsis" });
+  // With room, nothing is cut.
+  expect(
+    await page
+      .getByRole("group", { name: "Wide head" })
+      .getByText("Quarterly planning")
+      .evaluate((words) => words.scrollWidth > words.clientWidth)
+  ).toBe(false);
 });

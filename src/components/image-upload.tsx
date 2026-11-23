@@ -394,7 +394,7 @@ const Inside = ({
     </span>
     {status === "saving" ? (
       <span aria-hidden="true" {...stylex.props(styles.busy)}>
-        <Spinner size={size === "lg" ? "lg" : "default"} />
+        <Spinner size={size === "lg" ? "default" : "sm"} />
       </span>
     ) : null}
   </>

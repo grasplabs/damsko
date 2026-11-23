@@ -13,7 +13,7 @@
 //
 // An ordered list, the step you are on marked `aria-current="step"`, each step's status said in
 // words. With `onValueChange` a done step is a way back to it, and with `reached` every step up to
-// the furthest one reached is a way there. With `hideLabels` the marks stand alone, each step's
+// the furthest one reached is a way there. With `showLabels={false}` the marks stand alone, each step's
 // name its tooltip. Across a phone the names give way to one line, "Step 2 of 4 · Members".
 //
 // StepperNav is the guided flow's Back, how far through, and Next, as a quiet bar at the top of the
@@ -93,13 +93,13 @@ export interface StepperProps {
   /** What the steps are for, for a screen reader ("Setting up the workspace"). */
   "aria-label"?: string;
   /**
-   * Shows the marks alone: each step's name is its name for a screen reader and its tooltip on
-   * hover and on focus (every step takes focus), and nothing else changes. Across, the marks stand
+   * Shows each step's name beside its mark. `false` shows the marks alone: each step's name is its
+   * name for a screen reader and its tooltip on hover and on focus (every step takes focus), and nothing else changes. Across, the marks stand
    * a calm pitch apart instead of filling the width (a `style` width still wins). On a phone the row
    * still folds to the marks and "Step 2 of 9 · Members".
-   * @default false
+   * @default true
    */
-  hideLabels?: boolean;
+  showLabels?: boolean;
   /**
    * The furthest step the person has reached, counted from 0. Given with `onValueChange`, every
    * step up to it is a button, forward as well as back (a 44px target), and the steps after it are
@@ -805,7 +805,7 @@ interface StepItemProps {
   /** How its status is said, after its name. */
   statusWords: string;
   across: boolean;
-  hideLabels: boolean;
+  showLabels: boolean;
   loading: boolean;
   /** Pressed, it goes to this step: given when the step can be pressed. */
   onSelect: ((index: number) => void) | undefined;
@@ -822,7 +822,7 @@ const StepItem = ({
   status,
   statusWords,
   across,
-  hideLabels,
+  showLabels,
   loading,
   onSelect,
   start,
@@ -834,14 +834,14 @@ const StepItem = ({
       {...stylex.props(
         styles.words,
         !across && styles.wordsDown,
-        hideLabels && visuallyHidden
+        !showLabels && visuallyHidden
       )}
     >
       <span
         {...stylex.props(
           styles.name,
           nameStyles[status],
-          across && !hideLabels && styles.nameFolds,
+          across && showLabels && styles.nameFolds,
           pressable && styles.nameHover
         )}
       >
@@ -856,7 +856,7 @@ const StepItem = ({
   let ring: Ring;
   if (pressable) {
     ring = "press";
-  } else if (hideLabels) {
+  } else if (!showLabels) {
     ring = "focus";
   }
   const inside = (
@@ -864,7 +864,7 @@ const StepItem = ({
       {pressable && (
         <span
           aria-hidden="true"
-          {...stylex.props(styles.target, hideLabels && styles.targetWide)}
+          {...stylex.props(styles.target, !showLabels && styles.targetWide)}
         />
       )}
       <Mark
@@ -903,7 +903,7 @@ const StepItem = ({
         </button>
       );
     }
-    if (hideLabels) {
+    if (!showLabels) {
       return (
         <span
           {...lent}
@@ -939,7 +939,7 @@ const StepItem = ({
     >
       <Tipped
         name={step.label}
-        tipped={hideLabels}
+        tipped={!showLabels}
         focusable={!pressable}
         draw={draw}
       />
@@ -984,7 +984,7 @@ export const Stepper = ({
   onValueChange,
   orientation = "horizontal",
   "aria-label": label,
-  hideLabels = false,
+  showLabels = true,
   reached,
   loading = false,
   style,
@@ -1000,7 +1000,7 @@ export const Stepper = ({
       : words.current(current + 1, count, here.label);
   // Across, the steps start on their column's edge, under their names; with the marks alone each
   // mark stands in its column's middle, a pitch apart, but on a phone.
-  const marks = across && hideLabels;
+  const marks = across && !showLabels;
   // Where it stands, said as it moves; at first the list says it.
   const said = useRef(where);
   useEffect(() => {
@@ -1013,7 +1013,7 @@ export const Stepper = ({
     <div
       data-slot="stepper"
       data-loading={loading ? "" : undefined}
-      data-hide-labels={hideLabels ? "" : undefined}
+      data-show-labels={showLabels ? "" : undefined}
       {...stylex.props(styles.frame, marks && styles.pitch(count), style)}
     >
       <div
@@ -1042,14 +1042,14 @@ export const Stepper = ({
                 status={shown}
                 statusWords={words.states[shown]}
                 across={across}
-                hideLabels={hideLabels}
+                showLabels={showLabels}
                 loading={loading}
                 onSelect={
                   canPress(status, index, current, reached)
                     ? onValueChange
                     : undefined
                 }
-                start={across && !hideLabels}
+                start={across && showLabels}
                 marks={marks}
               />
             );

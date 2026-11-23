@@ -125,3 +125,23 @@ test("on a touch screen its words are 16px, so the page never zooms in", async (
   );
   await context.close();
 });
+
+test("on a touch screen its words grow with the reader's text size, as the words round it do", async ({
+  browser,
+}) => {
+  const context = await browser.newContext({
+    viewport: { width: 390, height: 900 },
+    hasTouch: true,
+    isMobile: true,
+    reducedMotion: "reduce",
+  });
+  const page = await context.newPage();
+  await openExample(page, "textarea", "field");
+  // A reader who doubles the browser's text size: the root's size, which every rem follows.
+  await page.addStyleTag({ content: "html { font-size: 200%; }" });
+  await expect(page.getByRole("textbox").first()).toHaveCSS(
+    "font-size",
+    "32px"
+  );
+  await context.close();
+});

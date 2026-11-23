@@ -17,7 +17,7 @@ const layout = stylex.create({
 export default function SpinnerAlone() {
   return (
     <div {...stylex.props(layout.panel)}>
-      <Spinner size="xl" aria-label="Loading the update" />
+      <Spinner size="lg" aria-label="Loading the update" />
     </div>
   );
 }

@@ -52,7 +52,7 @@ export default function ItemChoice() {
           }}
         >
           <ItemMedia align="center">
-            <BrandIcon {...logos[each.brand]} size="lg" decorative />
+            <BrandIcon {...logos[each.brand]} size="default" decorative />
           </ItemMedia>
           <ItemContent>
             <ItemTitle>{each.id}</ItemTitle>

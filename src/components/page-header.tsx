@@ -230,7 +230,7 @@ const styles = stylex.create({
     fontSize: font.headingLg,
     lineHeight: font.headingLgLine,
   },
-  // A settings page's title: the serif at the middle size (Heading's `md`).
+  // A settings page's title: the serif at the middle size (Heading's `default`).
   titleSm: { fontSize: font.headingMd, lineHeight: font.headingMdLine },
   // A sub-page's title: a step down, in the sans, as a component's own title.
   titleXs: {
