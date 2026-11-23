@@ -188,6 +188,12 @@ export const groups: TokenGroup[] = [
             value: "oklch(0.173 0.028 169.36)",
             use: "The last stop: the dark at the centre of the glass.",
           },
+          {
+            name: "texture-strength",
+            category: "size",
+            value: "0.3",
+            use: "How strongly the light shows as a faint dither behind the head of the one thing a page is about (a banner, a side panel's cover): a texture you find, not a pattern you see.",
+          },
         ],
       },
       {
@@ -4175,12 +4181,6 @@ export const groups: TokenGroup[] = [
             category: "size",
             value: "280px",
             use: "The width of a page title's placeholder while the page loads.",
-          },
-          {
-            name: "texture-strength",
-            category: "size",
-            value: "0.3",
-            use: "How strongly the faint dither of light shows behind the head of the one thing a page is about (a banner, a side panel's cover): a texture you find, not a pattern you see.",
           },
         ],
       },

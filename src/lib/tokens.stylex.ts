@@ -464,6 +464,8 @@ export const duration = stylex.defineConsts({
 });
 
 export const size = stylex.defineConsts({
+  // Colour: the light.
+  textureStrength: "var(--damsko-texture-strength)",
   // Elevation: edge and lifts.
   borderStrong: "var(--damsko-border-strong)",
   // Sizes: targets and controls.
@@ -722,7 +724,6 @@ export const size = stylex.defineConsts({
   linkMarkGap: "var(--damsko-link-mark-gap)",
   // Page header: page header.
   pageTitleWait: "var(--damsko-page-title-wait)",
-  textureStrength: "var(--damsko-texture-strength)",
   // Stepper: stepper.
   stepperMark: "var(--damsko-stepper-mark)",
   stepperPitch: "var(--damsko-stepper-pitch)",
