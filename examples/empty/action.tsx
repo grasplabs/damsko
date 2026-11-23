@@ -2,20 +2,22 @@
 
 import { Button } from "@grasp-os/ui/components/button";
 import {
-  Empty,
   EmptyHeader,
   EmptyTitle,
   EmptyDescription,
   EmptyContent,
 } from "@grasp-os/ui/components/empty";
 import { Icon, PlusIcon } from "@grasp-os/ui/lib/icons";
-import { space } from "@grasp-os/ui/lib/tokens.stylex";
+import { size, space } from "@grasp-os/ui/lib/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
 import { useState } from "react";
 
+import { Place } from "./clearing";
 import FirstProject from "./first-project";
 
 const layout = stylex.create({
+  // A whole list's place: as tall as a page's empty state.
+  place: { width: "100%", height: size.emptyPage },
   made: { display: "grid", gap: space[3], width: "100%", maxWidth: 560 },
   back: { justifySelf: "start" },
 });
@@ -42,24 +44,26 @@ export default function EmptyAction() {
     );
   }
   return (
-    <Empty size="lg">
-      <EmptyHeader>
-        <EmptyTitle>No projects yet</EmptyTitle>
-        <EmptyDescription>
-          Projects appear here once someone in the workspace creates one.
-        </EmptyDescription>
-      </EmptyHeader>
-      <EmptyContent>
-        <Button
-          variant="default"
-          onClick={() => {
-            setMade(true);
-          }}
-        >
-          <Icon icon={PlusIcon} />
-          New project
-        </Button>
-      </EmptyContent>
-    </Empty>
+    <div {...stylex.props(layout.place)}>
+      <Place shape="rows">
+        <EmptyHeader>
+          <EmptyTitle>No projects yet</EmptyTitle>
+          <EmptyDescription>
+            Projects appear here once someone in the workspace creates one.
+          </EmptyDescription>
+        </EmptyHeader>
+        <EmptyContent>
+          <Button
+            variant="default"
+            onClick={() => {
+              setMade(true);
+            }}
+          >
+            <Icon icon={PlusIcon} />
+            New project
+          </Button>
+        </EmptyContent>
+      </Place>
+    </div>
   );
 }
