@@ -44,7 +44,7 @@ import { useI18n } from "./i18n";
 import { CheckIcon, ChevronRightIcon, Icon, LoaderIcon } from "./icons";
 import type { IconData } from "./icons";
 import { menuStyles, scrollbarHidden } from "./styles";
-import { colors, media } from "./tokens.stylex";
+import { colors, media, size, space } from "./tokens.stylex";
 import { popup } from "./tokens.values";
 import {
   announce,
@@ -61,7 +61,21 @@ import type { LayoutStyle } from "./utils";
 /** Which menu a part is drawn for: its name, which starts each slot. */
 export type MenuKind = "dropdown-menu" | "context-menu" | "menubar";
 
+// The widest a submenu may be. UI SDK flips a submenu that does not fit beside its parent to the
+// other side, and where it fits neither (a phone) shifts it over its parent, kept on screen, as a
+// native menu does: but only a submenu no wider than the item that opened it. So its room is the
+// room on the side it opens on (--available-width), or that item's width (--anchor-width) where
+// that is more. Once it has shifted one, UI SDK reports the whole window as its room; anywhere else
+// the item and its parent take their share of the window, so twice what the room leaves of the
+// window is never less than a submenu beside them, and nothing once shifted: a shifted submenu
+// keeps its item's width rather than growing back off the screen.
+const SUB_ROOM = `max(var(--anchor-width, 0px), min(var(--available-width, ${size.popupWidth}), 2 * (100vw - 2 * ${space.popupGutter} - var(--available-width, 0px))))`;
+
 const styles = stylex.create({
+  subPanel: {
+    minWidth: `min(${size.menuWidth}, ${SUB_ROOM})`,
+    maxWidth: `min(${size.popupWidth}, ${SUB_ROOM})`,
+  },
   // A submenu's trigger is lit while the keys or the pointer are on it, and while it is open.
   subHighlighted: {
     backgroundColor: {
@@ -274,7 +288,7 @@ const Item = ({
       {(state: MenuItemState) => (
         <>
           {icon && (
-            <MenuItemIcon data-menu-icon="" {...stylex.props(menuStyles.icon)}>
+            <MenuItemIcon {...stylex.props(menuStyles.icon)}>
               <Icon icon={icon} />
             </MenuItemIcon>
           )}
@@ -507,7 +521,7 @@ export const MenuSubTriggerPart = ({
     }
   >
     {icon && (
-      <MenuItemIcon data-menu-icon="" {...stylex.props(menuStyles.icon)}>
+      <MenuItemIcon {...stylex.props(menuStyles.icon)}>
         <Icon icon={icon} />
       </MenuItemIcon>
     )}
@@ -532,6 +546,7 @@ export const MenuSubContentPart = ({ kind, children, style }: PartProps) => (
       menuStyles.panel,
       menuStyles.motion,
       scrollbarHidden,
+      styles.subPanel,
       style
     )}
   >
