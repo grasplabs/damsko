@@ -40,9 +40,8 @@ const layout = stylex.create({
   },
 });
 
-// Earlier messages load above the ones you are reading, and what you are reading stays where it
-// is (`preserveScrollOnPrepend`, on by default). Scroll up a little, then load earlier messages.
-export default function MessageScrollerHistory() {
+/** The log and its button; `autoScroll` as the provider's. */
+export function History({ autoScroll = false }: { autoScroll?: boolean }) {
   const [first, setFirst] = useState(24);
   const turns = Array.from({ length: (30 - first) / 6 }, (_, n) =>
     page(first + n * 6)
@@ -60,7 +59,7 @@ export default function MessageScrollerHistory() {
         Load earlier messages
       </Button>
       <div {...stylex.props(frame.box)}>
-        <MessageScrollerProvider>
+        <MessageScrollerProvider autoScroll={autoScroll}>
           <MessageScroller>
             <MessageScrollerViewport aria-label="Conversation with the assistant">
               <MessageScrollerContent>
@@ -81,4 +80,10 @@ export default function MessageScrollerHistory() {
       </div>
     </div>
   );
+}
+
+// Earlier messages load above the ones you are reading, and what you are reading stays where it
+// is (`preserveScrollOnPrepend`, on by default). Scroll up a little, then load earlier messages.
+export default function MessageScrollerHistory() {
+  return <History />;
 }

@@ -132,7 +132,8 @@ export interface MessageScrollerViewportProps {
   "aria-labelledby"?: string;
   /**
    * Keep what the reader is looking at in place when rows are drawn above it (older messages
-   * loaded, a row above measured), while it is not following the end.
+   * loaded, a row above measured), while it is not following the end. A log with `autoScroll`
+   * always does.
    * @default true
    */
   preserveScrollOnPrepend?: boolean;
@@ -470,14 +471,6 @@ const RowContext = createContext<Row>({
   anchors: undefined,
 });
 
-/** Whether the follower follows: only with `autoScroll`, as React reads an outside store. */
-const useFollowing = (stick: StickToBottom, autoScroll: boolean) =>
-  useSyncExternalStore(
-    (listener: () => void) => stick.subscribe(listener),
-    () => stick.get(),
-    () => stick.get()
-  ).following && autoScroll;
-
 /** Does it now, and again a frame later, as the first rows drawn can change the height. */
 const nowAndNextFrame = (go: () => void) => {
   go();
@@ -743,15 +736,16 @@ export const MessageScrollerViewport = ({
     [mounted, loading, viewport, stick, autoScroll, position]
   );
 
-  // While the reader is away from the end the browser keeps what they read in place as rows
-  // above it are drawn and measured; while it follows, the follower alone moves the scroll.
-  const following = useFollowing(stick, autoScroll);
+  // Away from the end, what the reader looks at stays in place as rows above it are drawn and
+  // measured. A log that follows its end (`autoScroll`) has the follower hold it, at the very top
+  // too; any other has the browser's own anchoring. Never both: together they moved the log twice
+  // as far, to its end.
   useLayoutEffect(() => {
     viewport?.style.setProperty(
       "overflow-anchor",
-      !following && preserveScrollOnPrepend ? "auto" : "none"
+      !autoScroll && preserveScrollOnPrepend ? "auto" : "none"
     );
-  }, [following, preserveScrollOnPrepend, viewport]);
+  }, [autoScroll, preserveScrollOnPrepend, viewport]);
 
   // A scroll, or the log or its rows changing size, changes what lies past each edge.
   const watchEdges = useScrollEdges({

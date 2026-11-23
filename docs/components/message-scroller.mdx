@@ -38,6 +38,13 @@ Rows drawn above the ones you are reading leave what you read where it is (`pres
 
 <Stage path="message-scroller/history" label="Loading earlier messages" />
 
+A log that follows its end (`autoScroll`) holds the row being read too, once the reader has scrolled away from the end, at the very top of the log as well; it does not go back to the end.
+
+<Stage
+  path="message-scroller/history-following"
+  label="Loading earlier messages in a log that follows its end"
+/>
+
 ## A long conversation
 
 Every row is drawn; the browser skips the ones out of view.
