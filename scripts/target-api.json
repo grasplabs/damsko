@@ -1482,7 +1482,7 @@
     "src/components/tags-input.tsx": [
       "TagsInput",
       "TagsInputProps",
-      "TagsInputTranslations"
+      "TagsInputLabels"
     ]
   },
   "tool": {

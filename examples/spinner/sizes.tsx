@@ -12,8 +12,8 @@ export default function SpinnerSizes() {
   return (
     <div {...stylex.props(layout.row)}>
       <Spinner />
+      <Spinner size="default" />
       <Spinner size="lg" />
-      <Spinner size="xl" />
     </div>
   );
 }

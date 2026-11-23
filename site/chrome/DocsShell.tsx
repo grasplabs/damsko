@@ -222,7 +222,7 @@ const styles = stylex.create({
     paddingInline: size.sidebarRowInline,
     borderRadius: radius.row,
     cornerShape: radius.shape,
-    color: colors.sidebarText,
+    color: colors.sidebarForeground,
     backgroundColor: {
       default: "transparent",
       [media.hover]: { default: null, ":hover": colors.sidebarHover },

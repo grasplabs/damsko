@@ -4,8 +4,8 @@
 // `filledMark`, a part in `currentColor` following the ink (a black or white mark, so it stands in
 // both themes) and a part keyed `knockout` the white inside a mark.
 //
-//   <BrandIcon logo={SlackLogo} label="Slack" />                 a tile, named "Slack"
-//   <BrandIcon logo={GoogleLogo} label="Google" tile={false} size="sm" />  the mark alone, beside words
+//   <BrandIcon logo={SlackLogo} label="Slack" />                 a 40px tile, named "Slack"
+//   <BrandIcon logo={GoogleLogo} label="Google" tile={false} size="xs" />  the mark alone, beside words
 //   <BrandIcon logo={NotionLogo} label="Notion" decorative />    its name is in the words beside it
 //   <BrandIcon logo={SlackLogo} label="Slack" variant="mono" />  the same shape in the text colour
 //   <BrandIcon label="Acme CRM" />                               no mark: its first letter on the tile
@@ -28,8 +28,8 @@ import { colors, font, radius, size, space } from "../lib/tokens.stylex";
 import type { LayoutStyle } from "../lib/utils";
 import { iconVars } from "../lib/vars.stylex";
 
-/** The tile's size, as Avatar's: `sm` 24px, `default` 32px, `lg` 40px, `xl` 48px. */
-export type BrandIconSize = "sm" | "default" | "lg" | "xl";
+/** The tile's size, as Avatar's: `xs` 24px, `sm` 32px, `default` 40px, `lg` 48px. */
+export type BrandIconSize = "xs" | "sm" | "default" | "lg";
 
 /** `brand` the mark's own colours; `mono` the same shape in the text colour. */
 export type BrandIconVariant = "brand" | "mono";
@@ -50,7 +50,7 @@ export interface BrandIconProps {
    */
   variant?: BrandIconVariant;
   /**
-   * The tile's size, as Avatar's: `sm` 24px, `default` 32px, `lg` 40px, `xl` 48px. The mark is
+   * The tile's size, as Avatar's: `xs` 24px, `sm` 32px, `default` 40px, `lg` 48px. The mark is
    * half of it. Without a tile, the mark alone is that half.
    * @default "default"
    */
@@ -90,7 +90,7 @@ export interface BrandIconGroupProps {
   max?: number;
   /**
    * The tiles' size, as BrandIcon's.
-   * @default "sm"
+   * @default "xs"
    */
   size?: BrandIconSize;
   /**
@@ -127,26 +127,26 @@ const styles = stylex.create({
   },
   // The tile's size, its corner (the one corner, capped at half; the mark corner under 32px) and
   // the mark at half of it.
-  sm: {
+  xs: {
     width: size.avatarXs,
     height: size.avatarXs,
     borderRadius: radius.mark,
     cornerShape: radius.shape,
     [iconVars.size]: `calc(${size.avatarXs} / 2)`,
   },
-  default: {
+  sm: {
     width: size.avatarSm,
     height: size.avatarSm,
     borderRadius: `min(${radius.base}, calc(${size.avatarSm} / 2))`,
     [iconVars.size]: `calc(${size.avatarSm} / 2)`,
   },
-  lg: {
+  default: {
     width: size.avatarDefault,
     height: size.avatarDefault,
     borderRadius: `min(${radius.base}, calc(${size.avatarDefault} / 2))`,
     [iconVars.size]: `calc(${size.avatarDefault} / 2)`,
   },
-  xl: {
+  lg: {
     width: size.avatarLg,
     height: size.avatarLg,
     borderRadius: `min(${radius.base}, calc(${size.avatarLg} / 2))`,
@@ -162,15 +162,15 @@ const styles = stylex.create({
     lineHeight: 1,
     userSelect: "none",
   },
-  letterSm: { fontSize: `calc(${size.avatarXs} / 2)` },
-  letterDefault: { fontSize: `calc(${size.avatarSm} / 2)` },
-  letterLg: { fontSize: `calc(${size.avatarDefault} / 2)` },
-  letterXl: { fontSize: `calc(${size.avatarLg} / 2)` },
+  letterXs: { fontSize: `calc(${size.avatarXs} / 2)` },
+  letterSm: { fontSize: `calc(${size.avatarSm} / 2)` },
+  letterDefault: { fontSize: `calc(${size.avatarDefault} / 2)` },
+  letterLg: { fontSize: `calc(${size.avatarLg} / 2)` },
   // Without a tile only the mark's size counts.
-  bareSm: { [iconVars.size]: `calc(${size.avatarXs} / 2)` },
-  bareDefault: { [iconVars.size]: `calc(${size.avatarSm} / 2)` },
-  bareLg: { [iconVars.size]: `calc(${size.avatarDefault} / 2)` },
-  bareXl: { [iconVars.size]: `calc(${size.avatarLg} / 2)` },
+  bareXs: { [iconVars.size]: `calc(${size.avatarXs} / 2)` },
+  bareSm: { [iconVars.size]: `calc(${size.avatarSm} / 2)` },
+  bareDefault: { [iconVars.size]: `calc(${size.avatarDefault} / 2)` },
+  bareLg: { [iconVars.size]: `calc(${size.avatarLg} / 2)` },
   group: {
     display: "inline-flex",
     alignItems: "center",
@@ -195,26 +195,26 @@ const styles = stylex.create({
     color: colors.mutedForeground,
     whiteSpace: "nowrap",
   },
-  countSm: {
+  countXs: {
     minWidth: size.avatarXs,
     height: size.avatarXs,
     borderRadius: radius.mark,
     cornerShape: radius.shape,
     fontSize: `max(10px, calc(${size.avatarXs} * 0.4))`,
   },
-  countDefault: {
+  countSm: {
     minWidth: size.avatarSm,
     height: size.avatarSm,
     borderRadius: `min(${radius.base}, calc(${size.avatarSm} / 2))`,
     fontSize: `max(10px, calc(${size.avatarSm} * 0.4))`,
   },
-  countLg: {
+  countDefault: {
     minWidth: size.avatarDefault,
     height: size.avatarDefault,
     borderRadius: `min(${radius.base}, calc(${size.avatarDefault} / 2))`,
     fontSize: `max(10px, calc(${size.avatarDefault} * 0.4))`,
   },
-  countXl: {
+  countLg: {
     minWidth: size.avatarLg,
     height: size.avatarLg,
     borderRadius: `min(${radius.base}, calc(${size.avatarLg} / 2))`,
@@ -223,28 +223,28 @@ const styles = stylex.create({
 });
 
 const tiles = {
+  xs: styles.xs,
   sm: styles.sm,
   default: styles.default,
   lg: styles.lg,
-  xl: styles.xl,
 } as const;
 const bares = {
+  xs: styles.bareXs,
   sm: styles.bareSm,
   default: styles.bareDefault,
   lg: styles.bareLg,
-  xl: styles.bareXl,
 } as const;
 const letters = {
+  xs: styles.letterXs,
   sm: styles.letterSm,
   default: styles.letterDefault,
   lg: styles.letterLg,
-  xl: styles.letterXl,
 } as const;
 const counts = {
+  xs: styles.countXs,
   sm: styles.countSm,
   default: styles.countDefault,
   lg: styles.countLg,
-  xl: styles.countXl,
 } as const;
 
 // The one-colour form of each mark, made once: its parts in `currentColor`, the gradient and the
@@ -330,7 +330,7 @@ export const BrandIcon = ({
 export const BrandIconGroup = ({
   items,
   max = 3,
-  size: sized = "sm",
+  size: sized = "xs",
   variant = "brand",
   "aria-label": label,
   style,

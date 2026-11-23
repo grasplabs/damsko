@@ -194,7 +194,7 @@ const styles = stylex.create({
     // Read only: the number a step quieter, as Input's.
     color: {
       default: colors.foreground,
-      ":read-only:not(:disabled)": colors.inputInkRead,
+      ":read-only:not(:disabled)": colors.inputForegroundRead,
     },
     caretColor: colors.foreground,
     font: "inherit",

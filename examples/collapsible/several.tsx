@@ -13,19 +13,19 @@ const layout = stylex.create({
 export default function CollapsibleSeveral() {
   return (
     <div {...stylex.props(layout.stack)}>
-      <Collapsible variant="raised" defaultOpen>
+      <Collapsible variant="outline" defaultOpen>
         <CollapsibleTrigger>Section 1</CollapsibleTrigger>
         <CollapsibleContent>
           The brief, the owner and the date it is due.
         </CollapsibleContent>
       </Collapsible>
-      <Collapsible variant="raised">
+      <Collapsible variant="outline">
         <CollapsibleTrigger>Section 2</CollapsibleTrigger>
         <CollapsibleContent>
           Who reviews it, and in what order.
         </CollapsibleContent>
       </Collapsible>
-      <Collapsible variant="raised">
+      <Collapsible variant="outline">
         <CollapsibleTrigger>Section 3</CollapsibleTrigger>
         <CollapsibleContent>
           What happens once every reviewer agrees.

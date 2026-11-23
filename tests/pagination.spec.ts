@@ -58,7 +58,7 @@ for (const theme of ["light", "dark"] as const) {
           const off = step.getAttribute("aria-disabled") === "true";
           probe.style.backgroundColor = off
             ? "var(--damsko-muted)"
-            : "var(--damsko-secondary)";
+            : "var(--damsko-control)";
           probe.style.boxShadow = off ? "none" : "var(--damsko-shadow-sm)";
           step.after(probe);
           const want = getComputedStyle(probe);

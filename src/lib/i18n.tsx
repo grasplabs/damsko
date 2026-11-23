@@ -859,10 +859,10 @@ export interface I18nCatalog {
   treeView: {
     /** Clears the filter field. */
     clear: string;
+    /** Shown in the tree's place when the filter matches nothing. */
+    empty: string;
     /** The filter field's name and its placeholder. */
     filter: string;
-    /** Shown in the tree's place when the filter matches nothing. */
-    noMatches: string;
   };
   useAction: {
     /** What an agent is told before it presses a danger or approve button with no words. */
@@ -1505,8 +1505,8 @@ const english: I18nCatalog = {
   },
   treeView: {
     clear: "Clear the filter",
+    empty: "No matches",
     filter: "Filter",
-    noMatches: "No matches",
   },
   useAction: {
     agentAsks: "Does something that needs your yes",

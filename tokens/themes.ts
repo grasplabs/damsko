@@ -62,8 +62,8 @@ export const themes: readonly Theme[] = [
         dark: "oklch(0.88 0.03 165)",
       },
       "checkbox-bg-hover": { light: "oklch(0.42 0.08 177)" },
-      secondary: { light: "oklch(0.99 0.006 172)" },
-      "secondary-active": { light: "oklch(0.93 0.026 172)" },
+      control: { light: "oklch(0.99 0.006 172)" },
+      "control-active": { light: "oklch(0.93 0.026 172)" },
     },
   },
   {
@@ -99,7 +99,7 @@ export const themes: readonly Theme[] = [
         dark: "oklch(0.86 0.008 85)",
       },
       "checkbox-bg-hover": { light: "oklch(0.34 0.01 70)" },
-      "secondary-active": { light: "oklch(0.94 0.01 85)" },
+      "control-active": { light: "oklch(0.94 0.01 85)" },
     },
   },
 ];
