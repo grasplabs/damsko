@@ -209,13 +209,18 @@ const sortableList = definePrimitive({
         "aria-pressed": api.reorder.moving(state, key) ? "true" : undefined,
       }),
       // A press with no drag (a click, or a screen reader's activation, which sends no key) picks
-      // the item up, and a second puts it down, as Space does; a drag that ends swallows its click.
+      // the item up, and a second puts it down, as Space does; a press on another item's handle
+      // puts the first back and picks that one up. A drag that ends swallows its click.
       press: ({ api, key, store }, event) => {
-        if (api.reorder.moving(store.get(), key)) {
+        const state = store.get();
+        if (api.reorder.moving(state, key)) {
           api.reorder.drop(event);
-        } else {
-          api.reorder.grab(key);
+          return;
         }
+        if (state.moving !== null) {
+          api.reorder.cancel();
+        }
+        api.reorder.grab(key);
       },
       on: {
         keydown: (event, { api, key }) => {

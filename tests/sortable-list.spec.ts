@@ -171,6 +171,17 @@ test("a press with no drag picks an item up and a second puts it down, as a scre
   await expect
     .poll(async () => await orderOf(list))
     .toEqual(["Welcome", "Its people", "Its AI", "Its tools", "Review"]);
+
+  // A press on another handle while one item is up puts that one back and picks this one up.
+  const review = page.getByRole("button", { name: "Move Review" });
+  await handle.click();
+  await page.keyboard.press("ArrowDown");
+  await review.click();
+  await expect(handle).not.toHaveAttribute("aria-pressed", "true");
+  await expect(review).toHaveAttribute("aria-pressed", "true");
+  await expect
+    .poll(async () => await orderOf(list))
+    .toEqual(["Welcome", "Its people", "Its AI", "Its tools", "Review"]);
 });
 
 test("a finger on a handle drags its item", async ({ page }) => {
