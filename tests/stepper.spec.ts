@@ -251,7 +251,7 @@ test("in a form, Next submits it: Enter in the field goes on", async ({
   await expect(page.getByLabel("Your team")).toBeVisible();
 });
 
-const middle = (part: DrawnPart) => ({
+const middle = (part: Omit<DrawnPart, "cut">) => ({
   x: (part.left + part.right) / 2,
   y: (part.top + part.bottom) / 2,
 });
@@ -266,15 +266,15 @@ const markOf = async (page: Page, step: Locator, down: boolean) => {
   if (box === null) {
     throw new Error("The step is not drawn.");
   }
-  const parts = await drawnParts(
-    page,
-    down
-      ? { x: box.x - 4, y: box.y - 6, width: 32, height: 42 }
-      : { x: box.x - 12, y: box.y - 4, width: 44, height: 28 }
-  );
+  const clip = down
+    ? { x: box.x - 4, y: box.y - 6, width: 32, height: 42 }
+    : { x: box.x - 12, y: box.y - 4, width: 44, height: 28 };
+  const parts = await drawnParts(page, clip);
   return {
     mark: parts.filter((part) => !part.cut),
     line: parts.filter((part) => part.cut),
+    /** Where what was looked at starts on the page, which the parts are placed from. */
+    origin: { x: clip.x, y: clip.y },
   };
 };
 
@@ -342,5 +342,172 @@ for (const scale of [1, 2]) {
       expectOneMiddle(await markOf(page, steps.nth(1), down), 1, down);
       await page.close();
     });
+  }
+}
+
+/**
+ * The box round what is drawn in `clip` otherwise than in `before`, a picture of the same place
+ * taken earlier: what the step drew in answer to the pointer or the keyboard. Each edge is placed
+ * to the fraction of a pixel its blend says: a shape whose edge falls halfway across a device
+ * pixel colours that pixel half as much as its inside, so a circle that stands half a pixel off the
+ * pixel grid on one side is still measured round. Null when nothing changed.
+ */
+const changedBox = async (
+  page: Page,
+  clip: { x: number; y: number; width: number; height: number },
+  before: Buffer
+) => {
+  const after = await page.screenshot({
+    clip,
+    fullPage: true,
+    scale: "device",
+  });
+  return await page.evaluate(
+    async ({ pictures, across }) => {
+      const pixels = await Promise.all(
+        pictures.map(async (png) => {
+          const bitmap = await createImageBitmap(
+            new Blob(
+              [Uint8Array.from(atob(png), (char) => char.codePointAt(0) ?? 0)],
+              { type: "image/png" }
+            )
+          );
+          const context = new OffscreenCanvas(
+            bitmap.width,
+            bitmap.height
+          ).getContext("2d");
+          if (context === null) {
+            throw new Error("No canvas to read the picture with.");
+          }
+          context.drawImage(bitmap, 0, 0);
+          return context.getImageData(0, 0, bitmap.width, bitmap.height);
+        })
+      );
+      const [was, now] = pixels;
+      if (was === undefined || now === undefined) {
+        throw new Error("Two pictures are needed.");
+      }
+      const { width, height } = now;
+      const change = Array.from({ length: width * height }, (_, pixel) =>
+        [0, 1, 2].reduce(
+          (sum, at) =>
+            sum +
+            Math.abs(
+              (was.data[pixel * 4 + at] ?? 0) - (now.data[pixel * 4 + at] ?? 0)
+            ),
+          0
+        )
+      );
+      const most = Math.max(...change);
+      if (most <= 12) {
+        return null;
+      }
+      // How much of each column and each row the shape covers, at its fullest: 1 inside it.
+      const columns = Array.from({ length: width }, () => 0);
+      const rows = Array.from({ length: height }, () => 0);
+      for (const [pixel, amount] of change.entries()) {
+        const x = pixel % width;
+        const y = (pixel - x) / width;
+        columns[x] = Math.max(columns[x] ?? 0, amount / most);
+        rows[y] = Math.max(rows[y] ?? 0, amount / most);
+      }
+      // Where the shape starts and ends along each side, in device pixels.
+      const [sideways, upright] = [columns, rows].map((cover) => {
+        const first = cover.findIndex((part) => part > 0.1);
+        const last = cover.findLastIndex((part) => part > 0.1);
+        return {
+          start: first + 1 - (cover[first] ?? 0),
+          end: last + (cover[last] ?? 0),
+        };
+      });
+      if (sideways === undefined || upright === undefined) {
+        throw new Error("Both sides are measured.");
+      }
+      const scale = width / across;
+      return {
+        left: sideways.start / scale,
+        right: sideways.end / scale,
+        top: upright.start / scale,
+        bottom: upright.end / scale,
+      };
+    },
+    {
+      pictures: [before.toString("base64"), after.toString("base64")],
+      across: clip.width,
+    }
+  );
+};
+
+for (const scale of [1, 1.5, 2, 3]) {
+  for (const down of [false, true]) {
+    for (const answer of ["hover", "focus"] as const) {
+      test(`a step that can be pressed answers ${answer === "hover" ? "the pointer" : "the keyboard"} with a circle about its dot, ${down ? "down" : "across"} at ${scale}x`, async ({
+        browser,
+      }) => {
+        const page = await browser.newPage({
+          deviceScaleFactor: scale,
+          reducedMotion: "reduce",
+        });
+        await openExample(page, "stepper", "fixture");
+        const step = page
+          .getByRole("list", { name: "Setting up the workspace" })
+          .nth(down ? 1 : 0)
+          .getByRole("listitem")
+          .first();
+        const press = step.getByRole("button", { name: /^Details\b/u });
+        const { mark, origin } = await markOf(page, step, down);
+        const [dot] = mark;
+        if (dot === undefined) {
+          throw new Error("No dot is drawn.");
+        }
+        expect(mark).toHaveLength(1);
+        // The dot's middle on the page.
+        const centre = {
+          x: origin.x + middle(dot).x,
+          y: origin.y + middle(dot).y,
+        };
+        // Round the dot, clear of the name: under it across, beside it down.
+        const reach = { x: 22, y: down ? 22 : 17 };
+        const clip = {
+          x: centre.x - reach.x,
+          y: centre.y - reach.y,
+          width: 2 * reach.x,
+          height: 2 * reach.y,
+        };
+        const before = await page.screenshot({
+          clip,
+          fullPage: true,
+          scale: "device",
+        });
+        if (answer === "hover") {
+          await press.hover();
+        } else {
+          await press.focus();
+          await expect(press).toBeFocused();
+          expect(
+            await press.evaluate((node) => node.matches(":focus-visible"))
+          ).toBe(true);
+        }
+        // Once the answer has eased in.
+        await page.evaluate(async () => {
+          await Promise.all(
+            document
+              .getAnimations()
+              .map(async (motion) => await motion.finished)
+          );
+        });
+        const shown = await changedBox(page, clip, before);
+        if (shown === null) {
+          throw new Error(`Nothing answers the ${answer}.`);
+        }
+        // A circle: its box is square, and about the dot's middle.
+        expect(
+          Math.abs(shown.right - shown.left - (shown.bottom - shown.top))
+        ).toBeLessThan(0.5);
+        expect(Math.abs(clip.x + middle(shown).x - centre.x)).toBeLessThan(0.5);
+        expect(Math.abs(clip.y + middle(shown).y - centre.y)).toBeLessThan(0.5);
+        await page.close();
+      });
+    }
   }
 }
