@@ -37,6 +37,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "../../components/breadcrumb";
+import { breadcrumbVars } from "../../components/breadcrumb.stylex";
 import { Button } from "../../components/button";
 import { InlineEdit } from "../../components/inline-edit";
 import { pageBandVars } from "../../components/page-header.stylex";
@@ -56,7 +57,7 @@ import {
   useSidebar,
 } from "../../components/sidebar";
 import { Icon, PanelRightIcon } from "../../lib/icons";
-import { colors, size, space } from "../../lib/tokens.stylex";
+import { colors, font, media, size, space } from "../../lib/tokens.stylex";
 import type { LayoutStyle } from "../../lib/utils";
 
 /** The words an AppShell says, for a screen reader: English here; pass the product's as `labels`. */
@@ -129,12 +130,14 @@ const styles = stylex.create({
   // What the page holds, laid over the SidebarInset's box: the inset is as tall as the shell (the
   // window's height, or the frame's), never as tall as the page, so the header stays and the page
   // scrolls under it.
+  // The card's own ground at every width: beside the sidebar, and filling the window on a phone.
   frame: {
     position: "absolute",
     inset: 0,
     display: "flex",
     flexDirection: "column",
     overflow: "clip",
+    backgroundColor: colors.sidebarCard,
     borderRadius: "inherit",
     cornerShape: "inherit",
   },
@@ -146,7 +149,28 @@ const styles = stylex.create({
     minWidth: 0,
     height: size.appShellBar,
     paddingInline: space["3"],
+    // The bar is the frame's, as the sidebar is: its path in the sidebar's neutral ink.
+    [breadcrumbVars.foreground]: colors.sidebarForeground,
+    [breadcrumbVars.mutedForeground]: colors.sidebarSecondaryForeground,
+    [breadcrumbVars.subtleForeground]: colors.sidebarTertiaryForeground,
+    // Its foot a hairline across the card, in the card's own line, so it reads as a bar. Inside
+    // the bar's row, which keeps its height. In forced colours the system's ink.
+    position: "relative",
+    "::after": {
+      content: '""',
+      position: "absolute",
+      insetInline: 0,
+      insetBlockEnd: 0,
+      height: size.hairline,
+      backgroundColor: {
+        default: colors.sidebarCardBorder,
+        [media.forcedColors]: "CanvasText",
+      },
+      pointerEvents: "none",
+    },
   },
+  // The slash between two steps, as far from each as the steps' words are from a chevron's box.
+  slash: { marginInline: space["1"] },
   where: {
     display: "flex",
     alignItems: "center",
@@ -180,8 +204,12 @@ const styles = stylex.create({
   },
   panel: { height: "100%", minHeight: 0 },
   contents: { display: "contents" },
-  // The renamable name in the page's ink, as BreadcrumbPage draws it.
-  rename: { minWidth: 0, color: colors.foreground },
+  // The renamable name in the page's ink and weight, as BreadcrumbPage draws it.
+  rename: {
+    minWidth: 0,
+    color: breadcrumbVars.foreground,
+    fontWeight: font.weightMedium,
+  },
 });
 
 /** Whether a press follows a link to its page here: not a new tab, a new window or a download. */
@@ -251,7 +279,10 @@ const ShellPage = ({
   };
   // Where the page is: the steps before it, then the page itself, renamable in place.
   const where = (breadcrumb !== undefined || title !== undefined) && (
-    <Breadcrumb aria-label={words.breadcrumb}>
+    <Breadcrumb
+      aria-label={words.breadcrumb}
+      separator={<span {...stylex.props(styles.slash)}>/</span>}
+    >
       <BreadcrumbList>
         {breadcrumb}
         {breadcrumb !== undefined && title !== undefined && (
