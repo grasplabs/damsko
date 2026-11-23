@@ -144,8 +144,8 @@ export interface SourceProps {
    */
   access?: SourceAccess;
   /**
-   * Its number, as its citations in the answer carry it: shown after the title. Screen readers
-   * skip it: the list's own order says it.
+   * Its number, as its citations in the answer carry it: after the title, to the eye and in the
+   * name a screen reader says, so it holds whatever order the list is in.
    */
   index?: number;
   /**
@@ -532,13 +532,16 @@ export const Source = ({
                 </span>
               )}
               {index !== undefined && (
-                <span
-                  aria-hidden="true"
-                  data-slot="source-index"
-                  {...stylex.props(styles.index)}
-                >
-                  {index}
-                </span>
+                <>
+                  {/* Said after the title as the eye reads it: the number its citations carry. */}
+                  <span {...stylex.props(visuallyHidden)}>, </span>
+                  <span
+                    data-slot="source-index"
+                    {...stylex.props(styles.index)}
+                  >
+                    {index}
+                  </span>
+                </>
               )}
             </span>
             <SourceNotes access={access} where={where} quote={quote} />

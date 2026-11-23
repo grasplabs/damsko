@@ -66,7 +66,6 @@ const layout = stylex.create({
     flexWrap: "wrap",
     alignItems: "center",
     gap: space["2"],
-    marginBlockEnd: space["2"],
   },
   order: {
     display: "flex",
