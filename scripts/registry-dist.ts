@@ -207,81 +207,84 @@ export const packRegistry = (out: string): string => {
   return tag;
 };
 
-/** Where GitHub lists Damsko's releases. The repository is public: no token. */
-export const releasesApi =
-  "https://api.github.com/repos/grasplabs/damsko/releases?per_page=100";
+/** Damsko's repository, public: its tags are read by git and its releases' files by their address. */
+export const repository = "https://github.com/grasplabs/damsko";
 
 const TAG = /^v\d+\.\d+\.\d+$/u;
 const ITEM = /^r\/[\w-]+\.json$/u;
 
-/**
- * A file from GitHub. Nothing needs a token: the repository is public. Where the environment has
- * one (GITHUB_TOKEN, in CI), the list of releases is asked for with it, since GitHub answers few
- * unsigned questions from an address many runners share; it goes to GitHub's API and nowhere else.
- */
-const fetched = async (url: string): Promise<Buffer> => {
-  const token = process.env.GITHUB_TOKEN ?? "";
-  const response = await fetch(url, {
-    headers: {
-      "User-Agent": "damsko-site-build",
-      ...(token !== "" && url.startsWith("https://api.github.com/")
-        ? { Authorization: `Bearer ${token}` }
-        : {}),
-    },
-  });
+/** The version tags a repository has, as `git ls-remote --tags` lists them, in order. */
+const tagsOf = (from: string): string[] => {
+  let listed = "";
+  try {
+    listed = execFileSync("git", ["ls-remote", "--tags", from], {
+      encoding: "utf-8",
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+  } catch (error) {
+    throw new Error(
+      `registry: the tags of ${from} could not be read, so no released version can be served: ${error instanceof Error ? error.message : String(error)}`,
+      { cause: error }
+    );
+  }
+  return listed
+    .split("\n")
+    .map((line) => /\trefs\/tags\/(?<tag>[^^\s]+)$/u.exec(line)?.groups?.tag)
+    .filter((tag) => tag !== undefined)
+    .filter((tag) => TAG.test(tag))
+    .toSorted();
+};
+
+/** A file of a release, or undefined when the release has none by that name (404). */
+const fetched = async (url: string): Promise<Buffer | undefined> => {
+  let response: Response;
+  try {
+    response = await fetch(url);
+  } catch (error) {
+    throw new Error(
+      `registry: ${url} could not be reached, so its version cannot be served`,
+      { cause: error }
+    );
+  }
+  if (response.status === 404) {
+    return undefined;
+  }
   if (!response.ok) {
-    throw new Error(`${url} answered ${String(response.status)}`);
+    throw new Error(`registry: ${url} answered ${String(response.status)}`);
   }
   return Buffer.from(await response.arrayBuffer());
 };
 
 /**
  * Writes every released version into `<out>/r/<tag>/`, from the archive its release carries, and
- * returns the tags written. Asked for at every build, nothing kept between builds. A release with
- * no archive is passed over and said; an archive that is not the file its checksum names stops
- * the build, as does a list of releases that cannot be read: a site that dropped the versions
- * unseen would break every product's pin.
+ * returns the tags written. Asked for at every build, nothing kept between builds, and nothing of
+ * GitHub's API: the tags by git, each file by its release's address. A tag whose release has no
+ * archive is passed over and said; an archive that is not the file its checksum names stops the
+ * build, as does GitHub not answering: a site that dropped the versions unseen would break every
+ * product's pin. `tags` stands in for git where there is no repository to ask
+ * (scripts/check-install.ts).
  */
 export const writeVersions = async (
   out: string,
-  api = releasesApi
+  from = repository,
+  tags = tagsOf(from)
 ): Promise<string[]> => {
-  const listed = await fetched(api);
-  const releases: unknown = JSON.parse(listed.toString("utf-8"));
-  if (!Array.isArray(releases)) {
-    throw new TypeError(`${api} did not answer with a list of releases`);
-  }
   const written: string[] = [];
-  for (const release of releases) {
-    const tag = isRecord(release) ? release.tag_name : undefined;
-    if (typeof tag !== "string" || !TAG.test(tag)) {
-      continue;
-    }
-    const assets = new Map<string, string>();
-    for (const asset of isRecord(release) && Array.isArray(release.assets)
-      ? release.assets
-      : []) {
-      if (
-        isRecord(asset) &&
-        typeof asset.name === "string" &&
-        typeof asset.browser_download_url === "string"
-      ) {
-        assets.set(asset.name, asset.browser_download_url);
-      }
-    }
+  for (const tag of tags) {
     const name = archiveName(tag);
-    const from = assets.get(name);
-    const sumFrom = assets.get(`${name}.sha256`);
-    if (from === undefined || sumFrom === undefined) {
+    const at = `${from}/releases/download/${tag}/${name}`;
+    // oxlint-disable-next-line no-await-in-loop -- one release after the other, two small files
+    const archive = await fetched(at);
+    if (archive === undefined) {
       console.log(
         `registry: ${tag} has no archive in its release, passed over`
       );
       continue;
     }
-    // oxlint-disable-next-line no-await-in-loop -- one release after the other, a few small files
-    const [archive, sum] = await Promise.all([fetched(from), fetched(sumFrom)]);
-    if (sum.toString("utf-8").split(/\s/u)[0] !== sha256(archive)) {
-      throw new Error(`${name} is not the file its checksum names`);
+    // oxlint-disable-next-line no-await-in-loop -- as above
+    const sum = await fetched(`${at}.sha256`);
+    if (sum?.toString("utf-8").split(/\s/u)[0] !== sha256(archive)) {
+      throw new Error(`registry: ${name} is not the file its checksum names`);
     }
     const dir = nodePath.join(out, "r", tag);
     mkdirSync(dir, { recursive: true });

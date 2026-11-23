@@ -4,8 +4,8 @@
 // Every item: added by name with the stock shadcn CLI into a fresh workspace's packages/ui with
 // the product's catalog and strict TypeScript flags, as a product pins a version: from
 // /r/<tag>/, written as the site's build writes it (scripts/registry-dist.ts) from the archive a
-// release carries (as .github/workflows/release.yml packs it), listed by a stand-in for GitHub's
-// releases, and served alone, with no latest beside it, so an item's own dependencies can only
+// release carries (as .github/workflows/release.yml packs it), at a stand-in for the release's
+// address, and served alone, with no latest beside it, so an item's own dependencies can only
 // have come from the version. A release with no archive is passed over; one whose archive is not
 // the file its checksum names stops the build. It holds when
 // - the fonts arrive packed, their check says so, and their script unpacks them;
@@ -52,7 +52,6 @@ import {
   mkdtempSync,
   readFileSync,
   readdirSync,
-  renameSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
@@ -154,46 +153,33 @@ const write = (dir: string, path: string, value: unknown) => {
 };
 
 // The registry as the site serves it (scripts/registry-dist.ts), and beside it what stands in for
-// GitHub: the archive of this version where a release has it, and the list of releases.
+// GitHub: this version's archive at the address a release gives it, and once more with another
+// file's checksum.
 const registryDir = nodePath.join(scratch, "registry");
 const commit = await writeRegistry(registryDir);
 const tag = packRegistry(registryDir);
 const served = await serve(registryDir);
-const asset = (name: string, file = name) => ({
-  name,
-  browser_download_url: `${served.url}/releases/${file}`,
-});
-mkdirSync(nodePath.join(registryDir, "releases"));
-for (const name of [archiveName(tag), `${archiveName(tag)}.sha256`]) {
-  renameSync(
-    nodePath.join(registryDir, name),
-    nodePath.join(registryDir, "releases", name)
-  );
-}
-write(registryDir, "releases/other.sha256", `${"0".repeat(64)}  other\n`);
-const released = {
-  tag_name: tag,
-  assets: [asset(archiveName(tag)), asset(`${archiveName(tag)}.sha256`)],
+const archive = readFileSync(nodePath.join(registryDir, archiveName(tag)));
+const sum = readFileSync(
+  nodePath.join(registryDir, `${archiveName(tag)}.sha256`),
+  "utf-8"
+);
+const release = (repo: string, checksum: string) => {
+  const dir = nodePath.join(registryDir, repo, "releases/download", tag);
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(nodePath.join(dir, archiveName(tag)), archive);
+  writeFileSync(nodePath.join(dir, `${archiveName(tag)}.sha256`), checksum);
 };
-// A release from before the archives: passed over.
-write(registryDir, "releases.json", [
-  { tag_name: "v0.0.1", assets: [] },
-  released,
-]);
-// A release whose archive is not the file its checksum names.
-write(registryDir, "releases-altered.json", [
-  {
-    tag_name: tag,
-    assets: [
-      asset(archiveName(tag)),
-      asset(`${archiveName(tag)}.sha256`, "other.sha256"),
-    ],
-  },
-]);
+release("github", sum);
+release("altered", `${"0".repeat(64)}  ${archiveName(tag)}\n`);
 
 // The released versions as the site's build writes them, served alone: what a pin installs from.
+// A tag from before the archives has none: passed over.
 const versionsDir = nodePath.join(scratch, "versions");
-const tags = await writeVersions(versionsDir, `${served.url}/releases.json`);
+const tags = await writeVersions(versionsDir, `${served.url}/github`, [
+  "v0.0.1",
+  tag,
+]);
 if (tags.join(",") !== tag || pinned !== tag) {
   failures.push(
     `the released versions written are ${tags.join(", ")}, not ${tag}, which Get started pins as ${pinned}`
@@ -202,7 +188,8 @@ if (tags.join(",") !== tag || pinned !== tag) {
 try {
   await writeVersions(
     nodePath.join(scratch, "altered"),
-    `${served.url}/releases-altered.json`
+    `${served.url}/altered`,
+    [tag]
   );
   failures.push(
     "an archive that is not the file its checksum names was unpacked"
