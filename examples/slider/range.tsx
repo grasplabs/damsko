@@ -1,4 +1,4 @@
-import { Slider } from "@grasp-os/ui/components/slider";
+import { Slider, SliderLabel } from "@grasp-os/ui/components/slider";
 import * as stylex from "@stylexjs/stylex";
 
 const layout = stylex.create({
@@ -9,11 +9,12 @@ const layout = stylex.create({
 export default function SliderRange() {
   return (
     <Slider
-      label="Team size"
       defaultValue={[10, 50]}
       max={200}
       thumbLabels={["Smallest team", "Largest team"]}
       style={layout.slider}
-    />
+    >
+      <SliderLabel>Team size</SliderLabel>
+    </Slider>
   );
 }

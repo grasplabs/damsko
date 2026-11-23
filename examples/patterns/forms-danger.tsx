@@ -38,9 +38,9 @@ const layout = stylex.create({
 // member) would take a hold on the button instead.
 export default function FormsDanger() {
   const save = useAction(saveProject, {
-    loadingLabel: "Saving",
-    successLabel: "Saved",
-    errorLabel: "Not saved",
+    loadingText: "Saving",
+    successText: "Saved",
+    errorText: "Not saved",
   });
   const [open, setOpen] = useState(false);
   const [removing, setRemoving] = useState(false);
@@ -72,9 +72,9 @@ export default function FormsDanger() {
             type="submit"
             variant="default"
             status={save.status}
-            loadingLabel="Saving"
-            successLabel="Saved"
-            errorLabel="Not saved"
+            loadingText="Saving"
+            successText="Saved"
+            errorText="Not saved"
           >
             Save changes
           </Button>
@@ -121,8 +121,8 @@ export default function FormsDanger() {
                 variant="destructive"
                 size="sm"
                 onClick={remove}
-                loadingLabel="Deleting"
-                errorLabel="Not deleted"
+                loadingText="Deleting"
+                errorText="Not deleted"
                 agentConfirm="Deletes the project Quarterly review and its 14 reports"
               >
                 Delete forever

@@ -44,7 +44,7 @@ export default function ModelSelectorFavorites() {
             <ModelSelectorMaker
               key={maker.id}
               value={maker.id}
-              label={maker.name}
+              aria-label={maker.name}
               logo={maker.logo}
             />
           ))}

@@ -63,8 +63,8 @@ export default function AlertDialogFailed() {
             variant="destructive"
             size="sm"
             onClick={remove}
-            loadingLabel="Deleting"
-            errorLabel="Could not delete"
+            loadingText="Deleting"
+            errorText="Could not delete"
             agentConfirm="Deletes the 2025 archive and its 1,180 reports"
           >
             Delete

@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@grasp-os/ui/components/select";
-import { Slider } from "@grasp-os/ui/components/slider";
+import { Slider, SliderLabel } from "@grasp-os/ui/components/slider";
 import { Switch } from "@grasp-os/ui/components/switch";
 import { space } from "@grasp-os/ui/lib/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
@@ -74,7 +74,9 @@ export default function FormRequiredNames() {
           </Field>
         </RadioGroup>
       </Field>
-      <Slider label="Share of the budget" defaultValue={40} />
+      <Slider defaultValue={40}>
+        <SliderLabel>Share of the budget</SliderLabel>
+      </Slider>
       <div>
         <Label htmlFor="plain-code" required>
           Project code

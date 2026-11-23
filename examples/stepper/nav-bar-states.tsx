@@ -42,7 +42,7 @@ export default function StepperNavBarStates() {
         total={7}
         onBack={stay}
         onNext={stay}
-        finishLabel="Create agent"
+        finishText="Create agent"
         loading
       />
       <StepperNav

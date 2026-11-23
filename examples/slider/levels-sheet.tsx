@@ -21,10 +21,9 @@ export default function SliderLevelsSheet() {
         <Slider
           variant="levels"
           key={level.id}
-          label={`Effort at ${level.label}`}
-          showLabel={false}
           levels={effort}
           defaultValue={level.id}
+          aria-label={`Effort at ${level.label}`}
         />
       ))}
     </div>

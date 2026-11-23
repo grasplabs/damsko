@@ -60,8 +60,8 @@ export default function ConfirmationsDelete() {
             variant="destructive"
             size="sm"
             onClick={remove}
-            loadingLabel="Deleting"
-            errorLabel="Could not delete"
+            loadingText="Deleting"
+            errorText="Could not delete"
             agentConfirm="Deletes the project Quarterly review and its 14 reports"
           >
             Delete

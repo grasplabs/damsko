@@ -975,6 +975,22 @@ test("queued messages wait above the card: one is put back to edit, one taken of
   await expect(page.getByText(/queued/u)).toHaveCount(0);
 });
 
+test("the queue's fold shuts and opens it, and says whether it is open", async ({
+  page,
+}) => {
+  await openExample(page, "prompt-input", "queue");
+  const fold = page.getByRole("button", { name: "2 queued" });
+  const first = page.getByText("Also compare it with last year's numbers");
+  await expect(fold).toHaveAttribute("aria-expanded", "true");
+  await expect(first).toBeVisible();
+  await fold.click();
+  await expect(fold).toHaveAttribute("aria-expanded", "false");
+  await expect(first).toBeHidden();
+  await fold.press("Enter");
+  await expect(fold).toHaveAttribute("aria-expanded", "true");
+  await expect(first).toBeVisible();
+});
+
 test("while the page loads the card stands still in the same box, and nothing in it can be reached", async ({
   page,
 }) => {

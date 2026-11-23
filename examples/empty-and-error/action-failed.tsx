@@ -14,9 +14,9 @@ export default function ActionFailed() {
     <Button
       variant="outline"
       onClick={archive}
-      loadingLabel="Archiving"
-      successLabel="Archived"
-      errorLabel="Not archived"
+      loadingText="Archiving"
+      successText="Archived"
+      errorText="Not archived"
     >
       Archive project
     </Button>

@@ -83,7 +83,7 @@ export interface CodeBlockProps {
    */
   language?: string;
   /** The language's name in the header, where the usual one would not do. */
-  languageLabel?: string;
+  languageName?: string;
   /**
    * It is still being written: the header says so in words, copying waits, nothing folds, and
    * the code grows in place, read again at most once a frame.
@@ -602,7 +602,7 @@ interface Block {
   /** Its name, when given in words. */
   label: string | undefined;
   language: string;
-  languageLabel: string | undefined;
+  languageName: string | undefined;
   streaming: boolean;
   showStreamingIndicator: boolean;
   variant: "default" | "destructive";
@@ -655,7 +655,7 @@ export const CodeBlock = ({
   variant = "default",
   size: sized = "default",
   language = "text",
-  languageLabel,
+  languageName,
   streaming = false,
   showStreamingIndicator = false,
   "aria-label": label,
@@ -685,7 +685,7 @@ export const CodeBlock = ({
           nameId,
           label,
           language,
-          languageLabel,
+          languageName,
           streaming,
           showStreamingIndicator,
           variant,
@@ -720,12 +720,12 @@ export const CodeBlockHeader = ({ children }: CodeBlockHeaderProps) => {
  */
 export const CodeBlockTitle = ({ children }: CodeBlockTitleProps) => {
   const words = useI18n().codeBlock;
-  const { nameId, language, languageLabel, streaming, showStreamingIndicator } =
+  const { nameId, language, languageName, streaming, showStreamingIndicator } =
     useBlock("CodeBlockTitle");
   const titled = children !== undefined && children !== null && children !== "";
   const key = language.toLowerCase();
   const name =
-    languageLabel ??
+    languageName ??
     (key === "text" ? words.plainText : ownValue(languageNames, key)) ??
     language;
   return (

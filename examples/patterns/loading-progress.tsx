@@ -1,5 +1,9 @@
 import { Button } from "@grasp-os/ui/components/button";
-import { Progress } from "@grasp-os/ui/components/progress";
+import {
+  Progress,
+  ProgressLabel,
+  ProgressValue,
+} from "@grasp-os/ui/components/progress";
 import { colors, font, space } from "@grasp-os/ui/lib/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
 import { useEffect, useState } from "react";
@@ -38,11 +42,12 @@ export default function LoadingProgress() {
           The report has not been exported yet.
         </p>
       ) : (
-        <Progress
-          label={value === 100 ? "Report exported" : "Exporting the report"}
-          value={value}
-          variant={value === 100 ? "success" : "default"}
-        />
+        <Progress value={value} variant={value === 100 ? "success" : "default"}>
+          <ProgressLabel>
+            {value === 100 ? "Report exported" : "Exporting the report"}
+          </ProgressLabel>
+          <ProgressValue />
+        </Progress>
       )}
       {/* The button keeps focus while it is off, so a keyboard user stays on it. */}
       <Button

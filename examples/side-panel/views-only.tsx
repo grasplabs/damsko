@@ -14,6 +14,7 @@ import {
   SidePanelContent,
   SidePanelHeader,
   SidePanelSection,
+  SidePanelSectionAdd,
 } from "@grasp-os/ui/components/side-panel";
 import {
   ClockIcon,
@@ -78,15 +79,17 @@ export default function SidePanelViewsOnly() {
           <SidePanelSection
             title="Comments"
             description="What people said about it."
-            emptyLabel="No comments yet"
-          />
+          >
+            <SidePanelSectionAdd>No comments yet</SidePanelSectionAdd>
+          </SidePanelSection>
         </SidePanelContent>
         <SidePanelContent value="history">
           <SidePanelSection
             title="History"
             description="Its changes, the newest first."
-            emptyLabel="No changes yet"
-          />
+          >
+            <SidePanelSectionAdd>No changes yet</SidePanelSectionAdd>
+          </SidePanelSection>
         </SidePanelContent>
       </SidePanel>
     </div>

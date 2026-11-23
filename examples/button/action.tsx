@@ -21,9 +21,9 @@ export default function ButtonAction() {
       <Button
         variant="outline"
         onClick={sendInvite}
-        loadingLabel="Sending"
-        successLabel="Sent"
-        errorLabel="Not sent"
+        loadingText="Sending"
+        successText="Sent"
+        errorText="Not sent"
       >
         <Icon icon={SendIcon} />
         Send invite

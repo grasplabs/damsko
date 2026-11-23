@@ -40,7 +40,7 @@ To go somewhere, `asChild` draws the link itself, `<a href>`, so it opens in a n
 
 ## A press that takes time
 
-It is automatic: when `onClick` returns a Promise, the Button is busy until it settles, takes no second press and shows a spinner, in its icon's place or over its words when it has none, then a tick or the alert for a moment, and the words stay in their place so the width never changes. Failed, it draws the quiet fill with destructive words and edge, whatever its variant. `loadingLabel`, `successLabel` and `errorLabel` are said and shown in place of the words, all stacked so the widest sets the width (an icon-only button says them only). When the page runs the work itself, as a form's submit, it gives `status` instead.
+It is automatic: when `onClick` returns a Promise, the Button is busy until it settles, takes no second press and shows a spinner, in its icon's place or over its words when it has none, then a tick or the alert for a moment, and the words stay in their place so the width never changes. Failed, it draws the quiet fill with destructive words and edge, whatever its variant. `loadingText`, `successText` and `errorText` are said and shown in place of the words, all stacked so the widest sets the width (an icon-only button says them only). When the page runs the work itself, as a form's submit, it gives `status` instead.
 
 <Stage path="button/action" live label="A press that takes time" />
 
@@ -318,7 +318,7 @@ Loading keeps focus on the button; success and failure show for a moment, then i
     {
       key: "Loading",
       value:
-        "`aria-busy` and `aria-disabled`; its labels, or the catalogue's words, said once: `loadingLabel` as the work starts, and with none the catalogue's word only once the work has run a second, so a copy says only Copied",
+        "`aria-busy` and `aria-disabled`; its labels, or the catalogue's words, said once: `loadingText` as the work starts, and with none the catalogue's word only once the work has run a second, so a copy says only Copied",
     },
     {
       key: "Disabled",
@@ -337,7 +337,7 @@ Loading keeps focus on the button; success and failure show for a moment, then i
 A press whose `onClick` returns a Promise needs nothing more:
 
 ```tsx
-<Button onClick={saveChanges} successLabel="Saved" errorLabel="Could not save">
+<Button onClick={saveChanges} successText="Saved" errorText="Could not save">
   Save changes
 </Button>
 ```

@@ -20,6 +20,7 @@ const gates: readonly (readonly string[])[] = [
   ["scripts/check-props.ts"],
   ["scripts/check-api.ts"],
   ["scripts/check-conventions.ts"],
+  ["scripts/check-labels.ts"],
   ["scripts/check-target-api.ts"],
   ["scripts/check-coverage.ts"],
   ["scripts/check-product-knowledge.ts"],

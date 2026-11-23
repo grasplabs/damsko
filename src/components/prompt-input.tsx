@@ -447,7 +447,7 @@ export type PromptInputActionMenuItemProps = DropdownMenuItemProps;
 /** Every prop a PromptInputActionAddAttachments takes. */
 export interface PromptInputActionAddAttachmentsProps {
   /** Its words, in place of `promptInput.addAttachments` ("Add files"). */
-  label?: string;
+  children?: string;
   /** Layout only. */
   style?: LayoutStyle;
 }
@@ -537,10 +537,8 @@ export interface PromptInputBannerProps {
 
 /** Every prop a PromptInputQueue takes. */
 export interface PromptInputQueueProps {
-  /** Its PromptInputQueueItems: the messages written while an answer was still coming, the next one first. */
+  /** Its PromptInputQueueTrigger, then its PromptInputQueueContent. */
   children: ReactNode;
-  /** The words on its fold, with the count ("2 queued"). */
-  label: string;
   /**
    * Whether it starts open.
    * @default true
@@ -548,6 +546,18 @@ export interface PromptInputQueueProps {
   defaultOpen?: boolean;
   /** Layout only. */
   style?: LayoutStyle;
+}
+
+/** Every prop a PromptInputQueueTrigger takes. */
+export interface PromptInputQueueTriggerProps {
+  /** The words on its fold, with the count ("2 queued"). */
+  children: ReactNode;
+}
+
+/** Every prop a PromptInputQueueContent takes. */
+export interface PromptInputQueueContentProps {
+  /** Its PromptInputQueueItems: the messages written while an answer was still coming, the next one first. */
+  children: ReactNode;
 }
 
 /** Every prop a PromptInputQueueItem takes. */
@@ -672,21 +682,26 @@ export interface PromptInputMentionProps {
 export interface PromptInputMentionContentProps {
   /**
    * Rows of your own, as PromptInputMentionItems, drawn in place of the rows of the trigger's
-   * `items` (which every trigger has). Without them it draws the trigger's items.
+   * `items` (which every trigger has), and a PromptInputMentionEmpty for what it says while nothing
+   * matches. Without rows it draws the trigger's items.
    */
   children?: ReactNode;
-  /**
-   * The words while nothing matches.
-   * @default `promptInput.mentionEmpty`
-   */
-  emptyLabel?: string;
   /**
    * The words when the items could not be loaded.
    * @default `promptInput.mentionsError`
    */
-  errorLabel?: string;
+  errorText?: string;
   /** Layout only. */
   style?: LayoutStyle;
+}
+
+/** Every prop a PromptInputMentionEmpty takes. */
+export interface PromptInputMentionEmptyProps {
+  /**
+   * The words while nothing matches.
+   * @default `promptInput.mentionEmpty`
+   */
+  children?: ReactNode;
 }
 
 /** Every prop a PromptInputMentionItem takes. */
@@ -2648,7 +2663,6 @@ export const PromptInputBanner = ({
  */
 export const PromptInputQueue = ({
   children,
-  label,
   defaultOpen = true,
   style,
 }: PromptInputQueueProps) => {
@@ -2660,15 +2674,26 @@ export const PromptInputQueue = ({
       data-slot="prompt-input-queue"
       {...stylex.props(styles.above, styles.queue, style)}
     >
-      <Collapsible defaultOpen={defaultOpen}>
-        <CollapsibleTrigger>{label}</CollapsibleTrigger>
-        <CollapsibleContent>
-          <ul {...stylex.props(styles.queueList)}>{children}</ul>
-        </CollapsibleContent>
-      </Collapsible>
+      <Collapsible defaultOpen={defaultOpen}>{children}</Collapsible>
     </div>
   );
 };
+
+/** The queue's fold: its words, with the count, open and shut it. */
+export const PromptInputQueueTrigger = ({
+  children,
+}: PromptInputQueueTriggerProps) => (
+  <CollapsibleTrigger>{children}</CollapsibleTrigger>
+);
+
+/** What the fold opens: the waiting messages, the next one first. */
+export const PromptInputQueueContent = ({
+  children,
+}: PromptInputQueueContentProps) => (
+  <CollapsibleContent>
+    <ul {...stylex.props(styles.queueList)}>{children}</ul>
+  </CollapsibleContent>
+);
 
 /**
  * One waiting message: its words, and its actions at the row's end. When an action takes the
@@ -3660,11 +3685,12 @@ const PICKER_KEYS = "mod+/";
 
 /** Opens the file picker: Cmd or Ctrl and / does the same while focus is in the form. */
 export const PromptInputActionAddAttachments = ({
-  label,
+  children,
   style,
 }: PromptInputActionAddAttachmentsProps) => {
   const words = useI18n().promptInput;
   const openFiles = usePromptInput()?.openFiles;
+  const said = children ?? words.addAttachments;
   return (
     <DropdownMenuItem
       icon={PaperclipIcon}
@@ -3672,10 +3698,10 @@ export const PromptInputActionAddAttachments = ({
       onSelect={() => {
         openFiles?.();
       }}
-      label={label ?? words.addAttachments}
+      label={said}
       style={style}
     >
-      {label ?? words.addAttachments}
+      {said}
       <DropdownMenuShortcut>{PICKER_KEYS}</DropdownMenuShortcut>
     </DropdownMenuItem>
   );
@@ -4480,8 +4506,8 @@ const DataRows = ({ items }: { items: TriggerMenuData<unknown> }) =>
 const menuWords = (
   state: { status: TriggerMenuContentState["status"]; loading?: boolean },
   words: { error: string; loading: string },
-  rest: string
-) => {
+  rest: ReactNode
+): ReactNode => {
   if (state.status === "error") {
     return words.error;
   }
@@ -4490,18 +4516,48 @@ const menuWords = (
     : rest;
 };
 
+/** Where the menu is, for its PromptInputMentionEmpty: its state and its own words for it. */
+const MentionMenuContext = createContext<
+  | {
+      state: TriggerMenuContentState;
+      said: { error: string; loading: string };
+    }
+  | undefined
+>(undefined);
+
+/** What the menu says while nothing matches; and while its items load, or when they failed. */
+export const PromptInputMentionEmpty = ({
+  children,
+}: PromptInputMentionEmptyProps) => {
+  const menu = use(MentionMenuContext);
+  const words = useI18n().promptInput;
+  if (menu === undefined) {
+    throw new Error(
+      "PromptInputMentionEmpty must be used within a PromptInputMentionContent."
+    );
+  }
+  return (
+    // Its own words when the loader failed, where UI SDK would say nothing matched.
+    <TriggerMenuEmpty {...stylex.props(styles.mentionEmpty)}>
+      {menuWords(menu.state, menu.said, children ?? words.mentionEmpty)}
+    </TriggerMenuEmpty>
+  );
+};
+
 /** The menu: a menu's panel at the caret, its items, and what it says when it has none. */
 export const PromptInputMentionContent = ({
   children,
-  emptyLabel,
-  errorLabel,
+  errorText,
   style,
 }: PromptInputMentionContentProps) => {
   const words = useI18n().promptInput;
   const said = {
-    error: errorLabel ?? words.mentionsError,
+    error: errorText ?? words.mentionsError,
     loading: words.mentionsLoading,
   };
+  const parts = partsOf(children);
+  const empty = parts.find((part) => isPart(part, PromptInputMentionEmpty));
+  const rows = parts.filter((part) => !isPart(part, PromptInputMentionEmpty));
   return (
     <TriggerMenuContent
       side="bottom"
@@ -4524,18 +4580,16 @@ export const PromptInputMentionContent = ({
       )}
     >
       {(state: TriggerMenuContentState) => (
-        <>
-          {/* Its own words when the loader failed, where UI SDK would say nothing matched. */}
-          <TriggerMenuEmpty {...stylex.props(styles.mentionEmpty)}>
-            {menuWords(state, said, emptyLabel ?? words.mentionEmpty)}
-          </TriggerMenuEmpty>
+        // oxlint-disable-next-line react/jsx-no-constructed-context-values -- compiled
+        <MentionMenuContext value={{ state, said }}>
+          {empty ?? <PromptInputMentionEmpty />}
           <TriggerMenuList
             data-slot="prompt-input-mention"
             {...stylex.props(styles.mentionList)}
           >
-            {children ?? <DataRows items={state.items} />}
+            {rows.length > 0 ? rows : <DataRows items={state.items} />}
           </TriggerMenuList>
-        </>
+        </MentionMenuContext>
       )}
     </TriggerMenuContent>
   );
@@ -4591,7 +4645,7 @@ export const PromptInputMention = ({
       }}
     >
       <TriggerMenuStatus {...stylex.props(visuallyHidden)}>
-        {(state: TriggerMenuStatusState) =>
+        {(state: TriggerMenuStatusState): ReactNode =>
           menuWords(
             state,
             said,

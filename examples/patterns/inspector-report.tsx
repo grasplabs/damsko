@@ -139,7 +139,7 @@ const OwnerDialog = ({
       actions={[
         {
           label: "Save",
-          errorLabel: "Could not save",
+          errorText: "Could not save",
           run: () => {
             if (chosen !== null) {
               onSave(chosen);

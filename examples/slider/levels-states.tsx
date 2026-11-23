@@ -1,4 +1,4 @@
-import { Slider } from "@grasp-os/ui/components/slider";
+import { Slider, SliderLabel } from "@grasp-os/ui/components/slider";
 import * as stylex from "@stylexjs/stylex";
 
 import { detail, effort } from "./effort-levels";
@@ -26,12 +26,13 @@ export default function SliderLevelsState({
     <Slider
       variant="levels"
       style={layout.cell}
-      label="Effort"
       levels={levels}
       defaultValue={value}
       size={size}
       disabled={disabled}
-      emptyLabel="This model has one level of effort."
-    />
+      emptyText="This model has one level of effort."
+    >
+      <SliderLabel>Effort</SliderLabel>
+    </Slider>
   );
 }
