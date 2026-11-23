@@ -132,3 +132,28 @@ test("at a phone's width a date stays whole on one line, and a long name gives w
   );
   expect(givesWay).toBe(true);
 });
+
+test("while the record loads its head says it is busy; a footer stands under the sections", async ({
+  page,
+}) => {
+  await openExample(page, "inspector-01", "loading");
+  const panel = page.getByRole("complementary", { name: "Source details" });
+  await expect(panel.locator("[aria-busy=true]")).not.toHaveCount(0);
+  await expect(panel.getByRole("heading", { level: 2 })).toHaveCount(0);
+  const footer = panel.getByText("Earlier versions are kept for 400 days.");
+  await expect(footer).toBeVisible();
+  await page.getByRole("button", { name: "Show the record" }).click();
+  await expect(
+    panel.getByRole("heading", { level: 2, name: "Supplier contracts 2026" })
+  ).toBeVisible();
+  await expect(panel.locator("[aria-busy=true]")).toHaveCount(0);
+  await expect(panel.getByText("12 November 2026")).toBeVisible();
+  // The footer stands after the last section.
+  const section = await panel
+    .getByRole("region", { name: "This version" })
+    .boundingBox();
+  const foot = await footer.boundingBox();
+  expect(foot?.y ?? 0).toBeGreaterThanOrEqual(
+    (section?.y ?? 0) + (section?.height ?? 0)
+  );
+});
