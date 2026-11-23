@@ -567,6 +567,19 @@ test("a button keeps the room its longest words need, failure's too: Export is a
   page,
 }) => {
   await openExample(page, "button", "sizes");
-  const box = await page.getByRole("button", { name: "Export" }).boundingBox();
-  expect(box?.width).toBeCloseTo(134, 0);
+  const [inner, failure] = await page
+    .getByRole("button", { name: "Export" })
+    .evaluate((button) => {
+      const content = button.querySelector("[data-slot=button-content]");
+      const words = [...(content?.children ?? [])].find(
+        (layer) => layer.textContent === "Not exported"
+      );
+      return [
+        content?.getBoundingClientRect().width ?? -1,
+        words?.getBoundingClientRect().width ?? 0,
+      ];
+    });
+  // At rest Export already holds the room Not exported needs (134px in the original's fonts).
+  expect(failure).toBeGreaterThan(0);
+  expect(inner).toBeCloseTo(failure, 0);
 });
