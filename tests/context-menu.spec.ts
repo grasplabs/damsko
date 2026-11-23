@@ -208,6 +208,50 @@ test.describe("on a touch screen", () => {
     );
     expect(heights.every((height) => height >= 44)).toBe(true);
   });
+
+  for (const example of ["file", "in-dialog"]) {
+    test(`a long press opens the menu, and lifting the finger leaves it open (${example})`, async ({
+      page,
+    }) => {
+      await openExample(page, "context-menu", example);
+      if (example === "in-dialog") {
+        await page.getByRole("button", { name: "Open the files" }).tap();
+      }
+      const area = page.getByRole("group", { name: "Q3 forecast" });
+      const box = await area.boundingBox();
+      if (box === null) {
+        throw new Error("the area is not on the page");
+      }
+      const at = { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+      // A finger held down, then lifted: the touch as the browser's own input sends it.
+      const cdp = await page.context().newCDPSession(page);
+      await cdp.send("Input.dispatchTouchEvent", {
+        type: "touchStart",
+        touchPoints: [at],
+      });
+      const menu = page.getByRole("menu");
+      await expect(menu).toBeVisible();
+      await page.evaluate(() => {
+        window.addEventListener(
+          "click",
+          () => {
+            document.body.dataset.clicked = "";
+          },
+          { capture: true, once: true }
+        );
+      });
+      await cdp.send("Input.dispatchTouchEvent", {
+        type: "touchEnd",
+        touchPoints: [],
+      });
+      // The click a browser sends after the finger lifts has come and gone.
+      await expect(page.locator("body")).toHaveAttribute("data-clicked", "");
+      await expect(menu).toBeVisible();
+      // A tap outside it still closes it.
+      await page.touchscreen.tap(at.x, box.y - 24);
+      await expect(menu).toBeHidden();
+    });
+  }
 });
 
 test("round a link that takes the keys, the area takes no tab stop, and focus goes back to the link", async ({
@@ -217,6 +261,8 @@ test("round a link that takes the keys, the area takes no tab stop, and focus go
   const link = page.getByRole("link", { name: "Q3 forecast" });
   await page.keyboard.press("Tab");
   await expect(link).toBeFocused();
+  // The link is the one thing with that name: the area round it is no group of the same name.
+  await expect(page.getByRole("group", { name: "Q3 forecast" })).toHaveCount(0);
   await page.keyboard.press("Shift+F10");
   await expect(page.getByRole("menu")).toBeVisible();
   await page.keyboard.press("Escape");

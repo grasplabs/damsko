@@ -49,6 +49,9 @@ const over: Record<string, { requests?: number; bytes?: number }> = {
   "/components/markdown": { requests: 29, bytes: 630 * 1024 },
   // MessageResponse's Markdown, once its answers draw, Message scroller, and Reasoning in a turn.
   "/components/message": { requests: 32, bytes: 630 * 1024 },
+  // Prompt input and the parts its examples compose: the page stood 152 bytes under the limit,
+  // and the docs' own Sidebar and Snippet, on every page, then grew by under 1KB.
+  "/components/prompt-input": { bytes: 610 * 1024 },
   // Reasoning, which loads Markdown with it for its thoughts.
   "/components/reasoning": { requests: 29, bytes: 620 * 1024 },
   // Prism, for the commit example's diffs: it is the row that opens, in view on the first screen.

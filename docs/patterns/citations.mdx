@@ -1,0 +1,40 @@
+---
+title: Sources and citations
+description: Citations in an answer's words and the list of sources under it, each lighting the other.
+---
+
+<Head lead={frontmatter.description} />
+
+## A citation and its row
+
+An answer cites its sources by number in its words, and lists them under it in Sources. The page holds two things: which source is under the pointer or holds focus, and whether the list is open.
+
+- Resting on a citation, or tabbing to it, lights the row it stands for. Resting on a row, or tabbing to it, lights every citation of it.
+- A press on a citation opens the list and goes to its row: the row's link takes focus and is scrolled into view.
+
+A citation is a link to its row, named for what it cites ("Source 1: Churn by region, Q3"), so a screen reader hears where it leads. It is drawn as the original design drew it, from tokens: a small box on the soft fill (`muted`) with the system's edge, its number in the quiet ink. Lit, the citation and the row's box take the highlight fill (`accent-highlight`) and the number takes the ink; the list's own rows stay its items.
+
+<Stage path="patterns/citations" label="A citation and its row" />
+
+## What it is made of
+
+- **Sources**, held open by the page (`open`, `onOpenChange`), with a **Source** for each row.
+- A link of the pattern's own for each citation in the words, with the library's focus ring and a finger's target (`focusRing`, `tapTarget`).
+- Two pieces of state for the light, the source under the pointer and the one holding focus, so a pointer leaving never puts out the light that focus holds.
+
+Where a citation should show the source itself in a card, on hover and on focus, use [Inline citation](/components/inline-citation) in the words and keep Sources under the answer for a touch screen and a screen reader.
+
+## Rules
+
+<Rules
+  always={[
+    "Number the citations in the order of the list, and name each for its source.",
+    "The same light from both ends: a citation lights its row, a row its citations.",
+    "A press on a citation opens the list first, then moves focus to the row.",
+  ]}
+  never={[
+    "A citation that only a pointer can use: focus lights the row too.",
+    "The light as the only sign of which source is meant: the number says it.",
+    "A citation with no row in the list under the answer.",
+  ]}
+/>

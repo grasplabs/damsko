@@ -30,7 +30,7 @@ import {
   MenuContextTrigger,
   MenuSub,
 } from "@ui-sdk/react/menu";
-import { createContext, use } from "react";
+import { createContext, use, useRef } from "react";
 import type { ComponentProps, KeyboardEvent, ReactNode } from "react";
 
 import type { IconData } from "../lib/icons";
@@ -81,7 +81,10 @@ export interface ContextMenuProps {
 export interface ContextMenuTriggerProps {
   /** The area it opens on: a row, a card, a canvas. With `asChild`, the one element that is the area. */
   children: ReactNode;
-  /** The area's name, as a screen reader and an agent say it: the thing the actions are for ("Q3 forecast"). */
+  /**
+   * The area's name, as a screen reader and an agent say it: the thing the actions are for
+   * ("Q3 forecast"). Not said with `tabStop={false}`, where the thing inside carries the name.
+   */
   "aria-label": string;
   /**
    * Draws the one element given as the child as the area, with the area's props on it.
@@ -90,7 +93,8 @@ export interface ContextMenuTriggerProps {
   asChild?: boolean;
   /**
    * Whether the area takes a tab stop of its own. `false` when the area holds the thing the keys
-   * reach (a row's link): the menu key and Shift+F10 on it still open the menu, as they bubble.
+   * reach (a row's link): the menu key and Shift+F10 on it still open the menu, as they bubble,
+   * and the area is then no group of its own: the thing inside is what is named.
    * @default true
    */
   tabStop?: boolean;
@@ -342,15 +346,49 @@ export const ContextMenu = ({
   children,
   onOpenChange,
   disabled = false,
-}: ContextMenuProps) => (
-  <Menu
-    onOpenChange={onOpenChange}
-    // Silent: an item says its own work once it starts, with its own words.
-    pendingAnnouncement=""
-  >
-    <Disabled value={disabled}>{children}</Disabled>
-  </Menu>
-);
+}: ContextMenuProps) => {
+  // A long press opened it, and that finger has not come down again since.
+  const held = useRef(false);
+  const change: OpenChange = (open, details) => {
+    const { event, reason } = details;
+    if (open) {
+      held.current =
+        reason === "trigger-press" &&
+        event instanceof PointerEvent &&
+        event.pointerType === "touch";
+      if (held.current) {
+        window.addEventListener(
+          "pointerdown",
+          () => {
+            held.current = false;
+          },
+          { capture: true, once: true }
+        );
+      }
+    } else if (
+      held.current &&
+      reason === "outside-press" &&
+      event?.type === "click"
+    ) {
+      // The click a browser sends as the finger lifts ends the long press, on the area, not a
+      // press outside the menu: inside a dialog or a sheet it was taken for one, and closed the
+      // menu as it opened.
+      held.current = false;
+      details.cancel();
+      return;
+    }
+    onOpenChange?.(open, details);
+  };
+  return (
+    <Menu
+      onOpenChange={change}
+      // Silent: an item says its own work once it starts, with its own words.
+      pendingAnnouncement=""
+    >
+      <Disabled value={disabled}>{children}</Disabled>
+    </Menu>
+  );
+};
 
 /** The area the menu opens on, with its tab stop and its name. */
 export const ContextMenuTrigger = ({
@@ -366,9 +404,11 @@ export const ContextMenuTrigger = ({
     <MenuContextTrigger
       disabled={disabled}
       tabIndex={disabled || !tabStop ? undefined : 0}
-      // The area is any content the caller gives; a <fieldset> would bring its own border and padding
-      role="group"
-      aria-label={ariaLabel}
+      // The area is any content the caller gives; a <fieldset> would bring its own border and padding.
+      // An area with no tab stop only stands round the thing the keys reach, which has the name:
+      // it is no group of the same name beside it.
+      role={tabStop ? "group" : undefined}
+      aria-label={tabStop ? ariaLabel : undefined}
       onKeyDown={disabled ? undefined : openByKey}
       render={slotted("div", "context-menu-trigger", slot.render)}
       {...stylex.props(styles.area, focusRing, style)}

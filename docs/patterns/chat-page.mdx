@@ -19,6 +19,8 @@ A chat at its own address. The switch above the page shows each state the produc
 - The person's **Message**, with Copy. The assistant's **Message** holds, in order: its steps in a **ChainOfThought** (each step active while it runs, folded to one line once done), the answer in **MessageResponse** (streaming while words arrive), the **Sources** it drew on once it is written, then its actions: Copy, thumbs up and down, Write it again (**MessageAction**).
 - The **PromptInput** at the foot: its `status` is `streaming` while the assistant works, so Submit turns into **Stop**; `disabled` while the chat loads.
 
+A thread's day lines, its Unread line and older messages loading as the reader nears the top are in [Chat thread](/patterns/chat-thread); citations that light their source's row are in [Sources and citations](/patterns/citations).
+
 ## The states
 
 - **Answered**, the first HTML: the whole chat, readable without script.

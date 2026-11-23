@@ -44,6 +44,8 @@ const [mode, setMode] = useState<ThemeMode>(() => {
 <ThemeToggle mode={mode} onModeChange={setMode} />;
 ```
 
+[Theme choice](/patterns/theme-choice) shows a small provider that keeps the choice, draws it before the first paint and grows the change from the switch.
+
 Without `data-mode` the system's setting wins. In forced colours the system's palette wins over any theme.
 
 ## The switch

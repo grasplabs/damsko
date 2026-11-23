@@ -119,6 +119,8 @@ export const groups: Group[] = [
     folder: "patterns",
     order: [
       "chat-page",
+      "chat-thread",
+      "citations",
       "forms",
       "settings",
       "members",
@@ -126,6 +128,8 @@ export const groups: Group[] = [
       "loading",
       "confirmations",
       "navigation",
+      "sidebar-rows",
+      "theme-choice",
     ],
   },
   {
