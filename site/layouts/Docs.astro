@@ -16,7 +16,7 @@
 // column, outside the prose (Get started's light band); `wide` is a band across the column and
 // the rail, above both (site/system/styles/site.css, "A wide opening").
 import { ClientRouter } from "astro:transitions";
-import { libraryName, navOpenKey, navStorageKey } from "../system/name";
+import { libraryName, navOpenKey } from "../system/name";
 import { sidebarStateScript } from "@grasp-os/ui/components/sidebar";
 
 import "../../src/styles/tokens.css";
@@ -130,9 +130,9 @@ const rail = headings.filter((heading) => heading.depth === 2 || heading.depth =
     <script is:inline set:html={directionInit} />
     <script is:inline set:html={scrollInit} />
     <script is:inline set:html={groundInit} />
-    {/* The run holding this page is open on arrival, whatever was kept for it: written into the kept
-        folds before the shell wakes, so it stays open and stays kept (site/chrome/nav-folds.ts). */}
-    {!bleed && hereRun && <script is:inline data-astro-rerun set:html={`(()=>{try{const k=${JSON.stringify(navStorageKey)},f=JSON.parse(localStorage.getItem(k)||"{}");f[${JSON.stringify(hereRun)}]=false;localStorage.setItem(k,JSON.stringify(f));}catch(e){}})()`} />}
+    {/* The run holding this page is open on arrival, whatever was kept for it: kept open under the
+        sidebar's key before its script draws the folds, so it stays open and stays kept. */}
+    {!bleed && hereRun && <script is:inline data-astro-rerun set:html={`(()=>{try{localStorage.setItem(${JSON.stringify(`${navOpenKey}:${hereRun}`)},"true");}catch(e){}})()`} />}
     <!-- The sidebar folded or open as the reader left it, on the first paint, before the shell wakes. -->
     {!bleed && <script is:inline data-astro-rerun set:html={sidebarStateScript(navOpenKey)} />}
     <ClientRouter />

@@ -106,7 +106,7 @@ export const scrollInit = `(() => {
  * every page change, so it would start at the top: its place is saved before the swap and put back
  * after it. On a first load, or when the current page's link is out of sight, the link is brought
  * to the middle. Runs right after the sidebar's markup, before it paints, and again once the shell
- * wakes (site:nav-woke, from DocsShell) while the runs a reader kept open open and push the link.
+ * wakes (site:nav-woke, from DocsShell).
  */
 export const sidebarScroll = `(() => {
   const box = () => document.querySelector("[data-site-nav]");
@@ -126,7 +126,7 @@ export const sidebarScroll = `(() => {
     if (sidebar && saved >= 0) sidebar.scrollTop = saved;
     centre();
   });
-  // Awake, the kept runs open (and grow to their height), so the link is followed for a moment.
+  // Awake, the link is followed for a moment, while the runs settle.
   document.addEventListener("site:nav-woke", () => {
     const sidebar = box();
     if (!sidebar) return;
