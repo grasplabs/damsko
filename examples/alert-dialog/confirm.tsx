@@ -56,8 +56,8 @@ export default function AlertDialogConfirm() {
           <Button
             size="sm"
             onClick={sending}
-            loadingLabel="Sending"
-            errorLabel="Could not send"
+            loadingText="Sending"
+            errorText="Could not send"
             agentConfirm="Emails the release notes to 2,400 customers"
           >
             Send to everyone

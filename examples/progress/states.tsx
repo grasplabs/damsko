@@ -19,16 +19,15 @@ export default function ProgressState({
 }) {
   return part === "circle" ? (
     <ProgressCircle
-      label="Exporting the report"
+      aria-label="Exporting the report"
       value={value}
       variant={variant}
     />
   ) : (
     <Progress
-      label="Exporting the report"
+      aria-label="Exporting the report"
       value={value}
       variant={variant}
-      showLabel={false}
       style={layout.bar}
     />
   );

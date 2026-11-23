@@ -28,8 +28,8 @@ export default function InputGroupWithButton() {
             <InputGroupButton
               aria-label="Copy link"
               onClick={copy}
-              successLabel="Copied"
-              errorLabel="Could not copy"
+              successText="Copied"
+              errorText="Could not copy"
             >
               <Icon icon={CopyIcon} />
             </InputGroupButton>

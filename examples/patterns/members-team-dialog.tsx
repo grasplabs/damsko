@@ -319,8 +319,8 @@ export function TeamDialog({
             size="sm"
             variant="default"
             onClick={save}
-            loadingLabel="Saving"
-            errorLabel="Not saved"
+            loadingText="Saving"
+            errorText="Not saved"
           >
             Save changes
           </Button>

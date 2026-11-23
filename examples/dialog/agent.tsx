@@ -42,8 +42,8 @@ interface TaskProps {
   action: string;
   variant: ButtonVariant;
   work: () => Promise<void>;
-  loadingLabel: string;
-  errorLabel: string;
+  loadingText: string;
+  errorText: string;
 }
 
 const Task = ({
@@ -54,8 +54,8 @@ const Task = ({
   action,
   variant,
   work,
-  loadingLabel,
-  errorLabel,
+  loadingText,
+  errorText,
 }: TaskProps) => {
   const [open, setOpen] = useState(false);
   const [runWorking, setRunWorking] = useState(false);
@@ -82,8 +82,8 @@ const Task = ({
             variant={variant}
             size="sm"
             onClick={run}
-            loadingLabel={loadingLabel}
-            errorLabel={errorLabel}
+            loadingText={loadingText}
+            errorText={errorText}
           >
             {action}
           </Button>
@@ -107,8 +107,8 @@ export default function DialogAgent() {
           await wait(300);
           log("renamed");
         }}
-        loadingLabel="Renaming"
-        errorLabel="Could not rename"
+        loadingText="Renaming"
+        errorText="Could not rename"
       />
       <Task
         trigger="Delete project"
@@ -121,8 +121,8 @@ export default function DialogAgent() {
           await wait(300);
           log("deleted");
         }}
-        loadingLabel="Deleting"
-        errorLabel="Could not delete"
+        loadingText="Deleting"
+        errorText="Could not delete"
       />
       <Task
         trigger="Publish report"
@@ -135,8 +135,8 @@ export default function DialogAgent() {
           await wait(300);
           throw new Error("The report could not be reached.");
         }}
-        loadingLabel="Publishing"
-        errorLabel="Could not publish"
+        loadingText="Publishing"
+        errorText="Could not publish"
       />
     </>
   );

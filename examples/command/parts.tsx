@@ -87,7 +87,7 @@ export default function CommandParts() {
             <CommandItem
               value="duplicate"
               icon={CopyIcon}
-              errorLabel="Could not duplicate"
+              errorText="Could not duplicate"
               onAction={() => {
                 throw new Error("offline");
               }}

@@ -1,4 +1,4 @@
-import { Slider } from "@grasp-os/ui/components/slider";
+import { Slider, SliderLabel } from "@grasp-os/ui/components/slider";
 
 import { pageAgent } from "../../site/behaviour/agent";
 
@@ -6,5 +6,9 @@ import { pageAgent } from "../../site/behaviour/agent";
 pageAgent();
 
 export default function SliderAgent() {
-  return <Slider label="Volume" defaultValue={40} />;
+  return (
+    <Slider defaultValue={40}>
+      <SliderLabel>Volume</SliderLabel>
+    </Slider>
+  );
 }

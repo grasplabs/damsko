@@ -6,7 +6,7 @@
 //   - a string given to an attribute that is said or shown (aria-label, aria-description,
 //     aria-roledescription, aria-valuetext, title, placeholder, alt, label);
 //   - a string inside a JSX expression ({open ? "Show less" : "Show more"}).
-//   - a string given to any attribute whose name ends in "Label" (`loadingLabel="Looking"`): it is
+//   - a string given to any attribute whose name ends in "Label" or "Text" (`loadingText="Looking"`): it is
 //     a word handed on to a part that shows or says it.
 // And anywhere in the code, JSX or not (.ts files too):
 //   - a unit written in ("KB", "MB", "GB"): a size is formatted by the host, in its language;
@@ -275,7 +275,10 @@ const scan = (item: string, file: string, code: string) => {
     } else if (ts.isJsxAttribute(node)) {
       const name = node.name.getText(source);
       const value = node.initializer;
-      if ((said.has(name) || name.endsWith("Label")) && value !== undefined) {
+      if (
+        (said.has(name) || /(?:Label|Text)$/u.test(name)) &&
+        value !== undefined
+      ) {
         for (const literal of attributeLiterals(value)) {
           const text = textOf(literal, source);
           if (isWord(text)) {

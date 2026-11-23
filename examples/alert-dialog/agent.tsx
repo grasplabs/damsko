@@ -41,8 +41,8 @@ interface AskProps {
   action: string;
   variant: ButtonVariant;
   work: () => Promise<void>;
-  loadingLabel: string;
-  errorLabel: string;
+  loadingText: string;
+  errorText: string;
   agentConfirm?: string;
 }
 
@@ -53,8 +53,8 @@ const Ask = ({
   action,
   variant,
   work,
-  loadingLabel,
-  errorLabel,
+  loadingText,
+  errorText,
   agentConfirm,
 }: AskProps) => {
   const [open, setOpen] = useState(false);
@@ -93,8 +93,8 @@ const Ask = ({
             variant={variant}
             size="sm"
             onClick={run}
-            loadingLabel={loadingLabel}
-            errorLabel={errorLabel}
+            loadingText={loadingText}
+            errorText={errorText}
             agentConfirm={agentConfirm}
           >
             {action}
@@ -118,8 +118,8 @@ export default function AlertDialogAgent() {
           await wait(300);
           log("deleted");
         }}
-        loadingLabel="Deleting"
-        errorLabel="Could not delete"
+        loadingText="Deleting"
+        errorText="Could not delete"
       />
       <Ask
         trigger="Clear history"
@@ -131,8 +131,8 @@ export default function AlertDialogAgent() {
           await wait(300);
           throw new Error("The history is locked by an export.");
         }}
-        loadingLabel="Clearing"
-        errorLabel="Could not clear"
+        loadingText="Clearing"
+        errorText="Could not clear"
         agentConfirm="Clears every past version of every report"
       />
     </>

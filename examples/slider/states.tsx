@@ -1,4 +1,4 @@
-import { Slider } from "@grasp-os/ui/components/slider";
+import { Slider, SliderLabel } from "@grasp-os/ui/components/slider";
 import * as stylex from "@stylexjs/stylex";
 
 const layout = stylex.create({
@@ -14,11 +14,12 @@ export default function SliderState({
 }) {
   return (
     <Slider
-      label="Volume"
       showValue={false}
       defaultValue={40}
       disabled={disabled}
       style={layout.slider}
-    />
+    >
+      <SliderLabel>Volume</SliderLabel>
+    </Slider>
   );
 }

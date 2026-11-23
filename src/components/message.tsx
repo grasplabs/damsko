@@ -15,7 +15,7 @@
 //       <MessageResponse>{answer}</MessageResponse>
 //       <MessageActions>
 //         <CopyButton value={answer} />
-//         <MessageAction label="Good answer"><Icon icon={ThumbsUpIcon} /></MessageAction>
+//         <MessageAction aria-label="Good answer"><Icon icon={ThumbsUpIcon} /></MessageAction>
 //       </MessageActions>
 //       <MessageFooter><time dateTime="2026-11-12T12:00">2 min ago</time></MessageFooter>
 //     </MessageContent>
@@ -184,10 +184,10 @@ export interface MessageActionsProps {
 /** Every prop a MessageAction takes. */
 export interface MessageActionProps {
   /** Its name, for a screen reader and an agent ("Good answer"). */
-  label: string;
+  "aria-label": string;
   /**
    * What its tooltip says.
-   * @default label
+   * @default aria-label
    */
   tooltip?: string;
   /** The icon: `<Icon icon={ThumbsUpIcon} />`. */
@@ -634,7 +634,7 @@ export const MessageActions = ({
 
 /** One quiet icon button in a message's actions, named by `label`, with its tooltip. */
 export const MessageAction = ({
-  label,
+  "aria-label": ariaLabel,
   tooltip,
   children,
   onClick,
@@ -647,7 +647,7 @@ export const MessageAction = ({
       <Button
         variant="ghost"
         size="icon-sm"
-        aria-label={label}
+        aria-label={ariaLabel}
         aria-pressed={pressed}
         disabled={disabled}
         onClick={onClick === undefined ? undefined : () => onClick()}
@@ -660,7 +660,7 @@ export const MessageAction = ({
         </button>
       </Button>
     </TooltipTrigger>
-    <TooltipContent>{tooltip ?? label}</TooltipContent>
+    <TooltipContent>{tooltip ?? ariaLabel}</TooltipContent>
   </Tooltip>
 );
 

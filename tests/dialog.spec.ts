@@ -160,7 +160,7 @@ test("a failed action says so and keeps it open", async ({ page }) => {
   const dialog = page.getByRole("dialog", { name: "Test the connection" });
   const check = dialog.getByRole("button", { name: "Test", exact: true });
   await check.click();
-  // With no errorLabel, the alert stands on the button and the catalogue's words are said.
+  // With no errorText, the alert stands on the button and the catalogue's words are said.
   await expect(check).toHaveAttribute("data-status", "error");
   await expect.poll(said).toContain("Could not finish");
   await expect(dialog).toBeVisible();

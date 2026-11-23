@@ -11,7 +11,10 @@ import {
   ItemSeparator,
   ItemTitle,
 } from "@grasp-os/ui/components/item";
-import { SidePanelSection } from "@grasp-os/ui/components/side-panel";
+import {
+  SidePanelSection,
+  SidePanelSectionAdd,
+} from "@grasp-os/ui/components/side-panel";
 import {
   ClockIcon,
   Icon,
@@ -84,8 +87,9 @@ export default function SidePanelSectionExample() {
       <SidePanelSection
         title="Context"
         description="Files and notes the agent reads before it starts."
-        emptyLabel="Add context"
-      />
+      >
+        <SidePanelSectionAdd>Add context</SidePanelSectionAdd>
+      </SidePanelSection>
     </div>
   );
 }

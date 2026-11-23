@@ -47,7 +47,7 @@ const commands: CommandItems = [
         label: "Copy link",
         icon: LinkIcon,
         shortcut: "mod+alt+l",
-        errorLabel: "Could not copy",
+        errorText: "Could not copy",
       },
       {
         value: "export",

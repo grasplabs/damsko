@@ -45,7 +45,7 @@ import type { IconData } from "../lib/icons";
 import { codeStyles } from "../lib/styles";
 import { colors, space } from "../lib/tokens.stylex";
 import type { LayoutStyle } from "../lib/utils";
-import { Progress } from "./progress";
+import { Progress, ProgressLabel, ProgressValue } from "./progress";
 import {
   Trace,
   TraceCollapsible,
@@ -389,12 +389,14 @@ export const TestResultsProgress = ({ style }: TestResultsProgressProps) => {
     <Progress
       value={summary.passed}
       max={summary.total}
-      label={label}
       getAriaValueText={() => label}
       variant={summary.failed > 0 ? "destructive" : "success"}
       size="sm"
       style={style}
-    />
+    >
+      <ProgressLabel>{label}</ProgressLabel>
+      <ProgressValue />
+    </Progress>
   );
 };
 

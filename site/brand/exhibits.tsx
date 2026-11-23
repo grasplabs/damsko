@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@grasp-os/ui/components/dropdown-menu";
 import { Field, FieldLabel } from "@grasp-os/ui/components/field";
-import { Slider } from "@grasp-os/ui/components/slider";
+import { Slider, SliderLabel } from "@grasp-os/ui/components/slider";
 import { Snippet } from "@grasp-os/ui/components/snippet";
 import { Textarea } from "@grasp-os/ui/components/textarea";
 import {
@@ -693,7 +693,6 @@ export const Sizes = ({ start = 120 }: { start?: number }) => {
       </div>
       <div {...stylex.props(s.sizeControl)}>
         <Slider
-          label={logoWords.sizeLabel}
           min={8}
           max={240}
           step={1}
@@ -701,7 +700,9 @@ export const Sizes = ({ start = 120 }: { start?: number }) => {
           onValueChange={(value) => {
             setWidth(Array.isArray(value) ? (value[0] ?? start) : value);
           }}
-        />
+        >
+          <SliderLabel>{logoWords.sizeLabel}</SliderLabel>
+        </Slider>
         <p {...stylex.props(s.sizeState)} aria-live="polite">
           <span {...stylex.props(fits ? s.good : s.bad)}>
             <Icon icon={fits ? CheckIcon : XIcon} />

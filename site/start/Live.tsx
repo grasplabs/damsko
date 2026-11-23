@@ -40,7 +40,12 @@ import {
   MessageScrollerProvider,
   MessageScrollerViewport,
 } from "@grasp-os/ui/components/message-scroller";
-import { Progress, ProgressCircle } from "@grasp-os/ui/components/progress";
+import {
+  Progress,
+  ProgressCircle,
+  ProgressLabel,
+  ProgressValue,
+} from "@grasp-os/ui/components/progress";
 import { Reasoning, ReasoningTrigger } from "@grasp-os/ui/components/reasoning";
 import {
   Select,
@@ -133,8 +138,8 @@ export const PressedButton = ({
       <Button
         size="lg"
         onClick={save}
-        successLabel={done}
-        errorLabel="Could not save"
+        successText={done}
+        errorText="Could not save"
       >
         {words}
       </Button>
@@ -159,7 +164,7 @@ export const TurningSwitch = ({ label }: { label: string }) => {
             setMine(next);
           }}
           onSave={() => wait(400)}
-          errorLabel="Could not save"
+          errorText="Could not save"
         />
       </Field>
     </div>
@@ -192,10 +197,12 @@ export const FillingProgress = ({ label }: { label: string }) => {
   return (
     <div ref={box} className="sc-progress">
       <Progress
-        label={label}
         value={Math.min(100, value)}
         variant={value >= 100 ? "success" : "default"}
-      />
+      >
+        <ProgressLabel>{label}</ProgressLabel>
+        <ProgressValue />
+      </Progress>
     </div>
   );
 };
@@ -295,9 +302,9 @@ export const FillingRing = ({ label }: { label: string }) => {
   return (
     <div ref={box}>
       <ProgressCircle
-        label={label}
+        aria-label={label}
         value={Math.min(100, value)}
-        showLabel={false}
+        showValue={false}
         variant={value >= 100 ? "success" : "default"}
       />
     </div>
@@ -480,9 +487,9 @@ const InviteScreen = () => {
           </Field>
           <Button
             onClick={invite}
-            loadingLabel="Sending"
-            successLabel="Sent"
-            errorLabel="Could not send"
+            loadingText="Sending"
+            successText="Sent"
+            errorText="Could not send"
           >
             Send invite
           </Button>

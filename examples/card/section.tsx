@@ -47,8 +47,8 @@ export default function CardSection() {
                 size="sm"
                 variant="outline"
                 onClick={exporting}
-                successLabel="Exported"
-                errorLabel="Not exported"
+                successText="Exported"
+                errorText="Not exported"
               >
                 Export
               </Button>

@@ -7,8 +7,8 @@ export default function ActionFailedStill() {
     <Button
       variant="outline"
       status="error"
-      successLabel="Archived"
-      errorLabel="Not archived"
+      successText="Archived"
+      errorText="Not archived"
     >
       Archive project
     </Button>

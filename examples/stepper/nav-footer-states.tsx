@@ -34,7 +34,7 @@ export default function StepperNavFooterStates() {
         total={7}
         onBack={stay}
         onNext={stay}
-        finishLabel="Create agent"
+        finishText="Create agent"
         loading
       />
     </div>

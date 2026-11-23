@@ -7,7 +7,7 @@ export default function AudioPlayerFailed() {
     <AudioPlayer
       src="data:audio/mpeg;base64,AAAA"
       aria-label="Recording that was moved"
-      errorLabel="Could not play this file. It may have been moved."
+      errorText="Could not play this file. It may have been moved."
     />
   );
 }

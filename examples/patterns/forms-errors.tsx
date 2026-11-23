@@ -27,9 +27,9 @@ const layout = stylex.create({
 // the browser's bubble never shows; once both are right, the button says the invite went.
 export default function FormsErrors() {
   const send = useAction(invite, {
-    loadingLabel: "Sending",
-    successLabel: "Sent",
-    errorLabel: "Not sent",
+    loadingText: "Sending",
+    successText: "Sent",
+    errorText: "Not sent",
   });
   return (
     <form
@@ -71,9 +71,9 @@ export default function FormsErrors() {
           type="submit"
           variant="default"
           status={send.status}
-          loadingLabel="Sending"
-          successLabel="Sent"
-          errorLabel="Not sent"
+          loadingText="Sending"
+          successText="Sent"
+          errorText="Not sent"
         >
           Send invite
         </Button>

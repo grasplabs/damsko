@@ -5,7 +5,11 @@ import { Card, CardDescription, CardTitle } from "@grasp-os/ui/components/card";
 import { Checkbox } from "@grasp-os/ui/components/checkbox";
 import { Field, FieldLabel } from "@grasp-os/ui/components/field";
 import { Input } from "@grasp-os/ui/components/input";
-import { Progress } from "@grasp-os/ui/components/progress";
+import {
+  Progress,
+  ProgressLabel,
+  ProgressValue,
+} from "@grasp-os/ui/components/progress";
 import { Switch } from "@grasp-os/ui/components/switch";
 import { Tabs, TabsList, TabsTrigger } from "@grasp-os/ui/components/tabs";
 import type { ThemeId, ThemeMode } from "@grasp-os/ui/components/theme-toggle";
@@ -187,7 +191,10 @@ export function ThemeBoard() {
           <Checkbox defaultChecked />
           <FieldLabel>Tell the owner</FieldLabel>
         </Field>
-        <Progress label="Uploading files" value={64} />
+        <Progress value={64}>
+          <ProgressLabel>Uploading files</ProgressLabel>
+          <ProgressValue />
+        </Progress>
       </div>
       <Alert variant="warning">
         <AlertTitle>Almost at this month's limit</AlertTitle>

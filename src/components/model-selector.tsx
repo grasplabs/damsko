@@ -15,7 +15,7 @@
 //     <ModelSelectorContent>
 //       <ModelSelectorInput />
 //       <ModelSelectorMakers>
-//         <ModelSelectorMaker value="maker" label="Maker" logo={makerLogo} />
+//         <ModelSelectorMaker value="maker" aria-label="Maker" logo={makerLogo} />
 //       </ModelSelectorMakers>
 //       <ModelSelectorList>
 //         <ModelSelectorEmpty />
@@ -220,7 +220,7 @@ export interface ModelSelectorMakerProps {
   /** Matches the `value` of the ModelSelectorGroup holding its models. */
   value: string;
   /** The maker's name ("Maker"): the option's name and its tooltip. */
-  label: string;
+  "aria-label": string;
   /** The maker's logo, from the product's own (an IconData made with lib/icons' `filledMark`). Left out, its first letter. */
   logo?: IconData;
 }
@@ -295,7 +295,7 @@ export interface ModelSelectorEffortProps {
    * Its heading, and the name of its segments.
    * @default "Thinking" (`modelSelector.effort`)
    */
-  label?: string;
+  heading?: string;
 }
 
 /** Every prop a ModelSelectorLogo takes. */
@@ -306,7 +306,7 @@ export interface ModelSelectorLogoProps {
    * The maker's name, when the logo stands without it in words beside it. Left out, the logo is
    * decoration.
    */
-  label?: string;
+  "aria-label"?: string;
   /** Layout only. */
   style?: LayoutStyle;
 }
@@ -1008,14 +1008,14 @@ export const ModelSelectorMakers = ({
 /** A maker in the column: its logo, named by the maker. */
 export const ModelSelectorMaker = ({
   value,
-  label,
+  "aria-label": label,
   logo,
 }: ModelSelectorMakerProps) => {
   const { registerMaker } = usePanel("ModelSelectorMaker");
   useLayoutEffect(() => registerMaker(value), [registerMaker, value]);
   return (
     <Rail value={value} label={label}>
-      <BrandIcon logo={logo} label={label} size="sm" decorative tile={false} />
+      <BrandIcon logo={logo} name={label} size="sm" decorative tile={false} />
     </Rail>
   );
 };
@@ -1107,13 +1107,13 @@ export const ModelSelectorGroup = ({
 /** A maker's logo, beside the model's name, at the icon's size. */
 export const ModelSelectorLogo = ({
   logo,
-  label,
+  "aria-label": label,
   style,
 }: ModelSelectorLogoProps) => (
   <span data-slot="model-selector-logo" {...stylex.props(styles.logo, style)}>
     <BrandIcon
       logo={logo}
-      label={label ?? ""}
+      name={label ?? ""}
       size="sm"
       decorative={label === undefined}
       tile={false}
@@ -1290,11 +1290,11 @@ const NO_LEVELS: readonly { value: string; label: string }[] = [];
  */
 export const ModelSelectorEffort = ({
   levels,
-  label,
+  heading,
 }: ModelSelectorEffortProps) => {
   const root = useRoot("ModelSelectorEffort");
   const words = useI18n().modelSelector;
-  const named = label ?? words.effort;
+  const named = heading ?? words.effort;
   const open = levels.length > 1;
   const [kept, setKept] = useState(levels);
   if (open && levelsKey(kept) !== levelsKey(levels)) {

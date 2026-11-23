@@ -17,7 +17,7 @@ const commands: CommandItems = [
     value: "send",
     label: "Send the summary",
     icon: SendIcon,
-    errorLabel: "Could not send",
+    errorText: "Could not send",
   },
 ];
 
