@@ -60,3 +60,17 @@ for (const theme of ["light", "dark"] as const) {
     expect(await family("Team members")).toBe(await family("Notifications"));
   });
 }
+
+test("a heading with tabIndex -1 takes focus from code when the control that had it goes, and is no Tab stop", async ({
+  page,
+}) => {
+  await openExample(page, "heading", "focus");
+  const heading = page.getByRole("heading", { name: "Your data", level: 2 });
+  await page.keyboard.press("Tab");
+  await expect(heading).not.toBeFocused();
+  const request = page.getByRole("button", { name: "Request an export" });
+  await expect(request).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(request).toBeHidden();
+  await expect(heading).toBeFocused();
+});
