@@ -156,6 +156,59 @@ export const packageExports: Record<string, string | null> = {
   "./styles/*": "./src/styles/*",
 };
 
+/**
+ * The versions an app here is built with: what Vite's template brings, what the configs below
+ * name, and every package a component imports. They are Damsko's own (the catalog in its
+ * pnpm-workspace.yaml; scripts/check-registry.ts holds the two together), written once, here: the
+ * page shows them as the app's catalog and every command below takes its version from it, so the
+ * install check builds with these and no release upstream changes what it builds.
+ */
+export const versions: Record<string, string> = {
+  // The app: Vite's template and the two the Vite config names.
+  vite: "8.3.8",
+  "@vitejs/plugin-react": "6.3.0",
+  typescript: "7.0.2",
+  "@types/node": "26.6.2",
+  "@stylexjs/unplugin": "0.19.2",
+  lightningcss: "1.33.0",
+  // Beside Tailwind.
+  tailwindcss: "4.3.5",
+  "@tailwindcss/vite": "4.3.5",
+  // What the components import: the CLI adds each by name, and pnpm gives it this version.
+  "@hugeicons/core-free-icons": "4.4.0",
+  "@hugeicons/react": "1.1.10",
+  "@stylexjs/stylex": "0.19.2",
+  "@tanstack/react-table": "9.3.1",
+  "@types/mdast": "4.0.4",
+  "@types/prismjs": "1.26.6",
+  "@types/react": "19.3.0",
+  "@types/react-dom": "19.3.0",
+  "@ui-sdk/core": "0.1.0-beta.13",
+  "@ui-sdk/react": "0.1.0-beta.13",
+  "mdast-util-from-markdown": "2.0.3",
+  "mdast-util-gfm": "3.1.0",
+  "micromark-extension-gfm": "3.0.0",
+  prismjs: "1.30.0",
+  react: "19.3.1",
+  "react-dom": "19.3.1",
+  "react-is": "19.3.1",
+  recharts: "3.10.1",
+};
+
+/** The versions as a pnpm catalog, the lines of a pnpm-workspace.yaml. */
+const catalogYaml = [
+  "# The versions Damsko is built and tested with.",
+  "catalog:",
+  ...Object.entries(versions).map(
+    ([name, version]) =>
+      `  ${name.startsWith("@") ? `"${name}"` : name}: ${version}`
+  ),
+].join("\n");
+
+/** The template's own packages and the two the Vite config names, each at the catalog's version. */
+const addAtCatalog =
+  "pnpm add react@catalog: react-dom@catalog:\npnpm add -D vite@catalog: @vitejs/plugin-react@catalog: typescript@catalog: @types/node@catalog: @types/react@catalog: @types/react-dom@catalog: @stylexjs/unplugin@catalog: lightningcss@catalog:";
+
 /** The stylesheets a new app imports, once, at its root: the tokens first. */
 const appStyles = (from: string) =>
   ["tokens", "themes", "base", "fonts"]
@@ -204,12 +257,29 @@ export const sections: Section[] = [
       {
         slug: "start-a-react-app",
         name: "Start a React app",
-        note: "Vite's React and TypeScript template, with pnpm, StyleX's plugin (the components are StyleX) and lightningcss, which the config below names.",
+        note: "Vite's React and TypeScript template, with pnpm.",
         blocks: [
           {
-            code: "pnpm create vite@9.3.4 app --template react-ts\ncd app\npnpm install\npnpm add -D @stylexjs/unplugin@0.19.2 lightningcss@1.33.0",
+            code: "pnpm create vite@9.3.4 app --template react-ts\ncd app",
             lang: "bash",
             does: { kind: "run", in: "." },
+          },
+        ],
+      },
+      {
+        slug: "pin-the-versions",
+        name: "Pin the versions",
+        note: "The whole of pnpm-workspace.yaml, beside package.json: a catalog of the versions Damsko is built and tested with. The template names its packages by a range and the CLI adds a component's by name alone, so without it each install takes whatever was released last. Then the template's packages, StyleX's plugin (the components are StyleX) and lightningcss, which the config below names, each at the catalog's version. A product with a catalog of its own keeps its own.",
+        blocks: [
+          {
+            code: catalogYaml,
+            lang: "yaml",
+            does: { kind: "write", file: "app/pnpm-workspace.yaml" },
+          },
+          {
+            code: addAtCatalog,
+            lang: "bash",
+            does: { kind: "run", in: "app" },
           },
         ],
       },
@@ -348,10 +418,10 @@ export const sections: Section[] = [
       {
         slug: "the-workspace",
         name: "The workspace and its app",
-        note: "pnpm-workspace.yaml and package.json at the root, then an app from Vite's template.",
+        note: "pnpm-workspace.yaml, with the catalog as above, and package.json at the root, then an app from Vite's template.",
         blocks: [
           {
-            code: "packages:\n  - apps/*\n  - packages/*",
+            code: `packages:\n  - apps/*\n  - packages/*\n\n${catalogYaml}`,
             lang: "yaml",
             does: { kind: "write", file: "pnpm-workspace.yaml" },
           },
@@ -370,7 +440,7 @@ export const sections: Section[] = [
       {
         slug: "the-package",
         name: "The package",
-        note: "The whole of packages/ui/package.json and packages/ui/tsconfig.json. Source is exported as it is: the app's bundler compiles it. A plain exports map misses the two .tsx files of lib/, a component's .stylex.ts and the three folder components, so copy this one. React and its types are the package's own: the components import them, and the CLI adds the rest.",
+        note: "The whole of packages/ui/package.json and packages/ui/tsconfig.json. Source is exported as it is: the app's bundler compiles it. A plain exports map misses the two .tsx files of lib/, a component's .stylex.ts and the three folder components, so copy this one. React and its types are the package's own, at the catalog's versions: the components import them, and the CLI adds the rest.",
         blocks: [
           {
             code: JSON.stringify(
@@ -381,10 +451,10 @@ export const sections: Section[] = [
                 exports: packageExports,
                 peerDependencies: { react: "^19.2.0", "react-dom": "^19.2.0" },
                 devDependencies: {
-                  "@types/react": "^19.2.0",
-                  "@types/react-dom": "^19.2.0",
-                  react: "^19.2.0",
-                  "react-dom": "^19.2.0",
+                  "@types/react": "catalog:",
+                  "@types/react-dom": "catalog:",
+                  react: "catalog:",
+                  "react-dom": "catalog:",
                 },
               },
               null,
@@ -431,10 +501,10 @@ export const sections: Section[] = [
       {
         slug: "the-app-depends-on-it",
         name: "The app depends on it",
-        note: "The package, StyleX's plugin and lightningcss; this installs the workspace too.",
+        note: "The package, then the template's packages, StyleX's plugin and lightningcss at the catalog's versions; this installs the workspace too.",
         blocks: [
           {
-            code: 'cd apps/web\npnpm add "@grasp-os/ui@workspace:*"\npnpm add -D @stylexjs/unplugin@0.19.2 lightningcss@1.33.0',
+            code: `cd apps/web\npnpm add "@grasp-os/ui@workspace:*"\n${addAtCatalog}`,
             lang: "bash",
             does: { kind: "run", in: "." },
           },
@@ -527,7 +597,7 @@ export const sections: Section[] = [
         note: "Skip this in a product that has Tailwind already.",
         blocks: [
           {
-            code: "pnpm add -D tailwindcss@4.3.5 @tailwindcss/vite@4.3.5",
+            code: "pnpm add -D tailwindcss@catalog: @tailwindcss/vite@catalog:",
             lang: "bash",
             does: { kind: "run", in: "apps/web" },
           },
