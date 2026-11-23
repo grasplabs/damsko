@@ -105,9 +105,10 @@ test("folded to its icons by the keys while focus is on a nested row the rail hi
   await expect(triggerOf(page)).toBeFocused();
 });
 
-test("opened from the page's trigger, which shows only while the sidebar is away, focus goes to the sidebar's own trigger", async ({
+test("opened from the page's trigger, which shows only while the sidebar is away, focus goes to the sidebar's own trigger as it slides in", async ({
   page,
 }) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
   await openExample(page, "sidebar", "basic");
   const own = sidebarOf(page).getByRole("button", { name: TOGGLE });
   await own.focus();
@@ -115,6 +116,8 @@ test("opened from the page's trigger, which shows only while the sidebar is away
   // Folded off the canvas with focus inside: the page's trigger, which now shows, takes it.
   const bar = triggerOf(page);
   await expect(bar).toBeFocused();
+  // Once it has slid away whole, opened again.
+  await expect(own).toBeHidden();
   await page.keyboard.press("Enter");
   await expect(bar).toBeHidden();
   await expect(own).toBeFocused();

@@ -220,7 +220,12 @@ const styles = stylex.create({
     height: "100%",
     maxHeight: "100svh",
     transitionProperty: "translate, visibility",
-    transitionDuration: motionVars.ui,
+    // Hidden only once it has slid away, and shown as it starts to slide in: focus can go to it
+    // as soon as it opens.
+    transitionDuration: {
+      default: `${motionVars.ui}, 0s`,
+      [folded()]: motionVars.ui,
+    },
     transitionTimingFunction: duration.ease,
   },
   // Off the canvas it keeps its width and slides out past its side, and once gone it is out of
@@ -948,12 +953,13 @@ const useHeld = (
 
 /**
  * Whether focus can be on an element now: in the page, drawn (not in a folded group, not a nested
- * row or an action the rail hides), not out of reach (`inert`), and not in a sidebar folded off the
- * canvas, which is still drawn while it slides away.
+ * row or an action the rail hides), not out of reach (`inert`, as a level not shown is), and not in
+ * a sidebar folded off the canvas. Its `visibility` is not read: a sidebar sliding in is hidden
+ * until its slide has begun, and one sliding away is drawn until it ends.
  */
 const inReach = (element: Element) =>
   element.isConnected &&
-  element.checkVisibility({ visibilityProperty: true }) &&
+  element.checkVisibility() &&
   element.closest(
     '[inert], [data-slot="sidebar"][data-collapsible="offcanvas"][data-state="collapsed"]'
   ) === null;
