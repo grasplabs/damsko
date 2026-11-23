@@ -4,6 +4,8 @@
 // reading a long answer a block at a time; and the one HTML form read as a section.
 //
 //   pnpm exec vp test scripts/markdown-parse.test.ts
+import { fileURLToPath } from "node:url";
+
 import { fromMarkdown } from "mdast-util-from-markdown";
 import { gfmFromMarkdown } from "mdast-util-gfm";
 import { gfm } from "micromark-extension-gfm";
@@ -21,6 +23,7 @@ import {
   sectionSaid,
   tidy,
 } from "../src/components/markdown/parse.ts";
+import { isRecord, readJson } from "./json.ts";
 
 describe(parseMarkdown, () => {
   test("GitHub's additions are read: a table, a task, a strike, a bare address, a note", () => {
@@ -220,6 +223,12 @@ describe("repair, where remend's own tests found it wanting", () => {
 });
 
 describe(tidy, () => {
+  test("a task's box with no words yet stays as it is", () => {
+    for (const box of ["Done.\n\n- [x]", "Done.\n\n- [ ]", "- [X]"]) {
+      expect(tidy(box)).toBe(box);
+    }
+  });
+
   test("a link still being written goes, its words with it", () => {
     expect(tidy("Your own rule allows a rise [2")).toBe(
       "Your own rule allows a rise"
@@ -383,6 +392,13 @@ describe("the end of a long answer, read on every word that arrives", () => {
       "brackets and parentheses that open no link",
       (n: number) => `[a](b "${"](".repeat(n / 2)}" c`,
     ],
+    // Thousands of marks that each open and none closes: each new one is weighed against those
+    // still open, so they must not all be weighed again.
+    ["stars that open", (n: number) => "*a ".repeat(n / 3)],
+    ["underscores that open", (n: number) => "_a ".repeat(n / 3)],
+    ["double stars that open", (n: number) => "**a ".repeat(n / 4)],
+    ["strikes that open", (n: number) => "~~a ".repeat(n / 4)],
+    ["stars that open in a quote", (n: number) => "> *a\n".repeat(n / 5)],
   ])(
     "%s",
     (_, make) => {
@@ -404,6 +420,58 @@ describe("the end of a long answer, read on every word that arrives", () => {
 /** `unit` again and again, to `length` characters at least. */
 const filled = (unit: string) => (length: number) =>
   unit.repeat(Math.ceil(length / unit.length));
+
+describe("an answer streamed in chunks", () => {
+  // Every chunk repairs the answer so far: 50 KB in 500 chunks of 100 characters. Its repair reads
+  // only what follows the last blank line, and the marks of that, each against those still open,
+  // so in all it costs about a second, not minutes, however many marks open; and the ten answers
+  // one after another, read a block at a time as Markdown reads them, about a second more. (A
+  // block of 50 KB with no blank line in it is read again whole on every chunk, as it always was:
+  // that is the parse, not the repair.) Timed in this process's time on the processor.
+  const fixture = readJson(
+    fileURLToPath(new URL("fixtures/markdown-answers.json", import.meta.url))
+  );
+  const list = isRecord(fixture) ? fixture.answers : [];
+  const answers = (Array.isArray(list) ? list : [])
+    .map((answer: unknown) =>
+      isRecord(answer) && Array.isArray(answer.lines)
+        ? answer.lines.join("\n")
+        : ""
+    )
+    .join("\n\n");
+
+  test.each([
+    [
+      "the ten answers, again and again",
+      filled(`${answers}\n\n`)(50_000),
+      true,
+    ],
+    ["stars that open", "*a ".repeat(17_000), false],
+    ["underscores that open", "_a ".repeat(17_000), false],
+    ["stars that open in a quote", "> *a\n".repeat(10_000), false],
+  ])(
+    "%s: 50 KB in 500 chunks",
+    (_, text, blocks) => {
+      let repairing = 0;
+      let reading = 0;
+      let kept = NOTHING;
+      for (let chunk = 1; chunk <= 500; chunk += 1) {
+        const start = now();
+        const shown = repair(bounded(text.slice(0, chunk * 100))).text;
+        const repaired = now();
+        if (blocks) {
+          ({ kept } = readBlocks(shown, kept, true));
+        }
+        repairing += repaired - start;
+        reading += now() - repaired;
+      }
+      // About a second each on a laptop: three times that is allowed a slow machine.
+      expect(repairing).toBeLessThan(3000);
+      expect(reading).toBeLessThan(3000);
+    },
+    SLOW_TEST
+  );
+});
 
 /** A node of a tree, as far as these tests read it. */
 interface Tree {
@@ -1590,8 +1658,26 @@ describe("what an answer refers to", () => {
     ).toBe("paragraph(text)");
   });
 
-  test("a list item's `>` before a number says greater than, and a strike is two tildes", () => {
-    expect(wordsOf(boundedTree("- > 25: rich"))).toBe("> 25: rich");
+  test("a list item's `>` before a number and a label or nothing says greater than, and a strike is two tildes", () => {
+    for (const comparison of [
+      "- > 25: rich",
+      "- >= 10: high",
+      "- > $100: expensive",
+      "1. > 5 ms",
+      "  - > 25–30: rich; you need strong growth",
+    ]) {
+      expect(wordsOf(boundedTree(comparison))).toBe(
+        comparison.replace(/^[ \t]*(?:-|\d\.)[ \t]+/u, "")
+      );
+    }
+    // A quote that starts with a number stays a quote, and code stays code.
+    for (const other of [
+      "- > 2024 was the year we grew.",
+      "Example:\n\n    - > 5 items",
+      "```\n- > 25: rich\n```",
+    ]) {
+      expect(bounded(other)).toBe(other);
+    }
     expect(
       shapeOf(
         parseMarkdown("20~25°C and ~~gone~~").children[0] ?? { type: "none" }

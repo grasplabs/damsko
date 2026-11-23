@@ -690,6 +690,39 @@ describe("components", () => {
     ]);
   });
 
+  test("while written, a picture reaches `img` only once its address is whole", () => {
+    const answer =
+      "A chart: ![chart](https://images.example.com/charts/q3.png) and more.";
+    const sources = new Set<string | undefined>();
+    for (let at = 1; at <= answer.length; at += 1) {
+      draw(answer.slice(0, at), {
+        streaming: true,
+        components: {
+          img: ({ src }) => {
+            sources.add(src);
+            return null;
+          },
+        },
+      });
+    }
+    expect([...sources]).toStrictEqual([
+      "https://images.example.com/charts/q3.png",
+    ]);
+  });
+
+  test("a missing cell is handed an empty cell's node", () => {
+    const nodes: string[] = [];
+    draw("| a | b |\n| - | - |\n| 1 |", {
+      components: {
+        td: ({ node, children }) => {
+          nodes.push(node.type);
+          return <td>{children}</td>;
+        },
+      },
+    });
+    expect(nodes).toStrictEqual(["tableCell", "tableCell"]);
+  });
+
   test("headings by the level they are drawn at; table cells as many as the head", () => {
     const html = draw("# Top\n\n| a | b |\n| - | -: |\n| 1 |\n| 1 | 2 | 3 |", {
       headingLevel: 2,

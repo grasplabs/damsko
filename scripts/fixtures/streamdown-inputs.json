@@ -1,5 +1,5 @@
 {
-  "about": "Every Markdown input written out in the tests of Streamdown and of its repair, remend, in github.com/vercel/streamdown at 147f33903bb3948e81c3f7aad5f0c07de330967e (packages/remend/__tests__ and packages/streamdown/__tests__), read from the test files as text and never run, each once and none over 2,000 characters (two timing inputs), with what remend 1.5.0 makes of it. Read by scripts/markdown-streamdown.test.tsx.",
+  "about": "Every Markdown input written out in the tests of Streamdown and of its repair, remend, in github.com/vercel/streamdown at 147f33903bb3948e81c3f7aad5f0c07de330967e (packages/remend/__tests__ and packages/streamdown/__tests__), read from the test files as text and never run, each once and none over 2,000 characters (two timing inputs), with what remend 1.5.0 makes of it. Read by scripts/markdown-stream.test.tsx.",
   "licence": "Streamdown and remend, copyright 2023 Vercel, Inc., under the Apache License, Version 2.0 (http://www.apache.org/licenses/LICENSE-2.0). See THIRD_PARTY_NOTICES.md.",
   "cases": [
     {

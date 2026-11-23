@@ -692,43 +692,88 @@ const FENCE_RUN = /^(?:`{3,}(?![^`\n]*`)|~{3,})/u;
 /** A line's quote marks. */
 const QUOTES = /^(?:[ \t]*>[ \t]?)*/u;
 
+/** Where the fences stand after a line: the run of the one still open ("" for none), its depth in quotes and how far in it is. */
+interface Fences {
+  open: string;
+  depth: number;
+  indent: number;
+}
+
 /**
- * Which lines are code (a fence's own lines, and those between), however deep in quotes and lists
- * the fence stands, and the run of the fence still open at the end ("" for none). A fence in a quote
- * or a list item ends with it: at a line with fewer quote marks, or with words less far in.
+ * Whether `line` is code (a fence's own line, or one inside a fence), however deep in quotes and
+ * lists the fence stands, given where the fences stood before it, which it moves on. A fence in a
+ * quote or a list item ends with it: at a line with fewer quote marks, or with words less far in.
  */
-const codeLines = (lines: readonly string[]) => {
-  let open = "";
-  let depth = 0;
-  let indent = 0;
-  const code = lines.map((line) => {
-    const quotes = QUOTES.exec(line)?.[0] ?? "";
-    const inner = line.slice(quotes.length);
-    const lineDepth = quotes.split(">").length - 1;
-    const rest = line.replace(CONTAINERS, "");
-    const run = FENCE_RUN.exec(rest)?.[0] ?? "";
-    if (open !== "") {
-      const ends =
-        lineDepth < depth ||
-        (inner.trim() !== "" &&
-          inner.length - inner.trimStart().length < indent);
-      if (!ends) {
-        if (
-          run.startsWith(open.charAt(0)) &&
-          run.length >= open.length &&
-          rest.slice(run.length).trim() === ""
-        ) {
-          open = "";
-        }
-        return true;
-      }
+const isCode = (fences: Fences, line: string): boolean => {
+  const quotes = QUOTES.exec(line)?.[0] ?? "";
+  const inner = line.slice(quotes.length);
+  const depth = quotes.split(">").length - 1;
+  const rest = line.replace(CONTAINERS, "");
+  const run = FENCE_RUN.exec(rest)?.[0] ?? "";
+  if (
+    fences.open !== "" &&
+    depth >= fences.depth &&
+    (inner.trim() === "" ||
+      inner.length - inner.trimStart().length >= fences.indent)
+  ) {
+    if (
+      run.startsWith(fences.open.charAt(0)) &&
+      run.length >= fences.open.length &&
+      rest.slice(run.length).trim() === ""
+    ) {
+      fences.open = "";
     }
-    open = run;
-    depth = lineDepth;
-    indent = line.length - rest.length - quotes.length;
-    return run !== "";
-  });
-  return { code, open };
+    return true;
+  }
+  fences.open = run;
+  fences.depth = depth;
+  fences.indent = line.length - rest.length - quotes.length;
+  return run !== "";
+};
+
+/** Which lines are code, and the run of the fence still open at the end ("" for none). */
+const codeLines = (lines: readonly string[]) => {
+  if (!lines.some((line) => line.includes("``") || line.includes("~~"))) {
+    return { code: [], open: "" };
+  }
+  const fences = { open: "", depth: 0, indent: 0 };
+  const code = lines.map((line) => isCode(fences, line));
+  return { code, open: fences.open };
+};
+
+// As an answer streams, it is repaired again for every chunk, each time a little longer. What
+// came before its last blank line outside code is settled: no mark is open across it. So the
+// answer is read for its fences once, on from where the last repair stopped when it goes on from
+// the same text, and only what follows that blank line is repaired. Each chunk costs its own lines.
+
+/** How far the answer last repaired was read: its whole lines, the fences after them, and where what follows its last blank line outside code starts. */
+const settled = {
+  text: "",
+  fences: { open: "", depth: 0, indent: 0 },
+  at: 0,
+};
+
+/** Where what follows the last blank line outside code in `source`'s whole lines starts (0 for none). */
+const settledAt = (source: string): number => {
+  if (!source.startsWith(settled.text)) {
+    settled.text = "";
+    settled.fences = { open: "", depth: 0, indent: 0 };
+    settled.at = 0;
+  }
+  let at = settled.text.length;
+  for (
+    let end = source.indexOf("\n", at);
+    end !== -1;
+    end = source.indexOf("\n", at)
+  ) {
+    const line = source.slice(at, end);
+    if (!isCode(settled.fences, line) && line.trim() === "") {
+      settled.at = end + 1;
+    }
+    at = end + 1;
+  }
+  settled.text = source.slice(0, at);
+  return settled.at;
 };
 
 /** Whether `source` ends inside a fence that has not been closed. */
@@ -812,14 +857,15 @@ const withoutHalfLine = (source: string): number => {
       : source.length;
   }
   const blank = source.lastIndexOf("\n\n");
-  const block = source.slice(blank + 2);
+  const opening = blank === -1 ? 0 : blank + 2;
+  const block = source.slice(opening);
   if (
     block.startsWith("<details") &&
     block.length <= MAX_OPENING &&
     block.trimEnd().split("\n").length <= 2 &&
     !OPENING.test(block.trimEnd())
   ) {
-    return blank + 2;
+    return opening;
   }
   if (line === "") {
     return source.length;
@@ -857,34 +903,47 @@ const tableHead = (text: string): string | null => {
 const ITEM = /(?:^|[ \t>])(?:[-*+]|\d{1,9}[.)])(?=[ \t]|$)/u;
 const HEADING = /^#{1,6}(?:[ \t]|$)/u;
 
+/** A line's containers, its words after them, its depth in quotes, and whether it ends a block (blank, or code). */
+const shapeOf = (line: string, code: boolean) => {
+  const marks = CONTAINERS.exec(line)?.[0] ?? "";
+  const rest = line.slice(marks.length);
+  return {
+    marks,
+    rest,
+    depth: marks.split(">").length - 1,
+    ends: code || rest.trim() === "",
+  };
+};
+
 /**
  * Where the block of words still being written at the end starts, past the marks that open it:
- * bold or a link never runs from one block into the next. A blank line or a line of code ends a
- * block, a heading is a block of its own line, and a line starts one where it starts a list item or
- * enters or leaves a quote.
+ * bold or a link never runs from one block into the next. Read back from the end: a blank line or a
+ * line of code ends a block, a heading is a block of its own line, and a line starts one where it
+ * starts a list item or enters or leaves a quote.
  */
 const leafStart = (lines: readonly string[], code: readonly boolean[]) => {
-  let at = 0;
-  let start = 0;
-  let quotes = -1;
-  let ended = true;
   // A line just begun with nothing on it yet ends nothing: the block may go on on it.
   const begun = lines.at(-1) === "" ? lines.length - 1 : lines.length;
-  for (const [index, line] of lines.slice(0, begun).entries()) {
-    const marks = CONTAINERS.exec(line)?.[0] ?? "";
-    const rest = line.slice(marks.length);
-    const depth = marks.split(">").length - 1;
-    if (code[index] === true || rest.trim() === "") {
-      start = at + line.length + 1;
-      ended = true;
-    } else if (ended || depth !== quotes || ITEM.test(marks)) {
-      start = at + marks.length;
-      ended = HEADING.test(rest);
-      quotes = depth;
-    }
+  const starts: number[] = [];
+  let at = 0;
+  for (const line of lines.slice(0, begun)) {
+    starts.push(at);
     at += line.length + 1;
   }
-  return Math.min(start, Math.max(at - 1, 0));
+  let index = begun - 1;
+  let line = shapeOf(lines[index] ?? "", code[index] === true);
+  if (index < 0 || line.ends) {
+    return Math.max(at - 1, 0);
+  }
+  while (index > 0 && !ITEM.test(line.marks) && !HEADING.test(line.rest)) {
+    const above = shapeOf(lines[index - 1] ?? "", code[index - 1] === true);
+    if (above.ends || HEADING.test(above.rest) || above.depth !== line.depth) {
+      break;
+    }
+    index -= 1;
+    line = above;
+  }
+  return (starts[index] ?? 0) + line.marks.length;
 };
 
 /** The length of the run of one character at `at`. */
@@ -1169,12 +1228,17 @@ const ownAt = (words: string, at: number) => {
 };
 
 /** A run of marks, read against those still open: it closes what it can, and opens what is left. */
+/** The most runs of marks a block of words leaves open: no answer leaves more than a few. */
+const MAX_OPEN = 32;
+
 const delimit = (open: Run[], words: string, at: number, run: number) => {
   const mark = words[at] ?? "";
   const { opens, closes, weak } = sidesOf(words, at, run);
   const both = opens && closes;
   const rest = closes ? closeWith(open, { mark, length: run, both }) : run;
-  if (rest > 0 && opens) {
+  // Past MAX_OPEN runs left open, one more is words: each run is weighed against those still open,
+  // so it costs no more than they do, however many marks a block holds.
+  if (rest > 0 && opens && open.length < MAX_OPEN) {
     // A run like one still open did not close it (`**这句话。**接着`: CommonMark closes no run
     // between a mark of punctuation and a letter): neither is closed, as neither will be.
     const twin = open.find(
@@ -1199,9 +1263,10 @@ const delimit = (open: Run[], words: string, at: number, run: number) => {
  * stands on each side: `snake_case` and `5 * 3` are words. A run inside a word of letters and
  * digits (`5*3`) may close one, but is left open, not closed: it is most likely words.
  */
-const openMarks = (block: string): { open: Run[]; code: string } => {
+const openMarks = (block: string) => {
   // A link's address and title are its own: an underscore or star in them is no mark.
-  const words = linksIn(block).masked;
+  const links = linksIn(block);
+  const words = links.masked;
   const open: Run[] = [];
   let code = "";
   let at = 0;
@@ -1224,22 +1289,18 @@ const openMarks = (block: string): { open: Run[]; code: string } => {
     }
     at += run;
   }
-  return { open, code };
+  return { open, code, link: links.open };
 };
 
-/** What closes the marks left open in `block`: code in a sentence, a link, then the runs, innermost first. */
-const closingOf = (block: string, link = "") => {
-  const { open, code } = openMarks(block);
-  return (
-    code +
-    link +
-    open
-      .filter((run) => !run.weak)
-      .toReversed()
-      .map((run) => run.mark.repeat(run.left))
-      .join("")
-  );
-};
+/** What closes the marks left open (`openMarks`): code in a sentence, a link, then the runs, innermost first. */
+const closingOf = ({ open, code }: { open: Run[]; code: string }, link = "") =>
+  code +
+  link +
+  open
+    .filter((run) => !run.weak)
+    .toReversed()
+    .map((run) => run.mark.repeat(run.left))
+    .join("");
 
 /** `block` without the marks at its very end (stars, underscores, tildes, backticks), unless escaped. */
 const withoutEndMarks = (block: string): string => {
@@ -1322,11 +1383,8 @@ const lastBlockOf = (text: string) => {
   return { from, block: text.slice(from) };
 };
 
-/**
- * `source`, as much as has arrived of an answer, made whole (see above). Inside an open fence it is
- * all code still coming in, and is left as it is but for a half-typed closing.
- */
-export const repair = (source: string): Repaired => {
+/** `source`, made whole, where nothing before it is open: the block or blocks after a blank line. */
+const repairedOf = (source: string): Repaired => {
   const kept = withoutHalfLine(source);
   const text = source.slice(0, kept);
   const head = tableHead(text);
@@ -1340,9 +1398,11 @@ export const repair = (source: string): Repaired => {
   const { from } = last;
   // Marks at the very end (a star that may become two, a mark with no words yet) wait, and so does
   // a bracket that may yet open a link and a tag not yet closed.
-  let body = withoutEndMarks(last.block);
-  const inCode = openMarks(body).code !== "";
-  const link = inCode ? null : linksIn(body).open;
+  const whole = withoutEndMarks(last.block);
+  let body = whole;
+  const marks = openMarks(body);
+  const inCode = marks.code !== "";
+  const link = inCode ? null : marks.link;
   // One after another: `[a [b`, `see [the wiki][wi`.
   for (let round = link === null && !inCode ? 0 : 3; round < 3; round += 1) {
     const ends = [endingBracket(body, PENDING, true), endingTag(body)].filter(
@@ -1353,10 +1413,26 @@ export const repair = (source: string): Repaired => {
     }
     body = withoutEndMarks(body.slice(0, Math.min(...ends)).trimEnd());
   }
-  const close = closingOf(body, link?.close);
+  const close = closingOf(
+    body === whole ? marks : openMarks(body),
+    link?.close
+  );
   // A closing mark closes only right after a word, so the space before it goes.
   const end = from + (close === "" ? body : body.trimEnd()).length;
   return { text: text.slice(0, end) + close, kept: Math.min(kept, end) };
+};
+
+/**
+ * `source`, as much as has arrived of an answer, made whole (see above). Inside an open fence it is
+ * all code still coming in, and is left as it is but for a half-typed closing.
+ */
+export const repair = (source: string): Repaired => {
+  const from = settledAt(source);
+  if (from === 0) {
+    return repairedOf(source);
+  }
+  const tail = repairedOf(source.slice(from));
+  return { text: source.slice(0, from) + tail.text, kept: from + tail.kept };
 };
 
 /**
@@ -1366,6 +1442,10 @@ export const repair = (source: string): Repaired => {
  * that ended whole comes back as it was; inside an open fence the code simply ends.
  */
 export const tidy = (source: string): string => {
+  // A task's box with no words yet is what it is: no link to cut.
+  if (TASK_START.test(source.slice(source.lastIndexOf("\n") + 1))) {
+    return source;
+  }
   const last = lastBlockOf(source);
   if (last === null) {
     return source;
@@ -1373,8 +1453,9 @@ export const tidy = (source: string): string => {
   const { from } = last;
   let text = source;
   let body = last.block;
-  const inCode = openMarks(body).code !== "";
-  const link = inCode ? null : linksIn(body).open;
+  const marks = openMarks(body);
+  const inCode = marks.code !== "";
+  const link = inCode ? null : marks.link;
   let cut = inCode || link !== null ? -1 : endingBracket(body, CUT_CITATION);
   if (link !== null) {
     // The link from its bracket on, and the bang of an image before it.
@@ -1386,7 +1467,7 @@ export const tidy = (source: string): string => {
   }
   // Marks at the very end close nothing yet: they go, and what they would close is closed below.
   const bare = withoutEndMarks(body);
-  const close = closingOf(bare);
+  const close = closingOf(openMarks(bare));
   if (close === "") {
     return text;
   }
@@ -1402,17 +1483,22 @@ export const tidy = (source: string): string => {
 // undoes the first mark past it, and it shows as the character it is. Code in a fence is left as it
 // is. (A long paragraph's cost is bounded in the parse: see MAX_INLINE.)
 //
-// And one thing a model writes means what it says, not Markdown: a list item that starts with `>`
-// and a number (`- > 25: expensive`) says "greater than", so its `>` is a character, not a quote.
+// And one thing a model writes means what it says, not Markdown: a list item that is `>` and a
+// number, then a label or nothing (`- > 25: expensive`, `- >= 10 ms`), says "greater than", so its
+// `>` is a character, not a quote. A quote that starts with a number and goes on in words
+// (`- > 2024 was the year…`) stays a quote, and code stays code.
 
 /** The deepest quote or list a line opens. */
 const MAX_DEPTH = 32;
 
 const FOOTNOTE_START = /^\[\^[^\]\s]+\]:/u;
 const ORDERED = /^\d{1,9}[.)](?:[ \t]|$)/u;
-/** A list item's mark, then `>` before a number or a price: greater than. */
+/**
+ * A list item's mark, at most three spaces in (four is code), then `>` or `>=`, a number or a
+ * price (a range, a percentage, a short unit), then a colon or the line's end: greater than.
+ */
 const GREATER_THAN =
-  /^(?<item>[ \t]*(?:[-*+]|\d{1,9}[.)])[ \t]+)>(?==?[ \t]*\$?\d)/u;
+  /^(?<item> {0,3}(?:[-*+]|\d{1,9}[.)])[ \t]+)>(?==?[ \t]*\$?\d[\d.,]*(?:[ \t]?[-–][ \t]?\$?\d[\d.,]*)?%?(?:[ \t]?[A-Za-z]{1,5})?[ \t]*(?::|$))/u;
 
 /**
  * Where a backslash undoes the first container mark past MAX_DEPTH that opens `line` (quotes, list
@@ -1506,7 +1592,7 @@ export interface Kept {
 const REFERRED =
   /\[\^(?<note>[^\]\s]+)\]|\]\[(?<name>[^\]\n]+)\]|\[(?<own>[^\]\n]+)\]\[\]/gu;
 
-/** The names `source` refers to and does not define, as if defined before it: no address yet. */
+/** The names `source` refers to that neither it nor `defined` defines, as if defined before it: no address yet. */
 const comingIn = (source: string, defined: Defined): Defined => {
   const own: Defined = new Map();
   for (const found of source.matchAll(DEFINING)) {
@@ -1550,7 +1636,7 @@ export const readBlocks = (
   const read = guarded(
     tail,
     budget,
-    written ? comingIn(shown, defined) : defined
+    written ? comingIn(tail, defined) : defined
   ).children.map((node) => ({ node, base }));
   const blocks = [...held.blocks, ...read];
   const cut = read.at(-1)?.node.position?.start.offset;

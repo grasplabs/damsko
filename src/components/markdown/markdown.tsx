@@ -14,8 +14,8 @@
 // when a mark closes. The words come as they are given: pacing them is the message's job.
 //
 // It knows no router and no citation: the host draws any link it wants to (`renderLink`, or a part
-// around it through MarkdownLinkProvider), and any element it wants to (`components`, by the names
-// react-markdown and Streamdown use), within the same safe defaults. Every value is a token. A
+// around it through MarkdownLinkProvider), and any element it wants to (`components`, keyed by HTML
+// element name), within the same safe defaults. Every value is a token. A
 // caller sets layout only.
 "use client";
 
@@ -143,8 +143,8 @@ type MarkdownElement =
   | "ul";
 
 /**
- * Elements drawn in Markdown's place, by their HTML names, as react-markdown's and Streamdown's
- * `components` are: each is given the element's own props (its `children`; `href` and `title` for
+ * Elements drawn in Markdown's place, keyed by HTML element name (a map written for react-markdown
+ * or Streamdown carries over): each is given the element's own props (its `children`; `href` and `title` for
  * `a`, `src`, `alt` and `title` for `img`, `className` `language-…` for fenced code, `start` for `ol`,
  * `align` for a cell) and the syntax tree's `node` it draws.
  */
@@ -220,15 +220,18 @@ export interface MarkdownProps {
    */
   renderLink?: MarkdownLinkRenderer;
   /**
-   * Draws elements in Markdown's place, by their HTML names (`{ code: MyCode, a: MyLink }`), as
-   * react-markdown's and Streamdown's `components`; any element left out is Markdown's own. The safe
+   * Draws elements in Markdown's place, keyed by HTML element name (`{ code: MyCode, a: MyLink }`);
+   * any element left out is Markdown's own. The safe
    * defaults hold: `a` is given only a link Markdown would draw (http, https or mailto, its address
    * whole), its address encoded as CommonMark has it; any other link is its words. `img` draws a
-   * picture whose address is http or https, which is never loaded otherwise: giving it is the
+   * picture whose address is http or https, once that address is whole (while an answer is
+   * written, half of one is its words), which is never loaded otherwise: giving it is the
    * choice to load pictures, and it checks the addresses it trusts. `code` draws code in a sentence
    * and fenced code (its `node.type` is `code`, its `className` `language-…`), in CodeBlock's place;
    * `pre`, when given, holds fenced code's `code`. Headings are named by the level they are drawn at
-   * (`headingLevel`). Task boxes and footnotes stay Markdown's own.
+   * (`headingLevel`). Task boxes and footnotes stay Markdown's own. `node` is the syntax tree's node
+   * as the answer wrote it: its `url` and raw HTML are unchecked, so draw from the checked `href`
+   * and `src`, never from `node.url`.
    */
   components?: MarkdownComponents;
   /** Layout only: where it sits and how much room it takes. */
@@ -867,7 +870,12 @@ const PictureInline = ({
       return drawn;
     }
   }
-  const href = url === undefined ? null : safeHref(encodedUrl(url));
+  // Still being written (repair closed it): half of its address (`https://i`) would be another
+  // site's, so it is its words, and nothing loads or leads anywhere, until its address is whole.
+  const coming =
+    context.streaming &&
+    context.base + (node.position?.end.offset ?? 0) > context.kept;
+  const href = coming || url === undefined ? null : safeHref(encodedUrl(url));
   const Picture = context.components.img;
   if (Picture !== undefined && href !== null && /^https?:/u.test(href)) {
     return <Picture node={node} src={href} alt={alt} title={title} />;
@@ -1106,6 +1114,12 @@ const ListBlock = ({
       );
 };
 
+/** The cell a row shorter than its table's head has at its end: empty. */
+const EMPTY_CELL: TableNode["children"][number]["children"][number] = {
+  type: "tableCell",
+  children: [],
+};
+
 // A table scrolls sideways inside its own box, with no bar (Table's), so a wide one never widens the
 // answer. A row arrives whole, when its line has ended (repair), so its cells come in together. Every
 // row has as many cells as the head, as GitHub draws it: a short row's last are empty, a long one's
@@ -1134,17 +1148,15 @@ const TableBlock = ({
     align: (typeof columns)[number],
     column: number
   ): ReactNode => {
-    const cell = row.children[column];
-    const children =
-      cell === undefined ? null : (
-        <Phrasing nodes={cell.children} context={context} />
-      );
+    // A row shorter than the head has empty cells at its end.
+    const cell = row.children[column] ?? EMPTY_CELL;
+    const children = <Phrasing nodes={cell.children} context={context} />;
     return (
       <Fragment key={column}>
         {elementOf(
           context,
           tag,
-          cell ?? row,
+          cell,
           { align: node.align?.[column] ?? undefined, children },
           tag === "th" ? (
             <TableHead align={align}>{children}</TableHead>
@@ -1170,15 +1182,16 @@ const TableBlock = ({
       <TableRow>{cells}</TableRow>
     );
   };
+  const headRow = head === undefined ? null : rowOf(head, "th");
   const header =
-    head === undefined
+    headRow === null
       ? null
       : elementOf(
           context,
           "thead",
           node,
-          { children: rowOf(head, "th") },
-          <TableHeader>{rowOf(head, "th")}</TableHeader>
+          { children: headRow },
+          <TableHeader>{headRow}</TableHeader>
         );
   const bodyRows = rows.map((row, index) => (
     <Fragment key={index}>{rowOf(row, "td")}</Fragment>

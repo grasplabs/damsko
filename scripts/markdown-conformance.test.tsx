@@ -6,8 +6,10 @@
 //   - Drawn: what Markdown draws (on the server) is what the spec draws, element for element and
 //     word for word, unless one of Markdown's own rules says otherwise: a link leads only to http,
 //     https or mailto, a picture is its words, raw HTML is its text, a fifth or sixth heading is
-//     drawn as the fourth. Each example that differs is put down to the one rule that makes it
-//     differ, and the drawing is checked to follow that rule; any other difference is a bug.
+//     drawn as the fourth. Each example that differs is put down to the rule that makes it differ,
+//     and its drawing is checked: against the spec drawn by that rule, or against the parser's
+//     tree drawn by Markdown's rules, written out in this test apart from Markdown. Any other
+//     difference is a bug.
 // The counts are the docs page's "How it is tested" (docs/components/markdown.mdx), held to it here.
 //
 //   pnpm exec vp test scripts/markdown-conformance.test.tsx
@@ -22,7 +24,11 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test } from "vitest";
 
 import { Markdown } from "../src/components/markdown/index.ts";
-import { bounded, parseMarkdown } from "../src/components/markdown/parse.ts";
+import {
+  bounded,
+  encodedUrl,
+  parseMarkdown,
+} from "../src/components/markdown/parse.ts";
 import { visuallyHidden } from "../src/lib/styles.ts";
 import { safeHref } from "../src/lib/utils.ts";
 import { isRecord, readJson } from "./json.ts";
@@ -520,6 +526,205 @@ const kindsIn = (tree: Tree) => {
   return kinds;
 };
 
+/** A node of the parser's tree, as far as drawing it by Markdown's rules reads it. */
+interface Drawn {
+  type: string;
+  value?: string;
+  url?: string;
+  title?: string | null;
+  alt?: string | null;
+  depth?: number;
+  lang?: string | null;
+  ordered?: boolean | null;
+  start?: number | null;
+  checked?: boolean | null;
+  identifier?: string;
+  children?: Drawn[];
+}
+
+/** The elements of a phrase, by the tree's name for each. */
+const PHRASES = new Map([
+  ["emphasis", "em"],
+  ["strong", "strong"],
+  ["delete", "del"],
+  ["inlineCode", "code"],
+  ["break", "br"],
+]);
+
+/** What the tree refers to: link targets, notes, and the notes in the order they are first referred to. */
+const referredIn = (root: Drawn) => {
+  const definitions = new Map<string, Drawn>();
+  const notes = new Map<string, Drawn>();
+  const order: string[] = [];
+  const gather = (node: Drawn) => {
+    const id = node.identifier ?? "";
+    if (node.type === "definition") {
+      definitions.set(id, node);
+    } else if (node.type === "footnoteDefinition") {
+      notes.set(id, node);
+    } else if (node.type === "footnoteReference" && !order.includes(id)) {
+      order.push(id);
+    }
+    for (const child of node.children ?? []) {
+      gather(child);
+    }
+  };
+  gather(root);
+  return { definitions, notes, numbered: order.filter((id) => notes.has(id)) };
+};
+
+/**
+ * The parser's tree drawn as the outline by Markdown's rules, written out apart from Markdown: a
+ * link leads only to http, https or mailto, its address encoded as CommonMark has it; a picture is
+ * its alt words, a link to it where it may lead; raw HTML is its text; a fifth or sixth heading is
+ * a fourth; a short row has empty cells to the head's count; the notes stand at the foot, in the
+ * order they are first referred to.
+ */
+const fromTree = (root: Drawn): string => {
+  const { definitions, notes, numbered } = referredIn(root);
+  const target = (node: Drawn) =>
+    node.type.endsWith("Reference")
+      ? definitions.get(node.identifier ?? "")
+      : node;
+  const hrefOf = (node: Drawn) => {
+    const url = target(node)?.url;
+    return url === undefined ? null : safeHref(encodedUrl(url));
+  };
+  const draw = (node: Drawn, inLink = false): (Part | string)[] => {
+    const inner = () =>
+      (node.children ?? []).flatMap((child) =>
+        draw(child, inLink || node.type.startsWith("link"))
+      );
+    const href = hrefOf(node);
+    const title = target(node)?.title ?? undefined;
+    if (node.type === "link" || node.type === "linkReference") {
+      return href === null ? inner() : [linkOf(href, title, inner())];
+    }
+    if (node.type === "image" || node.type === "imageReference") {
+      const alt = node.alt ?? "";
+      const words = alt === "" ? (href ?? "") : alt;
+      return href === null || inLink ? [words] : [linkOf(href, title, [words])];
+    }
+    if (node.type === "footnoteReference") {
+      const number = numbered.indexOf(node.identifier ?? "") + 1;
+      return [{ tag: "note", children: [String(number)] }];
+    }
+    const tag = PHRASES.get(node.type);
+    if (tag === undefined) {
+      return [node.value ?? ""];
+    }
+    return [
+      {
+        tag,
+        children: node.children === undefined ? [node.value ?? ""] : inner(),
+      },
+    ];
+  };
+  const phrases = (node: Drawn) =>
+    (node.children ?? []).flatMap((child) => draw(child));
+  const row = (each: Drawn, tag: string, columns: number): Part => ({
+    tag: "tr",
+    children: Array.from({ length: columns }, (_, column) => ({
+      tag,
+      children: phrases(each.children?.[column] ?? { type: "tableCell" }),
+    })),
+  });
+  const drawers: Record<
+    string,
+    (
+      node: Drawn,
+      blocks: (node: Drawn) => (Part | string)[]
+    ) => (Part | string)[]
+  > = {
+    paragraph: (node) => [{ tag: "p", children: phrases(node) }],
+    html: (node) => [{ tag: "p", children: [node.value ?? ""] }],
+    heading: (node) => [
+      { tag: `h${Math.min(node.depth ?? 1, 4)}`, children: phrases(node) },
+    ],
+    thematicBreak: () => [{ tag: "hr", children: [] }],
+    definition: () => [],
+    footnoteDefinition: () => [],
+    code: (node) => {
+      const language = node.lang ?? "text";
+      return [
+        {
+          tag: "code-block",
+          about: language === "text" ? undefined : language,
+          children: [node.value ?? ""],
+        },
+      ];
+    },
+    list: (node, inner) => {
+      const start = node.ordered === true ? (node.start ?? 1) : 1;
+      return [
+        {
+          tag: node.ordered === true ? "ol" : "ul",
+          about: start === 1 ? undefined : String(start),
+          children: inner(node),
+        },
+      ];
+    },
+    listItem: (node, inner) => {
+      const box: Part[] =
+        typeof node.checked === "boolean"
+          ? [
+              {
+                tag: "task",
+                about: node.checked ? "done" : "open",
+                children: [],
+              },
+            ]
+          : [];
+      return [{ tag: "li", children: [...box, ...inner(node)] }];
+    },
+    table: (node) => {
+      const [head, ...rows] = node.children ?? [];
+      const columns = head?.children?.length ?? 0;
+      const body: Part[] =
+        rows.length === 0
+          ? []
+          : [
+              {
+                tag: "tbody",
+                children: rows.map((each) => row(each, "td", columns)),
+              },
+            ];
+      return [
+        {
+          tag: "table",
+          children: [
+            {
+              tag: "thead",
+              children: head === undefined ? [] : [row(head, "th", columns)],
+            },
+            ...body,
+          ],
+        },
+      ];
+    },
+  };
+  const blocks = (node: Drawn): (Part | string)[] =>
+    (node.children ?? []).flatMap(
+      (child) =>
+        drawers[child.type]?.(child, blocks) ?? [
+          { tag: child.type, children: blocks(child) },
+        ]
+    );
+  const foot: Part[] =
+    numbered.length === 0
+      ? []
+      : [
+          {
+            tag: "notes",
+            children: numbered.map((id) => ({
+              tag: "li",
+              children: blocks(notes.get(id) ?? { type: "none" }),
+            })),
+          },
+        ];
+  return written([...blocks(root), ...foot]);
+};
+
 /** What cmark-gfm draws that GitHub's parser for the web, micromark, reads otherwise, by example. */
 const READ_OTHERWISE = new Map([
   [
@@ -564,7 +769,6 @@ const verdictOf = ({ set, example, markdown, html }: Example) => {
     pictures: kinds.pictures,
     headings: kinds.headings,
   };
-  const shown = textOf(drawing).replaceAll(/\s+/gu, " ");
   let drawn = "bug";
   if (written(fromSpec(spec, rules)) === ours) {
     drawn = "links";
@@ -573,10 +777,10 @@ const verdictOf = ({ set, example, markdown, html }: Example) => {
     } else if (kinds.headings) {
       drawn = "headings";
     }
-  } else if (
-    kinds.html.length > 0 &&
-    kinds.html.every((value) => shown.includes(value.replaceAll(/\s+/gu, " ")))
-  ) {
+  } else if (fromTree(parseMarkdown(bounded(markdown))) !== ours) {
+    // Every other class is drawn by Markdown's rules from the tree Markdown reads: checked so.
+    drawn = "bug";
+  } else if (kinds.html.length > 0) {
     drawn = "html";
   } else if (
     set === "commonmark" &&

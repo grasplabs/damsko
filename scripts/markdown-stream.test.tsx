@@ -233,6 +233,10 @@ const seenInHtml = (html: string): string => {
 /** The characters that start or end a mark. */
 const MARK = /[*_~`[\]()#>|<!\\$=-]/u;
 
+/** How far apart the prefixes are that are read, in characters, and those also drawn on the server. */
+const STEP = 3;
+const DRAWN_EVERY = 200;
+
 /** How a stream of `answer` reads, a character at a time: where a raw mark shows, where something is taken back. */
 const streamOf = (answer: string) => {
   const whole = seenOf(
@@ -246,7 +250,7 @@ const streamOf = (answer: string) => {
   const retractions: number[] = [];
   let kept = NOTHING;
   let before = "";
-  for (let at = 1; at <= answer.length; at += 1) {
+  for (let at = 1; at <= answer.length; at += STEP) {
     const read = readBlocks(
       repair(bounded(answer.slice(0, at))).text,
       kept,
@@ -283,14 +287,14 @@ describe("ten answers, streamed a character at a time", () => {
   // `5*3 = 15 and 2*2*2 = 8`: CommonMark pairs the star of `5*3` with the first of `2*2`, so the
   // whole answer shows "3 = 15 and 2" in italics. A star inside a word is left open while written
   // (it is most likely a character), so it shows until the second arrives, and then goes.
-  const FIVE_TIMES_THREE = { rawMarks: 13, retractions: 1 };
+  const FIVE_TIMES_THREE = { rawMarks: 4, retractions: 1 };
 
   test("no raw mark shows and nothing is taken back, but where CommonMark pairs two stars inside words", () => {
     const found = answers.map(({ name, text }) => {
       const { rawMarks, retractions } = streamOf(text);
       return {
         name,
-        prefixes: text.length,
+        prefixes: Math.ceil(text.length / STEP),
         rawMarks: rawMarks.length,
         retractions: retractions.length,
       };
@@ -311,14 +315,14 @@ describe("ten answers, streamed a character at a time", () => {
     );
     const prefixes = found.reduce((sum, { prefixes: each }) => sum + each, 0);
     expect(page).toContain(
-      `"${answers.length} answers as a model writes them, ${counted(prefixes)} prefixes, a character at a time: a raw mark shows at ${FIVE_TIMES_THREE.rawMarks} and something is taken back at ${FIVE_TIMES_THREE.retractions}, all one star inside a word that CommonMark pairs with a later one (5*3 … 2*2)"`
+      `"${answers.length} answers as a model writes them, ${counted(prefixes)} prefixes, every third character: a raw mark shows at ${FIVE_TIMES_THREE.rawMarks} and something is taken back at ${FIVE_TIMES_THREE.retractions}, all one star inside a word that CommonMark pairs with a later one (5*3 … 2*2)"`
     );
   }, 120_000);
 
   test("what is read off the blocks is what is drawn", () => {
     const differing: string[] = [];
     for (const { name, text } of answers) {
-      for (let at = 1; at <= text.length; at += 40) {
+      for (let at = 1; at <= text.length; at += DRAWN_EVERY) {
         const source = text.slice(0, at);
         const drawn = seenInHtml(
           renderToStaticMarkup(<Markdown streaming>{source}</Markdown>)

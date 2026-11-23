@@ -138,7 +138,7 @@ Markdown knows no router and no citation. `renderLink` draws every link and pict
 
 ## Your own elements
 
-`components` draws elements in Markdown's place, by their HTML names, as react-markdown's and Streamdown's `components` do: `a`, `blockquote`, `code`, `del`, `em`, `h1` to `h6`, `hr`, `img`, `li`, `ol`, `p`, `pre`, `strong`, `table`, `thead`, `tbody`, `tr`, `th`, `td` and `ul`. Each is given the element's own props and the syntax tree's `node`. The safe defaults hold: `a` gets only a link Markdown would draw (http, https or mailto, its address whole), and `img` only a picture at an http or https address, which giving it chooses to load. `code` draws code in a sentence and fenced code (`node.type` is `code`, `className` is `language-…`) in CodeBlock's place, so a fence can be a diagram or maths of the product's own. Here a link names its site and fenced code has no line numbers.
+`components` draws elements in Markdown's place, keyed by HTML element name (the keys react-markdown and Streamdown take, so a map written for them carries over): `a`, `blockquote`, `code`, `del`, `em`, `h1` to `h6`, `hr`, `img`, `li`, `ol`, `p`, `pre`, `strong`, `table`, `thead`, `tbody`, `tr`, `th`, `td` and `ul`. Each is given the element's own props and the syntax tree's `node`, as the answer wrote it: its `url` and raw HTML are unchecked, so draw from the checked `href` and `src`, never from `node.url`. The safe defaults hold: `a` gets only a link Markdown would draw (http, https or mailto, its address whole), and `img` only a picture at an http or https address, once that address is whole: giving it chooses to load pictures. `code` draws code in a sentence and fenced code (`node.type` is `code`, `className` is `language-…`) in CodeBlock's place, so a fence can be a diagram or maths of the product's own. Here a link names its site and fenced code has no line numbers.
 
 ```tsx
 <Markdown
@@ -183,13 +183,13 @@ Against the specifications it reads, example by example, and against streams. Th
       group: "While it is written",
       key: "Answers",
       value:
-        "10 answers as a model writes them, 9,258 prefixes, a character at a time: a raw mark shows at 13 and something is taken back at 1, all one star inside a word that CommonMark pairs with a later one (5*3 … 2*2)",
+        "10 answers as a model writes them, 3,090 prefixes, every third character: a raw mark shows at 4 and something is taken back at 1, all one star inside a word that CommonMark pairs with a later one (5*3 … 2*2)",
     },
     {
       group: "While it is written",
       key: "Streamdown's tests",
       value:
-        "966 inputs of their tests, each a half-written answer: Markdown shows the same as remend for 822, fewer raw marks for 95, holds back a mark or a bracket still being written for 43 (remend shows it), and more raw marks for 6: a star inside a word, or a bracket that ran past its line, which it leaves as words",
+        "966 inputs of their tests, each a half-written answer: Markdown shows the same as remend for 821, fewer raw marks for 96, holds back a mark or a bracket still being written for 43 (remend shows it), and more raw marks for 6: a star inside a word, or a bracket that ran past its line, which it leaves as words",
     },
     {
       group: "Untrusted text",
