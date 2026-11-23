@@ -2,12 +2,17 @@
 // 127.0.0.1. Two parts.
 //
 // Every item: added by name with the stock shadcn CLI into a fresh workspace's packages/ui with
-// the product's catalog and strict TypeScript flags, as a product pins a version: from the
-// release's archive (scripts/registry-dist.ts, as .github/workflows/release.yml packs it), which
-// the script Get started gives downloads, checks and serves. It holds when
+// the product's catalog and strict TypeScript flags, as a product pins a version: from
+// /r/<tag>/, written as the site's build writes it (scripts/registry-dist.ts) from the archive a
+// release carries (as .github/workflows/release.yml packs it), listed by a stand-in for GitHub's
+// releases, and served alone, with no latest beside it, so an item's own dependencies can only
+// have come from the version. A release with no archive is passed over; one whose archive is not
+// the file its checksum names stops the build. It holds when
 // - the fonts arrive packed, their check says so, and their script unpacks them;
 // - the installed src/ is then Damsko's src/ byte for byte (nothing missing, nothing extra,
 //   nothing written anywhere else), and every item says its version, commit and licence;
+// - Get started's drift check passes on the committed tree, and the fonts' check fails on a font
+//   that was altered;
 // - the CLI added exactly the packages the items name, each left at the catalog's version;
 // - the tree type-checks twice: as the package it is installed in, and as an app that imports
 //   every file sees it (a declaration only a reference brings must still arrive).
@@ -31,7 +36,8 @@
 // and must be the same pixels with the same computed styles. With a Geist of its own (Fontsource's,
 // as an older kit loads it), the app is built by the bundler called directly, with no package
 // script, and must load that Geist and no file of Damsko's Geist, with Geist Serif and Geist Mono
-// from Damsko's files.
+// from Damsko's files. Every app provides the family its sans token names (the page's own
+// assertion, evaluated in it); this one, built again with the token left unset, does not.
 //
 //   node scripts/check-install.ts           fresh folders in the system's temp folder, removed after
 //   node scripts/check-install.ts --keep    keeps them, and says where
@@ -61,7 +67,8 @@ import { parse, stringify } from "yaml";
 
 import {
   packageExports,
-  releasesAddress,
+  pinned,
+  sansProvided,
   sections,
   siteAddress,
 } from "../site/start/get-started.ts";
@@ -69,7 +76,12 @@ import type { Block } from "../site/start/get-started.ts";
 import { namespace, root, version as damskoVersion } from "./build-registry.ts";
 import { isRecord, readJson, stringsAt } from "./json.ts";
 import { registryItems } from "./registry-deps.ts";
-import { archiveName, packRegistry, writeRegistry } from "./registry-dist.ts";
+import {
+  archiveName,
+  packRegistry,
+  writeRegistry,
+  writeVersions,
+} from "./registry-dist.ts";
 import { serve } from "./serve.ts";
 
 const { values } = parseArgs({
@@ -141,19 +153,64 @@ const write = (dir: string, path: string, value: unknown) => {
   );
 };
 
-// The registry as the site serves it, and its archive where a tag's release has it
-// (scripts/registry-dist.ts).
+// The registry as the site serves it (scripts/registry-dist.ts), and beside it what stands in for
+// GitHub: the archive of this version where a release has it, and the list of releases.
 const registryDir = nodePath.join(scratch, "registry");
 const commit = await writeRegistry(registryDir);
 const tag = packRegistry(registryDir);
+const served = await serve(registryDir);
+const asset = (name: string, file = name) => ({
+  name,
+  browser_download_url: `${served.url}/releases/${file}`,
+});
+mkdirSync(nodePath.join(registryDir, "releases"));
 for (const name of [archiveName(tag), `${archiveName(tag)}.sha256`]) {
-  mkdirSync(nodePath.join(registryDir, "releases", tag), { recursive: true });
   renameSync(
     nodePath.join(registryDir, name),
-    nodePath.join(registryDir, "releases", tag, name)
+    nodePath.join(registryDir, "releases", name)
   );
 }
-const served = await serve(registryDir);
+write(registryDir, "releases/other.sha256", `${"0".repeat(64)}  other\n`);
+const released = {
+  tag_name: tag,
+  assets: [asset(archiveName(tag)), asset(`${archiveName(tag)}.sha256`)],
+};
+// A release from before the archives: passed over.
+write(registryDir, "releases.json", [
+  { tag_name: "v0.0.1", assets: [] },
+  released,
+]);
+// A release whose archive is not the file its checksum names.
+write(registryDir, "releases-altered.json", [
+  {
+    tag_name: tag,
+    assets: [
+      asset(archiveName(tag)),
+      asset(`${archiveName(tag)}.sha256`, "other.sha256"),
+    ],
+  },
+]);
+
+// The released versions as the site's build writes them, served alone: what a pin installs from.
+const versionsDir = nodePath.join(scratch, "versions");
+const tags = await writeVersions(versionsDir, `${served.url}/releases.json`);
+if (tags.join(",") !== tag || pinned !== tag) {
+  failures.push(
+    `the released versions written are ${tags.join(", ")}, not ${tag}, which Get started pins as ${pinned}`
+  );
+}
+try {
+  await writeVersions(
+    nodePath.join(scratch, "altered"),
+    `${served.url}/releases-altered.json`
+  );
+  failures.push(
+    "an archive that is not the file its checksum names was unpacked"
+  );
+} catch {
+  // As it must: the site's build stops there.
+}
+const versions = await serve(versionsDir);
 
 /** The product's flags (its tsconfig.base.json), with no ambient types: what a file needs, it brings. */
 const flags = {
@@ -191,16 +248,17 @@ const lenientJson = (source: string): unknown =>
   );
 
 /** Carries one block of the page out, as the block says, from the folder its section starts in. */
-const carryOut = async (block: Block, dir: string): Promise<boolean> => {
+const carryOut = async (
+  block: Block,
+  dir: string,
+  site = served.url
+): Promise<boolean> => {
   const { does } = block;
   if (does === undefined) {
     return true;
   }
-  // The page writes the registry's address as a placeholder for its own origin, and the releases'
-  // as GitHub's: here, this server.
-  const code = block.code
-    .replaceAll(siteAddress, served.url)
-    .replaceAll(releasesAddress, `${served.url}/releases`);
+  // The page writes the registry's address as a placeholder for its own origin: here, this server.
+  const code = block.code.replaceAll(siteAddress, site);
   if (does.kind === "run") {
     return await run("sh", ["-ec", code], nodePath.join(dir, does.in));
   }
@@ -289,9 +347,9 @@ const namedPackages = (
       ...(item.devDependencies ?? []),
     ])
   );
-  for (const [name, pinned] of Object.entries(declared)) {
-    if (pinned !== "catalog:") {
-      failures.push(`package.json: ${name} is "${pinned}", not the catalog's`);
+  for (const [name, range] of Object.entries(declared)) {
+    if (range !== "catalog:") {
+      failures.push(`package.json: ${name} is "${range}", not the catalog's`);
     }
     if (!(name in start) && !named.has(name)) {
       failures.push(`package.json: ${name} was added, and no item names it`);
@@ -304,6 +362,42 @@ const namedPackages = (
       );
     }
   }
+};
+
+/**
+ * The page's drift check, on the tree as a product has it: committed. It passes as installed, and
+ * the fonts' check fails on a font that is not the one installed.
+ */
+const drift = async () => {
+  write(workspace, ".gitignore", "node_modules\n");
+  const git = async (...args: string[]) =>
+    await run(
+      "git",
+      ["-c", "user.name=check", "-c", "user.email=check@localhost", ...args],
+      workspace
+    );
+  if (
+    !(
+      (await git("init", "--quiet")) &&
+      (await git("add", "--all")) &&
+      (await git("commit", "--quiet", "--message", "install"))
+    )
+  ) {
+    return;
+  }
+  for (const block of stepOf("pin-and-update", "check-for-drift")) {
+    // oxlint-disable-next-line no-await-in-loop -- a page is followed one block after the other
+    await carryOut(block, project, versions.url);
+  }
+  const font = nodePath.join(project, "src/styles/fonts/geist-common.woff2");
+  const bytes = readFileSync(font);
+  writeFileSync(font, bytes.subarray(0, -1));
+  if (
+    await passes("node", ["src/styles/fonts/unpack.mjs", "--check"], project)
+  ) {
+    failures.push("the fonts' check passes on a font that was altered");
+  }
+  writeFileSync(font, bytes);
 };
 
 /** Every item, into a workspace package with the product's catalog and flags. */
@@ -357,7 +451,7 @@ const everyItem = async () => {
   });
   write(project, "tsconfig.json", { compilerOptions: flags, include: ["src"] });
   // baseColor "" keeps the CLI off shadcn's own site. The registry's address is the page's, for a
-  // pinned version: its script and its line of components.json, carried out below.
+  // pinned version: its line of components.json, carried out below at the versions' own server.
   write(project, "components.json", {
     $schema: "https://ui.shadcn.com/schema.json",
     style: "new-york",
@@ -379,21 +473,19 @@ const everyItem = async () => {
   }
   for (const block of pin) {
     // oxlint-disable-next-line no-await-in-loop -- a page is followed one block after the other
-    await carryOut(block, project);
+    await carryOut(block, project, versions.url);
   }
   const before = new Set(readdirSync(project));
   if (!(await run("pnpm", ["install"], workspace))) {
     return;
   }
   // Every item by name, in one command, as a product syncs: never `--all`, which means shadcn's
-  // own registry. Through the page's script, with the tag: from the archive, not from a site.
+  // own registry. From the version's address, where no latest is served: what an item builds on
+  // came from the version too, or the install fails.
   const items = registryItems();
   await run(
-    "node",
+    "pnpm",
     [
-      "damsko-registry.mjs",
-      tag,
-      "pnpm",
       "exec",
       "shadcn",
       "add",
@@ -431,18 +523,10 @@ const everyItem = async () => {
     }
   }
 
-  // Every item, as the archive the script unpacked has it, says where it came from and its licence.
+  // Every item, as its version's address serves it, says where it came from and its licence.
   for (const item of items) {
     const said = stringsAt(
-      readJson(
-        nodePath.join(
-          project,
-          "node_modules/.cache/damsko",
-          tag,
-          "r",
-          `${item.name}.json`
-        )
-      ),
+      readJson(nodePath.join(versionsDir, "r", tag, `${item.name}.json`)),
       "meta"
     );
     if (
@@ -476,6 +560,7 @@ const everyItem = async () => {
     ["exec", "tsc", "--noEmit", "-p", "tsconfig.app.json"],
     project
   );
+  await drift();
   console.log(
     `install: ${items.length} items, ${installed.size} files installed into ${project}`
   );
@@ -647,6 +732,10 @@ const checkPage = async (label: string, app: string) => {
     expect(
       seen.button.cursor === "pointer",
       `the button has no pointer (${seen.button.cursor})`
+    );
+    expect(
+      await page.evaluate<boolean>(`(${sansProvided})()`),
+      "the page does not provide the family its sans token names"
     );
     expect(
       seen.loaded.includes("Geist") &&
@@ -934,7 +1023,32 @@ const ownGeist = async (product: string) => {
         `the family "${family}" did not load (loaded: ${seen.loaded.join(", ")})`
       );
     }
+    expect(
+      await page.evaluate<boolean>(`(${sansProvided})()`),
+      "the page does not provide the family its sans token names"
+    );
   });
+
+  // The mistake the page's assertion is for: the sheet left out and the token not set.
+  const styles = nodePath.join(app, "src/index.css");
+  writeFileSync(
+    styles,
+    readFileSync(styles, "utf-8").replace(/:root \{[^}]*\}/u, "")
+  );
+  if (!(await run("pnpm", ["exec", "vite", "build"], app))) {
+    return;
+  }
+  await inBrowser(
+    `${label}, its token unset`,
+    dist,
+    async (page, url, expect) => {
+      await open(page, url, "button");
+      expect(
+        !(await page.evaluate<boolean>(`(${sansProvided})()`)),
+        "the page's assertion passes with no sans family provided"
+      );
+    }
+  );
 };
 
 /** Get started, carried out as written, in empty folders. */
@@ -971,6 +1085,7 @@ try {
   await thePage();
 } finally {
   await served.close();
+  await versions.close();
   if (values.keep) {
     console.log(`install: kept ${scratch}`);
   } else {

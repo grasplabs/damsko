@@ -1,25 +1,42 @@
 # A version's registry, built once and kept: on a `v*` tag, the registry is
 # built from the tagged commit and attached to the tag's release as
-# registry-<tag>.tgz with its checksum (registry-<tag>.tgz.sha256). A
-# product pins the tag and downloads that archive, with none of Damsko's
-# toolchain (Get started, "Pin and update").
+# registry-<tag>.tgz with its checksum (registry-<tag>.tgz.sha256). The
+# site's build unpacks every release's archive under /r/<tag>/, the
+# address a product pins (Get started, "Pin and update").
 #
-# Safe to run again for a tag that is pushed again: the release is made
-# only when there is none, and the two assets replace the ones it has.
-# It creates and moves no tag. Needs no secret: the job's own token, with
+# A tag is a pin. The archive is the same bytes whenever the same commit
+# is packed (scripts/registry-dist.ts), so a tag pushed again at the same
+# commit uploads what is there already. An archive that would differ from
+# the one the release has is refused: only a run started by hand, for
+# that tag, with `replace` ticked, puts another in its place. It creates
+# and moves no tag. Needs no secret: the job's own token, with
 # `contents: write` for the release and nothing else.
 name: Release
 
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: The tag to build the registry of (v0.1.0)
+        required: true
+        type: string
+      replace:
+        description: Replace the release's archive when the new one differs
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   contents: read
 
 concurrency:
-  group: release-${{ github.ref }}
+  group: release-${{ inputs.tag || github.ref_name }}
   cancel-in-progress: false
+
+env:
+  TAG: ${{ inputs.tag || github.ref_name }}
 
 jobs:
   registry:
@@ -30,6 +47,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: refs/tags/${{ inputs.tag || github.ref_name }}
           persist-credentials: false
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
@@ -50,8 +68,6 @@ jobs:
             echo "::error::the tag is $TAG and package.json says $version"
             exit 1
           fi
-        env:
-          TAG: ${{ github.ref_name }}
       - run: node scripts/registry-dist.ts out --release
       - name: Attach the registry to the tag's release
         run: |
@@ -59,8 +75,18 @@ jobs:
             gh release create "$TAG" --verify-tag --title "$TAG" \
               --notes "The registry of $TAG, built from the tag: registry-$TAG.tgz and its checksum. What changed is in CHANGELOG.md."
           fi
+          mkdir has
+          if gh release download "$TAG" --pattern "registry-$TAG.tgz.sha256" --dir has 2> /dev/null; then
+            if ! cmp -s "has/registry-$TAG.tgz.sha256" "out/registry-$TAG.tgz.sha256"; then
+              if [ "$REPLACE" != "true" ]; then
+                echo "::error::the release of $TAG has another archive ($(cut -c1-12 "has/registry-$TAG.tgz.sha256") there, $(cut -c1-12 "out/registry-$TAG.tgz.sha256") built). A tag is a pin: run this workflow by hand with replace ticked to put the new one in its place."
+                exit 1
+              fi
+              echo "::warning::replacing the archive of $TAG, as asked"
+            fi
+          fi
           gh release upload "$TAG" "out/registry-$TAG.tgz" "out/registry-$TAG.tgz.sha256" --clobber
         env:
           GH_REPO: ${{ github.repository }}
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.ref_name }}
+          REPLACE: ${{ github.event_name == 'workflow_dispatch' && inputs.replace }}

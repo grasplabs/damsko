@@ -7,7 +7,9 @@
 //   node src/styles/fonts/unpack.mjs           unpacks what is packed; safe to run again
 //   node src/styles/fonts/unpack.mjs --check   changes nothing; fails while anything is packed
 //
-// Either way it fails, with the names, when a file a sheet names is not there.
+// Either way it fails, with the names, when a file a sheet names is not there, or is not the
+// font that was installed: each is held to its checksum (SHA256SUMS, installed beside it).
+import { createHash } from "node:crypto";
 import {
   existsSync,
   readFileSync,
@@ -44,6 +46,20 @@ for (const sheet of readdirSync(fonts).filter((name) => name.endsWith(".css"))) 
     if (name !== undefined && !existsSync(new URL(name, fonts))) {
       problems.push(`${name}, which ${sheet} names, is missing`);
     }
+  }
+}
+
+for (const line of readFileSync(new URL("SHA256SUMS", fonts), "utf-8")
+  .split("\n")
+  .filter(Boolean)) {
+  const [sum, name] = line.split(/\s+/u);
+  if (
+    existsSync(new URL(name, fonts)) &&
+    createHash("sha256")
+      .update(readFileSync(new URL(name, fonts)))
+      .digest("hex") !== sum
+  ) {
+    problems.push(`${name} is not the font Damsko ships: install the fonts again`);
   }
 }
 

@@ -247,70 +247,28 @@ const firstApp =
 /** The fonts are unpacked once, where they were installed, and committed. */
 const unpack = "node src/styles/fonts/unpack.mjs";
 
-/** Where every tag's release is, on GitHub. */
-export const releasesAddress =
-  "https://github.com/grasplabs/damsko/releases/download";
+/**
+ * The version the page pins, as an example: Damsko's own now (scripts/check-registry.ts holds it
+ * to package.json), so the install check can install from it.
+ */
+export const pinned = "v0.1.0";
 
-/** What tells the CLI where the registry is, when one version is served from this machine. */
-const registryVariable = "DAMSKO_REGISTRY";
+const everyItemAgain =
+  "pnpm dlx shadcn@4.23.0 add @damsko/tokens @damsko/fonts @damsko/lib @damsko/hooks @damsko/button --overwrite --yes";
 
 /**
- * The whole of damsko-registry.mjs: one released version of the registry, served from this machine
- * while a command runs. Node and `tar` only.
+ * Whether the page provides the family the sans token names first, as a function a browser test
+ * evaluates in the page. The install check evaluates it in every app it builds.
  */
-export const registryScript = [
-  "// Runs a command with one released version of Damsko's registry served from this machine:",
-  "//",
-  "//   node damsko-registry.mjs <tag> <command>",
-  "//",
-  "// The tag's archive is downloaded once from its release, checked against its checksum and kept",
-  `// in node_modules/.cache; the command finds the registry's address in ${registryVariable}.`,
-  'import { execFileSync, spawn } from "node:child_process";',
-  'import { createHash } from "node:crypto";',
-  'import { createReadStream, existsSync, mkdirSync, writeFileSync } from "node:fs";',
-  'import { createServer } from "node:http";',
-  'import { join } from "node:path";',
-  "",
-  `const releases = "${releasesAddress}";`,
-  "const [tag, command, ...args] = process.argv.slice(2);",
-  "if (tag === undefined || command === undefined) {",
-  '  console.error("usage: node damsko-registry.mjs <tag> <command>");',
-  "  process.exit(1);",
+export const sansProvided = [
+  "() => {",
+  "  const root = getComputedStyle(document.documentElement);",
+  '  const [first = ""] = root.getPropertyValue("--damsko-font-sans").split(",");',
+  '  const family = first.trim().replaceAll(\'"\', "");',
+  "  return [...document.fonts].some(",
+  '    (face) => face.family.replaceAll(\'"\', "") === family',
+  "  );",
   "}",
-  "",
-  'const dir = join("node_modules/.cache/damsko", tag);',
-  "const name = `registry-${tag}.tgz`;",
-  "const get = async (file) => {",
-  "  const response = await fetch(`${releases}/${tag}/${file}`);",
-  "  if (!response.ok) {",
-  "    throw new Error(`${response.url} answered ${response.status}`);",
-  "  }",
-  "  return Buffer.from(await response.arrayBuffer());",
-  "};",
-  'if (!existsSync(join(dir, "r"))) {',
-  "  const archive = await get(name);",
-  '  const sum = createHash("sha256").update(archive).digest("hex");',
-  "  if (!String(await get(`${name}.sha256`)).startsWith(`${sum} `)) {",
-  "    throw new Error(`${name} is not the file its checksum names`);",
-  "  }",
-  "  mkdirSync(dir, { recursive: true });",
-  "  writeFileSync(join(dir, name), archive);",
-  '  execFileSync("tar", ["-xzf", name], { cwd: dir });',
-  "}",
-  "",
-  "const server = createServer((request, response) => {",
-  '  const { pathname } = new URL(request.url ?? "/", "http://127.0.0.1");',
-  "  createReadStream(join(dir, decodeURIComponent(pathname)))",
-  '    .on("error", () => response.writeHead(404).end())',
-  "    .pipe(response);",
-  "});",
-  'server.listen(0, "127.0.0.1", () => {',
-  "  const child = spawn(command, args, {",
-  `    env: { ...process.env, ${registryVariable}: \`http://127.0.0.1:\${server.address().port}\` },`,
-  '    stdio: "inherit",',
-  "  });",
-  '  child.on("close", (code) => process.exit(code ?? 1));',
-  "});",
 ].join("\n");
 
 const nodeResolution = '"module": "esnext",\n"moduleResolution": "bundler"';
@@ -714,6 +672,17 @@ export const sections: Section[] = [
           },
         ],
       },
+      {
+        slug: "check-the-family",
+        name: "Check the family",
+        note: "A sheet left out with its token not set fails without a word: the text falls back to the system's font. So the product's browser test asks the page, once, whether it provides the family the sans token names first. The install check evaluates this function in every app it builds, and in this one again with the token left unset, where it must say no.",
+        blocks: [
+          {
+            code: `const sansProvided = ${sansProvided};\n\nexpect(await page.evaluate(sansProvided)).toBe(true);`,
+            lang: "ts",
+          },
+        ],
+      },
     ],
   },
   {
@@ -757,45 +726,46 @@ export const sections: Section[] = [
   {
     slug: "pin-and-update",
     title: "Pin and update",
-    lead: "What a product installs is one version of Damsko, and the record of which is the product's own: the tag its install command names. The CLI writes files only, so nothing in an installed file says where it came from; each item's meta, in the registry, says its version and commit. This site serves main as last deployed, whichever commit that is (version.json names it): right for a first look, never for a pin. Every tag's release on GitHub carries the registry built from that tag as one archive, registry-<tag>.tgz, with its checksum: a product downloads that, with none of Damsko's toolchain.",
+    lead: "What a product installs is one version of Damsko, and the record of which is the product's own: the address in its components.json. The CLI writes files only, so nothing in an installed file says where it came from; each item's meta, in the registry, says its version and commit. This site serves two things. /r/{name}.json is main as last deployed, whichever commit that is (version.json names it): right for a first look, never for a pin. /r/<tag>/{name}.json is a released version, and never changes: every release of Damsko is served there, from the archive its tag's release on GitHub carries.",
     starts: "the registry's",
     steps: [
       {
         slug: "pin-a-version",
         name: "Pin a version",
-        note: `The whole of damsko-registry.mjs, beside components.json, and the registry's address in components.json. The CLI takes an address, never a folder, so the script serves the archive from this machine while a command runs: it downloads the tag's archive once (into node_modules/.cache), checks it against its checksum, and gives the command the address in ${registryVariable}. Without the script the CLI stops and names the variable, so no install comes from anywhere else by accident.`,
+        note: "One line of components.json: the tag in the registry's address. An item names what it builds on by the same registry, so everything a component brings comes from that version too. The second form reads the tag from the environment, for a product that keeps it elsewhere; the CLI stops and names the variable when it is not set.",
         blocks: [
           {
-            code: registryScript,
-            lang: "js",
-            does: { kind: "write", file: "damsko-registry.mjs" },
-          },
-          {
-            code: `// components.json\n"registries": { "@damsko": "\${${registryVariable}}/r/{name}.json" }`,
+            code: `// components.json\n"registries": { "@damsko": "${siteAddress}/r/${pinned}/{name}.json" }`,
             lang: "jsonc",
             does: { kind: "set", file: "components.json", at: [] },
+          },
+          {
+            code: `"registries": { "@damsko": "${siteAddress}/r/\${DAMSKO_VERSION}/{name}.json" }`,
+            lang: "jsonc",
           },
         ],
       },
       {
         slug: "install-and-update",
         name: "Install and update",
-        note: "Every item the product has, all at once, through the script with the tag (v0.2.0, …): never one item alone (the items share lib/ and the tokens), and never shadcn add --all, which installs from shadcn's own registry. Then unpack the fonts, review the diff and commit it, the six font files with it. To update, change the tag and run it again; the tag in this command, in the product's own script, is its pin.",
+        note: "Every item the product has, all at once: never one item alone (the items share lib/ and the tokens), and never shadcn add --all, which installs from shadcn's own registry. Then unpack the fonts, review the diff and commit it, the six font files with it. To update, change the tag in components.json and run it again.",
         blocks: [
           {
-            code: `node damsko-registry.mjs <tag> pnpm dlx shadcn@4.23.0 add @damsko/tokens @damsko/fonts @damsko/lib @damsko/hooks @damsko/button --overwrite --yes\n${unpack}\ngit status --short`,
+            code: `${everyItemAgain}\n${unpack}`,
             lang: "bash",
+            does: { kind: "run", in: "." },
           },
         ],
       },
       {
         slug: "check-for-drift",
         name: "Check for drift",
-        note: "In the product's own checks. The first command is what keeps the fonts in place, whatever builds the app: it fails while a font is still packed or missing. After the same install again, the second prints nothing when the product's copy is the pin's, new and changed files alike (git diff alone misses a file git does not track yet). The files are never edited in the product: a change is a pull request in Damsko, then an update.",
+        note: "In the product's own checks, with its work committed: the same install again, the fonts unpacked, then two questions. The fonts' own check fails while a font is packed, missing or not the file that was installed; it is what keeps the fonts in place, whatever builds the app. The last line fails when the product's copy is not the pin's, new and changed files alike (git diff alone misses a file git does not track yet). The files are never edited in the product: a change is a pull request in Damsko, then an update.",
         blocks: [
           {
-            code: `${unpack} --check\ngit status --porcelain`,
+            code: `${everyItemAgain}\n${unpack}\n${unpack} --check\ntest -z "$(git status --porcelain)"`,
             lang: "bash",
+            does: { kind: "run", in: "." },
           },
         ],
       },
