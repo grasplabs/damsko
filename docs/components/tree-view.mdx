@@ -41,15 +41,27 @@ Folders open and close; a press or Space chooses one item. A letter finds the ne
 
 ## Links, with counts and marks
 
-A node's `href`, or `render` for a router's own link, makes its row a link (`current` marks the open one); `actions` puts a count or a mark at the row's end. The keys and typeahead stay the tree's: Enter follows the link, as a press does.
+A node's `href`, or `render` for a router's own link, makes its row a link (`current` marks the open one); `badge` puts a count or a mark at the row's end. The keys and typeahead stay the tree's: Enter follows the link, as a press does.
 
 <Stage path="tree-view/links" live label="Links, with counts and marks" />
 
 ## A count, and a mark in a tone
 
-`actions` is a node, so its tone is yours: a count stands as it is, in the row's muted tone, and a mark that asks for a look is wrapped in a span that gives it the warning colour. Wrapping it is the intended way; TreeView has no tone prop of its own.
+`badge` is a node, so its tone is yours: a count stands as it is, in the row's muted tone, and a mark that asks for a look is wrapped in a span that gives it the warning colour. Wrapping it is the intended way; TreeView has no tone prop of its own.
 
 <Stage path="tree-view/end" label="A count, and a mark in a tone" />
+
+## Buttons on a row, and folders that only open
+
+A node's `actions` are its row's buttons: small icon Buttons, each named for its row ("Rename notes.md"). They are drawn only for the row under the pointer and the row that holds focus, and on a touch screen for the rows in view, so a tree of thousands of rows mounts none of them; a long name may wrap as they come. Only the focused row's buttons are in the Tab order: Tab from a row goes to its buttons and then out of the tree, never through another row's. A press or a key on a button is the button's, so the row is not chosen or opened, and the buttons are no part of the row's name. When a button takes its own row out, focus goes to the row after it, else the one before. `selectable: false` makes a node one that opens and runs but is never chosen, as the folder here: the choice is always a file.
+
+<Stage path="tree-view/actions" live label="Buttons on a row" />
+
+## An icon per kind of file
+
+`icon` is the node's own, so which file wears which icon is the product's table. Read the extension as an own key (`ownValue`): a file's name is data.
+
+<Stage path="tree-view/file-icons" label="An icon per kind of file" />
 
 ## A filter over it
 
@@ -202,6 +214,24 @@ One row in each state; hover and keyboard focus are forced from the tree's own C
         "A press chooses an item and opens or closes a branch; the chevron always opens or closes.",
     },
     {
+      group: "Pointer",
+      key: "A row's buttons",
+      value:
+        "`actions` are drawn for the row under the pointer and the focused row, on a touch screen for the rows in view; a press on one leaves the row as it was.",
+    },
+    {
+      group: "Keyboard",
+      key: "A row's buttons",
+      value:
+        "Tab from a row goes to its own buttons, then out of the tree; no other row's are Tab stops, and the tree's keys do nothing on a button. A button that removes its row leaves focus on the row after it, else the one before.",
+    },
+    {
+      group: "Choosing",
+      key: "Not every node",
+      value:
+        "A node with `selectable: false` opens and runs but is never chosen, and says nothing of being chosen.",
+    },
+    {
       group: "Loading",
       key: "Children",
       value:
@@ -221,6 +251,10 @@ One row in each state; hover and keyboard focus are forced from the tree's own C
       key: "Role",
       value: "`tree` of `treeitem`s, named by `aria-label`",
       note: "WAI-ARIA's tree view",
+    },
+    {
+      key: "Name",
+      value: "An item's words and its badge; never its row's buttons",
     },
     { key: "Levels", value: "`aria-level`, and `aria-expanded` on a branch" },
     {

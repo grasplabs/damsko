@@ -11,11 +11,11 @@ import * as stylex from "@stylexjs/stylex";
 
 const layout = stylex.create({
   frame: { width: "100%", maxWidth: 320 },
-  // The tone is the host's: `actions` is a node, so a span round the mark gives it the warning colour.
+  // The tone is the host's: `badge` is a node, so a span round the mark gives it the warning colour.
   warning: { display: "inline-flex", color: colors.warning },
 });
 
-// A row's actions are any node. A count stands as it is, in the row's muted tone; a mark that asks for
+// A row's badge is any node. A count stands as it is, in the row's muted tone; a mark that asks for
 // a look is wrapped in a span that gives it the warning colour. That is the intended way.
 export default function TreeEnd() {
   const items: TreeNode[] = [
@@ -23,13 +23,13 @@ export default function TreeEnd() {
       value: "contracts",
       label: "Contracts",
       icon: FolderIcon,
-      actions: "4",
+      badge: "4",
       children: [
         {
           value: "contracts/suppliers",
           label: "Supplier terms",
           icon: FileIcon,
-          actions: (
+          badge: (
             <span {...stylex.props(layout.warning)}>
               <Icon icon={ShieldAlertIcon} label="Sensitive" />
             </span>
