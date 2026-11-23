@@ -363,7 +363,7 @@ export const Inspector = ({
             icon === undefined || isValidElement(icon) ? (
               icon
             ) : (
-              <IconTile icon={icon} />
+              <IconTile icon={icon} variant="tinted" />
             )
           }
           title={title}
