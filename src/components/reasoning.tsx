@@ -36,6 +36,7 @@ import { BrainIcon, Icon } from "../lib/icons";
 import { colors, font, size, space } from "../lib/tokens.stylex";
 import { announce, lazyPart, NotYetShown, nothing } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
+import type { MarkdownProps } from "./markdown";
 import {
   Trace,
   TraceCollapsible,
@@ -84,6 +85,12 @@ export interface ReasoningTriggerProps {
 export interface ReasoningContentProps {
   /** The thoughts, in Markdown: as much as has arrived. */
   children: string;
+  /**
+   * How the words come in while it thinks: `word` a word at a time, `character` a character at a
+   * time, each fading in; `false` as they are given. As Markdown's `animated`.
+   * @default "word"
+   */
+  animated?: MarkdownProps["animated"];
   /** Layout only: where it sits and how much room it takes. */
   style?: LayoutStyle;
 }
@@ -315,6 +322,7 @@ const stepsOf = (text: string): Step[] => {
 /** The thoughts, under the line, while it is open. */
 export const ReasoningContent = ({
   children,
+  animated = "word",
   style,
 }: ReasoningContentProps) => {
   const { isStreaming, isOpen } = useReasoning();
@@ -342,7 +350,12 @@ export const ReasoningContent = ({
                 {markdown ? (
                   // Silent: the thoughts are not read out as they come, open or closed; that
                   // thinking started is said once, by Reasoning.
-                  <LazyMarkdown size="xs" streaming={isStreaming} live="off">
+                  <LazyMarkdown
+                    size="xs"
+                    streaming={isStreaming}
+                    animated={animated}
+                    live="off"
+                  >
                     {step.body.trim()}
                   </LazyMarkdown>
                 ) : (

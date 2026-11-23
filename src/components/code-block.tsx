@@ -375,11 +375,16 @@ const styles = stylex.create({
     overflowWrap: "anywhere",
   },
   // While the code is still coming in, each new line fades in as it starts, as an answer's words
-  // do; the code on it then comes as it is, so it reads as it is typed. Nothing kept after.
+  // do; the code on it then comes as it is, so it reads as it is typed. The first line comes with
+  // the block, which fades in whole (Markdown): it does not fade a second time inside it.
   lineArrives: {
-    animationName: { default: lineIn, [REDUCED]: "none" },
+    animationName: {
+      default: lineIn,
+      ":first-child": "none",
+      [REDUCED]: "none",
+    },
     animationDuration: duration.stream,
-    animationTimingFunction: duration.easeStream,
+    animationTimingFunction: duration.easeInOut,
     animationFillMode: "backwards",
   },
   // A highlighted line: a wash and a bar at its start, so colour is never the only mark; an added

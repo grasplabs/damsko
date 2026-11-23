@@ -66,6 +66,41 @@ describe(schemeOf, () => {
 });
 
 describe(repair, () => {
+  test("adds only closing marks after the answer's own words, never anything before them", () => {
+    // Markdown keys each word it fades in by where it starts in the repaired text: a character put
+    // before words already shown would move every word after it, and they would fade in again.
+    const answer = [
+      "## Results this week",
+      "",
+      "Support closed **58 requests** and _Sales_ closed 33,[^1] see [the report](https://example.com/r) and the [guide][g]; `closed_at` is set.",
+      "",
+      "- Support ~~closed~~ the most",
+      "  - four still open",
+      "",
+      "| Team | Closed |",
+      "| :-- | --: |",
+      "| Support | 58 |",
+      "",
+      "```python",
+      "def closed(requests):",
+      "```",
+      "",
+      "> A quote with *emphasis* and <https://example.com>.",
+      "",
+      "[g]: https://example.com/guide",
+      "[^1]: A note.",
+    ].join("\n");
+    for (let end = 0; end <= answer.length; end += 1) {
+      const given = answer.slice(0, end);
+      const { text } = repair(given);
+      let same = 0;
+      while (same < text.length && text[same] === given[same]) {
+        same += 1;
+      }
+      expect(text.slice(same)).toMatch(/^[\s*_~`()[\]<>|:-]*$/u);
+    }
+  });
+
   test("an open fence is code still coming, a half-typed closing waits", () => {
     expect(openFence("```ts\nconst a = 1")).toBeTruthy();
     expect(openFence("```ts\nconst a = 1\n```")).toBeFalsy();

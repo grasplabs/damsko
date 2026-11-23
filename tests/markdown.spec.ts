@@ -561,8 +561,10 @@ test("with motion, nothing already shown moves, and a finished block is not draw
   await page.getByRole("button", { name: "250 tokens/s" }).click();
   const watched = await watchFades(page);
   expect(watched.moved).toBeLessThan(0.5);
-  // Once more as plain text when its last words have faded: never per word or per frame.
-  expect(watched.redrawn).toBeLessThanOrEqual(2);
+  // Once more as plain text when its last words have faded, once for each definition further down
+  // (a link's target, a note: two here) and once as the answer is read whole at its end: never
+  // per word or per frame.
+  expect(watched.redrawn).toBeLessThanOrEqual(5);
 });
 
 test("with reduced motion, the words show as they arrive: no fade and no spans", async ({
@@ -637,3 +639,106 @@ test("with motion, a screen reader hears each finished block once, never a word 
     "Support closed 58 requests and Sales closed 33, so the queue is the shortest it has been since March."
   );
 });
+
+test("with motion, a link to a definition and a note defined further down end as links, as written", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await openExample(page, "markdown", "pace");
+  await page.getByRole("button", { name: "250 tokens/s" }).click();
+  const answer = page.locator("[data-slot=markdown]");
+  await expect(answer).toHaveAttribute("aria-busy", "true");
+  await expect(answer).not.toHaveAttribute("aria-busy", { timeout: 30_000 });
+  await expect(
+    answer.getByRole("link", { name: /^triage guide/u })
+  ).toHaveAttribute("href", "https://example.com/triage");
+  await expect(answer).not.toContainText("[guide]");
+  await expect(answer).not.toContainText("[^1]");
+  // The note's mark leads to the note, and the note back to the mark.
+  const mark = answer.locator("sup").getByRole("link");
+  const note = (await mark.getAttribute("href")) ?? "";
+  await expect(answer.locator(`[id="${note.slice(1)}"]`)).toContainText(
+    "Counted from the help desk's export."
+  );
+  const back = answer.getByRole("link", { name: "Back to reference 1" });
+  const reference = (await back.getAttribute("href")) ?? "";
+  await expect(answer.locator(`[id="${reference.slice(1)}"]`)).toContainText(
+    "1"
+  );
+});
+
+test("with motion, a selection made while the answer is written is kept as it is finished", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await openExample(page, "markdown", "pace");
+  await page.getByRole("button", { name: "80 tokens/s" }).click();
+  const answer = page.locator("[data-slot=markdown]");
+  const paragraph = answer.getByRole("paragraph").first();
+  await expect(paragraph).toContainText("Sales closed");
+  // The words shown so far, while the newest of them are still fading in.
+  const selected = await paragraph.evaluate((node) => {
+    const range = document.createRange();
+    range.setStart(node, 0);
+    range.setEnd(node, node.childNodes.length);
+    document.getSelection()?.removeAllRanges();
+    document.getSelection()?.addRange(range);
+    return document.getSelection()?.toString() ?? "";
+  });
+  expect(selected).toContain("Support closed");
+  await expect(answer).not.toHaveAttribute("aria-busy", { timeout: 30_000 });
+  await page.waitForTimeout(600);
+  // The same words (a space after the last of them may since have come).
+  expect(
+    await page.evaluate(
+      () => document.getSelection()?.toString().trimEnd() ?? ""
+    )
+  ).toBe(selected.trimEnd());
+  // Let go, the answer ends as text.
+  await page.evaluate(() => document.getSelection()?.removeAllRanges());
+  await expect(answer.locator("span[data-at]")).toHaveCount(0);
+});
+
+/** The main thread's long tasks while the long-answer example plays `answer` with `fade`, in ms. */
+const longTasksWhile = async (page: Page, answer: string, fade: string) => {
+  await page.getByRole("button", { name: answer }).click();
+  await page.getByRole("button", { name: fade }).click();
+  const answerBox = page.locator("[data-slot=markdown]");
+  await expect(answerBox).not.toHaveAttribute("aria-busy", { timeout: 30_000 });
+  await page.evaluate(() => {
+    const tasks: number[] = [];
+    Reflect.set(window, "longTasks", tasks);
+    new PerformanceObserver((list) => {
+      for (const entry of list.getEntries()) {
+        tasks.push(entry.duration);
+      }
+    }).observe({ type: "longtask" });
+  });
+  await page.getByRole("button", { name: "Play" }).click();
+  await expect(answerBox).toHaveAttribute("aria-busy", "true");
+  await expect(answerBox).not.toHaveAttribute("aria-busy", { timeout: 60_000 });
+  return await page.evaluate(() => {
+    const tasks: unknown = Reflect.get(window, "longTasks");
+    let sum = 0;
+    for (const task of Array.isArray(tasks) ? tasks : []) {
+      sum += typeof task === "number" ? task : 0;
+    }
+    return sum;
+  });
+};
+
+for (const answer of ["A long list", "Unclosed marks"]) {
+  test(`with motion, ${answer.toLowerCase()} streamed fast costs about what it does without the fade`, async ({
+    page,
+  }) => {
+    test.slow();
+    await page.emulateMedia({ reducedMotion: "no-preference" });
+    await openExample(page, "markdown", "long");
+    // Without the fade first: what the page costs as it is, on this machine, now.
+    const off = await longTasksWhile(page, answer, "Off");
+    const faded = await longTasksWhile(page, answer, "By word");
+    // Every word of the block a span, cut into words again each frame, cost seconds here.
+    expect(faded).toBeLessThan(off * 1.5 + 300);
+    await expect(page.locator("span[data-at]")).toHaveCount(0);
+  });
+}

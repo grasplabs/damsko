@@ -4,7 +4,14 @@
 import * as stylex from "@stylexjs/stylex";
 import { renderElement } from "@ui-sdk/react/primitive";
 import type { RenderProp } from "@ui-sdk/react/primitive";
-import { createContext, createElement, isValidElement, lazy, use } from "react";
+import {
+  createContext,
+  createElement,
+  isValidElement,
+  lazy,
+  use,
+  useSyncExternalStore,
+} from "react";
 import type { ReactElement, ReactNode, Ref } from "react";
 
 import { durations } from "./tokens.values";
@@ -342,6 +349,28 @@ const never = new Promise<never>(() => {
  * Once the part shows, draw the lazyPart instead, and it loads then.
  */
 export const NotYetShown = (): ReactNode => use(never);
+
+const REDUCED_MOTION = "(prefers-reduced-motion: reduce)";
+
+const watchMotion = (changed: () => void) => {
+  const query = window.matchMedia(REDUCED_MOTION);
+  query.addEventListener("change", changed);
+  return () => {
+    query.removeEventListener("change", changed);
+  };
+};
+
+/**
+ * Whether the person asked for less motion, for motion a style cannot turn off (a chart's own
+ * animation, an answer's pace). On the server, and until the page is live, it is: what the server
+ * drew stands still.
+ */
+export const useReducedMotion = (): boolean =>
+  useSyncExternalStore(
+    watchMotion,
+    () => window.matchMedia(REDUCED_MOTION).matches,
+    () => true
+  );
 
 /** What an effect or a subscription that started nothing gives back to undo it. */
 export const nothing = () => {

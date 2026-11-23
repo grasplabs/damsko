@@ -25,9 +25,9 @@ Headings, lists, a table (Table, scrolling sideways in its own box), code in a s
 
 ## Word by word
 
-A model's stream comes in uneven chunks: a token at a time, then a paragraph at once after a pause. While `streaming`, Markdown lets the words out at a steady pace, whole words only, at the pace they arrive: each chunk's first word shows at once and the rest are spread until the next chunk is due, so a burst runs on evenly instead of landing in a lump, and the answer is never more than 400ms behind what has arrived. A word still being written waits for its end, so it never shows in two halves. Each new word fades in once (250ms, opacity only, so nothing beside it moves); a word already shown never fades again, however the answer is read anew. Code comes a line at a time, each new line fading in. When the stream ends, or the tab was hidden, all that has arrived shows at once. With reduced motion the words show as they arrive, with no fade.
+A model's stream comes in uneven chunks: a token at a time, then a paragraph at once after a pause. While `streaming`, Markdown lets the words out at a steady pace, whole words only, at the pace they arrive: each chunk's first word shows at once and the rest are spread until the next chunk is due, four words a frame at most, so a burst sweeps in instead of landing in a lump. The answer is never more than 400ms behind what has arrived: a burst too big for four words a frame runs faster, as much as that needs. A word still being written waits for its end, so it never shows in two halves. Each new word fades in once (250ms, opacity only, so nothing beside it moves); a word already shown never fades again, however the answer is read anew. Code comes a line at a time, each new line fading in, and a link's arrow fades in with its words. When the stream ends, what is left runs out at the same pace, within 400ms; when the tab was hidden, all that has arrived shows at once. With reduced motion the words show as they arrive, with no fade.
 
-`animated` picks the unit: `word` (the default; Chinese, Japanese, Thai and emoji are words too), `character`, or `false` for the words as they are given. Only the block being written is drawn again as words come; a finished block keeps its spans until its last words have faded, then is plain text, drawn once.
+`animated` picks the unit: `word` (the default; Chinese, Japanese, Thai and emoji are words too), `character`, or `false` for the words as they are given. Only the block being written is drawn again as words come, and only its words shown in the last 250ms are spans: the words before them are plain text, so a long block or a hostile one costs no more a frame than a short one. A finished block is plain text once its last words have faded, drawn once. A selection made while the answer is written is kept: nothing it touches is drawn again until it is let go.
 
 <Stage path="markdown/pace" live label="Word by word" />
 
@@ -51,7 +51,7 @@ const { messages, status } = useChat();
 }
 ```
 
-The pacing happens here, in the browser, so the server sends tokens as they come. Pacing on the server too (the AI SDK's `smoothStream`, which holds each word back by a fixed delay) adds its delay to every word and still arrives in network-sized chunks; leave it off, or keep its delay short. Throttling the client's updates (`useChat`'s `throttle`) only makes the chunks bigger, which the pace spreads again. A hook of its own, `useSmoothText(text, { streaming })` (`hooks/use-smooth-text.ts`), paces any text the same way: the text to show, a word at a time.
+The pacing happens here, in the browser, so the server sends tokens as they come. Pacing on the server too (the AI SDK's `smoothStream`, which holds each word back by a fixed delay) adds its delay to every word and still arrives in network-sized chunks; leave it off, or keep its delay short. Throttling the client's updates (`useChat`'s `throttle`) only makes the chunks bigger, which the pace spreads again.
 
 ## Cut off
 
@@ -88,6 +88,10 @@ A section written as GitHub's `<details>` with a `<summary>` line is drawn as a 
 Its links may come from a page the agent read. Raw HTML is text, never HTML, and a link of Markdown's own leads only to http, https or mailto; a picture is never loaded. A paragraph, heading or table cell over 8,000 characters is drawn as plain text, and so is one with more than 128 marks (the characters that start or end a link, emphasis, code or a tag) once such paragraphs have spent the answer's budget of 6,000,000, each its marks squared: an ordinary answer keeps every mark at any length, and no answer, however hostile, takes long to draw. A single block of more than 64 lines (a list, a table, a quote, notes one under the other; code, HTML and definitions of links do not count) spends its lines squared from a budget of 8,000,000, and its lines past that are drawn as plain lines: a list of 2,800 items is a list, and one of 100,000 is a list for its first 2,800.
 
 <Stage path="markdown/safe" label="Untrusted text" />
+
+While it is written, a frame costs about what it does without the fade, however long the block being written or however hostile: only the words shown in the last 250ms are spans.
+
+<Stage path="markdown/long" live label="Long and hostile answers" />
 
 <Rows
   title="What untrusted text becomes"
@@ -244,13 +248,13 @@ Markdown knows no router and no citation. `renderLink` draws every link and pict
     {
       key: "Pace",
       value:
-        "A word at a time; each chunk's first word at once, the rest spread until the next is due",
-      note: "{stream-lag} behind at most",
+        "A word at a time; each chunk's first word at once, the rest spread until the next is due, four a frame at most",
+      note: "400ms behind at most",
     },
     {
       key: "Words",
       value: "Each new word fades in once, opacity only",
-      note: "{duration-stream}, {ease-stream}",
+      note: "{duration-stream}, {ease-in-out}",
     },
     {
       key: "Code",
@@ -265,7 +269,7 @@ Markdown knows no router and no citation. `renderLink` draws every link and pict
     {
       key: "End",
       value:
-        "All that has arrived at once: when the stream ends or the tab was hidden",
+        "What is left runs out at the same pace when the stream ends; all at once when the tab was hidden",
       note: "reduced: no pace and no fade, words as they arrive",
     },
   ]}

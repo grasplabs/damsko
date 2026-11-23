@@ -412,8 +412,6 @@ export const duration = stylex.defineConsts({
   stagger: "var(--damsko-duration-stagger)",
   swap: "var(--damsko-duration-swap)",
   stream: "var(--damsko-duration-stream)",
-  easeStream: "var(--damsko-ease-stream)",
-  streamLag: "var(--damsko-stream-lag)",
   resultFollow: "var(--damsko-result-follow)",
   work: "var(--damsko-duration-work)",
   hold: "var(--damsko-duration-hold)",

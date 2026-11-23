@@ -1,23 +1,26 @@
-// The pace of an answer still being written (src/hooks/use-smooth-text.ts), on a clock of its own:
-// chunks arrive at set times, frames come every 1/60 s, and what shows is read at each frame. Whole
-// words only, in order, never more than stream-lag behind what has arrived, evenly through a burst.
+// The pace of an answer still being written (src/components/markdown/pace.ts), on a clock of its
+// own: chunks arrive at set times, frames come every 1/60 s, and what shows is read at each frame.
+// Whole words only, in order, never more than STREAM_LAG behind what has arrived, a few words a
+// frame, evenly through a burst and to the end.
 //
-//   pnpm exec vp test scripts/use-smooth-text.test.ts
+//   pnpm exec vp test scripts/markdown-pace.test.ts
 import { describe, expect, test } from "vitest";
 
 import {
   advance,
   arrive,
+  end,
+  MOST_UNITS,
   startPace,
+  STREAM_LAG,
   unitsOf,
-} from "../src/hooks/use-smooth-text.ts";
-import type { SmoothTextUnit } from "../src/hooks/use-smooth-text.ts";
-import { durations } from "../src/lib/tokens.values.ts";
+} from "../src/components/markdown/pace.ts";
+import type { Unit } from "../src/components/markdown/pace.ts";
 
 const FRAME = 1000 / 60;
 
 /** A text's units, as strings. */
-const split = (text: string, unit: SmoothTextUnit = "word") => {
+const split = (text: string, unit: Unit = "word") => {
   const starts = unitsOf(text, unit);
   return starts.map((start, index) =>
     text.slice(start, starts[index + 1] ?? text.length)
@@ -38,7 +41,8 @@ interface Shown {
 const play = (
   chunks: [number, string][],
   until: number,
-  unit: SmoothTextUnit = "word"
+  unit: Unit = "word",
+  endsAt = Number.POSITIVE_INFINITY
 ): Shown[] => {
   let pace = startPace(0);
   let text = "";
@@ -50,6 +54,9 @@ const play = (
       pace = arrive(pace, text, at, unit);
       next += 1;
     }
+    if (at >= endsAt && !pace.ended) {
+      pace = end(pace);
+    }
     const before = pace.shown;
     pace = advance(pace, text, at, FRAME, unit);
     if (pace.shown !== before) {
@@ -58,6 +65,16 @@ const play = (
   }
   return seen;
 };
+
+/** The most words any one frame let out, from `since` on. */
+const mostWordsAFrame = (seen: Shown[], since = 0) =>
+  Math.max(
+    0,
+    ...seen.map((step, index) => {
+      const before = seen[index - 1]?.text.length ?? 0;
+      return step.at < since ? 0 : split(step.text.slice(before)).length;
+    })
+  );
 
 const sentence =
   "The team agreed to move the launch to the second week of June, and to keep the budget. ";
@@ -119,9 +136,7 @@ describe("the pace", () => {
     expect(seen.length).toBeGreaterThan(8);
     const last = seen.at(-1);
     expect(last?.text).toBe(burst);
-    expect(last?.at ?? Infinity).toBeLessThanOrEqual(
-      durations.streamLag + FRAME
-    );
+    expect(last?.at ?? Infinity).toBeLessThanOrEqual(STREAM_LAG + FRAME);
   });
 
   test("never further behind what has arrived than stream-lag, at any speed", () => {
@@ -148,7 +163,7 @@ describe("the pace", () => {
         const shownAt = seen.find((step) => step.text.length >= upTo)?.at;
         waited = Math.max(waited, (shownAt ?? Infinity) - at);
       }
-      expect(waited).toBeLessThanOrEqual(durations.streamLag + 2 * FRAME);
+      expect(waited).toBeLessThanOrEqual(STREAM_LAG + 2 * FRAME);
     }
   });
 
@@ -167,7 +182,7 @@ describe("the pace", () => {
     const stalled = play([[0, "Hello wor"]], 1000);
     expect(stalled.at(0)?.text).toBe("Hello ");
     expect(stalled.at(-1)?.text).toBe("Hello wor");
-    expect(stalled.at(-1)?.at).toBeGreaterThanOrEqual(durations.streamLag);
+    expect(stalled.at(-1)?.at).toBeGreaterThanOrEqual(STREAM_LAG);
   });
 
   test("a slow stream shows each word as it comes, not in a bunch", () => {
@@ -206,6 +221,70 @@ describe("the pace", () => {
     let pace = arrive(startPace(0), sentence, 0);
     pace = advance(pace, sentence, 3000, 3000);
     expect(pace.shown).toBe(sentence.length);
+  });
+
+  test("a burst after chunks 20 ms apart sweeps in a few words a frame, within stream-lag", () => {
+    // 50 tokens a second, a token each 20 ms, then 200 tokens at once.
+    const tokens = sentence.repeat(60).match(/.{1,4}/gsu) ?? [];
+    const chunks: [number, string][] = tokens
+      .slice(0, 50)
+      .map((token, index) => [index * 20, token]);
+    chunks.push([1000, tokens.slice(50, 250).join("")]);
+    const seen = play(chunks, 2500);
+    const most = mostWordsAFrame(seen);
+    // Before, the burst showed in two frames; spread to its deadline it is under 8 words a frame.
+    expect(most).toBeLessThanOrEqual(8);
+    const all = chunks.reduce((sum, [, text]) => sum + text.length, 0);
+    const done = seen.find((step) => step.text.length === all)?.at ?? Infinity;
+    expect(done - 1000).toBeLessThanOrEqual(STREAM_LAG + FRAME + 1);
+    expect(seen.filter((step) => step.at >= 1000).length).toBeGreaterThan(15);
+  });
+
+  test("when the stream ends, what is left runs out a few words a frame within stream-lag", () => {
+    // A 40-word chunk arrives, and the stream ends with it.
+    const words = sentence
+      .repeat(3)
+      .split(/(?<= )/u)
+      .slice(0, 40)
+      .join("");
+    const seen = play(
+      [
+        [0, "Well, "],
+        [100, words],
+      ],
+      1500,
+      "word",
+      100
+    );
+    const tail = seen.filter((step) => step.at >= 100);
+    expect(mostWordsAFrame(seen, 100)).toBeLessThanOrEqual(MOST_UNITS);
+    expect(tail.length).toBeGreaterThanOrEqual(40 / MOST_UNITS);
+    expect(tail.at(-1)?.text).toBe(`Well, ${words}`);
+    expect((tail.at(-1)?.at ?? Infinity) - 100).toBeLessThanOrEqual(
+      STREAM_LAG + FRAME
+    );
+  });
+
+  test("at the end a word with no space after it is whole: it shows at once", () => {
+    const seen = play([[0, "Hello wor"]], 200, "word", 50);
+    expect(seen.at(-1)?.text).toBe("Hello wor");
+    expect(seen.at(-1)?.at ?? Infinity).toBeLessThanOrEqual(50 + FRAME);
+  });
+
+  test("a steady stream lets out no more than a few words a frame", () => {
+    for (const tokensPerSecond of [30, 80, 250]) {
+      const perChunk = Math.max(1, Math.round((tokensPerSecond * 30) / 1000));
+      const tokens = sentence.repeat(20).match(/.{1,4}/gsu) ?? [];
+      const chunks: [number, string][] = [];
+      for (let index = 0; index < tokens.length; index += perChunk) {
+        chunks.push([
+          (index / perChunk) * 30,
+          tokens.slice(index, index + perChunk).join(""),
+        ]);
+      }
+      const seen = play(chunks, (chunks.at(-1)?.[0] ?? 0) + 1000);
+      expect(mostWordsAFrame(seen)).toBeLessThanOrEqual(MOST_UNITS);
+    }
   });
 
   test("characters are let out one grapheme at a time", () => {

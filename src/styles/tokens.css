@@ -356,10 +356,6 @@
   --damsko-duration-swap: 120ms;
   /* A word of an answer still being written fading in as it is shown: long enough that the last few words fade at once, a soft edge rather than a flicker. Dropped with reduced motion. */
   --damsko-duration-stream: 250ms;
-  /* A streamed word's fade: slow to start and soft to settle, so the last few words shown feather from nothing to full ink rather than flicker on. */
-  --damsko-ease-stream: var(--damsko-ease-in-out);
-  /* The most an answer still being written is shown behind what has arrived: a burst is spread over at most this long, a slow stream shown as it comes. */
-  --damsko-stream-lag: 400ms;
   /* How soft words go as they swap out in place. Dropped with reduced motion. */
   --damsko-swap-blur: blur(2px);
   /* How small words go as they swap out in place. Dropped with reduced motion. */

@@ -27,7 +27,6 @@ import {
   useId,
   useLayoutEffect,
   useState,
-  useSyncExternalStore,
 } from "react";
 import type { Dispatch, PointerEvent, ReactNode, SetStateAction } from "react";
 import { createPortal } from "react-dom";
@@ -73,6 +72,7 @@ import {
   DITHER_GEOMETRY,
   DITHER_LEVELS,
   ownValue,
+  useReducedMotion,
 } from "../lib/utils";
 import type { DitherTexture, LayoutStyle } from "../lib/utils";
 import { motionVars } from "../lib/vars.stylex";
@@ -187,23 +187,6 @@ const useChart = () => use(ChartContext);
 
 /** An id from React's, as SVG ids and url(#…) take it. */
 const useChartId = () => `chart-${useId().replaceAll(/[^a-zA-Z0-9-]/gu, "")}`;
-
-const reducedQuery = "(prefers-reduced-motion: reduce)";
-const subscribeReduced = (change: () => void) => {
-  const list = window.matchMedia(reducedQuery);
-  list.addEventListener("change", change);
-  return () => {
-    list.removeEventListener("change", change);
-  };
-};
-
-/** Whether the reader asked for less motion: Recharts' own animation is a prop, not a style. On the server, and until it is known, it is. */
-const useReducedMotion = () =>
-  useSyncExternalStore(
-    subscribeReduced,
-    () => window.matchMedia(reducedQuery).matches,
-    () => true
-  );
 
 /** A part that writes values (a y axis, a tooltip) gives the chart its formatter, so the table writes them alike. */
 const useTellFormatter = (

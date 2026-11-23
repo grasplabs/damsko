@@ -386,10 +386,20 @@ const fadeStyles = stylex.create({
     animationTimingFunction: duration.ease,
     animationFillMode: "both",
   },
+  // Slow to start and soft to settle, so the last few words shown feather in rather than flicker
+  // on; nothing kept once it is over (backwards, not both), so what has faded in has no layer.
+  stream: {
+    animationName: { default: fade, [REDUCED]: "none" },
+    animationDuration: duration.stream,
+    animationTimingFunction: duration.easeInOut,
+    animationFillMode: "backwards",
+  },
 });
 
 /** What replaces a placeholder fades in, where the placeholder stood. */
 export const fadeIn = fadeStyles.in;
+/** A word of an answer being written, or a line of its code, fades in as it is shown. */
+export const fadeInStream = fadeStyles.stream;
 
 // ---- Edge fade ----------------------------------------------------------------------------------
 //

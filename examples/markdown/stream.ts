@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 
 /** How the stream comes: tokens a second, evenly, or uneven bursts. */
-export type StreamPace = "30" | "80" | "250" | "bursts";
+export type StreamPace = "30" | "80" | "250" | "2000" | "bursts";
 
 /** The answer's tokens: words and pieces of words, about four characters each, as a model sends. */
 const tokensOf = (text: string): string[] =>

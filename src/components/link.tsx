@@ -68,6 +68,9 @@ export interface LinkProps extends Omit<
   style?: LayoutStyle;
 }
 
+// The mark's fade in an answer being written.
+const arrive = stylex.keyframes({ from: { opacity: 0 } });
+
 const styles = stylex.create({
   link: {
     borderRadius: radius.sm,
@@ -112,19 +115,18 @@ const styles = stylex.create({
     verticalAlign: "-0.1em",
     marginInlineStart: size.linkMarkGap,
     [iconVars.size]: size.linkMark,
-    // While the link's words fade in (Markdown writing an answer step by step), the mark arrives
-    // with them, at the step its newest words are at.
-    opacity: {
+    // In an answer being written (Markdown marks the link `data-streaming`), the mark comes with
+    // the address after the words: it fades in as they do, never at full ink beside faint words.
+    animationName: {
       default: null,
-      ':is([data-arrive-step="0"] *)': 0.14,
-      ':is([data-arrive-step="1"] *)': 0.3,
-      ':is([data-arrive-step="2"] *)': 0.45,
-      ':is([data-arrive-step="3"] *)': 0.58,
-      ':is([data-arrive-step="4"] *)': 0.7,
-      ':is([data-arrive-step="5"] *)': 0.8,
-      ':is([data-arrive-step="6"] *)': 0.88,
-      ':is([data-arrive-step="7"] *)': 0.95,
+      ":is([data-streaming] *)": {
+        default: arrive,
+        [media.reducedMotion]: "none",
+      },
     },
+    animationDuration: duration.stream,
+    animationTimingFunction: duration.easeInOut,
+    animationFillMode: "backwards",
   },
   // The mark's drawing ends short of its box (the arrow's own room, about 0.27 of its size), so the
   // focus ring would stand further off its end than off the words' start. The mark's box stops

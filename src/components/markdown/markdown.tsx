@@ -11,7 +11,7 @@
 // first letter, a table is a table from its first row, an open fence is code still being written,
 // and a link still being written keeps the room its arrow will take. Nothing flickers or re-flows
 // when a mark closes. The words are let out at a steady pace, a word at a time, however unevenly
-// they arrive (useSmoothText), and each fades in as it is shown (reveal.tsx); code comes a line at a
+// they arrive (pace.ts), and each fades in as it is shown (reveal.tsx); code comes a line at a
 // time. Only the block being written is drawn again as words come: a finished block is drawn once.
 //
 // It knows no router and no citation: the host draws any link it wants to (`renderLink`, or a part
@@ -27,15 +27,17 @@ import {
   useId,
   useRef,
   useState,
-  useSyncExternalStore,
 } from "react";
 import type { FC, ReactNode } from "react";
 
-import { usePacedText, useReducedMotion } from "../../hooks/use-smooth-text";
-import type { SmoothTextUnit } from "../../hooks/use-smooth-text";
 import { useI18n } from "../../lib/i18n";
 import { CheckIcon, ChevronRightIcon, Icon } from "../../lib/icons";
-import { choiceBoxStyles, focusRing, visuallyHidden } from "../../lib/styles";
+import {
+  choiceBoxStyles,
+  fadeInStream,
+  focusRing,
+  visuallyHidden,
+} from "../../lib/styles";
 import {
   colors,
   duration,
@@ -45,7 +47,7 @@ import {
   size,
   space,
 } from "../../lib/tokens.stylex";
-import { announce, nothing, safeHref } from "../../lib/utils";
+import { announce, nothing, safeHref, useReducedMotion } from "../../lib/utils";
 import type { LayoutStyle } from "../../lib/utils";
 import { iconVars, motionVars } from "../../lib/vars.stylex";
 import {
@@ -72,6 +74,7 @@ import {
   TableRow,
 } from "../table";
 import { tableVars } from "../table.stylex";
+import { usePace } from "./pace";
 import {
   bounded,
   groupSections,
@@ -95,7 +98,7 @@ import type {
   RootContent,
   TableNode,
 } from "./parse";
-import { fadeStyle, useReveal, useSettled, Words } from "./reveal";
+import { useReveal, useSettled, Words } from "./reveal";
 import type { Reveal } from "./reveal";
 
 /** A link in the answer, as the host's renderer sees it. */
@@ -142,7 +145,7 @@ export interface MarkdownProps {
    * arrive, with no fade.
    * @default "word"
    */
-  animated?: SmoothTextUnit | false;
+  animated?: "word" | "character" | false;
   /**
    * How a screen reader hears it while it is written: `polite`, each block once it is finished;
    * `off`, nothing, for words beside the answer that another part already says (Reasoning's
@@ -599,12 +602,20 @@ const eachNode = (
 /** A table column's side, from the source's colons. */
 const sides = { left: "start", right: "end", center: "center" } as const;
 
+/** Whether what starts at `at` in the block's source is among the words still fading in. */
+const fadesFrom = (at: number | undefined, context: Context) =>
+  context.reveal !== null &&
+  at !== undefined &&
+  context.base + at >= context.reveal.fresh;
+
 /**
- * A text's words, from `at` in the source: as they are, or while its block is written, each a span
- * that fades in as it is shown (reveal.tsx).
+ * A text's words, from `at` in the source: as they are, or those shown in the last moment, while
+ * its block is written, each a span that fades in as it is shown (reveal.tsx).
  */
 const wordsOf = (value: string, at: number | undefined, context: Context) =>
-  context.reveal === null || at === undefined ? (
+  context.reveal === null ||
+  at === undefined ||
+  context.base + at + value.length <= context.reveal.fresh ? (
     value
   ) : (
     <Words value={value} at={context.base + at} reveal={context.reveal} />
@@ -792,7 +803,12 @@ const LinkInline = ({
     );
   }
   return (
-    <Link href={href} external={!href.startsWith("mailto:")}>
+    <Link
+      href={href}
+      external={!href.startsWith("mailto:")}
+      // Its arrow, which comes with the address after the words, fades in as they do.
+      data-streaming={context.reveal === null ? undefined : true}
+    >
       {words}
     </Link>
   );
@@ -882,15 +898,15 @@ const CodeInline = ({
   context: Context;
 }) => {
   const at = node.position?.start.offset;
-  const fades = context.reveal !== null && at !== undefined;
+  const fades = fadesFrom(at, context);
   return (
     <code
-      data-at={fades ? context.base + at : undefined}
+      data-at={fades ? context.base + (at ?? 0) : undefined}
       ref={fades ? context.reveal?.attach : undefined}
       {...stylex.props(
         styles.inlineCode,
         context.size === "xs" && styles.xsmallCode,
-        fades && fadeStyle
+        fades && fadeInStream
       )}
     >
       {node.value}
@@ -1459,7 +1475,7 @@ interface Drawn {
   element: ReactNode;
 }
 
-/** The finished blocks as drawn, and what they were drawn with (`settingsOf`). */
+/** The finished blocks as drawn, and what they were drawn with (`settings`). */
 interface DrawnBlocks {
   settings: readonly unknown[];
   blocks: readonly (Drawn | undefined)[];
@@ -1476,13 +1492,14 @@ const placeOf = ({ node, base }: Placed) => {
     : { from: base + from, to: base + to };
 };
 
-const noSubscribe = () => nothing;
-
 /**
  * The answer's blocks, each drawn once it is finished (with its words still fading in), once more
- * as plain text when they have (`settled`), and then never again: a block drawn as before (its
- * source, and what it is drawn with, the same) is the same element, which React passes over. So as
- * an answer is written, only the block being written is drawn again, however long the answer grows.
+ * as plain text when they have (`settled`), and then never again: a block of the same source in
+ * the same place, drawn with the same `settings`, is the same element, which React passes over.
+ * So as an answer is written, only the block being written is drawn again, however long the answer
+ * grows. `settings` holds all a block's drawing reads besides its source: what the document
+ * defines (link targets, notes), whether it is still written (a whole reading at the end may find
+ * a reference to a definition further down), and how it is drawn.
  */
 const useDrawnBlocks = (
   groups: Grouped[],
@@ -1544,33 +1561,62 @@ const useDrawnBlocks = (
 };
 
 /**
+ * Whether a selection is being made or held in `root`: while it is, nothing the selection may
+ * touch is drawn again (the words keep their spans), so it is never lost as the answer is written.
+ */
+const useSelecting = (root: HTMLElement | null, watch: boolean): boolean => {
+  const [selecting, setSelecting] = useState(false);
+  useEffect(() => {
+    if (root === null || !watch) {
+      return nothing;
+    }
+    const check = () => {
+      const selection = document.getSelection();
+      setSelecting(
+        selection !== null &&
+          !selection.isCollapsed &&
+          selection.rangeCount > 0 &&
+          selection.getRangeAt(0).intersectsNode(root)
+      );
+    };
+    document.addEventListener("selectionchange", check);
+    return () => {
+      document.removeEventListener("selectionchange", check);
+    };
+  }, [root, watch]);
+  return watch && selecting;
+};
+
+/**
  * What to draw of an answer (useAnswer), its words let out at a steady pace while it is written
- * (useSmoothText), and how they fade in as they are shown. They fade only in the browser, once it
- * has taken over the page: what the server drew stands as it is.
+ * (pace.ts), and how they fade in as they are shown. They fade only in the browser, once it has
+ * taken over the page: what the server drew stands as it is. With reduced motion, neither. While
+ * a selection is made in `root`, no word it may touch is drawn anew until it is let go: the words
+ * keep fading as they are, and no block settles.
  */
 const useWritten = (
   source: string,
-  streaming: boolean,
-  truncated: boolean,
-  animated: SmoothTextUnit | false
+  { streaming, truncated }: { streaming: boolean; truncated: boolean },
+  animated: NonNullable<MarkdownProps["animated"]>,
+  root: HTMLElement | null
 ) => {
   const reduced = useReducedMotion();
-  const hydrated = useSyncExternalStore(
-    noSubscribe,
-    () => true,
-    () => false
-  );
-  const paced = usePacedText(bounded(source), {
-    streaming: streaming && animated !== false,
-    unit: animated === false ? "word" : animated,
-  });
-  const reveal = useReveal(
-    paced.text.length,
+  const on = animated !== false && !reduced;
+  const hold = useSelecting(root, on);
+  const paced = usePace(bounded(source), {
     streaming,
-    paced.round,
-    animated !== false && !reduced && hydrated ? animated : false
-  );
-  return { ...useAnswer(paced.text, streaming, truncated), reveal };
+    on,
+    unit: animated === false ? "word" : animated,
+    hold,
+  });
+  const writing = streaming || paced.writing;
+  const reveal = useReveal(paced.text.length, writing, on, paced);
+  return {
+    ...useAnswer(paced.text, writing, truncated),
+    writing,
+    reveal,
+    hold,
+  };
 };
 
 /** An answer drawn from Markdown, safe while it streams. */
@@ -1589,14 +1635,15 @@ export const Markdown = ({
 }: MarkdownProps) => {
   const words = useI18n().markdown;
   const prefix = useId().replaceAll(":", "");
-  const { shown, kept, written, reveal } = useWritten(
+  const [root, setRoot] = useState<HTMLElement | null>(null);
+  const { shown, kept, written, writing, reveal, hold } = useWritten(
     source,
-    streaming,
-    truncated,
-    animated
+    { streaming, truncated },
+    animated,
+    root
   );
   const provided = use(ProvidedLinks);
-  const all = useBlocks(shown, streaming);
+  const all = useBlocks(shown, writing);
   const { definitions, notes, references } = gather(
     all.map(({ node }) => node)
   );
@@ -1607,10 +1654,10 @@ export const Markdown = ({
   const blocks = placed.map(({ node }) => node);
   const lastBlock = blocks.at(-1);
   const tableNames = nameTables(blocks);
-  useSaidBlocks(blocks, streaming, live === "polite", tableNames, words.table);
+  useSaidBlocks(blocks, writing, live === "polite", tableNames, words.table);
   const groups = groupSections(placed);
-  const finished = streaming ? Math.max(groups.length - 1, 0) : groups.length;
-  const settled = useSettled(finished, streaming);
+  const finished = writing ? Math.max(groups.length - 1, 0) : groups.length;
+  const settled = useSettled(finished, writing, hold);
   const context: Context = {
     definitions,
     renderLink,
@@ -1621,11 +1668,11 @@ export const Markdown = ({
       notes.map((note, index) => [note.identifier, index + 1])
     ),
     prefix,
-    streaming,
+    streaming: writing,
     codeMaxLines,
-    writing: streaming ? lastBlock : undefined,
+    writing: writing ? lastBlock : undefined,
     openCode:
-      streaming && lastBlock?.type === "code" && openFence(shown)
+      writing && lastBlock?.type === "code" && openFence(shown)
         ? lastBlock
         : undefined,
     inLink: false,
@@ -1648,6 +1695,8 @@ export const Markdown = ({
     reveal,
     context,
     [
+      // What the document defines, which a block may refer to before it is defined.
+      JSON.stringify([[...definitions], notes.map((note) => note.identifier)]),
       renderLink,
       provided,
       answerSize,
@@ -1657,12 +1706,14 @@ export const Markdown = ({
       words,
       prefix,
       written,
+      writing,
     ]
   );
   return (
     <div
+      ref={setRoot}
       data-slot="markdown"
-      aria-busy={streaming || undefined}
+      aria-busy={writing || undefined}
       {...stylex.props(
         styles.root,
         answerSize === "message" && styles.message,

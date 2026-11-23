@@ -903,13 +903,19 @@ const MAX_NOT_LINKS = 32;
 
 /**
  * The links in `block`, outside code: the one cut off at its end (where its `[` is, and what closes
- * it), and the block with every link's address and title masked, so nothing in them is read as a
- * mark. A bracket with no `](` after it is words, as a range's `[0, 1)` is.
+ * it), the block with every link's address and title masked, so nothing in them is read as a
+ * mark, and where each link's tail is (`](…)`, never drawn). A bracket with no `](` after it is
+ * words, as a range's `[0, 1)` is.
  */
 const linksIn = (
   block: string
-): { open: { at: number; close: string } | null; masked: string } => {
+): {
+  open: { at: number; close: string } | null;
+  masked: string;
+  tails: [number, number][];
+} => {
   const parts: string[] = [];
+  const tails: [number, number][] = [];
   let done = 0;
   let bracket = -1;
   let code = 0;
@@ -917,6 +923,7 @@ const linksIn = (
   let at = 0;
   const mask = (to: number) => {
     parts.push(block.slice(done, at + 2), "x".repeat(to - at - 2));
+    tails.push([at, Math.min(block.length, to + 1)]);
     done = to;
   };
   while (at < block.length) {
@@ -955,14 +962,30 @@ const linksIn = (
           bracket === -1 || block[bracket + 1] === "^"
             ? null
             : { at: bracket, close: tail.close };
-        return { open, masked: parts.join("") };
+        return { open, masked: parts.join(""), tails };
       }
     } else {
       at += 1;
     }
   }
   parts.push(block.slice(done));
-  return { open: null, masked: parts.join("") };
+  return { open: null, masked: parts.join(""), tails };
+};
+
+/**
+ * Where `text` has characters that are never drawn as words: each link's tail (`](address
+ * "title")`) and each table's row of dashes. Letting them out takes no time (pace.ts).
+ */
+export const unseenIn = (text: string): [number, number][] => {
+  const unseen = linksIn(text).tails;
+  let start = 0;
+  for (const line of text.split("\n")) {
+    if (ROW.test(line) && isDelimiter(line)) {
+      unseen.push([start, start + line.length]);
+    }
+    start += line.length + 1;
+  }
+  return unseen;
 };
 
 /** The marks left open in a block's words, outermost first, and where code in a sentence is open (or -1). */

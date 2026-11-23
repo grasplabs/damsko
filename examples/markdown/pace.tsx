@@ -19,7 +19,7 @@ const answer = `## What changed this week
 Support closed **58 requests** and Sales closed 33, so the queue is the shortest it has been since March. Most of the drop came from the new triage rule, which sends billing questions straight to the finance desk.
 
 - Support closed the most, with four still open.
-- Sales has the fewest open: [the weekly report](https://example.com/weekly) has the rest.
+- Sales has the fewest open: [the weekly report](https://example.com/weekly) has the rest, and the [triage guide][guide] says why.[^1]
 - The \`closed_at\` field is now set for every request.
 
 | Team | Closed | Open |
@@ -34,7 +34,10 @@ def closed(requests):
     return sum(1 for request in requests if request.closed_at)
 \`\`\`
 
-> Next week the rule covers refunds too, so expect the finance desk's queue to grow a little.`;
+> Next week the rule covers refunds too, so expect the finance desk's queue to grow a little.
+
+[guide]: https://example.com/triage
+[^1]: Counted from the help desk's export.`;
 
 const paces: [StreamPace, string][] = [
   ["30", "30 tokens/s"],

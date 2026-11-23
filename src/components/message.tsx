@@ -43,7 +43,6 @@ import {
 } from "react";
 import type { ReactNode } from "react";
 
-import type { SmoothTextUnit } from "../hooks/use-smooth-text";
 import { useI18n } from "../lib/i18n";
 import {
   Icon,
@@ -66,6 +65,7 @@ import type { LayoutStyle } from "../lib/utils";
 import { iconVars } from "../lib/vars.stylex";
 import { Bubble, BubbleContent } from "./bubble";
 import { Button } from "./button";
+import type { MarkdownProps } from "./markdown";
 import { messageVars } from "./message.stylex";
 import { Skeleton } from "./skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip";
@@ -163,7 +163,7 @@ export interface MessageResponseProps {
    * at a time, each fading in; `false` as they are given. As Markdown's `animated`.
    * @default "word"
    */
-  animated?: SmoothTextUnit | false;
+  animated?: MarkdownProps["animated"];
   /** Layout only. */
   style?: LayoutStyle;
 }

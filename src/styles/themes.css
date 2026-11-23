@@ -90,7 +90,6 @@
   --damsko-destructive-fill-active: oklch(0.46 0.165 28);
   --damsko-destructive-hold: light-dark(var(--damsko-destructive-fill-active), oklch(0.38 0.14 28));
   --damsko-error-border: inset 0 0 0 1px var(--damsko-destructive-border), var(--damsko-input-shadow);
-  --damsko-ease-stream: var(--damsko-ease-in-out);
   --damsko-input-bg: var(--damsko-control);
   --damsko-input-bg-read: light-dark(var(--damsko-muted), oklch(0.96 0.02 150 / 0.05));
   --damsko-input-foreground-read: var(--damsko-muted-foreground);
@@ -373,7 +372,6 @@
   --damsko-destructive-fill-active: oklch(0.46 0.165 28);
   --damsko-destructive-hold: light-dark(var(--damsko-destructive-fill-active), oklch(0.38 0.14 28));
   --damsko-error-border: inset 0 0 0 1px var(--damsko-destructive-border), var(--damsko-input-shadow);
-  --damsko-ease-stream: var(--damsko-ease-in-out);
   --damsko-input-bg: var(--damsko-control);
   --damsko-input-bg-read: light-dark(var(--damsko-muted), oklch(0.96 0.04 178 / 0.05));
   --damsko-input-foreground-read: var(--damsko-muted-foreground);
@@ -656,7 +654,6 @@
   --damsko-destructive-fill-active: oklch(0.46 0.165 28);
   --damsko-destructive-hold: light-dark(var(--damsko-destructive-fill-active), oklch(0.38 0.14 28));
   --damsko-error-border: inset 0 0 0 1px var(--damsko-destructive-border), var(--damsko-input-shadow);
-  --damsko-ease-stream: var(--damsko-ease-in-out);
   --damsko-input-bg: var(--damsko-control);
   --damsko-input-bg-read: light-dark(var(--damsko-muted), oklch(0.96 0.004 75 / 0.05));
   --damsko-input-foreground-read: var(--damsko-muted-foreground);
