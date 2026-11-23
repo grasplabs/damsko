@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
-import { fixedTime, openExample } from "./example.ts";
+import { fixedTime, listenToLiveRegions, openExample } from "./example.ts";
 
 test.use({ permissions: ["clipboard-read", "clipboard-write"] });
 
@@ -18,6 +18,16 @@ test("a press copies the value and says so once", async ({ page }) => {
   await expect(
     page.getByRole("status").filter({ hasText: /^Copied$/u })
   ).toHaveCount(1);
+});
+
+test("a copy is over at once, so only its result is said, never that it is working", async ({
+  page,
+}) => {
+  const said = await listenToLiveRegions(page);
+  await openExample(page, "copy-button", "basic");
+  await page.getByRole("button", { name: "Copy code" }).click();
+  await expect.poll(said).toContain("Copied");
+  expect(await said()).toStrictEqual(["Copied"]);
 });
 
 test("the keyboard copies too", async ({ page }) => {

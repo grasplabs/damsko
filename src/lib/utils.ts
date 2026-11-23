@@ -7,6 +7,8 @@ import type { RenderProp } from "@ui-sdk/react/primitive";
 import { createContext, createElement, isValidElement, lazy, use } from "react";
 import type { ReactElement, ReactNode, Ref } from "react";
 
+import { durations } from "./tokens.values";
+
 type Value = string | number | null;
 
 /**
@@ -421,6 +423,21 @@ export const announce = (
   if (!speaking) {
     sayNext();
   }
+};
+
+/**
+ * Says that work is under way, once it has run for loading-delay; returns what to call when the
+ * work is over, which keeps work over sooner from saying anything but how it went.
+ *
+ *   const over = announceWork(saving);   await work;   over();   announce(saved);
+ */
+export const announceWork = (message: string) => {
+  const timer = setTimeout(() => {
+    announce(message);
+  }, durations.loadingDelay);
+  return () => {
+    clearTimeout(timer);
+  };
 };
 
 // The system's dither, as numbers: ordered dither on a 4×4 Bayer matrix, in two textures. Charts

@@ -1,6 +1,6 @@
-// The life of an action: it runs async work, says that it works, then how it went ("Saved",
-// "Could not save"), once to a screen reader, holds that result for duration-hold, then returns to
-// rest. A second run while it works or shows its result does nothing.
+// The life of an action: it runs async work, says that it works once the work has run for
+// loading-delay, then how it went ("Saved", "Could not save"), once to a screen reader, holds that
+// result for duration-hold, then returns to rest. Work over sooner says only how it went. A second run while it works or shows its result does nothing.
 //
 // A Button runs it for a press whose `onClick` returns a Promise, and shows it; a page uses it for
 // work it runs itself, such as a form's submit, and gives the Button its `status`:
@@ -19,7 +19,7 @@ import type { RefObject } from "react";
 
 import { useI18n } from "../lib/i18n";
 import { durations } from "../lib/tokens.values";
-import { announce } from "../lib/utils";
+import { announce, announceWork } from "../lib/utils";
 
 /** Where an action is. */
 export type ActionStatus = "idle" | "loading" | "success" | "error";
@@ -82,6 +82,8 @@ export const useAction = <Args extends unknown[], Result>(
   const [failure, setFailure] = useState<{ error: unknown } | null>(null);
   const running = useRef(false);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Ends the wait after which work still running is said to be working (announceWork).
+  const over = useRef<(() => void) | null>(null);
   const mounted = useRef(true);
   // The newest work, words and handler, so a press always runs what the page passed last.
   const latest = useRef({ work, labels, onError: options.onError });
@@ -93,10 +95,12 @@ export const useAction = <Args extends unknown[], Result>(
     return () => {
       mounted.current = false;
       stop(timer);
+      over.current?.();
     };
   }, []);
 
   const settle = (result: "success" | "error") => {
+    over.current?.();
     announce(latest.current.labels[result]);
     if (!mounted.current) {
       running.current = false;
@@ -119,7 +123,8 @@ export const useAction = <Args extends unknown[], Result>(
     stop(timer);
     setFailure(null);
     setStatus("loading");
-    announce(latest.current.labels.loading);
+    // Work over within loading-delay says only how it went; longer, that it is working, once.
+    over.current = announceWork(latest.current.labels.loading);
     try {
       const value = await latest.current.work(...args);
       settle("success");

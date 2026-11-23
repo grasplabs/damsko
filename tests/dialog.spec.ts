@@ -138,6 +138,20 @@ test("while its action works it stays open, and it closes once the work is done"
   await expect(dialog).toBeHidden();
 });
 
+test("work that takes over a second is said to be working, then how it went", async ({
+  page,
+}) => {
+  const said = await listenToLiveRegions(page);
+  await openExample(page, "dialog", "basic");
+  await page.getByRole("button", { name: "Publish report" }).click();
+  const dialog = page.getByRole("dialog", { name: "Publish the report" });
+  await dialog.getByRole("button", { name: "Publish", exact: true }).click();
+  await expect(dialog).toBeHidden();
+  await expect.poll(said).toHaveLength(2);
+  const [first] = await said();
+  expect(first).toBe("Publishing");
+});
+
 test("a failed action says so and keeps it open", async ({ page }) => {
   const said = await listenToLiveRegions(page);
   await openExample(page, "dialog", "check-failed");

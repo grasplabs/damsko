@@ -48,6 +48,7 @@ import { colors, media } from "./tokens.stylex";
 import { popup } from "./tokens.values";
 import {
   announce,
+  announceWork,
   className,
   isThenable,
   listOf,
@@ -161,13 +162,23 @@ const End = ({
   return keys ?? null;
 };
 
-/** Waits for an item's work; a failure is said aloud and rejects with the words the item shows. */
-const settle = async (work: PromiseLike<unknown>, errorLabel: string) => {
+/**
+ * Waits for an item's work, which is said once it has run for loading-delay; a failure is said
+ * aloud and rejects with the words the item shows.
+ */
+const settle = async (
+  work: PromiseLike<unknown>,
+  loadingLabel: string,
+  errorLabel: string
+) => {
+  const over = announceWork(loadingLabel);
   try {
     return await work;
   } catch (error) {
     announce(errorLabel);
     throw new Error(errorLabel, { cause: error });
+  } finally {
+    over();
   }
 };
 
@@ -222,8 +233,8 @@ const Item = ({
 }: ItemProps) => {
   const name = nameOf(label, words);
   const destructive = variant === "destructive";
-  // Work is said as it starts, when the menu says so; work that fails is said aloud, and rejects
-  // with the words shown, so an agent's press fails with them.
+  // Work that runs long is said; work that fails is said aloud, and rejects with the words shown,
+  // so an agent's press fails with them.
   const select =
     onSelect &&
     ((event: Event): unknown => {
@@ -231,8 +242,7 @@ const Item = ({
       if (!isThenable(result)) {
         return result;
       }
-      announce(loadingLabel);
-      return settle(result, errorLabel);
+      return settle(result, loadingLabel, errorLabel);
     });
   return (
     <MenuItem
