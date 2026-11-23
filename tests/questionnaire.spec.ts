@@ -83,6 +83,29 @@ test("an answer that fails to send says so, and the choice stays to send again",
   await expect(page.getByRole("button", { name: "Send answer" })).toBeEnabled();
 });
 
+test("sending held by the page: Send stays a Tab stop described by the reason, and neither it nor Enter sends", async ({
+  page,
+}) => {
+  await openExample(page, "questionnaire", "held");
+  const reason = "No assistant is connected, so the answer cannot be sent yet.";
+  await expect(page.getByText(reason)).toBeVisible();
+  const send = page.getByRole("button", { name: "Send answer" });
+  await expect(send).toBeDisabled();
+  await expect(send).toHaveAccessibleDescription(reason);
+  // The person can still choose, and Enter on a choice sends nothing.
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("ArrowDown");
+  const second = page.getByRole("radio", { name: /Supplier review/u });
+  await expect(second).toBeChecked();
+  await page.keyboard.press("Enter");
+  await expect(second).toBeChecked();
+  await page.keyboard.press("Tab");
+  await expect(send).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("status")).toHaveCount(0);
+  await expect(second).toBeVisible();
+});
+
 test("the keyboard alone: Tab to the choices, the arrows between them, Enter sends", async ({
   page,
 }) => {

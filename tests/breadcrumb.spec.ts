@@ -89,6 +89,21 @@ test("the path holds one line, however long it is", async ({ page }) => {
   }
 });
 
+test("the “…” button shows its name in a tooltip, under a resting pointer and on keyboard focus", async ({
+  page,
+}) => {
+  await openExample(page, "breadcrumb", "long");
+  const more = page.getByRole("button", { name: "Show hidden levels" });
+  await more.hover();
+  await expect(page.getByRole("tooltip")).toHaveText("Show hidden levels");
+  await page.mouse.move(0, 0);
+  await expect(page.getByRole("tooltip")).toHaveCount(0);
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Tab");
+  await expect(more).toBeFocused();
+  await expect(page.getByRole("tooltip")).toHaveText("Show hidden levels");
+});
+
 test("a page name cut off takes keyboard focus, keeps its whole name, and its tooltip shows it", async ({
   page,
 }) => {

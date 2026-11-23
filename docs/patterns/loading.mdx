@@ -11,6 +11,12 @@ When the layout is known, a dot field holds the place of the words, our light pa
 
 <Stage path="patterns/loading-skeleton" label="Its own shape" />
 
+## A card whose words are coming
+
+Card has no loading state of its own. While a card's title and sentence are still coming, a Skeleton stands in its CardHeader for each, as tall as the line it stands for (`size="lg"` for the title, `default` for the sentence), so the header keeps its height. The card says it is busy with `aria-busy`, and what it holds waits its own way.
+
+<Stage path="patterns/loading-card" label="A card whose words are coming" />
+
 ## How far it has got
 
 A long task of known length shows a bar that fills, and says when it is done.

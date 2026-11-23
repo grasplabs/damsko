@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import type { Locator, Page } from "@playwright/test";
 
-import { drawnParts, openExample } from "./example.ts";
+import { drawnParts, listenToLiveRegions, openExample } from "./example.ts";
 import type { DrawnPart } from "./example.ts";
 
 /** A step's name and its status, as a screen reader hears them: "Details, done". */
@@ -43,6 +43,23 @@ test("Tab reaches the done steps only, with a ring, and Enter goes back to one",
   await expect(steps.nth(1)).toHaveText(said("Members", "not started"));
   // The move is said once, through the page's live region.
   await expect(page.getByRole("status")).toHaveText("Step 1 of 4: Details");
+});
+
+test("where it stands is said when it moves, once for each move, and never at rest", async ({
+  page,
+}) => {
+  const heard = await listenToLiveRegions(page);
+  await openExample(page, "stepper", "select");
+  const members = page.getByRole("button", { name: said("Members", "done") });
+  await expect(members).toBeVisible();
+  // At rest the list says where it stands; nothing is announced.
+  expect(await heard()).toEqual([]);
+  await members.click();
+  await expect.poll(heard).toEqual(["Step 2 of 4: Members"]);
+  await page.getByRole("button", { name: said("Details", "done") }).click();
+  await expect
+    .poll(heard)
+    .toEqual(["Step 2 of 4: Members", "Step 1 of 4: Details"]);
 });
 
 test("a failed step says so, on its own and once every step is done", async ({

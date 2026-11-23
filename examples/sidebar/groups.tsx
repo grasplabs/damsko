@@ -1,12 +1,12 @@
 "use client";
 
 import {
-  Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@grasp-os/ui/components/collapsible";
 import {
   Sidebar,
+  SidebarCollapsible,
   SidebarContent,
   SidebarGroup,
   SidebarGroupAction,
@@ -20,6 +20,7 @@ import {
   SidebarMenuItem,
   SidebarProvider,
   SidebarTrigger,
+  sidebarStateScript,
 } from "@grasp-os/ui/components/sidebar";
 import {
   ChevronDownIcon,
@@ -65,15 +66,26 @@ const groups = [
   { label: "Teams", rows: ["Finance", "Operations", "Design"] },
 ];
 
-// Groups that fold from their label, a Collapsible's trigger drawn as the label; an action at the
-// end of a label; and a field in the header that filters the rows by name.
+// Groups that fold from their label, a SidebarCollapsible's trigger drawn as the label; an action
+// at the end of a label; and a field in the header that filters the rows by name. Each fold is
+// kept by its `name` under the provider's `storageKey`: fold one and reload, and it stays folded,
+// drawn so by `sidebarStateScript` before the page wakes.
 export default function SidebarGroups() {
   const [query, setQuery] = useState("");
   const found = (row: string) =>
     row.toLowerCase().includes(query.trim().toLowerCase());
   return (
     <div {...stylex.props(layout.frame)}>
-      <SidebarProvider style={layout.provider}>
+      <script
+        // oxlint-disable-next-line react/no-danger -- the script is the library's own, from a constant key
+        dangerouslySetInnerHTML={{
+          __html: sidebarStateScript("examples-sidebar-groups"),
+        }}
+      />
+      <SidebarProvider
+        style={layout.provider}
+        storageKey="examples-sidebar-groups"
+      >
         <Sidebar>
           <SidebarHeader>
             <SidebarInput
@@ -86,7 +98,10 @@ export default function SidebarGroups() {
           </SidebarHeader>
           <SidebarContent>
             {groups.map((group) => (
-              <Collapsible key={group.label} defaultOpen>
+              <SidebarCollapsible
+                key={group.label}
+                name={group.label.toLowerCase()}
+              >
                 <SidebarGroup>
                   <CollapsibleTrigger asChild>
                     <SidebarGroupLabel asChild>
@@ -123,7 +138,7 @@ export default function SidebarGroups() {
                     </SidebarGroupContent>
                   </CollapsibleContent>
                 </SidebarGroup>
-              </Collapsible>
+              </SidebarCollapsible>
             ))}
           </SidebarContent>
         </Sidebar>

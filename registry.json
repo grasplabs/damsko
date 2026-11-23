@@ -311,6 +311,7 @@
         "@ui-sdk/react"
       ],
       "registryDependencies": [
+        "@damsko/button",
         "@damsko/dropdown-menu",
         "@damsko/lib",
         "@damsko/tooltip"
@@ -2643,6 +2644,7 @@
         "@ui-sdk/react"
       ],
       "registryDependencies": [
+        "@damsko/collapsible",
         "@damsko/input",
         "@damsko/lib",
         "@damsko/sheet",

@@ -37,8 +37,9 @@
 // and gives focus back to the trigger. Cmd+B on a Mac, Ctrl+B elsewhere, folds and opens it from
 // anywhere on the page (`keyboardShortcut`); where a page holds several, the one holding focus
 // answers, else the first. `storageKey` keeps the person's choice in localStorage, and
-// `sidebarStateScript` draws it before the page wakes. Nothing here knows a product: a profile, a
-// theme control or a working mark is the caller's, composed into the parts.
+// `sidebarStateScript` draws it before the page wakes. A group that folds is a SidebarCollapsible,
+// a Collapsible by a `name`, whose fold is kept and drawn the same way. Nothing here knows a
+// product: a profile, a theme control or a working mark is the caller's, composed into the parts.
 //
 // An area of the product with a navigation of its own (its settings, one project) is a level: the
 // SidebarLevels between the header and the footer hold a SidebarLevel for each, one shown at a
@@ -98,6 +99,7 @@ import { durations, px } from "../lib/tokens.values";
 import { announce, listOf, slotProps, slotWords } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { iconVars, motionVars } from "../lib/vars.stylex";
+import { Collapsible } from "./collapsible";
 import { Input } from "./input";
 import type { InputProps } from "./input";
 import { Sheet, SheetContent } from "./sheet";
@@ -821,6 +823,12 @@ const styles = stylex.create({
     flexShrink: 0,
     paddingBlockStart: space["1"],
   },
+  // A group that folds: the box a Collapsible draws, round its SidebarGroup.
+  collapsible: {
+    display: "grid",
+    width: "100%",
+    minWidth: 0,
+  },
   // A level's name in a row's box, in the ink read first: a heading, so nothing answers the pointer.
   levelTitle: {
     // Never pressed, so a row's height on a touch screen too, and no edge in forced colours.
@@ -857,6 +865,8 @@ interface SidebarState extends SidebarApi {
   id: string;
   /** The keys, as `aria-keyshortcuts` names them and as a person reads them; none when off. */
   keys: { aria: string; text: string } | undefined;
+  /** Where the person's choices are kept, when they are. */
+  storageKey: string | undefined;
 }
 
 const SidebarContext = createContext<SidebarState | null>(null);
@@ -871,7 +881,12 @@ const useSidebarState = (part: string): SidebarState => {
 
 /** The sidebar's state and what changes it, inside a SidebarProvider. */
 export const useSidebar = (): SidebarApi => {
-  const { id: _id, keys: _keys, ...api } = useSidebarState("useSidebar");
+  const {
+    id: _id,
+    keys: _keys,
+    storageKey: _storageKey,
+    ...api
+  } = useSidebarState("useSidebar");
   return api;
 };
 
@@ -962,8 +977,9 @@ export interface SidebarProviderProps {
   /** Runs with the new state when the trigger, the rail or the keys fold or open it. */
   onOpenChange?: (open: boolean) => void;
   /**
-   * Where the person's choice is kept in localStorage, so it stays as they left it. Put
-   * `sidebarStateScript(storageKey)` in the page's head to draw it so before the page wakes.
+   * Where the person's choices are kept in localStorage, so they stay as they left them: whether
+   * it is open, and which SidebarCollapsible groups are folded (each under `storageKey:name`). Put
+   * `sidebarStateScript(storageKey)` in the page's head to draw them so before the page wakes.
    * Without it nothing is read or kept.
    */
   storageKey?: string;
@@ -1081,6 +1097,7 @@ export const SidebarProvider = ({
       shortcut === ""
         ? undefined
         : { aria: hint.ariaKeyshortcuts, text: hint.text },
+    storageKey,
   };
 
   return (
@@ -1102,21 +1119,29 @@ export const SidebarProvider = ({
 const literal = (text: string) =>
   JSON.stringify(text).replaceAll("<", String.raw`\u003c`);
 
+/** Where a SidebarCollapsible's fold is kept: under the provider's key, by its name. */
+const foldKey = (storageKey: string | undefined, name: string) =>
+  storageKey === undefined ? undefined : `${storageKey}:${name}`;
+
 /**
  * The head script that draws the kept state before the page wakes, as the theme's does: pass the
- * SidebarProvider's `storageKey`. It sets each of that provider's sidebars folded or open as the
- * parser reaches them, so nothing moves when React takes over. Run once the page is read (a client
- * router running it again), it sets them once and watches nothing.
+ * SidebarProvider's `storageKey`. It sets each of that provider's sidebars folded or open, and each
+ * SidebarCollapsible's panel shown or hidden, as the parser reaches them, so nothing moves when
+ * React takes over. Run once the page is read (a client router running it again), it sets them
+ * once and watches nothing.
  *
  *   <script is:inline set:html={sidebarStateScript("app-sidebar")} />                    Astro
  *   <script dangerouslySetInnerHTML={{ __html: sidebarStateScript("app-sidebar") }} />   React
  */
 export const sidebarStateScript = (storageKey: string): string =>
   "(()=>{try{" +
-  `const v=localStorage.getItem(${literal(storageKey)});if(v!=="true"&&v!=="false")return;` +
-  'const s=v==="true"?"expanded":"collapsed",' +
-  `q=${literal(`[data-sidebar-key=${JSON.stringify(storageKey)}] [data-slot=sidebar]`)},` +
-  "d=()=>{for(const e of document.querySelectorAll(q))e.dataset.state=s;};" +
+  `const k=${literal(storageKey)},w=${literal(`[data-sidebar-key=${JSON.stringify(storageKey)}] `)},` +
+  'g=(n)=>{const v=localStorage.getItem(n);return v==="true"||v==="false"?v:null;},' +
+  "d=()=>{const v=g(k);" +
+  'if(v)for(const e of document.querySelectorAll(w+"[data-slot=sidebar]"))e.dataset.state=v==="true"?"expanded":"collapsed";' +
+  'for(const e of document.querySelectorAll(w+"[data-sidebar-fold]")){' +
+  'const f=g(k+":"+e.dataset.sidebarFold),p=e.querySelector("[data-slot=collapsible-content]");' +
+  'if(f&&p)p[f==="true"?"removeAttribute":"setAttribute"]("hidden","until-found");}};' +
   'if(document.readyState!=="loading"){d();return;}' +
   "const o=new MutationObserver(d);o.observe(document,{childList:true,subtree:true});" +
   'addEventListener("DOMContentLoaded",()=>{d();o.disconnect();},{once:true});' +
@@ -1643,6 +1668,78 @@ export interface SidebarGroupProps extends PartProps, Own<"div"> {
 /** A group of places: a label over a menu. */
 export const SidebarGroup = (props: SidebarGroupProps) =>
   part("div", "group", styles.group, props);
+
+/** Every prop a SidebarCollapsible takes. */
+export interface SidebarCollapsibleProps {
+  /** A SidebarGroup whose SidebarGroupLabel is a CollapsibleTrigger and whose rows stand in a CollapsibleContent. */
+  children: ReactNode;
+  /**
+   * What its fold is kept under, unique among the provider's: with the SidebarProvider's
+   * `storageKey`, the person's choice stays as they left it, in every level.
+   */
+  name: string;
+  /** Whether it is open. Pass it with `onOpenChange` to keep the state yourself. */
+  open?: boolean;
+  /**
+   * Open at first, when you do not keep the state and nothing is kept for it.
+   * @default true
+   */
+  defaultOpen?: boolean;
+  /** Runs with the new state when its trigger is pressed. */
+  onOpenChange?: (open: boolean) => void;
+}
+
+const awake = () => true;
+const asleep = () => false;
+
+/**
+ * A group that folds: a Collapsible whose state the sidebar keeps by `name`, as it keeps whether
+ * it is open. The server and the waking page draw `defaultOpen`, and `sidebarStateScript` shows or
+ * hides the panel as kept before that; once awake, a kept fold that differs is drawn anew in one
+ * step, so nothing opens or folds in front of the person.
+ */
+export const SidebarCollapsible = ({
+  children,
+  name,
+  open: given,
+  defaultOpen = true,
+  onOpenChange,
+}: SidebarCollapsibleProps) => {
+  const key = foldKey(useSidebarState("SidebarCollapsible").storageKey, name);
+  const kept = useSyncExternalStore(
+    watchKept,
+    () => readKept(key),
+    nothingKept
+  );
+  const isAwake = useSyncExternalStore(watchKept, awake, asleep);
+  const [own, setOwn] = useState<boolean>();
+  // Whether the fold kept differed from the one first drawn, said once, as the page wakes: the
+  // Collapsible is then a new one (its key), which starts as kept with nothing to move.
+  const [start, setStart] = useState<"first" | "same" | "kept">("first");
+  if (isAwake && start === "first") {
+    setStart(kept !== undefined && kept !== defaultOpen ? "kept" : "same");
+  }
+  return (
+    <Collapsible
+      key={start === "kept" ? "kept" : "first"}
+      asChild
+      open={given ?? own ?? kept ?? defaultOpen}
+      onOpenChange={(now: boolean) => {
+        keep(key, now);
+        setOwn(now);
+        onOpenChange?.(now);
+      }}
+    >
+      <div
+        data-slot="sidebar-collapsible"
+        data-sidebar-fold={name}
+        {...stylex.props(styles.collapsible)}
+      >
+        {children}
+      </div>
+    </Collapsible>
+  );
+};
 
 /** Every prop a SidebarGroupLabel takes: these, and the rest of a <div>. */
 export interface SidebarGroupLabelProps extends SlotPartProps, Own<"div"> {

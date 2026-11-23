@@ -358,6 +358,34 @@ test("earlier messages load above without moving what is being read, and are not
   expect(await said()).toStrictEqual([]);
 });
 
+for (const [where, by] of [
+  ["away from the end", 120],
+  ["at the very top", 2000],
+] as const) {
+  test(`a log that follows its end holds what is being read ${where} when earlier messages load, and stays there`, async ({
+    page,
+  }) => {
+    await openExample(page, "message-scroller", "history-following");
+    const log = theLog(page);
+    await wheelUp(page, log, by);
+    const read = log.getByText(/^Question 13:/u);
+    await expect(read).toBeInViewport();
+    const before = await read.boundingBox();
+    await page.getByRole("button", { name: "Load earlier messages" }).click();
+    await expect(log.getByText(/^Question 10:/u)).toBeAttached();
+    await expect
+      .poll(async () => {
+        const after = await read.boundingBox();
+        return Math.abs((after?.y ?? 0) - (before?.y ?? 0));
+      })
+      .toBeLessThanOrEqual(1);
+    // It has not gone back to following the end.
+    await expect(
+      page.getByRole("button", { name: /Jump to latest/u })
+    ).toBeVisible();
+  });
+}
+
 test("another conversation swapped into the same log is opened afresh: none of its turns is news", async ({
   page,
 }) => {
