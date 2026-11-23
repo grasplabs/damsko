@@ -1314,6 +1314,42 @@ test("in one row a spoken conversation is the row, its words on the line before 
   ).toBeLessThanOrEqual(1);
 });
 
+for (const width of [1440, 390]) {
+  test(`in one row at ${width}px a note stands in the field's place, beside the words, and the row stays one row`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 640 });
+    await openExample(page, "prompt-input", "voice-compact", {
+      time: fixedTime,
+    });
+    const voice = page.getByRole("group", { name: "Voice conversation" });
+    const card = page.getByRole("group").first();
+    // The person's turn, two words in: a stretch was not made out.
+    await page.clock.runFor(9100);
+    const note = voice.getByText("A part couldn't be made out.");
+    await expect(note).toBeVisible();
+    expect(await heightOf(card)).toBe(56);
+    const words = voice.locator("[data-slot=prompt-input-voice-words]");
+    await expect(words).toContainText("Waiting on");
+    // On the row's line: after the words, before Mute, never over either.
+    const said = await words.locator("..").boundingBox();
+    const shown = await note.boundingBox();
+    const mute = await voice
+      .getByRole("button", { name: "Mute" })
+      .boundingBox();
+    expect(shown?.width ?? 0).toBeGreaterThan(0);
+    expect(shown?.x ?? 0).toBeGreaterThanOrEqual(
+      (said?.x ?? 0) + (said?.width ?? 0)
+    );
+    expect((shown?.x ?? 0) + (shown?.width ?? 0)).toBeLessThanOrEqual(
+      mute?.x ?? 0
+    );
+    // Gone with the next word.
+    await page.clock.runFor(1000);
+    await expect(note).toBeHidden();
+  });
+}
+
 test("a spoken conversation takes the focus as it starts from the keyboard, and Escape ends it", async ({
   page,
 }) => {

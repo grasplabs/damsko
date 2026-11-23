@@ -1600,6 +1600,21 @@ const styles = stylex.create({
     display: { default: "grid", [VOICE_ROW_NARROW]: "none" },
     flexGrow: 0,
   },
+  // A note's words in the band's place, from its start, and the band then never gives way: a stretch
+  // not made out is what the row must say.
+  rowLevelNoted: { display: "grid" },
+  rowNote: {
+    gridArea: "1 / 1",
+    minWidth: 0,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+    color: colors.mutedForeground,
+    fontSize: font.textXs,
+    lineHeight: font.textXsLine,
+  },
+  // The field keeps the band's room under the note, unseen.
+  canvasUnder: { gridArea: "1 / 1", visibility: "hidden" },
   // The mention menu: a menu's panel under the caret, items with a mark, a name and a quiet line
   // under it.
   mentionPanel: {
@@ -3840,6 +3855,7 @@ const Level = ({
   mode,
   row = false,
   written = false,
+  note,
 }: {
   level: number;
   sample: (() => VoiceReading | undefined) | undefined;
@@ -3847,6 +3863,8 @@ const Level = ({
   /** In a one-row voice, beside its words once some are `written`. */
   row?: boolean;
   written?: boolean;
+  /** In a one-row voice, a note's words, shown in the field's place. */
+  note?: ReactNode;
 }) => {
   const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
   const [drawing, setDrawing] = useState<ReturnType<typeof drawVoice> | null>(
@@ -3873,16 +3891,29 @@ const Level = ({
   useEffect(() => {
     drawing?.mode(mode);
   }, [drawing, mode]);
+  const noted = row && !isBlank(note);
   return (
     <span
-      aria-hidden="true"
       {...stylex.props(
         styles.level,
         row && styles.rowLevel,
-        row && written && styles.rowLevelHeard
+        row && written && styles.rowLevelHeard,
+        noted && styles.rowLevelNoted
       )}
     >
-      <canvas ref={setCanvas} {...stylex.props(styles.canvas)} />
+      <canvas
+        ref={setCanvas}
+        aria-hidden="true"
+        {...stylex.props(styles.canvas, noted && styles.canvasUnder)}
+      />
+      {noted && (
+        <span
+          data-slot="prompt-input-voice-note"
+          {...stylex.props(styles.rowNote)}
+        >
+          {note}
+        </span>
+      )}
     </span>
   );
 };
@@ -4262,7 +4293,7 @@ const voiceMode = (
  * runs: the words of the turn where the text stood, and under them the time (or, while the other
  * voice speaks, its mark), the voice's level as a field of light, the microphone and a close
  * button. In a `compact` PromptInput it is one row: the words on its line between the time and the
- * field, the latest in view, and no note under them (it is still said). The turns pass by
+ * field, the latest in view, and a note in the field's place. The turns pass by
  * themselves, so there is no Done and no Cancel. The product listens and speaks; this part draws
  * what it is told, and says each turn once.
  */
@@ -4349,6 +4380,7 @@ export const PromptInputVoice = ({
             mode={voiceMode(speaking, off, !isBlank(note))}
             row={compact}
             written={heard}
+            note={note}
           />
           {toolButton({
             "aria-label": words.speechButton.mute,
