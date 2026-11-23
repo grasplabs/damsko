@@ -72,6 +72,7 @@ import {
 import { tableVars } from "../table.stylex";
 import {
   bounded,
+  definesAny,
   encodedUrl,
   groupSections,
   NOTHING,
@@ -145,7 +146,7 @@ type MarkdownElement =
  * Elements drawn in Markdown's place, by their HTML names, as react-markdown's and Streamdown's
  * `components` are: each is given the element's own props (its `children`; `href` and `title` for
  * `a`, `src`, `alt` and `title` for `img`, `className` `language-…` for fenced code, `start` for `ol`,
- * `style.textAlign` for a cell) and the syntax tree's `node` it draws.
+ * `align` for a cell) and the syntax tree's `node` it draws.
  */
 export type MarkdownComponents = {
   [Tag in MarkdownElement]?: ComponentType<
@@ -1517,9 +1518,6 @@ const useSaidBlocks = (
   }, [blocks, finished, said, names, tableLabel]);
 };
 
-/** A line that defines a link's target or a note: `[name]: …` or `[^1]: …`. */
-const DEFINES = /^ {0,3}\[[^\]\n]+\]:/mu;
-
 /**
  * The answer's blocks. While it is written, only the block still being written is read again as
  * more of it comes (parse.ts, readBlocks): the blocks before it are finished and kept as they were
@@ -1531,7 +1529,7 @@ const useBlocks = (shown: string, live: boolean): Placed[] => {
   const [kept, setKept] = useState(NOTHING);
   if (
     !live &&
-    (kept === NOTHING || DEFINES.test(shown) || !shown.startsWith(kept.text))
+    (kept === NOTHING || definesAny(shown) || !shown.startsWith(kept.text))
   ) {
     if (kept !== NOTHING) {
       setKept(NOTHING);

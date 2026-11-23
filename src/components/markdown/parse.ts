@@ -342,6 +342,10 @@ const DEFINING = new RegExp(
 /** A name in brackets, as a link or a note may be referred to. */
 const NAMED = /\[(?<name>(?:[^[\]\\]|\\.)+)\]/gu;
 
+/** Whether a line of `source` looks to define a link's target or a note: `[name]: …`, `[^1]: …`. */
+export const definesAny = (source: string): boolean =>
+  source.search(DEFINING) !== -1;
+
 /** What an answer defines: each name as the parser compares it, as it is written, and where it is defined. */
 type Defined = Map<string, { label: string; at: number }>;
 
