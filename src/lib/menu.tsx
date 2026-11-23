@@ -163,15 +163,15 @@ const End = ({
 };
 
 /**
- * Waits for an item's work, which is said once it has run for loading-delay; a failure is said
- * aloud and rejects with the words the item shows.
+ * Waits for an item's work, which is said (announceWork: its own words at once, the catalogue's
+ * once it runs long); a failure is said aloud and rejects with the words the item shows.
  */
 const settle = async (
   work: PromiseLike<unknown>,
-  loadingLabel: string,
+  loading: { label: string; own: boolean },
   errorLabel: string
 ) => {
-  const over = announceWork(loadingLabel);
+  const over = announceWork(loading.label, loading.own);
   try {
     return await work;
   } catch (error) {
@@ -194,7 +194,10 @@ interface ItemPartProps {
   disabled?: boolean;
   onSelect?: (event: Event) => unknown;
   closeOnSelect?: boolean;
-  /** Said as work that returns a Promise starts. @default the catalogue's menu.loading */
+  /**
+   * Said as work that returns a Promise starts; left out, the catalogue's menu.loading is said
+   * once the work has run a second.
+   */
   loadingLabel?: string;
   /** Said and shown when that work fails. @default the catalogue's menu.error */
   errorLabel?: string;
@@ -211,6 +214,8 @@ type ItemProps = Omit<
   ReturnType<typeof partsOf> & {
     keysLabel?: string;
     loadingLabel: string;
+    /** The loading words are the caller's, not the catalogue's. */
+    loadingOwn: boolean;
     errorLabel: string;
   };
 
@@ -226,6 +231,7 @@ const Item = ({
   onSelect,
   closeOnSelect,
   loadingLabel,
+  loadingOwn,
   errorLabel,
   agentConfirm,
   label,
@@ -233,8 +239,8 @@ const Item = ({
 }: ItemProps) => {
   const name = nameOf(label, words);
   const destructive = variant === "destructive";
-  // Work that runs long is said; work that fails is said aloud, and rejects with the words shown,
-  // so an agent's press fails with them.
+  // Work is said (settle); work that fails is said aloud, and rejects with the words shown, so an
+  // agent's press fails with them.
   const select =
     onSelect &&
     ((event: Event): unknown => {
@@ -242,7 +248,11 @@ const Item = ({
       if (!isThenable(result)) {
         return result;
       }
-      return settle(result, loadingLabel, errorLabel);
+      return settle(
+        result,
+        { label: loadingLabel, own: loadingOwn },
+        errorLabel
+      );
     });
   return (
     <MenuItem
@@ -310,6 +320,7 @@ export const MenuItemPart = ({
   const props = {
     ...rest,
     loadingLabel: loadingLabel ?? menu.loading,
+    loadingOwn: loadingLabel !== undefined,
     errorLabel: errorLabel ?? menu.error,
   };
   const parts = partsOf(children, asChild, shortcut);
@@ -330,7 +341,6 @@ interface CheckboxItemPartProps {
   kind: MenuKind;
   children: ReactNode;
   checked?: boolean;
-  defaultChecked?: boolean;
   onCheckedChange?: CheckedChange;
   disabled?: boolean;
   closeOnSelect?: boolean;
@@ -378,7 +388,6 @@ interface RadioGroupPartProps {
   kind: MenuKind;
   children: ReactNode;
   value?: string | null;
-  defaultValue?: string | null;
   onValueChange?: ValueChange;
   style?: LayoutStyle;
 }

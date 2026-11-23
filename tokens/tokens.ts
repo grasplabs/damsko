@@ -1388,7 +1388,7 @@ export const groups: TokenGroup[] = [
             name: "loading-delay",
             category: "duration",
             value: "1000ms",
-            use: "How long work runs before a screen reader is told it is working. Work over sooner says only how it went: a copy never says it is working.",
+            use: "How long work with no loading words of its own runs before a screen reader is told it is working. Work over sooner says only how it went: a copy never says it is working.",
           },
           {
             name: "duration-spin",

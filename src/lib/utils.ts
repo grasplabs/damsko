@@ -426,15 +426,19 @@ export const announce = (
 };
 
 /**
- * Says that work is under way, once it has run for loading-delay; returns what to call when the
- * work is over, which keeps work over sooner from saying anything but how it went.
+ * Says that work is under way. Words the caller gave for it (`own`) are said at once; the
+ * catalogue's plain word only once the work has run for loading-delay, so quick work with no words
+ * of its own (a copy) says only how it went. Returns what to call when the work is over.
  *
- *   const over = announceWork(saving);   await work;   over();   announce(saved);
+ *   const over = announceWork(saving, true);   await work;   over();   announce(saved);
  */
-export const announceWork = (message: string) => {
-  const timer = setTimeout(() => {
-    announce(message);
-  }, durations.loadingDelay);
+export const announceWork = (message: string, own: boolean) => {
+  const timer = setTimeout(
+    () => {
+      announce(message);
+    },
+    own ? 0 : durations.loadingDelay
+  );
   return () => {
     clearTimeout(timer);
   };

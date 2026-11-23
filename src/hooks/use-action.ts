@@ -1,6 +1,7 @@
-// The life of an action: it runs async work, says that it works once the work has run for
-// loading-delay, then how it went ("Saved", "Could not save"), once to a screen reader, holds that
-// result for duration-hold, then returns to rest. Work over sooner says only how it went. A second run while it works or shows its result does nothing.
+// The life of an action: it runs async work, says that it works, then how it went ("Saved",
+// "Could not save"), once to a screen reader, holds that result for duration-hold, then returns to
+// rest. Its own `loadingLabel` is said as the work starts; with none, the catalogue's word is said
+// only once the work has run for loading-delay, so quick work says only how it went. A second run while it works or shows its result does nothing.
 //
 // A Button runs it for a press whose `onClick` returns a Promise, and shows it; a page uses it for
 // work it runs itself, such as a form's submit, and gives the Button its `status`:
@@ -86,9 +87,10 @@ export const useAction = <Args extends unknown[], Result>(
   const over = useRef<(() => void) | null>(null);
   const mounted = useRef(true);
   // The newest work, words and handler, so a press always runs what the page passed last.
-  const latest = useRef({ work, labels, onError: options.onError });
+  const own = options.loadingLabel !== undefined;
+  const latest = useRef({ work, labels, own, onError: options.onError });
   useEffect(() => {
-    latest.current = { work, labels, onError: options.onError };
+    latest.current = { work, labels, own, onError: options.onError };
   });
   useEffect(() => {
     mounted.current = true;
@@ -123,8 +125,11 @@ export const useAction = <Args extends unknown[], Result>(
     stop(timer);
     setFailure(null);
     setStatus("loading");
-    // Work over within loading-delay says only how it went; longer, that it is working, once.
-    over.current = announceWork(latest.current.labels.loading);
+    // The caller's own loading words at once; the catalogue's only for work that runs long.
+    over.current = announceWork(
+      latest.current.labels.loading,
+      latest.current.own
+    );
     try {
       const value = await latest.current.work(...args);
       settle("success");

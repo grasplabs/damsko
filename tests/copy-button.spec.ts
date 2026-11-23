@@ -30,6 +30,19 @@ test("a copy is over at once, so only its result is said, never that it is worki
   expect(await said()).toStrictEqual(["Copied"]);
 });
 
+test("work with no loading words of its own is said to be working only once it has run a second", async ({
+  page,
+}) => {
+  const said = await listenToLiveRegions(page);
+  await openExample(page, "button", "action", { time: fixedTime });
+  await page.clock.pauseAt(new Date(fixedTime.getTime() + 60_000));
+  await page.getByRole("button", { name: "Save changes" }).click();
+  await page.clock.runFor(900);
+  expect(await said()).toStrictEqual([]);
+  await page.clock.runFor(200);
+  expect(await said()).toStrictEqual(["Working"]);
+});
+
 test("the keyboard copies too", async ({ page }) => {
   await openExample(page, "copy-button", "basic");
   await page.getByRole("button", { name: "Copy code" }).focus();
