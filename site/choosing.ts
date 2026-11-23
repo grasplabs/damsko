@@ -22,7 +22,14 @@ export const choosingGroups: ChoosingGroup[] = [
   },
   {
     title: "Rows of things",
-    of: ["table", "data-table", "data-grid", "item", "key-value"],
+    of: [
+      "table",
+      "data-table",
+      "data-grid",
+      "item",
+      "key-value",
+      "sortable-list",
+    ],
   },
   {
     title: "Saying that something happened",
@@ -41,6 +48,7 @@ export const choosingGroups: ChoosingGroup[] = [
     of: [
       "radio-group",
       "select",
+      "native-select",
       "combobox",
       "model-selector",
       "checkbox",
