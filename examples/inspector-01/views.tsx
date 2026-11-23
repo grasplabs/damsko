@@ -27,6 +27,7 @@ export default function InspectorViews() {
       aria-label="Report details"
       style={layout.panel}
       icon={ChartColumnIcon}
+      iconVariant="gradient"
       title="Churn by region, Q3"
       description="How many customers left in each region, and what changed."
       meta={["Updated 2 days ago"]}

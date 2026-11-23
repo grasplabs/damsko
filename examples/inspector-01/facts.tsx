@@ -41,7 +41,11 @@ export default function InspectorFacts() {
             {
               id: "stage",
               label: "Stage",
-              value: <Badge size="sm">Renewal</Badge>,
+              value: (
+                <Badge size="sm" variant="info">
+                  Renewal
+                </Badge>
+              ),
             },
             {
               id: "renews",

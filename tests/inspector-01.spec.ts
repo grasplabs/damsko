@@ -98,3 +98,21 @@ test("with no sections it says what will stand there", async ({ page }) => {
     panel.getByText("Nothing has been read from it yet.", { exact: false })
   ).toBeVisible();
 });
+
+test("the head's tile takes the look it is given, and who made it shows their face", async ({
+  page,
+}) => {
+  await openExample(page, "inspector-01", "views");
+  const look = await page
+    .getByRole("heading", { name: "Churn by region, Q3" })
+    .evaluate(
+      (title) =>
+        title
+          .closest("[data-slot=inspector]")
+          ?.querySelector<HTMLElement>("[data-slot=icon-tile]")?.dataset
+          .variant ?? ""
+    );
+  expect(look).toBe("gradient");
+  await openExample(page, "inspector-01", "basic");
+  await expect(page.getByText("By AO Amara Okafor")).toBeVisible();
+});
