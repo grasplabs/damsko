@@ -35,7 +35,7 @@ export default function BrandIconGroups() {
           logos.stripe,
           logos.github,
         ]}
-        size="default"
+        size="sm"
       />
     </div>
   );

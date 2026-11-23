@@ -168,7 +168,7 @@ const styles = stylex.create({
   // Default: white on a light ground, a veil on a dark one. Every variant has the system's edge.
   variantDefault: {
     color: colors.foreground,
-    backgroundColor: colors.secondary,
+    backgroundColor: colors.control,
     boxShadow: sizes.borderStrong,
   },
   success: {

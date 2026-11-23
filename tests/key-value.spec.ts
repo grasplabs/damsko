@@ -144,10 +144,10 @@ test("a press on the row opens it and leaves no ring; the keyboard's ring follow
   await page.keyboard.press("Tab");
   await page.keyboard.press("Shift+Tab");
   expect(await hasFocusRing(model)).toBe(true);
-  // The corner sibling rows take: the system's radius, capped at half the row, in the system's
-  // shape, which the detail under it has too.
+  // The corner every row takes: the row corner, capped at half the row, in the system's shape,
+  // which the detail under it has too.
   const [radius, shape] = await corner(model);
-  expect(radius).toBe("18px");
+  expect(radius).toBe("16px");
   expect(await corner(page.getByRole("definition").nth(2))).toEqual([
     "20px",
     shape,

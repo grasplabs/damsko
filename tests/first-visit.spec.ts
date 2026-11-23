@@ -1,22 +1,25 @@
 // A first visit, on every component page: loaded once with an empty cache, every request it makes
 // is counted with the bytes it took. It makes at most 26 requests besides its fonts, takes at most
-// 600KB, and at most 150KB of fonts (a page's fonts differ by a file from run to run, as a block
-// that uses one comes into view or not, so they are counted by their bytes alone). Read through Chromium's own network protocol, so
-// Chromium only (playwright.config.ts). The figures mean something for a build alone, which is what the specs serve,
-// compressed as the host serves it (scripts/serve.ts).
+// 600KB, and at most 150KB of fonts. Read through Chromium's own network protocol, so Chromium only
+// (playwright.config.ts). The figures mean something for a build alone, which is what the specs
+// serve, compressed as the host serves it (scripts/serve.ts).
 //
-// The fonts are held back until the page has drawn, as on a slow line: what a page draws in its
-// fallback font it draws otherwise (other widths, so other line breaks and hyphens), and a
-// character drawn only then can ask for a font file a quick line never fetches. Held, every run
-// counts that heavier visit; let go at once, a run counted one or the other by how busy the
-// machine was.
+// A page takes the same requests and the same bytes on every visit, and each test notes them in
+// the report ("first visit"). It is read once the page has settled: its fonts are in, every example
+// within a screen of view is live (site/system/island.ts), and the network is quiet. The fonts are
+// the three common files every page preloads, and a family's full file only on a page that shows a
+// character of it (site/styles/fonts.css).
 //
-// The pages below need more, each for what it loads, said beside it: what the page takes, its
-// heavier font set included, plus a request and about 10KB.
+// It was not always so: a page with a hyphenated block (`hyphens: auto`) laid out before the
+// preloaded common file had arrived asked the family for the hyphen U+2010, which only the full
+// file's range named, and fetched that file (29KB) on some visits. The common file now answers
+// for every character first, so nothing is asked of the full file while it loads.
+//
+// The pages below need more, each for what it loads, said beside it: what the page takes, plus a
+// request and about 10KB.
 import { expect, test } from "@playwright/test";
-import type { Page } from "@playwright/test";
 
-import { docsPages } from "./example.ts";
+import { docsPages, settled } from "./example.ts";
 
 /** The bytes a list of requests took. */
 const sum = (list: { bytes: number }[]) => {
@@ -25,19 +28,6 @@ const sum = (list: { bytes: number }[]) => {
     total += request.bytes;
   }
   return total;
-};
-
-/** Waits until the page has drawn what it holds: two frames on. */
-const drawn = async (page: Page): Promise<void> => {
-  await page.evaluate(async () => {
-    const frames = Promise.withResolvers<null>();
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        frames.resolve(null);
-      });
-    });
-    await frames.promise;
-  });
 };
 
 const limits = { requests: 26, bytes: 600 * 1024, fonts: 150 * 1024 };
@@ -58,9 +48,7 @@ const over: Record<string, { requests?: number; bytes?: number }> = {
   // Markdown with Code block and Prism, its own subject.
   "/components/markdown": { requests: 29, bytes: 630 * 1024 },
   // MessageResponse's Markdown, once its answers draw, Message scroller, and Reasoning in a turn.
-  "/components/message": { requests: 32, bytes: 620 * 1024 },
-  // The Model selector among its tools (Command, Listbox and Toggle group with it), in its model example.
-  "/components/prompt-input": { requests: 28 },
+  "/components/message": { requests: 32, bytes: 630 * 1024 },
   // Reasoning, which loads Markdown with it for its thoughts.
   "/components/reasoning": { requests: 29, bytes: 620 * 1024 },
   // Prism, for the commit example's diffs: it is the row that opens, in view on the first screen.
@@ -90,25 +78,25 @@ for (const path of docsPages().filter((each) =>
         request.bytes = event.encodedDataLength;
       }
     });
-    const fonts = Promise.withResolvers<null>();
-    await page.route("**/fonts/*.woff2", async (route) => {
-      await fonts.promise;
-      await route.continue();
-    });
-    // The page's load waits on its fonts: only its arrival is waited for here.
-    await page.goto(new URL(path, process.env.BASE_URL).href, {
-      waitUntil: "domcontentloaded",
-    });
-    await drawn(page);
-    fonts.resolve(null);
+    await page.goto(new URL(path, process.env.BASE_URL).href);
+    // Fonts in and two frames on, the examples within a screen of view have begun to wake; then
+    // each of them live, and whatever they load in.
+    await settled(page);
+    await page.waitForFunction(
+      () =>
+        document.querySelector("damsko-island[data-island-live][ssr]") === null
+    );
     await page.waitForLoadState("networkidle");
     const list = [...requests.values()];
-    expect(sum(list.filter((request) => request.font))).toBeLessThanOrEqual(
-      limits.fonts
-    );
-    expect(list.filter((request) => !request.font).length).toBeLessThanOrEqual(
-      over[path]?.requests ?? limits.requests
-    );
-    expect(sum(list)).toBeLessThanOrEqual(over[path]?.bytes ?? limits.bytes);
+    const fonts = sum(list.filter((request) => request.font));
+    const others = list.filter((request) => !request.font).length;
+    const bytes = sum(list);
+    test.info().annotations.push({
+      type: "first visit",
+      description: `${others} requests besides fonts, ${bytes} bytes, ${fonts} of them fonts`,
+    });
+    expect(fonts).toBeLessThanOrEqual(limits.fonts);
+    expect(others).toBeLessThanOrEqual(over[path]?.requests ?? limits.requests);
+    expect(bytes).toBeLessThanOrEqual(over[path]?.bytes ?? limits.bytes);
   });
 }

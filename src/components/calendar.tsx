@@ -140,6 +140,7 @@ const styles = stylex.create({
     textAlign: "center",
     verticalAlign: "middle",
     borderRadius: radius.mark,
+    cornerShape: radius.shape,
     cursor: { default: "pointer", [off]: "default" },
     color: {
       default: colors.bodyForeground,
@@ -148,7 +149,7 @@ const styles = stylex.create({
       ":is([data-today])": colors.foreground,
       [middle]: colors.foreground,
       [chosen]: {
-        default: colors.calendarTextSelected,
+        default: colors.calendarForegroundSelected,
         [media.forcedColors]: "SelectedItemText",
       },
     },

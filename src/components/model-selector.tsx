@@ -1017,7 +1017,7 @@ export const ModelSelectorMaker = ({
   useLayoutEffect(() => registerMaker(value), [registerMaker, value]);
   return (
     <Rail value={value} label={label}>
-      <BrandIcon logo={logo} label={label} decorative tile={false} />
+      <BrandIcon logo={logo} label={label} size="sm" decorative tile={false} />
     </Rail>
   );
 };
@@ -1116,6 +1116,7 @@ export const ModelSelectorLogo = ({
     <BrandIcon
       logo={logo}
       label={label ?? ""}
+      size="sm"
       decorative={label === undefined}
       tile={false}
     />

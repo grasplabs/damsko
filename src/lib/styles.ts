@@ -351,13 +351,9 @@ const textStyles = stylex.create({
     scrollbarWidth: "none",
   },
   // A word hyphenates only when long (12 letters or more), never within 5 of its ends, where its
-  // language allows (the page's `lang`). Safari reads its own two limits. The hyphen it draws is
-  // the keyboard's own (U+002D), which every font file holds; a browser's own choice is the
-  // typographic one (U+2010), and where a font is split by `unicode-range` that one sits in the
-  // large file, fetched whole for a hyphen (often one only the fallback font's line breaks drew).
+  // language allows (the page's `lang`). Safari reads its own two limits.
   hyphenate: {
     hyphens: "auto",
-    hyphenateCharacter: '"-"',
     hyphenateLimitChars: "12 5 5",
     WebkitHyphenateLimitBefore: 5,
     WebkitHyphenateLimitAfter: 5,
@@ -660,7 +656,7 @@ export const listStyles = stylex.create({
     boxSizing: "border-box",
     paddingBlock: `calc((${size.controlSm} - ${font.textXsLine}) / 2)`,
     paddingInline: space[2],
-    borderRadius: `min(calc(${radius.base} - ${space.popupPadding}), calc(${size.controlSm} / 2))`,
+    borderRadius: `min(${radius.row}, calc(${size.controlSm} / 2))`,
     cornerShape: radius.shape,
     color: colors.foreground,
     fontSize: { default: font.textXs, [COARSE]: font.textSm },
@@ -677,7 +673,7 @@ export const listStyles = stylex.create({
   menuItem: {
     minHeight: { default: size.controlDefault, [COARSE]: size.tapTarget },
     paddingBlock: `calc((${size.controlDefault} - ${font.textSmLine}) / 2)`,
-    borderRadius: `min(calc(${radius.base} - ${space.popupPadding}), calc(${size.controlDefault} / 2))`,
+    borderRadius: `min(${radius.row}, calc(${size.controlDefault} / 2))`,
     color: colors.foreground,
     fontSize: {
       default: font.textSm,
@@ -767,7 +763,7 @@ export const listStyles = stylex.create({
 });
 
 // An item's corner nests inside the panel's, capped at half a control's height.
-const ITEM_CORNER = `min(calc(${radius.base} - ${space.popupPadding}), calc(${size.controlDefault} / 2))`;
+const ITEM_CORNER = `min(${radius.row}, calc(${size.controlDefault} / 2))`;
 
 /**
  * A menu: the panel and its items, for dropdown menu, context menu and menubar. The panel carries
@@ -1031,7 +1027,7 @@ export const disclosureStyles = stylex.create({
     },
     borderStyle: "solid",
     borderColor: "transparent",
-    borderRadius: `min(${radius.base}, calc(${size.collapsibleTrigger} / 2))`,
+    borderRadius: `min(${radius.row}, calc(${size.collapsibleTrigger} / 2))`,
     cornerShape: radius.shape,
     fontFamily: "inherit",
     fontSize: font.textSm,

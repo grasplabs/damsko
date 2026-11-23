@@ -133,6 +133,7 @@ const styles = stylex.create({
     },
     borderWidth: 0,
     borderRadius: radius.mark,
+    cornerShape: radius.shape,
     cursor: "copy",
     WebkitTapHighlightColor: "transparent",
     transform: { default: null, ":active": `scale(${size.buttonPressScale})` },

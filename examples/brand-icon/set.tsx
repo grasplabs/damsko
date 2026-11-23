@@ -42,7 +42,7 @@ export default function BrandIconsSet() {
     <ul {...stylex.props(layout.grid)}>
       {(Object.keys(logos) as Brand[]).map((brand) => (
         <li key={brand} {...stylex.props(layout.cell)}>
-          <BrandIcon {...logos[brand]} decorative />
+          <BrandIcon {...logos[brand]} size="sm" decorative />
           <span {...stylex.props(layout.name)}>{brand}</span>
         </li>
       ))}

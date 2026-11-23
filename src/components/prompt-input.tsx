@@ -25,8 +25,13 @@
 //       </PromptInputTools>
 //       <PromptInputSubmit onStop={stop} />
 //     </PromptInputFooter>
+//     <PromptInputNote>{working && <Shimmer>Searching the web</Shimmer>}</PromptInputNote>
 //     <PromptInputMention triggers={[{ char: "@", type: "person", items: loadPeople }]} />
 //   </PromptInput>
+//
+// While the answer comes a soft light travels along the card's top edge. PromptInputNote is the
+// band tucked under the card's foot: it says what the assistant is doing, in the caller's words,
+// and that a send failed, in the catalogue's, until the person types again.
 //
 // A mention is a real token in the text: it moves, deletes and copies as one piece, and reads as its
 // label and kind. The caller says which characters open a menu, where each one's items come from,
@@ -85,10 +90,13 @@ import type {
 import {
   Fragment,
   createContext,
+  isValidElement,
   use,
   useEffect,
   useId,
+  useLayoutEffect,
   useRef,
+  useReducer,
   useState,
 } from "react";
 import type {
@@ -101,20 +109,23 @@ import type {
   ReactNode,
   Ref,
 } from "react";
-import { flushSync } from "react-dom";
+import { createPortal, flushSync } from "react-dom";
 
 import { useI18n, useLocale } from "../lib/i18n";
 import type { I18nCatalog } from "../lib/i18n";
 import {
   ArrowUpIcon,
   AudioWaveformIcon,
-  CircleAlertIcon,
+  CheckIcon,
+  ChevronRightIcon,
   Icon,
+  InfoIcon,
   LoaderIcon,
   MicIcon,
   PaperclipIcon,
   PlusIcon,
   SquareIcon,
+  TriangleAlertIcon,
   XIcon,
 } from "../lib/icons";
 import type { IconData } from "../lib/icons";
@@ -130,9 +141,25 @@ import {
   space,
 } from "../lib/tokens.stylex";
 import { popup } from "../lib/tokens.values";
-import { announce, assignRef, className, isThenable } from "../lib/utils";
+import {
+  announce,
+  assignRef,
+  className,
+  isBlank,
+  isDevelopment,
+  isThenable,
+  listOf,
+  nothing,
+} from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
-import { iconVars, menuMarker } from "../lib/vars.stylex";
+import {
+  iconVars,
+  menuMarker,
+  pixel,
+  pixelVars,
+  ringInsetMarker,
+} from "../lib/vars.stylex";
+import { Alert, AlertAction, AlertTitle } from "./alert";
 import {
   Attachment,
   AttachmentAction,
@@ -143,7 +170,13 @@ import {
   AttachmentMedia,
   AttachmentTitle,
 } from "./attachment";
+import type { AttachmentState } from "./attachment";
 import { Button } from "./button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "./collapsible";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -157,10 +190,23 @@ import type {
   DropdownMenuProps,
 } from "./dropdown-menu";
 import { refitOf, stageOf } from "./prompt-input-limit";
+import { Skeleton } from "./skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip";
 
-/** Where the answer to the last message is: AI Elements' four, from the AI SDK's chat status. */
-type Status = "ready" | "submitted" | "streaming" | "error";
+/**
+ * Where the answer to the last message is: AI Elements' four, from the AI SDK's chat status, and
+ * `success`, the moment a product marks an answer as done.
+ */
+type Status = "ready" | "submitted" | "streaming" | "error" | "success";
+
+/** The colour of the working light and the success halo: the brand's light, or one colour. */
+type Accent =
+  | "default"
+  | "mint"
+  | "lavender"
+  | "info"
+  | "warning"
+  | "destructive";
 
 /** What a submit hands the caller. */
 export interface PromptInputMessage {
@@ -179,22 +225,50 @@ export interface PromptInputMessage {
 
 /** Every prop a PromptInput takes. */
 export interface PromptInputProps {
-  /** Its parts: a PromptInputHeader, a PromptInputBody, a PromptInputFooter and any PromptInputMention. */
+  /**
+   * Its parts: a PromptInputHeader, a PromptInputBody, a PromptInputFooter, and any PromptInputNote
+   * and PromptInputMention.
+   */
   children: ReactNode;
   /**
-   * Sends the message, its text and files: on Enter, or Submit. They clear at once (the text unless
-   * you keep `value` yourself), as AI Elements' do: the AI SDK's `sendMessage` settles only when the
-   * whole answer has come. Return a Promise and a second Enter waits for it; when it rejects, the
-   * failure is said and what was sent comes back, the text if nothing new has been typed.
+   * Sends the message, its text and files: on Enter, or Submit. Return a Promise that settles when
+   * the message is taken (not when the whole answer has come, as the AI SDK's `sendMessage` does)
+   * and the words and files stay until it resolves, then clear (the text unless you keep `value`
+   * yourself, or more was typed meanwhile); a second Enter waits for it. When it rejects, the
+   * failure is said, PromptInputNote shows it, and nothing was lost. Return nothing and they clear
+   * at once.
    */
   onSubmit?: (message: PromptInputMessage) => unknown;
   /**
    * Where the answer is: `ready` to send, `submitted` sent and waiting, `streaming` while the
-   * answer comes (Submit turns into Stop), `error` when it failed (said once; Submit sends again).
-   * Set on the form as `data-status`, for a layer of the product's own.
+   * answer comes (Submit turns into Stop), `error` when it failed (said once, and shown by
+   * PromptInputNote until the person types; Submit sends again). While it is `submitted` or
+   * `streaming` a soft light travels along the card's top edge. `success` is a moment the product
+   * marks: one halo round the card, said once, and Submit as at `ready`; set it again to play it
+   * again. Set on the form as `data-status`, for a layer of the product's own.
    * @default "ready"
    */
   status?: Status;
+  /**
+   * The colour of the working light and the success halo: `default` the brand's light (lime, sea
+   * and mint), or one colour, such as an assistant's own, or `warning` while it works on something
+   * that needs care.
+   * @default "default"
+   */
+  accent?: Accent;
+  /**
+   * The card's surface: `glass` where the page scrolls behind it (a chat's foot), the card's colour
+   * most of the way over a blur of what is behind.
+   * @default "default"
+   */
+  variant?: "default" | "glass";
+  /**
+   * The page's data is not there yet: the card stands in the box it will have, a quiet line where
+   * the text goes, Submit off, its other tools kept in their room but not drawn; nothing in it can
+   * be focused or read, so say that the page loads where the page says it.
+   * @default false
+   */
+  loading?: boolean;
   /** The text and its tokens, when you keep them in state. Pair it with `onValueChange`. */
   value?: TokenInputValue;
   /** The text and tokens it starts with. */
@@ -223,7 +297,8 @@ export interface PromptInputProps {
    */
   accept?: string;
   /**
-   * Takes files dropped anywhere on the page, not only on the card.
+   * Takes files dropped anywhere on the page, not only on the card. Either way the card is tinted
+   * and says so while a file is dragged over the page.
    * @default false
    */
   globalDrop?: boolean;
@@ -240,8 +315,8 @@ export interface PromptInputProps {
    */
   disabled?: boolean;
   /**
-   * One row: the tools, the text and Submit side by side, the text growing in its own column. On a
-   * narrow card the tools and Submit go under the text.
+   * One row: the tools, the text and Submit side by side. Once the words no longer fit their line
+   * the text takes the card's whole width and the tools and Submit go under it.
    * @default false
    */
   compact?: boolean;
@@ -410,18 +485,91 @@ export interface PromptInputAttachmentProps {
   /** The file, as PromptInputAttachments or `usePromptInputAttachments()` hands it. */
   data: PromptInputFile;
   /**
-   * Its parts: AttachmentMedia, AttachmentContent and AttachmentActions, in place of its own.
-   * @default its picture or mark, its name and size, and a remove action
+   * Where the file is on its way, when the product uploads it as it is attached: Attachment's
+   * `state`. While it is `uploading`, `processing` or `error` the message cannot be sent: the
+   * file is not there yet, or never will be, and its remove action takes it off.
+   * @default "done"
+   */
+  state?: AttachmentState;
+  /**
+   * The line under its name, in place of its size: how far it is ("Uploading 40%"), or why it was
+   * refused ("Larger than 20 MB"), which is said once as `state` comes to `error`.
+   * @default its size
+   */
+  description?: string;
+  /**
+   * Its parts: AttachmentMedia, AttachmentContent and AttachmentActions, in place of its own;
+   * keep a remove action among them in every state.
+   * @default its picture or mark, its name and the line under it, and a remove action
    */
   children?: ReactNode;
   /** Layout only. */
   style?: LayoutStyle;
 }
 
+/** Every prop a PromptInputBanner takes. */
+export interface PromptInputBannerProps {
+  /** The notice, in one short line ("You have used this month's questions"). */
+  children: ReactNode;
+  /**
+   * The mark before the words, or `false` for none.
+   * @default the variant's
+   */
+  icon?: IconData | false;
+  /**
+   * What it means: `default` a plain note, read where it stands; `warning` or `destructive` when
+   * it stops work, said at once as it appears. The strip is the same quiet one for each: the
+   * mark takes the colour.
+   * @default "default"
+   */
+  variant?: "default" | "warning" | "destructive";
+  /** One action at the end, such as a small Button ("See usage"). On a narrow card it stands under the words. */
+  action?: ReactNode;
+  /**
+   * Shows a close button at the end, named by the I18nProvider (`alert.close`), and runs as it
+   * is pressed: the product takes the banner away, and focus goes to the text.
+   */
+  onClose?: () => void;
+  /** Layout only. */
+  style?: LayoutStyle;
+}
+
+/** Every prop a PromptInputQueue takes. */
+export interface PromptInputQueueProps {
+  /** Its PromptInputQueueItems: the messages written while an answer was still coming, the next one first. */
+  children: ReactNode;
+  /** The words on its fold, with the count ("2 queued"). */
+  label: string;
+  /**
+   * Whether it starts open.
+   * @default true
+   */
+  defaultOpen?: boolean;
+  /** Layout only. */
+  style?: LayoutStyle;
+}
+
+/** Every prop a PromptInputQueueItem takes. */
+export interface PromptInputQueueItemProps {
+  /** The message, as written. */
+  children: ReactNode;
+  /**
+   * Its actions at the row's end, each a PromptInputButton named from the message ("Edit: …",
+   * "Send now: …", "Remove: …").
+   */
+  actions?: ReactNode;
+  /** Layout only. */
+  style?: LayoutStyle;
+}
+
 /** Every prop a PromptInputNote takes. */
 export interface PromptInputNoteProps {
-  /** A quiet line in the card ("Answers can be wrong. Check what matters."). */
-  children: ReactNode;
+  /**
+   * A quiet line on the band under the card: what the assistant is doing (an `<AgentIndicator />`
+   * and a `<Shimmer>` of words), or a note. With nothing to say, and no failed send, there is no
+   * band.
+   */
+  children?: ReactNode;
   /** Layout only. */
   style?: LayoutStyle;
 }
@@ -474,16 +622,23 @@ export interface PromptInputMentionTrigger {
   /**
    * The items, or a loader given what was typed after the character and an AbortSignal; a newer
    * query aborts the older load. Items given as a list are filtered as the person types; loaded
-   * ones are the loader's to filter.
+   * ones are the loader's to filter. With `kinds`, the loader is also told the kind the person
+   * went into (`context.kind`, its `value`), to load only that.
    */
   items:
     | readonly PromptInputMentionData[]
     | ((
         query: string,
-        context: { signal: AbortSignal }
+        context: { signal: AbortSignal; kind?: string }
       ) =>
         | Promise<readonly PromptInputMentionData[]>
         | readonly PromptInputMentionData[]);
+  /**
+   * The kinds of thing it suggests ("People", "Files"), as a first level: while nothing is typed
+   * the menu lists these, each with its name, a quiet line and a mark, and picking one lists the
+   * items whose `group` is its `label`. Typing at the first level searches every kind at once.
+   */
+  kinds?: readonly PromptInputMentionData[];
   /**
    * Makes the token a picked item becomes.
    * @default the item's value and label, of the trigger's type
@@ -566,6 +721,26 @@ export interface PromptInputSpeechButtonProps {
    * the PromptInput's `controller`.
    */
   onListeningChange?: (listening: boolean) => void;
+  /**
+   * Runs as Cancel is pressed, before `onListeningChange(false)`: the product takes out what it
+   * wrote. Done only stops listening.
+   */
+  onCancel?: () => void;
+  /** The microphone is off for a moment. Pass it with `onMutedChange` to keep it in state. */
+  muted?: boolean;
+  /** Runs as the bar's microphone turns it off or on again. */
+  onMutedChange?: (muted: boolean) => void;
+  /**
+   * How loud the voice is now, from 0 to 1, as the product reads it from its microphone: the
+   * bar's line swells with it.
+   * @default 0
+   */
+  level?: number;
+  /**
+   * The words heard but not yet final, shown lighter after the text until the product writes
+   * them through the `controller`. Not part of the message.
+   */
+  interim?: string;
   /** Its name, in place of `promptInput.speechButton.label` ("Dictate"). */
   "aria-label"?: string;
   /**
@@ -582,15 +757,40 @@ export interface PromptInputSpeechButtonProps {
 const FORCED = media.forcedColors;
 const REDUCED = media.reducedMotion;
 const TYPING = media.maxSmOrCoarse;
-// The one row while there is room for a text column beside the tools: from 20rem wide. A container
-// query cannot read a variable, so the width is written here.
-const ROW = "@container prompt-input (width >= 20rem)";
+const COARSE = media.pointerCoarse;
+// A footer too narrow to keep the count beside Submit: under 30rem. A container query cannot read
+// a variable, so the width is written here.
+const NARROW = "@container prompt-input (width < 30rem)";
+// Inside an Alert, where its action stands beside its words: its body 24rem wide or more. For the
+// banner's own box that is the form at 26.5rem (the body and the strip's insets).
+const WIDE = "@container (width >= 24rem)";
+const BANNER_WIDE = "@container prompt-input (width >= 26.5rem)";
+// Which way the working light travels: with the reading direction.
+const WAY = "--prompt-input-light-way";
 
 const spin = stylex.keyframes({ to: { transform: "rotate(360deg)" } });
+// Success: the halo gathers and fades, once.
+const glow = stylex.keyframes({
+  "0%": { opacity: 0 },
+  "20%": { opacity: 1 },
+  "100%": { opacity: 0 },
+});
+// With reduced motion the halo stands still for its moment and is gone: a mark, no movement.
+const stay = stylex.keyframes({
+  "0%": { opacity: 1 },
+  "99%": { opacity: 1 },
+  "100%": { opacity: 0 },
+});
+// A beam's strip slides by half its width, where its light starts over: a loop with no seam.
+const travel = stylex.keyframes({
+  from: { transform: "translateX(0)" },
+  to: { transform: `translateX(calc(-50% * var(${WAY}, 1)))` },
+});
 
 const styles = stylex.create({
   root: {
     display: "grid",
+    gridTemplateColumns: "minmax(0, 1fr)",
     width: "100%",
     maxWidth: size.promptInputWidth,
     minWidth: 0,
@@ -599,20 +799,151 @@ const styles = stylex.create({
     containerName: "prompt-input",
     fontFamily: font.sans,
   },
-  // The card: text over the footer, the one corner of the prompt input, at medium lift. While the
-  // text has focus the edge goes a step stronger with a faint halo: no ring, the caret says where
-  // the words go.
+  // The card and its light share this box: the light under the card, and both over the band that
+  // is tucked under the card's foot.
+  stack: {
+    position: "relative",
+    zIndex: 1,
+    isolation: "isolate",
+    minWidth: 0,
+  },
+  // What stands above the card (a banner, the queue): over the light, under the card, which
+  // tucks over its foot so the two read as one piece.
+  above: {
+    position: "relative",
+    zIndex: 1,
+  },
+  // The card's own box, which the light and the halo are placed against, with the card's corner
+  // so the halo rings its rounded shape. No stacking context of its own: the light, what stands
+  // above the card and the card share the stack's.
+  room: {
+    position: "relative",
+    borderRadius: radius.promptInputRadius,
+    cornerShape: radius.shape,
+  },
+  // The working light, behind the card so only what reaches past its top edge shows: three soft
+  // beams travelling along the edge at three speeds, light moving and never a spinner. Its layer
+  // reaches past the card's top and foot, not its sides, so it never widens the page. Only
+  // transform and opacity move. With reduced motion the beams stand still and the light comes and
+  // goes without a fade; in forced colours there is none, and Stop says the answer comes.
+  light: {
+    position: "absolute",
+    insetBlock: `calc(-1 * ${space["8"]})`,
+    insetInline: 0,
+    zIndex: 0,
+    display: { default: "block", [FORCED]: "none" },
+    opacity: 0,
+    pointerEvents: "none",
+    transitionProperty: "opacity",
+    transitionDuration: {
+      default: duration.promptInputLightIn,
+      [REDUCED]: "0s",
+    },
+    transitionTimingFunction: duration.ease,
+  },
+  lightOn: { opacity: size.promptInputLightOpacity },
+  // The card's own box inside the layer: the beams are placed against it.
+  lightFrame: {
+    position: "absolute",
+    insetBlock: space["8"],
+    insetInline: 0,
+  },
+  // A beam's room, centred just inside the top edge so about half its glow shows above the card.
+  // It clips its moving strip, then blurs, so the glow spreads past the room, softly.
+  beam: {
+    position: "absolute",
+    top: space["1"],
+    overflow: "hidden",
+    // A pill, not an ellipse: the light is as strong at the card's ends as at its middle, and its
+    // glow reaches past them.
+    borderRadius: radius.full,
+    transform: "translateY(-50%)",
+  },
+  beamWide: {
+    insetInline: space["1"],
+    height: space["3"],
+    filter: `blur(${space["3"]})`,
+  },
+  beamMid: {
+    insetInlineStart: "8%",
+    insetInlineEnd: "12%",
+    height: space["4"],
+    filter: `blur(calc(${space["3"]} - ${space["1"]} / 2))`,
+  },
+  beamTight: {
+    insetInlineStart: "38%",
+    insetInlineEnd: "7%",
+    height: space["2"],
+    filter: `blur(${space["2"]})`,
+  },
+  // The strip: twice the room, its light repeating once across it.
+  strip: {
+    [WAY]: { default: "1", ":dir(rtl)": "-1" },
+    position: "absolute",
+    insetBlock: 0,
+    insetInlineStart: 0,
+    width: "200%",
+    backgroundImage: colors.promptInputLight,
+    backgroundSize: "50% 100%",
+    backgroundRepeat: "repeat-x",
+    animationName: { default: travel, [REDUCED]: "none" },
+    animationTimingFunction: "linear",
+    animationIterationCount: "infinite",
+    animationPlayState: "paused",
+  },
+  // In one accent colour, the colour set on the light's layer.
+  stripTint: { backgroundImage: colors.promptInputTint },
+  stripRunning: { animationPlayState: "running", willChange: "transform" },
+  stripWide: { animationDuration: duration.promptInputBeam },
+  stripMid: {
+    animationDuration: duration.promptInputBeamFast,
+    animationDelay: `calc(-1 * ${duration.promptInputBeamFast} / 3)`,
+  },
+  stripTight: {
+    animationDuration: duration.promptInputBeamSlow,
+    animationDelay: `calc(-1 * ${duration.promptInputBeamSlow} / 2)`,
+  },
+  // Success: one soft halo round the card, in the accent, gathering and fading once. With reduced
+  // motion it stands still for that moment; in forced colours there is none: the words say it is
+  // done.
+  halo: {
+    position: "absolute",
+    inset: 0,
+    zIndex: 0,
+    display: { default: "block", [FORCED]: "none" },
+    borderRadius: "inherit",
+    cornerShape: radius.shape,
+    boxShadow: shadow.promptInputHalo,
+    opacity: 0,
+    pointerEvents: "none",
+    animationName: { default: glow, [REDUCED]: stay },
+    animationDuration: duration.promptInputHaloTime,
+    animationTimingFunction: {
+      default: duration.easeInOut,
+      [REDUCED]: "linear",
+    },
+    animationFillMode: "forwards",
+  },
+  mint: { color: colors.mint },
+  lavender: { color: colors.lavender },
+  info: { color: colors.info },
+  warning: { color: colors.warning },
+  destructive: { color: colors.destructive },
+  // The card: text over the footer, the one corner of the prompt input, at medium lift. Its parts
+  // keep their own insets (the text 16px, the footer's buttons 8px, which the card's corner nests
+  // round). While the text has focus the edge goes a step stronger with a faint halo: no ring, the
+  // caret says where the words go.
   card: {
     [iconVars.size]: size.iconSm,
     [iconVars.stroke]: size.iconStroke,
     position: "relative",
+    zIndex: 1,
     display: "grid",
     gridTemplateColumns: "minmax(0, 1fr)",
-    gap: space["1"],
     boxSizing: "border-box",
     minWidth: 0,
     margin: 0,
-    padding: space["2"],
+    padding: 0,
     borderWidth: { default: 0, [FORCED]: size.hairline },
     borderStyle: "solid",
     borderColor: "CanvasText",
@@ -630,49 +961,48 @@ const styles = stylex.create({
       default: "none",
       [FORCED]: {
         default: "none",
-        ":has([contenteditable=true]:focus)": `${size.ringWidth} solid Highlight`,
+        ":has([contenteditable=true]:focus)": `${size.lineStrong} solid Highlight`,
       },
     },
     transitionProperty: "box-shadow, background-color",
     transitionDuration: duration.hover,
     transitionTimingFunction: duration.ease,
   },
-  // One row: the tools, the text and Submit; the text's column grows, and a narrow card folds the
-  // tools and Submit under the text.
-  // A note (a failed send, a hint) is a line of words: in the tools' column it would take the
-  // text's width, so with one the card folds as a narrow one does, the note under the text.
+  // Over what scrolls behind it: the card's colour most of the way, over a blur.
+  glass: {
+    backgroundColor: {
+      default: colors.promptInputGlass,
+      ":disabled": colors.muted,
+    },
+    backdropFilter: size.promptInputGlassBlur,
+  },
+  // One row: the tools, the text and Submit, 12px in from the card's edge, so the row of 32px
+  // controls is 56px tall. The rows are named, so the text can take the whole width over a foot
+  // row of the tools and Submit (compactTall) with nothing moved in the page.
   compact: {
-    gridTemplateColumns: {
-      default: "minmax(0, 1fr) auto",
-      [ROW]: {
-        default: "auto minmax(0, 1fr) auto",
-        ":has([data-slot=prompt-input-note])": "minmax(0, 1fr) auto",
-      },
-    },
-    gridTemplateAreas: {
-      default: '"header header" "field field" "start end"',
-      [ROW]: {
-        default: '"header header header" "start field end"',
-        ":has([data-slot=prompt-input-note])":
-          '"header header" "field field" "start end"',
-      },
-    },
-    // In one row the tools and Submit stand at the foot of the growing text; folded, a row of
-    // their own, its items on one centre line (a note's one line level with Submit).
-    alignItems: {
-      default: "center",
-      [ROW]: {
-        default: "end",
-        ":has([data-slot=prompt-input-note])": "center",
-      },
-    },
-    columnGap: space["1"],
+    gridTemplateColumns: "auto minmax(0, 1fr) auto",
+    gridTemplateAreas: '"header header header" "start field end"',
+    alignItems: "center",
+    columnGap: space["2"],
+    padding: space["3"],
   },
-  // Files dragged over the card: tinted, its words say what a drop does.
+  // The words no longer fit their line: the text takes the row, the tools and Submit go under it.
+  compactTall: {
+    gridTemplateAreas:
+      '"header header header" "field field field" "start . end"',
+  },
+  // A file is dragged over the page: the card is a target, tinted in mint, its words say what a
+  // drop does. Over the card itself the tint and the edge go a step stronger.
+  dragging: {
+    backgroundColor: `color-mix(in oklch, ${colors.mint} 8%, ${colors.card})`,
+    boxShadow: `inset 0 0 0 ${size.lineStrong} color-mix(in oklch, ${colors.mint} 60%, transparent), ${shadow.sm}`,
+  },
   over: {
-    backgroundColor: `color-mix(in oklch, ${colors.mint} 12%, ${colors.card})`,
-    boxShadow: `inset 0 0 0 ${size.ringWidth} ${colors.mint}, ${shadow.md}`,
+    backgroundColor: `color-mix(in oklch, ${colors.mint} 16%, ${colors.card})`,
+    boxShadow: `inset 0 0 0 ${size.lineStrong} ${colors.mint}, ${shadow.md}`,
   },
+  // The card's own tint over the text and the footer, so the words stand alone; the files stay in
+  // sight above it.
   drop: {
     position: "absolute",
     inset: 0,
@@ -692,31 +1022,68 @@ const styles = stylex.create({
     flexWrap: "wrap",
     gap: space["2"],
     minWidth: 0,
+    paddingInline: space["4"],
+    paddingBlockStart: space["4"],
   },
-  compactHeader: { gridArea: "header" },
-  attachments: { flexBasis: "100%", minWidth: 0 },
+  // In one row the card's 12px is already round the header, which keeps its own inset.
+  compactHeader: {
+    gridArea: "header",
+    marginInline: `calc(-1 * ${space["3"]})`,
+    marginBlockStart: `calc(-1 * ${space["3"]})`,
+    marginBlockEnd: space["1"],
+  },
+  // The files take the header's whole line, their cards 16px from the card's top and side (the
+  // row keeps 4px of its own round them for a focus ring), so a row with more files than room
+  // fades out 16px in from the card's edge; and the text stands 12px under them: the text's own
+  // top room is for a card with no files, so the row takes it back. Above the drop words, and
+  // above the text's top room its foot lies over, so a press there is the file's.
+  attachments: {
+    position: "relative",
+    zIndex: 2,
+    flexBasis: `calc(100% + 2 * ${space["1"]})`,
+    flexShrink: 0,
+    minWidth: 0,
+    marginInline: `calc(-1 * ${space["1"]})`,
+    marginBlockStart: `calc(-1 * ${space["1"]})`,
+    marginBlockEnd: `calc(${space["3"]} - ${space["1"]} - ${space["4"]})`,
+  },
   body: {
     display: "grid",
     gridTemplateColumns: "minmax(0, 1fr)",
     minWidth: 0,
   },
-  compactBody: { gridArea: "field" },
-  // The text: grows with its lines to prompt-input-height, then scrolls inside.
+  // The text never gives in the row: with less room than its least, the card goes tall. At rest
+  // the placeholder gives instead, cut with an ellipsis, so the row stays one line.
+  compactBody: {
+    gridArea: "field",
+    minWidth: {
+      default: size.promptInputFieldMin,
+      ":has([data-empty])": 0,
+    },
+  },
+  // Tall, the words stand over the foot row where they stood in the row.
+  compactBodyTall: {
+    paddingBlockStart: space["1"],
+    paddingBlockEnd: space["2"],
+  },
+  // The text: one line at rest, grows with its lines to prompt-input-height, then scrolls inside.
   editor: {
     display: "block",
     boxSizing: "border-box",
     minWidth: 0,
-    minHeight: `calc(2 * ${font.textSmLine} + 2 * ${space["2"]})`,
+    // A finger needs 44px: on a touch screen the text is never shorter.
+    minHeight: { default: 0, [COARSE]: size.tapTarget },
     maxHeight: size.promptInputHeight,
     overflowY: "auto",
     margin: 0,
-    paddingBlock: space["2"],
-    paddingInline: space["2"],
+    paddingInline: space["4"],
+    paddingBlockStart: space["4"],
+    paddingBlockEnd: 0,
     color: colors.foreground,
     caretColor: colors.foreground,
     // 16px on a phone or a touch screen, or Safari zooms the page in when the text takes focus.
-    fontSize: { default: font.textSm, [TYPING]: size.inputTextTouch },
-    lineHeight: font.textSmLine,
+    fontSize: { default: size.messageText, [TYPING]: size.inputTextTouch },
+    lineHeight: size.messageTextLine,
     textAlign: "start",
     whiteSpace: "pre-wrap",
     overflowWrap: "anywhere",
@@ -727,7 +1094,8 @@ const styles = stylex.create({
     },
   },
   compactEditor: {
-    minHeight: `calc(${font.textSmLine} + 2 * ${space["2"]})`,
+    paddingInline: space["1"],
+    paddingBlockStart: 0,
   },
   placeholder: {
     "::before": {
@@ -735,6 +1103,23 @@ const styles = stylex.create({
       color: colors.mutedForeground,
       pointerEvents: "none",
     },
+  },
+  // While a dictation listens the words step back: the voice has the card.
+  editorListening: { color: colors.mutedForeground },
+  // What a dictation has heard but not yet settled on: lighter still, after the words, never part
+  // of them.
+  interim: {
+    "::after": {
+      content: "' ' attr(data-interim)",
+      color: colors.mutedForeground,
+      opacity: size.opacityDisabled,
+    },
+  },
+  // The resting row is one line at every width: a placeholder too long for it ends in an ellipsis.
+  compactPlaceholder: {
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
   },
   // A token in the text: its label on a quiet ground, a cross under a pointer.
   token: {
@@ -771,16 +1156,23 @@ const styles = stylex.create({
       },
     },
   },
+  // The footer stands 24px under the text, its buttons 8px from the card's sides and foot.
   footer: {
     display: "flex",
     flexWrap: "wrap",
     alignItems: "center",
     justifyContent: "space-between",
-    gap: space["1"],
+    gap: space["2"],
     minWidth: 0,
+    marginBlockStart: space["6"],
+    paddingInline: space["2"],
+    paddingBlockEnd: space["2"],
   },
   // In one row the footer gives its tools and Submit to the card's own columns.
   compactFooter: { display: "contents" },
+  // What the footer holds, given straight to its row; away while a dictation's bar stands there.
+  through: { display: "contents" },
+  away: { display: "none" },
   tools: {
     display: "flex",
     flexWrap: "wrap",
@@ -790,6 +1182,7 @@ const styles = stylex.create({
   },
   compactTools: { gridArea: "start" },
   end: {
+    position: "relative",
     display: "inline-flex",
     alignItems: "center",
     gap: space["2"],
@@ -797,20 +1190,182 @@ const styles = stylex.create({
   },
   compactEnd: { gridArea: "end", justifySelf: "end" },
   count: {
+    paddingInline: space["1"],
     color: colors.mutedForeground,
     fontSize: font.textXs,
     lineHeight: font.textXsLine,
     fontVariantNumeric: "tabular-nums",
     whiteSpace: "nowrap",
   },
-  countAt: { color: colors.destructive },
+  // On a narrow footer the count takes no room from the row: it stands above Submit.
+  countAbove: {
+    position: { default: "static", [NARROW]: "absolute" },
+    insetInlineEnd: { default: null, [NARROW]: 0 },
+    bottom: { default: null, [NARROW]: "100%" },
+  },
+  // At the limit the count goes from quiet to ink: nothing is wrong, there is no more room.
+  countAt: { color: colors.foreground },
+  // The band under the card, tucked under its foot: its lines say what the assistant is doing, or
+  // that the send failed. Nothing in it, no band.
+  under: {
+    display: { default: "grid", ":empty": "none" },
+    gap: space["1"],
+    marginBlockStart: `calc(-1 * ${radius.promptInputRadius})`,
+    marginInline: space["2"],
+    paddingInline: space["4"],
+    paddingBlockStart: `calc(${radius.promptInputRadius} + ${space["2"]})`,
+    paddingBlockEnd: space["2"],
+    borderEndStartRadius: radius.promptInputRadius,
+    borderEndEndRadius: radius.promptInputRadius,
+    cornerShape: radius.shape,
+    backgroundColor: colors.muted,
+    boxShadow: size.borderStrong,
+    // Forced colours drop the fill and the shadow: a real line draws the band.
+    outline: { default: "none", [FORCED]: `${size.hairline} solid CanvasText` },
+  },
   note: {
+    [iconVars.size]: size.iconSm,
+    [iconVars.stroke]: size.iconStroke,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: space["1"],
     margin: 0,
-    paddingInline: space["2"],
     color: colors.mutedForeground,
     fontSize: font.textXs,
     lineHeight: font.textXsLine,
+    textAlign: "center",
+    overflowWrap: "anywhere",
   },
+  noteFailed: { color: colors.destructive },
+  // A banner above the card: the quiet strip, in from the card's sides so its side lies inside the
+  // card's rounded corner, its foot behind the card's top so the two read as one piece. An Alert
+  // stands in it without a fill of its own: what the notice means is in its mark's colour, and in
+  // how the Alert says it.
+  banner: {
+    position: "relative",
+    zIndex: 1,
+    marginInline: space["2"],
+    marginBlockEnd: `calc(-1 * ${radius.base})`,
+    padding: space["3"],
+    // Room for the card's corner to lie over its foot.
+    paddingBlockEnd: `calc(${space["3"]} + ${radius.base})`,
+    borderStartStartRadius: radius.base,
+    borderStartEndRadius: radius.base,
+    cornerShape: radius.shape,
+    backgroundColor: colors.muted,
+    boxShadow: size.borderStrong,
+    // Forced colours drop the fill and the shadow: a real line draws the strip.
+    outline: { default: "none", [FORCED]: `${size.hairline} solid CanvasText` },
+  },
+  // The mark and the words: level with the action's button where it stands beside them.
+  bannerLine: {
+    display: "flex",
+    alignItems: "flex-start",
+    gap: space["1"],
+    minWidth: 0,
+    marginBlockStart: {
+      default: 0,
+      [WIDE]: `calc((${size.controlSm} - ${font.textSmLine}) / 2)`,
+    },
+  },
+  // Room at the words' end for the close button, which stands in the strip's corner.
+  bannerLineClosable: {
+    paddingInlineEnd: { default: size.controlXs, [WIDE]: 0 },
+  },
+  bannerMark: {
+    [iconVars.size]: size.iconSm,
+    [iconVars.stroke]: size.iconStroke,
+    display: "flex",
+    flexShrink: 0,
+    marginBlockStart: `calc((${font.textSmLine} - ${size.iconSm}) / 2)`,
+    color: colors.mutedForeground,
+  },
+  bannerWords: { minWidth: 0 },
+  // The action: at the row's top beside the words, and under them where they start, past the mark.
+  bannerAction: {
+    display: "flex",
+    flexWrap: "wrap",
+    alignItems: "center",
+    alignSelf: "flex-start",
+    gap: space["2"],
+    marginInlineStart: {
+      default: `calc(${size.iconSm} + ${space["1"]})`,
+      [WIDE]: 0,
+    },
+  },
+  bannerActionClosable: {
+    marginInlineEnd: { default: 0, [WIDE]: size.controlXs },
+  },
+  // The close button, in the strip's end corner.
+  bannerClose: {
+    position: "absolute",
+    top: { default: space["2"], [BANNER_WIDE]: `calc(${space["3"]} + 2px)` },
+    insetInlineEnd: space["1"],
+    display: "flex",
+  },
+  // The queue's panel above the card: raised as the card is, its rows starting where the card's
+  // words do, their actions ending where Submit ends, its foot behind the card.
+  queue: {
+    marginInline: space["2"],
+    marginBlockEnd: `calc(-1 * ${radius.promptInputRadius})`,
+    paddingInlineStart: `calc(${space["4"]} - ${space["2"]})`,
+    paddingBlockStart: space["1"],
+    paddingBlockEnd: radius.promptInputRadius,
+    borderStartStartRadius: radius.base,
+    borderStartEndRadius: radius.base,
+    cornerShape: radius.shape,
+    backgroundColor: colors.card,
+    boxShadow: shadow.sm,
+    // Forced colours drop the fill and the shadow: a real line draws the panel.
+    outline: { default: "none", [FORCED]: `${size.hairline} solid CanvasText` },
+  },
+  queueList: {
+    display: "grid",
+    gap: space["1"],
+    margin: 0,
+    padding: 0,
+    paddingBlockEnd: space["2"],
+    listStyle: "none",
+  },
+  queueItem: {
+    display: "flex",
+    alignItems: "center",
+    gap: space["1"],
+    minWidth: 0,
+  },
+  queueText: {
+    flexGrow: 1,
+    minWidth: 0,
+    color: colors.foreground,
+    fontSize: font.textSm,
+    lineHeight: font.textSmLine,
+    overflowWrap: "anywhere",
+  },
+  queueActions: {
+    display: "flex",
+    alignItems: "center",
+    flexShrink: 0,
+    gap: space["1"],
+  },
+  // While the page loads: a part kept in its room but not drawn, and the text's quiet line.
+  kept: { display: "inline-flex", opacity: 0 },
+  pending: { position: "relative", minWidth: 0 },
+  pendingLine: {
+    position: "absolute",
+    insetInlineStart: space["4"],
+    insetInlineEnd: 0,
+    top: space["4"],
+    display: "flex",
+    pointerEvents: "none",
+  },
+  // In one row the line stands on the row's centre line.
+  compactPendingLine: {
+    insetInlineStart: space["1"],
+    top: "50%",
+    transform: "translateY(-50%)",
+  },
+  pendingWidth: { display: "grid", width: "min(12rem, 60%)" },
   spinner: {
     display: "inline-flex",
     animationName: { default: spin, [REDUCED]: "none" },
@@ -818,7 +1373,63 @@ const styles = stylex.create({
     animationTimingFunction: "linear",
     animationIterationCount: "infinite",
   },
-  // The mention menu: a menu's panel at the caret, items with a mark, a name and a quiet line.
+  // A dictation's bar, in the footer's place while it listens: Cancel, the time, the voice's level
+  // as a field of pixels, the microphone, and Done where Submit stood.
+  dictation: {
+    display: "flex",
+    alignItems: "center",
+    flexGrow: 1,
+    gap: space["2"],
+    minWidth: 0,
+  },
+  // In one row it is the foot row, under the words.
+  compactDictation: {
+    gridRow: "start",
+    gridColumn: "start-start / end-end",
+  },
+  time: {
+    flexShrink: 0,
+    color: colors.foreground,
+    fontSize: font.textXs,
+    lineHeight: font.textXsLine,
+    fontVariantNumeric: "tabular-nums",
+    whiteSpace: "nowrap",
+  },
+  // The voice's field, on the bar's centre line: a fine line of the system's pixels from end to
+  // end, and round its middle a body of the same pixels that stands a row or two taller with the
+  // voice. Nothing travels sideways. Every height is a whole number of the grid's rows, so the
+  // line and the body share one grid.
+  level: {
+    [pixelVars.color]: "currentColor",
+    position: "relative",
+    display: "grid",
+    alignItems: "center",
+    flexGrow: 1,
+    minWidth: 0,
+    height: "27px",
+    color: { default: colors.mint, [FORCED]: "CanvasText" },
+    "::before": {
+      content: "''",
+      gridArea: "1 / 1",
+      height: "3px",
+      backgroundImage: pixel.fineFill,
+      backgroundSize: "3px 3px",
+      maskImage:
+        "linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent)",
+      opacity: size.opacityDisabled,
+    },
+  },
+  voice: {
+    gridArea: "1 / 1",
+    backgroundImage: pixel.fineFill,
+    backgroundSize: "3px 3px",
+    maskImage:
+      "linear-gradient(90deg, transparent 12%, #000 38%, #000 62%, transparent 88%)",
+  },
+  voiceMuted: { opacity: size.opacityDisabled },
+  loud: (height: string) => ({ height }),
+  // The mention menu: a menu's panel under the caret, items with a mark, a name and a quiet line
+  // under it.
   mentionPanel: {
     width: `min(${size.promptInputMentionWidth}, 100vw - 2 * ${space.popupGutter})`,
   },
@@ -827,12 +1438,31 @@ const styles = stylex.create({
     transitionProperty: "opacity",
     transitionDuration: duration.hover,
   },
-  mentionDescription: {
-    marginInlineStart: space["2"],
-    color: { default: colors.mutedForeground, [FORCED]: "inherit" },
+  // Two lines in a row: the name in the text's size, a quiet line under it, 4px above and below.
+  mentionItem: {
+    paddingBlock: space["1"],
+    fontSize: font.textSm,
+    lineHeight: font.textSmLine,
     fontWeight: font.weightNormal,
   },
+  mentionText: { display: "grid" },
+  mentionDescription: {
+    color: { default: colors.mutedForeground, [FORCED]: "inherit" },
+    fontSize: font.textXs,
+    lineHeight: font.textXsLine,
+    fontWeight: font.weightNormal,
+  },
+  // The chevron at a kind's end, which the reading direction turns.
+  mentionInto: {
+    display: "flex",
+    marginInlineStart: "auto",
+    color: colors.mutedForeground,
+    transform: { default: null, ":dir(rtl)": "scaleX(-1)" },
+  },
+  // The menu's words when it has no rows. It stays in the menu, wordless, while there are rows,
+  // and takes no room then.
   mentionEmpty: {
+    display: { default: "block", ":empty": "none" },
     paddingBlock: space["2"],
     paddingInline: space.menuItemPadding,
     color: colors.mutedForeground,
@@ -846,8 +1476,35 @@ interface PromptInputContextValue {
   status: Status;
   disabled: boolean;
   compact: boolean;
-  /** Nothing to send: no words, no token and no file. */
+  /** Nothing to send: no words and no token. */
   empty: boolean;
+  /** The last send failed, and nothing has been typed since. */
+  failed: boolean;
+  /** The page's data is not there yet: the card stands still. */
+  loading: boolean;
+  /** In one row, the text has the card's whole width and the tools stand under it. */
+  tall: boolean;
+  /** A send of the form's own is out: its Promise has not settled. */
+  sending: boolean;
+  /** A file is on its way or was refused: nothing is sent until it is there or taken off. */
+  held: boolean;
+  /** Holds the send for one such file (`1`), and lets it go again (`-1`). */
+  changeHolds: (by: number) => void;
+  /** What a dictation has heard but not settled on, shown lighter after the text. */
+  interim: string;
+  setInterim: (interim: string) => void;
+  /** Counts an outside part as written in the card, or as drawn by the form (development only). */
+  changeWritten: (by: number) => void;
+  changeDrawn: (by: number) => void;
+  /** The id of the band under the card, which describes the text while it says a send failed. */
+  noteId: string;
+  /** The footer's element, where a dictation's bar is drawn, and what says it is there. */
+  footer: HTMLElement | null;
+  setFooter: (footer: HTMLElement | null) => void;
+  dictating: boolean;
+  setDictating: (dictating: boolean) => void;
+  /** Sets what cancels the dictation that listens now: Escape anywhere in the form runs it. */
+  setCancelDictation: (cancel: (() => void) | null) => void;
   /** The text's length now, a token as its label, and the most it may be. */
   length: number;
   maxLength: number | undefined;
@@ -863,6 +1520,38 @@ const PromptInputContext = createContext<PromptInputContextValue | null>(null);
 
 /** The form's state, for a part inside it. A part outside one draws as if it were at rest. */
 const usePromptInput = () => use(PromptInputContext);
+
+// A part that stands outside the card (a banner or the queue above it, the note under it) is
+// written among the card's parts and drawn by the form where it belongs: in the card it draws
+// nothing, and the form draws it again above or under, where this says it may. The form finds
+// these parts among its own children (through a Fragment or a list, not inside another
+// component: a portal would not draw on the server, and the parts are few), as CardHeader finds
+// its action.
+const OutsideContext = createContext(false);
+
+const isPart = (child: ReactNode, part: unknown) =>
+  isValidElement(child) && child.type === part;
+
+/**
+ * Whether an outside part is drawn where it belongs (true) or only written in the card (false),
+ * and, in development, the count of each kept for the form: one written but never drawn stands
+ * inside a component of the caller's, where the form cannot find it.
+ */
+const useOutside = () => {
+  const outside = use(OutsideContext);
+  const form = use(PromptInputContext);
+  const change = outside ? form?.changeDrawn : form?.changeWritten;
+  useEffect(() => {
+    if (!isDevelopment || change === undefined) {
+      return nothing;
+    }
+    change(1);
+    return () => {
+      change(-1);
+    };
+  }, [change]);
+  return outside;
+};
 
 /** The files attached to the message, and what changes them: AI Elements' attachments. */
 interface PromptInputAttachmentsValue {
@@ -922,6 +1611,22 @@ const settle = async (
   }
 };
 
+/** Adds `by` to a count: the reducer of a count its parts change (`change(1)`, then `change(-1)`). */
+const countBy = (now: number, by: number) => now + by;
+
+/** Says `on(true)` while `send` runs, and `on(false)` once it is done, however it ends. */
+const during = async (
+  on: (running: boolean) => void,
+  send: () => Promise<void>
+) => {
+  on(true);
+  try {
+    await send();
+  } finally {
+    on(false);
+  }
+};
+
 /** Runs `send` one at a time: a second call while one runs waits for that one, and sends nothing. */
 const oneAtATime = async (
   running: { current: Promise<void> | null },
@@ -956,8 +1661,8 @@ const hasFiles = (transfer: DataTransfer | null) =>
 
 /**
  * The card's handlers for files: pasted into the text (before the editor reads the clipboard) or
- * dropped on it, they go to `take`; dragged over it, `setOver` tints it. A paste that holds words
- * as well (cells copied from a spreadsheet come with a picture of them) is the words.
+ * dropped on it, they go to `take`; dragged over it, `setOver` deepens its tint. A paste that
+ * holds words as well keeps both: the files are attached and the words go into the text.
  */
 const fileHandlers = (
   take: ((files: File[]) => void) | undefined,
@@ -965,16 +1670,14 @@ const fileHandlers = (
 ) => ({
   onPasteCapture: (event: ClipboardEvent<HTMLFormElement>) => {
     const pasted = [...event.clipboardData.files];
-    if (
-      take === undefined ||
-      pasted.length === 0 ||
-      event.clipboardData.getData("text/plain") !== ""
-    ) {
+    if (take === undefined || pasted.length === 0) {
       return;
     }
-    event.preventDefault();
-    event.stopPropagation();
     take(pasted);
+    if (event.clipboardData.getData("text/plain") === "") {
+      event.preventDefault();
+      event.stopPropagation();
+    }
   },
   onDragOver: (event: DragEvent<HTMLFormElement>) => {
     if (take === undefined || !hasFiles(event.dataTransfer)) {
@@ -991,7 +1694,6 @@ const fileHandlers = (
   },
   onDropCapture: (event: DragEvent<HTMLFormElement>) => {
     const dropped = [...event.dataTransfer.files];
-    setOver(false);
     if (take === undefined || dropped.length === 0) {
       return;
     }
@@ -1107,19 +1809,12 @@ const useAttachments = (
       picker.current?.click();
     },
   };
-  /** Takes off the files being sent, at once; any attached while they go stay. */
-  const sending = (gone: readonly PromptInputFile[]) => {
-    change((all) => all.filter((file) => !gone.includes(file)));
-  };
-  /** The files were sent: their pictures go. */
+  /** The files were sent: they go, and their pictures; any attached while they went stay. */
   const sent = (gone: readonly PromptInputFile[]) => {
     letGo(gone);
+    change((all) => all.filter((file) => !gone.includes(file)));
   };
-  /** The send failed: the files are attached again, before any attached since. */
-  const failed = (gone: readonly PromptInputFile[]) => {
-    change((all) => [...gone, ...all]);
-  };
-  return { value, sending, sent, failed };
+  return { value, sent };
 };
 
 /** What a token says after its label to a screen reader: its trigger's word, else its kind. */
@@ -1169,38 +1864,351 @@ const focusTakeover = (form: HTMLFormElement | null) => {
   )?.focus({ preventScroll: true });
 };
 
-/** Files dropped anywhere on the page go to `take`; dropped on the card, they are the card's own. */
-const listenForDrops = (
-  take: (files: File[]) => void,
-  form: { current: HTMLFormElement | null }
+/**
+ * A file dragged over the page makes the card a target (`setDragging`), until it is dropped or
+ * leaves. Dropped anywhere but on the card nothing happens (the browser would otherwise open the
+ * file), unless `take` is given (`globalDrop`), which attaches it. Heard as the event goes down,
+ * before the card's own drop ends it.
+ */
+const listenForFileDrags = (
+  form: { current: HTMLFormElement | null },
+  setDragging: (dragging: boolean) => void,
+  setOver: (over: boolean) => void,
+  take: ((files: File[]) => void) | undefined
 ) => {
+  let depth = 0;
+  const enter = (event: globalThis.DragEvent) => {
+    if (hasFiles(event.dataTransfer)) {
+      depth += 1;
+      setDragging(true);
+    }
+  };
+  const leave = (event: globalThis.DragEvent) => {
+    if (!hasFiles(event.dataTransfer)) {
+      return;
+    }
+    depth = Math.max(0, depth - 1);
+    if (depth === 0) {
+      setDragging(false);
+    }
+  };
   const hold = (event: globalThis.DragEvent) => {
     if (hasFiles(event.dataTransfer)) {
       event.preventDefault();
     }
   };
   const drop = (event: globalThis.DragEvent) => {
+    depth = 0;
+    setDragging(false);
+    setOver(false);
     if (!hasFiles(event.dataTransfer)) {
       return;
     }
     event.preventDefault();
-    if (
+    const onCard =
       event.target instanceof Node &&
-      form.current?.contains(event.target) === true
+      form.current?.contains(event.target) === true;
+    const files = [...(event.dataTransfer?.files ?? [])];
+    if (!onCard && files.length > 0) {
+      take?.(files);
+    }
+  };
+  window.addEventListener("dragenter", enter, true);
+  window.addEventListener("dragleave", leave, true);
+  window.addEventListener("dragover", hold);
+  window.addEventListener("drop", drop, true);
+  return () => {
+    window.removeEventListener("dragenter", enter, true);
+    window.removeEventListener("dragleave", leave, true);
+    window.removeEventListener("dragover", hold);
+    window.removeEventListener("drop", drop, true);
+  };
+};
+
+/**
+ * Once a change has drawn: when the caret stands at the end of a text that scrolls, the text
+ * scrolls to its end. A line started with Shift+Enter in a full text is empty, and the browser
+ * brings no caret into view until a letter is typed there.
+ */
+const keepCaretInView = (card: HTMLElement | null) => {
+  requestAnimationFrame(() => {
+    const editor = card?.querySelector<HTMLElement>(
+      '[data-slot="prompt-input-textarea"]'
+    );
+    const caret = getSelection();
+    if (
+      editor === null ||
+      editor === undefined ||
+      caret === null ||
+      !caret.isCollapsed ||
+      caret.focusNode === null ||
+      !editor.contains(caret.focusNode)
     ) {
       return;
     }
-    const files = [...(event.dataTransfer?.files ?? [])];
-    if (files.length > 0) {
-      take(files);
+    const rest = document.createRange();
+    rest.selectNodeContents(editor);
+    rest.setStart(caret.focusNode, caret.focusOffset);
+    if (rest.toString().trim() === "") {
+      editor.scrollTop = editor.scrollHeight;
     }
+  });
+};
+
+/** A length as computed ("8px"), in pixels; 0 for one that is not ("normal"). */
+// oxlint-disable-next-line unicorn/prefer-number-coercion -- a length reads "8px", which Number() makes NaN
+const px = (value: string) => Number.parseFloat(value) || 0;
+
+/**
+ * Whether the one row's words have outgrown their line: they take two lines where they stand, or
+ * one that is wider than the room between the tools and Submit, or that room is under the text's
+ * least width. The text then takes the card's whole width and the tools go under it. Every width
+ * is read from the card and its two sides, which stand alike in both forms, so the answer never
+ * depends on the form it changes and nothing flickers at the edge.
+ */
+const outgrown = (card: HTMLElement) => {
+  const editor = card.querySelector<HTMLElement>(
+    '[data-slot="prompt-input-textarea"]'
+  );
+  if (editor === null) {
+    return null;
+  }
+  if (editor.dataset.empty !== undefined) {
+    return false;
+  }
+  const look = getComputedStyle(card);
+  const own = getComputedStyle(editor);
+  // Every group of tools, and Submit where it stands apart from them.
+  const sides = [
+    ...card.querySelectorAll<HTMLElement>(
+      '[data-slot="prompt-input-tools"], [data-slot="prompt-input-end"]'
+    ),
+  ]
+    .filter(
+      (side) =>
+        side.parentElement?.closest('[data-slot="prompt-input-tools"]') === null
+    )
+    .map((side) => side.getBoundingClientRect().width)
+    .reduce((sum, width) => sum + width, 0);
+  const room =
+    card.clientWidth -
+    px(look.paddingInlineStart) -
+    px(look.paddingInlineEnd) -
+    2 * px(look.columnGap) -
+    sides;
+  const lines =
+    (editor.scrollHeight - px(own.paddingBlockStart)) / px(own.lineHeight);
+  const least = px(getComputedStyle(editor.parentElement ?? editor).minWidth);
+  if (lines > 1.5 || room < least) {
+    return true;
+  }
+  const words = document.createRange();
+  words.selectNodeContents(editor);
+  // A caret's width to spare, so the last letter is never under Submit.
+  return (
+    words.getBoundingClientRect().width + 2 >
+    room - px(own.paddingInlineStart) - px(own.paddingInlineEnd)
+  );
+};
+
+/**
+ * In one row, whether the text has the card's whole width (`outgrown`): read as the card comes,
+ * and again, before paint, as anything in it changes (the words, a tool that comes or goes) or it
+ * changes width. While something stands in the text's place the answer stays as it was.
+ */
+const useRowTall = (
+  on: boolean,
+  card: { current: HTMLElement | null },
+  dictating: boolean
+) => {
+  const [tall, setTall] = useState(false);
+  useLayoutEffect(() => {
+    const box = card.current;
+    if (!on || box === null) {
+      return nothing;
+    }
+    const read = () => {
+      const next = outgrown(box);
+      if (next !== null) {
+        setTall(next);
+      }
+    };
+    read();
+    const resized = new ResizeObserver(read);
+    resized.observe(box);
+    const changed = new MutationObserver(read);
+    changed.observe(box, {
+      characterData: true,
+      childList: true,
+      subtree: true,
+    });
+    return () => {
+      resized.disconnect();
+      changed.disconnect();
+    };
+  }, [on, card]);
+  // A dictation's bar is the foot row, so the words stand over it.
+  return on && (tall || dictating);
+};
+
+/**
+ * How many times the status has come to `success`: the halo plays again each time, and each time
+ * it is said once.
+ */
+const useSuccessCount = (status: Status, said: string) => {
+  const [count, setCount] = useState(status === "success" ? 1 : 0);
+  const [seen, setSeen] = useState(status);
+  if (status !== seen) {
+    setSeen(status);
+    if (status === "success") {
+      setCount(count + 1);
+    }
+  }
+  useEffect(() => {
+    if (count > 0) {
+      announce(said);
+    }
+  }, [count, said]);
+  return count;
+};
+
+/**
+ * Whether a failed send shows: from a send of the form's own that rejected, or the status, until
+ * the person types or sends again.
+ */
+const useFailure = (status: Status) => {
+  const [rejected, setRejected] = useState(false);
+  const [typedSince, setTypedSince] = useState(false);
+  const [seen, setSeen] = useState(status);
+  if (seen !== status) {
+    setSeen(status);
+    setTypedSince(false);
+  }
+  return {
+    shown: (status === "error" || rejected) && !typedSince,
+    /** Typing takes the failure's line away: the person has read it and gone on. */
+    typed: () => {
+      setRejected(false);
+      setTypedSince(true);
+    },
+    /** A send starts, or its words were cleared: no typing, so a failure said next shows. */
+    fresh: () => {
+      setRejected(false);
+      setTypedSince(false);
+    },
+    rejected: () => {
+      setRejected(true);
+      setTypedSince(false);
+    },
   };
-  window.addEventListener("dragover", hold);
-  window.addEventListener("drop", drop);
-  return () => {
-    window.removeEventListener("dragover", hold);
-    window.removeEventListener("drop", drop);
-  };
+};
+
+/** Whether a file is dragged over the page, and over the card itself (`listenForFileDrags`). */
+const useFileDrags = (
+  form: { current: HTMLFormElement | null },
+  take: ((files: File[]) => void) | undefined,
+  globalDrop: boolean
+) => {
+  const [dragging, setDragging] = useState(false);
+  const [over, setOver] = useState(false);
+  useEffect(
+    () =>
+      take === undefined
+        ? undefined
+        : listenForFileDrags(
+            form,
+            setDragging,
+            setOver,
+            globalDrop ? take : undefined
+          ),
+    [form, take, globalDrop]
+  );
+  return { dragging, over, setOver };
+};
+
+/** The card's look: its surface, the one row (and tall in it), a file dragged over the page. */
+const cardLook = ({
+  glass,
+  compact,
+  tall,
+  dragging,
+  over,
+}: {
+  glass: boolean;
+  compact: boolean;
+  tall: boolean;
+  dragging: boolean;
+  over: boolean;
+}) => [
+  styles.card,
+  glass && styles.glass,
+  compact && styles.compact,
+  tall && styles.compactTall,
+  dragging && styles.dragging,
+  over && styles.over,
+];
+
+/**
+ * The working light and the success halo, behind the card: three beams along its top edge while
+ * the answer comes, one halo each time it succeeds.
+ */
+const Light = ({
+  on,
+  still,
+  accent,
+  success,
+}: {
+  on: boolean;
+  /** No light while the page loads. */
+  still: boolean;
+  accent: Accent;
+  success: number;
+}) => {
+  if (still) {
+    return null;
+  }
+  const colour = [
+    accent === "mint" && styles.mint,
+    accent === "lavender" && styles.lavender,
+    accent === "info" && styles.info,
+    accent === "warning" && styles.warning,
+    accent === "destructive" && styles.destructive,
+    accent === "default" && styles.mint,
+  ];
+  const strip = [
+    styles.strip,
+    accent !== "default" && styles.stripTint,
+    on && styles.stripRunning,
+  ];
+  return (
+    <>
+      <span
+        aria-hidden="true"
+        data-slot="prompt-input-light"
+        {...stylex.props(styles.light, colour, on && styles.lightOn)}
+      >
+        <span {...stylex.props(styles.lightFrame)}>
+          <span {...stylex.props(styles.beam, styles.beamWide)}>
+            <span {...stylex.props(strip, styles.stripWide)} />
+          </span>
+          <span {...stylex.props(styles.beam, styles.beamMid)}>
+            <span {...stylex.props(strip, styles.stripMid)} />
+          </span>
+          <span {...stylex.props(styles.beam, styles.beamTight)}>
+            <span {...stylex.props(strip, styles.stripTight)} />
+          </span>
+        </span>
+      </span>
+      {success > 0 && (
+        <span
+          key={success}
+          aria-hidden="true"
+          data-slot="prompt-input-halo"
+          {...stylex.props(styles.halo, colour)}
+        />
+      )}
+    </>
+  );
 };
 
 /**
@@ -1265,11 +2273,247 @@ const ROOM = new Set([
   "prompt-input-tools",
 ]);
 
+/**
+ * The band under the card, tucked under its foot: what the assistant is doing, in the caller's
+ * words, and that the last send failed, in the catalogue's (said once by the form, and taken away
+ * as the person types). With neither, no band. Written straight in the PromptInput.
+ */
+export const PromptInputNote = ({ children, style }: PromptInputNoteProps) => {
+  const words = useI18n().promptInput;
+  const failed = usePromptInput()?.failed === true;
+  if (!useOutside()) {
+    return null;
+  }
+  return (
+    <>
+      {failed && (
+        <p
+          data-slot="prompt-input-note"
+          {...stylex.props(styles.note, styles.noteFailed, style)}
+        >
+          <Icon icon={TriangleAlertIcon} />
+          {words.failed}
+        </p>
+      )}
+      {!isBlank(children) && (
+        <p data-slot="prompt-input-note" {...stylex.props(styles.note, style)}>
+          {children}
+        </p>
+      )}
+    </>
+  );
+};
+
+// The mark a banner wears when none is given: what the notice means.
+const bannerIcons = {
+  default: InfoIcon,
+  warning: TriangleAlertIcon,
+  destructive: TriangleAlertIcon,
+} as const;
+
+/**
+ * A notice above the card that belongs to the prompt input (a limit reached, something to
+ * connect first), tucked under the card's top: the quiet strip with an Alert in it, one short line
+ * and one action, so it is said as an Alert is. Written straight in the PromptInput.
+ */
+export const PromptInputBanner = ({
+  children,
+  icon,
+  variant = "default",
+  action,
+  onClose,
+  style,
+}: PromptInputBannerProps) => {
+  const words = useI18n().alert;
+  const form = usePromptInput();
+  if (!useOutside()) {
+    return null;
+  }
+  const mark = icon === false ? undefined : (icon ?? bannerIcons[variant]);
+  const closable = onClose !== undefined;
+  return (
+    <div
+      data-slot="prompt-input-banner"
+      {...stylex.props(styles.banner, style)}
+    >
+      <Alert
+        appearance="subtle"
+        // Said at once when it warns or stops work, else read where it stands.
+        live={variant === "default" ? "polite" : "assertive"}
+        icon={false}
+      >
+        <AlertTitle>
+          <span
+            {...stylex.props(
+              styles.bannerLine,
+              closable && styles.bannerLineClosable
+            )}
+          >
+            {mark !== undefined && (
+              <span
+                aria-hidden="true"
+                {...stylex.props(
+                  styles.bannerMark,
+                  variant === "warning" && styles.warning,
+                  variant === "destructive" && styles.destructive
+                )}
+              >
+                <Icon icon={mark} />
+              </span>
+            )}
+            <span {...stylex.props(styles.bannerWords)}>{children}</span>
+          </span>
+        </AlertTitle>
+        {!isBlank(action) && (
+          <AlertAction>
+            <span
+              {...stylex.props(
+                styles.bannerAction,
+                closable && styles.bannerActionClosable
+              )}
+            >
+              {action}
+            </span>
+          </AlertAction>
+        )}
+      </Alert>
+      {closable && (
+        <span {...stylex.props(styles.bannerClose)}>
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            aria-label={words.close}
+            onClick={(event) => {
+              // The banner goes, and its button with it: the text takes the focus it held.
+              const held =
+                event.currentTarget.parentElement?.parentElement?.contains(
+                  document.activeElement
+                ) === true;
+              onClose();
+              if (held) {
+                form?.controller.focus({ at: "end" });
+              }
+            }}
+          >
+            <Icon icon={XIcon} />
+          </Button>
+        </span>
+      )}
+    </div>
+  );
+};
+
+/**
+ * The messages written while an answer was still coming, waiting their turn above the card: a
+ * panel that folds open and shut, its foot behind the card. The product keeps the queue. Written
+ * straight in the PromptInput.
+ */
+export const PromptInputQueue = ({
+  children,
+  label,
+  defaultOpen = true,
+  style,
+}: PromptInputQueueProps) => {
+  if (!useOutside()) {
+    return null;
+  }
+  return (
+    <div
+      data-slot="prompt-input-queue"
+      {...stylex.props(styles.above, styles.queue, style)}
+    >
+      <Collapsible defaultOpen={defaultOpen}>
+        <CollapsibleTrigger>{label}</CollapsibleTrigger>
+        <CollapsibleContent>
+          <ul {...stylex.props(styles.queueList)}>{children}</ul>
+        </CollapsibleContent>
+      </Collapsible>
+    </div>
+  );
+};
+
+/**
+ * One waiting message: its words, and its actions at the row's end. When an action takes the
+ * row off from the keyboard, focus goes on to the next row's first action, or the one before, and
+ * after the last to the text: never to the page.
+ */
+export const PromptInputQueueItem = ({
+  children,
+  actions,
+  style,
+}: PromptInputQueueItemProps) => {
+  const controller = usePromptInput()?.controller;
+  return (
+    // oxlint-disable-next-line jsx-a11y/no-noninteractive-element-interactions, jsx-a11y/click-events-have-key-events -- the row hears its own actions' presses, to place the focus if one takes the row off
+    <li
+      data-slot="prompt-input-queue-item"
+      onClick={(event) => {
+        const row = event.currentTarget;
+        if (!row.contains(document.activeElement)) {
+          return;
+        }
+        const near = [row.nextElementSibling, row.previousElementSibling]
+          .map((other) => other?.querySelector<HTMLElement>("button"))
+          .find((button) => button !== null && button !== undefined);
+        // Once the press has drawn: only if it took the row off and the focus fell to the page.
+        requestAnimationFrame(() => {
+          if (row.isConnected || document.activeElement !== document.body) {
+            return;
+          }
+          if (near?.isConnected === true) {
+            near.focus();
+          } else {
+            controller?.focus({ at: "end" });
+          }
+        });
+      }}
+      {...stylex.props(styles.queueItem, style)}
+    >
+      <span {...stylex.props(styles.queueText)}>{children}</span>
+      {!isBlank(actions) && (
+        <span {...stylex.props(styles.queueActions)}>{actions}</span>
+      )}
+    </li>
+  );
+};
+
+const inOrder = (part: ReactNode, at: number) => (
+  <Fragment key={at}>{part}</Fragment>
+);
+
+/** Children as one flat list, through lists and Fragments at any depth. */
+const partsOf = (children: ReactNode): ReactNode[] =>
+  listOf(children).flatMap((child) =>
+    isValidElement<{ children?: ReactNode }>(child) && child.type === Fragment
+      ? partsOf(child.props.children)
+      : [child]
+  );
+
+/**
+ * The parts that stand outside the card, in the order they are written: the banners and the
+ * queue above it, the notes under it.
+ */
+const outsideOf = (children: ReactNode) => {
+  const parts = partsOf(children);
+  return {
+    above: parts
+      .filter(
+        (part) =>
+          isPart(part, PromptInputBanner) || isPart(part, PromptInputQueue)
+      )
+      .map(inOrder),
+    under: parts.filter((part) => isPart(part, PromptInputNote)).map(inOrder),
+  };
+};
+
 /** The form: holds the text, its tokens and its files, and sends them. */
 export const PromptInput = ({
   children,
   onSubmit,
   status = "ready",
+  accent = "default",
+  variant = "default",
+  loading = false,
   value,
   defaultValue,
   onValueChange,
@@ -1293,9 +2537,26 @@ export const PromptInput = ({
   );
   const current = value ?? seen;
   const [cut, setCut] = useState(false);
-  const [over, setOver] = useState(false);
   const [editorShown, setEditorShown] = useState(true);
+  const [footer, setFooter] = useState<HTMLElement | null>(null);
+  const [dictating, setDictating] = useState(false);
+  const [interim, setInterim] = useState("");
+  const [going, setGoing] = useState(false);
+  // How many attached files are on their way or refused: none of them is sent.
+  const [holds, changeHolds] = useReducer(countBy, 0);
+  // What Escape does while a dictation listens: the speech button's cancel.
+  const cancelDictation = useRef<(() => void) | null>(null);
+  const setCancelDictation = (cancel: (() => void) | null) => {
+    cancelDictation.current = cancel;
+  };
+  // In development: the outside parts written in the card, and those the form found and drew.
+  const [written, changeWritten] = useReducer(countBy, 0);
+  const [drawn, changeDrawn] = useReducer(countBy, 0);
+  const warned = useRef(false);
+  const failure = useFailure(status);
+  const noteId = useId();
   const form = useRef<HTMLFormElement | null>(null);
+  const card = useRef<HTMLFieldSetElement | null>(null);
   const picker = useRef<HTMLInputElement | null>(null);
   const attachments = useAttachments(accept, picker);
   const { files } = attachments.value;
@@ -1307,27 +2568,22 @@ export const PromptInput = ({
   const failureSaid = useRef(false);
   const busy = status === "submitted" || status === "streaming";
   const { length } = toLabel(current);
-  const empty = emptyOf(current) && files.length === 0;
-  const takeFiles = disabled ? undefined : attachments.value.add;
-
-  useEffect(
-    () =>
-      globalDrop && takeFiles !== undefined
-        ? listenForDrops(takeFiles, form)
-        : undefined,
-    [globalDrop, takeFiles]
-  );
+  const empty = emptyOf(current);
+  const still = disabled || loading;
+  const takeFiles = still ? undefined : attachments.value.add;
+  const tall = useRowTall(compact && !loading, card, dictating);
+  const success = useSuccessCount(status, words.succeeded);
+  const drags = useFileDrags(form, takeFiles, globalDrop);
   const focusWatch = useTakeoverFocus(editorShown, form, controller);
 
-  const failed = status === "error";
+  const failedStatus = status === "error";
   useEffect(() => {
-    if (failed) {
+    if (failedStatus) {
       sayOnce(failureSaid, words.failed);
     } else {
       failureSaid.current = false;
     }
-  }, [failed, words.failed]);
-
+  }, [failedStatus, words.failed]);
   // A change past the limit is put in again as what fits of it, where it went: the editor's caret
   // has already moved past it, and a paste over a selection replaces the selection.
   const refit = (next: TokenInputValue) => {
@@ -1372,35 +2628,39 @@ export const PromptInput = ({
       setSeen(next);
       // What fits of a cut change keeps saying it was cut.
       setCut(refitting.current);
+      failure.typed();
     });
+    keepCaretInView(card.current);
     onValueChange?.(next, details);
   };
 
   const send = async (message: TokenInputValue, sending: PromptInputFile[]) => {
     failureSaid.current = false;
+    failure.fresh();
     const sent = onSubmit?.({
       text: toText(message, codec),
       files: sending.map((attached) => attached.file),
       tokens: tokensOf(message),
       value: message,
     });
-    // Cleared at once, as AI Elements' is: a send can settle only when the whole answer has come.
-    if (value === undefined) {
-      controller.clear();
-    }
-    attachments.sending(sending);
     if (isThenable(sent)) {
       try {
         await sent;
       } catch (error) {
-        // What was sent comes back to be sent again, unless a new message has been started.
-        if (value === undefined && emptyOf(controller.getValue())) {
-          controller.setValue(message);
-        }
-        attachments.failed(sending);
+        // Nothing was lost: the words and the files are where they were, to send again.
+        failure.rejected();
         sayOnce(failureSaid, words.failed);
         throw error;
       }
+    }
+    // Sent: only what was sent clears, so words typed while it went stay.
+    if (
+      value === undefined &&
+      toText(controller.getValue(), codec) === toText(message, codec)
+    ) {
+      controller.clear();
+      // Clearing is no typing: a failure the status says next still shows.
+      failure.fresh();
     }
     attachments.sent(sending);
   };
@@ -1411,11 +2671,15 @@ export const PromptInput = ({
       return;
     }
     const message = controller.getValue();
-    if (disabled || busy || (emptyOf(message) && files.length === 0)) {
+    // Nothing goes while a dictation's bar stands where Submit was, nor while a file is on its
+    // way or refused: Submit is hidden or off then, and Enter does no more than it would.
+    if (still || busy || dictating || holds > 0 || emptyOf(message)) {
       return;
     }
     await oneAtATime(running, async () => {
-      await send(message, files);
+      await during(setGoing, async () => {
+        await send(message, files);
+      });
     });
   };
 
@@ -1427,6 +2691,13 @@ export const PromptInput = ({
     // and no listener of the page's hears it and closes more.
     if (event.key === "Escape" && event.defaultPrevented) {
       event.stopPropagation();
+      return;
+    }
+    // Escape cancels a dictation, from the text as from its bar.
+    if (event.key === "Escape" && cancelDictation.current !== null) {
+      event.preventDefault();
+      event.stopPropagation();
+      cancelDictation.current();
       return;
     }
     // Cmd or Ctrl and / opens the file picker.
@@ -1453,6 +2724,16 @@ export const PromptInput = ({
     controller.focus({ at: "end" });
   };
 
+  const outside = outsideOf(children);
+  useEffect(() => {
+    if (isDevelopment && written > drawn && !warned.current) {
+      warned.current = true;
+      console.error(
+        "PromptInput: a PromptInputBanner, PromptInputQueue or PromptInputNote inside another component is not drawn. Write it straight in the PromptInput (a Fragment or a list is fine)."
+      );
+    }
+  }, [written, drawn]);
+
   return (
     // oxlint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- the form hears what happens in its controls: focus, Escape, the file keys, files pasted and dropped
     <form
@@ -1465,7 +2746,7 @@ export const PromptInput = ({
         void sendQuietly(submit);
       }}
       onKeyDown={onKeyDown}
-      {...fileHandlers(takeFiles, setOver)}
+      {...fileHandlers(takeFiles, drags.setOver)}
       onFocus={focusWatch.handleFocus}
       onBlur={focusWatch.handleBlur}
       {...stylex.props(styles.root, style)}
@@ -1478,6 +2759,22 @@ export const PromptInput = ({
           disabled,
           compact,
           empty,
+          failed: failure.shown,
+          loading,
+          tall,
+          sending: going,
+          held: holds > 0,
+          changeHolds,
+          interim,
+          setInterim,
+          changeWritten,
+          changeDrawn,
+          noteId,
+          footer,
+          setFooter,
+          dictating,
+          setDictating,
+          setCancelDictation,
           length,
           maxLength,
           submit,
@@ -1485,51 +2782,79 @@ export const PromptInput = ({
           setEditorShown,
         }}
       >
-        <AttachmentsContext
-          // oxlint-disable-next-line react/jsx-no-constructed-context-values -- compiled
-          value={{
-            ...attachments.value,
-            // The last file taken off: focus goes on to the text, as the list goes with it.
-            remove: (id) => {
-              if (files.length === 1 && focusHere(form.current)) {
-                controller.focus({ at: "end" });
-              }
-              attachments.value.remove(id);
-            },
-          }}
-        >
-          <TokenInput
-            controller={controller}
-            value={value}
-            defaultValue={defaultValue}
-            onValueChange={change}
-            codec={codec}
-            disabled={disabled}
-            getTokenDescription={describeToken}
-            // Enter sends; never while an input method composes or a menu is open (the editor's).
-            onSubmit={() => {
-              void sendQuietly(submit);
-            }}
-            renderToken={() => <Chip />}
-          >
-            <fieldset
-              disabled={disabled}
-              onPointerDown={onPointerDown}
-              {...stylex.props(
-                styles.card,
-                compact && styles.compact,
-                over && styles.over
-              )}
+        <div {...stylex.props(styles.stack)}>
+          <OutsideContext value>{outside.above}</OutsideContext>
+          <div {...stylex.props(styles.room)}>
+            <Light
+              on={busy}
+              still={loading}
+              accent={accent}
+              success={success}
+            />
+            <AttachmentsContext
+              // oxlint-disable-next-line react/jsx-no-constructed-context-values -- compiled
+              value={{
+                ...attachments.value,
+                // The last file taken off: focus goes on to the text, as the list goes with it.
+                remove: (id) => {
+                  if (files.length === 1 && focusHere(form.current)) {
+                    controller.focus({ at: "end" });
+                  }
+                  attachments.value.remove(id);
+                },
+              }}
             >
-              {children}
-              {over && (
-                <span aria-hidden="true" {...stylex.props(styles.drop)}>
-                  {words.drop}
-                </span>
-              )}
-            </fieldset>
-          </TokenInput>
-        </AttachmentsContext>
+              <TokenInput
+                controller={controller}
+                value={value}
+                defaultValue={defaultValue}
+                onValueChange={change}
+                codec={codec}
+                disabled={disabled}
+                getTokenDescription={describeToken}
+                // Enter sends; never while an input method composes or a menu is open (the editor's).
+                onSubmit={() => {
+                  void sendQuietly(submit);
+                }}
+                renderToken={() => <Chip />}
+              >
+                <fieldset
+                  ref={card}
+                  disabled={disabled}
+                  // Still while the page loads: nothing in it is focused or read out.
+                  inert={loading}
+                  aria-hidden={loading || undefined}
+                  onPointerDown={onPointerDown}
+                  {...stylex.props(
+                    // The rings of the controls in the card are drawn inside them.
+                    ringInsetMarker,
+                    cardLook({
+                      glass: variant === "glass",
+                      compact,
+                      tall,
+                      dragging: drags.dragging,
+                      over: drags.over,
+                    })
+                  )}
+                >
+                  {children}
+                  {drags.dragging && (
+                    <span aria-hidden="true" {...stylex.props(styles.drop)}>
+                      {words.drop}
+                    </span>
+                  )}
+                </fieldset>
+              </TokenInput>
+            </AttachmentsContext>
+          </div>
+        </div>
+        <div
+          id={noteId}
+          data-slot="prompt-input-under"
+          {...stylex.props(styles.under)}
+        >
+          <OutsideContext value>{outside.under}</OutsideContext>
+        </div>
       </PromptInputContext>
       {takeFiles !== undefined && (
         <input
@@ -1560,30 +2885,55 @@ export const PromptInput = ({
   );
 };
 
-/** One attached file: an Attachment whose remove action takes it off the message. */
+/**
+ * One attached file: an Attachment whose remove action takes it off the message. While the
+ * product says it is on its way or refused (`state`), the form sends nothing; a refusal is said
+ * once, with its reason.
+ */
 export const PromptInputAttachment = ({
   data,
+  state = "done",
+  description,
   children,
   style,
 }: PromptInputAttachmentProps) => {
   const words = useI18n().attachment;
   const locale = useLocale();
   const remove = use(AttachmentsContext)?.remove;
+  const changeHolds = usePromptInput()?.changeHolds;
+  const held =
+    state === "uploading" || state === "processing" || state === "error";
+  const refused = state === "error";
+  useEffect(() => {
+    if (!held || changeHolds === undefined) {
+      return nothing;
+    }
+    changeHolds(1);
+    return () => {
+      changeHolds(-1);
+    };
+  }, [held, changeHolds]);
+  const { name } = data;
+  useEffect(() => {
+    if (refused) {
+      announce(description === undefined ? name : `${name}: ${description}`);
+    }
+  }, [refused, name, description]);
   return (
-    <Attachment style={style}>
+    <Attachment state={state} style={style}>
       {children ?? (
         <>
           <AttachmentMedia src={data.preview} type={data.type} />
           <AttachmentContent>
-            <AttachmentTitle>{data.name}</AttachmentTitle>
+            <AttachmentTitle>{name}</AttachmentTitle>
             <AttachmentDescription>
-              {formatFileSize(data.size, locale)}
+              {description ?? formatFileSize(data.size, locale)}
             </AttachmentDescription>
           </AttachmentContent>
           {remove !== undefined && (
             <AttachmentActions>
               <AttachmentAction
-                aria-label={words.remove(data.name)}
+                aria-label={words.remove(name)}
                 onClick={() => {
                   remove(data.id);
                 }}
@@ -1612,7 +2962,10 @@ export const PromptInputAttachments = ({
   return (
     // The files take the header's whole line: their row is a size container, which takes no width
     // from its files and would shrink to nothing as an item of the header's row.
-    <div {...stylex.props(styles.attachments)}>
+    <div
+      data-slot="prompt-input-attachments"
+      {...stylex.props(styles.attachments)}
+    >
       <AttachmentGroup aria-label={label ?? words.attachments} style={style}>
         {files.map((file) => (
           <Fragment key={file.id}>
@@ -1646,11 +2999,17 @@ export const PromptInputHeader = ({
 
 /** Where the text stands, or what the product puts in its place for a while. */
 export const PromptInputBody = ({ children, style }: PromptInputBodyProps) => {
-  const compact = usePromptInput()?.compact === true;
+  const form = usePromptInput();
+  const compact = form?.compact === true;
   return (
     <div
       data-slot="prompt-input-body"
-      {...stylex.props(styles.body, compact && styles.compactBody, style)}
+      {...stylex.props(
+        styles.body,
+        compact && styles.compactBody,
+        form?.tall === true && styles.compactBodyTall,
+        style
+      )}
     >
       {children}
     </div>
@@ -1671,6 +3030,7 @@ export const PromptInputTextarea = ({
   const setShown = form?.setEditorShown;
   const controller = form?.controller;
   const compact = form?.compact === true;
+  const interim = form?.interim ?? "";
   // Here, the text stands in the body; gone, a takeover does.
   useEffect(() => {
     setShown?.(true);
@@ -1683,10 +3043,12 @@ export const PromptInputTextarea = ({
       controller?.focus({ at: "end" });
     }
   }, [autoFocus, controller]);
-  return (
+  const editor = (
     <TokenInputEditor
       aria-label={ariaLabel}
       aria-labelledby={labelledBy}
+      // The band under the card says why the words are still here.
+      aria-describedby={form?.failed === true ? form.noteId : undefined}
       placeholder={placeholder}
       onKeyDown={onKeyDown}
       ref={(element: HTMLDivElement | null) => {
@@ -1696,16 +3058,40 @@ export const PromptInputTextarea = ({
         <div
           {...props}
           data-slot="prompt-input-textarea"
+          data-empty={state.empty ? "" : undefined}
+          data-interim={interim === "" ? undefined : interim}
           {...stylex.props(
             styles.editor,
             compact && styles.compactEditor,
-            state.empty && styles.placeholder,
+            state.empty && interim === "" && styles.placeholder,
+            state.empty && compact && styles.compactPlaceholder,
+            form?.dictating === true && styles.editorListening,
+            interim !== "" && styles.interim,
             scrollbarHidden,
             style
           )}
         />
       )}
     />
+  );
+  if (form?.loading !== true) {
+    return editor;
+  }
+  // While the page loads the text keeps its box, not drawn, a quiet line in its words' place.
+  return (
+    <div {...stylex.props(styles.pending)}>
+      <div {...stylex.props(styles.kept, styles.body)}>{editor}</div>
+      <span
+        {...stylex.props(
+          styles.pendingLine,
+          compact && styles.compactPendingLine
+        )}
+      >
+        <span {...stylex.props(styles.pendingWidth)}>
+          <Skeleton size="sm" />
+        </span>
+      </span>
+    </div>
   );
 };
 
@@ -1714,13 +3100,23 @@ export const PromptInputFooter = ({
   children,
   style,
 }: PromptInputFooterProps) => {
-  const compact = usePromptInput()?.compact === true;
+  const form = usePromptInput();
+  const compact = form?.compact === true;
   return (
+    // A dictation's bar is drawn in here by the speech button, in place of what the footer holds:
+    // that stays in the page, away, so the button keeps its state and comes back as it was.
     <div
+      ref={form?.setFooter}
       data-slot="prompt-input-footer"
       {...stylex.props(styles.footer, compact && styles.compactFooter, style)}
     >
-      {children}
+      <div
+        {...stylex.props(
+          form?.dictating === true ? styles.away : styles.through
+        )}
+      >
+        {children}
+      </div>
     </div>
   );
 };
@@ -1742,8 +3138,9 @@ export const PromptInputTools = ({
 };
 
 /**
- * A bare (ghost) Button, small, named, pressed on or off: an element, not a part of its own, so a
- * TooltipTrigger around it gives its props to the Button itself.
+ * A bare (ghost) Button, small, named, pressed on or off (filled, for the one that ends a
+ * dictation): an element, not a part of its own, so a TooltipTrigger around it gives its props to
+ * the Button itself.
  */
 const toolButton = ({
   children,
@@ -1752,13 +3149,18 @@ const toolButton = ({
   onClick,
   off,
   slot,
+  variant = "ghost",
+  ref,
   style,
 }: Omit<PromptInputButtonProps, "tooltip" | "disabled"> & {
   off: boolean;
   slot: string;
+  variant?: "ghost" | "default";
+  ref?: (element: HTMLButtonElement | null) => void;
 }) => {
   const element = (
     <button
+      ref={ref}
       type="button"
       data-slot={slot}
       aria-pressed={pressed}
@@ -1778,7 +3180,7 @@ const toolButton = ({
   return (
     <Button
       asChild
-      variant="ghost"
+      variant={variant}
       {...sized}
       disabled={off}
       onClick={onClick}
@@ -1789,14 +3191,22 @@ const toolButton = ({
   );
 };
 
+/** While the page loads a tool keeps its room but is not drawn; else it is itself. */
+const keptWhile = (loading: boolean, tool: ReactNode): ReactNode =>
+  loading ? <span {...stylex.props(styles.kept)}>{tool}</span> : tool;
+
 /** A tool in the footer: a small bare button, an icon with words or alone, a tooltip if it helps. */
 export const PromptInputButton = ({
   tooltip,
   disabled,
   ...props
-}: PromptInputButtonProps) => {
-  const off = (usePromptInput()?.disabled ?? false) || disabled === true;
+}: PromptInputButtonProps): ReactNode => {
+  const form = usePromptInput();
+  const off = (form?.disabled ?? false) || disabled === true;
   const button = toolButton({ ...props, off, slot: "prompt-input-button" });
+  if (form?.loading === true) {
+    return keptWhile(true, button);
+  }
   if (tooltip === undefined || tooltip === null) {
     return button;
   }
@@ -1808,8 +3218,19 @@ export const PromptInputButton = ({
   );
 };
 
-/** The count near the limit: hidden from a screen reader, which hears the stage instead. */
-const Count = ({ length, max }: { length: number; max: number }) => {
+/**
+ * The count near the limit: hidden from a screen reader, which hears the stage instead. Over the
+ * footer's row it stands above Submit where the footer is narrow (`above`).
+ */
+const Count = ({
+  length,
+  max,
+  above,
+}: {
+  length: number;
+  max: number;
+  above: boolean;
+}) => {
   const words = useI18n().promptInput;
   const stage = stageOf(length, max);
   if (stage === "under") {
@@ -1820,14 +3241,18 @@ const Count = ({ length, max }: { length: number; max: number }) => {
       aria-hidden="true"
       data-slot="prompt-input-count"
       data-limit={stage}
-      {...stylex.props(styles.count, stage === "at" && styles.countAt)}
+      {...stylex.props(
+        styles.count,
+        above && styles.countAbove,
+        stage === "at" && styles.countAt
+      )}
     >
       {words.count(Math.min(length, max), max)}
     </span>
   );
 };
 
-/** The mark Submit wears: an arrow to send, a spinner once sent, a square to stop, a mark on failure. */
+/** The mark Submit wears: an arrow to send, a spinner once sent, a square to stop. */
 const submitIcon = (status: Status, stoppable: boolean): ReactNode => {
   if (status === "streaming" || (status === "submitted" && stoppable)) {
     return <Icon icon={SquareIcon} />;
@@ -1839,7 +3264,8 @@ const submitIcon = (status: Status, stoppable: boolean): ReactNode => {
       </span>
     );
   }
-  return <Icon icon={status === "error" ? CircleAlertIcon : ArrowUpIcon} />;
+  // After a failure it is the arrow still: the band under the card says what happened.
+  return <Icon icon={ArrowUpIcon} />;
 };
 
 /** Where Submit is: its status, whether the answer comes, whether it stops it, whether it is off. */
@@ -1850,12 +3276,15 @@ const submitState = (
 ) => {
   const status = given ?? form?.status ?? "ready";
   const working = status === "submitted" || status === "streaming";
-  const nothing = form?.empty ?? true;
+  const none = (form?.empty ?? true) || (form?.held ?? false);
   return {
     status,
     working,
     stoppable: working && canStop,
-    off: (form?.disabled ?? false) || (working ? !canStop : nothing),
+    off:
+      (form?.disabled ?? false) ||
+      (form?.loading ?? false) ||
+      (working ? !canStop : none),
   };
 };
 
@@ -1888,9 +3317,12 @@ export const PromptInputSubmit = ({
     await form?.submit();
   };
   return (
-    <span {...stylex.props(styles.end, compact && styles.compactEnd, style)}>
+    <span
+      data-slot="prompt-input-end"
+      {...stylex.props(styles.end, compact && styles.compactEnd, style)}
+    >
       {form?.maxLength !== undefined && (
-        <Count length={form.length} max={form.maxLength} />
+        <Count length={form.length} max={form.maxLength} above={!compact} />
       )}
       <Button
         asChild
@@ -1899,7 +3331,10 @@ export const PromptInputSubmit = ({
         aria-label={ariaLabel ?? (stoppable ? words.stop : words.submit)}
         disabled={off}
         focusableWhenDisabled={working}
-        aria-busy={status === "submitted" ? true : undefined}
+        // Busy while the message goes, whether a press or Enter sent it.
+        aria-busy={
+          status === "submitted" || form?.sending === true ? true : undefined
+        }
         // The prompt input holds where its message is and draws it itself: the Button follows none.
         status="idle"
         onClick={press}
@@ -1996,41 +3431,217 @@ export const PromptInputActionAddAttachments = ({
   );
 };
 
-/** A quiet line in the card. */
-export const PromptInputNote = ({ children, style }: PromptInputNoteProps) => (
-  <p data-slot="prompt-input-note" {...stylex.props(styles.note, style)}>
-    {children}
-  </p>
-);
+/**
+ * How tall the voice's field stands for a level from 0 to 1: one row of its grid at rest, three for
+ * ordinary speech, five at its loudest. Two rows a step, so it grows evenly from its middle.
+ */
+const fieldHeight = (level: number) =>
+  `${3 + 6 * Math.round(2 * Math.min(Math.max(level, 0), 1))}px`;
 
-/** Dictation's button: pressed while it listens. The product listens, and writes what it hears. */
+/** The time a dictation has run, as a clock reads it ("0:12"). */
+const clock = (seconds: number) =>
+  `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+
+/**
+ * A dictation's bar, in the footer's place while it listens: Cancel, the time it has run, the
+ * voice's level as a field of pixels, the microphone (off for a moment, and on again), and Done
+ * where Submit stood. A pointer's press leaves the focus in the text; the keyboard's goes to Done.
+ * Escape cancels it, from the bar as from the text (the form hears it).
+ */
+const Dictation = ({
+  compact,
+  level,
+  muted,
+  autoFocus,
+  onMutedChange,
+  onCancel,
+  onDone,
+}: {
+  compact: boolean;
+  level: number;
+  muted: boolean;
+  autoFocus: boolean;
+  onMutedChange: (muted: boolean) => void;
+  onCancel: () => void;
+  onDone: () => void;
+}) => {
+  const words = useI18n().promptInput.speechButton;
+  const [seconds, setSeconds] = useState(0);
+  const [done, setDone] = useState<HTMLButtonElement | null>(null);
+  // The time runs while it listens, and waits while the microphone is off.
+  useEffect(() => {
+    if (muted) {
+      return nothing;
+    }
+    const timer = setInterval(() => {
+      setSeconds((now) => now + 1);
+    }, 1000);
+    return () => {
+      clearInterval(timer);
+    };
+  }, [muted]);
+  useEffect(() => {
+    if (autoFocus) {
+      done?.focus();
+    }
+  }, [autoFocus, done]);
+  return (
+    <div
+      role="group"
+      aria-label={words.listening}
+      data-slot="prompt-input-dictation"
+      {...stylex.props(styles.dictation, compact && styles.compactDictation)}
+    >
+      {toolButton({
+        "aria-label": words.cancel,
+        off: false,
+        slot: "prompt-input-dictation-cancel",
+        onClick: onCancel,
+        children: <Icon icon={XIcon} />,
+      })}
+      <span role="timer" {...stylex.props(styles.time)}>
+        {clock(seconds)}
+      </span>
+      <span aria-hidden="true" {...stylex.props(styles.level)}>
+        <span
+          {...stylex.props(
+            styles.voice,
+            muted && styles.voiceMuted,
+            styles.loud(fieldHeight(muted ? 0 : level))
+          )}
+        />
+      </span>
+      {toolButton({
+        "aria-label": words.mute,
+        pressed: muted,
+        off: false,
+        slot: "prompt-input-dictation-mute",
+        onClick: () => {
+          onMutedChange(!muted);
+        },
+        children: <Icon icon={MicIcon} />,
+      })}
+      {toolButton({
+        "aria-label": words.done,
+        off: false,
+        slot: "prompt-input-dictation-done",
+        variant: "default",
+        ref: setDone,
+        onClick: onDone,
+        children: <Icon icon={CheckIcon} />,
+      })}
+    </div>
+  );
+};
+
+/**
+ * Dictation's button. The product listens, and writes what it hears; while it does, the footer
+ * gives way to a bar: Cancel, the time, the voice's level, the microphone, and Done. Outside a
+ * footer it is a toggle, pressed while it listens.
+ */
 export const PromptInputSpeechButton = ({
   listening,
   onListeningChange,
+  onCancel,
+  muted,
+  onMutedChange,
+  level = 0,
+  interim = "",
   "aria-label": ariaLabel,
   disabled,
   style,
 }: PromptInputSpeechButtonProps) => {
   const words = useI18n().promptInput.speechButton;
-  const off = (usePromptInput()?.disabled ?? false) || disabled === true;
+  const form = usePromptInput();
+  const off = (form?.disabled ?? false) || disabled === true;
   const [own, setOwn] = useState(false);
   const on = listening ?? own;
-  // A toggle: its name stays, pressed says it listens, and that it starts listening is said.
-  return toolButton({
+  const [ownMuted, setOwnMuted] = useState(false);
+  // The keyboard started it: focus goes to the bar, and back here as the bar goes.
+  const [keyed, setKeyed] = useState(false);
+  const [mic, setMic] = useState<HTMLButtonElement | null>(null);
+  const footer = form?.footer ?? null;
+  const setDictating = form?.setDictating;
+  const dictating = form?.dictating === true;
+  const setInterim = form?.setInterim;
+  const setCancel = form?.setCancelDictation;
+  useEffect(() => {
+    setDictating?.(on);
+    return () => {
+      setDictating?.(false);
+    };
+  }, [on, setDictating]);
+  useEffect(() => {
+    setInterim?.(on ? interim : "");
+    return () => {
+      setInterim?.("");
+    };
+  }, [on, interim, setInterim]);
+  useEffect(() => {
+    // Only when the bar took the focus with it: never from where the person has gone since.
+    if (!dictating && keyed && document.activeElement === document.body) {
+      mic?.focus();
+    }
+  }, [dictating, keyed, mic]);
+  const listen = (next: boolean) => {
+    if (next) {
+      announce(words.listening);
+      setKeyed(document.activeElement === mic);
+    }
+    setOwn(next);
+    setOwnMuted(false);
+    onListeningChange?.(next);
+  };
+  const cancel = () => {
+    onCancel?.();
+    listen(false);
+  };
+  // The newest cancel, while it listens in a form: what the form's Escape runs.
+  useEffect(() => {
+    if (!on || setCancel === undefined) {
+      return nothing;
+    }
+    setCancel(cancel);
+    return () => {
+      setCancel(null);
+    };
+  });
+  const button = toolButton({
     "aria-label": ariaLabel ?? words.label,
     pressed: on,
     off,
     slot: "prompt-input-speech-button",
+    ref: setMic,
     style,
     onClick: () => {
-      if (!on) {
-        announce(words.listening);
-      }
-      setOwn(!on);
-      onListeningChange?.(!on);
+      listen(!on);
     },
     children: <Icon icon={on ? AudioWaveformIcon : MicIcon} />,
   });
+  return (
+    <>
+      {keptWhile(form?.loading === true, button)}
+      {on &&
+        footer !== null &&
+        createPortal(
+          <Dictation
+            compact={form?.compact === true}
+            level={level}
+            muted={muted ?? ownMuted}
+            autoFocus={keyed}
+            onMutedChange={(next) => {
+              setOwnMuted(next);
+              onMutedChange?.(next);
+            }}
+            onCancel={cancel}
+            onDone={() => {
+              listen(false);
+            }}
+          />,
+          footer
+        )}
+    </>
+  );
 };
 
 // ---- Mentions ------------------------------------------------------------------------------------
@@ -2079,37 +3690,107 @@ const itemOf = (entry: {
     ? entry
     : { value: String(entry.value), label: entry.label };
 
-/** One trigger as UI SDK's Trigger Menu takes it: the items as its data, the token a pick inserts. */
-const definitionOf = (trigger: PromptInputMentionTrigger) => {
+/** A kind as a row of the menu: picked, the menu stays and lists the things of that kind. */
+type KindRow = PromptInputMentionData & { after: "continue"; kind: true };
+
+const isKind = (entry: unknown): entry is KindRow =>
+  isMentionData(entry) && "kind" in entry && entry.kind === true;
+
+/** Whether typing finds the item: in its name, its quiet line or its other words. */
+const found = (item: PromptInputMentionData, query: string) =>
+  [item.label, item.description ?? "", ...(item.keywords ?? [])].some((words) =>
+    words.toLowerCase().includes(query.toLowerCase())
+  );
+
+/**
+ * The items of a trigger with kinds, for what was typed: the kinds while nothing is typed at the
+ * first level; inside a kind, its things, without their heading; else every kind's, as given.
+ */
+const kindItems = async (
+  trigger: PromptInputMentionTrigger,
+  kinds: readonly PromptInputMentionData[],
+  kind: PromptInputMentionData | null,
+  query: string,
+  signal: AbortSignal
+): Promise<TriggerMenuData> => {
+  if (kind === null && query === "") {
+    return kinds.map((each): KindRow => ({
+      ...each,
+      after: "continue",
+      kind: true,
+    }));
+  }
   const { items } = trigger;
+  const all =
+    typeof items === "function"
+      ? await items(query, { signal, kind: kind?.value })
+      : items.filter((item) => found(item, query));
+  return toMenuData(
+    kind === null
+      ? all
+      : all
+          .filter((item) => item.group === kind.label)
+          .map((item) => ({ ...item, group: undefined }))
+  );
+};
+
+/** The trigger's items as the menu takes them: its data, a loader, or the levels of its kinds. */
+const itemsOf = (
+  trigger: PromptInputMentionTrigger,
+  kindNow: () => PromptInputMentionData | null
+) => {
+  const { items, kinds } = trigger;
+  if (kinds !== undefined) {
+    return async (query: string, context: { signal: AbortSignal }) =>
+      await kindItems(trigger, kinds, kindNow(), query, context.signal);
+  }
+  return typeof items === "function"
+    ? async (query: string, context: { signal: AbortSignal }) =>
+        toMenuData(await items(query, context))
+    : toMenuData(items);
+};
+
+/** The kind the person went into in an open menu, kept beside the menu: none at its first level. */
+const createLevel = () => {
+  let kind: PromptInputMentionData | null = null;
   return {
-    char: trigger.char,
-    boundary: trigger.boundary,
-    type: trigger.type,
-    items:
-      typeof items === "function"
-        ? async (query: string, context: { signal: AbortSignal }) =>
-            toMenuData(await items(query, context))
-        : toMenuData(items),
-    insert: (entry: { value: unknown; label: string }) => {
-      const item = itemOf(entry);
-      const made: MentionToken = trigger.toToken?.(item) ?? {
-        value: item.value,
-        label: item.label,
-      };
-      return {
-        type: made.type ?? trigger.type,
-        value: made.value,
-        label: made.label,
-        // What it says after its label, in the caller's words; never written into the text.
-        data: {
-          ...made.data,
-          description: trigger.description ?? trigger.type,
-        },
-      };
+    read: () => kind,
+    enter: (next: PromptInputMentionData | null) => {
+      kind = next;
     },
   };
 };
+
+/**
+ * One trigger as UI SDK's Trigger Menu takes it: the items as its data, the token a pick inserts.
+ * `kindNow` reads the kind the person went into, as the items are asked for.
+ */
+const definitionOf = (
+  trigger: PromptInputMentionTrigger,
+  kindNow: () => PromptInputMentionData | null
+) => ({
+  char: trigger.char,
+  boundary: trigger.boundary,
+  type: trigger.type,
+  items: itemsOf(trigger, kindNow),
+  insert: (entry: { value: unknown; label: string }) => {
+    const item = itemOf(entry);
+    const made: MentionToken = trigger.toToken?.(item) ?? {
+      value: item.value,
+      label: item.label,
+    };
+    return {
+      type: made.type ?? trigger.type,
+      value: made.value,
+      label: made.label,
+      // What it says after its label, in the caller's words; never written into the text.
+      data: {
+        ...made.data,
+        description: trigger.description ?? trigger.type,
+      },
+    };
+  },
+});
 
 /** How an item shows in the menu, when the caller draws it. */
 const RenderItemContext = createContext<
@@ -2133,6 +3814,7 @@ export const PromptInputMentionItem = ({
     className={(state: TriggerMenuItemState) =>
       className(
         menuStyles.item,
+        styles.mentionItem,
         state.highlighted && menuStyles.highlighted,
         state.disabled && menuStyles.disabled,
         style
@@ -2145,7 +3827,7 @@ export const PromptInputMentionItem = ({
       </TriggerMenuItemIcon>
     )}
     {children ?? (
-      <span {...stylex.props(menuStyles.text)}>
+      <span {...stylex.props(menuStyles.text, styles.mentionText)}>
         {label}
         {description !== undefined && (
           <span {...stylex.props(styles.mentionDescription)}>
@@ -2160,6 +3842,29 @@ export const PromptInputMentionItem = ({
 /** One row of the menu as data gives it: the caller's drawing, else a mark, its name and a quiet line. */
 const DataItem = ({ item }: { item: PromptInputMentionData }) => {
   const renderItem = use(RenderItemContext);
+  if (isKind(item)) {
+    // A kind goes one level in: a chevron at its end says so.
+    return (
+      <PromptInputMentionItem
+        value={item.value}
+        label={item.label}
+        icon={item.icon}
+        disabled={item.disabled}
+      >
+        <span {...stylex.props(menuStyles.text, styles.mentionText)}>
+          {item.label}
+          {item.description !== undefined && (
+            <span {...stylex.props(styles.mentionDescription)}>
+              {item.description}
+            </span>
+          )}
+        </span>
+        <span aria-hidden="true" {...stylex.props(styles.mentionInto)}>
+          <Icon icon={ChevronRightIcon} />
+        </span>
+      </PromptInputMentionItem>
+    );
+  }
   return (
     <PromptInputMentionItem
       value={item.value}
@@ -2226,9 +3931,9 @@ export const PromptInputMentionContent = ({
   };
   return (
     <TriggerMenuContent
-      side="top"
+      side="bottom"
       align="start"
-      sideOffset={popup.menuGap}
+      sideOffset={popup.gap}
       collisionPadding={popup.gutter}
       render={(props: Record<string, unknown>) => (
         <div
@@ -2272,9 +3977,13 @@ export const PromptInputMention = ({
 }: PromptInputMentionProps) => {
   const words = useI18n().promptInput;
   const said = { error: words.mentionsError, loading: words.mentionsLoading };
+  // The kind the person went into, read as the menu asks for its items: it asks at once as a
+  // kind is picked, before a render would tell it.
+  // oxlint-disable-next-line react/hook-use-state -- made once, never set
+  const [level] = useState(createLevel);
   return (
     <TriggerMenu
-      triggers={triggers.map(definitionOf)}
+      triggers={triggers.map((trigger) => definitionOf(trigger, level.read))}
       // Silent: the status below says that items load, in the page's language.
       pendingAnnouncement=""
       // One Escape does one thing: it closes the menu, and no listener of the page's on the
@@ -2283,6 +3992,9 @@ export const PromptInputMention = ({
         open: boolean,
         details: { reason: string; event?: Event }
       ) => {
+        if (!open) {
+          level.enter(null);
+        }
         if (!open && details.reason === "escape-key") {
           details.event?.preventDefault();
           details.event?.stopImmediatePropagation();
@@ -2290,10 +4002,20 @@ export const PromptInputMention = ({
       }}
       onSelect={(
         _value: string,
-        details: { trigger: string; item: { value: unknown; label: string } }
-      ): void | Promise<void> =>
-        onSelect?.(itemOf(details.item), details.trigger)
-      }
+        details: {
+          trigger: string;
+          item: { value: unknown; label: string };
+          insert: (content: string) => void;
+        }
+      ): void | Promise<void> => {
+        // A kind is no mention: the character goes, and the menu stays with that kind's things.
+        if (isKind(details.item)) {
+          level.enter(details.item);
+          details.insert("");
+          return undefined;
+        }
+        return onSelect?.(itemOf(details.item), details.trigger);
+      }}
     >
       <TriggerMenuStatus {...stylex.props(visuallyHidden)}>
         {(state: TriggerMenuStatusState) =>

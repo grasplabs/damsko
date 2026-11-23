@@ -1,5 +1,5 @@
 // Attachment: a file or picture that goes with a message, in
-// StyleX on our Button: a small card with its picture or a mark for its kind, its name and a line
+// StyleX: a small card with its picture or a mark for its kind, its name and a line
 // about it, and its actions. A prompt input shows them above its text and a message under its
 // words; neither is known here.
 // Adapted from shadcn/ui (MIT), see THIRD_PARTY_NOTICES.md.
@@ -53,8 +53,10 @@ import { useScrollEdges } from "../hooks/use-scroll-edges";
 import { Icon, fileMark } from "../lib/icons";
 import {
   edgeFade,
+  focusRing,
   focusRingInset,
   scrollbarHidden,
+  tapTarget,
   tileEdge,
 } from "../lib/styles";
 import {
@@ -69,8 +71,6 @@ import {
 import { safeMediaSrc } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { iconVars, ringInsetMarker } from "../lib/vars.stylex";
-import { Button } from "./button";
-import type { ButtonSize, ButtonVariant } from "./button";
 
 /** Where the file is on its way: `done` once it is there. */
 export type AttachmentState =
@@ -196,16 +196,6 @@ export interface AttachmentActionProps {
   /** What it does. When that takes the file off, focus goes on to the next file's first action. */
   onClick?: MouseEventHandler<HTMLButtonElement>;
   /**
-   * The button's look.
-   * @default "ghost"
-   */
-  variant?: ButtonVariant;
-  /**
-   * The button's size.
-   * @default "icon-xs"
-   */
-  size?: Extract<ButtonSize, "icon" | "icon-xs" | "icon-sm" | "icon-lg">;
-  /**
    * Out of use.
    * @default false
    */
@@ -233,6 +223,8 @@ export interface AttachmentTriggerProps extends Omit<
 }
 
 const HOVER = media.hover;
+const FORCED = media.forcedColors;
+const COARSE = media.pointerCoarse;
 
 const styles = stylex.create({
   group: {
@@ -252,15 +244,16 @@ const styles = stylex.create({
     containerType: "inline-size",
     fontFamily: font.sans,
   },
-  // With more than one file, a card leaves the room of a fade at each side, so a long name never
-  // puts its card's actions under the fade nor scrolls them out from under it; alone, it takes the
-  // whole row and nothing fades. (The fade's reach is edgeFade's, space-10.)
+  // A card is at most as wide as the row. With more than one file the first leaves the room of a
+  // fade at each side, so at rest a long name never puts its actions under the fade at the row's
+  // end; the cards after it come into view by scrolling, where the row's scroll padding keeps a
+  // focused action clear. (The fade's reach is edgeFade's, space-10.)
   item: {
     display: "flex",
     flexShrink: 0,
     maxWidth: {
-      default: `calc(100% - 2 * ${space["10"]})`,
-      ":only-child": "100%",
+      default: "100%",
+      ":first-child:not(:only-child)": `calc(100% - 2 * ${space["10"]})`,
     },
   },
   card: {
@@ -396,6 +389,12 @@ const styles = stylex.create({
     zIndex: 1,
     display: "flex",
     alignItems: "center",
+    // Two small actions keep a finger's room each: on a touch screen their targets, wider than
+    // the circles, stand side by side and never over one another.
+    gap: {
+      default: space["1"],
+      [COARSE]: `calc(${sizes.tapTarget} - ${sizes.badgeHeight})`,
+    },
     flexShrink: 0,
     opacity: {
       default: 1,
@@ -413,6 +412,36 @@ const styles = stylex.create({
     position: "absolute",
     top: space["2"],
     insetInlineEnd: space["2"],
+  },
+  // An action: a small circle, quiet until a pointer is on it, with a finger's room round it on
+  // a touch screen (tapTarget).
+  action: {
+    position: "relative",
+    display: "inline-grid",
+    placeItems: "center",
+    flexShrink: 0,
+    boxSizing: "border-box",
+    width: sizes.badgeHeight,
+    height: sizes.badgeHeight,
+    margin: 0,
+    padding: 0,
+    // No edge: the fill under a pointer is its bound. Forced colours drop fills, so a real edge
+    // draws it there, as a Button's does.
+    borderWidth: { default: 0, [FORCED]: sizes.hairline },
+    borderStyle: "solid",
+    borderColor: "ButtonText",
+    borderRadius: radius.circle,
+    backgroundColor: {
+      default: "transparent",
+      ":hover": { default: null, [HOVER]: colors.accent },
+      ":active": colors.accentActive,
+    },
+    color: colors.mutedForeground,
+    cursor: { default: "pointer", ":disabled": "not-allowed" },
+    opacity: { default: 1, ":disabled": sizes.opacityDisabled },
+    transitionProperty: "background-color",
+    transitionDuration: duration.hover,
+    transitionTimingFunction: duration.ease,
   },
   trigger: {
     position: "absolute",
@@ -700,53 +729,46 @@ const neighbourOf = (
   return group ? placeNear(group) : null;
 };
 
-/** One of the file's actions: an icon button named for what it does to the file. */
+/** One of the file's actions: a small round icon button named for what it does to the file. */
 export const AttachmentAction = ({
   children,
   "aria-label": label,
   onClick,
-  variant = "ghost",
-  size = "icon-xs",
   disabled = false,
   style,
 }: AttachmentActionProps) => (
-  <Button
-    asChild
-    variant={variant}
-    size={size}
-    disabled={disabled}
+  <button
+    type="button"
+    data-slot="attachment-action"
     aria-label={label}
-    style={style}
-  >
-    <button
-      type="button"
-      data-slot="attachment-action"
-      onClick={(event) => {
-        const button = event.currentTarget;
-        const neighbour =
-          button === document.activeElement ? neighbourOf(button) : null;
-        onClick?.(event);
-        if (neighbour === null) {
-          return;
+    disabled={disabled}
+    onClick={(event) => {
+      const button = event.currentTarget;
+      const neighbour =
+        button === document.activeElement ? neighbourOf(button) : null;
+      onClick?.(event);
+      if (neighbour === null) {
+        return;
+      }
+      // Once the press has drawn, a file taken off has taken its focused button with it: focus
+      // goes on to the neighbour, unless something else has taken it.
+      requestAnimationFrame(() => {
+        const place = neighbour();
+        if (
+          !button.isConnected &&
+          place?.isConnected === true &&
+          (document.activeElement === null ||
+            document.activeElement === document.body)
+        ) {
+          place.focus();
         }
-        // Once the press has drawn, a file taken off has taken its focused button with it: focus
-        // goes on to the neighbour, unless something else has taken it.
-        requestAnimationFrame(() => {
-          const place = neighbour();
-          if (
-            !button.isConnected &&
-            place?.isConnected === true &&
-            (document.activeElement === null ||
-              document.activeElement === document.body)
-          ) {
-            place.focus();
-          }
-        });
-      }}
-    >
-      {children}
-    </button>
-  </Button>
+      });
+    }}
+    {...stylex.props(styles.action, focusRing, style)}
+  >
+    <span aria-hidden="true" {...stylex.props(tapTarget)} />
+    {children}
+  </button>
 );
 
 /** The whole card as one press, behind its actions: it opens the file, a link or a dialog. */

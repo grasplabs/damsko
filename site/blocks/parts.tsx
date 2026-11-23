@@ -105,6 +105,7 @@ export const partStyles = stylex.create({
     color: colors.foreground,
     backgroundColor: colors.codeBg,
     borderRadius: radius.mark,
+    cornerShape: radius.shape,
     boxShadow: "none",
     whiteSpace: "nowrap",
     boxDecorationBreak: "clone",

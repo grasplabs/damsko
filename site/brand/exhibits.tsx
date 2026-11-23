@@ -399,6 +399,7 @@ const s = stylex.create({
     minHeight: { default: "22rem", [media.maxSm]: "12rem" },
     padding: space["6"],
     borderRadius: radius.mark,
+    cornerShape: radius.shape,
     backgroundColor: colors.brandPaper,
     color: colors.brandInk,
     boxShadow: shadow.lg,

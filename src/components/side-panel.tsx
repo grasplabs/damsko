@@ -1103,6 +1103,7 @@ const textStyles = stylex.create({
     insetInlineEnd: space["2"],
     zIndex: 1,
     borderRadius: radius.mark,
+    cornerShape: radius.shape,
     backgroundColor: { default: colors.card, [FORCED]: "Canvas" },
   },
 });

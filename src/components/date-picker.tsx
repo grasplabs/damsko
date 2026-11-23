@@ -265,7 +265,7 @@ const styles = stylex.create({
     backgroundColor: "transparent",
     color: {
       default: colors.foreground,
-      ":read-only:not(:disabled)": colors.inputInkRead,
+      ":read-only:not(:disabled)": colors.inputForegroundRead,
     },
     caretColor: colors.foreground,
     fontFamily: font.sans,

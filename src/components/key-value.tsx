@@ -251,7 +251,7 @@ const styles = stylex.create({
     margin: 0,
     padding: 0,
     borderWidth: 0,
-    borderRadius: `min(${radius.base}, calc(${size.controlDefault} / 2))`,
+    borderRadius: `min(${radius.row}, calc(${size.controlDefault} / 2))`,
     cornerShape: radius.shape,
     cursor: "pointer",
     transitionProperty: "background-color",
@@ -658,7 +658,7 @@ const Rail = ({
   const icons = items.some((item) => item.icon !== undefined);
   return (
     <dl
-      data-slot="key-value"
+      data-slot="key-value-list"
       data-orientation="horizontal"
       data-value-align={start ? "start" : "end"}
       {...stylex.props(
@@ -716,7 +716,7 @@ export const KeyValueList = ({
   }
   return (
     <dl
-      data-slot="key-value"
+      data-slot="key-value-list"
       data-orientation={orientation}
       {...stylex.props(styles.list, !divided && styles.spaced, style)}
     >

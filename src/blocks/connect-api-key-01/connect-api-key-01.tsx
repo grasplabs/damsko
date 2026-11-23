@@ -221,12 +221,7 @@ const styles = stylex.create({
 /** A provider's mark: its logo, or its first letter. */
 const Logo = ({ provider }: { provider: ConnectApiKeyProvider }) => (
   <ItemMedia align="center">
-    <BrandIcon
-      logo={provider.logo}
-      label={provider.name}
-      size="lg"
-      decorative
-    />
+    <BrandIcon logo={provider.logo} label={provider.name} decorative />
   </ItemMedia>
 );
 
