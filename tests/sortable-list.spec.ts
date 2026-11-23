@@ -141,14 +141,12 @@ test("Escape puts a moved item back where it was, and Tab does too and moves on"
   await expect(page.getByRole("button", { name: "Move Its AI" })).toBeFocused();
 });
 
-test("a pointer drags an item by its handle to a new place; a press that does not move is no drag", async ({
+test("a pointer drags an item by its handle to a new place", async ({
   page,
 }) => {
   await openExample(page, "sortable-list", "basic");
   const list = page.getByRole("list", { name: "Onboarding steps, in order" });
   const handle = page.getByRole("button", { name: "Move Welcome" });
-  await handle.click();
-  await expect(list.getByRole("listitem").first()).toHaveText("Welcome");
   const first = await list.getByRole("listitem").nth(0).boundingBox();
   const second = await list.getByRole("listitem").nth(1).boundingBox();
   // From one item's top to the next one's: an item and the gap after it.
@@ -157,6 +155,22 @@ test("a pointer drags an item by its handle to a new place; a press that does no
   await expect
     .poll(async () => await orderOf(list))
     .toEqual(["Its AI", "Its people", "Welcome", "Its tools", "Review"]);
+});
+
+test("a press with no drag picks an item up and a second puts it down, as a screen reader's activation does", async ({
+  page,
+}) => {
+  await openExample(page, "sortable-list", "basic");
+  const list = page.getByRole("list", { name: "Onboarding steps, in order" });
+  const handle = page.getByRole("button", { name: "Move Its people" });
+  await handle.click();
+  await expect(handle).toHaveAttribute("aria-pressed", "true");
+  await page.keyboard.press("ArrowUp");
+  await handle.click();
+  await expect(handle).not.toHaveAttribute("aria-pressed", "true");
+  await expect
+    .poll(async () => await orderOf(list))
+    .toEqual(["Welcome", "Its people", "Its AI", "Its tools", "Review"]);
 });
 
 test("a finger on a handle drags its item", async ({ page }) => {
