@@ -31,6 +31,8 @@ import * as stylex from "@stylexjs/stylex";
 import { useRef, useState } from "react";
 import { flushSync } from "react-dom";
 
+import { citeStyles } from "./cited";
+
 // Under this the head's three do not fit one row.
 const NARROW = "@container (width < 26rem)";
 
@@ -41,22 +43,6 @@ const layout = stylex.create({
     fontSize: font.textBase,
     lineHeight: font.textBaseLine,
     color: colors.bodyForeground,
-  },
-  // A citation's number in the sentence: a small box on the soft fill, as its row's number says it.
-  // The Citations pattern makes it a link that lights and opens its row.
-  cited: {
-    marginInlineStart: space["1"],
-    paddingBlock: 1,
-    paddingInline: space["1"],
-    borderRadius: radius.sm,
-    cornerShape: radius.shape,
-    fontSize: font.textXs,
-    lineHeight: font.textXsLine,
-    fontWeight: font.weightMedium,
-    fontVariantNumeric: "tabular-nums",
-    color: colors.mutedForeground,
-    backgroundColor: colors.muted,
-    boxShadow: size.borderStrong,
   },
   // The open list's head, in the pile's place: the count, the order, the button that folds it. In
   // a narrow column the order takes a line of its own under the other two.
@@ -124,7 +110,7 @@ const Cite = ({ index }: { index: number }) => (
   <span
     role="note"
     aria-label={`Source ${index}`}
-    {...stylex.props(layout.cited)}
+    {...stylex.props(citeStyles.number, citeStyles.after)}
   >
     {index}
   </span>
