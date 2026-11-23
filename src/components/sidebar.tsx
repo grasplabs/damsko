@@ -1084,7 +1084,10 @@ export const SidebarProvider = ({
   useShortcut(shortcut === "" ? null : shortcut, toggleSidebar, {
     when: () => answers(element.current),
     // The sidebar's own layer: on a narrow window its sheet, so the keys close it as they opened it.
-    layer: () => document.querySelector(`#${id}`) ?? element.current,
+    // The id is escaped: React builds it from the app's identifierPrefix, and a colon or a dot in
+    // that would make a bare "#id" an invalid selector, throwing inside the keys' handler.
+    layer: () =>
+      document.querySelector(`#${CSS.escape(id)}`) ?? element.current,
     description: toggle,
   });
 
