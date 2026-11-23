@@ -1,7 +1,8 @@
 // What the layers share: dialog, alert dialog, command, drawer, sheet, popover and the pickers. A
-// panel that always finishes closing, the look of a panel, its title, its description and its
-// scrolling body, a body that knows its title and whether it scrolls, a popup that grows from the
-// trigger that opened it, and the row of a surface's top-end actions.
+// panel that always finishes closing, a shade that lets the next press through as it leaves, the
+// look of a panel, its title, its description and its scrolling body, a body that knows its title
+// and whether it scrolls, a popup that grows from the trigger that opened it, and the row of a
+// surface's top-end actions.
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
@@ -200,6 +201,70 @@ export const watchPanel = (element: HTMLElement | null) => {
   return () => {
     stopClose?.();
     stopOrigin();
+  };
+};
+
+// ---- The shade ----------------------------------------------------------------------------------
+//
+// While a modal layer leaves, UI SDK takes any press over its shade as the shade's (layers.js: an
+// exiting layer's `overBackdrop`), so the second press of a double press that closed it on the
+// shade does not land on the page under it. Closed any other way (Escape, Cancel, the close
+// button, its work done), that swallowed the person's next press for the whole leave. UI SDK reads
+// the shade's own box, so a shade that was not pressed leaves with none: its scrim is drawn by its
+// ::before, over the window whatever its box, and the next press goes through.
+
+// UI SDK marks a closing shade `data-closed` until it goes, and `data-ending-style` only while its own
+// fade runs, which may end before its panel's.
+const leavingUnpressed = ":is([data-closed]:not([data-shade-pressed]))";
+
+export const shadeStyles = stylex.create({
+  shade: {
+    position: "fixed",
+    inset: { default: 0, [leavingUnpressed]: "0 auto auto 0" },
+    width: { default: null, [leavingUnpressed]: 0 },
+    height: { default: null, [leavingUnpressed]: 0 },
+    // Closed, it is no target for a press, though its fade may have ended (and its inert with it)
+    // before its panel's.
+    pointerEvents: { default: null, ":is([data-closed])": "none" },
+    "::before": {
+      content: '""',
+      position: "fixed",
+      inset: 0,
+      backgroundColor: colors.dialogScrim,
+    },
+  },
+});
+
+/**
+ * A shade's ref, with shadeStyles' shade: as its layer closes, whether the last press or key before
+ * was a press on the shade (`data-shade-pressed`), so only the shade that closed its layer keeps its
+ * box as it leaves. The observer runs once the event that closed it is through.
+ */
+export const watchShade = (element: HTMLElement | null) => {
+  if (element === null) {
+    return keep;
+  }
+  const view = element.ownerDocument.defaultView;
+  let pressed = false;
+  const heard = (event: Event) => {
+    pressed = event.type === "pointerdown" && event.target === element;
+  };
+  const settle = new MutationObserver(() => {
+    element.toggleAttribute(
+      "data-shade-pressed",
+      element.dataset.closed !== undefined && pressed
+    );
+  });
+  settle.observe(element, {
+    attributes: true,
+    attributeFilter: ["data-closed"],
+  });
+  view?.addEventListener("pointerdown", heard, true);
+  view?.addEventListener("keydown", heard, true);
+  return () => {
+    settle.disconnect();
+    view?.removeEventListener("pointerdown", heard, true);
+    view?.removeEventListener("keydown", heard, true);
   };
 };
 

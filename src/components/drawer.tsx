@@ -43,7 +43,13 @@ import type { ComponentProps, ReactNode } from "react";
 
 import { useReturnFocus } from "../hooks/use-return-focus";
 import { useI18n } from "../lib/i18n";
-import { keepBodyPut, layerStyles, useLayerBody } from "../lib/layer";
+import {
+  keepBodyPut,
+  layerStyles,
+  shadeStyles,
+  useLayerBody,
+  watchShade,
+} from "../lib/layer";
 import {
   focusRing,
   focusRingInset,
@@ -182,12 +188,6 @@ const lowerRest = ":is([data-snap-point]):not([data-expanded])";
 
 const styles = stylex.create({
   // The shade over the page. UI SDK sets its opacity as the panel moves.
-  overlay: {
-    position: "fixed",
-    inset: 0,
-    backgroundColor: colors.dialogScrim,
-  },
-
   // The panel (layerStyles' panel): the one corner on its top. As wide as the window up to
   // drawer-width, in the middle; as tall as its content up to drawer-height.
   panel: {
@@ -337,8 +337,8 @@ export const DrawerContent = ({
   return (
     <>
       <BackdropPrimitive
-        render={<div data-slot="drawer-overlay" />}
-        {...stylex.props(styles.overlay)}
+        render={<div ref={watchShade} data-slot="drawer-overlay" />}
+        {...stylex.props(shadeStyles.shade)}
       />
       <ContentPrimitive
         {...rest}

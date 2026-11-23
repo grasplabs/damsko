@@ -45,10 +45,15 @@ import type { ComponentProps, ReactNode } from "react";
 import { useReturnFocus } from "../hooks/use-return-focus";
 import { useI18n } from "../lib/i18n";
 import { Icon, XIcon } from "../lib/icons";
-import { layerStyles, useLayerBody, watchPanel } from "../lib/layer";
+import {
+  layerStyles,
+  shadeStyles,
+  useLayerBody,
+  watchPanel,
+  watchShade,
+} from "../lib/layer";
 import { focusRingInset, scrollbarHidden } from "../lib/styles";
 import {
-  colors,
   duration,
   font,
   media,
@@ -164,11 +169,8 @@ const leaving = ":is([data-ending-style])";
 const arriving = "@starting-style";
 
 const look = stylex.create({
-  // The shade over the page. It follows the panel in and out.
+  // The shade over the page (lib/layer's shade). It follows the panel in and out.
   overlay: {
-    position: "fixed",
-    inset: 0,
-    backgroundColor: colors.dialogScrim,
     opacity: { default: 1, [arriving]: 0, [leaving]: 0 },
     transitionProperty: "opacity",
     transitionDuration: {
@@ -292,6 +294,7 @@ const look = stylex.create({
 /** The dialog's look, for the panels built like it: Alert dialog's and Command's. */
 export const dialogStyles = {
   ...look,
+  overlay: [shadeStyles.shade, look.overlay],
   panel: [layerStyles.panel, look.panel],
   title: [layerStyles.title, look.title],
   description: layerStyles.description,
@@ -342,7 +345,7 @@ export const DialogContent = ({
   return (
     <>
       <BackdropPrimitive
-        render={<div data-slot="dialog-overlay" />}
+        render={<div ref={watchShade} data-slot="dialog-overlay" />}
         {...stylex.props(styles.overlay)}
       />
       <ContentPrimitive

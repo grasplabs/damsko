@@ -43,7 +43,12 @@ import type { ComponentProps, ReactNode } from "react";
 import { useReturnFocus } from "../hooks/use-return-focus";
 import { useI18n } from "../lib/i18n";
 import { Icon, XIcon } from "../lib/icons";
-import { keepBodyPut, useLayerBody } from "../lib/layer";
+import {
+  keepBodyPut,
+  shadeStyles,
+  useLayerBody,
+  watchShade,
+} from "../lib/layer";
 import { focusRingInset, scrollbarHidden } from "../lib/styles";
 import {
   colors,
@@ -200,12 +205,6 @@ const INSET = sizes.sheetPadding;
 // the body, the footer) comes from dialogStyles.
 const styles = stylex.create({
   // The shade over the page. UI SDK sets its opacity as the panel moves.
-  overlay: {
-    position: "fixed",
-    inset: 0,
-    backgroundColor: colors.dialogScrim,
-  },
-
   // The panel: the window's height, sheet-width wide, a little off the window's edges with every
   // corner rounded, the same inset on a phone from both sides as from the top and foot.
   panel: {
@@ -327,8 +326,8 @@ export const SheetContent = ({
   return (
     <>
       <BackdropPrimitive
-        render={<div data-slot="sheet-overlay" />}
-        {...stylex.props(styles.overlay)}
+        render={<div ref={watchShade} data-slot="sheet-overlay" />}
+        {...stylex.props(shadeStyles.shade)}
       />
       {/* The panel keeps UI SDK's own slot, drawer-content: named otherwise through its render
           element, UI SDK's focus trap no longer holds Tab inside it. */}
