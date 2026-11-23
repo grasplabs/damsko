@@ -789,6 +789,8 @@ const OPENING =
   /^<details(?<attributes>(?:\s+[a-z][a-z-]*(?:="[^"\n]*")?)*)\s*>[ \t]*\n?[ \t]*<summary>(?<summary>[^\n]*?)<\/summary>[ \t]*$/u;
 const CLOSING = /^<\/details>[ \t]*$/u;
 
+/** The longest line that waits to be whole as a link's definition; past it, it is words. */
+const MAX_DEFINITION = 256;
 /** The longest opening of a section that waits to be whole; past it, it is words. */
 const MAX_OPENING = 400;
 
@@ -825,7 +827,7 @@ const withoutHalfLine = (source: string): number => {
   }
   return ONLY_A_MARK.test(line) ||
     TASK_START.test(line) ||
-    DEFINITION_START.test(line) ||
+    (DEFINITION_START.test(line) && line.length <= MAX_DEFINITION) ||
     FENCE_RUN.test(line.replace(CONTAINERS, "")) ||
     ROW.test(line)
     ? start

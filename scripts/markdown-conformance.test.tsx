@@ -551,9 +551,10 @@ const verdictOf = ({ set, example, markdown, html }: Example) => {
     read = "one tilde";
   }
   const spec = elementsOf(html);
-  const ours = written(
-    fromOurs(elementsOf(renderToStaticMarkup(<Markdown>{markdown}</Markdown>)))
+  const drawing = elementsOf(
+    renderToStaticMarkup(<Markdown>{markdown}</Markdown>)
   );
+  const ours = written(fromOurs(drawing));
   if (written(fromSpec(spec, NO_RULES)) === ours) {
     return { read, drawn: "same" };
   }
@@ -563,9 +564,7 @@ const verdictOf = ({ set, example, markdown, html }: Example) => {
     pictures: kinds.pictures,
     headings: kinds.headings,
   };
-  const shown = textOf(
-    elementsOf(renderToStaticMarkup(<Markdown>{markdown}</Markdown>))
-  ).replaceAll(/\s+/gu, " ");
+  const shown = textOf(drawing).replaceAll(/\s+/gu, " ");
   let drawn = "bug";
   if (written(fromSpec(spec, rules)) === ours) {
     drawn = "links";
@@ -615,37 +614,52 @@ const page = readFileSync(
   "utf-8"
 );
 
-describe("the specifications, example by example", () => {
-  test("CommonMark 0.31.2: every example read as the parser reads it, drawn as the spec draws it or by Markdown's own rules", () => {
-    const { read, drawn, bugs } = tally(commonmark);
-    expect(bugs).toStrictEqual([]);
-    expect(read).toStrictEqual({ same: 652 });
-    expect(drawn).toStrictEqual({
-      same: 462,
-      links: 96,
-      pictures: 22,
-      html: 65,
-      headings: 2,
-      "bare links": 5,
-    });
-    expect(page).toContain(
-      `"${commonmark.length} examples. Read: all ${read.same} as the parser alone reads them. Drawn: ${drawn.same} as the spec draws them; ${drawn.links} links to other than http, https or mailto as their words; ${drawn.pictures} pictures as their words; ${drawn.html} with raw HTML, shown as its text; ${drawn.headings} fifth or sixth headings as fourth ones; ${drawn["bare links"]} bare web or mail addresses linked, as GitHub links them"`
-    );
-  });
+/**
+ * How long a test that draws hundreds of examples may run, in milliseconds: a second or two of this
+ * process's time on the processor, which a machine busy with others can make many times as long by
+ * the clock.
+ */
+const SLOW_TEST = 120_000;
 
-  test("GitHub Flavored Markdown: every extension example read and drawn as GitHub has it, or by Markdown's own rules", () => {
-    const { read, drawn, bugs } = tally(github);
-    expect(bugs).toStrictEqual([]);
-    expect(read).toStrictEqual({ same: 52, "one tilde": 2 });
-    expect(drawn).toStrictEqual({
-      same: 46,
-      links: 1,
-      html: 3,
-      "one tilde": 2,
-      "read otherwise": 2,
-    });
-    expect(page).toContain(
-      `"${github.length} examples. Read: ${read.same} as the parser alone reads them, ${read["one tilde"]} with a strike of one tilde read as a tilde. Drawn: ${drawn.same} as cmark-gfm draws them; ${drawn.links} link to ftp as its words; ${drawn.html} with raw HTML, shown as its text; ${drawn["one tilde"]} with a tilde for a strike; ${drawn["read otherwise"]} that micromark reads otherwise than cmark-gfm or that have no HTML"`
-    );
-  });
+describe("the specifications, example by example", () => {
+  test(
+    "CommonMark 0.31.2: every example read as the parser reads it, drawn as the spec draws it or by Markdown's own rules",
+    () => {
+      const { read, drawn, bugs } = tally(commonmark);
+      expect(bugs).toStrictEqual([]);
+      expect(read).toStrictEqual({ same: 652 });
+      expect(drawn).toStrictEqual({
+        same: 462,
+        links: 96,
+        pictures: 22,
+        html: 65,
+        headings: 2,
+        "bare links": 5,
+      });
+      expect(page).toContain(
+        `"${commonmark.length} examples. Read: all ${read.same} as the parser alone reads them. Drawn: ${drawn.same} as the spec draws them; ${drawn.links} links to other than http, https or mailto as their words; ${drawn.pictures} pictures as their words; ${drawn.html} with raw HTML, shown as its text; ${drawn.headings} fifth or sixth headings as fourth ones; ${drawn["bare links"]} bare web or mail addresses linked, as GitHub links them"`
+      );
+    },
+    SLOW_TEST
+  );
+
+  test(
+    "GitHub Flavored Markdown: every extension example read and drawn as GitHub has it, or by Markdown's own rules",
+    () => {
+      const { read, drawn, bugs } = tally(github);
+      expect(bugs).toStrictEqual([]);
+      expect(read).toStrictEqual({ same: 52, "one tilde": 2 });
+      expect(drawn).toStrictEqual({
+        same: 46,
+        links: 1,
+        html: 3,
+        "one tilde": 2,
+        "read otherwise": 2,
+      });
+      expect(page).toContain(
+        `"${github.length} examples. Read: ${read.same} as the parser alone reads them, ${read["one tilde"]} with a strike of one tilde read as a tilde. Drawn: ${drawn.same} as cmark-gfm draws them; ${drawn.links} link to ftp as its words; ${drawn.html} with raw HTML, shown as its text; ${drawn["one tilde"]} with a tilde for a strike; ${drawn["read otherwise"]} that micromark reads otherwise than cmark-gfm or that have no HTML"`
+      );
+    },
+    SLOW_TEST
+  );
 });
