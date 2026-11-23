@@ -954,7 +954,8 @@
       "BreadcrumbPageProps",
       "BreadcrumbSeparatorProps",
       "BreadcrumbEllipsisProps"
-    ]
+    ],
+    "src/components/breadcrumb.stylex.ts": ["breadcrumbVars"]
   },
   "checkbox": {
     "src/components/checkbox.tsx": [

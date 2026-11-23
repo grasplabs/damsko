@@ -451,6 +451,11 @@
       },
       "files": [
         {
+          "path": "src/components/breadcrumb.stylex.ts",
+          "type": "registry:file",
+          "target": "~/src/components/breadcrumb.stylex.ts"
+        },
+        {
           "path": "src/components/breadcrumb.tsx",
           "type": "registry:file",
           "target": "~/src/components/breadcrumb.tsx"

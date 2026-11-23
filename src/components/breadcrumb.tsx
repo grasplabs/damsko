@@ -51,7 +51,6 @@ import {
 } from "../lib/icons";
 import { focusRingText } from "../lib/styles";
 import {
-  colors,
   duration,
   font,
   media,
@@ -61,6 +60,7 @@ import {
 } from "../lib/tokens.stylex";
 import type { LayoutStyle } from "../lib/utils";
 import { iconVars, motionVars, ringInsetMarker } from "../lib/vars.stylex";
+import { breadcrumbVars } from "./breadcrumb.stylex";
 import { Button } from "./button";
 import {
   DropdownMenu,
@@ -81,6 +81,12 @@ export interface BreadcrumbProps {
    * @default "auto"
    */
   variant?: "auto" | "back";
+  /**
+   * What stands between two steps, for every BreadcrumbSeparator that has no children of its own:
+   * `separator="/"` for a path with slashes.
+   * @default a chevron, mirrored right to left
+   */
+  separator?: ReactNode;
   /**
    * The name of the path, as a screen reader and an agent say it.
    * @default "Breadcrumb"
@@ -144,7 +150,7 @@ export interface BreadcrumbPageProps {
 export interface BreadcrumbSeparatorProps {
   /**
    * What stands between two steps; hidden from screen readers.
-   * @default a chevron, mirrored right to left
+   * @default the Breadcrumb's `separator`, a chevron
    */
   children?: ReactNode;
   /** Layout only. */
@@ -201,7 +207,7 @@ const styles = stylex.create({
     fontFamily: font.sans,
     fontSize: font.textSm,
     lineHeight: font.textSmLine,
-    color: colors.mutedForeground,
+    color: breadcrumbVars.mutedForeground,
     whiteSpace: "nowrap",
   },
   // The page's name gives way first, down to a few letters; the links only once it has. Flex
@@ -228,8 +234,8 @@ const styles = stylex.create({
     display: "flex",
     minWidth: 0,
     color: {
-      default: colors.mutedForeground,
-      ":hover": { default: null, [media.hover]: colors.foreground },
+      default: breadcrumbVars.mutedForeground,
+      ":hover": { default: null, [media.hover]: breadcrumbVars.foreground },
     },
     textDecoration: "none",
     paddingInline: ROOM,
@@ -275,8 +281,8 @@ const styles = stylex.create({
   // the page's ink and weight, though it is not the page you are on.
   end: {
     color: {
-      default: colors.mutedForeground,
-      ":is(li:last-child > *)": colors.foreground,
+      default: breadcrumbVars.mutedForeground,
+      ":is(li:last-child > *)": breadcrumbVars.foreground,
     },
     fontWeight: { default: null, ":is(li:last-child > *)": font.weightMedium },
   },
@@ -286,7 +292,7 @@ const styles = stylex.create({
     overflow: "hidden",
     textOverflow: "ellipsis",
     whiteSpace: "nowrap",
-    color: colors.foreground,
+    color: breadcrumbVars.foreground,
     fontWeight: font.weightMedium,
     borderRadius: radius.sm,
     cornerShape: radius.shape,
@@ -297,7 +303,7 @@ const styles = stylex.create({
     [iconVars.stroke]: size.iconStroke,
     display: "inline-flex",
     flexShrink: 0,
-    color: colors.subtleForeground,
+    color: breadcrumbVars.subtleForeground,
   },
   separatorAuto: {
     display: { default: "inline-flex", [PHONE]: "none" },
@@ -313,7 +319,7 @@ const styles = stylex.create({
     [iconVars.stroke]: size.iconStroke,
     flexShrink: 0,
     alignItems: "center",
-    color: colors.subtleForeground,
+    color: breadcrumbVars.subtleForeground,
     marginInlineStart: `calc(-9 / 24 * ${size.iconSm})`,
     marginInlineEnd: space["1"],
   },
@@ -340,10 +346,14 @@ const styles = stylex.create({
 /** Whether the back form shows at every width (`back`), or only under 640px (`auto`). */
 const Back = createContext(false);
 
+/** What a separator with no children of its own shows: the Breadcrumb's `separator`. */
+const Between = createContext<ReactNode>(undefined);
+
 /** The path from the top of the site to the page you are on, on one line. */
 export const Breadcrumb = ({
   children,
   variant = "auto",
+  separator,
   "aria-label": label,
   style,
 }: BreadcrumbProps) => {
@@ -355,7 +365,9 @@ export const Breadcrumb = ({
       data-variant={variant}
       {...stylex.props(styles.nav, style)}
     >
-      <Back value={variant === "back"}>{children}</Back>
+      <Back value={variant === "back"}>
+        <Between value={separator}>{children}</Between>
+      </Back>
     </nav>
   );
 };
@@ -584,6 +596,7 @@ export const BreadcrumbSeparator = ({
   style,
 }: BreadcrumbSeparatorProps) => {
   const back = use(Back);
+  const between = use(Between);
   return (
     <li
       role="presentation"
@@ -595,7 +608,7 @@ export const BreadcrumbSeparator = ({
         style
       )}
     >
-      {children ?? <Icon icon={ChevronRightIcon} />}
+      {children ?? between ?? <Icon icon={ChevronRightIcon} />}
     </li>
   );
 };
