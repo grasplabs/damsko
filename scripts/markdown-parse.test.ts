@@ -1186,6 +1186,112 @@ describe("an answer of more lines than any answer's", () => {
   );
 });
 
+/** What `make` makes `count` times, with `between` between. */
+const made = (count: number, make: () => string, between: string) =>
+  Array.from({ length: count }, make).join(between);
+
+describe("an answer read in pieces is the answer read whole", () => {
+  // A piece that ended inside a block would part it. So answers are made at random, long enough
+  // to be read in several pieces, and each must be the tree the parser reads whole, with every
+  // place the same. The same answers on every run.
+  const random = randomFrom(21);
+  const pick = <Item>(items: Item[], none: Item): Item =>
+    items[random(items.length)] ?? none;
+  const words =
+    "the budget rose by 3% in Q2 and **bold** *emph* `code` [link](https://example.com/a) see[^1] https://example.com ~~old~~ [ref] team plan a_b x*y <br> &amp;".split(
+      " "
+    );
+  const sentence = () => made(4 + random(14), () => pick(words, ""), " ");
+  const blocks = [
+    () => sentence() + (random(3) === 0 ? `\n${sentence()}` : ""),
+    () => `${"#".repeat(1 + random(4))} ${sentence()}`,
+    () =>
+      made(
+        2 + random(30),
+        () =>
+          `- ${sentence()}${random(5) === 0 ? `\n  - ${sentence()}\n  - ${sentence()}` : ""}`,
+        "\n"
+      ),
+    () =>
+      made(
+        2 + random(30),
+        () =>
+          `1. ${sentence()}${random(6) === 0 ? `\n\n   ${sentence()}` : ""}`,
+        random(4) === 0 ? "\n\n" : "\n"
+      ),
+    () =>
+      made(
+        2 + random(8),
+        () => `- [${pick(["x", " "], " ")}] ${sentence()}`,
+        "\n"
+      ),
+    () =>
+      `| A | B |\n| --- | --: |\n${made(1 + random(40), () => `| ${pick(words, "")} | ${random(100)} |`, "\n")}`,
+    () =>
+      `\`\`\`ts\n${made(1 + random(40), () => (random(6) === 0 ? "" : `const a = [${random(9)}]; // *x*`), "\n")}\n\`\`\``,
+    () =>
+      made(
+        1 + random(12),
+        () => `> ${sentence()}`,
+        random(4) === 0 ? "\n>\n" : "\n"
+      ),
+    () => "---",
+    () => `[^1]: ${sentence()}`,
+    () => '[ref]: https://example.com/ref "t"',
+    () =>
+      `- ${sentence()}\n\n  \`\`\`sh\n  ${sentence()}\n\n  ${sentence()}\n  \`\`\`\n\n  ${sentence()}\n- ${sentence()}`,
+    () => `> - ${sentence()}\n> - ${sentence()}\n>\n> ${sentence()}`,
+    () => `<details>\n<summary>More</summary>\n\n${sentence()}\n\n</details>`,
+    () => `${sentence()}\n===`,
+    () => `<!--\n${sentence()}\n\n${sentence()}\n-->`,
+    () => `    ${sentence()}\n\n    ${sentence()}`,
+  ];
+  // Lines of every kind, in any order: fences, HTML and comments left open, marks with no words.
+  const kinds = [
+    "- a|  - b|    c|> q|> - x|||```|~~~|| a | b |/| - | - |/# h|===|---|text *e* [l](u)|  lazy|1. o",
+    "   cont|[r]: /u|[^n]: note|    code|<div>|<!--|-->|</div>|x[^n] [r]|\\|a  |a\\|* * *|+ p|10) q|>",
+    "> > deep|\t- tab|<pre>|</pre>|- [ ] t|- |   |>     code|[r2]:|  /u2|<script>|</script>|<?|?>|**b",
+    "c**|`co|de`|[a|](b)|>```|  ```|-|2.|Setext|  ---|- - a|> # h|    - deep|      - deeper|<details>",
+    "</details>|<summary>s</summary>|````|~~~~|   ```|<![CDATA[|]]>|<!DOCTYPE html>|[r]:|  [x]: /x",
+  ]
+    .join("|")
+    .replaceAll("/", "\n")
+    .split("|");
+  const soup = () => {
+    const favoured = [pick(kinds, ""), pick(kinds, ""), pick(kinds, "")];
+    const eol = random(8) === 0 ? "\r\n" : "\n";
+    return made(
+      70 + random(260),
+      () => (random(3) === 0 ? pick(favoured, "") : pick(kinds, "")) + eol,
+      ""
+    );
+  };
+
+  test.each([
+    [
+      "of ordinary blocks",
+      60,
+      () =>
+        `${made(25 + random(60), () => pick(blocks, sentence)(), "\n\n")}\n`,
+    ],
+    ["of lines of every kind in any order", 250, soup],
+  ])(
+    "answers %s",
+    (_, count, make) => {
+      const differing: string[] = [];
+      for (let round = 0; round < count; round += 1) {
+        const source = make();
+        const read = JSON.stringify(parseMarkdown(source));
+        if (read !== JSON.stringify(wholeTree(source))) {
+          differing.push(source);
+        }
+      }
+      expect(differing).toStrictEqual([]);
+    },
+    SLOW_TEST
+  );
+});
+
 /**
  * What is drawn of `source` as it is written, `step` characters at a time: for each step, the blocks,
  * read as Markdown reads them while an answer streams.

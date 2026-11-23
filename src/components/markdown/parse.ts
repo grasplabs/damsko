@@ -39,10 +39,11 @@ export type MarkdownRoot = ReturnType<typeof fromMarkdown>;
 // squared. So an answer is read in pieces, each by itself, and their blocks stand one after the
 // other. A piece ends, once it has PIECE lines, where the parser starts anew whatever came before:
 // at a line at the margin after a blank line, that is no list item (which would go on in a list
-// before it), outside a fence and outside HTML. A piece of more than twice PIECE lines is one
-// block that runs on: it spends its lines squared from MAX_LINES (lines of code in a fence are
-// free), and where it runs on past what is left (a list of thousands of items), its lines from
-// there on are plain lines.
+// before it), and where the piece does not end in code or HTML that nothing closed. A piece of
+// more than twice PIECE lines is one block that runs on: it spends its lines squared from
+// MAX_LINES (lines of code in a fence and plain definitions of links cost no more than their
+// length, and are free), and where it runs on past what is left (a list of thousands of items),
+// its lines from there on are plain lines.
 
 /** The longest paragraph, heading or table cell read for its marks. */
 const MAX_INLINE = 8000;
@@ -274,78 +275,65 @@ const treeOf = (source: string, budget: Budget): MarkdownRoot => {
   return givenBack(parsed(stood), source, long);
 };
 
-/** A piece of the source: where it is, the line it starts on (from 0), and whether it is plain lines. */
-interface Piece {
+/** Where a piece starts: its place, its line (from 0), what is left of MAX_LINES, and whether it is plain lines. */
+interface Start {
   from: number;
-  to: number;
   line: number;
+  left: number;
   plain: boolean;
 }
 
-/** A line that starts a list item, which goes on in a list before it. */
-const LIST_ITEM = /^(?:[-*+]|\d{1,9}[.)])(?:[ \t]|$)/u;
+/** A line at the margin that starts no list item, which would go on in a list before it. */
+const MARGIN = /^(?!(?:[-*+]|\d{1,9}[.)])(?:[ \t]|$))\S/u;
+/** A line as far in as indented code: the parser reads the line after such code as one after a paragraph. */
+const DEEP = /^(?: {4}| {0,3}\t)/u;
+/** A line that defines a link's target in the plainest way: after a blank line, or another such, it costs no more than its length. */
+const PLAIN_DEFINITION = /^ {0,3}\[[^\s[\]\\^][^[\]\\]*\]:[ \t]+[^\s<()\\]+$/u;
 /** The run of backticks or tildes a line opens a fence with. */
 const FENCE_OPEN = /^ {0,3}(?<run>`{3,}(?=[^`]*$)|~{3,})/u;
-/** The names of the HTML that starts a block wherever it stands, as CommonMark lists them. */
-const BLOCK_HTML =
-  "address|article|aside|base|basefont|blockquote|body|caption|center|col|colgroup|dd|details|dialog|dir|div|dl|dt|fieldset|figcaption|figure|footer|form|frame|frameset|h[1-6]|head|header|hr|html|iframe|legend|li|link|main|menu|menuitem|nav|noframes|ol|optgroup|option|p|param|search|section|summary|table|tbody|td|tfoot|th|thead|title|tr|track|ul";
-/** How a block of HTML starts, and what the line holds that ends it: for the last, nothing. */
-const HTML: [RegExp, RegExp][] = [
-  [
-    /^ {0,3}<(?:script|pre|style|textarea)(?:[ \t>]|$)/iu,
-    /<\/(?:script|pre|style|textarea)>/iu,
-  ],
-  [/^ {0,3}<!--/u, /-->/u],
-  [/^ {0,3}<\?/u, /\?>/u],
-  [/^ {0,3}<![a-z]/iu, />/u],
-  [/^ {0,3}<!\[CDATA\[/u, /\]\]>/u],
-  [new RegExp(`^ {0,3}</?(?:${BLOCK_HTML})(?:[ \\t>]|/>|$)`, "iu"), /^$/u],
-];
 
 /**
- * What the line holds that ends the fence or the HTML that `line` opens, if it opens one and does
- * not end it: what stands in them is no Markdown (a fence in HTML is none), so no piece ends there.
+ * What a line is that closes the fence `line` looks to open, if it looks to. Only so that the lines
+ * of code are not counted and no piece is tried there: whether a piece may end where it does is the
+ * parser's to say (see readWith).
  */
-const opened = (line: string): RegExp | null => {
+const fenceEnd = (line: string): RegExp | null => {
   const run = FENCE_OPEN.exec(line)?.groups?.run;
-  if (run !== undefined) {
-    return new RegExp(`^ {0,3}${run[0]}{${run.length},}$`, "u");
-  }
-  const ends = HTML.find(([opening]) => opening.test(line))?.[1];
-  return ends === undefined || ends.test(line) ? null : ends;
+  return run === undefined
+    ? null
+    : new RegExp(`^ {0,3}${run[0]}{${run.length},}$`, "u");
 };
 
-/** The pieces `source` is read in (see above). */
-const piecesOf = (source: string): Piece[] => {
-  const pieces: Piece[] = [];
-  let piece = { from: 0, line: 0, plain: false };
-  let left = MAX_LINES;
+/** The piece that starts at `start` and counts `min` lines at least: where it ends, and where the next starts. */
+const pieceAt = (source: string, start: Start, min: number) => {
   let lines = 0;
   let inside: RegExp | null = null;
   let blank = false;
-  for (let at = 0, line = 0; at < source.length; line += 1) {
+  let defines = true;
+  let deep = false;
+  for (let at = start.from, { line } = start; at < source.length; line += 1) {
     const end = source.indexOf("\n", at);
     const next = end === -1 ? source.length : end + 1;
     const text = source.slice(at, next).trimEnd();
     if (inside === null) {
-      const starts =
-        blank && text !== "" && !isBlank(text[0]) && !LIST_ITEM.test(text);
-      const spent = lines >= 2 * PIECE && (lines + 1) ** 2 > left;
-      if (starts ? piece.plain || lines >= PIECE : spent && !piece.plain) {
-        pieces.push({ ...piece, to: at });
-        left -= piece.plain || lines <= 2 * PIECE ? 0 : lines ** 2;
-        piece = { from: at, line, plain: !starts };
-        lines = 0;
+      const starts = blank && !deep && MARGIN.test(text);
+      const spent = lines >= 2 * PIECE && (lines + 1) ** 2 > start.left;
+      if (starts ? start.plain || lines >= min : spent && !start.plain) {
+        const cost = start.plain || lines <= 2 * PIECE ? 0 : lines ** 2;
+        const left = start.left - cost;
+        return { to: at, next: { from: at, line, left, plain: !starts } };
       }
-      lines += 1;
-      inside = opened(text);
-    } else {
-      inside = inside.test(text) ? null : inside;
+      defines = (blank || defines) && PLAIN_DEFINITION.test(text);
+      lines += defines ? 0 : 1;
+      inside = fenceEnd(text);
+    } else if (inside.test(text)) {
+      inside = null;
     }
     blank = text === "";
+    deep = blank ? deep : DEEP.test(text);
     at = next;
   }
-  return [...pieces, { ...piece, to: source.length }];
+  return { to: source.length, next: { ...start, from: source.length } };
 };
 
 /** The paragraphs of plain lines: readBlocks keeps nothing while an answer has them. */
@@ -387,19 +375,22 @@ const NAMED = /\[(?<name>(?:[^[\]\\]|\\.)+)\]/gu;
 type Defined = Map<string, { text: string; at: number }>;
 
 /**
- * The blocks of `piece`. The line that defines each name the piece refers to and another piece
- * defines is read before it, so a link or a note defined there is one here too; what was read from
- * those lines is dropped, and every place is the source's.
+ * The blocks of the piece from `start` to `to`, and whether it ends in code or HTML that nothing
+ * closed (the last block then runs to its very end, past the blank line it ends with). The line
+ * that defines each name the piece refers to and another piece defines is read before it, so a link
+ * or a note defined there is one here too; what was read from those lines is dropped, and every
+ * place is the source's.
  */
 const blocksOf = (
   source: string,
-  { from, to, line, plain }: Piece,
+  { from, line, plain }: Start,
+  to: number,
   defined: Defined,
   budget: Budget
-): Node[] => {
+): { blocks: Node[]; open: boolean } => {
   const text = source.slice(from, to);
   if (plain) {
-    return plainBlocks(text);
+    return { blocks: plainBlocks(text), open: false };
   }
   const lines = new Set<string>();
   for (const { groups } of defined.size === 0 ? [] : text.matchAll(NAMED)) {
@@ -415,6 +406,8 @@ const blocksOf = (
   const blocks = (tree.children ?? []).filter(
     (node) => startOf(node) >= stubs.length
   );
+  const last = blocks.at(-1);
+  const open = last !== undefined && endOf(last) === stubs.length + text.length;
   for (const block of blocks) {
     each(block, ({ position }) => {
       for (const point of position ? [position.start, position.end] : []) {
@@ -423,7 +416,18 @@ const blocksOf = (
       }
     });
   }
-  return blocks;
+  return { blocks, open };
+};
+
+/**
+ * `defined` with `name` defined by `text`, which starts at `from` after any spaces, unless it is
+ * defined: the first to define a name does.
+ */
+const define = (defined: Defined, name: string, text: string, from: number) => {
+  const at = from + text.length - text.trimStart().length;
+  return defined.has(name)
+    ? defined
+    : defined.set(name, { text: text.trim(), at });
 };
 
 /** What `blocks` define, as the parser read it: a note by its first line. */
@@ -431,13 +435,12 @@ const definedIn = (source: string, blocks: Node[]): Defined => {
   const defined: Defined = new Map();
   for (const block of blocks) {
     each(block, (node) => {
-      const at = startOf(node);
-      const [first = ""] = source.slice(at, endOf(node)).split("\n", 1);
+      const text = source.slice(startOf(node), endOf(node));
       if (node.type === "definition") {
-        const text = source.slice(at, endOf(node)).trim();
-        defined.set(node.identifier ?? "", { text, at });
+        define(defined, node.identifier ?? "", text, startOf(node));
       } else if (node.type === "footnoteDefinition") {
-        defined.set(`^${node.identifier}`, { text: first.trim(), at });
+        const [first = ""] = text.split("\n", 1);
+        define(defined, `^${node.identifier}`, first, startOf(node));
       }
     });
   }
@@ -445,30 +448,53 @@ const definedIn = (source: string, blocks: Node[]): Defined => {
 };
 
 /**
- * The blocks of `source`, read piece by piece. The lines that look to define a name are taken to;
+ * The blocks of `source`, read piece by piece, with the names `defined` holds, and how many pieces
+ * they were. A piece that ends in code or HTML that nothing closed did not end where a block
+ * starts, whatever its lines looked like: it is read again, twice as long.
+ */
+const readWith = (source: string, defined: Defined) => {
+  const budget = { left: MAX_COST };
+  const blocks: Node[] = [];
+  let pieces = 0;
+  let start = { from: 0, line: 0, left: MAX_LINES, plain: false };
+  for (let min = PIECE; start.from < source.length; pieces += 1) {
+    const before = { ...budget };
+    const piece = pieceAt(source, start, min);
+    const read = blocksOf(source, start, piece.to, defined, budget);
+    if (read.open && piece.to < source.length && !piece.next.plain) {
+      Object.assign(budget, before);
+      min *= 2;
+    } else {
+      for (const block of read.blocks) {
+        blocks.push(block);
+      }
+      start = piece.next;
+      min = PIECE;
+    }
+  }
+  return { blocks, pieces };
+};
+
+/**
+ * The blocks of `source`, read into `into`. The lines that look to define a name are taken to;
  * should the pieces, once read, define other names or define them otherwise (a line of a paragraph
  * only looks to, a line in a quote does, and so do two lines), they are read again with those.
  */
 const readPieces = (source: string, into: Node[]) => {
-  const pieces = piecesOf(source);
-  const read = (defined: Defined) => {
-    const budget = { left: MAX_COST };
-    return pieces.flatMap((piece) => blocksOf(source, piece, defined, budget));
-  };
   const guessed: Defined = new Map();
-  for (const found of pieces.length === 1 ? [] : source.matchAll(DEFINITION)) {
-    const name = nameOf(found.groups?.label ?? "");
-    guessed.set(name, { text: found[0].trim(), at: found.index });
+  for (const found of source.matchAll(DEFINITION)) {
+    define(guessed, nameOf(found.groups?.label ?? ""), found[0], found.index);
   }
-  const blocks = read(guessed);
+  const { blocks, pieces } = readWith(source, guessed);
   const defined = definedIn(source, blocks);
   const same =
-    pieces.length === 1 ||
+    pieces === 1 ||
     (defined.size === guessed.size &&
-      [...defined].every(
-        ([name, { text }]) => guessed.get(name)?.text === text
-      ));
-  for (const block of same ? blocks : read(defined)) {
+      [...defined].every(([name, { text, at }]) => {
+        const found = guessed.get(name);
+        return found?.text === text && found.at === at;
+      }));
+  for (const block of same ? blocks : readWith(source, defined).blocks) {
     into.push(block);
   }
 };
