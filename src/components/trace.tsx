@@ -33,8 +33,9 @@
 // surfaces start; its fill under the pointer reaches past them by its own padding. In a card that
 // carries traceCardMarker (Tool's) the trigger runs the card's width and takes no fill: its words
 // turn to ink, as a step that opens did in the original. A TraceIcon with nothing in it is the
-// status mark: a dot, the alert when the step failed. A running title shimmers (Shimmer) in ink, a
-// failed one stands in the body's ink beside its red mark. Each status is said in words after the
+// status mark: a dot, the working mark (Agent indicator) while it runs, the alert when the step
+// failed. A running title shimmers (Shimmer) in ink, a failed one stands in the body's ink beside
+// its red mark. Each status is said in words after the
 // line, not only by its mark and colour.
 //
 // What is said aloud, through the page's live region: a line is said once, when its status changes
@@ -82,6 +83,7 @@ import {
 import { announce, className } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { iconVars, ringInsetMarker, traceCardMarker } from "../lib/vars.stylex";
+import { AgentIndicator } from "./agent-indicator";
 import { Shimmer } from "./shimmer";
 
 /** Where the work a line reports stands: `running` under way, `error` failed, `pending` not begun. Without one it is done. */
@@ -466,18 +468,17 @@ export const TraceIcon = ({ children, style }: TraceIconProps) => {
   const status = use(StatusContext);
   const step = use(StepContext);
   let mark = children;
-  if (mark === undefined) {
-    mark =
-      status === "error" ? (
-        <Icon icon={CircleAlertIcon} />
-      ) : (
-        <span
-          {...stylex.props(
-            styles.dot,
-            status === "pending" && styles.dotPending
-          )}
-        />
-      );
+  if (mark === undefined && status === "error") {
+    mark = <Icon icon={CircleAlertIcon} />;
+  } else if (mark === undefined && status === "running") {
+    // The step at work: the working mark, nine pixels and their light, in the dot's place.
+    mark = <AgentIndicator />;
+  } else if (mark === undefined) {
+    mark = (
+      <span
+        {...stylex.props(styles.dot, status === "pending" && styles.dotPending)}
+      />
+    );
   }
   return (
     <span

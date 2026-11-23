@@ -328,3 +328,19 @@ test("a subagent's row names the run and its model, and opens on its tool calls,
   await expect(run).toHaveAttribute("aria-expanded", "false");
   await expect(found).toBeHidden();
 });
+
+test("a running step stands its working mark in its dot's place", async ({
+  page,
+}) => {
+  await openExample(page, "trace", "steps");
+  const marks = await page
+    .getByText("Searched the web", { exact: true })
+    .evaluate((title) => {
+      const trace = title.closest("[data-slot=trace]");
+      return [...(trace?.querySelectorAll("[data-slot=trace-icon]") ?? [])].map(
+        (icon) => icon.querySelector("[data-slot=agent-indicator]") !== null
+      );
+    });
+  // One running step, one working mark.
+  expect(marks.filter(Boolean)).toHaveLength(1);
+});

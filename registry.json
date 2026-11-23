@@ -3538,6 +3538,7 @@
         "@ui-sdk/react"
       ],
       "registryDependencies": [
+        "@damsko/agent-indicator",
         "@damsko/lib",
         "@damsko/shimmer"
       ],
