@@ -12,7 +12,8 @@
 // - one per block: src/blocks/<name>/ (registry:block);
 // - lib (src/lib, registry:lib), hooks (src/hooks, registry:hook), tokens (src/styles: the CSS
 //   variables, the themes and the base, registry:lib) and fonts (src/styles/fonts.css and
-//   src/styles/fonts/: the faces, their files and their licence, registry:lib).
+//   src/styles/fonts/: the faces, their files, their licence and the script that unpacks them,
+//   registry:lib).
 //
 // The shape the stock shadcn CLI installs byte for byte: every file is `registry:file` with the
 // target `~/<its path>`, so it lands at the same path under a project's root (src/… in src/…),
@@ -21,8 +22,8 @@
 //
 // A font file is the one exception. The CLI carries a file's content as text, which a font is
 // not, so a font's target is `~/<its path>.base64` and its content, in the registry as served
-// (scripts/registry-dist.ts), the file in base64; one command turns the six back into the files
-// (`unpackFonts` in site/start/get-started.ts).
+// (scripts/registry-dist.ts), the file in base64; the script installed beside them turns the six
+// back into the files (src/styles/fonts/unpack.mjs).
 //
 // Every item carries `meta`: the version (package.json) and the licence its files are under,
 // wherever they are installed. The served registry adds the commit (scripts/registry-dist.ts).
@@ -85,7 +86,7 @@ const sharedItems = [
     owns: (path: string) => !isFontFile(path),
     title: "Tokens",
     description:
-      "Every colour, space, corner, edge, shadow, time and curve as CSS variables (tokens.css), the modes and themes (themes.css), and the base the components assume (base.css: the box model, the page's text). Import the three once, at the root. The font families the tokens name are not included: add @damsko/fonts, or load Geist yourself.",
+      "Every colour, space, corner, edge, shadow, time and curve as CSS variables (tokens.css), and the modes and themes (themes.css): import the two once, at the root. With them, base.css: an optional reset for a new app that has none; never import it beside Tailwind, whose preflight is the reset. The font families the tokens name are not included: add @damsko/fonts, or load Geist yourself.",
   },
   {
     name: "fonts",
@@ -94,7 +95,7 @@ const sharedItems = [
     owns: isFontFile,
     title: "Fonts",
     description:
-      "Geist, Geist Mono and Geist Serif as the tokens name them: the @font-face rules (fonts.css), the six subset files and their licence (fonts/). The files arrive as base64 text, which one command turns into the fonts; import fonts.css once, at the root.",
+      "Geist, Geist Mono and Geist Serif as the tokens name them: the @font-face rules (fonts.css), the six subset files and their licence (fonts/). The files arrive as base64 text; fonts/unpack.mjs turns them into the fonts. Run it after every install and before every build (node src/styles/fonts/unpack.mjs; --check fails while one is packed), and import fonts.css once, at the root.",
     license: fontLicense,
   },
 ] as const;

@@ -1,7 +1,7 @@
 /* The product's base: what a page in a Grasp product gives the components before any of their own
    styles, and so all a preview here may inherit. Loaded by the docs layout and by the bare example
    frame alike, so a part looks the same in a stage, in the frame and in a product. The resets
-   themselves are the file a product installs (src/styles/base.css, the registry's `tokens` item),
+   themselves are the reset a new app installs (src/styles/base.css, the registry's `tokens` item),
    imported below; this file adds only what is the site's own: the mark StyleX's sheet is placed
    by, and the mode the site's theme script sets.
 

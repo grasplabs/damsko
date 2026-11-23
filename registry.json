@@ -1257,7 +1257,7 @@
       "name": "fonts",
       "type": "registry:lib",
       "title": "Fonts",
-      "description": "Geist, Geist Mono and Geist Serif as the tokens name them: the @font-face rules (fonts.css), the six subset files and their licence (fonts/). The files arrive as base64 text, which one command turns into the fonts; import fonts.css once, at the root.",
+      "description": "Geist, Geist Mono and Geist Serif as the tokens name them: the @font-face rules (fonts.css), the six subset files and their licence (fonts/). The files arrive as base64 text; fonts/unpack.mjs turns them into the fonts. Run it after every install and before every build (node src/styles/fonts/unpack.mjs; --check fails while one is packed), and import fonts.css once, at the root.",
       "meta": {
         "version": "0.1.0",
         "license": "SIL Open Font License 1.1 (src/styles/fonts/OFL.txt, installed with the files): Geist, Geist Mono and Geist Serif, copyright The Geist Project Authors. The stylesheet is under Damsko's LICENSE."
@@ -1297,6 +1297,11 @@
           "path": "src/styles/fonts/geist-serif.woff2",
           "type": "registry:file",
           "target": "~/src/styles/fonts/geist-serif.woff2.base64"
+        },
+        {
+          "path": "src/styles/fonts/unpack.mjs",
+          "type": "registry:file",
+          "target": "~/src/styles/fonts/unpack.mjs"
         },
         {
           "path": "src/styles/fonts.css",
@@ -3299,7 +3304,7 @@
       "name": "tokens",
       "type": "registry:lib",
       "title": "Tokens",
-      "description": "Every colour, space, corner, edge, shadow, time and curve as CSS variables (tokens.css), the modes and themes (themes.css), and the base the components assume (base.css: the box model, the page's text). Import the three once, at the root. The font families the tokens name are not included: add @damsko/fonts, or load Geist yourself.",
+      "description": "Every colour, space, corner, edge, shadow, time and curve as CSS variables (tokens.css), and the modes and themes (themes.css): import the two once, at the root. With them, base.css: an optional reset for a new app that has none; never import it beside Tailwind, whose preflight is the reset. The font families the tokens name are not included: add @damsko/fonts, or load Geist yourself.",
       "meta": {
         "version": "0.1.0",
         "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."

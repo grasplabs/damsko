@@ -323,12 +323,18 @@ for (const page of [...docPages("docs"), "site/start/get-started.ts"]) {
       );
     }
   }
-  for (const command of text.matchAll(/\bpnpm add (?<packages>[^"`\\\n]+)/gu)) {
+  for (const command of text.matchAll(
+    /\bpnpm add (?<packages>[^"'`\\\n]+)/gu
+  )) {
     for (const spec of (command.groups?.packages ?? "").split(/\s+/u)) {
       const pinned = /^(?<name>@?[^@\s]+)@(?<version>[^\s]+)$/u.exec(
         spec
       )?.groups;
-      if (pinned?.name !== undefined) {
+      // A workspace's own package has no version to pin.
+      if (
+        pinned?.name !== undefined &&
+        pinned.version?.startsWith("workspace:") !== true
+      ) {
         check(
           pinned.version === catalog[pinned.name],
           `${page}: pins ${spec}, the catalog has ${pinned.name} ${catalog[pinned.name] ?? "not at all"}`

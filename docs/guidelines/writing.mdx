@@ -138,7 +138,7 @@ The catalogue is a `Partial<I18nCatalog>`, partial by part: a part it leaves out
 
 ## Words from a translation library
 
-A product whose words come from a translation library (Lingui, i18next, FormatJS) has no constant to give: the words exist once a language is active, and change with it. Build the catalogue where the library's words are read, while rendering, in one component around the routes. The provider keeps the words it has until `locale` or one of the strings changes, so nothing that reads them is drawn again because the object is a new one; a word that is a function is read again at the same moment.
+A product whose words come from a translation library (Lingui, i18next, FormatJS) has no constant to give: the words exist once a language is active, and change with it. Build the catalogue where the library's words are read, while rendering, in one component around the routes. The provider keeps the words it has until `locale` or one of the strings changes, so nothing that reads them is drawn again because the object is a new one; a word that is a function is read again at the same moment. `locale` is required for that reason: a change of language always changes it, so no word outlives its language.
 
 ```tsx
 export const UiWords = ({ children }: { children: ReactNode }) => {

@@ -468,6 +468,7 @@ const styles = stylex.create({
     transitionTimingFunction: duration.ease,
     color: "inherit",
     font: "inherit",
+    cursor: "pointer",
   },
   ticks: {
     display: "contents",

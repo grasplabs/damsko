@@ -7,7 +7,7 @@ Grasp's design system: primitives and a few generic blocks, built on StyleX and 
 | Path | What it is |
 | --- | --- |
 | `tokens/` | Token source and generator; never shipped |
-| `src/` | What ships, at the paths it lands at in a product: `components/` (one file per primitive, three folder components), `blocks/`, `lib/`, `hooks/`, `styles/` (the tokens, the themes, the base, and the fonts with their files) |
+| `src/` | What ships, at the paths it lands at in a product: `components/` (one file per primitive, three folder components), `blocks/`, `lib/`, `hooks/`, `styles/` (the tokens, the themes, an optional reset for a new app, and the fonts with their files and their unpack script) |
 | `examples/` | One folder per component, one file per example |
 | `docs/` | The docs pages (MDX) |
 | `site/` | The Astro docs site, deployed with the registry to damsko.joingrasp.com |
@@ -23,7 +23,7 @@ Vite+ (`vp`) is the toolchain. Run from the repo root:
 - `vp check`: format, lint (Ultracite) and type-check; `vp check --fix` to fix
 - `node scripts/gates.ts`: the static gates (generated files current, registry, React Compiler, no memo, words, props tables, API tables, conventions, every component's target API and shape, every component's spec, example and page under its name, product knowledge, ES2023, the diff engine)
 - `node scripts/guard.ts`: what may be in the tree
-- `node scripts/check-install.ts`: every item installed with the stock shadcn CLI into a fresh workspace, from the registry built here: byte for byte, only the packages the items name, type-checked, and the two apps Get started describes built from that page's code blocks and opened in Chromium (fonts, base, mode, words). Installs from npm, about half a minute; needs Playwright's Chromium
+- `node scripts/check-install.ts`: every item installed with the stock shadcn CLI into a fresh workspace, from the registry built here: byte for byte, only the packages the items name, type-checked. Then Get started carried out as written, in empty folders: every block that says what it does is run or written, and nothing else, and the three apps it makes (plain, workspace package, beside Tailwind) are built and opened in Chromium (fonts, reset, mode, words; beside Tailwind, a part that is not Damsko's keeps its pixels). Installs from npm, under a minute; needs Playwright's Chromium
 - `vp test`: unit tests
 - `vp run test:browser`: the browser specs in Chromium, against `dist/` (build first); `vp run test:browser tests/<name>.spec.ts` for one
 - `vp run dev`: the docs site at localhost:4517; `vp run build`: the static site and the registry into `dist/`
@@ -42,8 +42,9 @@ Vite+ (`vp`) is the toolchain. Run from the repo root:
 - **No barrels**, no `index.ts` outside the three folder components, no deprecated aliases, no compatibility shims, no dead code.
 - **The primitives' few built-in words come from the `I18nProvider`.** No per-component word files.
 - **Not in the brand book, not in Damsko**: colours, tokens, effects. Every colour, space, corner, edge, shadow, time and curve is a token.
-- **Source layout equals installed layout.** Every registry file is typed `registry:file` with a `~/src/…` target, imports are relative, npm dependencies are listed by name only, and the registry's files are built at deploy, never committed (`scripts/check-registry.ts`, `scripts/registry-dist.ts`). A font is the one file the CLI cannot carry as it is: it travels as base64 text and one documented command unpacks it. Every item's `meta` says its version, commit and licence.
-- **What Get started says is what the install check runs.** The Vite configs, the exports map, the styles and the commands on that page are data in `site/start/get-started.ts`, and `scripts/check-install.ts` builds its apps from them; change a setting there, never in prose alone. A new `.tsx` in `lib/` or a fourth folder component must be added to that file's exports map (`scripts/check-registry.ts` fails until it is).
+- **Source layout equals installed layout.** Every registry file is typed `registry:file` with a `~/src/…` target, imports are relative, npm dependencies are listed by name only, and the registry's files are built at deploy, never committed (`scripts/check-registry.ts`, `scripts/registry-dist.ts`). A font is the one file the CLI cannot carry as it is: it travels as base64 text and the script installed beside it unpacks it (`src/styles/fonts/unpack.mjs`). Every item's `meta` says its version, commit and licence.
+- **What Get started says is what the install check runs.** Every block on that page is data in `site/start/get-started.ts`; a block a reader must carry out says what it does (`does`: a command, a whole file, members of a JSON file), and `scripts/check-install.ts` carries out exactly those, in order, in an empty folder. A file, package or setting the apps need must be in a block the page shows; the check adds none.
+- **No component leans on the app's reset.** `src/styles/base.css` is optional, for a new app; a product beside Tailwind does not load it. A component that must shrink below its content or shows a pointer says so in its own styles (`tests/base.spec.ts`). A new `.tsx` in `lib/` or a fourth folder component must be added to that file's exports map (`scripts/check-registry.ts` fails until it is).
 - **Every component has a spec** that selects by role, label or text, an example and a docs page, changed in the same pull request as the component; its files and exports are pinned in `scripts/target-api.json` (`scripts/check-target-api.ts`), and the spec, the examples folder and the page carry its name (`scripts/check-coverage.ts`).
 
 ## How a component is made
@@ -72,7 +73,7 @@ The product builds Damsko's source with its own toolchain, so every component pa
 
 ## Branches and pull requests
 
-Trunk-based: `main` is the only long-lived branch. The site and the registry are built from it; no CI job deploys them. Every deploy serves the registry under its commit too (`/r/<commit>/{name}.json`), which is what a product pins.
+Trunk-based: `main` is the only long-lived branch. The site and the registry are built from it; no CI job deploys them. Every deploy serves the registry under its commit too (`/r/<commit>/{name}.json`), for the commit it serves now; any other is built from a checkout.
 
 1. Branch from `main` as `<type>/<kebab-description>`, e.g. `feat/button-icon-sm`, using the commit types. A `pre-push` hook and CI check the name.
 2. Open a **draft** pull request into `main`. Screenshots of any change that shows go in its Screenshots section, light and dark.

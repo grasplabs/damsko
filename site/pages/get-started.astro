@@ -32,8 +32,12 @@ const drawn = await Promise.all(
     steps: await Promise.all(
       section.steps.map(async (step) => ({
         ...step,
-        html: await highlight(step.code, step.lang),
-        thenHtml: step.then ? await highlight(step.then.code, step.then.lang) : null,
+        blocks: await Promise.all(
+          step.blocks.map(async (block) => ({
+            lang: block.lang,
+            html: await highlight(block.code, block.lang),
+          })),
+        ),
       })),
     ),
   })),
@@ -64,8 +68,7 @@ const drawn = await Promise.all(
             <li>
               <h3 id={step.slug}>{step.name}</h3>
               <p class="gs-note">{step.note}</p>
-              <CodeBlock html={step.html} language={step.lang} />
-              {step.thenHtml && <CodeBlock html={step.thenHtml} language={step.then?.lang} />}
+              {step.blocks.map((block) => <CodeBlock html={block.html} language={block.lang} />)}
             </li>
           ))}
         </ol>

@@ -129,6 +129,8 @@ const styles = stylex.create({
     alignItems: "center",
     gap: space["1"],
     boxSizing: "border-box",
+    // Gives way in a row that is short of room, down to its words' ellipsis.
+    minWidth: 0,
     maxWidth: "100%",
     margin: 0,
     paddingInline: sizes.badgePadding,

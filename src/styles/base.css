@@ -1,18 +1,22 @@
-/* The base: what a page gives Damsko's components before any of their own styles. They were written
-   and checked against this box model (Tailwind's preflight, plus three rules of ours: nothing
-   refuses to shrink below its content, a pointer on what can be pressed, legible text rendering),
-   so a page without it draws them with the browser's own margins, edges and control looks.
+/* An app-level reset, optional: for a new app that has no reset of its own.
 
-   Import it once, with tokens.css, before the page's own styles. Everything is in the cascade layer
-   `base`: a component's StyleX rule, layered after it or not layered at all, wins whatever its
-   specificity, and so does a rule of the page's own. Beside Tailwind, its preflight is in a layer
-   of the same name and gives rules 1, 6 and 7 already; this sheet then adds rules 2 and 3 and sets
-   the page's text (4 and 5) for everything on the page, the product's own parts included.
+   Do not import it beside Tailwind. Tailwind's preflight is that app's reset, and this one would
+   restyle the product's own interface: the page's font, size and colours (rules 4 and 5),
+   `min-width: 0` on everything (rule 2) and a pointer on every button (rule 3).
 
-   What it leaves to others: the mode and the theme (`color-scheme`, themes.css), the fonts'
-   files (fonts.css), a focus ring (each component draws its own) and `[hidden]` (the browser's
-   own, which a component's display rule may override). It selects elements only: no class, no
-   attribute of ours. */
+   What the components need from an app is a reset of preflight's kind: one box model, and no
+   look of the browser's own on an element or a control (rules 1, 6 and 7 here, the same as
+   Tailwind's preflight). They need nothing else of this file. None leans on rules 2 and 3: a
+   component that must shrink, or shows a pointer, says so in its own styles, and
+   tests/base.spec.ts takes both rules out of every example and holds each box and cursor where
+   it was. Rules 4 and 5 are the page's text, which a component inherits where it sets none of
+   its own, here as in any app.
+
+   Everything is in the cascade layer `base`: a component's StyleX rule, which is in no layer,
+   wins whatever its specificity, and so does a rule of the page's own. What it leaves to others:
+   the mode and the theme (`color-scheme`, themes.css), the fonts' files (fonts.css), a focus ring
+   (each component draws its own) and `[hidden]` (the browser's own). It selects elements only:
+   no class, no attribute of ours. */
 
 @layer base {
   /* 1. One box model. A size is the border box, and nothing has a margin, a padding or an edge it

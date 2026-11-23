@@ -14,8 +14,9 @@
 //   const { t, i18n } = useTranslations();
 //   <I18nProvider locale={i18n.locale} catalog={{ dialog: { close: t("Close") } }}>…</I18nProvider>
 //
-// Either way the provider keeps the words it has until the language or a word changes, so what
-// reads them is not drawn again because the object is a new one (I18nProvider, below).
+// Either way the provider keeps the words it has until `locale` or a string changes, so what reads
+// them is not drawn again because the object is a new one (I18nProvider, below). `locale` is
+// always given: a word that is a function is read again when it changes.
 //
 // A part the catalogue leaves out keeps its English, and a part it gives, it gives whole: every
 // word of it, so a word added here fails the product's type check until it is translated. With no
@@ -1570,8 +1571,12 @@ export interface I18nProviderProps {
    * strings changes, and reads the function words again then.
    */
   catalog?: Partial<I18nCatalog>;
-  /** The page's language, as a BCP 47 tag ("nl-NL"): numbers and dates are formatted in it. */
-  locale?: string;
+  /**
+   * The page's language, as a BCP 47 tag ("nl-NL"): numbers and dates are formatted in it, and the
+   * catalogue is read again whenever it changes. Always given, so words never outlive their
+   * language.
+   */
+  locale: string;
   children: ReactNode;
 }
 

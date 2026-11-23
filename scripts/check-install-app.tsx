@@ -1,33 +1,21 @@
-// The app scripts/check-install.ts builds from an installed registry and opens in a browser: it is
-// copied into the fresh project as src/App.tsx, and never runs here. It holds one thing for each
-// claim the docs make to a product: a component with its fill, text in each of the three font
+// The second app scripts/check-install.ts opens in a browser. The first is the page's own (Get
+// started's blocks, carried out as written: one button). Once that has built and drawn, this file
+// takes the place of its src/App.tsx, and nothing else changes: no package, no setting. It holds
+// one thing for each further claim the docs make to a product: text in each of the three font
 // families (with a letter only the full Latin file has), an element with no style of its own for
 // the base, a choice of mode that is kept, and the components' words from a translation library
-// in miniature, built while rendering.
+// in miniature, built while rendering. Never run here.
+/* oxlint-disable shadcn/no-inline-styles -- the page's app has no StyleX of its own and this file adds no package to it, so its three styles are inline */
 import { Button } from "@grasp-os/ui/components/button";
-import { CopyButton } from "@grasp-os/ui/components/copy-button";
 import { I18nProvider, useI18n } from "@grasp-os/ui/lib/i18n";
 import type { I18nCatalog } from "@grasp-os/ui/lib/i18n";
-import { font } from "@grasp-os/ui/lib/tokens.stylex";
-import * as stylex from "@stylexjs/stylex";
 import { useState, useSyncExternalStore } from "react";
-
-const styles = stylex.create({
-  // A flex column, so the paragraph is a flex item: only the base lets it shrink below its words.
-  column: {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "flex-start",
-  },
-  mono: { fontFamily: font.mono },
-  serif: { fontFamily: font.serif },
-});
 
 // A runtime catalogue: the words exist once a language is active, and its readers are told when
 // the language changes.
 const messages = {
-  en: { copied: "Copied", copy: "Copy", copyError: "Not copied" },
-  nl: { copied: "Gekopieerd", copy: "Kopiëren", copyError: "Niet gekopieerd" },
+  en: { asks: "Needs your yes", error: "Failed", loading: "Working" },
+  nl: { asks: "Vraagt je ja", error: "Mislukt", loading: "Bezig" },
 };
 type Language = keyof typeof messages;
 
@@ -52,10 +40,16 @@ const library = {
 /** Every catalogue object a reader was given: one for each language shown, however often drawn. */
 const given = new Set<I18nCatalog>();
 
-/** Says how many different catalogue objects the readers have seen. */
-const Catalogues = () => {
-  given.add(useI18n());
-  return <output aria-label="Catalogues">{given.size}</output>;
+/** A component's word, and how many different catalogue objects the readers have seen. */
+const Words = () => {
+  const words = useI18n();
+  given.add(words);
+  return (
+    <>
+      <output aria-label="Word">{words.action.loading}</output>
+      <output aria-label="Catalogues">{given.size}</output>
+    </>
+  );
 };
 
 const choose = (mode: "light" | "dark") => {
@@ -71,25 +65,30 @@ const App = () => {
     <I18nProvider
       locale={language === "nl" ? "nl-NL" : "en-GB"}
       catalog={{
-        copyButton: {
-          copied: words.copied,
-          copy: words.copy,
-          copyError: words.copyError,
-        },
-        holdButton: {
-          ask: (action) => `${action}?`,
-          cancel: "Cancel",
-          confirm: "Confirm",
-          holdTo: (action) => `Hold to ${action}`,
+        action: {
+          agentAsks: words.asks,
+          // A word that is a function, built anew at every draw.
+          agentPresses: (pressed) => `${words.asks}: ${pressed}`,
+          error: words.error,
+          loading: words.loading,
+          success: words.loading,
         },
       }}
     >
-      <main {...stylex.props(styles.column)}>
-        <h1 {...stylex.props(styles.serif)}>Café Zoë</h1>
+      {/* A flex column, so the paragraph is a flex item: only a reset lets it shrink below its words. */}
+      <main
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "flex-start",
+        }}
+      >
+        <h1 style={{ fontFamily: "var(--damsko-font-serif)" }}>Café Zoë</h1>
         <p>A plain paragraph: señor, façade.</p>
-        <code {...stylex.props(styles.mono)}>const naïve = 1;</code>
+        <code style={{ fontFamily: "var(--damsko-font-mono)" }}>
+          const naïve = 1;
+        </code>
         <Button variant="default">Save changes</Button>
-        <CopyButton value="https://example.com" />
         <Button
           variant="outline"
           onClick={() => {
@@ -107,7 +106,7 @@ const App = () => {
           Draw again
         </Button>
         <output aria-label="Drawn">{drawn}</output>
-        <Catalogues />
+        <Words />
         <Button
           variant="outline"
           onClick={() => {

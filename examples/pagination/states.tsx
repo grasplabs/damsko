@@ -32,7 +32,7 @@ const projects: Partial<I18nCatalog> = {
 
 export default function PaginationStates() {
   return (
-    <I18nProvider catalog={projects}>
+    <I18nProvider locale="en-GB" catalog={projects}>
       <div {...stylex.props(layout.stack)}>
         <Pagination
           total={100}
