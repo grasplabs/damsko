@@ -9,7 +9,8 @@
 // It is one button (the copy button), so a keyboard reaches it once and a screen reader hears its
 // name; the field round it is a label for that button, so a press on the value presses it too. A
 // value longer than its room stays on one line and scrolls sideways inside the field, the end with
-// more fading; it is never broken and never cut short. The timing, the check and the words are
+// more fading; it is never broken and never cut short. While it is clipped the value is a Tab stop
+// before the button, so the arrow keys scroll to the rest of it. The timing, the check and the words are
 // CopyButton's, the same for every copy in the library.
 //
 // Every value is a token. A caller may set layout only (the `style` prop).
@@ -17,7 +18,7 @@
 
 import * as stylex from "@stylexjs/stylex";
 
-import { useScrollEdges } from "../hooks/use-scroll-edges";
+import { markScrollEdges, useScrollEdges } from "../hooks/use-scroll-edges";
 import { focusWithin } from "../lib/styles";
 import {
   colors,
@@ -168,7 +169,7 @@ const styles = stylex.create({
     overflowY: "hidden",
     whiteSpace: "nowrap",
     scrollbarWidth: "none",
-    // Out of the tab order (below), but a press can still focus it: the field's ring shows focus.
+    // Focused by a press or, clipped, by Tab: the field's ring shows it.
     outline: "none",
     maskImage: {
       default: "none",
@@ -188,8 +189,15 @@ export const Snippet = ({
   onCopy,
   style,
 }: SnippetProps) => {
-  // The ends of the value with more beyond them are marked for the fade there.
-  const edges = useScrollEdges();
+  // The ends of the value with more beyond them are marked for the fade there. Clipped, the value
+  // is a Tab stop of its own, so the keyboard's arrows scroll to the rest of it (WCAG 2.1.1); a
+  // value that fits is none, and the button is the one stop.
+  const edges = useScrollEdges({
+    onChange: (found, element) => {
+      markScrollEdges(found, element);
+      element.tabIndex = found.overflows ? 0 : -1;
+    },
+  });
   const hasSwatch = swatch !== undefined && swatch !== "";
   return (
     // A label round the button: a press anywhere on the field presses the button, once.
@@ -207,8 +215,8 @@ export const Snippet = ({
       {hasSwatch ? (
         <span aria-hidden="true" {...stylex.props(styles.swatch(swatch))} />
       ) : null}
-      {/* Out of the tab order: Chrome and Firefox make a box that scrolls a Tab stop of its own,
-          a second, ringless stop before the button. The button is the one stop. */}
+      {/* Out of the tab order while the value fits (above): browsers differ on whether a box that
+          could scroll is a Tab stop, so it is said here. */}
       <span
         ref={edges}
         tabIndex={-1}

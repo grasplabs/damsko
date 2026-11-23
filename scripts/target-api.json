@@ -1401,7 +1401,8 @@
       "QuestionnaireInputProps",
       "QuestionnaireErrorProps",
       "QuestionnaireActionsProps",
-      "QuestionnaireNavigationProps"
+      "QuestionnaireNavigationProps",
+      "QuestionnaireSubmitProps"
     ]
   },
   "share-dialog-01": {
@@ -1430,6 +1431,7 @@
       "SidebarSeparator",
       "SidebarInput",
       "SidebarGroup",
+      "SidebarCollapsible",
       "SidebarGroupLabel",
       "SidebarGroupAction",
       "SidebarGroupContent",
@@ -1458,6 +1460,7 @@
       "SidebarSeparatorProps",
       "SidebarInputProps",
       "SidebarGroupProps",
+      "SidebarCollapsibleProps",
       "SidebarGroupLabelProps",
       "SidebarGroupActionProps",
       "SidebarGroupContentProps",

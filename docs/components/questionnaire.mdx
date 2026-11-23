@@ -46,6 +46,12 @@ When `onSubmit`'s Promise rejects, the questionnaire says it could not send, kee
 
 <Stage path="questionnaire/failed" label="An answer that fails" />
 
+## Sending held
+
+`disabled` on `QuestionnaireSubmit` holds the answers while the page cannot take them: neither the button nor Enter sends. With `disabledReason` the reason stands at the start of the row, the button keeps its place in the Tab order and is described by it, so a keyboard or a screen reader reaches Send and hears why. The person can still choose.
+
+<Stage path="questionnaire/held" label="Sending held" />
+
 ## Held by the page
 
 `checked` on a `QuestionnaireChoice` and `value` on a `QuestionnaireInput` hold the answer in the page; `onCheckedChange` and `onValueChange` say each change.
@@ -129,6 +135,11 @@ A questionnaire is a group, not a form, so it may stand in a PromptInput's body 
       key: "Next, Submit",
       value:
         "Wait until the item is answered or skipped; Submit works while its Promise runs.",
+    },
+    {
+      key: "Submit held",
+      value:
+        "With `disabled`, neither the button nor Enter sends. With `disabledReason` the button is `aria-disabled`, keeps its place in the Tab order and is described by the reason at the start of the row.",
     },
     {
       key: "Navigation",
@@ -274,6 +285,12 @@ A questionnaire is a group, not a form, so it may stand in a PromptInput's body 
   source="src/components/questionnaire.tsx"
   type="QuestionnaireNavigationProps"
   label="QuestionnairePrevious, QuestionnaireSkip, QuestionnaireNext and QuestionnaireSubmit props"
+/>
+
+<Props
+  source="src/components/questionnaire.tsx"
+  type="QuestionnaireSubmitProps"
+  label="QuestionnaireSubmit's own props"
 />
 
 </Reference>

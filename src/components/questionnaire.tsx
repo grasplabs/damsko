@@ -37,8 +37,10 @@
 // the left and right arrows go back and on, away from a radio or the words. Next and Submit wait
 // until the item is answered, or skipped. `onSubmit` may return a Promise: Submit works until it
 // settles; if it rejects, the questionnaire says it could not send and can be sent again; once
-// sent, the answers stand in one line in the choices' place. Every value is a token. A caller may
-// set layout only (the `style` prop).
+// sent, the answers stand in one line in the choices' place. A page that cannot take the answers
+// yet holds QuestionnaireSubmit (`disabled`); with `disabledReason` the button stays a Tab stop and
+// the reason stands beside it. Every value is a token. A caller may set layout only (the `style`
+// prop).
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
@@ -298,6 +300,22 @@ export interface QuestionnaireNavigationProps {
   size?: "xs" | "sm" | "default" | "lg";
   /** Runs first when it is pressed; `event.preventDefault()` keeps it from doing its own work. */
   onClick?: (event: MouseEvent<HTMLElement>) => void;
+}
+
+/** Every prop a QuestionnaireSubmit takes: a navigation button's, and the page's hold on it. */
+export interface QuestionnaireSubmitProps extends QuestionnaireNavigationProps {
+  /**
+   * Held by the page: the answers cannot be sent yet (nothing is there to receive them), from the
+   * button or from Enter. The person can still choose.
+   * @default false
+   */
+  disabled?: boolean;
+  /**
+   * Why it is held, as a sentence ("No assistant is connected, so the answer cannot be sent
+   * yet."): shown at the start of the actions' row and read with the button, which then keeps its
+   * place in the Tab order.
+   */
+  disabledReason?: string;
 }
 
 const FORCED = media.forcedColors;
@@ -642,6 +660,18 @@ const styles = stylex.create({
     height: font.textSmLine,
     color: colors.success,
   },
+  // Why Submit is held: quiet words at the start of the row, which take its room.
+  reason: {
+    order: -1,
+    flexGrow: 1,
+    flexBasis: 0,
+    minWidth: "10rem",
+    margin: 0,
+    fontSize: font.textXs,
+    lineHeight: font.textXsLine,
+    color: colors.mutedForeground,
+    overflowWrap: "anywhere",
+  },
   failed: {
     display: "flex",
     alignItems: "center",
@@ -694,6 +724,8 @@ interface QuestionnaireState {
   ) => () => void;
   /** What runs when the words change. */
   listenText: (item: string, listener: (text: string) => void) => () => void;
+  /** Sending held by the page (QuestionnaireSubmit's `disabled`), until what it returns runs. */
+  holdSubmit: () => () => void;
   requiredOf: (name: string) => boolean;
   previous: () => void;
   forward: () => void;
@@ -819,6 +851,7 @@ export const Questionnaire = ({
     new Map<string, (checked: boolean) => void>()
   );
   const textListeners = useRef(new Map<string, (text: string) => void>());
+  const [onHold, setOnHold] = useState(false);
   const failedId = useId();
 
   // The items that count, in the page's order once drawn (`entries` is kept in it); `items`' order
@@ -922,7 +955,7 @@ export const Questionnaire = ({
   };
 
   const send = async () => {
-    if (busy.current || sentLine !== null) {
+    if (busy.current || sentLine !== null || onHold) {
       return;
     }
     const wrong = order.find(
@@ -1159,6 +1192,12 @@ export const Questionnaire = ({
       checkedListeners.current.set(key, listener);
       return () => {
         checkedListeners.current.delete(key);
+      };
+    },
+    holdSubmit: () => {
+      setOnHold(true);
+      return () => {
+        setOnHold(false);
       };
     },
     listenText: (owner, listener) => {
@@ -1833,17 +1872,27 @@ export const QuestionnaireNext = ({
   );
 };
 
-/** Sends the answers. It waits until the item is answered or skipped, and works while it sends. On the last item. */
+/**
+ * Sends the answers. It waits until the item is answered or skipped, and works while it sends. On
+ * the last item. `disabled` holds it for the page; with `disabledReason` it stays a Tab stop that
+ * says why.
+ */
 export const QuestionnaireSubmit = ({
   children,
   variant = "default",
   size: sized = "sm",
   onClick,
-}: QuestionnaireNavigationProps) => {
-  const { order, active, statusOf, submit, sending } = useQuestionnaire(
-    "QuestionnaireSubmit"
-  );
+  disabled = false,
+  disabledReason,
+}: QuestionnaireSubmitProps) => {
+  const { order, active, statusOf, submit, sending, holdSubmit } =
+    useQuestionnaire("QuestionnaireSubmit");
   const words = useI18n().questionnaire;
+  const reasonId = useId();
+  useEffect(
+    () => (disabled ? holdSubmit() : undefined),
+    [disabled, holdSubmit]
+  );
   if (
     active !== null &&
     order.length > 0 &&
@@ -1852,25 +1901,41 @@ export const QuestionnaireSubmit = ({
     return null;
   }
   const waiting = active === null || statusOf(active) === "unanswered";
+  const reason =
+    disabled && disabledReason !== undefined && disabledReason !== ""
+      ? disabledReason
+      : undefined;
   return (
-    <span data-slot="questionnaire-submit">
-      <Button
-        type="button"
-        variant={variant}
-        size={sized}
-        disabled={waiting || sending}
-        focusableWhenDisabled={sending}
-        aria-busy={sending || undefined}
-        onClick={(event: MouseEvent<HTMLElement>) => {
-          onClick?.(event);
-          if (event.defaultPrevented) {
-            return;
-          }
-          submit();
-        }}
-      >
-        {children ?? words.submit}
-      </Button>
-    </span>
+    <>
+      {reason !== undefined && (
+        <p
+          id={reasonId}
+          data-slot="questionnaire-submit-reason"
+          {...stylex.props(styles.reason)}
+        >
+          {reason}
+        </p>
+      )}
+      <span data-slot="questionnaire-submit">
+        <Button
+          type="button"
+          variant={variant}
+          size={sized}
+          disabled={waiting || sending || disabled}
+          focusableWhenDisabled={sending || reason !== undefined}
+          aria-busy={sending || undefined}
+          aria-describedby={reason === undefined ? undefined : reasonId}
+          onClick={(event: MouseEvent<HTMLElement>) => {
+            onClick?.(event);
+            if (event.defaultPrevented) {
+              return;
+            }
+            submit();
+          }}
+        >
+          {children ?? words.submit}
+        </Button>
+      </span>
+    </>
   );
 };

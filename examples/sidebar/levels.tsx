@@ -1,12 +1,12 @@
 "use client";
 
 import {
-  Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@grasp-os/ui/components/collapsible";
 import {
   Sidebar,
+  SidebarCollapsible,
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
@@ -23,6 +23,7 @@ import {
   SidebarMenuItem,
   SidebarProvider,
   SidebarTrigger,
+  sidebarStateScript,
   useSidebar,
 } from "@grasp-os/ui/components/sidebar";
 import {
@@ -91,7 +92,7 @@ const Reopen = () => {
 // Settings takes the sidebar: its row, or the person at the foot, shows the Settings level in the
 // main one's place (the way back, its name, its own groups), and Back shows the main one again as
 // it was left. The header and the foot stay. Here the level is kept in state; in a product the
-// router says which one is shown.
+// router says which one is shown. A level's group that folds is kept by its `name` as any other.
 export default function SidebarLevelsExample() {
   const [level, setLevel] = useState("main");
   const [page, setPage] = useState("chat");
@@ -113,7 +114,16 @@ export default function SidebarLevelsExample() {
   );
   return (
     <div {...stylex.props(layout.frame)}>
-      <SidebarProvider style={layout.provider}>
+      <script
+        // oxlint-disable-next-line react/no-danger -- the script is the library's own, from a constant key
+        dangerouslySetInnerHTML={{
+          __html: sidebarStateScript("examples-sidebar-levels"),
+        }}
+      />
+      <SidebarProvider
+        style={layout.provider}
+        storageKey="examples-sidebar-levels"
+      >
         <Sidebar>
           <SidebarHeader>
             <SidebarTrigger />
@@ -175,7 +185,7 @@ export default function SidebarLevelsExample() {
                   <SidebarGroupLabel>Workspace</SidebarGroupLabel>
                   <SidebarMenu>{workspace.map(settingRow)}</SidebarMenu>
                 </SidebarGroup>
-                <Collapsible defaultOpen>
+                <SidebarCollapsible name="settings-account">
                   <SidebarGroup>
                     <CollapsibleTrigger asChild>
                       <SidebarGroupLabel asChild>
@@ -194,7 +204,7 @@ export default function SidebarLevelsExample() {
                       <SidebarMenu>{account.map(settingRow)}</SidebarMenu>
                     </CollapsibleContent>
                   </SidebarGroup>
-                </Collapsible>
+                </SidebarCollapsible>
               </SidebarContent>
             </SidebarLevel>
           </SidebarLevels>

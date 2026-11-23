@@ -80,11 +80,42 @@ test("a long value stays on one line inside its field, and copies whole", async 
   await expect.poll(async () => await clipboard(page)).toBe(value);
 });
 
-test("a long value that scrolls is still one tab stop", async ({ page }) => {
+test("a clipped value is a Tab stop before the button, and the arrow keys scroll to the rest of it", async ({
+  page,
+}) => {
   await openExample(page, "snippet", "long");
+  const value = page.getByText(
+    "workspace_8f3a2c91-d4e7-4b6a-905f-1c2d3e4b5a69"
+  );
+  await page.keyboard.press("Tab");
+  await expect(value).toBeFocused();
+  // The field shows the keyboard's ring for it.
+  await expect
+    .poll(
+      async () =>
+        await page
+          .locator("label")
+          .filter({ has: value })
+          .evaluate((node) => getComputedStyle(node).outlineStyle)
+    )
+    .toBe("solid");
+  const scrolled = async () => await value.evaluate((node) => node.scrollLeft);
+  expect(await scrolled()).toBe(0);
+  await page.keyboard.press("ArrowRight");
+  await expect.poll(scrolled).toBeGreaterThan(0);
   await page.keyboard.press("Tab");
   await expect(
     page.getByRole("button", { name: "Copy the workspace ID" })
+  ).toBeFocused();
+});
+
+test("a value that fits is no Tab stop: the button is the one stop", async ({
+  page,
+}) => {
+  await openExample(page, "snippet", "basic");
+  await page.keyboard.press("Tab");
+  await expect(
+    page.getByRole("button", { name: "Copy the install command" })
   ).toBeFocused();
 });
 

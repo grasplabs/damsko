@@ -249,6 +249,81 @@ test("a group folds from its label, and the header's field filters the rows", as
   ).toBeVisible();
 });
 
+test("with a storage key a group's fold stays across a reload, apart from the sidebar's own", async ({
+  page,
+}) => {
+  await openExample(page, "sidebar", "groups");
+  const projects = page.getByRole("button", { name: "Projects", exact: true });
+  const teams = page.getByRole("button", { name: "Teams", exact: true });
+  await projects.click();
+  await expect(projects).toHaveAttribute("aria-expanded", "false");
+  await page.reload();
+  await expect(projects).toHaveAttribute("aria-expanded", "false");
+  await expect(page.getByRole("link", { name: "Hiring" })).toBeHidden();
+  await expect(teams).toHaveAttribute("aria-expanded", "true");
+  await expect(page.getByRole("link", { name: "Finance" })).toBeVisible();
+  await expect(triggerOf(page)).toHaveAttribute("aria-expanded", "true");
+  await projects.click();
+  await page.reload();
+  await expect(projects).toHaveAttribute("aria-expanded", "true");
+  await expect(page.getByRole("link", { name: "Hiring" })).toBeVisible();
+});
+
+test("the head script draws a kept fold before the page wakes, and waking moves nothing", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("examples-sidebar-groups:projects", "false");
+  });
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  const wake = await openExampleAsleep(page, "sidebar", "groups");
+  const hiring = page.getByRole("link", { name: "Hiring" });
+  const finance = page.getByRole("link", { name: "Finance" });
+  await expect(finance).toBeVisible();
+  await expect(hiring).toBeHidden();
+  const asleep = await finance.boundingBox();
+  // Every frame from here on: the kept group never shows, and the group under it never moves.
+  await page.evaluate(() => {
+    const tops = new Set<number>();
+    const look = () => {
+      const links = [...document.querySelectorAll("a")];
+      const row = (name: string) =>
+        links.find((link) => link.textContent.trim() === name);
+      if (row("Hiring")?.checkVisibility() === true) {
+        document.body.dataset.keptShown = "";
+      }
+      tops.add(Math.round(row("Finance")?.getBoundingClientRect().top ?? -1));
+      document.body.dataset.tops = String(tops.size);
+      requestAnimationFrame(look);
+    };
+    look();
+  });
+  await wake();
+  const projects = page.getByRole("button", { name: "Projects", exact: true });
+  await expect(projects).toHaveAttribute("aria-expanded", "false");
+  expect(await finance.boundingBox()).toEqual(asleep);
+  await expect(page.locator("body")).not.toHaveAttribute("data-kept-shown");
+  await expect(page.locator("body")).toHaveAttribute("data-tops", "1");
+  // Awake, it opens from its label as any other.
+  await projects.click();
+  await expect(hiring).toBeVisible();
+});
+
+test("levels: a group's fold in a level is kept by its name too", async ({
+  page,
+}) => {
+  await openExample(page, "sidebar", "levels");
+  const sidebar = sidebarOf(page);
+  await sidebar.getByRole("link", { name: "Settings" }).click();
+  const account = sidebar.getByRole("button", { name: "Your account" });
+  await account.click();
+  await expect(account).toHaveAttribute("aria-expanded", "false");
+  await page.reload();
+  await sidebarOf(page).getByRole("link", { name: "Settings" }).click();
+  await expect(account).toHaveAttribute("aria-expanded", "false");
+  await expect(sidebar.getByRole("link", { name: "Profile" })).toBeHidden();
+});
+
 test("a row's action shows on the row and opens its menu, and focus reaches it after the row", async ({
   page,
 }) => {

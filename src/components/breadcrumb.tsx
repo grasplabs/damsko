@@ -18,7 +18,8 @@
 //   </Breadcrumb>
 //
 // The parts render what they say: the caller writes the separators and, for a long path, the "…"
-// that holds the levels between in a Dropdown menu. It knows no router: a router's link comes in as
+// that holds the levels between in a Dropdown menu (an icon-only Button, so its tooltip shows its
+// name). It knows no router: a router's link comes in as
 // BreadcrumbLink's child, with `asChild`, and so does a button for a step that acts in place.
 //
 // It holds one line. When the path is wider than its room the page's name gives way first, cut off
@@ -49,7 +50,7 @@ import {
   EllipsisIcon,
   Icon,
 } from "../lib/icons";
-import { focusRing, focusRingText } from "../lib/styles";
+import { focusRingText } from "../lib/styles";
 import {
   colors,
   duration,
@@ -61,6 +62,7 @@ import {
 } from "../lib/tokens.stylex";
 import type { LayoutStyle } from "../lib/utils";
 import { iconVars, motionVars, ringInsetMarker } from "../lib/vars.stylex";
+import { Button } from "./button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -168,7 +170,6 @@ export interface BreadcrumbEllipsisProps {
 
 const PHONE = media.maxSm;
 const COARSE = media.pointerCoarse;
-const FORCED = media.forcedColors;
 
 // A link stands a little wider than its words, into the gap round it, so its ring keeps off the
 // first and last letter as it does off the line above and below.
@@ -326,43 +327,14 @@ const styles = stylex.create({
   backChevronBack: {
     display: { default: "none", [IN_PARENT]: "inline-flex" },
   },
-  // The "…": a small ghost button. The margins round it hand back what it is taller than the line,
-  // so the trail stays one line high, and what it is wider than its "…", so the "…" stands as far
-  // from the chevrons as a level's words do. Its ring is drawn inside its edge, so it is as tall as
-  // a level's ring and stands as far from the chevrons.
+  // The "…": Button's small ghost square. The margins round it hand back what it is taller than
+  // the line, so the trail stays one line high, and what it is wider than its "…", so the "…"
+  // stands as far from the chevrons as a level's words do.
   ellipsis: {
-    [iconVars.size]: size.iconSm,
-    [iconVars.stroke]: size.iconStroke,
     display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
     flexShrink: 0,
-    boxSizing: "border-box",
-    width: size.controlXs,
-    height: size.controlXs,
     marginBlock: `calc((${font.textSmLine} - ${size.controlXs}) / 2)`,
     marginInline: `calc((${size.iconSm} - ${size.controlXs}) / 2)`,
-    padding: 0,
-    borderWidth: 0,
-    borderRadius: `min(${radius.base}, calc(${size.controlXs} / 2))`,
-    cornerShape: radius.shape,
-    color: colors.foreground,
-    backgroundColor: {
-      default: "transparent",
-      ":hover": { default: null, [media.hover]: colors.accent },
-      ":is([aria-expanded=true])": {
-        default: colors.accent,
-        [FORCED]: "Highlight",
-      },
-    },
-    cursor: "pointer",
-    WebkitTapHighlightColor: "transparent",
-    transitionProperty: "background-color",
-    transitionDuration: motionVars.hover,
-    transitionTimingFunction: duration.ease,
-  },
-  ellipsisRing: {
-    outlineOffset: `calc(-1 * (${size.ringWidth} + ${size.ringOffsetText}))`,
   },
 });
 
@@ -409,7 +381,7 @@ const watchFocus = (
       return false;
     }
     const menu = ol
-      .querySelector("[data-slot=breadcrumb-ellipsis]")
+      .querySelector("[aria-haspopup=menu]")
       ?.getAttribute("aria-controls");
     return (
       ol.contains(target) ||
@@ -637,23 +609,19 @@ export const BreadcrumbEllipsis = ({
 }: BreadcrumbEllipsisProps) => {
   const { breadcrumb } = useI18n();
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button
-          type="button"
-          aria-label={label ?? breadcrumb.ellipsis}
-          data-slot="breadcrumb-ellipsis"
-          {...stylex.props(
-            styles.ellipsis,
-            focusRing,
-            styles.ellipsisRing,
-            style
-          )}
-        >
-          <Icon icon={EllipsisIcon} />
-        </button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start">{children}</DropdownMenuContent>
-    </DropdownMenu>
+    <span {...stylex.props(styles.ellipsis, style)}>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon-xs"
+            aria-label={label ?? breadcrumb.ellipsis}
+          >
+            <Icon icon={EllipsisIcon} />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start">{children}</DropdownMenuContent>
+      </DropdownMenu>
+    </span>
   );
 };
