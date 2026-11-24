@@ -3,7 +3,14 @@ import type { Locator, Page } from "@playwright/test";
 
 import { fixedTime, openExample } from "./example.ts";
 
-test.use({ permissions: ["clipboard-read", "clipboard-write"] });
+// Only Chromium has the clipboard's permissions: a context asked for them elsewhere does not open.
+test.use({
+  permissions: async ({ browserName }, give) => {
+    await give(
+      browserName === "chromium" ? ["clipboard-read", "clipboard-write"] : []
+    );
+  },
+});
 
 const clipboard = async (page: Page) =>
   await page.evaluate(async () => await navigator.clipboard.readText());
@@ -240,7 +247,7 @@ declare global {
   }
 }
 
-/** The page's long tasks from its start, where the browser reports them (Chromium). */
+/** The page's long tasks, where the browser reports them (Chromium), from `fromNow` on. */
 const watchLongTasks = async (page: Page) => {
   await page.addInitScript(() => {
     window.longTasks = [];
@@ -253,6 +260,12 @@ const watchLongTasks = async (page: Page) => {
     } catch {
       // Not reported here.
     }
+  });
+};
+
+const fromNow = async (page: Page) => {
+  await page.evaluate(() => {
+    window.longTasks = [];
   });
 };
 
@@ -307,6 +320,7 @@ test("code Prism cannot read in time stays plain and whole, and never holds the 
   const stopped = countStopped(page);
   await openExample(page, "code-block", "any");
   await page.getByLabel("Code").fill(slowCode);
+  await fromNow(page);
   await page.getByRole("button", { name: "Show", exact: true }).click();
   // The worker is stopped when its time is up.
   await expect.poll(() => stopped.count, { timeout: 15_000 }).toBe(1);
@@ -336,6 +350,7 @@ test("while slow code is written the page is never held, and done, it is plain a
   const stopped = countStopped(page);
   await openExample(page, "code-block", "any");
   await page.getByLabel("Code").fill(slowCode);
+  await fromNow(page);
   await page.getByRole("button", { name: "Write it out" }).click();
   // Stopped once while it is written, when a reading first takes too long, and not read again
   // until it is done; then read once more, whole, and stopped again.
