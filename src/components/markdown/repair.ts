@@ -10,10 +10,12 @@
 // a section's opening until its summary is whole; inside a fence, a half-typed closing line.
 //
 // Only the end is touched: the result is the source up to `kept`, then the marks that close it. So a
-// later prefix only adds to what an earlier one showed. Every loop moves forward over the leaf being
-// written, or over WINDOW characters at the very end, and no pattern here can backtrack
-// (scripts/check-markdown-patterns.ts), so a repair costs time in step with what it reads.
-import { codeLines, containersEnd } from "./parse";
+// later prefix only adds to what an earlier one showed, but where a definition arrives: the
+// references to it, shown as written, become its link. Every loop moves forward over the leaf being
+// written, or over WINDOW characters at the very end, and no pattern here can backtrack beyond
+// its length (scripts/check-markdown-patterns.ts), so a repair costs time in step with what it
+// reads.
+import { codeLines, containersEnd, fenceRun } from "./parse";
 
 /** The source made whole: `text` is `source.slice(0, kept)` and then the marks that close it. */
 export interface Repaired {
@@ -31,7 +33,6 @@ const MAX_OPENING = 400;
 
 /** A last line, past its quotes and list items and its spaces at the end, that is so far only a mark: `#`, `-`, `_ _`, `1.`, a fence. */
 const ONLY_MARK = /^(?:#{1,6}|[-=*_+][-=*_+ \t]*|\d{1,9}[.)]?|`+|~+)?$/u;
-const FENCE = /^(?:`{3,}|~{3,})/u;
 /** A task's box before its words: `[`, `[x]`. */
 const TASK = /^\[[ xX]?\]?[ \t]*$/u;
 /** A definition still being written: its name, then its target to its line's end. */
@@ -75,7 +76,7 @@ const lastLineWaits = (last: string): boolean => {
   return (
     last !== "" &&
     (ONLY_MARK.test(rest) ||
-      FENCE.test(rest) ||
+      fenceRun(rest) !== "" ||
       isRow(last) ||
       (inner > 0 && TASK.test(rest)) ||
       (inner === 0 && last.length <= MAX_DEFINITION && DEFINITION.test(last)))
@@ -126,7 +127,7 @@ const leafFrom = (text: string): number => {
     const next = end === -1 ? text.length : end + 1;
     const line = text.slice(at, next);
     const inner = containersEnd(line);
-    if (FENCE.test(line.slice(inner))) {
+    if (fenceRun(line.slice(inner)) !== "") {
       from = next;
     } else if (line.startsWith("#")) {
       from = at;
@@ -165,6 +166,32 @@ const flanks = (
     : { opens: left, closes: right };
 };
 
+/** Whether `char` ends a link's address, in angle brackets or not, `depth` deep in its parentheses. */
+const endsAddress = (
+  char: string | undefined,
+  pointy: boolean,
+  depth: number
+): boolean =>
+  pointy
+    ? char === undefined || "<>\n".includes(char)
+    : isSpace(char) || (char === ")" && depth === 0);
+
+/**
+ * Where a link's address from `from` ends: in angle brackets, at the first `<`, `>` or line's end
+ * that no backslash escapes; else at a space or the `)` that closes its parentheses, and how deep
+ * in them it ends.
+ */
+const addressEnd = (body: string, from: number) => {
+  const pointy = body[from] === "<";
+  let depth = 0;
+  let at = pointy ? from + 1 : from;
+  while (!endsAddress(body[at], pointy, depth)) {
+    depth += pointy ? 0 : Number(body[at] === "(") - Number(body[at] === ")");
+    at += body[at] === "\\" ? 2 : 1;
+  }
+  return { at, depth };
+};
+
 /** What closes a title that opens with its mark. */
 const TITLE_ENDS: Partial<Record<string, string>> = {
   '"': '"',
@@ -173,22 +200,26 @@ const TITLE_ENDS: Partial<Record<string, string>> = {
 };
 
 /**
- * A link's tail, read as CommonMark reads it from just after its `](`: its address (in which
- * parentheses are balanced), a title in quotes or parentheses after a space, then `)`. Where it
- * ends, past its `)`; what closes it, when it runs to the end of `body`; or, when it is no link's
- * tail after all (`[a](b c)`), where its address ends, or its title: what was read is not read
- * again, so a run of `](` costs its length.
+ * A link's tail, read as CommonMark reads it from just after its `](`: its address (in angle
+ * brackets, or with its parentheses balanced), a title in quotes or parentheses after a space, then
+ * `)`. Where it ends, past its `)`; what closes it, when it runs to the end of `body`; or, when it
+ * is no link's tail after all (`[a](b c)`), where its address ends, or its title: what was read is
+ * not read again, so a run of `](` costs its length.
  */
 const tailAt = (body: string, from: number): number | string => {
-  let depth = 0;
-  let at = from;
-  while (
-    at < body.length &&
-    !isSpace(body[at]) &&
-    !(body[at] === ")" && depth === 0)
-  ) {
-    depth += Number(body[at] === "(") - Number(body[at] === ")");
-    at += body[at] === "\\" ? 2 : 1;
+  const found = addressEnd(body, from);
+  const { depth } = found;
+  let { at } = found;
+  if (body[from] === "<") {
+    if (at >= body.length) {
+      return ">)";
+    }
+    // In angle brackets, an address runs to its `>`, spaces and all; a line's end or a `<` first,
+    // and it is no address.
+    if (body[at] !== ">") {
+      return at;
+    }
+    at += 1;
   }
   const address = at;
   while (at < body.length && isSpace(body[at])) {

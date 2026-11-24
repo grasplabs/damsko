@@ -17,7 +17,7 @@ Headings, lists, a table (Table, scrolling sideways in its own box), code in a s
 
 ## While it is written
 
-`streaming`: what is half-written at the end is drawn as what it will be, and what was shown is only ever added to. A table is a table from its row of dashes, code shows as it comes in a CodeBlock that says it is being written, a link is its words until its address is whole (with its arrow's room kept) and then the link in their place, and bold is bold from its first letter. What is only the start of a mark waits for its words: a list's number, a task's box, a fence, a tag, a bracket that may open a link. A note or a reference to a link is shown as written until its definition arrives, as it is should none come, and a section that folds is one from its summary. Nothing flickers or re-flows when a mark closes. The words come as they are given: pacing them is the message's job. A screen reader hears each block once it is finished, never each word; `live="off"` keeps it silent, for words beside the answer that another part already says (Reasoning's thoughts).
+`streaming`: what is half-written at the end is drawn as what it will be, and what was shown is only ever added to, but when a link's definition arrives: the references to it, shown as written until then, become the link. A table is a table from its row of dashes, code shows as it comes in a CodeBlock that says it is being written, a link is its words until its address is whole (with its arrow's room kept) and then the link in their place, and bold is bold from its first letter. What is only the start of a mark waits for its words: a list's number, a task's box, a fence, a tag, a bracket that may open a link. A note's mark shows its number at once, the number it keeps once its note arrives (a model writes its notes at the end); should no note come, the mark is shown as written once the answer is whole. A reference to a link is shown as written until its definition arrives, as it is should none come, and a section that folds is one from its summary. Nothing flickers or re-flows when a mark closes. The words come as they are given: pacing them is the message's job. A screen reader hears each block once it is finished, never each word; `live="off"` keeps it silent, for words beside the answer that another part already says (Reasoning's thoughts).
 
 <Stage path="markdown/streaming" label="While it is written" />
 
@@ -55,7 +55,7 @@ A section written as GitHub's `<details>` with a `<summary>` line is drawn as a 
 
 ## Untrusted text
 
-Its links may come from a page the agent read. Raw HTML is text, never HTML, and a link of Markdown's own leads only to http, https or mailto; a picture is never loaded. A paragraph, heading or table cell over 8,000 characters is drawn as plain text, and so is one with more than 128 marks (the characters that start or end a link, emphasis, code or a tag) once such paragraphs have spent the answer's budget of 1,500,000, each its marks squared: an ordinary answer keeps every mark at any length, and no answer, however hostile, takes long to draw. A single block of more than 64 lines (a list, a table, a quote, notes one under the other; code, HTML and definitions of links do not count) spends its lines squared from a budget of 2,000,000, a line that opens more than one quote or list counting as one for each, and its lines past that are drawn as plain lines: a list of 1,400 items is a list, and one of 100,000 is a list for its first 1,400.
+Its links may come from a page the agent read. Raw HTML is text, never HTML, and a link of Markdown's own leads only to http, https or mailto; a picture is never loaded. A paragraph, heading or table cell over 8,000 characters is drawn as plain text, and so is one with more than 128 marks (the characters that start or end a link, emphasis, code or a tag) once such paragraphs have spent the answer's budget of 1,500,000, each its marks squared: an ordinary answer keeps every mark at any length, and no answer, however hostile, takes long to draw. A single block of more than 64 lines (a list, a table, a quote, notes one under the other; code, HTML and definitions of links do not count) spends its lines squared from a budget of 2,000,000, a line that opens more than one quote or list counting as one for each, and its lines past that are drawn as plain lines: a list of 1,400 items is a list, and one of 100,000 is a list for its first 1,400. The budgets are the answer's, not a moment's: an answer drawn as it streams in ends as it is drawn when the page is opened again. A table's row draws its own cells, at most as many as its head, so a wide head over many short rows draws no more than was written. While an answer is written, the block being written is read with at most 128 of the names of links and notes that the blocks before it define; past those, a reference is its words until the answer is whole.
 
 <Stage path="markdown/safe" label="Untrusted text" />
 
@@ -179,19 +179,19 @@ Against the specifications it reads, example by example, and against streams. Th
       group: "Read and drawn",
       key: "GitHub Flavored Markdown",
       value:
-        "54 examples. Read: 52 as the parser alone reads them, 2 with a strike of one tilde read as a tilde. Drawn: 46 as cmark-gfm draws them; 1 link to ftp as its words; 3 with raw HTML, shown as its text; 2 with a tilde for a strike; 2 that micromark reads otherwise than cmark-gfm or that have no HTML",
+        "54 examples. Read: 52 as the parser alone reads them, 2 with a strike of one tilde read as a tilde. Drawn: 41 as cmark-gfm draws them; 1 link to ftp as its words; 3 with raw HTML, shown as its text; 5 with a row shorter than its head, drawn with its own cells; 2 with a tilde for a strike; 2 that micromark reads otherwise than cmark-gfm or that have no HTML",
     },
     {
       group: "While it is written",
       key: "Answers",
       value:
-        "72 answers as a model writes them, 47,285 prefixes, every character: what was shown is only ever added to, but at 1 (5*3 … 2*2, a star inside a word that CommonMark pairs with a later one); a raw mark shows at 1,594 prefixes in 4 episodes, all that star or a note shown as written until it arrives",
+        "72 answers as a model writes them, 47,285 prefixes, every character: what was shown is only ever added to, but where a link's definition arrives (its references, shown as written, become the link) and at 1 (5*3 … 2*2, a star inside a word that CommonMark pairs with a later one); a raw mark shows at 564 prefixes in 3 episodes, all that star or a reference to a link shown as written until its definition arrives",
     },
     {
       group: "While it is written",
       key: "Streamdown's tests",
       value:
-        "966 inputs of their tests, each a half-written answer: Markdown shows the same as remend for 790, fewer raw marks for 112, holds back a mark or a bracket still being written for 53 (remend shows it), and other words for 11: a star inside a word or a bracket that ran past its line, which it leaves as words, and a note shown as written until it is defined",
+        "966 inputs of their tests, each a half-written answer: Markdown shows the same as remend for 791, fewer raw marks for 112, holds back a mark or a bracket still being written for 58 (remend shows it), and other words for 5: a star inside a word or a bracket that ran past its line, which it leaves as words",
     },
     {
       group: "Untrusted text",
@@ -203,7 +203,7 @@ Against the specifications it reads, example by example, and against streams. Th
       group: "Untrusted text",
       key: "Hostile sizes",
       value:
-        "Answers no model writes (nesting thousands deep, 100 KB of brackets, a list of 100,000 items) take time in step with their length",
+        "Answers no model writes (nesting thousands deep, 100 KB of brackets, a list of 100,000 items, a table's head as wide as its rows are many) take time, and draw HTML, in step with their length",
     },
   ]}
 />

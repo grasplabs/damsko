@@ -19,8 +19,7 @@ describe("what an answer costs", () => {
           {
             "bounded, repaired and tidied": (text) => () => {
               const within = bounded(text);
-              repair(within);
-              tidy(within);
+              return repair(within).text + tidy(within);
             },
           },
           () => true,

@@ -125,12 +125,16 @@ const gathered = (nodes: Node[]) => {
 
 /**
  * What a reader sees of each block, as Markdown draws it: its words, a section's summary then its
- * blocks, and after the blocks each note at the foot. While it streams, a section still open is one.
+ * blocks, and after the blocks each note at the foot. While it streams, a section still open is one,
+ * and every note referred to has its number, defined or not.
  */
-const seenBlocks = (blocks: Placed[]): { shown: string[]; foot: string[] } => {
+const seenBlocks = (
+  blocks: Placed[],
+  streaming: boolean
+): { shown: string[]; foot: string[] } => {
   const nodes: Node[] = blocks.map(({ node }) => node);
   const { definitions, notes, order } = gathered(nodes);
-  const numbered = order.filter((id) => notes.has(id));
+  const numbered = streaming ? order : order.filter((id) => notes.has(id));
   const pictured = (node: Node) => {
     const url =
       node.type === "image" ? node.url : definitions.get(node.identifier ?? "");
@@ -179,8 +183,8 @@ const seenBlocks = (blocks: Placed[]): { shown: string[]; foot: string[] } => {
 };
 
 /** What a reader sees of blocks, as Markdown draws them: words only, every run of spaces one. */
-const seenOf = (blocks: Placed[]): string => {
-  const { shown, foot } = seenBlocks(blocks);
+const seenOf = (blocks: Placed[], streaming: boolean): string => {
+  const { shown, foot } = seenBlocks(blocks, streaming);
   return [...shown, ...foot].join(" ").replaceAll(/\s+/gu, " ").trim();
 };
 
@@ -272,7 +276,8 @@ const streamOf = (answer: string, strict: boolean) => {
     parseMarkdown(tidy(bounded(answer))).children.map((node) => ({
       node,
       base: 0,
-    }))
+    })),
+    false
   );
   const flashes: number[] = [];
   const changes: string[] = [];
@@ -283,7 +288,7 @@ const streamOf = (answer: string, strict: boolean) => {
   for (let at = 1; at <= answer.length; at += 1) {
     const read = readBlocks(repair(bounded(answer.slice(0, at))).text, held);
     held = read.kept;
-    const seen = seenBlocks(read.blocks);
+    const seen = seenBlocks(read.blocks, true);
     const joined = [...seen.shown, ...seen.foot]
       .join(" ")
       .replaceAll(/\s+/gu, " ")
@@ -327,18 +332,19 @@ const page = readFileSync(
 );
 
 describe("72 answers, streamed a character at a time", () => {
-  // Where a raw mark shows, all of them once: a note shows as written (`[^1]`) until it arrives at
-  // the end; and `5*3 … 2*2`, where CommonMark pairs the star inside `5*3` with a later one, which
-  // no prefix before it can know: a star inside a word is most likely a character, so it shows,
-  // and goes once the second arrives. That one change is the only change to what was shown.
+  // Where a raw mark shows, all of them once: a reference to a link shows as written
+  // (`[the wiki][wiki]`) until its definition arrives at the end (a note shows its number at once);
+  // and `5*3 … 2*2`, where CommonMark pairs the star inside `5*3` with a later one, which no prefix
+  // before it can know: a star inside a word is most likely a character, so it shows, and goes once
+  // the second arrives. That one change is the only change to what was shown.
+  const REFERENCE = "a reference as written until its definition arrives";
   const RAW_MARKS = new Map([
-    ["export", "a note as written until it arrives"],
+    ["export", REFERENCE],
     [
       "math",
       "a star inside a word that CommonMark pairs with a later one (5*3 … 2*2)",
     ],
-    ["policy", "a note as written until it arrives"],
-    ["d1", "a note as written until it arrives"],
+    ["d1", REFERENCE],
   ]);
   const CHANGED = new Map([["math", 1]]);
 
@@ -371,7 +377,7 @@ describe("72 answers, streamed a character at a time", () => {
     });
     expect(flashing).toStrictEqual(RAW_MARKS);
     expect(page).toContain(
-      `"${answers.length} answers as a model writes them, ${counted(prefixes)} prefixes, every character: what was shown is only ever added to, but at ${CHANGED.size} (5*3 … 2*2, a star inside a word that CommonMark pairs with a later one); a raw mark shows at ${counted(flashes)} prefixes in ${episodes} episodes, all that star or a note shown as written until it arrives"`
+      `"${answers.length} answers as a model writes them, ${counted(prefixes)} prefixes, every character: what was shown is only ever added to, but where a link's definition arrives (its references, shown as written, become the link) and at ${CHANGED.size} (5*3 … 2*2, a star inside a word that CommonMark pairs with a later one); a raw mark shows at ${counted(flashes)} prefixes in ${episodes} episodes, all that star or a reference to a link shown as written until its definition arrives"`
     );
   }, 300_000);
 
@@ -384,7 +390,8 @@ describe("72 answers, streamed a character at a time", () => {
           renderToStaticMarkup(<Markdown streaming>{source}</Markdown>)
         );
         const read = seenOf(
-          readBlocks(repair(bounded(source)).text, NOTHING).blocks
+          readBlocks(repair(bounded(source)).text, NOTHING).blocks,
+          true
         );
         if (drawn !== read) {
           differing.push(
@@ -445,10 +452,7 @@ const weighed = (ours: string, theirs: string) => {
 describe("Streamdown's and remend's own inputs, half-written", () => {
   // Where remend shows fewer marks, by choice: a star inside a word is a character, not a mark
   // to close (CommonMark leaves it so once the answer is whole); a bracket that ran on past its
-  // line is words (remend makes the lines after it a link to nowhere); and a note is shown as
-  // written until it is defined (remend numbers it at once, so a number moves should the note
-  // never come, and words change: `m[0][1]`).
-  const NOTE = "a note shown as written until it is defined";
+  // line is words (remend makes the lines after it a link to nowhere).
   const REMEND_SHOWS_FEWER = new Map([
     ["remend/__tests__/intraword-asterisk.test.ts:31", "a star inside a word"],
     ["remend/__tests__/intraword-asterisk.test.ts:32", "a star inside a word"],
@@ -461,12 +465,6 @@ describe("Streamdown's and remend's own inputs, half-written", () => {
       "remend/__tests__/link-block-scope.test.ts:50",
       "a bracket that ran past its line",
     ],
-    ["streamdown/__tests__/anchor-links.test.tsx:29", NOTE],
-    ["streamdown/__tests__/footnotes.test.tsx:43", NOTE],
-    ["streamdown/__tests__/footnotes.test.tsx:65", NOTE],
-    ["streamdown/__tests__/footnotes.test.tsx:138", NOTE],
-    ["streamdown/__tests__/footnotes.test.tsx:158", NOTE],
-    ["streamdown/__tests__/footnotes.test.tsx:197", NOTE],
   ]);
 
   test("Markdown shows as few raw marks as remend, or fewer, and never loses a word", () => {
@@ -491,7 +489,7 @@ describe("Streamdown's and remend's own inputs, half-written", () => {
     }
     expect(fewer).toStrictEqual(REMEND_SHOWS_FEWER);
     expect(page).toContain(
-      `"${counted(cases.length)} inputs of their tests, each a half-written answer: Markdown shows the same as remend for ${counted(tally.same ?? 0)}, fewer raw marks for ${tally["fewer raw marks"] ?? 0}, holds back a mark or a bracket still being written for ${tally["held back"] ?? 0} (remend shows it), and other words for ${(tally["more raw marks"] ?? 0) + (tally.other ?? 0)}: a star inside a word or a bracket that ran past its line, which it leaves as words, and a note shown as written until it is defined"`
+      `"${counted(cases.length)} inputs of their tests, each a half-written answer: Markdown shows the same as remend for ${counted(tally.same ?? 0)}, fewer raw marks for ${tally["fewer raw marks"] ?? 0}, holds back a mark or a bracket still being written for ${tally["held back"] ?? 0} (remend shows it), and other words for ${(tally["more raw marks"] ?? 0) + (tally.other ?? 0)}: a star inside a word or a bracket that ran past its line, which it leaves as words"`
     );
   }, 120_000);
 });

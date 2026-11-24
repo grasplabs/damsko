@@ -695,11 +695,12 @@ describe("components", () => {
     () => {
       // Half of an address (`https://i`, `https://bare.exa`) is another site's: a picture drawn from
       // it loads from there, a link leads there. Each kind of address, a character at a time: a
-      // picture, a link, one in angle brackets, a bare one and a bare `www.`, and pictures and links
-      // by reference to a definition of any length, its address on its line or the next.
+      // picture, a link, one in angle brackets, a link's address in them, spaces and all, a bare one
+      // and a bare `www.`, and pictures and links by reference to a definition of any length, its
+      // address on its line or the next.
       const long = `https://images.example.com/${"x".repeat(260)}.png`;
       const answer = [
-        "A chart: ![chart](https://images.example.com/q3.png), [the report](https://example.com/q3), <https://auto.example.com/x> and https://bare.example.com/path now, or visit www.example.org today.",
+        "A chart: ![chart](https://images.example.com/q3.png), [the report](https://example.com/q3), <https://auto.example.com/x>, [spaced](<https://exa mple.com/a>) and https://bare.example.com/path now, or visit www.example.org today.",
         "![c][c] and [d][d].",
         `[c]: ${long}`,
         "[d]:\n  https://next-line.example.com/d",
@@ -737,6 +738,7 @@ describe("components", () => {
           "https://images.example.com/q3.png",
           "https://example.com/q3",
           "https://auto.example.com/x",
+          "https://exa mple.com/a",
           "https://bare.example.com/path",
           // As the host's renderLink is handed it, and as `a` is (its address checked).
           "http://www.example.org",
@@ -749,20 +751,7 @@ describe("components", () => {
     SLOW_TEST
   );
 
-  test("a missing cell is handed an empty cell's node", () => {
-    const nodes: string[] = [];
-    draw("| a | b |\n| - | - |\n| 1 |", {
-      components: {
-        td: ({ node, children }) => {
-          nodes.push(node.type);
-          return <td>{children}</td>;
-        },
-      },
-    });
-    expect(nodes).toStrictEqual(["tableCell", "tableCell"]);
-  });
-
-  test("headings by the level they are drawn at; table cells as many as the head", () => {
+  test("headings by the level they are drawn at; a row's own cells, as many as the head at most", () => {
     const html = draw("# Top\n\n| a | b |\n| - | -: |\n| 1 |\n| 1 | 2 | 3 |", {
       headingLevel: 2,
       components: {
@@ -773,7 +762,6 @@ describe("components", () => {
     expect(html).toContain('<b data-level="2">Top</b>');
     expect(html.match(/<td\b[^>]*>[^<]*<\/td>/gu)).toStrictEqual([
       "<td>1</td>",
-      '<td data-align="right"></td>',
       "<td>1</td>",
       '<td data-align="right">2</td>',
     ]);
@@ -787,14 +775,16 @@ describe("links' titles and notes while written", () => {
     );
   });
 
-  test("a note's mark and a reference are their words as written until their definitions arrive", () => {
+  test("a note's mark is its number before its note arrives; a reference its words as written until its definition does", () => {
     const before = draw("A claim[^1] in [the wiki][wiki], m[0][1] and [x][].", {
       streaming: true,
     });
     expect(textOf(before)).toBe(
-      "A claim[^1] in [the wiki][wiki], m[0][1] and [x][]."
+      "A claim1 in [the wiki][wiki], m[0][1] and [x][]."
     );
-    expect(anchors(before)).toStrictEqual([]);
+    expect(
+      anchors(before).filter((href) => href === null || !href.startsWith("#"))
+    ).toStrictEqual([]);
     const after = draw(
       "A claim[^1] in [the wiki][wiki].\n\n[^1]: The note.\n[wiki]: https://example.com/wiki\n",
       { streaming: true }
@@ -834,6 +824,12 @@ const takenBack = (seen: string[]) =>
       : []
   );
 
+/** The numbers of the notes' marks drawn, in order. */
+const noteNumbers = (html: string) =>
+  [...html.matchAll(/Footnote (?<number>\d+)/gu)]
+    .map((match) => match.groups?.number)
+    .join(" ");
+
 /** A host's links, drawn as their words in bold. */
 const bold: MarkdownLinkRenderer = (link) => <b>{link.children}</b>;
 
@@ -850,15 +846,30 @@ describe("what the earlier streaming rules got wrong", () => {
     }
   });
 
-  test("a note's number is the one the whole answer gives it, at every prefix", () => {
-    const answer = "One[^x] two[^1].\n\n[^1]: The note.";
-    const numbers = [
-      ...Array.from({ length: answer.length }, (_, at) =>
-        draw(answer.slice(0, at + 1), { streaming: true })
-      ),
-      draw(answer),
-    ].flatMap((html) => html.match(/Footnote \d+/gu) ?? []);
-    expect(new Set(numbers)).toStrictEqual(new Set(["Footnote 1"]));
+  test("a note's mark shows the number the whole answer gives it, at every prefix, when every note is defined", () => {
+    // The notes defined in another order than they are used: numbered by their definitions as
+    // they came, `[^b]` was 1 and then 2.
+    const answer =
+      "One[^b] two[^a], m[0][1] and [x][y] three[^b].\n\n[^a]: A.\n[^b]: B.\n";
+    const whole = draw(answer);
+    expect(noteNumbers(whole)).toBe("1 2 1");
+    expect(textOf(whole)).toContain("m[0][1] and [x][y]");
+    const prefixes = Array.from({ length: answer.length }, (_, at) =>
+      draw(answer.slice(0, at + 1), { streaming: true })
+    );
+    expect(
+      prefixes.filter(
+        (html) => !noteNumbers(whole).startsWith(noteNumbers(html))
+      )
+    ).toStrictEqual([]);
+    expect(
+      prefixes.filter((html) => textOf(html).includes("[^"))
+    ).toStrictEqual([]);
+    expect(
+      prefixes
+        .slice(answer.indexOf("[y]") + 3)
+        .filter((html) => !textOf(html).includes("m[0][1] and [x][y]"))
+    ).toStrictEqual([]);
   });
 
   test("a list item's `>` and a number is a quote at every prefix, never words with a `>`", () => {

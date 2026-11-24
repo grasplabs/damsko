@@ -1592,6 +1592,22 @@ describe("while a long block is written", () => {
     expect(marked).toStrictEqual([true, false, false]);
   });
 
+  test("the budget of marks is the answer's: streamed, it ends as it is read whole", () => {
+    // 80 paragraphs of 100 bold words: 400 marks each, so nine fit the budget. A stream once read
+    // every paragraph with all of it, so all 80 were bold until the page was opened again.
+    const source = lines(
+      80,
+      (at) =>
+        `${Array.from({ length: 100 }, (_, word) => `**b${word}**`).join(" ")} p${at}\n\n`
+    );
+    const bold = (blocks: Tree[]) =>
+      blocks.filter((block) => (countOf(block, ["strong"]).strong ?? 0) > 0)
+        .length;
+    const steps = written(source, 1024);
+    expect(bold(parseMarkdown(source).children)).toBe(9);
+    expect(bold(steps.at(-1) ?? [])).toBe(9);
+  });
+
   test(
     "a list written past the budget keeps its items a list, and the lines after them plain",
     () => {
@@ -1652,11 +1668,47 @@ describe("what an answer refers to", () => {
     );
   });
 
-  test("a note or a reference whose definition has not arrived is its words as written", () => {
+  test("a note whose definition has not arrived is a note; a reference to a link its words as written", () => {
     const source = "A claim[^1], [the wiki][wiki], m[0][1] and [x][].";
     const [node] = readBlocks(source, NOTHING).blocks;
-    expect(shapeOf(node?.node ?? { type: "none" })).toBe("paragraph(text)");
-    expect(wordsOf(node?.node ?? { type: "none" })).toBe(source);
+    expect(shapeOf(node?.node ?? { type: "none" })).toBe(
+      "paragraph(text,footnoteReference,text)"
+    );
+    expect(wordsOf(node?.node ?? { type: "none" })).toBe(
+      source.replace("[^1]", "")
+    );
+    const [whole] = parseMarkdown(source).children;
+    expect(wordsOf(whole ?? { type: "none" })).toBe(source);
+  });
+
+  test("once written, an answer that refers to a note none defines is read whole: the mark as written", () => {
+    const answer = "A claim[^x] and m[0][1].\n\nMore words.";
+    const { kept } = readBlocks(answer, NOTHING);
+    expect(shapeOf(kept.blocks[0]?.node ?? { type: "none" })).toBe(
+      "paragraph(text,footnoteReference,text)"
+    );
+    const { blocks } = readBlocks(answer, kept, false);
+    expect(wordsOf(blocks[0]?.node ?? { type: "none" })).toBe(
+      "A claim[^x] and m[0][1]."
+    );
+  });
+
+  test("the block being written is read with at most 128 of the names the blocks before it define", () => {
+    // The parser looks each reference up among every name defined: 8,000 definitions and a
+    // paragraph using them took 320 ms a chunk to read, against 25 ms with none.
+    const definitions = lines(
+      200,
+      (at) => `[x${at}]: https://a.example/${at}\n`
+    );
+    const uses = lines(200, (at) => `[x${at}] `);
+    const { kept } = readBlocks(`${definitions}\nWords`, NOTHING);
+    const last = readBlocks(`${definitions}\n${uses}`, kept).blocks.at(-1);
+    expect(
+      countOf(last?.node ?? { type: "none" }, ["linkReference"])
+    ).toStrictEqual({ linkReference: 128 });
+    expect(
+      countOf(parseMarkdown(`${definitions}\n${uses}`), ["linkReference"])
+    ).toStrictEqual({ linkReference: 200 });
   });
 
   test("a strike is two tildes", () => {

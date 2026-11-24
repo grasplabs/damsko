@@ -1,6 +1,6 @@
 // The cost gate (scripts/markdown-cost.ts) on an answer read and drawn whole, from 4 KB to 16 KB:
 // each mark and structure drawn on the server while written (bounded, repaired, read a block at a
-// time, drawn), which reads it as it is read once written too; and each pair of marks in one
+// time, drawn), its time and the HTML it draws, which reads it as it is read once written too; and each pair of marks in one
 // paragraph read while written (a pair in blocks of its own is weighed as text). A tree costs the
 // parser some microseconds a character, so these are the sizes a minute allows, and well past
 // where a path that grows as the square shows it. (A paragraph's marks cost their square up to the
@@ -26,9 +26,8 @@ describe("what an answer costs", () => {
       expect(
         weighAll(
           {
-            "drawn while written": (text) => () => {
-              renderToStaticMarkup(<Markdown streaming>{text}</Markdown>);
-            },
+            "drawn while written": (text) => () =>
+              renderToStaticMarkup(<Markdown streaming>{text}</Markdown>),
           },
           (family) => family.kind !== "pair",
           4000

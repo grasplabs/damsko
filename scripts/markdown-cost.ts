@@ -1,10 +1,15 @@
 // The gate on what an answer costs Markdown (scripts/markdown-cost-*.test.ts*). Markdown reads
 // untrusted text, a model's or one it was handed, and every fix of a slow path has opened another,
 // so the gate does not trust review: it generates hostile answers from one table and runs each
-// through every entry point a render uses, holding three things:
+// through every entry point a render uses, holding four things:
 //
 //   - growth: at four times the size, under eight times the time on the processor (in step is
 //     four, the square sixteen), the best of up to five runs;
+//   - what is drawn: at the larger size, under 200 characters of HTML for each it reads (an
+//     answer draws under 100), so a rule whose output grows faster than what it reads fails long
+//     before it grows (a table's head as wide as its rows are many drew 7,000 a character at
+//     3.5 KB). Its growth from size to size is no measure: past a budget a block is drawn as
+//     plain lines, a few times as many characters as before, in step all the same;
 //   - a hard cap at 2 KB, which a path that grows exponentially passes by long before it grows;
 //   - a ceiling per character at the larger size, which a path that is in step but costly for
 //     each character (a line nested 199 deep) passes by.
@@ -12,8 +17,8 @@
 // The families: each mark the grammar knows, repeated alone, with words, a line each and a block
 // each; each alternated with every other, with and without blank lines between; each container
 // nested line by line, on one line, and just under and over the deepest a line opens; definitions
-// and their uses by the thousand; and random text from the marks. Adding a mark to MARKS adds all
-// of its families.
+// and their uses by the thousand; tables wide and long, short rows and ragged ones; and random
+// text from the marks. Adding a mark to MARKS adds all of its families.
 
 /** What a family is made of, which says which entry points weigh it (see each test). */
 export type Kind = "single" | "pair" | "structure" | "random";
@@ -213,7 +218,11 @@ const ofContainers = (): Family[] =>
     ];
   });
 
-/** Definitions and their uses by the thousand, lists and tasks, and random text from the marks. */
+/** A table: a head `cells` wide, its row of dashes, then `rows`. */
+const tableOf = (cells: number, rows: readonly string[]) =>
+  `${"|a".repeat(cells)}|\n${"|-".repeat(cells)}|\n${rows.map((row) => `${row}\n`).join("")}`;
+
+/** Definitions and their uses by the thousand, lists and tasks, tables, and random text from the marks. */
 const ofStructure = (): Family[] => [
   familyOf(
     "a list indented 0 to 59 deep, line by line",
@@ -274,6 +283,45 @@ const ofStructure = (): Family[] => [
     repeated("a[^1]\n\n[^1]: b\n\n"),
     true
   ),
+  familyOf(
+    "a table's head as wide as its rows are many, each row one cell",
+    "structure",
+    (length) => {
+      const cells = Math.floor(length / 7);
+      return tableOf(
+        cells,
+        Array.from({ length: cells }, () => "|b")
+      );
+    }
+  ),
+  familyOf("a wide head over many short rows", "structure", (length) =>
+    tableOf(
+      Math.floor(length / 20),
+      Array.from({ length: Math.floor(length / 4) }, () => "|b")
+    )
+  ),
+  // Tables of their own, each under 8,000 characters, so each is read as one (MAX_INLINE).
+  familyOf(
+    "many columns, few rows",
+    "structure",
+    (length) => {
+      const cells = Math.floor(length / 40);
+      const row = `${"|c".repeat(cells)}|`;
+      return repeated(`${tableOf(cells, [row, row])}\n`)(length);
+    },
+    true
+  ),
+  familyOf(
+    "ragged rows",
+    "structure",
+    repeated(
+      `${tableOf(
+        16,
+        Array.from({ length: 20 }, (_, at) => `${"|c".repeat(at * 2)}|`)
+      )}\n`
+    ),
+    true
+  ),
   ...Array.from({ length: 8 }, (_, seed) =>
     familyOf(`random ${seed + 1}`, "random", random((seed + 1) * 7919))
   ),
@@ -295,7 +343,7 @@ const now = () => {
 const FLOOR = 10;
 
 /** What `run` costs a call, in milliseconds of the processor: it is run again until FLOOR has passed. */
-const costOf = (run: () => void) => {
+const costOf = (run: () => unknown) => {
   const start = now();
   let calls = 0;
   let spent = 0;
@@ -321,15 +369,24 @@ const HARD_CAP = 200;
  * in step but costly for each character, as a line nested 199 deep was, takes more.
  */
 const CEILING = 0.1;
+/** What one call may draw for each character at the larger size, in characters of HTML. */
+const DRAWN_CEILING = 200;
 
-/** What is run: given an answer, a call that weighs one entry point on it. */
-export type Entry = (text: string) => () => void;
+/** What is run: given an answer, a call that weighs one entry point on it, and gives what it draws, if any. */
+export type Entry = (text: string) => () => unknown;
+
+/** How much a call draws: the length of the text it gives, or 0 for none. */
+const drawnBy = (call: () => unknown) => {
+  const drawn = call();
+  return typeof drawn === "string" ? drawn.length : 0;
+};
 
 /**
- * What is wrong with `entry` on `family`, or null: growth from `small` to four times it of GROWTH
- * or more, more than CEILING a character at the larger size, or more than HARD_CAP at 2 KB. Each
- * is the best of up to five runs, each run only when the ones before are over: a busy machine
- * slows one run, not five.
+ * What is wrong with `entry` on `family`, or null: more than HARD_CAP at 2 KB; at four times
+ * `small`, more than DRAWN_CEILING drawn a character; from `small` to four times it, time growing
+ * GROWTH times or more, or more than CEILING a character at the larger size. Each time is the best
+ * of up to five runs, each run only when the ones before are over: a busy machine slows one run,
+ * not five.
  */
 export const weighed = (
   family: Family,
@@ -349,6 +406,10 @@ export const weighed = (
   const large = small * 4;
   const fewer = entry(family.make(small));
   const more = entry(family.make(large));
+  const drawn = drawnBy(more);
+  if (drawn > large * DRAWN_CEILING) {
+    return `${drawn} characters drawn at ${large / 1000} KB`;
+  }
   let fast = Number.POSITIVE_INFINITY;
   let slow = Number.POSITIVE_INFINITY;
   for (let run = 0; run < 5; run += 1) {

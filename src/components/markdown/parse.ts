@@ -1,9 +1,9 @@
-// Markdown's pure half (markdown.tsx draws what this reads): the parse to a syntax tree, with
-// GitHub's additions (tables, task lists, strikethrough, autolinks, footnotes); which links may lead
-// anywhere; the repair of an answer still being written, and the tidy of one cut off; the blocks of
-// a long answer read a block at a time; and the one HTML form drawn as a section that folds. Never
-// HTML: raw HTML in the source stays a text node, drawn as text. No React here, so all of it is
-// tested as plain functions (scripts/markdown-parse.test.ts).
+// Markdown's pure half (markdown.tsx draws what this reads, repair.ts makes whole what is still
+// being written): the parse to a syntax tree, with GitHub's additions (tables, task lists,
+// strikethrough, autolinks, footnotes); which links may lead anywhere; the blocks of a long answer
+// read a block at a time; and the one HTML form drawn as a section that folds. Never HTML: raw
+// HTML in the source stays a text node, drawn as text. No React here, so all of it is tested as
+// plain functions (scripts/markdown-parse.test.ts).
 //
 // Pinned as the product resolves them: mdast-util-from-markdown 2.0.3, micromark-extension-gfm
 // 3.0.0, mdast-util-gfm 3.1.0.
@@ -169,14 +169,17 @@ const mayCost = (source: string): boolean =>
     .some((run) => run.length > MAX_INLINE || marksOf(run) > FREE_MARKS);
 
 /**
- * What one read may still spend on paragraphs with more than FREE_MARKS marks; where in the answer
- * the first paragraph stands that it had too little for, from where on there is nothing; and how
- * far what is being read stands from the answer's start.
+ * What one read may still spend on paragraphs with more than FREE_MARKS marks, and where each that
+ * spent stands and what it spent; where in the answer the first paragraph stands that it had too
+ * little for, from where on there is nothing; how far what is being read stands from the answer's
+ * start; and how many names defined elsewhere a piece is read with (see blocksOf).
  */
 interface Budget {
   left: number;
+  charged: [number, number][];
   spent: number;
   shift: number;
+  names: number;
 }
 
 /**
@@ -205,6 +208,9 @@ const longInline = (source: string, budget: Budget): Uint8Array | null => {
       const cost = marks > FREE_MARKS ? marks * marks : 0;
       if (cost <= (at < budget.spent ? budget.left : 0)) {
         budget.left -= cost;
+        if (cost > 0) {
+          budget.charged.push([at, cost]);
+        }
         return;
       }
       // Nothing after it is read for more than FREE_MARKS either: plain text does not turn back.
@@ -326,8 +332,13 @@ const quotesOf = (line: string) => {
   }
 };
 
-/** A fence's run, once a line's containers are passed: a backtick fence's words hold no backtick. */
-const FENCE_RUN = /^(?:`{3,}(?![^`\n]*`)|~{3,})/u;
+const FENCE = /^(?:`{3,}|~{3,})/u;
+
+/** The fence's run `rest` starts with, a line once its containers are passed, or "": a backtick fence's words hold no backtick. */
+export const fenceRun = (rest: string): string => {
+  const run = FENCE.exec(rest)?.[0] ?? "";
+  return run.startsWith("`") && rest.includes("`", run.length) ? "" : run;
+};
 
 /** Where the fences stand after a line: the run of the one still open ("" for none), its depth in quotes and how far in it is. */
 interface Fences {
@@ -346,7 +357,7 @@ const isCode = (fences: Fences, line: string): boolean => {
   const inner = line.slice(quotes.end);
   const words = containersEnd(line);
   const rest = line.slice(words);
-  const run = FENCE_RUN.exec(rest)?.[0] ?? "";
+  const run = fenceRun(rest);
   if (
     fences.open !== "" &&
     quotes.depth >= fences.depth &&
@@ -519,7 +530,7 @@ const definitionsIn = (source: string): [string, number][] => {
 };
 
 /** Whether a line of `source` looks to define a link's target or a note: `[name]: …`, `[^1]: …`. */
-export const definesAny = (source: string): boolean =>
+const definesAny = (source: string): boolean =>
   definitionsIn(source).length > 0;
 
 /** What an answer defines: each name as the parser compares it, as it is written, and where it is defined. */
@@ -592,9 +603,16 @@ const blocksOf = (
     to < source.length
       ? withoutBlankEnd(source.slice(from, to))
       : source.slice(from);
+  // The parser looks each reference up in a list of every name defined, so a piece that refers to
+  // thousands of names defined elsewhere would cost their product: one read while an answer is
+  // written gives it budget.names of them, and past that a name is its words until the answer is
+  // whole and read whole.
   const names = new Set<string>();
   for (const name of defined.size === 0 ? [] : namesIn(text)) {
     const found = defined.get(nameOf(name));
+    if (names.size === budget.names) {
+      break;
+    }
     if (found !== undefined && (found.at < from || found.at >= to)) {
       names.add(`[${found.written}]: <>\n`);
     }
@@ -672,7 +690,7 @@ const closesFence = (line: string, run: string) => {
  */
 const closedAt = (source: string, from: number, to: number): number => {
   const first = source.slice(from, from + 1024).trimStart();
-  const run = /^(?:`{3,}|~{3,})/u.exec(first)?.[0] ?? "";
+  const run = FENCE.exec(first)?.[0] ?? "";
   const html = RAW_HTML.find(([opening]) => opening.test(first))?.[1];
   const ends = (line: string) =>
     run === "" ? html?.test(line) === true : closesFence(line, run);
@@ -758,7 +776,7 @@ const rootOf = (
   for (const [label, at] of definitionsIn(source)) {
     define(guessed, label, source.indexOf("[", at));
   }
-  const before = { ...budget };
+  const before = { ...budget, charged: [...budget.charged] };
   let blocks = readWith(source, guessed, budget);
   const defined: Defined = new Map(outer);
   for (const block of blocks) {
@@ -820,8 +838,10 @@ const guarded = (
 export const parseMarkdown = (source: string): MarkdownRoot =>
   guarded(source, {
     left: MAX_COST,
+    charged: [],
     spent: Number.POSITIVE_INFINITY,
     shift: 0,
+    names: Number.POSITIVE_INFINITY,
   });
 
 // The tree's node types, read from the parser's own return type, so nothing beyond the parser is
@@ -962,10 +982,12 @@ export const bounded = (source: string): string => {
 //
 // Reading the whole answer again for every few words that arrive costs more the longer it gets. But
 // only its last block can still change: the blocks before it are finished. So they are kept as they
-// were read, with the source they were read from and the names they define, and only what follows
-// them is read again, with those names. A note or a reference to a link whose definition has not
-// arrived yet (`[^1]`, `[the wiki][wiki]`) is what it is until then: the words as written, which
-// `m[0][1]` or a citation `[1][2]` that nothing defines stays.
+// were read, with the source they were read from, the names they define and what they spent of the
+// budget of marks, and only what follows them is read again, with those names and what is left. A
+// note whose definition has not arrived yet (`[^1]`) is read as one, as it will be: a model writes
+// its notes at the end. A reference to a link whose definition has not arrived (`[the wiki][wiki]`)
+// is its words as written until then, which `m[0][1]` or a citation `[1][2]` that nothing defines
+// stays.
 
 /** A block of the answer, and where it starts in the source: its nodes' places count from there. */
 export interface Placed {
@@ -974,12 +996,14 @@ export interface Placed {
 }
 
 /**
- * The blocks that are finished, and the source they were read from; and where in the answer the
- * first paragraph stands that was plain text for want of budget, if one was: it stays plain.
+ * The blocks that are finished, and the source they were read from; what they left of the budget
+ * of marks; and where in the answer the first paragraph stands that was plain text for want of
+ * budget, if one was: it stays plain.
  */
 export interface Kept {
   text: string;
   blocks: Placed[];
+  left?: number;
   spent?: number;
   /** The names the kept blocks define. */
   defined?: Defined;
@@ -987,28 +1011,102 @@ export interface Kept {
 
 export const NOTHING: Kept = { text: "", blocks: [] };
 
+/** The longest name of a note, as the parser reads one: at most 999 characters after its `[`. */
+const MAX_NOTE = 999;
+
+/**
+ * `defined`, with each note that `text` refers to (`[^name]`, no space or bracket in the name) and
+ * `defined` does not hold, as if it were defined.
+ */
+const withNotes = (text: string, defined: Defined): Defined => {
+  let notes = defined;
+  for (
+    let at = text.indexOf("[^");
+    at !== -1;
+    at = text.indexOf("[^", at + 2)
+  ) {
+    let end = at + 2;
+    while (end - at <= MAX_NOTE && !"[]\n\r\t ".includes(text[end] ?? "]")) {
+      end += 1;
+    }
+    if (text[end] === "]" && end > at + 2 && text[end + 1] !== ":") {
+      notes = notes === defined ? new Map(defined) : notes;
+      define(notes, text.slice(at + 1, end), -1);
+    }
+  }
+  return notes;
+};
+
+/**
+ * `kept` with the blocks of `read` but the last, read from `tail` with `budget`, the last starting
+ * at `cut`: their source, the names they define, and what is left of the budget once the last has
+ * what it spent given back, as it is read again.
+ */
+const keptWith = (
+  kept: Kept,
+  tail: string,
+  read: Placed[],
+  budget: Budget,
+  cut: number
+): Kept => {
+  const defined = new Map(kept.defined);
+  for (const { node } of read.slice(0, -1)) {
+    if (node.type === "definition" || node.type === "footnoteDefinition") {
+      define(defined, definedAt(tail, startOf(node), true) ?? "", -1);
+    }
+  }
+  let { left } = budget;
+  for (const [at, cost] of budget.charged) {
+    left += at >= cut ? cost : 0;
+  }
+  return {
+    ...kept,
+    text: kept.text + tail.slice(0, cut),
+    blocks: [...kept.blocks, ...read.slice(0, -1)],
+    defined,
+    left,
+  };
+};
+
 /**
  * The blocks of `shown`, given what was kept from reading less of it, and what to keep now. `kept`
- * comes back as it was given when nothing more is finished.
+ * comes back as it was given when nothing more is finished. Once the answer is written (not
+ * `live`), the kept blocks stand and only the last is read again, unless it defines a link or a
+ * note, or refers to a note (read as one while written, defined or not): then it is read whole,
+ * once, as it is when the page is opened again.
  */
 export const readBlocks = (
   shown: string,
-  kept: Kept
+  kept: Kept,
+  live = true
 ): { blocks: Placed[]; kept: Kept } => {
   // Other words than those kept (a new answer in the same place): start again.
   const held = shown.startsWith(kept.text) ? kept : NOTHING;
+  if (
+    !live &&
+    (held === NOTHING || definesAny(shown) || shown.includes("[^"))
+  ) {
+    const blocks = parseMarkdown(shown).children.map((node) => ({
+      node,
+      base: 0,
+    }));
+    return { blocks, kept: NOTHING };
+  }
   const base = held.text.length;
   const tail = shown.slice(base);
-  const budget = {
-    left: MAX_COST,
+  const budget: Budget = {
+    left: held.left ?? MAX_COST,
+    charged: [],
     spent: (held.spent ?? Number.POSITIVE_INFINITY) - base,
     shift: 0,
+    names: FREE_MARKS,
   };
   const defined = held.defined ?? new Map();
-  const read = guarded(tail, budget, defined).children.map((node) => ({
-    node,
-    base,
-  }));
+  const read = guarded(
+    tail,
+    budget,
+    live ? withNotes(tail, defined) : defined
+  ).children.map((node) => ({ node, base }));
   const blocks = [...held.blocks, ...read];
   const cut = read.at(-1)?.node.position?.start.offset;
   const spent = budget.spent + base;
@@ -1024,22 +1122,7 @@ export const readBlocks = (
     cut > 0 &&
     !read.some(({ node }) => PLAIN.has(node))
   ) {
-    const more = new Map(defined);
-    for (const { node } of read.slice(0, -1)) {
-      if (node.type === "definition" || node.type === "footnoteDefinition") {
-        const at = startOf(node);
-        define(more, definedAt(tail, at, true) ?? "", -1);
-      }
-    }
-    return {
-      blocks,
-      kept: {
-        ...now,
-        text: held.text + tail.slice(0, cut),
-        blocks: [...held.blocks, ...read.slice(0, -1)],
-        defined: more,
-      },
-    };
+    return { blocks, kept: keptWith(now, tail, read, budget, cut) };
   }
   return { blocks, kept: now };
 };

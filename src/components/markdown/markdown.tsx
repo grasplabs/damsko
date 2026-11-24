@@ -8,10 +8,12 @@
 //   <Markdown renderLink={(link) => …}>{answer}</Markdown>     the host draws the links
 //   <Markdown components={{ code: MyCode }}>{answer}</Markdown>  the host draws elements, by name
 //
-// While it streams, what is half-written is made whole (parse.ts, repair): bold is bold from its
+// While it streams, what is half-written is made whole (repair.ts, repair): bold is bold from its
 // first letter, a table is a table from its row of dashes, an open fence is code still being written,
-// and a link is its words until its address is whole, then the link in their place. Nothing shown
-// is taken back, and nothing flickers or re-flows when a mark closes. The words come as they are
+// a link is its words until its address is whole, then the link in their place, and a note's mark
+// is its number from the start. Nothing shown is taken back, but where a link's definition arrives
+// (its references, shown as written, become the link), and nothing flickers or re-flows when a mark
+// closes. The words come as they are
 // given: pacing them is the message's job.
 //
 // It knows no router and no citation: the host draws any link it wants to (`renderLink`, or a part
@@ -73,11 +75,9 @@ import {
 import { tableVars } from "../table.stylex";
 import {
   bounded,
-  definesAny,
   encodedUrl,
   groupSections,
   NOTHING,
-  parseMarkdown,
   readBlocks,
   schemeOf,
   sectionSaid,
@@ -1150,16 +1150,11 @@ const ListBlock = ({
       );
 };
 
-/** The cell a row shorter than its table's head has at its end: empty. */
-const EMPTY_CELL: TableNode["children"][number]["children"][number] = {
-  type: "tableCell",
-  children: [],
-};
-
 // A table scrolls sideways inside its own box, with no bar (Table's), so a wide one never widens the
-// answer. A row arrives whole, when its line has ended (repair), so its cells come in together. Every
-// row has as many cells as the head, as GitHub draws it: a short row's last are empty, a long one's
-// extra cells go.
+// answer. A row arrives whole, when its line has ended (repair), so its cells come in together. A
+// row draws its own cells, as many as the head at most: a long one's extra cells go, as GitHub
+// draws it, and a short one is not filled out with empty ones, so what is drawn grows with what
+// was written, never with the head's width times the rows.
 const TableBlock = ({
   node,
   context,
@@ -1179,13 +1174,11 @@ const TableBlock = ({
     return side === null || side === undefined ? "start" : sides[side];
   });
   const cellOf = (
-    row: TableNode["children"][number],
+    cell: TableNode["children"][number]["children"][number],
     tag: "th" | "td",
-    align: (typeof columns)[number],
     column: number
   ): ReactNode => {
-    // A row shorter than the head has empty cells at its end.
-    const cell = row.children[column] ?? EMPTY_CELL;
+    const align = columns[column];
     const children = <Phrasing nodes={cell.children} context={context} />;
     return (
       <Fragment key={column}>
@@ -1207,9 +1200,9 @@ const TableBlock = ({
     row: TableNode["children"][number],
     tag: "th" | "td"
   ): ReactNode => {
-    const cells = columns.map((align, column): ReactNode =>
-      cellOf(row, tag, align, column)
-    );
+    const cells = row.children
+      .slice(0, columns.length)
+      .map((cell, column): ReactNode => cellOf(cell, tag, column));
     return elementOf(
       context,
       "tr",
@@ -1401,12 +1394,12 @@ const Block = ({
 
 /**
  * What the tree refers to from anywhere in it: link targets and where each definition ends, the
- * notes in reading order, numbered by where each is first referred to (a note's mark is one only
- * once its note is defined, so no number moves when the answer is whole), and each reference to a
- * note counted in the order it is drawn (the answer, then the notes at its foot), so each has its
- * own id and drawing it twice (StrictMode) changes nothing.
+ * notes in reading order, numbered by where each is first referred to (once written, only those
+ * defined; while written, every one, as its note is to come at the end: so a mark shows the number
+ * it will have), and each reference to a note counted in the order it is drawn (the answer, then
+ * the notes at its foot), so each has its own id and drawing it twice (StrictMode) changes nothing.
  */
-const gather = (placed: Placed[]) => {
+const gather = (placed: Placed[], streaming: boolean) => {
   const definitions: Context["definitions"] = new Map();
   const found = new Map<string, FootnoteDefinition>();
   const order = new Set<string>();
@@ -1430,7 +1423,9 @@ const gather = (placed: Placed[]) => {
     return note === undefined ? [] : [note];
   });
   const footnotes = new Map(
-    notes.map((note, index) => [note.identifier, index + 1])
+    (streaming ? [...order] : notes.map((note) => note.identifier)).map(
+      (id, index) => [id, index + 1]
+    )
   );
   // A reference inside a link is drawn as its number only, with no id: it is not counted.
   const references = new Map<RootContent, number>();
@@ -1599,22 +1594,11 @@ const useSaidBlocks = (
 /**
  * The answer's blocks. While it is written, only the block still being written is read again as
  * more of it comes (parse.ts, readBlocks): the blocks before it are finished and kept as they were
- * read, so a long answer costs no more to draw at its end than at its start. Once written, the kept
- * blocks stand and only the last is read again; it is read whole only when it defines a link or a
- * note further down, or is other words than were written.
+ * read, so a long answer costs no more to draw at its end than at its start.
  */
 const useBlocks = (shown: string, live: boolean): Placed[] => {
   const [kept, setKept] = useState(NOTHING);
-  if (
-    !live &&
-    (kept === NOTHING || definesAny(shown) || !shown.startsWith(kept.text))
-  ) {
-    if (kept !== NOTHING) {
-      setKept(NOTHING);
-    }
-    return parseMarkdown(shown).children.map((node) => ({ node, base: 0 }));
-  }
-  const read = readBlocks(shown, kept);
+  const read = readBlocks(shown, kept, live);
   if (read.kept !== kept) {
     setKept(read.kept);
   }
@@ -1731,7 +1715,7 @@ export const Markdown = ({
   );
   const provided = use(ProvidedLinks);
   const all = useBlocks(shown, streaming);
-  const { definitions, notes, references, footnotes } = gather(all);
+  const { definitions, notes, references, footnotes } = gather(all, streaming);
   const placed = all.filter(
     ({ node }) =>
       node.type !== "definition" && node.type !== "footnoteDefinition"

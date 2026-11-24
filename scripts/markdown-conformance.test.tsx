@@ -6,7 +6,7 @@
 //   - Drawn: what Markdown draws (on the server) is what the spec draws, element for element and
 //     word for word, unless one of Markdown's own rules says otherwise: a link leads only to http,
 //     https or mailto, a picture is its words, raw HTML is its text, a fifth or sixth heading is
-//     drawn as the fourth. Each example that differs is put down to the rule that makes it differ,
+//     drawn as the fourth, a row draws its own cells. Each example that differs is put down to the rule that makes it differ,
 //     and its drawing is checked: against the spec drawn by that rule, or against the parser's
 //     tree drawn by Markdown's rules, written out in this test apart from Markdown. Any other
 //     difference is a bug.
@@ -506,6 +506,7 @@ const kindsIn = (tree: Tree) => {
     html: new Array<string>(),
     pictures: false,
     headings: false,
+    shortRows: false,
   };
   const visit = (node: Tree) => {
     if (node.type === "html") {
@@ -513,6 +514,10 @@ const kindsIn = (tree: Tree) => {
     }
     kinds.pictures ||= node.type === "image" || node.type === "imageReference";
     kinds.headings ||= node.type === "heading" && (node.depth ?? 0) > 4;
+    const [head, ...rows] = node.type === "table" ? (node.children ?? []) : [];
+    kinds.shortRows ||= rows.some(
+      (row) => (row.children?.length ?? 0) < (head?.children?.length ?? 0)
+    );
     for (const child of node.children ?? []) {
       visit(child);
     }
@@ -583,7 +588,7 @@ const referredIn = (root: Drawn) => {
  * The parser's tree drawn as the outline by Markdown's rules, written out apart from Markdown: a
  * link leads only to http, https or mailto, its address encoded as CommonMark has it; a picture is
  * its alt words, a link to it where it may lead; raw HTML is its text; a fifth or sixth heading is
- * a fourth; a short row has empty cells to the head's count; the notes stand at the foot, in the
+ * a fourth; a row draws its own cells, as many as the head at most; the notes stand at the foot, in the
  * order they are first referred to.
  */
 const fromTree = (root: Drawn): string => {
@@ -630,10 +635,9 @@ const fromTree = (root: Drawn): string => {
     (node.children ?? []).flatMap((child) => draw(child));
   const row = (each: Drawn, tag: string, columns: number): Part => ({
     tag: "tr",
-    children: Array.from({ length: columns }, (_, column) => ({
-      tag,
-      children: phrases(each.children?.[column] ?? { type: "tableCell" }),
-    })),
+    children: (each.children ?? [])
+      .slice(0, columns)
+      .map((cell) => ({ tag, children: phrases(cell) })),
   });
   const drawers: Record<
     string,
@@ -788,6 +792,8 @@ const verdictOf = ({ set, example, markdown, html }: Example) => {
     drawn = "bug";
   } else if (kinds.html.length > 0) {
     drawn = "html";
+  } else if (kinds.shortRows) {
+    drawn = "short rows";
   } else if (
     set === "commonmark" &&
     JSON.stringify(plain(markdown, false)) !== JSON.stringify(plain(markdown))
@@ -860,14 +866,15 @@ describe("the specifications, example by example", () => {
       expect(bugs).toStrictEqual([]);
       expect(read).toStrictEqual({ same: 52, "one tilde": 2 });
       expect(drawn).toStrictEqual({
-        same: 46,
+        same: 41,
         links: 1,
         html: 3,
+        "short rows": 5,
         "one tilde": 2,
         "read otherwise": 2,
       });
       expect(page).toContain(
-        `"${github.length} examples. Read: ${read.same} as the parser alone reads them, ${read["one tilde"]} with a strike of one tilde read as a tilde. Drawn: ${drawn.same} as cmark-gfm draws them; ${drawn.links} link to ftp as its words; ${drawn.html} with raw HTML, shown as its text; ${drawn["one tilde"]} with a tilde for a strike; ${drawn["read otherwise"]} that micromark reads otherwise than cmark-gfm or that have no HTML"`
+        `"${github.length} examples. Read: ${read.same} as the parser alone reads them, ${read["one tilde"]} with a strike of one tilde read as a tilde. Drawn: ${drawn.same} as cmark-gfm draws them; ${drawn.links} link to ftp as its words; ${drawn.html} with raw HTML, shown as its text; ${drawn["short rows"]} with a row shorter than its head, drawn with its own cells; ${drawn["one tilde"]} with a tilde for a strike; ${drawn["read otherwise"]} that micromark reads otherwise than cmark-gfm or that have no HTML"`
       );
     },
     SLOW_TEST
