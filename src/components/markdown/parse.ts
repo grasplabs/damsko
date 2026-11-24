@@ -1132,8 +1132,9 @@ export const readBlocks = (
 // Markdown blocks of its body, and an HTML block holding the closing. Only this form is read again,
 // as a section with its summary and the blocks between; any other HTML stays text. While an answer
 // is written, an opening is a section from the moment it is whole (repair holds it back till then),
-// its closing still to come, and so it stays once the answer is tidied (stopped, or streamed here).
-// An answer drawn whole with an opening nothing closes shows it as text. Sections may hold sections.
+// its closing still to come, and so it stays once the answer is tidied (`truncated`). An answer
+// drawn whole with an opening nothing closes shows it as text, and so does a stream that ended so.
+// Sections may hold sections.
 
 const isWhite = (char: string | undefined) =>
   char !== undefined && /\s/u.test(char);

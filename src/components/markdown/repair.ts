@@ -337,15 +337,23 @@ const markRun = (
     isAlphanumeric(body[at - 1]) &&
     isAlphanumeric(body[at + run]);
   const whole = run === 1 || run > 3 ? char.repeat(run) : char + char;
+  // What this run closed, and what was open inside that: a run of three that closes bold closes
+  // the emphasis opened with it too (`***a***`), so it does not open that again.
+  const closed: string[] = [];
   for (const mark of run === 3 ? [char + char, char] : [whole]) {
     const index = marks.lastIndexOf(mark);
     if (closes && index !== -1) {
-      marks.splice(index);
+      closed.push(...marks.splice(index));
     } else if (index !== -1 && opens) {
       // One like it is open and this did not close it (`**这句话。**接着`, `*a *b`): CommonMark
       // will close neither, so neither is closed.
       marks.splice(index, 1);
-    } else if (opens && !literal && marks.length < MAX_OPEN) {
+    } else if (
+      opens &&
+      !literal &&
+      marks.length < MAX_OPEN &&
+      !closed.includes(mark)
+    ) {
       marks.push(mark);
     }
   }

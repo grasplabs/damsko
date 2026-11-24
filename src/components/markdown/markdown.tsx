@@ -163,15 +163,15 @@ export interface MarkdownProps {
   /** The Markdown: the agent's answer, or as much of it as has arrived. */
   children: string;
   /**
-   * The answer is still being written: what is half-written at its end is shown whole, and once it
-   * turns false the end is tidied (as `truncated`).
+   * The answer is still being written: what is half-written at its end is shown whole. Once it
+   * turns false the answer is drawn as written, the same as when the page is opened again.
    * @default false
    */
   streaming?: boolean;
   /**
    * The answer was cut off part way (stopped): a link still being written at its end goes, and
-   * bold or code left open is closed, so no raw mark shows. An answer streamed here gets it by
-   * itself when `streaming` turns false; set it for a cut answer drawn from history.
+   * bold or code left open is closed, so no raw mark shows. Set it when a stream is stopped, and
+   * for a cut answer drawn from history.
    * @default false
    */
   truncated?: boolean;
@@ -1395,7 +1395,8 @@ const gather = (placed: Placed[], streaming: boolean) => {
   const order = new Set<string>();
   for (const { node: block, base } of placed) {
     eachNode([block], (node) => {
-      if (node.type === "definition") {
+      // The first to define a name does (CommonMark).
+      if (node.type === "definition" && !definitions.has(node.identifier)) {
         definitions.set(node.identifier, {
           url: node.url,
           title: node.title ?? undefined,
@@ -1531,8 +1532,9 @@ const heldIn = (placed: Placed | undefined, complete: number, word: number) => {
 };
 
 /**
- * What to draw of an answer: while it is written, made whole; once written, tidied if it may have
- * been cut off (it was streamed here, or the caller says so).
+ * What to draw of an answer: while it is written, made whole; once written, as it is, so a stream
+ * that ends draws what the whole answer draws when the page is opened again. Tidied only when the
+ * caller says it was cut off (`truncated`): an answer that ended whole may end in a mark.
  */
 const useAnswer = (source: string, streaming: boolean, truncated: boolean) => {
   const [streamed, setStreamed] = useState(streaming);
@@ -1540,14 +1542,13 @@ const useAnswer = (source: string, streaming: boolean, truncated: boolean) => {
     setStreamed(true);
   }
   if (!streaming) {
-    const tidied = truncated || streamed;
     return {
-      shown: tidied ? tidy(source) : source,
+      shown: truncated ? tidy(source) : source,
       kept: Number.POSITIVE_INFINITY,
       complete: Number.POSITIVE_INFINITY,
       word: Number.POSITIVE_INFINITY,
       written: streamed,
-      tidied,
+      tidied: truncated,
     };
   }
   // `kept`: how much of it is the stream's own; past it, repair closed what was still open. Before

@@ -569,7 +569,7 @@ const referredIn = (root: Drawn) => {
   const order: string[] = [];
   const gather = (node: Drawn) => {
     const id = node.identifier ?? "";
-    if (node.type === "definition") {
+    if (node.type === "definition" && !definitions.has(id)) {
       definitions.set(id, node);
     } else if (node.type === "footnoteDefinition") {
       notes.set(id, node);
@@ -837,6 +837,12 @@ const page = readFileSync(
  */
 const SLOW_TEST = 120_000;
 
+/** An example's addresses made ones that lead somewhere, so its links are drawn. */
+const leading = (text: string) =>
+  text
+    .replaceAll(/\bfirst\b|\/url1/gu, "https://one.example/")
+    .replaceAll(/\bsecond\b|\/url2/gu, "https://two.example/");
+
 describe("the specifications, example by example", () => {
   test(
     "CommonMark 0.31.2: every example read as the parser reads it, drawn as the spec draws it or by Markdown's own rules",
@@ -879,4 +885,18 @@ describe("the specifications, example by example", () => {
     },
     SLOW_TEST
   );
+
+  test("the first definition of a name is the one, as in examples 204 and 544, with addresses that lead somewhere", () => {
+    const examples = commonmark
+      .filter(({ example }) => example === 204 || example === 544)
+      .map((each) => ({
+        ...each,
+        markdown: leading(each.markdown),
+        html: leading(each.html),
+      }));
+    expect(examples.map(verdictOf)).toStrictEqual([
+      { read: "same", drawn: "same" },
+      { read: "same", drawn: "same" },
+    ]);
+  });
 });
