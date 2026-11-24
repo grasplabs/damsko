@@ -22,7 +22,6 @@ test.use({
 const least = 24;
 
 const known = new Set([
-  "app-shell-01/basic: Projects",
   "badge/link: What is new",
   "container/settings: BUTTON",
   "field/legend: BUTTON",
@@ -32,8 +31,6 @@ const known = new Set([
   "markdown/host-links: Source 1",
   "markdown/host-links: Source 2",
   "markdown/sections-cases: BUTTON",
-  "page-header/band: Notes",
-  "page-header/band: Reports",
   "tooltip/link: Reports",
 ]);
 

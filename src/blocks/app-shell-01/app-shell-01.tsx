@@ -188,7 +188,9 @@ const styles = stylex.create({
     // Room at the end for the renamable name's own padding, which reaches a step past its words:
     // clipped, the keyboard's ring lost its end.
     paddingInlineEnd: space["1"],
-    overflow: "hidden",
+    // A long path is cut along the bar, never across it: a link's 44px reach on a touch screen
+    // stands past the words' line, and stays a finger's.
+    overflowX: "clip",
   },
   actions: {
     display: "flex",
