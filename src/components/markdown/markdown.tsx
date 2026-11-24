@@ -32,6 +32,7 @@ import {
   use,
   useEffect,
   useId,
+  useLayoutEffect,
   useRef,
   useState,
 } from "react";
@@ -188,12 +189,11 @@ export interface MarkdownProps {
   truncated?: boolean;
   /**
    * While it streams, the words are let out at a steady pace and each fades in as it is shown:
-   * `word` a word at a time (with the spaces and marks after it), `character` a character at a
-   * time; `false` shows them as they are given, all at once. With reduced motion they show as they
-   * arrive, with no fade.
+   * `word` a word at a time (with the spaces and marks after it); `false` shows them as they are
+   * given, all at once. With reduced motion they show as they arrive, with no fade.
    * @default "word"
    */
-  animated?: "word" | "character" | false;
+  animated?: "word" | false;
   /**
    * How a screen reader hears it while it is written: `polite`, each block once it is finished;
    * `off`, nothing, for words beside the answer that another part already says (Reasoning's
@@ -686,6 +686,28 @@ const fadesFrom = (at: number | undefined, context: Context) =>
   context.base + at >= context.reveal.fresh;
 
 /**
+ * A part that is not words (code in a sentence, a note's mark, the way back from a note), from `at`
+ * in the source: while its block is written and it is among what is still fading in, it fades in
+ * whole, as one step of words does.
+ */
+const wholeOf = (
+  part: ReactNode,
+  at: number | undefined,
+  context: Context
+): ReactNode =>
+  fadesFrom(at, context) ? (
+    <span
+      data-at={context.base + (at ?? 0)}
+      ref={context.reveal?.attach}
+      {...stylex.props(fadeInStream)}
+    >
+      {part}
+    </span>
+  ) : (
+    part
+  );
+
+/**
  * A text's words, from `at` in the source: as they are, or those shown in the last moment, while
  * its block is written, each a span that fades in as it is shown (reveal.tsx).
  */
@@ -995,7 +1017,7 @@ const NoteMark = ({
 }: {
   node: NoteReference;
   context: Context;
-}) => {
+}): ReactNode => {
   const number = context.footnotes.get(node.identifier);
   if (number === undefined) {
     return `[^${node.label ?? node.identifier}]`;
@@ -1005,7 +1027,7 @@ const NoteMark = ({
   }
   // Each reference has its own id; the note leads back to the first.
   const nth = context.references.get(node);
-  return (
+  return wholeOf(
     <sup {...stylex.props(styles.footnoteMark)}>
       <span
         id={
@@ -1020,7 +1042,9 @@ const NoteMark = ({
           </span>
         </Link>
       </span>
-    </sup>
+    </sup>,
+    node.position?.start.offset,
+    context
   );
 };
 
@@ -1083,20 +1107,8 @@ const Inline = ({
           {node.value}
         </code>
       );
-      // While its block is written, the chip fades in whole, its fill with its words: words fading
-      // inside a chip already drawn would show an empty box first.
-      const at = node.position?.start.offset;
-      return fadesFrom(at, context) ? (
-        <span
-          data-at={context.base + (at ?? 0)}
-          ref={context.reveal?.attach}
-          {...stylex.props(fadeInStream)}
-        >
-          {chip}
-        </span>
-      ) : (
-        chip
-      );
+      // Its fill with its words: words fading inside a chip already drawn would show an empty box.
+      return wholeOf(chip, node.position?.start.offset, context);
     }
     case "break": {
       return <br />;
@@ -1121,22 +1133,43 @@ const Inline = ({
   }
 };
 
-/** A task's box: Checkbox's, read only, said by its words beside it. */
-const TaskBox = ({ done, said }: { done: boolean; said: string }) => (
-  <>
-    <span aria-hidden="true" {...stylex.props(styles.box)}>
+/**
+ * A task's box: Checkbox's, read only, said by its words beside it. While its list is written, it
+ * fades in with the first of them (`at`: where its item starts).
+ */
+const TaskBox = ({
+  done,
+  at,
+  context,
+}: {
+  done: boolean;
+  at: number | undefined;
+  context: Context;
+}) => {
+  const fades = fadesFrom(at, context);
+  return (
+    <>
       <span
-        {...stylex.props(
-          choiceBoxStyles.face,
-          done ? choiceBoxStyles.full : choiceBoxStyles.empty
-        )}
+        aria-hidden="true"
+        data-at={fades ? context.base + (at ?? 0) : undefined}
+        ref={fades ? context.reveal?.attach : undefined}
+        {...stylex.props(styles.box, fades && fadeInStream)}
       >
-        {done && <Icon icon={CheckIcon} />}
+        <span
+          {...stylex.props(
+            choiceBoxStyles.face,
+            done ? choiceBoxStyles.full : choiceBoxStyles.empty
+          )}
+        >
+          {done && <Icon icon={CheckIcon} />}
+        </span>
       </span>
-    </span>
-    <span {...stylex.props(visuallyHidden)}>{said}</span>
-  </>
-);
+      <span {...stylex.props(visuallyHidden)}>
+        {done ? context.words.done : context.words.notDone}
+      </span>
+    </>
+  );
+};
 
 const Item = ({
   item,
@@ -1175,7 +1208,8 @@ const Item = ({
     <>
       <TaskBox
         done={item.checked}
-        said={item.checked ? context.words.done : context.words.notDone}
+        at={item.position?.start.offset}
+        context={context}
       />
       {body}
     </>
@@ -1220,10 +1254,12 @@ const ListBlock = ({
 };
 
 // A table scrolls sideways inside its own box, with no bar (Table's), so a wide one never widens the
-// answer. A row arrives whole, when its line has ended (repair), so its cells come in together. A
-// row draws its own cells, as many as the head at most: a long one's extra cells go, as GitHub
-// draws it, and a short one is not filled out with empty ones, so what is drawn grows with what
-// was written, never with the head's width times the rows.
+// answer. A row arrives whole, when its line has ended (repair), so its cells come in together, and
+// while the table is written each row fades in as one as it comes (Table's `streaming`), the head
+// first: the table has no fade of its own, and its words are drawn plain, as a fade of theirs
+// inside the row's would dim them twice. A row draws its own cells, as many as the head at most: a
+// long one's extra cells go, as GitHub draws it, and a short one is not filled out with empty ones,
+// so what is drawn grows with what was written, never with the head's width times the rows.
 const TableBlock = ({
   node,
   context,
@@ -1232,6 +1268,8 @@ const TableBlock = ({
   context: Context;
 }): ReactNode => {
   const [head, ...rows] = node.children;
+  const plain =
+    context.reveal === null ? context : { ...context, reveal: null };
   // A table that was written here keeps the even columns it had as its rows came, for as long as
   // it is on the page: its cells never move, not when a row comes and not when it is whole.
   const [written, setWritten] = useState(node === context.writing);
@@ -1248,7 +1286,7 @@ const TableBlock = ({
     column: number
   ): ReactNode => {
     const align = columns[column];
-    const children = <Phrasing nodes={cell.children} context={context} />;
+    const children = <Phrasing nodes={cell.children} context={plain} />;
     return (
       <Fragment key={column}>
         {elementOf(
@@ -1604,9 +1642,14 @@ const Notes = ({
             child.type === "paragraph" ? (
               <span key={at}>
                 <Phrasing nodes={child.children} context={context} />{" "}
-                <Link href={`#${context.prefix}-ref-${number}-1`}>
-                  {context.words.back(number)}
-                </Link>
+                {/* After the note's words, so it comes with the last of them. */}
+                {wholeOf(
+                  <Link href={`#${context.prefix}-ref-${number}-1`}>
+                    {context.words.back(number)}
+                  </Link>,
+                  child.position?.end.offset,
+                  context
+                )}
               </span>
             ) : (
               <Block key={at} node={child} context={context} />
@@ -1743,8 +1786,11 @@ const useBlocks = (shown: string, live: boolean): Placed[] => {
   return read.blocks;
 };
 
-/** Blocks with a frame of their own (code, a table, a rule) fade in whole; words come as words. */
-const framed = new Set<RootContent["type"]>(["code", "table", "thematicBreak"]);
+/**
+ * Blocks with a frame of their own (code, a rule) fade in whole; words come as words, and a table's
+ * rows as rows (TableBlock).
+ */
+const framed = new Set<RootContent["type"]>(["code", "thematicBreak"]);
 
 /**
  * A section (parse.ts, groupSections): the chevron before its summary, its blocks under the
@@ -1979,19 +2025,23 @@ const useWritten = (
   const reduced = useReducedMotion();
   const on = animated !== false && !reduced;
   const [selecting, setSelecting] = useState(false);
+  // How far of what is shown the page draws: what repair holds back (a table's row, a note's line,
+  // until each is whole) fades in from when it is drawn, not from when it was let out.
+  const drawn = useRef(0);
   const paced = usePace(source, {
     streaming,
     on,
-    unit: animated === false ? "word" : animated,
     hold: selecting,
+    drawn,
   });
   const reveal = useReveal(paced, on);
   useSelecting(root, reveal !== null, setSelecting);
-  return {
-    ...useAnswer(paced.text, paced.writing || streaming, truncated),
-    writing: paced.writing || streaming,
-    reveal,
-  };
+  const answer = useAnswer(paced.text, paced.writing || streaming, truncated);
+  const drawnTo = Math.min(answer.kept, paced.text.length);
+  useLayoutEffect(() => {
+    drawn.current = drawnTo;
+  }, [drawnTo]);
+  return { ...answer, writing: paced.writing || streaming, reveal };
 };
 
 const NO_NODES: ReadonlySet<object> = new Set();
@@ -2048,14 +2098,17 @@ export const Markdown = ({
   truncated = false,
   animated = "word",
   live = "polite",
-  size: answerSize = "default",
-  headingLevel = 1,
-  softBreaks = "space",
-  codeMaxLines = 18,
-  renderLink,
-  components = NO_COMPONENTS,
   style,
+  ...drawing
 }: MarkdownProps) => {
+  const {
+    size: answerSize = "default",
+    headingLevel = 1,
+    softBreaks = "space",
+    codeMaxLines = 18,
+    renderLink,
+    components = NO_COMPONENTS,
+  } = drawing;
   const words = useI18n().markdown;
   const prefix = useId().replaceAll(":", "");
   const [root, setRoot] = useState<HTMLElement | null>(null);
@@ -2103,17 +2156,13 @@ export const Markdown = ({
   };
   const drawn = useDrawnBlocks(groups, shown, writing, reveal, context, [
     definedOf(definitions, footnotes, kept),
-    renderLink,
     provided,
-    components,
-    answerSize,
-    headingLevel,
-    softBreaks,
-    codeMaxLines,
     words,
     prefix,
     written,
     writing,
+    // Every prop but the answer and how it streams, is said or is placed: a new one is drawn with.
+    ...Object.values(drawing),
   ]);
   return (
     <div

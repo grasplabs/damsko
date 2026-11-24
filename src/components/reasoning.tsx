@@ -86,8 +86,8 @@ export interface ReasoningContentProps {
   /** The thoughts, in Markdown: as much as has arrived. */
   children: string;
   /**
-   * How the words come in while it thinks: `word` a word at a time, `character` a character at a
-   * time, each fading in; `false` as they are given. As Markdown's `animated`.
+   * How the words come in while it thinks: `word` a word at a time, each fading in; `false` as
+   * they are given. As Markdown's `animated`.
    * @default "word"
    */
   animated?: MarkdownProps["animated"];

@@ -160,8 +160,8 @@ export interface MessageResponseProps {
    */
   streaming?: boolean;
   /**
-   * How the words come in while it is written: `word` a word at a time, `character` a character
-   * at a time, each fading in; `false` as they are given. As Markdown's `animated`.
+   * How the words come in while it is written: `word` a word at a time, each fading in; `false` as
+   * they are given. As Markdown's `animated`.
    * @default "word"
    */
   animated?: MarkdownProps["animated"];

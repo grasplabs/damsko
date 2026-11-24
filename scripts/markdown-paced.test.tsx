@@ -216,6 +216,41 @@ describe("the ends of a stream, with the pace and the fade on", () => {
     });
   });
 
+  test("a stream turned on with its first words, in one render, lets them fade in; what was there already stays", () => {
+    const container = document.createElement("div");
+    const root = createRoot(container);
+    const first = "Support closed **58 requests** and Sales closed 33. ";
+    act(() => {
+      root.render(<Markdown>{first.slice(0, 0)}</Markdown>);
+    });
+    // As a chat's status turns to streaming with the first chunk it brings.
+    act(() => {
+      root.render(<Markdown streaming>{first}</Markdown>);
+    });
+    expect(container.textContent).not.toContain("Sales closed 33");
+    frames(4);
+    expect(container.querySelectorAll("[data-at]").length).toBeGreaterThan(0);
+    act(() => {
+      root.render(<Markdown>{first}</Markdown>);
+    });
+    settle(container);
+    expect(container.textContent).toBe(
+      "Support closed 58 requests and Sales closed 33."
+    );
+    // Given first and turned on after, the words are no news.
+    act(() => {
+      root.render(<Markdown>{`${first}More.`}</Markdown>);
+    });
+    act(() => {
+      root.render(<Markdown streaming>{`${first}More.`}</Markdown>);
+    });
+    expect(container.textContent).toContain("More.");
+    expect(container.querySelectorAll("[data-at]")).toHaveLength(0);
+    act(() => {
+      root.unmount();
+    });
+  });
+
   test("taken off the page while its words fade in, it leaves no frame or timer", () => {
     const { container, root } = writtenUpTo(80);
     expect(container.querySelectorAll("[data-at]").length).toBeGreaterThan(0);

@@ -28,6 +28,7 @@ import {
 } from "../lib/icons";
 import {
   fadeIn,
+  fadeInStream,
   focusCarrier,
   focusRing,
   tapTarget,
@@ -101,8 +102,8 @@ export interface TableProps {
   fade?: boolean;
   /**
    * Its rows arrive one at a time (an answer being written): the columns share the width evenly,
-   * so no row that comes moves the ones above it. Keep it on once the table is whole and nothing
-   * moves then either.
+   * so no row that comes moves the ones above it, and each row fades in as it comes, the head with
+   * the table. Keep it on once the table is whole and nothing moves then either.
    */
   streaming?: boolean;
   /** Something after the table, inside its box: a data table's mark for endless loading. */
@@ -298,12 +299,13 @@ export interface TableCellProps {
 }
 
 // What the table says to its parts: which section a row stands in (a body row lights under a
-// pointer and leaves its last hairline to the footer, a head row does neither), its density, and
-// whether its head stays in view. Plain values, each in its own context, so no object is built for
-// them on every render.
+// pointer and leaves its last hairline to the footer, a head row does neither), its density,
+// whether its head stays in view, and whether its rows arrive one at a time. Plain values, each in
+// its own context, so no object is built for them on every render.
 const SectionContext = createContext<"head" | "body" | "foot">("body");
 const DensityContext = createContext<TableDensity>("default");
 const StickyHeadContext = createContext(false);
+const StreamingContext = createContext(false);
 
 // Values only the moment knows: where a held column stands, how wide a sized one is, how tall the
 // box may grow. Given as StyleX values, never as an inline style.
@@ -862,7 +864,9 @@ export const Table = ({
             )}
             <DensityContext value={density}>
               <StickyHeadContext value={height !== undefined}>
-                {children}
+                <StreamingContext value={streaming === true}>
+                  {children}
+                </StreamingContext>
               </StickyHeadContext>
             </DensityContext>
           </table>
@@ -933,6 +937,7 @@ export const TableRow = ({
   style,
 }: TableRowProps) => {
   const section = use(SectionContext);
+  const streaming = use(StreamingContext);
   return (
     <tr
       data-slot="table-row"
@@ -944,6 +949,8 @@ export const TableRow = ({
       {...stylex.props(
         !open && styles.collapsed,
         styles.row,
+        // As one: its cells, its fill and its words (a hairline between rows is the table's own).
+        streaming && fadeInStream,
         section === "body" && styles.bodyRow,
         interactive && styles.interactive,
         current && styles.current,

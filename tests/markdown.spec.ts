@@ -598,6 +598,83 @@ test("with motion, nothing already shown moves, and a finished block is not draw
   expect(watched.redrawn).toBeLessThanOrEqual(5);
 });
 
+/**
+ * Each frame until the answer is written and settled, the ink of the words of every part `selector`
+ * picks (by its place among them): how much of each shows, all its fades multiplied. Gives every
+ * frame where a part's words gained more than a fade gains in that time over the most they had
+ * shown (duration-stream on the ease-in-out curve, whose steepest is 2.6 times its mean; 3 here),
+ * or were drawn at once beyond it. Over the most, not the last: WebKit reads a fade about to end
+ * as not begun for a frame now and then.
+ */
+const inkJumps = async (page: Page, selector: string) =>
+  await page.evaluate(
+    async ({ picked }) =>
+      // oxlint-disable-next-line promise/avoid-new -- frames until a condition, which have no promise of their own
+      await new Promise<string[]>((resolve) => {
+        const answer = document.querySelector("[data-slot=markdown]");
+        const steepest = 3 / 250;
+        const jumps: string[] = [];
+        const ink = new Map<string, number>();
+        let last = performance.now();
+        let quiet = 0;
+        const inkOf = (part: Element) => {
+          const walker = document.createTreeWalker(part, NodeFilter.SHOW_TEXT);
+          let text = walker.nextNode();
+          while (text !== null && (text.nodeValue ?? "").trim() === "") {
+            text = walker.nextNode();
+          }
+          let shows = 1;
+          for (
+            let node = text?.parentElement ?? null;
+            node !== null && node !== answer;
+            node = node.parentElement
+          ) {
+            shows *= Number(getComputedStyle(node).opacity);
+          }
+          return shows;
+        };
+        const frame = (now: number) => {
+          const parts = [...(answer?.querySelectorAll(picked) ?? [])];
+          for (const [index, part] of parts.entries()) {
+            const key = `${picked} ${index} ${part.textContent ?? ""}`;
+            const shows = inkOf(part);
+            const before = ink.get(key) ?? 0;
+            if (shows - before > Math.max(0.05, steepest * (now - last))) {
+              jumps.push(`${key}: ${before.toFixed(2)} to ${shows.toFixed(2)}`);
+            }
+            ink.set(key, Math.max(before, shows));
+          }
+          last = now;
+          const busy = answer?.getAttribute("aria-busy") === "true";
+          quiet =
+            !busy && answer?.querySelector("[data-at]") === null
+              ? quiet + 1
+              : 0;
+          if (quiet > 10) {
+            resolve(jumps);
+          } else {
+            requestAnimationFrame(frame);
+          }
+        };
+        requestAnimationFrame(frame);
+      }),
+    { picked: selector }
+  );
+
+test("with motion, a table's words and a note's fade in with their row and their note, never jumping to full ink", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await openExample(page, "markdown", "pace");
+  const answer = page.locator("[data-slot=markdown]");
+  await expect(answer).not.toHaveAttribute("aria-busy", { timeout: 30_000 });
+  await page.getByRole("button", { name: "Play again" }).click();
+  await expect(answer).toHaveAttribute("aria-busy", "true");
+  // The head's words and each row's, drawn only once the row is whole, long after they were let
+  // out; a note's mark, and the note, drawn once its line is.
+  expect(await inkJumps(page, "th, td, sup, li[id]")).toStrictEqual([]);
+});
+
 test("with reduced motion, the words show as they arrive: no fade and no spans", async ({
   page,
 }) => {
@@ -639,7 +716,7 @@ test("with motion, a screen reader hears each finished block once, never a word 
   // While it is written, its words read as one run of text, whatever spans they fade in.
   await expect(answer).toHaveAttribute("aria-busy", "true");
   await expect(answer.getByRole("paragraph").first()).toContainText(
-    "Support closed 58 requests and Sales"
+    "Support closed 58 requests and Sales closed 33,"
   );
   // The spans add nothing to the tree: words run on as text, apart only where a mark is.
   expect(await answer.getByRole("paragraph").first().ariaSnapshot()).toMatch(

@@ -25,9 +25,9 @@ Headings, lists, a table (Table, scrolling sideways in its own box), code in a s
 
 ## Word by word
 
-A model's stream comes in uneven chunks: a token at a time, then a paragraph at once after a pause. While `streaming`, Markdown lets the words out at a steady pace, whole words only, at the pace they arrive: each chunk's first word shows at once and the rest are spread until the next chunk is due, four words a frame at most, so a burst sweeps in instead of landing in a lump. The answer is never more than 400ms behind what has arrived: a burst too big for four words a frame runs faster, as much as that needs. A word still being written waits for its end, so it never shows in two halves. Each new word fades in once (250ms, opacity only, so nothing beside it moves); a word already shown never fades again, however the answer is read anew. Code comes a line at a time, each new line fading in, and a link's arrow fades in with its words. When the stream ends, what is left runs out at the same pace, within 400ms, and the last words fade in to their end. A frame that comes late (a hidden tab, a busy page) shows at once all that came more than 400ms before it. With reduced motion the words show as they arrive, with no fade.
+A model's stream comes in uneven chunks: a token at a time, then a paragraph at once after a pause. While `streaming`, Markdown lets the words out at a steady pace, whole words only, at the pace they arrive: each chunk's first word shows at once and the rest are spread until the next chunk is due, four words a draw at most (about 30 draws a second), so a burst sweeps in instead of landing in a lump. The answer is never more than 400ms behind what has arrived: a burst too big for four words a draw runs faster, as much as that needs. A word still being written waits for its end, so it never shows in two halves. Each new word fades in once from when it is drawn (250ms, opacity only, so nothing beside it moves); a word already shown never fades again, however the answer is read anew. What waits to be whole before it is drawn (a table's row, a note's line) fades in from when it is. Code comes a line at a time and a table a row at a time, each new line or row fading in as one, and a link's arrow, a note's mark and a task's box fade in with their words. A stream that starts in the same render as its first words lets those fade in too: only what was already on the page shows at once. When the stream ends, what is left runs out at the same pace, within 400ms, and the last words fade in to their end. A frame that comes late (a hidden tab, a busy page) shows at once all that came more than 400ms before it. With reduced motion the words show as they arrive, with no fade.
 
-`animated` picks the unit: `word` (the default; Chinese, Japanese, Thai and emoji are words too), `character`, or `false` for the words as they are given. Only the block being written is drawn again as words come, and only its words shown in the last 250ms are spans: the words before them are plain text, so a long block or a hostile one costs no more a frame than a short one. A finished block is plain text once its last words have faded, drawn once. A selection made while the answer is written is kept: nothing it touches is drawn again until it is let go.
+`animated` is `word` (the default; Chinese, Japanese, Thai and emoji are words too), or `false` for the words as they are given. Only the block being written is drawn again as words come, and only its words shown in the last 250ms are spans: the words before them are plain text, so a long block or a hostile one costs no more a frame than a short one. A finished block is plain text once its last words have faded, drawn once. A selection made while the answer is written is kept: nothing it touches is drawn again until it is let go.
 
 <Stage path="markdown/pace" live label="Word by word" />
 
@@ -320,12 +320,12 @@ Against the specifications it reads, example by example, and against streams. Th
     {
       key: "Pace",
       value:
-        "A word at a time; each chunk's first word at once, the rest spread until the next is due, four a frame at most",
+        "A word at a time; each chunk's first word at once, the rest spread until the next is due, four a draw at most, about 30 draws a second",
       note: "400ms behind at most",
     },
     {
       key: "Words",
-      value: "Each new word fades in once, opacity only",
+      value: "Each new word fades in once from when it is drawn, opacity only",
       note: "{duration-stream}, {ease-in-out}",
     },
     {
@@ -334,8 +334,13 @@ Against the specifications it reads, example by example, and against streams. Th
       note: "{duration-stream}",
     },
     {
+      key: "Tables",
+      value: "Each new row fades in as one, its words with it",
+      note: "{duration-stream}",
+    },
+    {
       key: "Framed blocks",
-      value: "A table, fenced code or a rule fades in whole as it arrives",
+      value: "Fenced code or a rule fades in whole as it arrives",
       note: "{duration-ui}",
     },
     {

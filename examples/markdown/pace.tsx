@@ -48,7 +48,6 @@ const paces: [StreamPace, string][] = [
 
 const fades: [string, MarkdownProps["animated"]][] = [
   ["word", "word"],
-  ["character", "character"],
   ["off", false],
 ];
 
@@ -70,7 +69,7 @@ const layout = stylex.create({
 });
 
 // The same answer streamed at a model's speeds, or in uneven bursts, with the words let out a word
-// (or a character) at a time and fading in, or as they come. Play again starts it over.
+// at a time and fading in, or as they come. Play again starts it over.
 export default function MarkdownPace() {
   const [pace, setPace] = useState<StreamPace>("80");
   const [fade, setFade] = useState("word");

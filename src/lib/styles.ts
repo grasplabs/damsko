@@ -399,7 +399,7 @@ const fadeStyles = stylex.create({
 
 /** What replaces a placeholder fades in, where the placeholder stood. */
 export const fadeIn = fadeStyles.in;
-/** A word of an answer being written, or a line of its code, fades in as it is shown. */
+/** A word of an answer being written, a line of its code or a row of its table, fades in as it is shown. */
 export const fadeInStream = fadeStyles.stream;
 
 // ---- Edge fade ----------------------------------------------------------------------------------

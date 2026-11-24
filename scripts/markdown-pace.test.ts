@@ -15,13 +15,12 @@ import {
   STREAM_LAG,
   unitsOf,
 } from "../src/components/markdown/pace.ts";
-import type { Unit } from "../src/components/markdown/pace.ts";
 
 const FRAME = 1000 / 60;
 
-/** A text's units, as strings. */
-const split = (text: string, unit: Unit = "word") => {
-  const starts = unitsOf(text, unit);
+/** A text's words, as strings. */
+const split = (text: string) => {
+  const starts = unitsOf(text);
   return starts.map((start, index) =>
     text.slice(start, starts[index + 1] ?? text.length)
   );
@@ -41,7 +40,6 @@ interface Shown {
 const play = (
   chunks: [number, string][],
   until: number,
-  unit: Unit = "word",
   endsAt = Number.POSITIVE_INFINITY
 ): Shown[] => {
   let pace = startPace(0);
@@ -51,14 +49,14 @@ const play = (
   for (let at = 0; at <= until; at += FRAME) {
     while (next < chunks.length && (chunks[next]?.[0] ?? 0) <= at) {
       text += chunks[next]?.[1] ?? "";
-      pace = arrive(pace, text, at, unit);
+      pace = arrive(pace, text, at);
       next += 1;
     }
     if (at >= endsAt && !pace.ended) {
       pace = end(pace);
     }
     const before = pace.shown;
-    pace = advance(pace, text, at, FRAME, unit);
+    pace = advance(pace, text, at, FRAME);
     if (pace.shown !== before) {
       seen.push({ at, text: text.slice(0, pace.shown), arrived: text });
     }
@@ -99,9 +97,8 @@ describe("units", () => {
     expect(split("今日はいい天気です").join("")).toBe("今日はいい天気です");
   });
 
-  test("an emoji goes with the word before it; a character is a whole grapheme", () => {
+  test("an emoji goes with the word before it", () => {
     expect(split("Done 🎉 now")).toStrictEqual(["Done 🎉 ", "now"]);
-    expect(split("a👩‍👩‍👧é", "character")).toStrictEqual(["a", "👩‍👩‍👧", "é"]);
   });
 });
 
@@ -253,7 +250,6 @@ describe("the pace", () => {
         [100, words],
       ],
       1500,
-      "word",
       100
     );
     const tail = seen.filter((step) => step.at >= 100);
@@ -266,7 +262,7 @@ describe("the pace", () => {
   });
 
   test("at the end a word with no space after it is whole: it shows at once", () => {
-    const seen = play([[0, "Hello wor"]], 200, "word", 50);
+    const seen = play([[0, "Hello wor"]], 200, 50);
     expect(seen.at(-1)?.text).toBe("Hello wor");
     expect(seen.at(-1)?.at ?? Infinity).toBeLessThanOrEqual(50 + FRAME);
   });
@@ -285,11 +281,5 @@ describe("the pace", () => {
       const seen = play(chunks, (chunks.at(-1)?.[0] ?? 0) + 1000);
       expect(mostWordsAFrame(seen)).toBeLessThanOrEqual(MOST_UNITS);
     }
-  });
-
-  test("characters are let out one grapheme at a time", () => {
-    const seen = play([[0, "ab👩‍👩‍👧c"]], 1000, "character");
-    expect(seen.map((step) => step.text)).not.toContain("ab\u{1F469}");
-    expect(seen.at(-1)?.text).toBe("ab👩‍👩‍👧c");
   });
 });

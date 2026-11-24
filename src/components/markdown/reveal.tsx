@@ -1,7 +1,7 @@
 // The fade of an answer's words as they are shown while it is written (markdown.tsx draws them with
-// it). The words each frame lets out (a step, pace.ts) are a span that fades in once, by CSS, from
-// the moment it is put on the page: only its opacity, so nothing it stands beside moves. Only the
-// steps shown in the last duration-stream are spans (after `fresh`): the words before them in the
+// it). The words one draw puts on the page (a step, pace.ts) are a span that fades in once, by CSS,
+// from the moment it is put there: only its opacity, so nothing it stands beside moves. Only the
+// steps drawn in the last duration-stream are spans (after `fresh`): the words before them in the
 // block are plain text, so however long the block, or however fast the words come, a block has a
 // few spans at most. A span is keyed by where it starts in the source, so drawing the block again
 // never starts its fade again; when the tree is read anew and a span is made afresh (a link that is

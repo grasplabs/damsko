@@ -22,7 +22,7 @@ A `Message` is the row; its `MessageContent` is the column that holds the surfac
 
 ## Streaming
 
-With `status="streaming"`, the words come in a word at a time at a steady pace, however unevenly the chunks arrive, each fading in as it is shown, and what is half-written is drawn whole: Markdown's [Word by word](/components/markdown#word-by-word), which `animated` sets (`word`, `character`, or `false` for the words as they come). With reduced motion they are drawn as they arrive. When the stream ends, what is left runs out within 400ms. Its actions keep their room while it is written, unseen, so the end moves nothing. Give it the whole answer so far each time more arrives; the pace is the browser's, so a server need not smooth its stream.
+With `status="streaming"`, the words come in a word at a time at a steady pace, however unevenly the chunks arrive, each fading in as it is shown, and what is half-written is drawn whole: Markdown's [Word by word](/components/markdown#word-by-word), which `animated` sets (`word`, or `false` for the words as they come). With reduced motion they are drawn as they arrive. When the stream ends, what is left runs out within 400ms. Its actions keep their room while it is written, unseen, so the end moves nothing. Give it the whole answer so far each time more arrives; the pace is the browser's, so a server need not smooth its stream.
 
 <Stage path="message/streaming" label="Streaming" />
 
