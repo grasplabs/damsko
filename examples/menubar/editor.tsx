@@ -25,8 +25,9 @@ import {
 } from "@grasp-os/ui/lib/icons";
 import { useState } from "react";
 
-// A document editor's menus: actions with shortcuts, a destructive action, a submenu, settings and
-// a choice. The page holds the settings and the choice: a menu's items are taken out when it closes.
+// A document editor's menus: actions with shortcuts, a destructive action, a submenu with one of
+// its own, settings and a choice. The page holds the settings and the choice: a menu's items are
+// taken out when it closes.
 export default function MenubarEditor() {
   const [outline, setOutline] = useState(true);
   const [comments, setComments] = useState(false);
@@ -46,6 +47,13 @@ export default function MenubarEditor() {
             <MenubarSubContent>
               <MenubarItem>As PDF</MenubarItem>
               <MenubarItem>As Markdown</MenubarItem>
+              <MenubarSub>
+                <MenubarSubTrigger>As an image</MenubarSubTrigger>
+                <MenubarSubContent>
+                  <MenubarItem>PNG</MenubarItem>
+                  <MenubarItem>SVG</MenubarItem>
+                </MenubarSubContent>
+              </MenubarSub>
             </MenubarSubContent>
           </MenubarSub>
           <MenubarSeparator />

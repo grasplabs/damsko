@@ -32,7 +32,7 @@ import type {
   MenuTriggerState,
 } from "@ui-sdk/react/menu";
 import { useShortcutHint } from "@ui-sdk/react/shortcuts";
-import { isValidElement, useId } from "react";
+import { isValidElement, useId, useState } from "react";
 import type {
   ComponentProps,
   ElementType,
@@ -63,15 +63,33 @@ export type MenuKind = "dropdown-menu" | "context-menu" | "menubar";
 
 // The widest a submenu may be. UI SDK flips a submenu that does not fit beside its parent to the
 // other side, and where it fits neither (a phone) shifts it over its parent, kept on screen, as a
-// native menu does: but only a submenu no wider than the item that opened it. So its room is the
-// room on the side it opens on (--available-width), or that item's width (--anchor-width) where
-// that is more. Once it has shifted one, UI SDK reports the whole window as its room; anywhere else
-// the item and its parent take their share of the window, so twice what the room leaves of the
-// window is never less than a submenu beside them, and nothing once shifted: a shifted submenu
-// keeps its item's width rather than growing back off the screen.
-const SUB_ROOM = `max(var(--anchor-width, 0px), min(var(--available-width, ${size.popupWidth}), 2 * (100vw - 2 * ${space.popupGutter} - var(--available-width, 0px))))`;
+// native menu does: but only a submenu no wider than the item that opened it (--anchor-width). So
+// beside its parent a submenu takes the room UI SDK gives on its side (--available-width), and
+// once shifted, its item's width, rather than growing back off the screen.
+//
+// Which of the two holds is read from those two numbers. Beside its parent, the room runs from
+// the item's far edge (and the gap) to the gutter, so the room and the item's width together fall
+// short of the window less both gutters by how far the item stands in from the near gutter: never
+// less than nothing, since the parent itself stays inside the gutters. Once UI SDK has shifted a
+// submenu, it gives the window less both gutters as its room, so the two together pass it by the
+// item's whole width. That shortfall plus 1px, times 1000, is therefore at least 1000px beside its
+// parent, more than any room, and below zero once shifted, for a parent of any width: the min
+// keeps the room beside it, and the max then gives a shifted submenu its item's width. (100vw
+// also counts a scrollbar, which UI SDK's window leaves out: narrower than any item, it changes
+// neither.)
+const SUB_ROOM = `max(var(--anchor-width, 0px), min(var(--available-width, ${size.popupWidth}), (100vw - 2 * ${space.popupGutter} - var(--available-width, 0px) - var(--anchor-width, 0px) + 1px) * 1000))`;
 
 const styles = stylex.create({
+  // The sheet a tap outside a submenu over its parent lands on (MenuSubContentPart): the whole
+  // window, beneath the parent's rows, inside the parent menu, so UI SDK closes the submenu alone.
+  // Only on a touch screen: under a mouse it would hold the pointer inside the parent, which loses
+  // the keys' place once it goes.
+  back: {
+    display: { default: "none", [media.pointerCoarse]: "block" },
+    position: "fixed",
+    inset: 0,
+    zIndex: -1,
+  },
   subPanel: {
     minWidth: `min(${size.menuWidth}, ${SUB_ROOM})`,
     maxWidth: `min(${size.popupWidth}, ${SUB_ROOM})`,
@@ -536,20 +554,58 @@ export const MenuSubTriggerPart = ({
   </MenuSubTrigger>
 );
 
-/** The submenu, beside its trigger. */
-export const MenuSubContentPart = ({ kind, children, style }: PartProps) => (
-  <MenuSubContent
-    sideOffset={popup.gap}
-    collisionPadding={popup.gutter}
-    render={slotted("div", `${kind}-sub-content`)}
-    {...stylex.props(
-      menuStyles.panel,
-      menuStyles.motion,
-      scrollbarHidden,
-      styles.subPanel,
-      style
-    )}
-  >
-    {children}
-  </MenuSubContent>
-);
+/**
+ * Calls `onOver` with whether a submenu stands over its parent menu, again each time UI SDK places
+ * it (it writes the place into the submenu's style), and with false once it is gone.
+ */
+const watchOver = (submenu: HTMLElement, onOver: (over: boolean) => void) => {
+  const parent = submenu.parentElement?.closest('[role="menu"]');
+  const check = () => {
+    const own = submenu.getBoundingClientRect();
+    const theirs = parent?.getBoundingClientRect();
+    onOver(
+      theirs !== undefined && own.left < theirs.right && theirs.left < own.right
+    );
+  };
+  const placed = new MutationObserver(check);
+  placed.observe(submenu, { attributeFilter: ["style"] });
+  check();
+  return () => {
+    placed.disconnect();
+    onOver(false);
+  };
+};
+
+/**
+ * The submenu, beside its trigger. Where it stands over its parent (a phone), a tap on the
+ * parent's rows still showing goes back one level without pressing the row: UI SDK closes only
+ * the menus a press lands outside of, and keeps the press from what is under it. A tap anywhere
+ * else outside does the same rather than closing the whole menu, since the submenu may cover every
+ * row of its parent: it lands on a sheet that fills the window inside the parent menu, beneath
+ * its rows. The keys close one level already (Escape, and the arrow back).
+ */
+export const MenuSubContentPart = ({ kind, children, style }: PartProps) => {
+  const [over, setOver] = useState(false);
+  return (
+    <>
+      {over && <div aria-hidden="true" {...stylex.props(styles.back)} />}
+      <MenuSubContent
+        ref={(node: HTMLDivElement | null) =>
+          node === null ? undefined : watchOver(node, setOver)
+        }
+        sideOffset={popup.gap}
+        collisionPadding={popup.gutter}
+        render={slotted("div", `${kind}-sub-content`)}
+        {...stylex.props(
+          menuStyles.panel,
+          menuStyles.motion,
+          scrollbarHidden,
+          styles.subPanel,
+          style
+        )}
+      >
+        {children}
+      </MenuSubContent>
+    </>
+  );
+};
