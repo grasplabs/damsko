@@ -16,6 +16,7 @@ import {
   parseMarkdown,
 } from "../src/components/markdown/index.ts";
 import type {
+  MarkdownComponents,
   MarkdownLinkRenderer,
   MarkdownProps,
 } from "../src/components/markdown/index.ts";
@@ -44,6 +45,8 @@ const draw = (source: string, props: Partial<MarkdownProps> = {}) =>
 
 const count = (html: string, pattern: string) =>
   html.match(new RegExp(pattern, "gu"))?.length ?? 0;
+/** What the HTML says, its tags dropped. */
+const textOf = (html: string) => html.replaceAll(/<[^>]*>/gu, "");
 
 type Tree = ReturnType<typeof parseMarkdown>["children"][number];
 // SAFETY: every node a node of the tree holds is a node of the tree.
@@ -74,6 +77,28 @@ const tags: Record<string, string> = {
   thematicBreak: '<hr|role="separator"',
 };
 
+/** A note's mark is a number up high, leading to its note; the note an item at the foot, each of its paragraphs leading back. */
+const notePartsOf = (
+  node: Tree,
+  inLink: boolean,
+  defined: Map<string, string>
+): [string, number][] => {
+  if (node.type === "footnoteReference" && defined.has(`^${node.identifier}`)) {
+    return [
+      ["<sup", 1],
+      ["<a\\b", inLink ? 0 : 1],
+    ];
+  }
+  if (node.type === "footnoteDefinition") {
+    const paragraphs = node.children.filter((kid) => kid.type === "paragraph");
+    return [
+      ["<li", 1],
+      ["<a\\b", paragraphs.length],
+    ];
+  }
+  return [];
+};
+
 /**
  * The parts one node draws, by the elements' patterns: a paragraph in a list item or a note is its
  * words, HTML outside a phrase a paragraph of text, a link in a link its words, and a table's row
@@ -85,7 +110,7 @@ const partsOf = (
   inLink: boolean,
   defined: Map<string, string>
 ): [string, number][] => {
-  const parts: [string, number][] = [];
+  const parts = notePartsOf(node, inLink, defined);
   const tag = tags[node.type];
   if (tag !== undefined) {
     parts.push([tag, 1]);
@@ -139,6 +164,16 @@ describe("the parse is micromark's, block by block", () => {
           .toReversed()
           .map((node) => [node.identifier, node.url])
       );
+      const marked = new Set(
+        allNodes(tree.children).flatMap((node) =>
+          node.type === "footnoteReference" ? [node.identifier] : []
+        )
+      );
+      for (const node of allNodes(tree.children)) {
+        if (node.type === "footnoteDefinition" && marked.has(node.identifier)) {
+          defined.set(`^${node.identifier}`, "");
+        }
+      }
       const want: Record<string, number> = {};
       const walk = (node: Tree, place: string, inLink: boolean) => {
         for (const [pattern, times] of partsOf(node, place, inLink, defined)) {
@@ -155,8 +190,14 @@ describe("the parse is micromark's, block by block", () => {
           walk(child, place === "phrase" ? place : next, inLink || linked);
         }
       };
+      // A note no mark refers to is not drawn.
       for (const node of tree.children) {
-        walk(node, "block", false);
+        if (
+          node.type !== "footnoteDefinition" ||
+          defined.has(`^${node.identifier}`)
+        ) {
+          walk(node, "block", false);
+        }
       }
       const html = draw(text);
       for (const [pattern, times] of Object.entries(want)) {
@@ -212,6 +253,8 @@ const links = [
   "Text ~~[struck](https://example.com/struck)~~ link.",
   "# A [heading link](https://example.com/heading)",
   "A footnote[^1] link.\n\n[^1]: See [the note](https://example.com/note).",
+  "Marks[^b] in [a link[^a]](https://example.com/l) and[^b].\n\n[^a]: A at https://example.com/bare\n\n[^b]: B.",
+  "Not yet[^later] defined, then[^none].\n\n[^later]: Here.",
   "Back to back https://example.com/a,https://example.com/b end.",
   "Trailing dot https://example.com/dot. Next.",
   "In parens (https://example.com/paren) end.",
@@ -245,20 +288,41 @@ describe("no address still being written, and none unsafe, is ever handed on", (
           const take: MarkdownLinkRenderer = (link) => {
             handed.push(link.href);
           };
-          const html = renderToStaticMarkup(
-            <MarkdownLinkProvider renderLink={take}>
-              <Markdown renderLink={take} {...props}>
-                {text.slice(0, at)}
-              </Markdown>
-            </MarkdownLinkProvider>
+          // A caller's `a` and `img` draw an anchor, as Markdown's own Link does.
+          const components: MarkdownComponents = {
+            a: ({ href, children }) => <a href={href}>{children}</a>,
+            img: ({ src }) => <a href={src}>picture</a>,
+          };
+          const html = [take, undefined].map((renderLink) =>
+            renderToStaticMarkup(
+              <MarkdownLinkProvider renderLink={take}>
+                <Markdown
+                  renderLink={renderLink}
+                  components={renderLink ? undefined : components}
+                  {...props}
+                >
+                  {text.slice(0, at)}
+                </Markdown>
+              </MarkdownLinkProvider>
+            )
           );
-          const anchors = [...html.matchAll(/<a [^>]*href="(?<href>[^"]*)"/gu)];
+          const anchors = [
+            ...html.join("").matchAll(/<a [^>]*href="(?<href>[^"]*)"/gu),
+          ];
           const drawn = anchors.map((found) =>
             (found.groups?.href ?? "").replaceAll("&amp;", "&")
           );
+          // A note's mark and its way back lead to an element there is.
+          const ids = new Set(
+            [...html.join("").matchAll(/ id="(?<id>[^"]*)"/gu)].map(
+              (found) => `#${found.groups?.id ?? ""}`
+            )
+          );
           for (const href of [
             ...handed.filter((url) => !written.has(url)),
-            ...drawn.filter((url) => !leads.has(url)),
+            ...drawn.filter((url) =>
+              url.startsWith("#") ? !ids.has(url) : !leads.has(url)
+            ),
           ]) {
             wrong.push(`${JSON.stringify(text.slice(0, at))} handed ${href}`);
           }
@@ -266,7 +330,161 @@ describe("no address still being written, and none unsafe, is ever handed on", (
       }
     }
     expect(wrong).toStrictEqual([]);
-    expect(links).toHaveLength(50);
+    expect(links).toHaveLength(52);
+  });
+});
+
+describe("what an answer may hold besides prose", () => {
+  test("a task is Checkbox's box, read only, said as done or not", () => {
+    const html = draw("- [x] Gather the comments\n- [ ] Share them\n- Plain");
+    expect(count(html, "<li")).toBe(3);
+    expect(count(html, "<input")).toBe(0);
+    expect(textOf(html)).toBe("DoneGather the commentsNot doneShare themPlain");
+  });
+
+  test("notes are numbered by their first mark, listed at the foot, and lead back", () => {
+    const source =
+      "B[^b], A[^a], B again[^b].\n\n[^a]: Note A.\n\n[^b]: Note B.";
+    const html = draw(source);
+    expect(textOf(html)).toBe(
+      "B1, A2, B again1.Note B. Back to reference 1Note A. Back to reference 2"
+    );
+    const hrefs = [...html.matchAll(/href="#(?<id>[^"]*)"/gu)].map(
+      (found) => found.groups?.id ?? ""
+    );
+    expect(hrefs).toHaveLength(5);
+    for (const id of hrefs) {
+      expect(count(html, ` id="${id}"`)).toBe(1);
+    }
+  });
+
+  test("while written, a mark whose note has not come is its number, leading nowhere; once whole, as written", () => {
+    const source = "First[^x] and[^y].\n\n[^y]: Why.";
+    const streamed = draw(source.slice(0, 18), { streaming: true });
+    expect(textOf(streamed)).toBe("First1 and2.");
+    expect(count(streamed, "<a\\b")).toBe(0);
+    expect(textOf(draw(source))).toBe(
+      "First[^x] and1.Why. Back to reference 1"
+    );
+  });
+
+  test("a caller's elements draw in Markdown's place, given the element's props and the node", () => {
+    const html = draw(
+      'See [the guide](https://example.com/guide "Guide"), `x`, ![c](https://e.com/c.png).\n\n```ts\nconst a = 1;\n```',
+      {
+        components: {
+          a: ({ href, title, children, node }) => (
+            <i data-href={href} data-title={title} data-node={node.type}>
+              {children}
+            </i>
+          ),
+          img: ({ src, alt }) => <img src={src} alt={alt} />,
+          code: ({ className, children, node }) => (
+            <kbd data-class={className} data-node={node.type}>
+              {children}
+            </kbd>
+          ),
+          p: ({ children }) => <section>{children}</section>,
+        },
+      }
+    );
+    expect(html).toContain(
+      '<section>See <i data-href="https://example.com/guide" data-title="Guide" data-node="link">the guide</i>, <kbd data-node="inlineCode">x</kbd>, <img src="https://e.com/c.png" alt="c"/>.</section>'
+    );
+    expect(html).toContain(
+      '<kbd data-class="language-ts" data-node="code">const a = 1;</kbd>'
+    );
+  });
+
+  test("soft breaks: a single newline is a line break when asked, a space otherwise", () => {
+    expect(count(draw("One\nTwo"), "<br")).toBe(0);
+    expect(count(draw("One\nTwo\nThree", { softBreaks: true }), "<br")).toBe(2);
+  });
+
+  test("a section folds: <details> with a <summary> line, nested; any other HTML stays text", () => {
+    const html = draw(
+      "<details>\n<summary>Outer **one**</summary>\n\nWords.\n\n<details open>\n<summary>Inner</summary>\n\nMore.\n\n</details>\n\n</details>\n\n<div>Other</div>\n\n<details>\n<summary>Never closed</summary>\n\nText."
+    );
+    expect(count(html, 'data-slot="markdown-section"')).toBe(2);
+    expect(html).toMatch(/<strong[^>]*>one<\/strong>/u);
+    expect(textOf(html)).toContain("&lt;div&gt;Other&lt;/div&gt;");
+    expect(textOf(html)).toContain(
+      "&lt;summary&gt;Never closed&lt;/summary&gt;"
+    );
+  });
+
+  test("sections nest 32 deep, and deeper is words", () => {
+    const source = `${"<details>\n<summary>s</summary>\n\n".repeat(40)}x\n\n${"</details>\n\n".repeat(40)}`;
+    const html = draw(source);
+    expect(count(html, 'data-slot="markdown-section"')).toBe(32);
+    expect(textOf(html)).toContain("&lt;details&gt;");
+  });
+});
+
+describe("while it is written, nothing shows that the whole answer will not", () => {
+  test("a list item starting with a bracket under a line is never a heading for a moment", () => {
+    for (const marker of ["-", "*", "+", "1.", "1)"]) {
+      for (const end of ["[", "[ ", "[x", "[ ]", "[x] "]) {
+        const html = draw(`Tasks:\n${marker} ${end}`, { streaming: true });
+        expect(count(html, "<h\\d")).toBe(0);
+      }
+    }
+  });
+
+  test("a mark of emphasis or code at the very end, and a closing fence half typed, wait", () => {
+    for (const mark of ["**", "*", "`", "~~", "__", "_"]) {
+      const html = draw(`The cost is ${mark}`, { streaming: true });
+      expect(textOf(html).trim()).toBe("The cost is");
+    }
+    const code = draw("```js\nconst a = 1;\n``", { streaming: true });
+    expect(code).toContain("const a = 1;");
+    expect(code).not.toContain("``");
+  });
+
+  test("a link's definition still being written is never a link", () => {
+    const source =
+      'See [the guide][ref].\n\n[ref]: https://example.com/guide "The guide"';
+    for (let at = 1; at < source.length; at += 1) {
+      const handed: string[] = [];
+      const html = draw(source.slice(0, at), {
+        streaming: true,
+        renderLink: (link) => {
+          handed.push(link.href);
+        },
+      });
+      expect([handed, count(html, "<a\\b")]).toStrictEqual([[], 0]);
+    }
+  });
+});
+
+describe("bounds a model's answer cannot pass", () => {
+  test("fenced code's marks are not counted against a paragraph's 1,000", () => {
+    const html = draw(`**Bold** words.\n\`\`\`\n${"*_".repeat(1000)}\n\`\`\``);
+    expect(count(html, "<strong")).toBe(1);
+  });
+
+  test("a link's name may be as long as CommonMark allows", () => {
+    const name = "n".repeat(500);
+    const html = draw(
+      `A [link][${name}].\n\n[${name}]: https://example.com/long`
+    );
+    expect(html).toContain('href="https://example.com/long"');
+  });
+
+  test("lists nest 32 deep, and deeper is drawn 32 deep", () => {
+    const source = Array.from(
+      { length: 400 },
+      (_, depth) => `${"  ".repeat(depth)}- level ${depth + 1}`
+    ).join("\n");
+    const html = draw(source);
+    expect(count(html, "<ul")).toBe(32);
+    expect(textOf(html)).toContain("level 400");
+  });
+
+  test("a table draws at most 1,000 rows, and says how many more", () => {
+    const html = draw(`| a |\n| - |\n${"| x |\n".repeat(1500)}`);
+    expect(count(html, "<tr")).toBe(1001);
+    expect(textOf(html)).toContain("500 more rows");
   });
 });
 
@@ -280,11 +498,23 @@ const hostile: Record<string, (size: number) => string> = {
   "a huge table": (size) =>
     `| a | b | c |\n|---|---|---|\n${"| **x** | [y](https://e.com) | `z` |\n".repeat(size / 39)}`,
   "many links": (size) => "[a](https://example.com/x) ".repeat(size / 27),
+  "closing brackets": (size) => "a] ".repeat(size / 3),
+  "notes and tasks": (size) =>
+    `${"- [x] a[^1]\n".repeat(size / 24)}\n[^1]: n\n`,
+  "notes' marks and spaces left open": (size) =>
+    `${"a[^".repeat(size / 6)}${" ".repeat(size / 2)}`,
+  "lists nested 400 deep": (size) =>
+    Array.from(
+      { length: size / 400 },
+      (_, at) => `${"  ".repeat(at % 400)}- a`
+    ).join("\n"),
+  "sections left open": (size) =>
+    "<details>\n<summary>s</summary>\n\nx\n\n".repeat(size / 34),
 };
 
 describe("time and size grow in step with the answer", () => {
   test.each(Object.entries(hostile))(
-    "%s: nine times the answer, under 27 times the time and 10 times the nodes",
+    "%s: nine times the answer, whole and while written, under 27 times the time and 10 times the nodes",
     (_, make) => {
       const cost = (size: number) => {
         let best = Number.POSITIVE_INFINITY;
@@ -292,8 +522,10 @@ describe("time and size grow in step with the answer", () => {
         for (let run = 0; run < 5; run += 1) {
           // A new answer each run, so none is read from what was read before.
           const source = `${run}${make(size)}`;
+          // Whole, and as the end of an answer still being written.
           const start = performance.now();
           const html = draw(source);
+          draw(source, { streaming: true });
           best = Math.min(best, performance.now() - start);
           nodes = html.split("<").length;
         }

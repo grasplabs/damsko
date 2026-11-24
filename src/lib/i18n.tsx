@@ -563,6 +563,8 @@ export interface I18nCatalog {
     done: string;
     /** A footnote's mark, said to a screen reader, from its number. */
     footnote: (number: number) => string;
+    /** Under a table drawn only in part, how many rows are not drawn. */
+    moreRows: (count: number) => string;
     /** What a task not yet ticked says. */
     notDone: string;
     /** A table's name when no heading stands above it (`tableLabel`). */
@@ -1290,6 +1292,8 @@ const english: I18nCatalog = {
     back: (number: number) => `Back to reference ${number}`,
     done: "Done",
     footnote: (number: number) => `Footnote ${number}`,
+    moreRows: (count: number) =>
+      count === 1 ? "1 more row" : `${count} more rows`,
     notDone: "Not done",
     table: "Table",
   },

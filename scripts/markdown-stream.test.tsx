@@ -41,6 +41,18 @@ const shapeOf = (node: Node): string => {
   return `<${[node.localName, ...attributes].join(" ")}>${children}</${node.localName}>`;
 };
 
+/** The last words shown, code left out. */
+const wordsEnd = (box: Element) => {
+  const walker = document.createTreeWalker(box, NodeFilter.SHOW_TEXT);
+  let words = "";
+  for (let text = walker.nextNode(); text; text = walker.nextNode()) {
+    words += text.parentElement?.closest("code")
+      ? " "
+      : (text.textContent ?? "");
+  }
+  return words.trimEnd().slice(-20);
+};
+
 /** Draws into a root of its own, and gives back the root's shape after each `step`. */
 const live = () => {
   const box = document.createElement("div");
@@ -57,15 +69,20 @@ const live = () => {
   };
 };
 
-describe("a stream that ends draws what the whole answer draws", () => {
+describe("a stream that ends draws what the whole answer draws, and no raw mark shows on the way", () => {
   test.each([1, 7, 64])(
     "every sample answer, in chunks of %i characters",
     (chunk) => {
+      const marks: string[] = [];
       const differing = answers.filter(({ text }) => {
         const whole = live();
         const streamed = live();
         for (let at = chunk; at < text.length; at += chunk) {
           streamed.render(<Markdown streaming>{text.slice(0, at)}</Markdown>);
+          const end = wordsEnd(streamed.box);
+          if (/[*_~`]$/u.test(end)) {
+            marks.push(`${at}: …${end}`);
+          }
         }
         const same =
           streamed.render(<Markdown>{text}</Markdown>) ===
@@ -77,10 +94,30 @@ describe("a stream that ends draws what the whole answer draws", () => {
         return !same;
       });
       expect(differing.map(({ name }) => name)).toStrictEqual([]);
+      // While written, no mark of emphasis or code shows at the end of the words.
+      expect(marks).toStrictEqual([]);
       expect(answers.length).toBeGreaterThan(50);
     },
     600_000
   );
+});
+
+describe("a huge block still being written costs no more a chunk than a small one", () => {
+  test("past 8 KB, it is read again only once it has grown by an eighth", () => {
+    const text = "word and words\n".repeat(2000);
+    const { box, root, render } = live();
+    const shown = (at: number) => {
+      render(<Markdown streaming>{text.slice(0, at)}</Markdown>);
+      return box.textContent.length;
+    };
+    const first = shown(16_384);
+    expect(shown(16_384 + 512)).toBe(first);
+    expect(shown(16_384 + 2600)).toBeGreaterThan(first);
+    expect(shown(4096)).toBeLessThan(shown(4096 + 16));
+    act(() => {
+      root.unmount();
+    });
+  });
 });
 
 describe("nothing runs on once it is gone", () => {

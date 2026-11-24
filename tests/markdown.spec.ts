@@ -158,6 +158,71 @@ test("untrusted text: a script stays text, a data link is words, a picture never
   expect(requests).toStrictEqual([]);
 });
 
+test("tasks are said as done or not, and a rule separates", async ({
+  page,
+}) => {
+  await openExample(page, "markdown", "tasks");
+  await expect(page.getByRole("listitem")).toHaveText([
+    "DoneGather the comments",
+    "DoneCount the open requests",
+    "Not doneAdd the survey results",
+    "Not doneShare with the team",
+  ]);
+  await expect(page.getByRole("checkbox")).toHaveCount(0);
+  await expect(page.getByRole("separator")).toHaveCount(1);
+});
+
+test("a task's box is round at the corner, its tick the icon's own size", async ({
+  page,
+}) => {
+  await openExample(page, "markdown", "tasks");
+  const done = page.getByRole("listitem").filter({ hasText: "Done" }).first();
+  const box = await done.evaluate((item) => {
+    const mark = item.querySelector("svg");
+    const face = mark?.parentElement;
+    if (mark === null || face === null || face === undefined) {
+      return null;
+    }
+    const look = getComputedStyle(face);
+    return {
+      // Where the browser draws corner shapes, the plain round one (computed as superellipse(1)),
+      // not the system's squircle.
+      round:
+        !CSS.supports("corner-shape", "round") ||
+        ["round", "superellipse(1)"].includes(
+          look.getPropertyValue("corner-shape")
+        ),
+      radius: look.borderTopLeftRadius,
+      tick: mark.getBoundingClientRect().width,
+    };
+  });
+  expect(box).toEqual({ round: true, radius: "6px", tick: 16 });
+});
+
+test("footnotes: a mark leads to its note at the foot, and the note leads back", async ({
+  page,
+}) => {
+  await openExample(page, "markdown", "footnotes");
+  const marks = page.getByRole("link", { name: /^Footnote \d$/u });
+  await expect(marks).toHaveText(["1", "2", "1"]);
+  const notes = page.getByRole("list").last().getByRole("listitem");
+  await expect(notes).toHaveText([
+    /^Year on year, in euros, before currency effects\. Back to reference 1$/u,
+    /^Churn counts cancelled seats only, not downgrades\. Back to reference 2$/u,
+  ]);
+  await marks.nth(1).click();
+  await expect(page).toHaveURL(/-fn-2$/u);
+  await notes.nth(1).getByRole("link", { name: "Back to reference 2" }).click();
+  // Back to the mark it came from: the second, numbered 2.
+  expect(
+    await page.evaluate(
+      () =>
+        document.querySelector(`#${CSS.escape(location.hash.slice(1))}`)
+          ?.textContent
+    )
+  ).toBe("2");
+});
+
 test("while it is written: no pipes, no fence marks, no brackets, and the table arrives whole", async ({
   page,
 }) => {
@@ -204,6 +269,125 @@ test("cut off: stopped part way and drawn from history, no raw mark and no link 
   ).toHaveCount(2);
   await expect(page.getByText(/[[\]*]/u)).toHaveCount(0);
   await expect(page.getByRole("link")).toHaveCount(0);
+});
+
+test("single line breaks: off runs on, softBreaks breaks every one", async ({
+  page,
+}) => {
+  await openExample(page, "markdown", "line-breaks");
+  // The two ways in order: off, then softBreaks; each paragraph's line breaks.
+  const breaks = async (start: RegExp) =>
+    await Promise.all(
+      [0, 1].map(
+        async (way) =>
+          await page.getByText(start).nth(way).locator("br").count()
+      )
+    );
+  expect(await breaks(/^When: 14 and 15 August/u)).toStrictEqual([0, 3]);
+  expect(await breaks(/^I checked three venues/u)).toStrictEqual([0, 2]);
+  expect(await breaks(/^Next steps/u)).toStrictEqual([0, 3]);
+});
+
+test("a section folds: its summary names its button, Enter and a press open and close it", async ({
+  page,
+}) => {
+  await openExample(page, "markdown", "sections");
+  await expect(page.getByText("<details>")).toHaveCount(0);
+  const toggle = page.getByRole("button", { name: "The policy's limits" });
+  await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  await expect(page.getByText("Meals: €40 a day.")).toBeHidden();
+  await toggle.click();
+  await expect(toggle).toHaveAttribute("aria-expanded", "true");
+  await expect(page.getByText("Meals: €40 a day.")).toBeVisible();
+  await toggle.press("Enter");
+  await expect(page.getByText("Meals: €40 a day.")).toBeHidden();
+});
+
+test("sections: nested ones fold, and any other HTML or an unclosed one stays text", async ({
+  page,
+}) => {
+  await openExample(page, "markdown", "sections-cases");
+  const outer = page.getByRole("button", { name: "Outer" }).first();
+  await outer.click();
+  const inner = page.getByRole("button", { name: "Inner" }).first();
+  await expect(inner).toHaveAttribute("aria-expanded", "false");
+  await expect(
+    page.getByText("<div>Other HTML stays text.</div>")
+  ).toBeVisible();
+  await expect(page.getByText("<summary>Never closed</summary>")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Never closed" })).toHaveCount(
+    0
+  );
+  await expect(page.getByRole("button", { name: "Arrives whole" })).toBeVisible(
+    {
+      timeout: 10_000,
+    }
+  );
+});
+
+test("a closed section's words are found by find in page, which opens it", async ({
+  page,
+}) => {
+  await openExample(page, "markdown", "sections");
+  const toggle = page.getByRole("button", { name: "The policy's limits" });
+  const words = page.getByText("Meals: €40 a day.");
+  await expect(words).toBeHidden();
+  expect(
+    await words.evaluate((node) =>
+      node.closest("[hidden]")?.getAttribute("hidden")
+    )
+  ).toBe("until-found");
+  // What the browser's find does when it lands on hidden words.
+  await words.evaluate((node) => {
+    node
+      .closest("[hidden]")
+      ?.dispatchEvent(new Event("beforematch", { bubbles: true }));
+  });
+  await expect(toggle).toHaveAttribute("aria-expanded", "true");
+  await expect(words).toBeVisible();
+});
+
+test("a section written open stands open from the first paint, without opening", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  // Every height the open section's words are seen at, from the first frame they are drawn in.
+  await page.addInitScript(() => {
+    const seen = new Set<number>();
+    let frames = 0;
+    const watch = () => {
+      for (const node of document.querySelectorAll("p")) {
+        if (node.textContent.includes("The claim's approver decides")) {
+          const panel = node.parentElement?.parentElement;
+          if (panel) {
+            seen.add(Math.round(panel.getBoundingClientRect().height));
+            frames += 1;
+            document.documentElement.dataset.seenHeights = [...seen].join(" ");
+            document.documentElement.dataset.seenFrames = String(frames);
+          }
+        }
+      }
+      requestAnimationFrame(watch);
+    };
+    requestAnimationFrame(watch);
+  });
+  await openExample(page, "markdown", "sections");
+  const toggle = page.getByRole("button", { name: "Who decides" });
+  await expect(toggle).toHaveAttribute("aria-expanded", "true");
+  await expect(
+    page.getByText("The claim's approver decides, never the agent.")
+  ).toBeVisible();
+  // Past the time an opening takes: thirty frames of it drawn.
+  await expect
+    .poll(async () =>
+      Number(await page.locator("html").getAttribute("data-seen-frames"))
+    )
+    .toBeGreaterThan(30);
+  // One height, never a climb from nothing.
+  await expect(page.locator("html")).toHaveAttribute(
+    "data-seen-heights",
+    /^[1-9]\d*$/u
+  );
 });
 
 test("the host draws links: out asks first, a path goes through its router, a citation is its chip, a script link is words", async ({
@@ -315,4 +499,118 @@ test("with reduced motion, each new word is there at once", async ({
   const seen = await watchFrames(page, 9000);
   expect(seen.popped).toBeGreaterThan(50);
   expect(seen.faded).toBe(0);
+});
+
+test("your own elements: a link names its site, fenced code is the product's CodeBlock, a script link never reaches them", async ({
+  page,
+}) => {
+  await openExample(page, "markdown", "components");
+  await expect(
+    page.getByRole("link", {
+      name: /^the reporting service \(reports\.example\.com\)/u,
+    })
+  ).toHaveAttribute("href", "https://reports.example.com/docs");
+  const code = page.getByRole("region", { name: /report\.ts/u });
+  await expect(code).toContainText(
+    'export const totals = await report.daily({ team: "support" });'
+  );
+  await expect(page.getByText("daily_totals")).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: /link the model was tricked into/u })
+  ).toHaveCount(0);
+  await expect(page.getByText("link the model was tricked into")).toBeVisible();
+});
+
+test("a fence with codeMaxLines={false} never folds, yet draws only its first 2,000 lines and says how many more", async ({
+  page,
+}) => {
+  await openExample(page, "markdown", "long-code");
+  // Line 1,999 is the thousandth entry, line 2,001 the next.
+  await expect(page.getByText("entry 1000", { exact: true })).toBeAttached();
+  await expect(page.getByText("entry 1001", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("999 more lines")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Show more" })).toHaveCount(0);
+});
+
+/**
+ * Watches the stream-cases example for `ms`, a frame at a time, and gives back what it should never
+ * draw: a link's words, once shown in full, fading again; a heading; a raw mark at the end of the
+ * words; a closing fence still being typed as a line of code.
+ */
+const watchCases = async (page: Page, ms: number) =>
+  await page.evaluate(
+    async (time) =>
+      // oxlint-disable-next-line promise/avoid-new -- frames until the time is up, which have no promise of their own
+      await new Promise<string[]>((resolve) => {
+        const root = document.querySelector("[data-slot=markdown]");
+        const wrong = new Set<string>();
+        const shown = new Set<string>();
+        let length = 0;
+        /** How visible a text is: its element's opacity times each of its ancestors'. */
+        const opacityOf = (node: Node) => {
+          let seen = 1;
+          for (
+            let element = node.parentElement;
+            element !== null && element !== root;
+            element = element.parentElement
+          ) {
+            seen *= Number(getComputedStyle(element).opacity);
+          }
+          return seen;
+        };
+        /** One text: a link's words fading again once shown, or a fence still being typed as code. */
+        const look = (text: Node, inCode: boolean) => {
+          for (const phrase of ["full", "www.example"]) {
+            if (text.textContent?.includes(phrase) === true) {
+              if (opacityOf(text) > 0.99) {
+                shown.add(phrase);
+              } else if (shown.has(phrase)) {
+                wrong.add(`${phrase} faded again`);
+              }
+            }
+          }
+          if (inCode && /^[`~]+$/u.test(text.textContent?.trim() ?? "")) {
+            wrong.add(`a fence as code: ${text.textContent ?? ""}`);
+          }
+        };
+        const frame = () => {
+          const now = root?.textContent?.length ?? 0;
+          if (now < length) {
+            shown.clear();
+          }
+          length = now;
+          const walker = document.createTreeWalker(
+            root ?? document.body,
+            NodeFilter.SHOW_TEXT
+          );
+          let words = "";
+          for (let text = walker.nextNode(); text; text = walker.nextNode()) {
+            const inCode = text.parentElement?.closest("code") !== null;
+            words += inCode ? " " : (text.textContent ?? "");
+            look(text, inCode);
+          }
+          const heading = root?.querySelector("h1, h2, h3, h4, h5, h6");
+          if (heading) {
+            wrong.add(`a heading: ${heading.textContent}`);
+          }
+          if (/[*_~`]\s*$/u.test(words)) {
+            wrong.add(`a raw mark: ${words.slice(-30)}`);
+          }
+          if (performance.now() < time) {
+            requestAnimationFrame(frame);
+          } else {
+            resolve([...wrong]);
+          }
+        };
+        requestAnimationFrame(frame);
+      }),
+    await page.evaluate((wait) => performance.now() + wait, ms)
+  );
+
+test("while it is written, a link's words never fade again, no line is a heading for a moment, and no raw mark shows", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await openExample(page, "markdown", "stream-cases");
+  expect(await watchCases(page, 12_000)).toStrictEqual([]);
 });

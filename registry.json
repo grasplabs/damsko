@@ -2052,6 +2052,7 @@
       ],
       "registryDependencies": [
         "@damsko/code-block",
+        "@damsko/collapsible",
         "@damsko/lib",
         "@damsko/link",
         "@damsko/separator",

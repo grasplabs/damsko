@@ -1,5 +1,5 @@
 {
-  "about": "72 answers as a model writes them, written for Damsko's tests: prose, nested and ordered lists, tasks, fenced code in ten languages, tables, inline, reference and bare links, citations, footnotes, maths-like text, <details>, and text in eight languages besides English. Each is streamed a character at a time (scripts/markdown-stream.test.tsx).",
+  "about": "75 answers as a model writes them, written for Damsko's tests: prose, nested and ordered lists, tasks, fenced code in ten languages, tables, inline, reference and bare links, citations, footnotes, maths-like text, <details>, and text in eight languages besides English. Each is streamed a character at a time (scripts/markdown-stream.test.tsx).",
   "answers": [
     {
       "name": "export",
@@ -1622,6 +1622,84 @@
         "Non-breaking additions:",
         "* `GET /v3/orders` accepts `status=open,closed` (comma-separated).",
         "* Every response includes an `X-Request-Id` header, which support will ask for."
+      ]
+    },
+    {
+      "name": "tasks",
+      "about": "Task lists: ordered, nested, in a quote, with marks and links",
+      "lines": [
+        "Before the release:",
+        "",
+        "1. [x] Freeze the **API**",
+        "2. [ ] Write the notes, see [the draft](https://example.com/draft)",
+        "   - [x] Changes",
+        "   - [ ] Thanks",
+        "3. [ ] Tag `v2.0`",
+        "",
+        "> - [x] Quoted and done",
+        "> - [ ] Quoted and open",
+        "",
+        "- [ ] A box with no words after it waits: [ ]",
+        "- [X] A capital X is done too"
+      ]
+    },
+    {
+      "name": "notes",
+      "about": "Notes: marked twice, in a link, in a heading, out of order, one never written",
+      "lines": [
+        "## Results[^method]",
+        "",
+        "Revenue grew by a tenth[^growth], and churn fell[^churn]. See [the report[^growth]](https://example.com/report).",
+        "",
+        "| Region | Change[^growth] |",
+        "| --- | --- |",
+        "| North | +12% |",
+        "",
+        "One mark refers to a note that never comes[^missing].",
+        "",
+        "[^churn]: Churn counts cancelled seats only.",
+        "",
+        "[^growth]: Year on year, in euros.",
+        "    A second paragraph, indented, with https://example.com/fx rates.",
+        "",
+        "[^method]: Read from the **ledger**, not the dashboard."
+      ]
+    },
+    {
+      "name": "sections",
+      "about": "Sections that fold: nested, open, holding a table, code and a list",
+      "lines": [
+        "Here is the policy.",
+        "",
+        "<details>",
+        "<summary>Limits by **country**</summary>",
+        "",
+        "| Country | Meals |",
+        "| --- | ---: |",
+        "| NL | €40 |",
+        "| DE | €35 |",
+        "",
+        "<details open>",
+        "<summary>Exceptions</summary>",
+        "",
+        "- Conferences",
+        "- Client dinners, see [the rules](https://example.com/rules)",
+        "",
+        "</details>",
+        "",
+        "</details>",
+        "",
+        "<details><summary>The script</summary>",
+        "",
+        "```python",
+        "print(\"limits\")",
+        "```",
+        "",
+        "</details>",
+        "",
+        "<div>This is not a section.</div>",
+        "",
+        "After the sections."
       ]
     }
   ]

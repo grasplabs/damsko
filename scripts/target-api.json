@@ -1351,6 +1351,8 @@
       "MarkdownLinkProvider",
       "parseMarkdown",
       "MarkdownProps",
+      "MarkdownComponents",
+      "MarkdownNode",
       "MarkdownLink",
       "MarkdownLinkRenderer",
       "MarkdownRoot"
