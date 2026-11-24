@@ -3,9 +3,10 @@
 // through one script: the box swept from its widest (576px) to its narrowest and back, and at six
 // widths every model and level picked in turn, long to short to long, the text cleared and typed
 // again, the window widened and narrowed. After every step the chip is whole with its words, its
-// maker's mark alone, or away, and the row is one line or tall, exactly as the original's was at
-// that step: `expected` is the original's, recorded by the same script run against it. Every step
-// is set by the box's own width, so the pages round it do not count.
+// maker's mark alone, or away, and the row is one line or tall, as the original's was at that step
+// (where a sweep crosses one of its edges, within one step): `expected` is the original's, recorded
+// by the same script run against it, where they differ at no step. Every step is set by the box's
+// own width, so the pages round it do not count.
 import { expect, test } from "@playwright/test";
 import type { Locator, Page } from "@playwright/test";
 
@@ -13,11 +14,14 @@ import { openExample, settled } from "./example.ts";
 
 const typed = "And churn among teams of five?";
 
+// Each box, its least width (a window of 300), and the widths the picks are made at (windows of
+// about 390, 430, 470, 520, 600 and 1440), each clear of the row's edges with every choice, so
+// words drawn a pixel wider on another system do not carry a step across one.
 const examples = {
   chat: {
     at: ["patterns", "chat-page"],
     least: 204,
-    picks: [294, 334, 374, 424, 504, 576],
+    picks: [294, 334, 374, 424, 530, 576],
   },
   compact: {
     at: ["prompt-input", "compact"],
@@ -299,7 +303,7 @@ const expected: Record<string, string[]> = {
     "whole(Medium)",
     "whole(Medium)",
   ],
-  "chat empty 504": [
+  "chat empty 530": [
     "whole(Medium)",
     "whole(Low)",
     "whole(Medium)",
@@ -470,27 +474,27 @@ const expected: Record<string, string[]> = {
     "whole(Medium)",
     "whole(Medium) tall",
   ],
-  "chat typed 504": [
+  "chat typed 530": [
     "whole(Medium)",
     "whole(Low)",
     "whole(Medium)",
     "whole(High)",
-    "whole(Extra high) tall",
+    "whole(Extra high)",
     "whole(Max)",
-    "whole(Extra high) tall",
+    "whole(Extra high)",
     "whole(High)",
     "whole(Medium)",
     "whole(Low)",
     "whole(High)",
     "whole(Claude Haiku 5.5) tall",
-    "whole(Extra high) tall",
+    "whole(Extra high)",
     "whole(Medium)",
     "whole(Gemini 3 Flash) tall",
     "whole(Low)",
     "whole(Max)",
     "whole(Claude Haiku 5.5) tall",
     "whole(Medium)",
-    "whole(Extra high) tall",
+    "whole(Extra high)",
     "whole(Claude Haiku 5.5) tall",
     "whole(Medium)",
     "whole(Medium)",
@@ -881,21 +885,35 @@ for (const example of ["chat", "compact"] as const) {
       const sweep = sweepOf(example);
       const turn = sweep.indexOf(examples[example].least);
       const runs = expected[`${key} sweep`] ?? [];
-      const seen: string[] = [];
-      const want: string[] = [];
-      let state = "";
-      for (const [at, width] of sweep.entries()) {
-        const step = `${at <= turn ? "down" : "up"} ${width}`;
-        state =
+      const steps = sweep.map(
+        (width, at) => `${at <= turn ? "down" : "up"} ${width}`
+      );
+      // The original's state at each step, from the run it falls in.
+      const states: string[] = [];
+      for (const step of steps) {
+        states.push(
           runs
             .find((run) => run.startsWith(`${step} `))
-            ?.slice(step.length + 1) ?? state;
+            ?.slice(step.length + 1) ??
+            states.at(-1) ??
+            ""
+        );
+      }
+      const seen: string[] = [];
+      const want: string[] = [];
+      for (const [at, width] of sweep.entries()) {
         // oxlint-disable-next-line no-await-in-loop -- one width after the other, as a window is dragged
         await sizeTo(page, example, width);
         // oxlint-disable-next-line no-await-in-loop -- one width after the other, as a window is dragged
-        const now = await stateOf(page, example);
-        seen.push(`${step} ${now.state}`);
-        want.push(`${step} ${state}`);
+        const { state } = await stateOf(page, example);
+        // Where the original's state changes, the step on either side may show either: another
+        // system draws the typed words a pixel or so wider (Linux's font rendering), which moves
+        // the row's edge by up to a step.
+        const either = [states[at - 1], states[at], states[at + 1]];
+        seen.push(`${steps[at]} ${state}`);
+        want.push(
+          `${steps[at]} ${either.includes(state) ? state : states[at]}`
+        );
       }
       expect(seen).toEqual(want);
     });
