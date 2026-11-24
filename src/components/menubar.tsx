@@ -25,7 +25,7 @@
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
-import { Menu, MenuContent, MenuTrigger } from "@ui-sdk/react/menu";
+import { Menu, MenuContent, MenuSub, MenuTrigger } from "@ui-sdk/react/menu";
 import type {
   MenuTriggerState,
   MenuCheckboxItem,
@@ -45,7 +45,6 @@ import {
   MenuSeparatorPart,
   MenuShortcutPart,
   MenuSubContentPart,
-  MenuSubPart,
   MenuSubTriggerPart,
 } from "../lib/menu";
 import type { MenuKind } from "../lib/menu";
@@ -513,7 +512,7 @@ export const MenubarSeparator = (props: MenubarSeparatorProps) => (
 
 /** A submenu: holds its MenubarSubTrigger and MenubarSubContent. */
 export const MenubarSub = ({ children }: MenubarSubProps) => (
-  <MenuSubPart>{children}</MenuSubPart>
+  <MenuSub>{children}</MenuSub>
 );
 
 /** The item that opens its submenu, with a chevron pointing the way it opens. */

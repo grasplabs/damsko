@@ -23,7 +23,12 @@
 
 import * as stylex from "@stylexjs/stylex";
 import type { MenuCheckboxItem, MenuRadioGroup } from "@ui-sdk/react/menu";
-import { Menu, MenuContent, MenuContextTrigger } from "@ui-sdk/react/menu";
+import {
+  Menu,
+  MenuContent,
+  MenuContextTrigger,
+  MenuSub,
+} from "@ui-sdk/react/menu";
 import { createContext, use, useRef } from "react";
 import type { ComponentProps, KeyboardEvent, ReactNode } from "react";
 
@@ -38,7 +43,6 @@ import {
   MenuSeparatorPart,
   MenuShortcutPart,
   MenuSubContentPart,
-  MenuSubPart,
   MenuSubTriggerPart,
 } from "../lib/menu";
 import type { MenuKind } from "../lib/menu";
@@ -476,7 +480,7 @@ export const ContextMenuSeparator = (props: ContextMenuSeparatorProps) => (
 
 /** A submenu: holds its ContextMenuSubTrigger and ContextMenuSubContent. */
 export const ContextMenuSub = ({ children }: ContextMenuSubProps) => (
-  <MenuSubPart>{children}</MenuSubPart>
+  <MenuSub>{children}</MenuSub>
 );
 
 /** The item that opens its submenu, with a chevron pointing the way it opens. */

@@ -4,9 +4,9 @@
 // menu with a submenu, on phones from 320 wide, in a short window, on a desktop and at 200% zoom,
 // in both reading directions, with the trigger at the left, the centre and the right, at the top
 // and at the bottom, and a submenu's submenu; under a pinch zoom a submenu settles and stays put;
-// a submenu beside a narrow, an ordinary and a wide parent takes the room beside it; from a
-// submenu a touch opened over its parent a press goes back one level, and from one the mouse
-// opened it closes the whole menu; and the top-level popups at a phone's width.
+// a submenu beside a narrow, an ordinary and a wide parent takes the room beside it; a submenu over
+// its parent stands beside it again once the window widens; after a tap on a parent's row goes
+// back one level, a tap outside closes the whole menu; and the top-level popups at a phone's width.
 import { expect, test } from "@playwright/test";
 import type { Locator, Page } from "@playwright/test";
 
@@ -16,6 +16,8 @@ import { openExample } from "./example.ts";
 const gutter = 16;
 /** The widest a popup grows for its words (popup.width, 20rem). */
 const popupWidth = 320;
+/** The width a menu takes at least (menu-width). */
+const menuWidth = 249;
 
 const phone = { width: 390, height: 844 };
 const desktop = { width: 1440, height: 900 };
@@ -110,8 +112,8 @@ interface Menu {
   open: (page: Page, place: Place, row?: Row) => Promise<void>;
   sub: string;
   first: string;
-  /** Two of the top-level menu's plain items: its first, and another. */
-  items: [string, string];
+  /** The top-level menu's first item, above its submenu's trigger. */
+  topItem: string;
 }
 
 const menus: Menu[] = [
@@ -125,7 +127,7 @@ const menus: Menu[] = [
     },
     sub: "Share",
     first: "With the team",
-    items: ["Open", "Rename"],
+    topItem: "Open",
   },
   {
     component: "context-menu",
@@ -140,7 +142,7 @@ const menus: Menu[] = [
     },
     sub: "Share",
     first: "With the team",
-    items: ["Open", "Rename"],
+    topItem: "Open",
   },
   {
     component: "menubar",
@@ -151,7 +153,7 @@ const menus: Menu[] = [
     },
     sub: "Export",
     first: "As PDF",
-    items: ["New document", "Duplicate"],
+    topItem: "New document",
   },
 ];
 
@@ -371,7 +373,8 @@ const parents = [
 for (const size of [phone, desktop]) {
   for (const parentWidth of parents) {
     for (const place of places) {
-      test(`dropdown-menu: a submenu takes the room beside a ${parentWidth.name} parent at ${size.width}, trigger at the ${place}`, async ({
+      const article = parentWidth.name === "ordinary" ? "an" : "a";
+      test(`dropdown-menu: a submenu takes the room beside ${article} ${parentWidth.name} parent at ${size.width}, trigger at the ${place}`, async ({
         page,
       }) => {
         await page.setViewportSize(size);
@@ -444,167 +447,117 @@ for (const size of [phone, desktop]) {
   }
 }
 
-/** Opens the submenu at the left of a phone, where it stands over its parent. */
-const openOver = async (
-  page: Page,
-  { component, example, open, sub, first }: Menu
-) => {
-  await openExample(page, component, example);
-  await open(page, "left");
-  const trigger = page.getByRole("menuitem", { name: sub });
-  await trigger.tap();
-  await expect(page.getByRole("menuitem", { name: first })).toBeVisible();
-  const submenu = page.getByRole("menu", { name: sub, exact: true });
-  const parent = page.getByRole("menu").filter({ has: trigger });
-  await expect.poll(async () => await beside(submenu, parent)).toBe(false);
-  return { submenu, parent };
+// Over its parent, a submenu is its item's width only while there is no room beside it: once the
+// window widens, it stands beside its parent at a menu's width, and so does one opened again.
+test("dropdown-menu: a submenu over its parent at 390 stands beside it once the window widens to 1280", async ({
+  page,
+}) => {
+  await page.setViewportSize(phone);
+  await openExample(page, "dropdown-menu", "submenu");
+  const roadmap = page.getByRole("button", { name: "Roadmap" });
+  await stand(roadmap, "left");
+  await roadmap.click();
+  const share = page.getByRole("menuitem", { name: "Share" });
+  const team = page.getByRole("menuitem", { name: "With the team" });
+  const submenu = page.getByRole("menu", { name: "Share", exact: true });
+  const parent = page.getByRole("menu").filter({ has: share });
+  const where = async (): Promise<string> => {
+    const [own, item] = await Promise.all([
+      submenu.boundingBox(),
+      share.boundingBox(),
+    ]);
+    if (own === null || item === null || (await pastEdge(submenu)) > 0) {
+      return "not whole on the screen";
+    }
+    if (await beside(submenu, parent)) {
+      return `beside, ${Math.round(own.width)}px`;
+    }
+    return Math.abs(own.width - item.width) <= 1
+      ? "over, its item's width"
+      : `over, ${own.width}px for an item of ${item.width}px`;
+  };
+  const openSub = async () => {
+    await share.focus();
+    await page.keyboard.press("ArrowRight");
+    await expect(team).toBeFocused();
+  };
+  const closeSub = async () => {
+    await page.keyboard.press("ArrowLeft");
+    await expect(team).toBeHidden();
+  };
+  await page.mouse.move(0, 0);
+  await openSub();
+  await expect.poll(where).toBe("over, its item's width");
+  // Widened while it is open.
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await expect.poll(where).toBe(`beside, ${menuWidth}px`);
+  await closeSub();
+  await page.setViewportSize(phone);
+  await openSub();
+  await expect.poll(where).toBe("over, its item's width");
+  // Widened while it is closed, then opened again.
+  await closeSub();
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await openSub();
+  await expect.poll(where).toBe(`beside, ${menuWidth}px`);
+});
+
+/** Taps the middle of an element. */
+const tapOn = async (page: Page, element: Locator): Promise<void> => {
+  const box = await element.boundingBox();
+  if (box === null) {
+    throw new Error("The element is not drawn.");
+  }
+  await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2);
 };
 
-/** After going back: the parent is still open, and another of its items can be picked. */
-const picksAnother = async (
-  page: Page,
-  { first, items: [, another] }: Menu,
-  parent: Locator
-) => {
-  await expect(page.getByRole("menuitem", { name: first })).toBeHidden();
-  await expect(parent).toBeVisible();
-  await page.getByRole("menuitem", { name: another }).tap();
-  await expect(parent).toBeHidden();
-};
-
-test.describe("from a submenu over its parent, a press goes back one level", () => {
+// A tap on a parent's row still showing goes back one level without pressing the row (UI SDK
+// closes only the menus a press lands outside of); a tap outside every menu then closes them all.
+test.describe("on a touch phone, back one level by a tap on a parent's row, then a tap outside", () => {
   test.use({ viewport: phone, hasTouch: true, isMobile: true });
 
-  for (const menu of menus) {
-    test(`${menu.component}: a tap on a parent's row still showing closes the submenu alone, without pressing the row`, async ({
-      page,
-    }) => {
-      const { parent } = await openOver(page, menu);
-      const row = await page
-        .getByRole("menuitem", { name: menu.items[0] })
-        .boundingBox();
-      if (row === null) {
-        throw new Error("The parent's first row is not drawn.");
-      }
-      await page.touchscreen.tap(row.x + row.width / 2, row.y + row.height / 2);
-      await picksAnother(page, menu, parent);
-    });
-
-    test(`${menu.component}: a tap outside both menus closes the submenu alone`, async ({
-      page,
-    }) => {
-      const { parent } = await openOver(page, menu);
-      await page.touchscreen.tap(phone.width - 8, phone.height - 8);
-      await picksAnother(page, menu, parent);
-    });
-
-    test(`${menu.component}: a tap outside a submenu that covers its whole parent closes the submenu alone`, async ({
-      page,
-    }) => {
-      const { submenu, parent } = await openOver(page, menu);
-      // As tall as the window less its gutters, as a long submenu is.
-      await submenu.evaluate((node: HTMLElement) => {
-        node.style.minHeight = "calc(100vh - 32px)";
-      });
-      const covered = async () =>
-        await parent.evaluate((node) =>
-          [...node.querySelectorAll('[role="menuitem"]')].every((row) => {
-            const box = row.getBoundingClientRect();
-            const top = document.elementFromPoint(
-              box.x + box.width / 2,
-              box.y + box.height / 2
-            );
-            return top?.closest('[role="menu"]') !== node;
-          })
-        );
-      await expect.poll(covered).toBe(true);
-      await page.touchscreen.tap(gutter / 2, gutter / 2);
-      await picksAnother(page, menu, parent);
-    });
-  }
-});
-
-for (const { component, example, open, sub, first } of menus) {
-  test(`${component}: on a desktop, a press outside a submenu beside its parent closes the whole menu`, async ({
-    page,
-  }) => {
-    await page.setViewportSize(desktop);
-    await openExample(page, component, example);
-    await open(page, "left");
-    await page.getByRole("menuitem", { name: sub }).click();
-    await expect(page.getByRole("menuitem", { name: first })).toBeVisible();
-    await page.mouse.click(desktop.width - 8, desktop.height - 8);
-    await expect(page.getByRole("menu")).toHaveCount(0);
-  });
-}
-
-// The way back one level is for a submenu a touch opened, whatever the screen says of its main
-// pointer: on a touch phone a submenu the mouse opened closes with the whole menu, and on a
-// laptop with a touch screen (its main pointer fine) a submenu a touch opened goes back one level.
-test.describe("a press outside a submenu over its parent, on a touch phone", () => {
-  test.use({ viewport: phone, hasTouch: true });
-
-  for (const { component, example, open, sub, first } of menus) {
-    test(`${component}: opened with the mouse, a click outside closes the whole menu`, async ({
+  for (const { component, example, open, sub, first, topItem } of menus) {
+    test(`${component}: a tap outside closes the whole menu`, async ({
       page,
     }) => {
       await openExample(page, component, example);
       await open(page, "left");
       const trigger = page.getByRole("menuitem", { name: sub });
-      await trigger.click();
-      await expect(page.getByRole("menuitem", { name: first })).toBeVisible();
-      const submenu = page.getByRole("menu", { name: sub, exact: true });
-      const parent = page.getByRole("menu").filter({ has: trigger });
-      await expect.poll(async () => await beside(submenu, parent)).toBe(false);
-      await page.mouse.click(phone.width - 8, phone.height - 8);
-      await expect(page.getByRole("menu")).toHaveCount(0);
-    });
-  }
-});
-
-test.describe("a press outside a submenu over its parent, on a laptop's touch screen", () => {
-  test.use({ viewport: phone });
-
-  for (const { component, example, open, sub, first, items } of menus) {
-    test(`${component}: on a laptop's touch screen, a tap outside a submenu a touch opened closes the submenu alone`, async ({
-      page,
-    }) => {
-      await openExample(page, component, example);
-      expect(
-        await page.evaluate(() => matchMedia("(pointer: coarse)").matches)
-      ).toBe(false);
-      // A finger on the screen, as the browser's own input sends it.
-      const cdp = await page.context().newCDPSession(page);
-      const tap = async (x: number, y: number) => {
-        await cdp.send("Input.dispatchTouchEvent", {
-          type: "touchStart",
-          touchPoints: [{ x, y }],
-        });
-        await cdp.send("Input.dispatchTouchEvent", {
-          type: "touchEnd",
-          touchPoints: [],
-        });
-      };
-      await open(page, "left");
-      const trigger = page.getByRole("menuitem", { name: sub });
-      const row = await trigger.boundingBox();
-      if (row === null) {
-        throw new Error("The submenu's trigger is not drawn.");
-      }
-      await tap(row.x + row.width / 2, row.y + row.height / 2);
+      await trigger.tap();
       const item = page.getByRole("menuitem", { name: first });
       await expect(item).toBeVisible();
       const submenu = page.getByRole("menu", { name: sub, exact: true });
       const parent = page.getByRole("menu").filter({ has: trigger });
       await expect.poll(async () => await beside(submenu, parent)).toBe(false);
-      await tap(phone.width - 8, phone.height - 8);
+      await tapOn(page, page.getByRole("menuitem", { name: topItem }));
       await expect(item).toBeHidden();
       await expect(parent).toBeVisible();
-      await expect(
-        page.getByRole("menuitem", { name: items[1] })
-      ).toBeVisible();
+      await page.touchscreen.tap(phone.width - 8, phone.height - 8);
+      await expect(page.getByRole("menu")).toHaveCount(0);
     });
   }
+
+  test("menubar: from a submenu's submenu, a tap outside closes the whole menu", async ({
+    page,
+  }) => {
+    await openExample(page, "menubar", "editor");
+    await stand(page.getByRole("menubar", { name: "Editor" }), "left");
+    await page.getByRole("menuitem", { name: "File" }).tap();
+    const exportRow = page.getByRole("menuitem", { name: "Export" });
+    await exportRow.tap();
+    const image = page.getByRole("menuitem", { name: "As an image" });
+    await image.tap();
+    const png = page.getByRole("menuitem", { name: "PNG" });
+    await expect(png).toBeVisible();
+    const images = page.getByRole("menu", { name: "As an image", exact: true });
+    const exported = page.getByRole("menu", { name: "Export", exact: true });
+    await expect.poll(async () => await beside(images, exported)).toBe(false);
+    await tapOn(page, page.getByRole("menuitem", { name: "As PDF" }));
+    await expect(png).toBeHidden();
+    await expect(exported).toBeVisible();
+    await page.touchscreen.tap(phone.width - 8, phone.height - 8);
+    await expect(page.getByRole("menu")).toHaveCount(0);
+  });
 });
 
 /** A top-level popup: how to find its trigger and open it, and the popup it opens. */

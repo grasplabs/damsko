@@ -22,7 +22,6 @@ import {
   MenuRadioItem,
   MenuSeparator,
   MenuShortcut,
-  MenuSub,
   MenuSubContent,
   MenuSubTrigger,
 } from "@ui-sdk/react/menu";
@@ -33,7 +32,7 @@ import type {
   MenuTriggerState,
 } from "@ui-sdk/react/menu";
 import { useShortcutHint } from "@ui-sdk/react/shortcuts";
-import { createContext, isValidElement, use, useId, useState } from "react";
+import { isValidElement, useId } from "react";
 import type {
   ComponentProps,
   ElementType,
@@ -67,28 +66,21 @@ export type MenuKind = "dropdown-menu" | "context-menu" | "menubar";
 // native menu does: but only a submenu no wider than the item that opened it (--anchor-width). So
 // beside its parent a submenu takes the room UI SDK gives on its side (--available-width), or its
 // item's width where that is more, which UI SDK then shifts over the parent. Once over its parent
-// (data-over, set by watchOver), it keeps its item's width until it closes, though UI SDK then
+// (data-over, set by watchOver), it keeps its item's width while it is open, though UI SDK then
 // reports the whole window as its room: grown to that, it would no longer shift, and would flip
 // back and forth on every frame.
 //
 // So it settles. Beside its parent it is never wider than the room on its side or its item,
 // whichever is more: where it does not fit that room it is no wider than its item, and UI SDK
 // either moves it to the other side, where it fits, or shifts it over the parent. Over it, it is
-// its item's width, which UI SDK keeps shifted, and it stays over until it closes, whatever room
-// UI SDK reports. No width reads the window: UI SDK measures the part of the page that shows
-// (narrower than 100vw under a pinch zoom, and without a scrollbar), and the two numbers it reports
-// are measured in that same window, as is watchOver's one look at it.
+// its item's width, which UI SDK keeps shifted, and it stays over whatever room UI SDK reports,
+// until it closes or the part of the page that shows grows wider. No width reads the window: UI SDK
+// measures the part of the page that shows (narrower than 100vw under a pinch zoom, and without a
+// scrollbar), and the two numbers it reports are measured in that same part, as watchOver reads it.
 const BESIDE = `max(var(--anchor-width, 0px), var(--available-width, ${size.popupWidth}))`;
 const OVER = "var(--anchor-width, 0px)";
 
 const styles = stylex.create({
-  // The sheet a tap outside a submenu over its parent lands on (MenuSubContentPart): the whole
-  // window, beneath the parent's rows, inside the parent menu, so UI SDK closes the submenu alone.
-  back: {
-    position: "fixed",
-    inset: 0,
-    zIndex: -1,
-  },
   subPanel: {
     minWidth: {
       default: `min(${size.menuWidth}, ${BESIDE})`,
@@ -559,14 +551,20 @@ export const MenuSubTriggerPart = ({
   </MenuSubTrigger>
 );
 
+/** How wide the part of the page that shows is, as UI SDK measures it to place a popup. */
+const shows = () =>
+  window.visualViewport?.width ?? document.documentElement.clientWidth;
+
 /**
- * Marks a submenu `data-over` once UI SDK has shifted it over its parent menu, and calls `onOver`:
- * once, then it stops looking, so the submenu stays over until it closes. UI SDK writes the room
- * into the submenu's style each time it places it, and once shifted, the room is the part of the
- * page that shows less both gutters; beside its parent, the room leaves out at least its item.
- * The mark is set before the page is drawn again, so the submenu never shows at that room's width.
+ * Marks a submenu `data-over` once UI SDK has shifted it over its parent menu, and keeps the mark
+ * whatever room UI SDK reports next. UI SDK writes the room into the submenu's style each time it
+ * places it, and once shifted, the room is the part of the page that shows less both gutters;
+ * beside its parent, the room leaves out at least its item. The mark is set before the page is
+ * drawn again, so the submenu never shows at that room's width. It comes off when the submenu
+ * closes or opens again, and when the part of the page that shows grows wider (a window widened, a
+ * phone turned, a pinch zoom let go), so the submenu stands beside its parent again where it fits.
  */
-const watchOver = (submenu: HTMLElement, onOver: () => void) => {
+const watchOver = (submenu: HTMLDivElement) => {
   const item = submenu.ownerDocument.querySelector(
     `[aria-controls="${CSS.escape(submenu.id)}"]`
   );
@@ -580,84 +578,60 @@ const watchOver = (submenu: HTMLElement, onOver: () => void) => {
     }
     // UI SDK writes both in the submenu's own pixels, which its opening's scale makes larger.
     const scale = item.getBoundingClientRect().width / itemWidth;
-    const shows =
-      window.visualViewport?.width ?? document.documentElement.clientWidth;
-    return room * scale >= shows - 2 * popup.gutter - 1;
+    return room * scale >= shows() - 2 * popup.gutter - 1;
   };
-  const check = (_: unknown, placed: MutationObserver) => {
-    if (over()) {
-      placed.disconnect();
-      submenu.toggleAttribute("data-over", true);
-      onOver();
+  const look = () => {
+    if (!Object.hasOwn(submenu.dataset, "over") && over()) {
+      submenu.dataset.over = "";
     }
   };
-  const placed = new MutationObserver(check);
-  placed.observe(submenu, { attributeFilter: ["style"] });
-  check(undefined, placed);
+  const again = () => {
+    delete submenu.dataset.over;
+    look();
+  };
+  const placed = new MutationObserver((changes) => {
+    const opened = changes.some(
+      ({ attributeName }) => attributeName === "data-open"
+    );
+    if (opened && Object.hasOwn(submenu.dataset, "open")) {
+      again();
+    } else {
+      look();
+    }
+  });
+  placed.observe(submenu, { attributeFilter: ["style", "data-open"] });
+  const viewport = window.visualViewport ?? window;
+  let width = shows();
+  const resized = () => {
+    if (shows() > width) {
+      again();
+    }
+    width = shows();
+  };
+  viewport.addEventListener("resize", resized);
+  look();
   return () => {
     placed.disconnect();
+    viewport.removeEventListener("resize", resized);
+    delete submenu.dataset.over;
   };
 };
 
-/** Whether a touch or a pen opened the submenu (MenuSubPart), rather than a mouse or the keys. */
-const OpenedByTouch = createContext(false);
-
-/** A submenu: its trigger and its content, which learns how it was opened. */
-export const MenuSubPart = ({ children }: { children: ReactNode }) => {
-  const [touch, setTouch] = useState(false);
-  return (
-    <MenuSub
-      onOpenChange={(open, { source }) => {
-        if (open) {
-          setTouch(source === "touch" || source === "pen");
-        }
-      }}
-    >
-      <OpenedByTouch value={touch}>{children}</OpenedByTouch>
-    </MenuSub>
-  );
-};
-
-/**
- * The submenu, beside its trigger. Where it stands over its parent (a phone), a tap on the
- * parent's rows still showing goes back one level without pressing the row: UI SDK closes only
- * the menus a press lands outside of, and keeps the press from what is under it. When a touch or
- * a pen opened it, a tap anywhere else outside does the same rather than closing the whole menu,
- * since the submenu may cover every row of its parent: it lands on a sheet that fills the window
- * inside the parent menu, beneath its rows. Decided by what opened the submenu, not by the
- * screen, which on a laptop with a touch screen says its pointer is fine. Not after the mouse or
- * the keys: the sheet would hold the pointer inside the parent, which loses the keys' place once
- * it goes. The keys close one level already (Escape, and the arrow back).
- */
-export const MenuSubContentPart = ({ kind, children, style }: PartProps) => {
-  const touch = use(OpenedByTouch);
-  const [over, setOver] = useState(false);
-  return (
-    <>
-      {over && touch && (
-        <div aria-hidden="true" {...stylex.props(styles.back)} />
-      )}
-      <MenuSubContent
-        ref={(node: HTMLDivElement | null) =>
-          node === null
-            ? undefined
-            : watchOver(node, () => {
-                setOver(true);
-              })
-        }
-        sideOffset={popup.gap}
-        collisionPadding={popup.gutter}
-        render={slotted("div", `${kind}-sub-content`)}
-        {...stylex.props(
-          menuStyles.panel,
-          menuStyles.motion,
-          scrollbarHidden,
-          styles.subPanel,
-          style
-        )}
-      >
-        {children}
-      </MenuSubContent>
-    </>
-  );
-};
+/** The submenu, beside its trigger. */
+export const MenuSubContentPart = ({ kind, children, style }: PartProps) => (
+  <MenuSubContent
+    ref={watchOver}
+    sideOffset={popup.gap}
+    collisionPadding={popup.gutter}
+    render={slotted("div", `${kind}-sub-content`)}
+    {...stylex.props(
+      menuStyles.panel,
+      menuStyles.motion,
+      scrollbarHidden,
+      styles.subPanel,
+      style
+    )}
+  >
+    {children}
+  </MenuSubContent>
+);

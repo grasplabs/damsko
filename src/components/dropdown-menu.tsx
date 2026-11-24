@@ -24,7 +24,7 @@
 
 import * as stylex from "@stylexjs/stylex";
 import type { MenuCheckboxItem, MenuRadioGroup } from "@ui-sdk/react/menu";
-import { Menu, MenuContent, MenuTrigger } from "@ui-sdk/react/menu";
+import { Menu, MenuContent, MenuSub, MenuTrigger } from "@ui-sdk/react/menu";
 import { createElement } from "react";
 import type { ComponentProps, ReactElement, ReactNode } from "react";
 
@@ -41,7 +41,6 @@ import {
   MenuSeparatorPart,
   MenuShortcutPart,
   MenuSubContentPart,
-  MenuSubPart,
   MenuSubTriggerPart,
 } from "../lib/menu";
 import type { MenuKind } from "../lib/menu";
@@ -469,7 +468,7 @@ export const DropdownMenuSeparator = (props: DropdownMenuSeparatorProps) => (
 
 /** A submenu: holds its DropdownMenuSubTrigger and DropdownMenuSubContent. */
 export const DropdownMenuSub = ({ children }: DropdownMenuSubProps) => (
-  <MenuSubPart>{children}</MenuSubPart>
+  <MenuSub>{children}</MenuSub>
 );
 
 /** The item that opens its submenu, with a chevron pointing the way it opens. */
