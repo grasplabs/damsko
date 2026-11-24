@@ -48,7 +48,7 @@ import {
 } from "../lib/tokens.stylex";
 import { announce, className } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
-import { buttonTarget, buttonVariants } from "./button";
+import { buttonVariants } from "./button";
 import { ghostVars } from "./button.stylex";
 
 /** Why the order changed: a pointer's drag, the keyboard, or code. */
@@ -397,6 +397,7 @@ const sortableList = definePrimitive({
 
 // ---- The look --------------------------------------------------------------------------------------
 
+const COARSE = media.pointerCoarse;
 const FORCED = media.forcedColors;
 const HOVER = media.hover;
 const REDUCED = media.reducedMotion;
@@ -462,6 +463,20 @@ const styles = stylex.create({
     cursor: { default: "grab", ":active": "grabbing" },
     touchAction: "none",
     userSelect: "none",
+    // On a touch screen the handle places nothing, so its target (below) is placed by the item.
+    position: { default: null, [COARSE]: "static" },
+  },
+  // What a press lands on. With a mouse, the handle's own box. On a touch screen, the tap target's
+  // width (the tapTarget token) centred on the handle, and exactly as tall as the item's row: never
+  // past the row's edges, so a press anywhere in a row's handle column moves that row and no other.
+  // Its sides are left where the handle's content would put it (the static position, centred in
+  // the handle by its justifyContent); its top and bottom are the item's, which the handle no
+  // longer places (grip, above).
+  target: {
+    position: "absolute",
+    insetBlock: 0,
+    insetInline: { default: 0, [COARSE]: "auto" },
+    width: { default: null, [COARSE]: size.tapTarget },
   },
   // Up: the press's fill stays while it is moved, and the press does not shrink it as it is
   // dragged.
@@ -592,7 +607,7 @@ export const SortableListHandle = ({
         ),
       children: (
         <>
-          <span aria-hidden="true" {...stylex.props(buttonTarget("icon-sm"))} />
+          <span aria-hidden="true" {...stylex.props(styles.target)} />
           <Icon icon={GripVerticalIcon} />
         </>
       ),

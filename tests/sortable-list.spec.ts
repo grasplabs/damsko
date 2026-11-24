@@ -702,3 +702,72 @@ test("right to left, the handle stands at the line's start and Down still moves 
     .poll(async () => await orderOf(list))
     .toEqual([before[1], before[0], before[2]]);
 });
+
+test.describe("on a touch screen", () => {
+  test.use({ viewport: { width: 390, height: 844 }, hasTouch: true });
+
+  test("a press anywhere in a row's handle column picks up that row and no other", async ({
+    page,
+  }) => {
+    await openExample(page, "sortable-list", "basic");
+    const list = page.getByRole("list", { name: "Onboarding steps, in order" });
+    const rows = await Promise.all(
+      [0, 1, 2].map(
+        async (index) =>
+          await list.getByRole("listitem").nth(index).boundingBox()
+      )
+    );
+    const handle = await list.getByRole("button").first().boundingBox();
+    const tapTarget = await page.evaluate(() =>
+      Number(
+        getComputedStyle(document.documentElement)
+          .getPropertyValue("--damsko-tap-target")
+          .trim()
+          .replace(/px$/u, "")
+      )
+    );
+    if (handle === null || rows.some((row) => row === null)) {
+      throw new Error("the list is not drawn");
+    }
+    const middle = handle.x + handle.width / 2;
+    const top = rows[0]?.y ?? 0;
+    const bottom = (rows[2]?.y ?? 0) + (rows[2]?.height ?? 0);
+    const wrong: string[] = [];
+    // Down the column every 2px, through its middle and along both sides of the tap target. A
+    // press in the gap between two rows is no row's: the browser may give it to either.
+    for (const x of [
+      middle - tapTarget / 2 + 1,
+      middle,
+      middle + tapTarget / 2 - 1,
+    ]) {
+      for (let y = top + 0.5; y < bottom; y += 2) {
+        const row = rows.findIndex(
+          (box) => box !== null && y >= box.y && y < box.y + box.height
+        );
+        if (row === -1) {
+          continue;
+        }
+        // oxlint-disable-next-line no-await-in-loop -- one press after the other
+        await page.touchscreen.tap(x, y);
+        // oxlint-disable-next-line no-await-in-loop -- one press after the other
+        const up = await list
+          .getByRole("button")
+          .evaluateAll((handles) =>
+            handles.findIndex(
+              (each) => each.getAttribute("aria-pressed") === "true"
+            )
+          );
+        if (up !== row) {
+          wrong.push(
+            `${Math.round(x - middle)},${Math.round(y - top)}: ${up}, not ${row}`
+          );
+        }
+        if (up !== -1) {
+          // oxlint-disable-next-line no-await-in-loop -- put back before the next press
+          await page.keyboard.press("Escape");
+        }
+      }
+    }
+    expect(wrong).toStrictEqual([]);
+  });
+});

@@ -2237,7 +2237,7 @@
       "docs": "https://damsko.joingrasp.com/components/native-select",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -2945,7 +2945,7 @@
       "docs": "https://damsko.joingrasp.com/components/sortable-list",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {

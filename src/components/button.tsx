@@ -493,36 +493,24 @@ const targetStyles = stylex.create({
   },
   lg: { insetBlock: 0 },
   "icon-xs": {
-    insetBlock: {
-      default: 0,
-      [COARSE]: `calc((${sizes.controlXs} - ${sizes.tapTarget}) / 2)`,
-    },
-    insetInline: {
+    inset: {
       default: 0,
       [COARSE]: `calc((${sizes.controlXs} - ${sizes.tapTarget}) / 2)`,
     },
   },
   "icon-sm": {
-    insetBlock: {
-      default: 0,
-      [COARSE]: `calc((${sizes.controlSm} - ${sizes.tapTarget}) / 2)`,
-    },
-    insetInline: {
+    inset: {
       default: 0,
       [COARSE]: `calc((${sizes.controlSm} - ${sizes.tapTarget}) / 2)`,
     },
   },
   icon: {
-    insetBlock: {
-      default: 0,
-      [COARSE]: `calc((${sizes.controlDefault} - ${sizes.tapTarget}) / 2)`,
-    },
-    insetInline: {
+    inset: {
       default: 0,
       [COARSE]: `calc((${sizes.controlDefault} - ${sizes.tapTarget}) / 2)`,
     },
   },
-  "icon-lg": { insetBlock: 0, insetInline: 0 },
+  "icon-lg": { inset: 0 },
 });
 
 // Each variant at rest; its hover and press are in liveStyles, left out while it cannot be pressed.
@@ -690,14 +678,6 @@ export const buttonVariants = ({
 }: { variant?: ButtonVariant; size?: ButtonSize } = {}): stylex.StyleXStyles =>
   lookOf(variant, size, true);
 
-/**
- * A button's touch target, for an element drawn with `buttonVariants`: an empty `aria-hidden`
- * span inside it that a finger reaches on a touch screen.
- */
-export const buttonTarget = (
-  size: ButtonSize = "default"
-): stylex.StyleXStyles => [styles.target, targetStyles[size]];
-
 // ---- The parts -------------------------------------------------------------------------------------
 
 /** The words an agent is told before its press runs, when it must ask. */
@@ -797,7 +777,10 @@ const Inside = ({
         {...stylex.props(styles.sheen, pressable && styles.sheenLive)}
       />
     )}
-    <span aria-hidden="true" {...stylex.props(buttonTarget(size))} />
+    <span
+      aria-hidden="true"
+      {...stylex.props(styles.target, targetStyles[size])}
+    />
   </>
 );
 
