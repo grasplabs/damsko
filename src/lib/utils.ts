@@ -389,8 +389,12 @@ const heedOthers = (region: HTMLElement) => {
  * before anything is said. UI SDK makes them `role="status"` and `role="alert"`: an empty status
  * and an empty alert on every page, which a page's own `getByRole("status")` or "no alert here"
  * then finds. The roles go; `aria-live` and `aria-atomic`, all either role means to a screen
- * reader, stay. Readied again before each message, in case the page lost them. Does nothing on the
- * server, or where UI SDK speaks through an announcer of its own.
+ * reader, stay. Does nothing on the server, or where UI SDK speaks through an announcer of its own.
+ *
+ * What it relies on in UI SDK (platform/announce.js, at the pinned version; live-regions.spec
+ * fails if it changes): each region is a child of the body marked `data-ui-sdk-announcer`, `""`
+ * for the polite one and `"assertive"` for the other, and one that has left the page is made anew,
+ * with its role, at its next message. So a new region is readied as it comes (`watchLiveRegions`).
  */
 export const readyLiveRegions = (): void => {
   if (typeof document === "undefined" || document.body === null) {
@@ -412,14 +416,32 @@ export const readyLiveRegions = (): void => {
   }
 };
 
+/** Readies the regions now, and again whenever UI SDK puts a new one in the body. */
+const watchLiveRegions = () => {
+  readyLiveRegions();
+  new MutationObserver((changes) => {
+    if (
+      changes.some((change) =>
+        [...change.addedNodes].some(
+          (node) =>
+            node instanceof HTMLElement &&
+            node.dataset.uiSdkAnnouncer !== undefined
+        )
+      )
+    ) {
+      readyLiveRegions();
+    }
+  }).observe(document.body, { childList: true });
+};
+
 // Ready from the start, so a screen reader knows the regions before their first message.
 if (typeof document !== "undefined") {
   if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", readyLiveRegions, {
+    document.addEventListener("DOMContentLoaded", watchLiveRegions, {
       once: true,
     });
-  } else {
-    readyLiveRegions();
+  } else if (document.body !== null) {
+    watchLiveRegions();
   }
 }
 

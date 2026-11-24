@@ -129,3 +129,27 @@ test("an Empty's error, a toast's error and a form's error at once: each said on
   ).toHaveCount(2);
   await expect(page.getByRole("alert")).toHaveCount(0);
 });
+
+test("a region UI SDK makes anew, once the page lost its own, is neither a status nor an alert, and says its message", async ({
+  page,
+}) => {
+  await recordRegions(page);
+  await openExample(page, "toast", "types");
+  const regions = page.locator("[data-ui-sdk-announcer]");
+  await expect(regions).toHaveCount(2);
+  // The page loses them (a framework that redraws the body, say).
+  await regions.evaluateAll((elements) => {
+    for (const element of elements) {
+      element.remove();
+    }
+  });
+  await page.getByRole("button", { name: "Error" }).click();
+  await expect
+    .poll(async () => await page.evaluate(() => window.regionsSaid ?? []))
+    .toEqual([
+      "assertive: Could not save. Check your connection and try again.",
+    ]);
+  await expect(regions).not.toHaveCount(0);
+  await expect(page.getByRole("alert")).toHaveCount(0);
+  await expect(page.getByRole("status")).toHaveCount(0);
+});
