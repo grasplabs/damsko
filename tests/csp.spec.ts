@@ -1,17 +1,21 @@
 // The product's Content Security Policy, across the library, as Damsko needs it: `img-src 'self'
 // data:`, so a picture from a `blob:` URL breaks there while it works on this site, and workers
-// only from the page's own files (`worker-src 'self'`), as CodeBlock reads its code in one. Every
-// component example is served here with those directives, and none may be broken by them; an
-// image upload's new picture still shows, its preview being a data: URL.
+// only from the place the site's built scripts are served from (`worker-src <origin>/_astro/`, as
+// Get started says), as CodeBlock reads its code in one. Every component example is served here
+// with those directives, and none may be broken by them; an image upload's new picture still
+// shows, its preview being a data: URL; and CodeBlock's code is coloured under it, and plain, said
+// once and tried once, under a policy that refuses workers.
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
 import { componentExamples, openExample, pickerFrom } from "./example.ts";
 
-const policy = "img-src 'self' data:; worker-src 'self'";
+/** The product's policy: workers only from where the built scripts are served. */
+const productPolicy = () =>
+  `img-src 'self' data:; worker-src ${new URL("/_astro/", process.env.BASE_URL).href}`;
 
-/** Serves every page with the product's policy and records what it refuses. */
-const underPolicy = async (page: Page) => {
+/** Serves every page with `policy` (the product's) and records what it refuses. */
+const underPolicy = async (page: Page, policy = productPolicy()) => {
   await page.route(
     (url) => url.pathname.startsWith("/examples/"),
     async (route) => {
@@ -95,4 +99,64 @@ test("an image upload's new picture shows under the product's policy", async ({
     )
     .toBe(true);
   expect(await page.evaluate(() => window.refused ?? [])).toStrictEqual([]);
+});
+
+/** Whether a run of a block's code is drawn in a colour other than its line's. */
+const coloured = async (page: Page) =>
+  await page.evaluate(() =>
+    [
+      ...document.querySelectorAll(
+        "[data-slot=code-block-line] > span:nth-child(2) > span"
+      ),
+    ].some(
+      (run) =>
+        run.parentElement !== null &&
+        getComputedStyle(run).color !==
+          getComputedStyle(run.parentElement).color
+    )
+  );
+
+test("CodeBlock's code is coloured under the product's policy", async ({
+  page,
+}) => {
+  await underPolicy(page);
+  await openExample(page, "code-block", "basic");
+  await expect.poll(async () => await coloured(page)).toBe(true);
+  expect(await page.evaluate(() => window.refused ?? [])).toStrictEqual([]);
+});
+
+test("where a policy refuses workers, every block is plain and whole, and the worker is tried and refused once", async ({
+  page,
+}) => {
+  await underPolicy(page, "worker-src 'none'");
+  const said: string[] = [];
+  page.on("console", (message) => {
+    said.push(message.text());
+  });
+  page.on("pageerror", (error) => {
+    said.push(error.message);
+  });
+  await openExample(page, "code-block", "many");
+  await page.getByLabel("Code").fill("export const total = 1;");
+  for (let added = 0; added < 3; added += 1) {
+    // oxlint-disable-next-line no-await-in-loop -- one block after the other
+    await page.getByRole("button", { name: "Add a block" }).click();
+  }
+  await expect
+    .poll(async () => await page.evaluate(() => window.refused ?? []))
+    .toHaveLength(1);
+  // A second more, for any block that would try again.
+  await page.waitForTimeout(1000);
+  const refused = await page.evaluate(() => window.refused ?? []);
+  expect(refused).toHaveLength(1);
+  expect(refused[0]).toMatch(/^worker-src /u);
+  expect(said).toHaveLength(1);
+  for (const name of ["Block 1", "Block 2", "Block 3"]) {
+    const block = page.getByRole("region", { name });
+    // oxlint-disable-next-line no-await-in-loop -- one block after the other
+    await expect(
+      block.getByText("export const total = 1;", { exact: true })
+    ).toBeVisible();
+  }
+  expect(await coloured(page)).toBe(false);
 });

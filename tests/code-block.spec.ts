@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+
 import { expect, test } from "@playwright/test";
 import type { Locator, Page } from "@playwright/test";
 
@@ -244,13 +246,18 @@ test("in a right-to-left page code still reads left to right from the left edge"
 declare global {
   interface Window {
     longTasks?: number[];
+    frameGaps?: number[];
   }
 }
 
-/** The page's long tasks, where the browser reports them (Chromium), from `fromNow` on. */
+/**
+ * The page's long tasks, where the browser reports them (Chromium), and the time between its
+ * frames, from `fromNow` on.
+ */
 const watchLongTasks = async (page: Page) => {
   await page.addInitScript(() => {
     window.longTasks = [];
+    window.frameGaps = [];
     try {
       new PerformanceObserver((list) => {
         for (const entry of list.getEntries()) {
@@ -260,17 +267,31 @@ const watchLongTasks = async (page: Page) => {
     } catch {
       // Not reported here.
     }
+    let last = performance.now();
+    const frame = (now: number) => {
+      window.frameGaps?.push(now - last);
+      last = now;
+      requestAnimationFrame(frame);
+    };
+    requestAnimationFrame(frame);
   });
 };
 
 const fromNow = async (page: Page) => {
   await page.evaluate(() => {
     window.longTasks = [];
+    window.frameGaps = [];
   });
 };
 
 const longestTask = async (page: Page) =>
   Math.max(0, ...(await page.evaluate(() => window.longTasks ?? [])));
+
+/** How many frames there were since `fromNow`, and how many took longer than 50 ms. */
+const framesSince = async (page: Page) => {
+  const gaps = await page.evaluate(() => window.frameGaps ?? []);
+  return { all: gaps.length, slow: gaps.filter((gap) => gap > 50).length };
+};
 
 /** Whether a run of the code has a colour of its own: drawn in another colour than its line. */
 const isColoured = async (run: Locator) =>
@@ -284,21 +305,32 @@ const isColoured = async (run: Locator) =>
           getComputedStyle(node.parentElement).color
     ));
 
-/** How many of the page's workers have been stopped, as it goes. */
-const countStopped = (page: Page) => {
-  const stopped = { count: 0 };
+/** How many runs of a block's code are drawn in a colour of their own. */
+const colouredRuns = async (block: Locator) =>
+  await block
+    .locator("[data-slot=code-block-line] > span:nth-child(2) > span")
+    .count();
+
+/** How many of the page's workers have been started and stopped, as it goes. */
+const countWorkers = (page: Page) => {
+  const workers = { started: 0, stopped: 0 };
   page.on("worker", (worker) => {
+    workers.started += 1;
     worker.on("close", () => {
-      stopped.count += 1;
+      workers.stopped += 1;
     });
   });
-  return stopped;
+  return workers;
 };
 
 // One TypeScript line Prism takes seconds over (one match of a grammar's over the whole string),
 // then an ordinary one.
 const longLine = `const report = "${"x".repeat(50_000)}";`;
 const slowCode = `${longLine}\nconst total = 1;`;
+
+/** A file of this repository's, ordinary code. */
+const fileOf = (path: string) =>
+  readFileSync(new URL(`../${path}`, import.meta.url), "utf-8");
 
 test("Prism reads the code in a worker, never on the page", async ({
   page,
@@ -317,13 +349,13 @@ test("code Prism cannot read in time stays plain and whole, and never holds the 
   page,
 }) => {
   await watchLongTasks(page);
-  const stopped = countStopped(page);
+  const workers = countWorkers(page);
   await openExample(page, "code-block", "any");
   await page.getByLabel("Code").fill(slowCode);
   await fromNow(page);
   await page.getByRole("button", { name: "Show", exact: true }).click();
   // The worker is stopped when its time is up.
-  await expect.poll(() => stopped.count, { timeout: 15_000 }).toBe(1);
+  await expect.poll(() => workers.stopped, { timeout: 15_000 }).toBe(1);
   const block = page.getByRole("region", { name: "TSX" });
   await expect(block.getByText(longLine, { exact: true })).toBeVisible();
   await expect(
@@ -332,7 +364,7 @@ test("code Prism cannot read in time stays plain and whole, and never holds the 
   // Plain: no word is a run of its own.
   await expect(block.getByText("const", { exact: true })).toHaveCount(0);
   // Read on the page, Prism would hold it for seconds.
-  expect(await longestTask(page)).toBeLessThan(500);
+  expect(await longestTask(page)).toBeLessThan(50);
   // The next code is read by a new worker, and coloured.
   await page.getByLabel("Code").fill("export const total = 1;");
   await page.getByRole("button", { name: "Show", exact: true }).click();
@@ -347,64 +379,191 @@ test("while slow code is written the page is never held, and done, it is plain a
   page,
 }) => {
   await watchLongTasks(page);
-  const stopped = countStopped(page);
+  const workers = countWorkers(page);
   await openExample(page, "code-block", "any");
   await page.getByLabel("Code").fill(slowCode);
   await fromNow(page);
   await page.getByRole("button", { name: "Write it out" }).click();
   // Stopped once while it is written, when a reading first takes too long, and not read again
   // until it is done; then read once more, whole, and stopped again.
-  await expect.poll(() => stopped.count, { timeout: 30_000 }).toBe(2);
+  await expect.poll(() => workers.stopped, { timeout: 30_000 }).toBe(2);
   const block = page.getByRole("region", { name: "TSX" });
   await expect(block.getByText(longLine, { exact: true })).toBeVisible();
   await expect(
     block.getByText("const total = 1;", { exact: true })
   ).toBeVisible();
   await expect(block.getByText("const", { exact: true })).toHaveCount(0);
-  expect(await longestTask(page)).toBeLessThan(500);
+  expect(await longestTask(page)).toBeLessThan(50);
 });
-test("where the page's policy refuses workers, the code is plain and whole", async ({
+
+/**
+ * `code` in `language` in the Any code example, written out (or shown, and opened whole), from
+ * the press to a second after it is all there: the longest task and how many frames were slow.
+ */
+const drawOut = async (
+  page: Page,
+  code: string,
+  language: string,
+  how: "written" | "shown"
+) => {
+  await page.getByLabel("Language").fill(language);
+  await page.getByLabel("Code").fill(code);
+  const block = page.getByRole("region", { name: /./u }).last();
+  await fromNow(page);
+  if (how === "written") {
+    await page.getByRole("button", { name: "Write it out" }).click();
+    await expect(page.locator("[data-streaming]")).toHaveCount(0, {
+      timeout: 60_000,
+    });
+  } else {
+    await page.getByRole("button", { name: "Show", exact: true }).click();
+    await page.getByRole("button", { name: "Show more" }).click();
+  }
+  await expect(page.getByText("Show less")).toBeVisible();
+  // Long enough for a read to be answered and drawn.
+  await page.waitForTimeout(1500);
+  return {
+    longest: await longestTask(page),
+    frames: await framesSince(page),
+    coloured: await colouredRuns(block),
+  };
+};
+
+/**
+ * `code` drawn in `language`: in Chromium with no long task, elsewhere with no more slow frames
+ * than as text (Firefox and WebKit report no long tasks). Gives the runs it drew in colour.
+ */
+const neverHeld = async (
+  page: Page,
+  browserName: string,
+  code: string,
+  language: string,
+  how: "written" | "shown"
+) => {
+  if (browserName === "chromium") {
+    const coloured = await drawOut(page, code, language, how);
+    expect(coloured.longest).toBeLessThan(50);
+    return coloured.coloured;
+  }
+  const plain = await drawOut(page, code, "text", how);
+  // A block that is new, so it opens again.
+  await openExample(page, "code-block", "any");
+  const coloured = await drawOut(page, code, language, how);
+  // A frame in ten either way is the machine, not the page: on a loaded machine the same text
+  // drawn twice differs by that much. Drawing every coloured line again each frame, as before,
+  // made half the frames slow.
+  expect(coloured.frames.slow).toBeLessThanOrEqual(
+    plain.frames.slow + Math.ceil(coloured.frames.all / 10)
+  );
+  return coloured.coloured;
+};
+
+test("lines of thousands of runs written out never hold the page, and stay plain", async ({
+  page,
+  browserName,
+}) => {
+  test.setTimeout(120_000);
+  await watchLongTasks(page);
+  await openExample(page, "code-block", "any");
+  // 199 KB, about 2,000 runs a line: past the most runs a block is coloured with.
+  const code = Array.from({ length: 100 }, () => "a,".repeat(995)).join("\n");
+  expect(await neverHeld(page, browserName, code, "tsx", "written")).toBe(0);
+});
+
+test("minified code shown whole never holds the page, and stays plain", async ({
+  page,
+  browserName,
+}) => {
+  test.setTimeout(120_000);
+  await watchLongTasks(page);
+  await openExample(page, "code-block", "any");
+  // 200 KB of React's minified build, wrapped at 200 columns.
+  const minified = fileOf(
+    "node_modules/react-dom/cjs/react-dom-client.production.js"
+  )
+    .replaceAll("\n", " ")
+    .slice(0, 200_000);
+  const code = minified.match(/.{1,200}/gu)?.join("\n") ?? "";
+  expect(await neverHeld(page, browserName, code, "js", "shown")).toBe(0);
+});
+
+test("a long file written out never holds the page, and done, it is coloured", async ({
+  page,
+  browserName,
+}) => {
+  test.setTimeout(120_000);
+  await watchLongTasks(page);
+  await openExample(page, "code-block", "any");
+  // 500 lines and more of ordinary code: each line coloured once, never again while more comes.
+  const code = fileOf("src/components/dialog.tsx");
+  expect(
+    await neverHeld(page, browserName, code, "tsx", "written")
+  ).toBeGreaterThan(1000);
+});
+
+/** Adds a block of `code` to the Many blocks example, `times` times. */
+const addBlocks = async (page: Page, code: string, times = 1) => {
+  await page.getByLabel("Code").fill(code);
+  for (let added = 0; added < times; added += 1) {
+    // oxlint-disable-next-line no-await-in-loop -- one block after the other
+    await page.getByRole("button", { name: "Add a block" }).click();
+  }
+};
+
+test("on a page of slow blocks, an ordinary one on the screen is coloured within a second and a half", async ({
   page,
 }) => {
-  await page.route(
-    (url) => url.pathname.startsWith("/examples/"),
-    async (route) => {
-      if (route.request().resourceType() !== "document") {
-        await route.fallback();
-        return;
-      }
-      const response = await route.fetch();
-      await route.fulfill({
-        response,
-        headers: {
-          ...response.headers(),
-          "content-security-policy": "worker-src 'none'",
-        },
-      });
-    }
-  );
-  const errors: string[] = [];
-  page.on("pageerror", (error) => {
-    errors.push(error.message);
-  });
-  await page.addInitScript(() => {
-    document.addEventListener("securitypolicyviolation", (event) => {
-      document.documentElement.dataset.refused = event.effectiveDirective;
-    });
-  });
-  await openExample(page, "code-block", "basic");
-  // The worker was asked for, and refused.
-  await expect(page.locator("html")).toHaveAttribute(
-    "data-refused",
-    "worker-src"
-  );
-  const block = page.getByRole("region", { name: "TSX" });
-  await expect(
-    block.getByText(
-      "export function ReportStatus({ ready }: { ready: boolean }) {",
-      { exact: true }
+  await openExample(page, "code-block", "many");
+  await addBlocks(page, slowCode, 10);
+  await addBlocks(page, "export const total = 1;");
+  const block = page.getByRole("region", { name: "Block 11" });
+  await block.scrollIntoViewIfNeeded();
+  const appeared = Date.now();
+  await expect
+    .poll(
+      async () => await isColoured(block.getByText("export", { exact: true })),
+      { timeout: 5000 }
     )
-  ).toBeVisible();
-  await expect(block.getByText("export", { exact: true })).toHaveCount(0);
-  expect(errors).toStrictEqual([]);
+    .toBe(true);
+  expect(Date.now() - appeared).toBeLessThan(1500);
+});
+
+test("blocks that are gone are no longer read", async ({ page }) => {
+  await openExample(page, "code-block", "many");
+  await addBlocks(page, slowCode, 10);
+  await page.waitForTimeout(300);
+  await page.getByRole("button", { name: "Remove all" }).click();
+  await addBlocks(page, "export const total = 1;");
+  const added = Date.now();
+  const block = page.getByRole("region", { name: "Block 1" });
+  await expect
+    .poll(
+      async () => await isColoured(block.getByText("export", { exact: true })),
+      { timeout: 5000 }
+    )
+    .toBe(true);
+  expect(Date.now() - added).toBeLessThan(1500);
+});
+
+test("the worker stops once no block is left on the page", async ({ page }) => {
+  const workers = countWorkers(page);
+  await openExample(page, "code-block", "many");
+  await addBlocks(page, "export const total = 1;");
+  const block = page.getByRole("region", { name: "Block 1" });
+  await expect
+    .poll(
+      async () => await isColoured(block.getByText("export", { exact: true }))
+    )
+    .toBe(true);
+  expect(workers).toStrictEqual({ started: 1, stopped: 0 });
+  await page.getByRole("button", { name: "Remove all" }).click();
+  await expect.poll(() => workers.stopped, { timeout: 5000 }).toBe(1);
+  // A new block starts it again.
+  await addBlocks(page, "export const total = 1;");
+  await expect
+    .poll(
+      async () => await isColoured(block.getByText("export", { exact: true }))
+    )
+    .toBe(true);
+  expect(workers.started).toBe(2);
 });

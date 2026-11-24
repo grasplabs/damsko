@@ -1,8 +1,9 @@
 // CodeBlock's highlighting (src/components/code-block-prism.ts): Prism reads a block's code whole,
 // in the worker, and the page turns its runs into lines. The colours are Prism's for the whole
 // text, on this repository's own files; a grammar is looked up only among its own names; while
-// code is written the lines the last read ended keep their colours and the rest is plain; and the
-// page's part grows with the code, not faster.
+// code is written the lines the last read ended keep their colours and the rest is plain; a line
+// that is the same from one read to the next is one object; and the page's part grows with the
+// code, not faster.
 //
 //   pnpm exec vp test scripts/code-block-prism.test.ts
 import { readFileSync } from "node:fs";
@@ -11,11 +12,15 @@ import type * as PrismTypes from "prismjs";
 import { describe, expect, test } from "vitest";
 
 import {
+  colouredLines,
+  colouredOf,
   isPrism,
   languages,
   linesOf,
+  plainLines,
   runsOf,
 } from "../src/components/code-block-prism.ts";
+import type { Runs } from "../src/components/code-block-prism.ts";
 
 // As the worker loads them (code-block-worker.ts).
 await import("prismjs");
@@ -94,10 +99,21 @@ const best = (work: () => unknown) => {
   return fastest;
 };
 
-const readWhole = (code: string, grammar: string) => {
+const ALL = Number.POSITIVE_INFINITY;
+
+const runsFor = (code: string, grammar: string): Runs => {
   const runs = runsOf(Prism, code, grammar);
-  return runs ? { code, runs } : null;
+  if (runs === null) {
+    throw new Error(`no grammar ${grammar}`);
+  }
+  return runs;
 };
+
+const readWhole = (code: string, grammar: string) =>
+  colouredOf(code, runsFor(code, grammar), ALL);
+
+const textOf = (line: { text: string }[] | string) =>
+  typeof line === "string" ? line : line.map((run) => run.text).join("");
 
 describe(runsOf, () => {
   test.each(["__proto__", "constructor", "extend", "DFS", "toString"])(
@@ -134,10 +150,10 @@ describe(linesOf, () => {
         new URL(`../${file}`, import.meta.url),
         "utf-8"
       );
-      const lines = linesOf(code, readWhole(code, grammar));
-      expect(
-        lines.map((line) => line.map((run) => run.text).join(""))
-      ).toStrictEqual(code.replace(/\n$/u, "").split("\n"));
+      const lines = linesOf(code, runsFor(code, grammar), ALL);
+      expect(lines.map(textOf)).toStrictEqual(
+        code.replace(/\n$/u, "").split("\n")
+      );
       expect(namesByLine(lines)).toStrictEqual(
         namesByLine(prismLines(code, grammar))
       );
@@ -149,46 +165,63 @@ describe(linesOf, () => {
       { length: 50 },
       (_, n) => `const a${n} = ${n};`
     ).join("\n");
-    const lines = linesOf(code, readWhole(code, "typescript"), 18);
+    const lines = linesOf(code, runsFor(code, "typescript"), 18);
     expect(lines).toHaveLength(18);
-    expect(
-      lines.map((line) => line.map((run) => run.text).join(""))
-    ).toStrictEqual(code.split("\n").slice(0, 18));
-    expect(linesOf(code, null, 3)).toStrictEqual([
-      [{ text: "const a0 = 0;", types: [] }],
-      [{ text: "const a1 = 1;", types: [] }],
-      [{ text: "const a2 = 2;", types: [] }],
+    expect(lines.map(textOf)).toStrictEqual(code.split("\n").slice(0, 18));
+    expect(plainLines(code, 3)).toStrictEqual([
+      "const a0 = 0;",
+      "const a1 = 1;",
+      "const a2 = 2;",
     ]);
-  });
-
-  test("while code is written, the lines the last read ended keep their colours and the rest is plain", () => {
-    const before = "const a = 1;\nconst b";
-    const now = `${before} = 2;\nconst c = 3;`;
-    const lines = linesOf(now, readWhole(before, "typescript"));
-    expect(lines).toHaveLength(3);
-    expect(lines[0]?.length).toBeGreaterThan(1);
-    expect(lines.slice(1)).toStrictEqual([
-      [{ text: "const b = 2;", types: [] }],
-      [{ text: "const c = 3;", types: [] }],
-    ]);
-  });
-
-  test("runs read for other code colour nothing", () => {
-    const lines = linesOf(
-      "let x = 1;",
-      readWhole("const a = 1;", "typescript")
-    );
-    expect(lines).toStrictEqual([[{ text: "let x = 1;", types: [] }]]);
   });
 
   test("the page's part grows with the code, not faster", () => {
     const small = runDense(25_000);
     const large = runDense(200_000);
-    const readSmall = readWhole(small, "tsx");
-    const readLarge = readWhole(large, "tsx");
-    const smallTime = best(() => linesOf(small, readSmall));
-    const largeTime = best(() => linesOf(large, readLarge));
+    const smallRuns = runsFor(small, "tsx");
+    const largeRuns = runsFor(large, "tsx");
+    const smallTime = best(() => linesOf(small, smallRuns, ALL));
+    const largeTime = best(() => linesOf(large, largeRuns, ALL));
     // Eight times the code: about eight times the work. Growing as its square would be 64.
     expect(largeTime / smallTime).toBeLessThan(24);
+  });
+});
+
+describe(colouredLines, () => {
+  test("while code is written, the lines the last read ended keep their colours and the rest is plain", () => {
+    const before = "const a = 1;\nconst b";
+    const now = `${before} = 2;\nconst c = 3;`;
+    const lines = colouredLines(now, readWhole(before, "typescript"), ALL);
+    expect(lines).toHaveLength(3);
+    expect(lines[0]).not.toBeTypeOf("string");
+    expect(lines[0]?.length).toBeGreaterThan(1);
+    expect(lines.slice(1)).toStrictEqual(["const b = 2;", "const c = 3;"]);
+  });
+
+  test("runs read for other code colour nothing", () => {
+    expect(
+      colouredLines("let x = 1;", readWhole("const a = 1;", "typescript"), ALL)
+    ).toStrictEqual(["let x = 1;"]);
+  });
+
+  test("past the lines a read coloured, the code is plain, every line in its place", () => {
+    const code = "const a = 1;\nconst b = 2;\nconst c = 3;\nconst d = 4;";
+    const read = colouredOf(code, runsFor(code, "typescript"), 2);
+    const lines = colouredLines(code, read, ALL);
+    expect(lines.map(textOf)).toStrictEqual(code.split("\n"));
+    expect(lines.slice(2)).toStrictEqual(["const c = 3;", "const d = 4;"]);
+    expect(colouredLines(`${code}\n`, read, ALL).map(textOf)).toStrictEqual(
+      code.split("\n")
+    );
+  });
+
+  test("a line that is the same in the next read is the same object, and one that changed is not", () => {
+    const before = "const a = 1;\nconst b";
+    const now = `${before} = 2;\nconst c = 3;`;
+    const first = readWhole(before, "typescript");
+    const next = colouredOf(now, runsFor(now, "typescript"), ALL, first.lines);
+    expect(next.lines[0]).toBe(first.lines[0]);
+    expect(next.lines[1]).not.toBe(first.lines[1]);
+    expect(next.lines.map(textOf)).toStrictEqual(now.split("\n"));
   });
 });

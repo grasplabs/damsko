@@ -20,8 +20,8 @@ const layout = stylex.create({
   row: { display: "flex", flexWrap: "wrap", gap: 8 },
 });
 
-/** How much is written each frame: all of it within about 300 frames. */
-const stepFor = (length: number) => Math.max(8, Math.ceil(length / 300));
+/** How much is written each frame: all of it within about 500 frames. */
+const stepFor = (length: number) => Math.max(8, Math.ceil(length / 500));
 
 // Any code, of any length, in a language a block names: shown whole, or written out a little each
 // frame as a model writes it. Whatever it holds, the page stays responsive.

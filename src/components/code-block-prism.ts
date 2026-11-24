@@ -4,7 +4,8 @@
 // short or paused. Code in a block is often a model's, so whatever it is, Prism reads it in the
 // worker, whole, as Prism reads any text; the page draws it plain until the worker answers, and
 // keeps it plain when the worker takes too long (code-block.tsx). This file is what both sides
-// share, and loads no Prism: the worker passes its own.
+// share (the languages, Prism's tokens turned into runs) and how the page turns runs into lines;
+// it loads no Prism: the worker passes its own.
 import type * as PrismTypes from "prismjs";
 
 type PrismModule = typeof PrismTypes;
@@ -54,11 +55,13 @@ export interface Runs {
 }
 
 /**
- * The most runs a line may have, and the most the page draws coloured in one frame. Code a line of
- * which has more (minified code, a line of thousands of punctuation marks) stays plain: drawn
- * coloured, that one line would hold the page.
+ * The most runs code may have and be coloured: code Prism reads as more (minified code, generated
+ * data, a file of a thousand lines and more) stays plain, all of it. Every run is a node the page
+ * draws, all in one frame when the block opens; 5,000 is what Chromium, Firefox and WebKit draw in
+ * that frame with room to spare, at any density: about 900 lines of ordinary code, at 5 or 6 runs
+ * a line, or a screen of minified code.
  */
-export const MOST_RUNS = 2000;
+export const MOST_RUNS = 5000;
 
 /** A run of code and what Prism says it is, outermost first. */
 export interface Segment {
@@ -85,7 +88,7 @@ const aliasesOf = (alias: string | string[]): string[] => {
 
 /**
  * `code` read whole by Prism in `grammar` (a value of `languages`), as runs; null when Prism has no
- * such grammar, and when a line has more than MOST_RUNS.
+ * such grammar.
  */
 export const runsOf = (
   Prism: PrismModule,
@@ -104,9 +107,6 @@ export const runsOf = (
   const names: string[] = [];
   const kindOf = new Map<string, number>();
   let at = 0;
-  // The runs in the line read last, and whether a line had too many.
-  let inLine = 0;
-  let tooMany = false;
   const add = (text: string, types: string[]) => {
     if (!text) {
       return;
@@ -119,18 +119,12 @@ export const runsOf = (
       kindOf.set(name, kind);
     }
     at += text.length;
-    const lineEnd = text.lastIndexOf("\n");
     if (kinds.at(-1) === kind) {
       ends[ends.length - 1] = at;
     } else {
       ends.push(at);
       kinds.push(kind);
-      inLine += 1;
     }
-    if (lineEnd !== -1) {
-      inLine = lineEnd < text.length - 1 ? 1 : 0;
-    }
-    tooMany ||= inLine > MOST_RUNS;
   };
   const walk = (token: string | PrismToken, types: string[]) => {
     if (typeof token === "string") {
@@ -149,9 +143,6 @@ export const runsOf = (
   };
   for (const token of Prism.tokenize(code, found)) {
     walk(token, []);
-  }
-  if (tooMany) {
-    return null;
   }
   return {
     ends: Uint32Array.from(ends),
@@ -172,20 +163,24 @@ const firstLines = (code: string, count: number): string => {
   return code.slice(0, Math.max(at, 0));
 };
 
-/**
- * The first `most` lines of `code`, coloured by `read`, Prism's runs for `read.code`: all of them
- * when that is the code, and while the code is still being written and has grown past it, the
- * lines `read.code` ended. Past what the runs colour, and with no runs, each line is one plain run.
- */
-export const linesOf = (
-  code: string,
-  read: { code: string; runs: Runs } | null,
-  most = Number.POSITIVE_INFINITY
-): Line[] => {
+/** Splits code into its lines: a last newline ends a line, it does not start one. */
+const split = (code: string): string[] => {
+  const lines = code.split("\n");
+  if (lines.length > 1 && lines.at(-1) === "") {
+    lines.pop();
+  }
+  return lines;
+};
+
+/** The first `most` lines of `code`, as text. */
+export const plainLines = (code: string, most: number): string[] =>
+  split(firstLines(code, most)).slice(0, most);
+
+/** The first `most` lines of `code`, coloured by `runs`, Prism's runs for it. */
+export const linesOf = (code: string, runs: Runs, most: number): Line[] => {
   const lines: Line[] = [[]];
   const add = (text: string, types: string[]) => {
-    const parts = text.split("\n");
-    for (const [index, part] of parts.entries()) {
+    for (const [index, part] of text.split("\n").entries()) {
       if (index > 0) {
         lines.push([]);
       }
@@ -194,31 +189,100 @@ export const linesOf = (
       }
     }
   };
-  let coloured = 0;
-  if (read !== null && code.startsWith(read.code)) {
-    coloured =
-      read.code.length === code.length
-        ? code.length
-        : read.code.lastIndexOf("\n") + 1;
-  }
+  const { ends, kinds, names } = runs;
+  const types = names.map((name) => (name ? name.split(" ") : []));
   let start = 0;
-  if (read !== null && coloured > 0) {
-    const { ends, kinds, names } = read.runs;
-    const types = names.map((name) => (name ? name.split(" ") : []));
-    for (const [index, runEnd] of ends.entries()) {
-      if (start >= coloured || lines.length > most) {
-        break;
-      }
-      const end = Math.min(runEnd, coloured);
-      add(code.slice(start, end), types[kinds[index] ?? 0] ?? []);
-      start = end;
+  for (const [index, end] of ends.entries()) {
+    if (lines.length > most) {
+      break;
     }
+    add(code.slice(start, end), types[kinds[index] ?? 0] ?? []);
+    start = end;
   }
-  // The rest, plain, as far as the lines asked for reach.
-  add(firstLines(code.slice(start), most - lines.length + 1), []);
   // A last empty line from a trailing newline is not a line of code.
   if (lines.length > 1 && lines.at(-1)?.length === 0) {
     lines.pop();
   }
   return lines.slice(0, most);
+};
+
+const sameRuns = (one: Line, other: Line) =>
+  one.length === other.length &&
+  one.every((run, index) => {
+    const that = other[index];
+    return (
+      that !== undefined &&
+      run.text === that.text &&
+      run.types.join(" ") === that.types.join(" ")
+    );
+  });
+
+/**
+ * `lines`, with each line that is the same as the one at its place in `before` (the same text in the
+ * same runs) taken from `before`: one object for one line, from one read to the next, so the page
+ * draws again only the lines that changed.
+ */
+export const keepSame = (before: Line[], lines: Line[]): Line[] =>
+  lines.map((line, index) => {
+    const was = before[index];
+    return was !== undefined && sameRuns(was, line) ? was : line;
+  });
+
+/**
+ * What a read gave the page: the code read; its first lines, coloured; how many of them a newline
+ * ends, and where the line after those starts; and whether they are all of the code.
+ */
+export interface Coloured {
+  code: string;
+  lines: Line[];
+  ended: number;
+  after: number;
+  whole: boolean;
+}
+
+/** `code`'s first `most` lines coloured by `runs`, each line the same as in `before` kept from it. */
+export const colouredOf = (
+  code: string,
+  runs: Runs,
+  most: number,
+  before: Line[] = []
+): Coloured => {
+  const lines = keepSame(before, linesOf(code, runs, most));
+  let ended = 0;
+  let after = 0;
+  for (
+    let at = code.indexOf("\n");
+    at !== -1 && ended < lines.length;
+    at = code.indexOf("\n", at + 1)
+  ) {
+    ended += 1;
+    after = at + 1;
+  }
+  return {
+    code,
+    lines,
+    ended,
+    after,
+    whole: ended < lines.length || after === code.length,
+  };
+};
+
+/**
+ * The first `most` lines of `code`, coloured by `read` where it can be: all it coloured when it is
+ * for this code, and while the code is still being written and has grown past it, the lines a
+ * newline ended in it. The rest is text, each line a string.
+ */
+export const colouredLines = (
+  code: string,
+  read: Coloured | null,
+  most: number
+): (Line | string)[] => {
+  if (read === null || !code.startsWith(read.code)) {
+    return plainLines(code, most);
+  }
+  if (read.whole && read.code.length === code.length) {
+    return read.lines.slice(0, most);
+  }
+  const kept = read.lines.slice(0, Math.min(read.ended, most));
+  return [...kept, ...plainLines(code.slice(read.after), most - kept.length)];
 };

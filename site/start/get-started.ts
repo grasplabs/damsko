@@ -239,9 +239,26 @@ const componentsJson = (address: string) =>
 
 const registryAddress = `${siteAddress}/r/{name}.json`;
 
-/** The first page of every app here: one button. */
-const firstApp =
-  'import { Button } from "@grasp-os/ui/components/button";\n\nexport default function App() {\n  return <Button variant="default">Save changes</Button>;\n}';
+/** The components the first app uses, added in one command. */
+const addComponents =
+  "pnpm dlx shadcn@4.23.0 add @damsko/button @damsko/code-block";
+
+/** The first page of every app here: a button, and a line of code coloured by its worker. */
+const firstApp = [
+  'import { Button } from "@grasp-os/ui/components/button";',
+  'import { CodeBlock, CodeBlockContent } from "@grasp-os/ui/components/code-block";',
+  "",
+  "export default function App() {",
+  "  return (",
+  "    <>",
+  '      <Button variant="default">Save changes</Button>',
+  '      <CodeBlock language="ts" aria-label="A sum">',
+  "        <CodeBlockContent>export const total = 1 + 2;</CodeBlockContent>",
+  "      </CodeBlock>",
+  "    </>",
+  "  );",
+  "}",
+].join("\n");
 
 /** The first page beside Tailwind: the button placed by an element of the page's own. */
 const placedApp =
@@ -336,7 +353,7 @@ export const sections: Section[] = [
   {
     slug: "install",
     title: "Install",
-    lead: "From an empty folder to a working button: a React app on Vite, StyleX, then the tokens, the fonts and a component from the shadcn CLI. Damsko's install check carries out these blocks, in this order, in an empty folder, on every change. The address in components.json here is this site's, which serves main as last deployed: a product pins a version instead (Pin and update, below).",
+    lead: "From an empty folder to a working button and a line of coloured code: a React app on Vite, StyleX, then the tokens, the fonts and two components from the shadcn CLI. Damsko's install check carries out these blocks, in this order, in an empty folder, on every change. The address in components.json here is this site's, which serves main as last deployed: a product pins a version instead (Pin and update, below).",
     starts: "empty",
     steps: [
       {
@@ -464,10 +481,14 @@ export const sections: Section[] = [
       },
       {
         slug: "add-a-component",
-        name: "Add a component",
-        note: "It brings the parts it needs: the focus style, its icons, the components it uses, its npm packages.",
+        name: "Add components",
+        note: "A Button and a CodeBlock. Each brings the parts it needs: the focus style, its icons, the components it uses, its npm packages, and for CodeBlock the worker its code is coloured in.",
         blocks: [
-          { code: install, lang: "bash", does: { kind: "run", in: "app" } },
+          {
+            code: addComponents,
+            lang: "bash",
+            does: { kind: "run", in: "app" },
+          },
         ],
       },
       {
@@ -484,6 +505,17 @@ export const sections: Section[] = [
             code: "pnpm build",
             lang: "bash",
             does: { kind: "run", in: "app" },
+          },
+        ],
+      },
+      {
+        slug: "allow-the-worker",
+        name: "Allow CodeBlock's worker",
+        note: "CodeBlock colours its code in a worker, a script of its own that the build writes beside the app's other scripts (assets/ in a Vite build). A Content Security Policy that names worker-src, or a default-src it falls back to, allows that place, where the app's built scripts are served from, and not all of 'self': the page may then start a worker only from its own built files, which may already run on it. Without it, the code stays plain, whole and readable, with no colours.",
+        blocks: [
+          {
+            code: "Content-Security-Policy: script-src https://app.example.com/assets/; worker-src https://app.example.com/assets/",
+            lang: "text",
           },
         ],
       },
@@ -613,11 +645,11 @@ export const sections: Section[] = [
       },
       {
         slug: "add-to-the-package",
-        name: "Add the tokens, the fonts and a component",
+        name: "Add the tokens, the fonts and the components",
         note: "In packages/ui, where components.json is; the fonts are unpacked there, once, and committed.",
         blocks: [
           {
-            code: `pnpm dlx shadcn@4.23.0 add @damsko/tokens @damsko/fonts @damsko/button\n${unpack}`,
+            code: `pnpm dlx shadcn@4.23.0 add @damsko/tokens @damsko/fonts @damsko/button @damsko/code-block\n${unpack}`,
             lang: "bash",
             does: { kind: "run", in: "packages/ui" },
           },
