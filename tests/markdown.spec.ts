@@ -67,9 +67,11 @@ test("an answer: its heading, list, table, code with copy, quote and a link that
   await expect(link).toHaveAttribute("rel", "noopener noreferrer");
 });
 
-test("a table is a table, its columns headed", async ({ page }) => {
+test("a table is a table, named by the heading above it, its columns headed", async ({
+  page,
+}) => {
   await openExample(page, "markdown", "answer");
-  const table = page.getByRole("table", { name: "Table" });
+  const table = page.getByRole("table", { name: "Summary of the comments" });
   await expect(table.getByRole("columnheader")).toHaveText([
     "Section",
     "Comments",
