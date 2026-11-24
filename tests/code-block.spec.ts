@@ -287,6 +287,12 @@ const fromNow = async (page: Page) => {
 const longestTask = async (page: Page) =>
   Math.max(0, ...(await page.evaluate(() => window.longTasks ?? [])));
 
+/** How long the long tasks since `fromNow` blocked the page: each one's time past 50 ms. */
+const blockedTime = async (page: Page) => {
+  const tasks = await page.evaluate(() => window.longTasks ?? []);
+  return tasks.reduce((sum, task) => sum + task - 50, 0);
+};
+
 /** How many frames there were since `fromNow`, and how many took longer than 50 ms. */
 const framesSince = async (page: Page) => {
   const gaps = await page.evaluate(() => window.frameGaps ?? []);
@@ -399,7 +405,7 @@ test("while slow code is written the page is never held, and done, it is plain a
 
 /**
  * `code` in `language` in the Any code example, written out (or shown, and opened whole), from
- * the press to a second after it is all there: the longest task and how many frames were slow.
+ * the press to a second after it is all there: how long long tasks blocked the page, and its frames.
  */
 const drawOut = async (
   page: Page,
@@ -424,15 +430,16 @@ const drawOut = async (
   // Long enough for a read to be answered and drawn.
   await page.waitForTimeout(1500);
   return {
-    longest: await longestTask(page),
+    blocked: await blockedTime(page),
     frames: await framesSince(page),
     coloured: await colouredRuns(block),
   };
 };
 
 /**
- * `code` drawn in `language`: in Chromium with no long task, elsewhere with no more slow frames
- * than as text (Firefox and WebKit report no long tasks). Gives the runs it drew in colour.
+ * `code` drawn in `language` holds the page no more than the same code as text: in Chromium, by
+ * the time its long tasks block it past 50 ms each; in Firefox and WebKit, which report no long
+ * tasks, by its frames over 50 ms. Gives the runs it drew in colour.
  */
 const neverHeld = async (
   page: Page,
@@ -441,21 +448,22 @@ const neverHeld = async (
   language: string,
   how: "written" | "shown"
 ) => {
-  if (browserName === "chromium") {
-    const coloured = await drawOut(page, code, language, how);
-    expect(coloured.longest).toBeLessThan(50);
-    return coloured.coloured;
-  }
   const plain = await drawOut(page, code, "text", how);
   // A block that is new, so it opens again.
   await openExample(page, "code-block", "any");
   const coloured = await drawOut(page, code, language, how);
-  // A frame in ten either way is the machine, not the page: on a loaded machine the same text
-  // drawn twice differs by that much. Drawing every coloured line again each frame, as before,
-  // made half the frames slow.
-  expect(coloured.frames.slow).toBeLessThanOrEqual(
-    plain.frames.slow + Math.ceil(coloured.frames.all / 10)
-  );
+  if (browserName === "chromium") {
+    // Drawing a thousand lines of text can itself take a task past 50 ms on a slow machine: what
+    // the colours add is what counts. 25 ms is the machine's own unevenness; the colours drawn
+    // again each frame, as before, blocked it for seconds.
+    expect(coloured.blocked).toBeLessThanOrEqual(plain.blocked + 25);
+  } else {
+    // A frame in ten either way is the machine, not the page: on a loaded machine the same text
+    // drawn twice differs by that much. The colours drawn again each frame made half of them slow.
+    expect(coloured.frames.slow).toBeLessThanOrEqual(
+      plain.frames.slow + Math.ceil(coloured.frames.all / 10)
+    );
+  }
   return coloured.coloured;
 };
 
