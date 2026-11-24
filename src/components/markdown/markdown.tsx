@@ -88,6 +88,8 @@ const styles = stylex.create({
   },
   paragraph: { margin: 0, textWrap: "pretty" },
   greedy: { textWrap: "wrap" },
+  // A word's fade ends with it: a finished one holds no animation the page keeps weighing.
+  word: { animationFillMode: "backwards" },
   heading: {
     margin: 0,
     color: colors.foreground,
@@ -346,7 +348,7 @@ const draw: { [T in Node["type"]]?: Draw<T> } = {
   text: (node, shared) =>
     shared.streaming
       ? node.value.match(/\S+\s*|\s+/gu)?.map((word, at) => (
-          <span key={at} {...stylex.props(fadeIn)}>
+          <span key={at} {...stylex.props(fadeIn, styles.word)}>
             {word}
           </span>
         ))
@@ -476,7 +478,6 @@ const HALF_ROW = /(?:^|\n) {0,3}\|[^\n]*$/u;
 const HEAD = /(?:^|\n) {0,3}\|[^\n]*\n?$/u;
 const DASHES = /^ {0,3}\|?[ \t]*:?-+:?[ \t]*(?:\||$)/mu;
 const framed = new Set(["code", "table", "thematicBreak"]);
-
 export const Markdown = ({
   children,
   streaming = false,
@@ -491,8 +492,18 @@ export const Markdown = ({
   if (streaming && !written) {
     setWritten(true);
   }
+  // Before anything the answer changes, so a finished block is handed the same as before.
+  const shared: Shared = {
+    provided,
+    renderLink,
+    streaming,
+    size: look,
+    headingLevel,
+    greedy: written,
+  };
   const source = children.replaceAll(/\r\n?/gu, "\n");
-  const starts = useStarts(source);
+  const cut = useStarts(source);
+  const starts = !streaming && parse.definesNames(source) ? [0] : cut;
   const open = streaming || truncated;
   const done = (open ? starts.slice(0, -1) : starts).flatMap((start, at) =>
     parse.readBlock(source.slice(start, starts[at + 1]))
@@ -517,14 +528,6 @@ export const Markdown = ({
     heading = node.type === "heading" ? textOf(node) : heading;
     return node.type === "table" ? heading : undefined;
   });
-  const shared: Shared = {
-    provided,
-    renderLink,
-    streaming,
-    size: look,
-    headingLevel,
-    greedy: written,
-  };
   return (
     <div
       data-slot="markdown"

@@ -69,17 +69,15 @@ const endOf = (line: string): ((next: string) => boolean) | null => {
   return open === "" || ends(line.slice(open.length + 1)) ? null : ends;
 };
 
-// A reference is a link only where its definition is read with it, so an answer that defines a
-// name (or seems to) is read whole.
-const DEFINES = /^[ \t>*+\d.)-]*\[(?:[^\]\\]|\\.){1,200}\]:/mu;
+// A reference is a link only where its definition is read with it, so a whole answer that defines a
+// name (or seems to) is read whole; while it streams, a reference is its words.
+const DEFINES = /^[ \t>*+\d.)-]*\[(?!\^)(?:[^\]\\]|\\.){1,200}\]:/mu;
+export const definesNames = (source: string) => DEFINES.test(source);
 /**
  * Where each top-level block of `source` starts. `known`: the starts of a shorter answer this one
  * goes on from; all but the last stand, and the rest is read on from there.
  */
 export const blockStarts = (source: string, known: readonly number[] = []) => {
-  if (DEFINES.test(source)) {
-    return [0];
-  }
   const starts = known.length > 1 ? known.slice(0, -1) : [0];
   let ends: ((next: string) => boolean) | null = null;
   let blank = false;
@@ -129,7 +127,7 @@ export const readBlock = (block: string, open = false) => {
   const source = open ? remend(block, REPAIR) : block;
   const nodes = cache.get(source) ?? parseMarkdown(source).children;
   if (!open) {
-    if (cache.size > 1000) {
+    if (cache.size > 5000) {
       cache.clear();
     }
     cache.set(source, nodes);

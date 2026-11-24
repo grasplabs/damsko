@@ -118,7 +118,9 @@ describe("the parse is micromark's, block by block", () => {
   test("every example reads as the whole parse does, cut into blocks", () => {
     const differing = specs.filter(({ text }) => {
       const source = text.replaceAll(/\r\n?/gu, "\n");
-      const starts = parse.blockStarts(source);
+      const starts = parse.definesNames(source)
+        ? [0]
+        : parse.blockStarts(source);
       const blocks = starts.flatMap((start, at) =>
         parse.readBlock(source.slice(start, starts[at + 1]))
       );
