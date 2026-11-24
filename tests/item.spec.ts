@@ -124,6 +124,17 @@ for (const [at, [role, name, reason]] of (
   });
 }
 
+test("a router's link row out of use keeps the attributes given it, never its address", async ({
+  page,
+}) => {
+  await openExample(page, "item", "disabled");
+  const row = page.getByRole("link", { name: "Members" });
+  await expect(row).toHaveAttribute("id", "members");
+  await expect(row).toHaveAttribute("data-analytics", "members");
+  await expect(row).not.toHaveAttribute("href");
+  await expect(row).not.toHaveAttribute("to");
+});
+
 test("links with showChevron off draw no chevron; a link row draws one", async ({
   page,
 }) => {

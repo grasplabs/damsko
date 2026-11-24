@@ -698,6 +698,13 @@ const outOfUse = {
   onClick: refuse,
   onAuxClick: refuse,
 };
+/** An element's attributes the DOM draws on any element: ARIA, data, its id, class, style, title, language and direction. */
+const attributesOf = (props: object): Record<string, unknown> =>
+  Object.fromEntries(
+    Object.entries(props).filter(([key]) =>
+      /^(?:aria-|data-|(?:id|className|style|title|lang|dir)$)/u.test(key)
+    )
+  );
 const TitlePress = createContext<Press | undefined>(undefined);
 // Whether the Item stands in an ItemGroup or an ItemGrid: then it is a list item.
 const InList = createContext(false);
@@ -805,15 +812,18 @@ const TitleWords = ({ children }: { children: ReactNode }): ReactNode => {
   if (href !== undefined || element !== undefined) {
     // Out of use a link has no address, so nothing (a middle click, the menu's "Open in new tab")
     // can follow it: still a link, and a stop for Tab. A router's link is then this plain one, as
-    // its own element would draw its address whatever it is given.
+    // its own element would draw its address whatever it is given; it keeps the caller's attributes
+    // (a name, a class, an id, a test id), never its address or its handlers.
     return (
       <a
         href={disabled ? undefined : href}
         role={disabled ? "link" : undefined}
         tabIndex={disabled ? 0 : undefined}
-        aria-current={active ? "page" : undefined}
-        {...(disabled ? outOfUse : { onClick })}
-        {...own}
+        {...mergeProps(
+          { ...own, "aria-current": active ? "page" : undefined },
+          element === undefined ? {} : attributesOf(element.props),
+          disabled ? outOfUse : { onClick }
+        )}
       >
         {children}
       </a>

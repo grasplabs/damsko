@@ -22,7 +22,8 @@ const layout = stylex.create({
 // Rows out of use (`disabled`), one of each kind: a button, a link and a router's link drawn as the
 // row (here a stand-in that moves without loading the page, calling the row's own press first as a
 // router's link does). Each is dimmed as a disabled Button is, takes no press, and is still
-// reached by Tab so it can be read; its description says why.
+// reached by Tab so it can be read; its description says why. The router's link keeps its own
+// attributes (here an id and an analytics mark), never its address.
 export default function ItemDisabled() {
   const [opened, setOpened] = useState("Nothing opened");
   const RouterLink = ({
@@ -71,7 +72,7 @@ export default function ItemDisabled() {
           </ItemContent>
         </Item>
         <Item variant="outline" size="sm" disabled asChild>
-          <RouterLink to="members">
+          <RouterLink to="members" id="members" data-analytics="members">
             <ItemMedia>
               <Icon icon={UsersIcon} />
             </ItemMedia>
