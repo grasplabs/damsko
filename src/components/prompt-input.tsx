@@ -2237,7 +2237,10 @@ const sidesOf = (card: HTMLElement) =>
       side.parentElement?.closest('[data-slot="prompt-input-tools"]') === null
   );
 
-/** A model chip's width in its row and the gap it keeps there: what it takes while it shows. */
+/**
+ * A model chip's width in its row and the gap it keeps there, and its step's (the empty box after
+ * it in a one-row prompt input: model-selector.tsx): what it takes while it shows.
+ */
 const chipRoom = (chip: HTMLElement) => {
   const drawn = [...chip.children].filter(
     (part) =>
@@ -2247,9 +2250,13 @@ const chipRoom = (chip: HTMLElement) => {
   const width = drawn
     .map((part) => part.getBoundingClientRect().width)
     .reduce((sum, each) => sum + each, 0);
-  return drawn.length === 0
-    ? 0
-    : width + px(getComputedStyle(chip.parentElement ?? chip).columnGap);
+  const step = !["none", "normal"].includes(
+    getComputedStyle(chip, "::after").content
+  );
+  const gaps = (drawn.length > 0 ? 1 : 0) + (step ? 1 : 0);
+  return (
+    width + gaps * px(getComputedStyle(chip.parentElement ?? chip).columnGap)
+  );
 };
 
 /**

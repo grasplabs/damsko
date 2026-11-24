@@ -36,7 +36,8 @@ import {
 } from "../model-selector/models";
 
 const styles = stylex.create({
-  // The model, dictation and Submit stand together at the row's end, a step apart.
+  // The model, dictation and Submit stand together at the row's end, a step apart (the model chip
+  // keeps its own step).
   end: { gridArea: "end", marginInlineStart: "auto" },
   apart: { marginInlineStart: space["1"] },
 });
@@ -104,7 +105,7 @@ export default function PromptInputCompact() {
               <ModelSelectorEffort levels={levels} />
             </ModelSelectorContent>
           </ModelSelector>
-          <PromptInputSpeechButton style={styles.apart} />
+          <PromptInputSpeechButton />
           <PromptInputSubmit style={styles.apart} />
         </PromptInputTools>
       </PromptInputFooter>

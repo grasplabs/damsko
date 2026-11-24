@@ -962,3 +962,38 @@ for (const example of ["chat", "compact"] as const) {
     }
   }
 }
+
+// The text field's width in the box at windows of 300, 390 and 430, at rest and typed: the
+// original's, recorded against it. At rest it is what the chip, its step and the tools leave it
+// (none of these boxes is at one of the row's edges, so no step's tolerance is needed); typed, the
+// row is tall and the field has the card's width.
+const fields: Record<Example, [number, number, number][]> = {
+  // The box's width, then the field's at rest and typed.
+  chat: [
+    [204, 60, 180],
+    [294, 150, 270],
+    [334, 130, 310],
+  ],
+  compact: [
+    [252, 108, 228],
+    [342, 138, 318],
+    [382, 178, 358],
+  ],
+};
+
+for (const example of ["chat", "compact"] as const) {
+  for (const [width, rest, typedWidth] of fields[example]) {
+    test(`${example}, a box ${width}px wide: the text field is the original's width, at rest and typed`, async ({
+      page,
+    }) => {
+      const field = async () => {
+        const box = await textOf(page, example).boundingBox();
+        return Math.round(box?.width ?? Number.NaN);
+      };
+      await open(page, example, width);
+      expect(await field()).toBe(rest);
+      await type(page, example);
+      expect(await field()).toBe(typedWidth);
+    });
+  }
+}

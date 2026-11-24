@@ -339,12 +339,20 @@ const FORCED = media.forcedColors;
 const HOVER = media.hover;
 
 const styles = stylex.create({
-  // In a one-row prompt input at rest with no room for it, the chip is away: unseen, out of the
-  // tab order and unsaid, until something is typed (prompt-input.tsx, `useRowFit`).
+  // In a one-row prompt input the chip keeps a step after it: an empty box after the chip takes the
+  // tools' gap a second time, so the next tool stands space-2 from it. At rest with no room for it
+  // the chip is away, and its step with it: unseen, out of the tab order and unsaid, until something
+  // is typed (prompt-input.tsx, `useRowFit`).
   root: {
     display: {
       default: "contents",
       [stylex.when.ancestor(":is([data-away])", promptInputRowMarker)]: "none",
+    },
+    "::after": {
+      content: {
+        default: null,
+        [stylex.when.ancestor(":is(*)", promptInputRowMarker)]: '""',
+      },
     },
   },
   // The chip's mark, words and chevron, a step apart and a size down from the Button's. The words
