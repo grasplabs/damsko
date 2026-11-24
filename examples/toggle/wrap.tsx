@@ -12,7 +12,7 @@ const languages = [
 ];
 
 // More items than the box is wide (five languages on a phone): those that do not fit go on to
-// another row, centred, and nothing runs past the track.
+// another row, and nothing runs past the track.
 export default function ToggleWrap() {
   return (
     <ToggleGroup

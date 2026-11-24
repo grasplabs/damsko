@@ -120,13 +120,13 @@ export type ToggleGroupItemProps = ToggleGroupItemOwnProps &
 const HOVER = media.hover;
 
 const styles = stylex.create({
-  // Side by side, items that do not fit the box go on to another row, centred, so none runs past
-  // the track (five languages on a phone).
+  // Side by side, items that do not fit the box go on to another row, from its start, so none runs
+  // past the track (five languages on a phone). A row that fits, and a group given its width, stand
+  // as they always did.
   group: {
     display: "inline-flex",
     flexWrap: "wrap",
     alignItems: "center",
-    justifyContent: "center",
     gap: sizes.toggleGap,
     boxSizing: "border-box",
     maxWidth: "100%",

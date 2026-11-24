@@ -49,7 +49,7 @@ Past `maxLines` on `CodeBlockContent`, 18 by default, it is folded under Show mo
 
 ## Very long output
 
-Folded, only the lines that show are drawn; opened, at most the first 2,000 are, and a line under them says how many more there are. Copy takes all of it. Where every line must be read (what an action will send), `maxLines={false}` never folds and draws every line, however many.
+Folded, only the lines that show are drawn; opened, at most the first 2,000 are, and a line under them says how many more there are. Copy takes all of it. Where every line must be read (what an action will send), `maxLines={false}` never folds and draws every line, however many: only for code whose length the product knows is bounded. Markdown never lifts the cap, even with `codeMaxLines={false}`, since a model's output has no bound.
 
 <Stage path="code-block/output" label="Very long output" />
 

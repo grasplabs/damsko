@@ -226,3 +226,21 @@ test.describe("on a narrow phone", () => {
     expect(new Set(items.map((item) => item.top)).size).toBeGreaterThan(1);
   });
 });
+
+test("a group given a wider width keeps its items at the track's start, as one at its own width", async ({
+  page,
+}) => {
+  await openExample(page, "toggle", "sized");
+  const startOf = async (name: string) =>
+    await page.getByRole("group", { name, exact: true }).evaluate((group) => {
+      const first = group.querySelector("button")?.getBoundingClientRect();
+      return Math.round(
+        (first?.left ?? 0) - group.getBoundingClientRect().left
+      );
+    });
+  const wide = await page
+    .getByRole("group", { name: "View, wide" })
+    .boundingBox();
+  expect(Math.round(wide?.width ?? 0)).toBe(300);
+  expect(await startOf("View, wide")).toBe(await startOf("View"));
+});

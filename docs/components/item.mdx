@@ -58,7 +58,7 @@ An Avatar or a logo, drawn as it is, stands in the middle of its row with `ItemM
 
 ## A detail under the name on a phone
 
-In a side panel's card an `xs` row's detail stands at the row's end and its name is cut short to make room. Where the name matters as much as the detail, `stack` on the ItemGroup puts each row's detail on a line under its name below 30rem of the list's own width, and lets the name wrap whole.
+In a side panel's card an `xs` row's detail stands at the row's end and its name is cut short to make room. Where the name matters as much as the detail, `stack` on the ItemGroup puts each row's detail on a line under its name below 30rem of the list's own width, and lets the name wrap whole. It does so at every row size. The list lays out by its own width, as the original's row list did, so it takes none from its rows: inside a box that sizes to its content, such as a shrink-wrapped flex item, give the list or the box a width.
 
 <Stage path="item/stack" label="A detail under the name on a phone" />
 

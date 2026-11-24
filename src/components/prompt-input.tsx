@@ -526,8 +526,9 @@ export interface PromptInputBannerProps {
   icon?: IconData | false;
   /**
    * What it means: `default` a plain note (what the prompt is about), read where it stands and
-   * never said as it appears; `warning` or `destructive` when it stops work, said at once as it
-   * appears. The strip is the same quiet one for each: the mark takes the colour.
+   * never said as it appears, and it describes the text; `warning` or `destructive` when it stops
+   * work, said at once as it appears. The strip is the same quiet one for each: the mark takes the
+   * colour.
    * @default "default"
    */
   variant?: "default" | "warning" | "destructive";
@@ -1650,6 +1651,10 @@ interface PromptInputContextValue {
   changeDrawn: (by: number) => void;
   /** The id of the band under the card, which describes the text while it says a send failed. */
   noteId: string;
+  /** The ids of the plain banners' words above the card, which describe the text. */
+  bannerIds: readonly string[];
+  /** Adds a plain banner's words to what describes the text (`true`), or takes them off. */
+  changeBannerIds: (change: readonly [string, boolean]) => void;
   /** The footer's element, where a dictation's bar is drawn, and what says it is there. */
   footer: HTMLElement | null;
   setFooter: (footer: HTMLElement | null) => void;
@@ -1767,6 +1772,10 @@ const settle = async (
 
 /** Adds `by` to a count: the reducer of a count its parts change (`change(1)`, then `change(-1)`). */
 const countBy = (now: number, by: number) => now + by;
+const listBy = (
+  now: readonly string[],
+  [id, on]: readonly [string, boolean]
+): readonly string[] => (on ? [...now, id] : now.filter((each) => each !== id));
 
 /** Says `on(true)` while `send` runs, and `on(false)` once it is done, however it ends. */
 const during = async (
@@ -2716,7 +2725,22 @@ export const PromptInputBanner = ({
 }: PromptInputBannerProps) => {
   const words = useI18n().alert;
   const form = usePromptInput();
-  if (!useOutside()) {
+  const drawn = useOutside();
+  // A plain note is never said as it appears: it describes the text instead, so a screen reader
+  // still hears it there.
+  const wordsId = useId();
+  const describes = drawn && variant === "default";
+  const describe = form?.changeBannerIds;
+  useEffect(() => {
+    if (!describes || describe === undefined) {
+      return nothing;
+    }
+    describe([wordsId, true]);
+    return () => {
+      describe([wordsId, false]);
+    };
+  }, [describes, describe, wordsId]);
+  if (!drawn) {
     return null;
   }
   const mark = icon === false ? undefined : (icon ?? bannerIcons[variant]);
@@ -2753,7 +2777,12 @@ export const PromptInputBanner = ({
                 <Icon icon={mark} />
               </span>
             )}
-            <span {...stylex.props(styles.bannerWords)}>{children}</span>
+            <span
+              id={describes ? wordsId : undefined}
+              {...stylex.props(styles.bannerWords)}
+            >
+              {children}
+            </span>
           </span>
         </AlertTitle>
         {!isBlank(action) && (
@@ -2957,6 +2986,7 @@ export const PromptInput = ({
   const warned = useRef(false);
   const failure = useFailure(status);
   const noteId = useId();
+  const [bannerIds, changeBannerIds] = useReducer(listBy, []);
   const form = useRef<HTMLFormElement | null>(null);
   const card = useRef<HTMLFieldSetElement | null>(null);
   const picker = useRef<HTMLInputElement | null>(null);
@@ -3182,6 +3212,8 @@ export const PromptInput = ({
           changeWritten,
           changeDrawn,
           noteId,
+          bannerIds,
+          changeBannerIds,
           footer,
           setFooter,
           dictating,
@@ -3460,12 +3492,18 @@ export const PromptInputTextarea = ({
       controller?.focus({ at: "end" });
     }
   }, [autoFocus, controller]);
+  // A plain banner above says what the prompt is about (it is never said as it appears); the band
+  // under the card says why the words are still here.
+  const describers = [...(form?.bannerIds ?? [])];
+  if (form?.failed === true) {
+    describers.push(form.noteId);
+  }
+  const describedBy = describers.join(" ");
   const editor = (
     <TokenInputEditor
       aria-label={ariaLabel}
       aria-labelledby={labelledBy}
-      // The band under the card says why the words are still here.
-      aria-describedby={form?.failed === true ? form.noteId : undefined}
+      aria-describedby={describedBy === "" ? undefined : describedBy}
       placeholder={placeholder}
       onKeyDown={onKeyDown}
       ref={(element: HTMLDivElement | null) => {

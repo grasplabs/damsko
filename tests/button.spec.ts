@@ -406,6 +406,23 @@ test("a destructive button asks in its own words", async ({ page }) => {
   );
 });
 
+test("a success press by an agent, the yes that approves, waits for the person's yes", async ({
+  page,
+}) => {
+  await openExample(page, "button", "agent");
+  expect(await confirmOf(page, "Approve the request")).toBe(
+    'Presses "Approve the request"'
+  );
+  await answer(page, false);
+  const refused = await press(page, "Approve the request");
+  expect(refused.ok).toBe(false);
+  expect(await ran(page)).not.toContain("approved");
+  await answer(page, true);
+  const allowed = await press(page, "Approve the request");
+  expect(allowed.ok).toBe(true);
+  expect(await ran(page)).toContain("approved");
+});
+
 test("a press whose work fails says so on the button, and nothing is thrown to the page", async ({
   page,
 }) => {

@@ -425,3 +425,14 @@ test("a section written open stands open from the first paint, without opening",
     /^[1-9]\d*$/u
   );
 });
+
+test("a fence with codeMaxLines={false} never folds, yet draws only its first 2,000 lines and says how many more", async ({
+  page,
+}) => {
+  await openExample(page, "markdown", "long-code");
+  // Line 1,999 is the thousandth entry, line 2,001 the next.
+  await expect(page.getByText("entry 1000", { exact: true })).toBeAttached();
+  await expect(page.getByText("entry 1001", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("999 more lines")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Show more" })).toHaveCount(0);
+});

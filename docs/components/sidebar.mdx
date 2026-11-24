@@ -19,7 +19,7 @@ The parts: a SidebarProvider holds whether it is open and the row it stands in, 
 
 ## Off the canvas
 
-The default, `collapsible="offcanvas"`: folded, it slides out past its side, the page takes the width and nothing in it is a tab stop. A SidebarRail along its edge folds and opens it too. `keyboardShortcut` changes the keys, `false` turns them off.
+The default, `collapsible="offcanvas"`: folded, it slides out past its side, the page takes the width and nothing in it is a tab stop. `keyboardShortcut` changes the keys, `false` turns them off.
 
 <Stage path="sidebar/collapsible" label="Off the canvas" />
 
@@ -83,7 +83,7 @@ SidebarMenuSkeleton draws quiet bars in the rows' own boxes, the same shapes eve
 
 ## From the page
 
-`useSidebar()` reads and sets the open state from anywhere inside the provider: a page's own control folds it with `setOpen`, which takes a value or an updater, as React's `setState`. Here the page keeps the state itself (`open`, `openMobile`), and its state is the only one: the trigger, the rail and the keys change it there.
+`useSidebar()` reads and sets the open state from anywhere inside the provider: a page's own control folds it with `setOpen`, which takes a value or an updater, as React's `setState`. Here the page keeps the state itself (`open`, `openMobile`), and its state is the only one: the trigger and the keys change it there.
 
 <Stage path="sidebar/from-the-page" label="From the page" />
 
@@ -205,7 +205,7 @@ Use a level for a different area with its own navigation; the pages within one p
       group: "Folding",
       key: "Ways",
       value:
-        "The trigger, the rail, or Cmd+B (Ctrl+B elsewhere) from anywhere on the page, not in rich text; where a page holds several, the one holding focus answers, else the first.",
+        "The trigger, or Cmd+B (Ctrl+B elsewhere) from anywhere on the page, not in rich text; where a page holds several, the one holding focus answers, else the first.",
     },
     {
       group: "Folding",
@@ -299,14 +299,6 @@ Use a level for a different area with its own navigation; the pages within one p
   source="src/components/sidebar.tsx"
   type="SidebarTriggerProps"
   label="SidebarTrigger"
-/>
-
-### SidebarRail
-
-<Props
-  source="src/components/sidebar.tsx"
-  type="SidebarRailProps"
-  label="SidebarRail"
 />
 
 ### SidebarInset

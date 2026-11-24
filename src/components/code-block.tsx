@@ -162,7 +162,8 @@ export interface CodeBlockContentProps {
   startLine?: number;
   /**
    * Past this many lines it is folded under Show more. `false` never folds and draws every line,
-   * however many: for code that must be read whole (what an action will send).
+   * however many: only for code a product knows is bounded and must be read whole (what an action
+   * will send), never for a model's output (Markdown keeps the 2,000-line cap).
    * @default 18
    */
   maxLines?: number | false;

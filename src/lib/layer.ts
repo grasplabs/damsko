@@ -5,7 +5,7 @@
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
-import { createContext, useState } from "react";
+import { useState } from "react";
 
 import {
   colors,
@@ -17,15 +17,6 @@ import {
   space,
 } from "./tokens.stylex";
 import { durations } from "./tokens.values";
-
-// ---- A footer's actions ------------------------------------------------------------------------
-//
-// A layer's footer holds its actions at one height: a Button in it that names no size takes the
-// footer's, small, as its Close does, so Cancel and the main action stand level without a size on
-// each (DialogFooter, AlertDialogFooter, SheetFooter and DrawerFooter give it).
-
-/** The size a Button takes when it names none: the footer's, inside a layer's footer. */
-export const FooterButtonSize = createContext<"sm" | undefined>(undefined);
 
 // ---- Grow from the trigger ----------------------------------------------------------------------
 //

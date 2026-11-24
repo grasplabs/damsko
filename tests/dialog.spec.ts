@@ -6,6 +6,11 @@ import { fixedTime, listenToLiveRegions, openExample } from "./example.ts";
 const holdsFocus = async (element: Locator): Promise<boolean> =>
   await element.evaluate((node) => node.contains(document.activeElement));
 
+const height = async (target: Locator): Promise<number | undefined> => {
+  const box = await target.boundingBox();
+  return box?.height;
+};
+
 test("its trigger opens it, named by its title and described by its text", async ({
   page,
 }) => {
@@ -436,3 +441,67 @@ test("in its footer a Button that names no size stands as tall as Close beside i
   expect(cancel?.height).toBe(32);
   expect(publish?.height).toBe(32);
 });
+
+const openFooterSizes = async (page: Page): Promise<Locator> => {
+  await openExample(page, "dialog", "footer-sizes");
+  await page.getByRole("button", { name: "Share the report" }).click();
+  return page.getByRole("dialog", { name: "Share the report" });
+};
+
+test("a footer's own action that names no size is small, a HoldButton too, and a named size wins", async ({
+  page,
+}) => {
+  const dialog = await openFooterSizes(page);
+  expect(await height(dialog.getByRole("button", { name: "More ways" }))).toBe(
+    32
+  );
+  expect(
+    await height(dialog.getByRole("button", { name: "Hold to stop sharing" }))
+  ).toBe(32);
+  expect(
+    await height(dialog.getByRole("button", { name: "Share", exact: true }))
+  ).toBe(36);
+});
+
+test("a popover opened from a footer keeps its own Button's size", async ({
+  page,
+}) => {
+  const dialog = await openFooterSizes(page);
+  await dialog.getByRole("button", { name: "More ways" }).click();
+  const copy = page.getByRole("button", { name: "Copy the link" });
+  // Polled: the popover grows in from its trigger.
+  await expect.poll(async () => await height(copy)).toBe(36);
+});
+
+for (const [component, example, opener, name, action] of [
+  [
+    "alert-dialog",
+    "confirm",
+    "Send release notes",
+    "Email 2,400 customers?",
+    "Send to everyone",
+  ],
+  ["sheet", "basic", "Report details", "Quarterly summary", "Archive"],
+  [
+    "drawer",
+    "basic",
+    "Remind me tomorrow",
+    "Remind me tomorrow",
+    "Set reminder",
+  ],
+] as const) {
+  test(`in a ${component}'s footer a Button that names no size is small, as its Close is`, async ({
+    page,
+  }) => {
+    await openExample(page, component, example);
+    await page.getByRole("button", { name: opener }).click();
+    const layer = page.getByRole(
+      component === "alert-dialog" ? "alertdialog" : "dialog",
+      { name }
+    );
+    const box = await layer
+      .getByRole("button", { name: action, exact: true })
+      .boundingBox();
+    expect(box?.height).toBe(32);
+  });
+}

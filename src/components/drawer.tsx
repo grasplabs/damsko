@@ -43,12 +43,7 @@ import type { ComponentProps, ReactNode } from "react";
 
 import { useReturnFocus } from "../hooks/use-return-focus";
 import { useI18n } from "../lib/i18n";
-import {
-  FooterButtonSize,
-  keepBodyPut,
-  layerStyles,
-  useLayerBody,
-} from "../lib/layer";
+import { keepBodyPut, layerStyles, useLayerBody } from "../lib/layer";
 import {
   focusRing,
   focusRingInset,
@@ -475,8 +470,8 @@ export interface DrawerFooterProps extends PartProps {
 }
 
 /**
- * The actions, at the end of the line. A Button in it that names no size is small, as DrawerClose
- * is, so its actions stand one height. At a lower rest they stay in view.
+ * The actions, at the end of the line. A Button directly in it that names no size is small, as
+ * DrawerClose is, so its actions stand one height. At a lower rest they stay in view.
  */
 export const DrawerFooter = ({ children, style }: DrawerFooterProps) => {
   const snaps = use(SnapsContext);
@@ -490,7 +485,7 @@ export const DrawerFooter = ({ children, style }: DrawerFooterProps) => {
         style
       )}
     >
-      <FooterButtonSize value="sm">{children}</FooterButtonSize>
+      {children}
     </div>
   );
 };

@@ -208,6 +208,8 @@ export interface MarkdownProps {
   softBreaks?: MarkdownSoftBreaks;
   /**
    * Fenced code past this many lines is folded under Show more, as CodeBlockContent's `maxLines`.
+   * `false` never folds; a block still draws at most its first 2,000 lines (a line says how many
+   * more, and Copy takes all), since the text comes from a model and has no bound.
    * @default 18
    */
   codeMaxLines?: number | false;
@@ -1362,7 +1364,16 @@ const Block = ({
               <CodeBlockCopyButton value={node.value} />
             </CodeBlockActions>
           </CodeBlockHeader>
-          <CodeBlockContent lineNumbers maxLines={context.codeMaxLines}>
+          <CodeBlockContent
+            lineNumbers
+            // Model output is never drawn without a bound: `false` never folds, yet an open block
+            // still draws at most its first 2,000 lines, as every opened block does.
+            maxLines={
+              context.codeMaxLines === false
+                ? Number.POSITIVE_INFINITY
+                : context.codeMaxLines
+            }
+          >
             {node.value}
           </CodeBlockContent>
         </CodeBlock>

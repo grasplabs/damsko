@@ -207,20 +207,7 @@ test("folded to its icons, every place keeps its name and shows it in a tooltip"
   await expect(sidebar.getByRole("link", { name: "Plan" })).toBeHidden();
 });
 
-test("the rail folds and opens it, and says whether it is open", async ({
-  page,
-}) => {
-  await openExample(page, "sidebar", "icon");
-  const rail = sidebarOf(page).getByRole("button", { name: TOGGLE });
-  await expect(rail).toHaveAttribute("aria-expanded", "true");
-  await rail.click();
-  await expect(rail).toHaveAttribute("aria-expanded", "false");
-  await expect(triggerOf(page)).toHaveAttribute("aria-expanded", "false");
-  await rail.click();
-  await expect(triggerOf(page)).toHaveAttribute("aria-expanded", "true");
-});
-
-test("Tab goes down the places, a place's own rows after it, the rail and a disabled place no stop, then the page", async ({
+test("Tab goes down the places, a place's own rows after it, a disabled place no stop, then the page", async ({
   page,
 }) => {
   await openExample(page, "sidebar", "icon");
@@ -496,18 +483,17 @@ test("with its shortcut off it still draws, folds by its trigger, and names no k
   expect(errors).toStrictEqual([]);
 });
 
-test("the page can keep whether it is open, the one copy: its own control folds it with an updater, two in one moment build on each other, and the trigger and the rail change it there", async ({
+test("the page can keep whether it is open, the one copy: its own control folds it with an updater, two in one moment build on each other, and the keys and the trigger change it there", async ({
   page,
 }) => {
   await openExample(page, "sidebar", "from-the-page");
   const focus = page.getByRole("button", { name: "Focus mode" });
   const trigger = triggerOf(page);
-  const rail = page.locator('[data-slot="sidebar-rail"]');
-  await rail.click();
+  await pressKeys(page);
   await expect(focus).toHaveAttribute("aria-pressed", "true");
   await trigger.click();
   await expect(focus).toHaveAttribute("aria-pressed", "false");
-  await expect(rail).toHaveAttribute("aria-expanded", "true");
+  await expect(trigger).toHaveAttribute("aria-expanded", "true");
   await focus.click();
   await expect(trigger).toHaveAttribute("aria-expanded", "false");
   await expect(focus).toHaveAttribute("aria-pressed", "true");
@@ -1483,6 +1469,15 @@ test("a row and a group's label take the original's plain 6px corner, the large 
   expect(await cornerOf(person.first())).toBe("10px round");
   const label = sidebar.locator("[data-slot=sidebar-group-label]").first();
   expect(await cornerOf(label)).toBe("6px round");
+});
+
+test("a row's action takes the original's corner, a small icon button's: 14px, half its height, not the row's", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await openExample(page, "sidebar", "actions");
+  const more = page.getByRole("button", { name: "More for Supplier invoices" });
+  expect(await cornerOf(more)).toMatch(/^14px (?:superellipse\(2\)|round)$/u);
 });
 
 test.describe("on a narrow window", () => {

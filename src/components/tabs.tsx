@@ -550,6 +550,10 @@ const navStyles = stylex.create({
   wordsAfterIcon: {
     paddingInlineStart: space["2"],
   },
+  // A tab's words stand a little further off its icon: 10px, as the original's switch.
+  wordsAfterTabIcon: {
+    paddingInlineStart: `calc(${space["2"]} + ${space["1"]} / 2)`,
+  },
   // The words of every link, unseen and with no height: they give the nav its natural width, which
   // the box (a container) cannot give.
   ghost: {
@@ -916,14 +920,19 @@ const tabClass =
       segmented ? focusRingInset : [focusMarker, focusCarrier]
     );
 
-/** A view's icon and words, a link's or a tab's; with `away`, the words gone to the icon alone. */
+/**
+ * A view's icon and words, a link's or a tab's (`tab`); with `away`, the words gone to the icon
+ * alone.
+ */
 const Inside = ({
   icon,
   away,
+  tab = false,
   children,
 }: {
   icon: IconData;
   away: boolean;
+  tab?: boolean;
   children: ReactNode;
 }) => (
   <>
@@ -932,7 +941,13 @@ const Inside = ({
     </span>
     <span {...stylex.props(navStyles.words, away && navStyles.wordsAway)}>
       <span {...stylex.props(navStyles.wordsInner)}>
-        <span {...stylex.props(navStyles.inside, navStyles.wordsAfterIcon)}>
+        <span
+          {...stylex.props(
+            navStyles.inside,
+            navStyles.wordsAfterIcon,
+            tab && navStyles.wordsAfterTabIcon
+          )}
+        >
           {children}
         </span>
       </span>
@@ -954,7 +969,7 @@ export const TabsTrigger = ({
     icon === undefined ? (
       children
     ) : (
-      <Inside icon={icon} away={false}>
+      <Inside icon={icon} away={false} tab>
         {children}
       </Inside>
     );

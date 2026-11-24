@@ -31,14 +31,13 @@
 import * as stylex from "@stylexjs/stylex";
 import { Button as ButtonPrimitive } from "@ui-sdk/react/button";
 import { mergeProps } from "@ui-sdk/react/primitive";
-import { isValidElement, use } from "react";
+import { isValidElement } from "react";
 import type { ComponentProps, ReactElement, ReactNode } from "react";
 
 import { useAction } from "../hooks/use-action";
 import type { ActionResult, ActionStatus } from "../hooks/use-action";
 import { useI18n } from "../lib/i18n";
 import { CheckIcon, CircleAlertIcon, Icon } from "../lib/icons";
-import { FooterButtonSize } from "../lib/layer";
 import { focusRing, hyphenate } from "../lib/styles";
 import {
   colors,
@@ -108,8 +107,8 @@ interface ButtonBase extends Omit<
   asChild?: boolean;
   /**
    * What the button does, said to the person when an agent asks to press it ("Deletes the
-   * workspace and its files"). The agent's press waits for their yes. A `destructive` button always
-   * asks: in its own words unless this says it better.
+   * workspace and its files"). The agent's press waits for their yes. A `destructive` or `success`
+   * button always asks: in its own words unless this says it better.
    */
   agentConfirm?: string;
   /**
@@ -166,7 +165,8 @@ interface WithWords extends ButtonBase {
   /**
    * The height: `xs` 28px, `sm` 32px, `default` 36px, `lg` 44px; an icon-only button is a square of
    * the same heights, `icon-xs`, `icon-sm`, `icon` and `icon-lg`. On a touch screen every size has
-   * a 44px target.
+   * a 44px target. Named none, it is `sm` as a direct child of a Dialog, AlertDialog, Sheet or
+   * Drawer footer, as the footer's Close is.
    * @default "default"
    */
   size?: Exclude<ButtonSize, IconSize>;
@@ -207,6 +207,13 @@ const ITEM =
   ':not([data-slot$="-content"], [data-slot$="-positioner"], [data-slot$="-backdrop"], [role=menu], [role=dialog], [role=listbox], [role=tooltip])';
 const FIRST = `:nth-child(1 of ${ITEM})`;
 const LAST = `:nth-last-child(1 of ${ITEM})`;
+
+// A layer footer's own actions: its direct children, read from the page's tree, not React's, so a
+// popup opened from the footer, drawn elsewhere or inside it, keeps its own sizes.
+const FOOTERS =
+  "[data-slot=dialog-footer], [data-slot=alert-dialog-footer], [data-slot=sheet-footer], [data-slot=drawer-footer]";
+const FOOTER_ACTION = `:is(:is(${FOOTERS}) > *)`;
+const IN_FOOTER_ACTION = `:is(:is(${FOOTERS}) > * > *)`;
 
 const styles = stylex.create({
   base: {
@@ -474,6 +481,40 @@ const sizeStyles = stylex.create({
   },
 });
 
+// A Button that names no size: `default`, and as a layer footer's own action `sm`, as the footer's
+// Close is, so its actions stand one height. An explicit size always wins: it takes sizeStyles.
+const unsizedStyles = stylex.create({
+  look: {
+    minHeight: {
+      default: sizes.controlDefault,
+      [FOOTER_ACTION]: sizes.controlSm,
+    },
+    minWidth: {
+      default: sizes.controlDefault,
+      [FOOTER_ACTION]: sizes.controlSm,
+    },
+    paddingBlock: {
+      default: `calc((${sizes.controlDefault} - ${font.textSmLine}) / 2)`,
+      [FOOTER_ACTION]: `calc((${sizes.controlSm} - ${font.textSmLine}) / 2)`,
+    },
+    paddingInline: space["3"],
+    borderRadius: {
+      default: `min(${radius.xl}, calc(${sizes.controlDefault} / 2))`,
+      [FOOTER_ACTION]: `min(${radius.xl}, calc(${sizes.controlSm} / 2))`,
+    },
+  },
+  // Its touch target, a direct child of the button.
+  target: {
+    insetBlock: {
+      default: 0,
+      [COARSE]: {
+        default: `calc((${sizes.controlDefault} - ${sizes.tapTarget}) / 2)`,
+        [IN_FOOTER_ACTION]: `calc((${sizes.controlSm} - ${sizes.tapTarget}) / 2)`,
+      },
+    },
+  },
+});
+
 // The touch target of each size: as tall as a finger needs, and as wide for a square.
 const targetStyles = stylex.create({
   xs: {
@@ -691,13 +732,13 @@ const hasFailed = (extra: Record<string, unknown>) =>
 
 const lookOf = (
   variant: ButtonVariant,
-  size: ButtonSize,
+  size: ButtonSize | undefined,
   pressable: boolean
 ) => [
   buttonMarker,
   styles.base,
   hyphenate,
-  sizeStyles[size],
+  size === undefined ? unsizedStyles.look : sizeStyles[size],
   styles.inFooter,
   styles.inGroup,
   variantStyles[variant],
@@ -723,8 +764,8 @@ interface AgentWords {
 
 /**
  * What an agent is told before its press runs: `agentConfirm`, or the part's own. A destructive
- * button always asks, in its own words, unless it only opens something (a dialog's trigger): the
- * action inside asks.
+ * button, and a success one (the yes that approves), always asks, in its own words, unless it only
+ * opens something (a dialog's trigger): the action inside asks.
  */
 const confirmFor = (
   variant: ButtonVariant,
@@ -745,7 +786,9 @@ const confirmFor = (
     typeof words === "string" && words !== ""
       ? said.agentPresses(words)
       : said.agentAsks;
-  return variant === "destructive" && !opens ? own : undefined;
+  return (variant === "destructive" || variant === "success") && !opens
+    ? own
+    : undefined;
 };
 
 /** The button's own props: its look, its slot, its variant and size, and what an agent is told. */
@@ -757,7 +800,7 @@ const ownOf = (
     truncate,
     style,
   }: Required<Pick<ButtonBase, "variant" | "disabled" | "truncate">> &
-    Pick<ButtonBase, "style"> & { size: ButtonSize },
+    Pick<ButtonBase, "style"> & { size: ButtonSize | undefined },
   extra: Record<string, unknown>,
   agentConfirm: string | undefined,
   words: unknown,
@@ -782,7 +825,7 @@ const ownOf = (
     "data-slot": part ?? "button",
     "data-button": part === undefined ? undefined : "",
     "data-variant": variant,
-    "data-size": size,
+    "data-size": size ?? "default",
     "data-agent-confirm": confirmFor(
       variant,
       agentConfirm ?? extra["data-agent-confirm"],
@@ -801,7 +844,7 @@ const Inside = ({
   failed,
 }: {
   variant: ButtonVariant;
-  size: ButtonSize;
+  size: ButtonSize | undefined;
   pressable: boolean;
   failed: boolean;
 }) => (
@@ -814,7 +857,10 @@ const Inside = ({
     )}
     <span
       aria-hidden="true"
-      {...stylex.props(styles.target, targetStyles[size])}
+      {...stylex.props(
+        styles.target,
+        size === undefined ? unsizedStyles.target : targetStyles[size]
+      )}
     />
   </>
 );
@@ -1130,15 +1176,9 @@ const usePress = (
   return { status: action.status, press };
 };
 
-/** The size given, else the footer's in a layer's footer (so its actions are level), else default. */
-const useSize = (given: ButtonSize | undefined): ButtonSize => {
-  const footer = use(FooterButtonSize);
-  return given ?? footer ?? "default";
-};
-
 const Pressable = ({
   variant = "default",
-  size: givenSize,
+  size,
   asChild = false,
   agentConfirm,
   disabled = false,
@@ -1156,7 +1196,6 @@ const Pressable = ({
   ...rest
 }: ButtonProps) => {
   const { agentAsks, agentPresses } = useI18n().action;
-  const size = useSize(givenSize);
   const { status, press } = usePress(onClick, held, {
     loading: loadingText,
     success: successText,

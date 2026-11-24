@@ -44,7 +44,7 @@ import type { ComponentProps, ReactNode } from "react";
 
 import { useReturnFocus } from "../hooks/use-return-focus";
 import { useI18n } from "../lib/i18n";
-import { FooterButtonSize, watchBody, watchPanel } from "../lib/layer";
+import { watchBody, watchPanel } from "../lib/layer";
 import { focusRingInset, scrollbarHidden } from "../lib/styles";
 import { space } from "../lib/tokens.stylex";
 import { className, slotProps } from "../lib/utils";
@@ -314,8 +314,8 @@ export interface AlertDialogFooterProps extends PartProps {
 }
 
 /**
- * The answers, at the end of the line. A Button in it that names no size is small, as the answers
- * are, so they stand one height. On a phone they share its width.
+ * The answers, at the end of the line. A Button directly in it that names no size is small, as
+ * the answers are, so they stand one height. On a phone they share its width.
  */
 export const AlertDialogFooter = ({
   children,
@@ -325,7 +325,7 @@ export const AlertDialogFooter = ({
     data-slot="alert-dialog-footer"
     {...stylex.props(layerFooterMarker, dialogStyles.footer, style)}
   >
-    <FooterButtonSize value="sm">{children}</FooterButtonSize>
+    {children}
   </div>
 );
 

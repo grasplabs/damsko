@@ -69,7 +69,8 @@ export interface HoldButtonProps extends Omit<
    */
   variant?: ButtonVariant;
   /**
-   * Button's size; an `icon` size for a button that is only an icon, named by `aria-label`.
+   * Button's size; an `icon` size for a button that is only an icon, named by `aria-label`. Named
+   * none, Button's own default: `sm` as a direct child of a layer's footer.
    * @default "default"
    */
   size?: ButtonSize;
@@ -611,7 +612,7 @@ const splitHandlers = (props: Record<string, unknown>) => {
 
 export const HoldButton = ({
   variant = "default",
-  size = "default",
+  size,
   children,
   onConfirm,
   loadingText,
@@ -722,7 +723,7 @@ export const HoldButton = ({
           {/* It only says yes: the work and its result show on the button, where focus returns. */}
           <PopoverClose asChild onClick={pressing.handleYes}>
             <Button
-              variant={variant === "destructive" ? "destructive" : "default"}
+              variant={variant === "destructive" ? "destructive" : "success"}
               size="sm"
               agentConfirm={agentConfirm ?? said}
             >

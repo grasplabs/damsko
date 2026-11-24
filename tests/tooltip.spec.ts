@@ -126,4 +126,17 @@ test.describe("an info mark on a touch screen", () => {
     await mark.tap();
     await expect(page.getByRole("tooltip")).toBeHidden();
   });
+  test("what it says is announced as a tap opens it", async ({ page }) => {
+    await openExample(page, "tooltip", "info");
+    const said = "Everyone in the workspace who can open the project";
+    await expect(
+      page.getByRole("status").filter({ hasText: said })
+    ).toHaveCount(0);
+    await page
+      .getByRole("button", { name: "More about who can read it" })
+      .tap();
+    await expect(
+      page.getByRole("status").filter({ hasText: said })
+    ).toHaveAttribute("aria-live", "polite");
+  });
 });

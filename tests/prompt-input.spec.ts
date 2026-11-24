@@ -1669,3 +1669,13 @@ test("in one row the tools at the end stand a space-2 apart, as the original's",
     Math.round((sendBox?.x ?? 0) - (micBox?.x ?? 0) - (micBox?.width ?? 0))
   ).toBe(8);
 });
+
+test("a plain banner, never said as it appears, describes the text, so a screen reader still hears it there", async ({
+  page,
+}) => {
+  await openExample(page, "prompt-input", "banner");
+  const box = page.getByRole("form", { name: "Message, about a file" });
+  await expect(box.getByRole("textbox")).toHaveAccessibleDescription(
+    "Asking about Quarterly plan.pdf"
+  );
+});

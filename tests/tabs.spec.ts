@@ -237,7 +237,7 @@ test("on the segmented track the first and last tab stand as far from its sides 
   expect(track.x + track.width - (last.x + last.width)).toBeCloseTo(above, 0);
 });
 
-test("given its box's width, a track shares it equally between its tabs, each icon a step before its words", async ({
+test("given its box's width, a track shares it equally between its tabs, each icon 10px before its words", async ({
   page,
 }) => {
   await openExample(page, "tabs", "fill");
@@ -266,7 +266,7 @@ test("given its box's width, a track shares it equally between its tabs, each ic
     range.selectNodeContents(words);
     return range.getBoundingClientRect().left - icon.right;
   });
-  expect(Math.round(gap)).toBe(8);
+  expect(Math.round(gap)).toBe(10);
 });
 
 test("at its own width a track keeps each tab its words' width", async ({

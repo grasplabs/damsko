@@ -318,3 +318,40 @@ test.describe("in a list that stacks", () => {
     });
   }
 });
+
+for (const [name, detail] of [
+  ["Amara Okafor", "Admin"],
+  ["Jonas Weber", "Editor"],
+] as const) {
+  test(`in a narrow list that stacks, ${name}'s row, of another size than xs, has its detail under the name`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 800 });
+    await openExample(page, "item", "stack-sizes");
+    const row = page
+      .getByRole("list", { name: "People" })
+      .getByRole("listitem")
+      .filter({ hasText: name });
+    const words = row.getByText(name, { exact: false }).first();
+    const [title, under] = await Promise.all([
+      words.evaluate((element) => {
+        const range = document.createRange();
+        const text = [...element.childNodes].find(
+          (node) =>
+            node.nodeType === Node.TEXT_NODE &&
+            (node.textContent ?? "").trim() !== ""
+        );
+        if (text === undefined) {
+          return null;
+        }
+        range.selectNodeContents(text);
+        const box = range.getBoundingClientRect();
+        return { left: box.left, bottom: box.bottom };
+      }),
+      row.getByText(detail, { exact: true }).boundingBox(),
+    ]);
+    expect(title).not.toBeNull();
+    expect(under?.y ?? 0).toBeGreaterThanOrEqual((title?.bottom ?? 0) - 1);
+    expect(Math.round(under?.x ?? 0)).toBe(Math.round(title?.left ?? 1));
+  });
+}

@@ -43,7 +43,7 @@ import type { ComponentProps, ReactNode } from "react";
 import { useReturnFocus } from "../hooks/use-return-focus";
 import { useI18n } from "../lib/i18n";
 import { Icon, XIcon } from "../lib/icons";
-import { FooterButtonSize, keepBodyPut, useLayerBody } from "../lib/layer";
+import { keepBodyPut, useLayerBody } from "../lib/layer";
 import { focusRingInset, scrollbarHidden } from "../lib/styles";
 import {
   colors,
@@ -463,9 +463,9 @@ export interface SheetFooterProps extends PartProps {
 }
 
 /**
- * The actions, at the end of the line, at the sheet's foot. A Button in it that names no size is
- * small, as SheetClose is, so its actions stand one height. On a phone every Button in it takes an
- * equal part of its width.
+ * The actions, at the end of the line, at the sheet's foot. A Button directly in it that names no
+ * size is small, as SheetClose is, so its actions stand one height. On a phone every Button in it
+ * takes an equal part of its width.
  */
 export const SheetFooter = ({ children, style }: SheetFooterProps) => (
   <div
@@ -477,7 +477,7 @@ export const SheetFooter = ({ children, style }: SheetFooterProps) => (
       style
     )}
   >
-    <FooterButtonSize value="sm">{children}</FooterButtonSize>
+    {children}
   </div>
 );
 

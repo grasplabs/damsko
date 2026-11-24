@@ -125,9 +125,12 @@ export interface ItemGroupProps {
   /** The id of a heading that names it, in place of `aria-label`. */
   "aria-labelledby"?: string;
   /**
-   * Narrower than 30rem (a phone, a narrow panel), an `xs` row's ItemDetail goes on a line under
-   * its name and the name wraps, where otherwise the detail stands at the row's end and the name
-   * is cut short to make room for it.
+   * Narrower than 30rem of the list's own width (a phone, a narrow panel), each row's ItemDetail
+   * goes on a line under its name, at every row size; an `xs` row's name then wraps whole, where
+   * otherwise its detail stands at the row's end and the name is cut short. The list lays out by
+   * its own width (a size container, as the original's row list did), so it takes none from its
+   * rows: in a box that sizes to its content (a shrink-wrapped flex item, an inline-block), give
+   * the list or the box a width.
    * @default false
    */
   stack?: boolean;
@@ -443,9 +446,11 @@ const styles = stylex.create({
       [STACK]: "normal",
     },
   },
-  // On the title's line, after a space and a little more room: quieter, not bolder.
+  // On the title's line, after a space and a little more room: quieter, not bolder. In a narrow
+  // list that stacks, on a line of its own under the name, at every row size.
   detail: {
-    marginInlineStart: space["1"],
+    display: { default: null, [STACK]: "block" },
+    marginInlineStart: { default: space["1"], [STACK]: 0 },
     fontWeight: font.weightNormal,
     color: colors.mutedForeground,
   },
@@ -453,7 +458,6 @@ const styles = stylex.create({
   // narrow list that stacks, on a line of its own under the name, cut with an ellipsis at the row's
   // width.
   detailXs: {
-    display: { default: null, [STACK]: "block" },
     overflow: { default: null, [STACK]: "hidden" },
     textOverflow: { default: null, [STACK]: "ellipsis" },
     marginInlineStart: {
@@ -857,8 +861,8 @@ export const ItemTitle = ({ children, style }: ItemTitleProps) => {
 /**
  * A quieter word or two on the title's line, after the name: a role, "you", a count ("Admin"). In
  * the muted ink at the regular weight; it wraps with the title, never cut off. Put it in the
- * ItemTitle. On an `xs` row in a side panel's card it stands at the row's end instead, on one line;
- * in an ItemGroup that stacks, narrower than 30rem, on a line of its own under the name.
+ * ItemTitle. On an `xs` row in a side panel's card it stands at the row's end instead, on one line.
+ * In an ItemGroup that stacks, narrower than 30rem, it stands on a line of its own under the name.
  */
 export const ItemDetail = ({ children, style }: ItemDetailProps) => {
   const dense = use(RowSize) === "xs";
