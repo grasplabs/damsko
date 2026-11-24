@@ -24,6 +24,7 @@ export const durations = {
   releaseSwallow: 600,
   justPressed: 1000,
   leaveMargin: 250,
+  doublePress: 300,
   tooltipDelay: 300,
   tooltipLeave: 100,
   switchTravel: 280,

@@ -382,6 +382,8 @@
   --damsko-duration-just-pressed: 1000ms;
   /* The margin past a panel's leave time before whatever still runs in it is cancelled, so a close always ends. */
   --damsko-duration-leave-margin: 250ms;
+  /* How far apart a double press's two presses come: after a press on a shade closed its layer, a press this soon is the shade's too, though the layer has gone. */
+  --damsko-duration-double-press: 300ms;
   /* Fields: fields. */
   /* The ground of a field you type in: the quiet button's fill, so a field and a button in one row match. */
   --damsko-input-bg: var(--damsko-control);

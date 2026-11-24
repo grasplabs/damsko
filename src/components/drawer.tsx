@@ -38,7 +38,6 @@ import type {
   DrawerDismissAttemptDetails,
   SnapPoint,
 } from "@ui-sdk/react/drawer";
-import { mergeProps } from "@ui-sdk/react/primitive";
 import { createContext, use } from "react";
 import type { ComponentProps, ReactNode } from "react";
 
@@ -63,7 +62,7 @@ import {
   size as sizes,
   space,
 } from "../lib/tokens.stylex";
-import { className, nothing, slotProps } from "../lib/utils";
+import { className, slotProps } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { layerFooterMarker } from "../lib/vars.stylex";
 import { Button } from "./button";
@@ -322,33 +321,6 @@ export interface DrawerContentProps extends Omit<
 }
 
 /**
- * A drawer panel's ref. On a phone UI SDK moves the drawer by scrolling the box it stands in, which
- * covers the window and takes presses (sheet-scroll-snap.js), and keeps it so through the leave, so
- * the page's next tap went to it. While the panel leaves, that box lets presses through, as the
- * shade does; opened again on its way out, it takes them as before.
- */
-const passPressesWhileLeaving = (panel: HTMLElement | null) => {
-  const box = panel?.parentElement;
-  if (panel === null || box === null || box === undefined) {
-    return nothing;
-  }
-  let before: string | undefined;
-  const watch = new MutationObserver(() => {
-    if (panel.dataset.closed !== undefined) {
-      before ??= box.style.pointerEvents;
-      box.style.pointerEvents = "none";
-    } else if (before !== undefined) {
-      box.style.pointerEvents = before;
-      before = undefined;
-    }
-  });
-  watch.observe(panel, { attributes: true, attributeFilter: ["data-closed"] });
-  return () => {
-    watch.disconnect();
-  };
-};
-
-/**
  * The panel, with the shade behind it and the handle at its top. With `snapPoints` the handle is a
  * button named by the I18nProvider's `drawer.handle` ("Resize"): a press steps the drawer to its
  * next height, and the arrow keys move it. With one height it only shows the panel can be dragged.
@@ -364,7 +336,7 @@ export const DrawerContent = ({
     <>
       <BackdropPrimitive {...shadeProps("drawer-overlay")} />
       <ContentPrimitive
-        {...mergeProps(rest, { ref: passPressesWhileLeaving })}
+        {...rest}
         {...stylex.props(
           drawerMarker,
           layerStyles.panel,

@@ -420,6 +420,7 @@ export const duration = stylex.defineConsts({
   releaseSwallow: "var(--damsko-duration-release-swallow)",
   justPressed: "var(--damsko-duration-just-pressed)",
   leaveMargin: "var(--damsko-duration-leave-margin)",
+  doublePress: "var(--damsko-duration-double-press)",
   // Popups: popups and their items.
   tooltipDelay: "var(--damsko-tooltip-delay)",
   tooltipLeave: "var(--damsko-tooltip-leave)",

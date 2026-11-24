@@ -213,9 +213,14 @@ export const watchPanel = (element: HTMLElement | null) => {
 // the shade's own box, so a shade that was not pressed leaves with none: its scrim is drawn by its
 // ::before, over the window whatever its box, and the next press goes through.
 //
+// UI SDK takes a press as the shade's only while the layer leaves, and a quick one (a command's
+// leave is 100ms) is gone before the second press of a double press, which then reached the page.
+// So after a press on the shade closed its layer, the next press for a double press's span is the
+// shade's too.
+//
 // The fix belongs in UI SDK: layers.js should record why a layer closed and swallow a press during
-// its leave only when an outside press closed it. Once it does, this whole section goes and every
-// shade is a plain fixed box again.
+// its leave only when an outside press closed it, and for a double press's span after. Once it
+// does, this whole section goes and every shade is a plain fixed box again.
 
 // UI SDK marks a closing shade `data-closed` until it goes, and `data-ending-style` only while its own
 // fade runs, which may end before its panel's.
@@ -238,6 +243,47 @@ const shadeStyles = stylex.create({
     },
   },
 });
+
+/**
+ * Takes the next press in `view` that starts within a double press's span: nothing under it is
+ * pressed, focused or clicked. The press that closed the layer, already under way, is not it.
+ */
+const takeNextPress = (view: Window) => {
+  const listening = new AbortController();
+  let pressed = false;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const stop = () => {
+    clearTimeout(timer);
+    listening.abort();
+  };
+  // A tap's click follows at once: a press held longer keeps its click.
+  const wait = () => {
+    clearTimeout(timer);
+    timer = setTimeout(stop, durations.doublePress);
+  };
+  const { signal } = listening;
+  view.addEventListener(
+    "pointerdown",
+    (event) => {
+      pressed = true;
+      event.preventDefault();
+      wait();
+    },
+    { capture: true, once: true, signal }
+  );
+  view.addEventListener(
+    "click",
+    (event) => {
+      if (pressed) {
+        event.preventDefault();
+        event.stopPropagation();
+        stop();
+      }
+    },
+    { capture: true, signal }
+  );
+  wait();
+};
 
 /**
  * Marks the shade `data-shade-pressed` as its layer closes when a press on it is what closed it, so
@@ -279,10 +325,11 @@ const watchShade = (element: HTMLElement | null) => {
     pressed = false;
   };
   const settle = new MutationObserver(() => {
-    element.toggleAttribute(
-      "data-shade-pressed",
-      element.dataset.closed !== undefined && pressed
-    );
+    const closedByIt = element.dataset.closed !== undefined && pressed;
+    element.toggleAttribute("data-shade-pressed", closedByIt);
+    if (closedByIt && view !== null) {
+      takeNextPress(view);
+    }
   });
   settle.observe(element, {
     attributes: true,
