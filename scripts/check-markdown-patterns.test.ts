@@ -26,11 +26,13 @@ describe("the patterns gate", () => {
     );
   });
 
+  // A second and more of the processor: beside the cost gate's files, which take every core, that
+  // was 5.6 s by the clock, past a test's default five.
   test("passes every pattern in src/components/markdown", () => {
     expect(
       problemsIn(
         nodePath.join(import.meta.dirname, "../src/components/markdown")
       )
     ).toStrictEqual([]);
-  });
+  }, 120_000);
 });
