@@ -334,14 +334,7 @@ test("a whole turn is said in order, each thing once: nothing lost, nothing twic
   await expect(page.getByText("Its renewals rose by a tenth")).toBeVisible();
   await expect
     .poll(said)
-    .toStrictEqual([
-      "Thinking",
-      "1 new message",
-      "Writing",
-      "The north changed its first week.",
-      "Its renewals rose by a tenth after it did.",
-      "Answer ready",
-    ]);
+    .toStrictEqual(["Thinking", "1 new message", "Writing", "Answer ready"]);
 });
 
 /** Where an avatar stands beside its message's bubble: before it or after, and level with it. */

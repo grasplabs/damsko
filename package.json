@@ -29,7 +29,8 @@
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-is": "catalog:",
-    "recharts": "catalog:"
+    "recharts": "catalog:",
+    "remend": "catalog:"
   },
   "devDependencies": {
     "@astrojs/mdx": "catalog:",
@@ -58,7 +59,6 @@
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "postcss": "catalog:",
-    "recheck": "catalog:",
     "satteri": "catalog:",
     "secretlint": "catalog:",
     "shadcn": "catalog:",

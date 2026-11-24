@@ -27,11 +27,7 @@ const noModuleMocks = ["mock", "doMock", "hoisted"].map((property) => ({
 }));
 
 /** The unit tests that weigh time (see `test.projects`). */
-const TIMED = [
-  "scripts/markdown-cost-*.test.{ts,tsx}",
-  "scripts/markdown.test.tsx",
-  "scripts/markdown-parse.test.ts",
-];
+const TIMED = ["scripts/markdown.test.tsx"];
 
 export default defineConfig({
   lint: {

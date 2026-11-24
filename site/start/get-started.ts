@@ -195,6 +195,7 @@ export const versions: Record<string, string> = {
   "react-dom": "19.3.1",
   "react-is": "19.3.1",
   recharts: "3.10.1",
+  remend: "1.5.0",
 };
 
 /** The versions as a pnpm catalog, the lines of a pnpm-workspace.yaml. */

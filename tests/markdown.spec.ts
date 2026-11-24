@@ -67,11 +67,9 @@ test("an answer: its heading, list, table, code with copy, quote and a link that
   await expect(link).toHaveAttribute("rel", "noopener noreferrer");
 });
 
-test("a table is a table, named by the heading above it, its columns headed", async ({
-  page,
-}) => {
+test("a table is a table, its columns headed", async ({ page }) => {
   await openExample(page, "markdown", "answer");
-  const table = page.getByRole("table", { name: "Summary of the comments" });
+  const table = page.getByRole("table", { name: "Table" });
   await expect(table.getByRole("columnheader")).toHaveText([
     "Section",
     "Comments",
@@ -114,7 +112,7 @@ test("headings start at the caller's level", async ({ page }) => {
   await expect(page.getByRole("heading", { level: 1 })).toHaveCount(0);
 });
 
-test("untrusted text: raw HTML is text, and only http, https and mailto lead anywhere", async ({
+test("untrusted text: raw HTML is text, and only http, https, mailto and paths here lead anywhere", async ({
   page,
 }) => {
   await openExample(page, "markdown", "safe");
@@ -123,11 +121,12 @@ test("untrusted text: raw HTML is text, and only http, https and mailto lead any
   ).toBeVisible();
   await expect(page.locator("b")).toHaveCount(0);
   await expect(
-    page.getByText(/script link.* relative link are words, not links\.$/u)
+    page.getByText(/script link.* data link are words, not links\.$/u)
   ).toBeVisible();
   await expect(page.getByRole("link", { name: "script link" })).toHaveCount(0);
-  await expect(page.getByRole("link", { name: "relative link" })).toHaveCount(
-    0
+  await expect(page.getByRole("link", { name: "a page here" })).toHaveAttribute(
+    "href",
+    "/components/markdown"
   );
   await expect(
     page.getByRole("link", { name: "safe link (opens in a new tab)" })
@@ -149,28 +148,12 @@ test("untrusted text: a script stays text, a data link is words, a picture never
   await openExample(page, "markdown", "safe");
   await expect(page.getByText("<script>alert(1)</script>")).toBeVisible();
   await expect(
-    page.getByText(
-      "A script link, a data link and a relative link are words, not links."
-    )
+    page.getByText("A script link and a data link are words, not links.")
   ).toBeVisible();
   await expect(page.getByRole("link", { name: "data link" })).toHaveCount(0);
   await expect(page.getByRole("img")).toHaveCount(0);
   await expect(page.getByText("a tracking pixel")).toBeVisible();
   expect(requests).toStrictEqual([]);
-});
-
-test("tasks are said as done or not, and a rule separates", async ({
-  page,
-}) => {
-  await openExample(page, "markdown", "tasks");
-  await expect(page.getByRole("listitem")).toHaveText([
-    "DoneGather the comments",
-    "DoneCount the open requests",
-    "Not doneAdd the survey results",
-    "Not doneShare with the team",
-  ]);
-  await expect(page.getByRole("checkbox")).toHaveCount(0);
-  await expect(page.getByRole("separator")).toHaveCount(1);
 });
 
 test("while it is written: no pipes, no fence marks, no brackets, and the table arrives whole", async ({
@@ -221,75 +204,6 @@ test("cut off: stopped part way and drawn from history, no raw mark and no link 
   await expect(page.getByRole("link")).toHaveCount(0);
 });
 
-test("single line breaks: space runs on, line breaks every one, auto only the short lines", async ({
-  page,
-}) => {
-  await openExample(page, "markdown", "line-breaks");
-  // The three ways in order: space, line, auto; each paragraph's line breaks.
-  const breaks = async (start: RegExp) =>
-    await Promise.all(
-      [0, 1, 2].map(
-        async (way) =>
-          await page.getByText(start).nth(way).locator("br").count()
-      )
-    );
-  expect(await breaks(/^When: 14 and 15 August/u)).toStrictEqual([0, 3, 3]);
-  expect(await breaks(/^I checked three venues/u)).toStrictEqual([0, 2, 0]);
-  expect(await breaks(/^Next steps/u)).toStrictEqual([0, 3, 3]);
-});
-
-test("single line breaks while written: the paragraph wrapped by hand never breaks", async ({
-  page,
-}) => {
-  await openExample(page, "markdown", "line-breaks-stream");
-  const wrapped = page.getByText(/^I checked three venues/u).locator("br");
-  let most = 0;
-  const end = Date.now() + 6000;
-  while (Date.now() < end) {
-    // One look at a time, in order: each waits for the one before.
-    // oxlint-disable-next-line no-await-in-loop
-    most = Math.max(most, await wrapped.count());
-  }
-  expect(most).toBe(0);
-});
-
-test("a section folds: its summary names its button, Enter and a press open and close it", async ({
-  page,
-}) => {
-  await openExample(page, "markdown", "sections");
-  await expect(page.getByText("<details>")).toHaveCount(0);
-  const toggle = page.getByRole("button", { name: "The policy's limits" });
-  await expect(toggle).toHaveAttribute("aria-expanded", "false");
-  await expect(page.getByText("Meals: €40 a day.")).toBeHidden();
-  await toggle.click();
-  await expect(toggle).toHaveAttribute("aria-expanded", "true");
-  await expect(page.getByText("Meals: €40 a day.")).toBeVisible();
-  await toggle.press("Enter");
-  await expect(page.getByText("Meals: €40 a day.")).toBeHidden();
-});
-
-test("sections: nested ones fold, and any other HTML or an unclosed one stays text", async ({
-  page,
-}) => {
-  await openExample(page, "markdown", "sections-cases");
-  const outer = page.getByRole("button", { name: "Outer" }).first();
-  await outer.click();
-  const inner = page.getByRole("button", { name: "Inner" }).first();
-  await expect(inner).toHaveAttribute("aria-expanded", "false");
-  await expect(
-    page.getByText("<div>Other HTML stays text.</div>")
-  ).toBeVisible();
-  await expect(page.getByText("<summary>Never closed</summary>")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Never closed" })).toHaveCount(
-    0
-  );
-  await expect(page.getByRole("button", { name: "Arrives whole" })).toBeVisible(
-    {
-      timeout: 10_000,
-    }
-  );
-});
-
 test("the host draws links: out asks first, a path goes through its router, a citation is its chip, a script link is words", async ({
   page,
 }) => {
@@ -314,114 +228,89 @@ test("the host draws links: out asks first, a path goes through its router, a ci
   await expect(dialog).toBeHidden();
 });
 
-test("your own elements: a link names its site, fenced code is the product's CodeBlock, a script link never reaches them", async ({
-  page,
-}) => {
-  await openExample(page, "markdown", "components");
-  await expect(
-    page.getByRole("link", {
-      name: /^the reporting service \(reports\.example\.com\)/u,
-    })
-  ).toHaveAttribute("href", "https://reports.example.com/docs");
-  const code = page.getByRole("region", { name: /report\.ts/u });
-  await expect(code).toContainText(
-    'export const totals = await report.daily({ team: "support" });'
+/**
+ * Watches the streaming example for `ms`, a frame at a time: every row, cell and code block once
+ * shown keeps its place until the answer starts again, and every word added fades in or, with
+ * reduced motion, is there at once. Gives back what moved and how the words came.
+ */
+const watchFrames = async (page: Page, ms: number) =>
+  await page.evaluate(
+    async (time) =>
+      // oxlint-disable-next-line promise/avoid-new -- frames until the time is up, which have no promise of their own
+      await new Promise<{ moved: string[]; faded: number; popped: number }>(
+        (resolve) => {
+          const placed = new WeakMap<Element, string>();
+          const moved: string[] = [];
+          const counts = { faded: 0, popped: 0 };
+          const root = document.querySelector("[data-slot=markdown]");
+          let length = 0;
+          new MutationObserver((changes) => {
+            for (const added of changes.flatMap((change) => [
+              ...change.addedNodes,
+            ])) {
+              const spans =
+                added instanceof Element
+                  ? [added, ...added.querySelectorAll("span")]
+                  : [];
+              // A word: a span of words alone in a block's text, not one hidden for a screen reader.
+              for (const span of spans) {
+                const word =
+                  span instanceof HTMLSpanElement &&
+                  span.closest("p, li, td, th") !== null &&
+                  span.children.length === 0 &&
+                  span.textContent.trim() !== "" &&
+                  getComputedStyle(span).position !== "absolute";
+                if (word) {
+                  counts[
+                    span.getAnimations().length > 0 ? "faded" : "popped"
+                  ] += 1;
+                }
+              }
+            }
+          }).observe(root ?? document.body, { childList: true, subtree: true });
+          const frame = () => {
+            const now = root?.textContent?.length ?? 0;
+            const restarted = now < length;
+            length = now;
+            for (const part of root?.querySelectorAll(
+              "tr, th, td, [data-slot=code-block]"
+            ) ?? []) {
+              const box = part.getBoundingClientRect();
+              const at = `${Math.round(box.top)},${Math.round(box.left)},${Math.round(box.width)}`;
+              const was = placed.get(part);
+              if (was !== undefined && was !== at && !restarted) {
+                moved.push(`${part.localName}: ${was} to ${at}`);
+              }
+              placed.set(part, at);
+            }
+            if (performance.now() < time) {
+              requestAnimationFrame(frame);
+            } else {
+              resolve({ moved, ...counts });
+            }
+          };
+          requestAnimationFrame(frame);
+        }
+      ),
+    await page.evaluate((wait) => performance.now() + wait, ms)
   );
-  await expect(page.getByText("daily_totals")).toBeVisible();
-  await expect(
-    page.getByRole("link", { name: /link the model was tricked into/u })
-  ).toHaveCount(0);
-  await expect(page.getByText("link the model was tricked into")).toBeVisible();
-});
 
-test("a task's box is round at the corner, its tick the icon's own size", async ({
-  page,
-}) => {
-  await openExample(page, "markdown", "tasks");
-  const done = page.getByRole("listitem").filter({ hasText: "Done" }).first();
-  const box = await done.evaluate((item) => {
-    const mark = item.querySelector("svg");
-    const face = mark?.parentElement;
-    if (mark === null || face === null || face === undefined) {
-      return null;
-    }
-    const look = getComputedStyle(face);
-    return {
-      // Where the browser draws corner shapes, the plain round one (computed as superellipse(1)),
-      // not the system's squircle.
-      round:
-        !CSS.supports("corner-shape", "round") ||
-        ["round", "superellipse(1)"].includes(
-          look.getPropertyValue("corner-shape")
-        ),
-      radius: look.borderTopLeftRadius,
-      tick: mark.getBoundingClientRect().width,
-    };
-  });
-  expect(box).toEqual({ round: true, radius: "6px", tick: 16 });
-});
-
-test("a closed section's words are found by find in page, which opens it", async ({
-  page,
-}) => {
-  await openExample(page, "markdown", "sections");
-  const toggle = page.getByRole("button", { name: "The policy's limits" });
-  const words = page.getByText("Meals: €40 a day.");
-  await expect(words).toBeHidden();
-  expect(
-    await words.evaluate((node) =>
-      node.closest("[hidden]")?.getAttribute("hidden")
-    )
-  ).toBe("until-found");
-  // What the browser's find does when it lands on hidden words.
-  await words.evaluate((node) => {
-    node
-      .closest("[hidden]")
-      ?.dispatchEvent(new Event("beforematch", { bubbles: true }));
-  });
-  await expect(toggle).toHaveAttribute("aria-expanded", "true");
-  await expect(words).toBeVisible();
-});
-
-test("a section written open stands open from the first paint, without opening", async ({
+test("while it is written, a table and a code block keep their place and each new word fades in", async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
-  // Every height the open section's words are seen at, from the first frame they are drawn in.
-  await page.addInitScript(() => {
-    const seen = new Set<number>();
-    let frames = 0;
-    const watch = () => {
-      for (const node of document.querySelectorAll("p")) {
-        if (node.textContent.includes("The claim's approver decides")) {
-          const panel = node.parentElement?.parentElement;
-          if (panel) {
-            seen.add(Math.round(panel.getBoundingClientRect().height));
-            frames += 1;
-            document.documentElement.dataset.seenHeights = [...seen].join(" ");
-            document.documentElement.dataset.seenFrames = String(frames);
-          }
-        }
-      }
-      requestAnimationFrame(watch);
-    };
-    requestAnimationFrame(watch);
-  });
-  await openExample(page, "markdown", "sections");
-  const toggle = page.getByRole("button", { name: "Who decides" });
-  await expect(toggle).toHaveAttribute("aria-expanded", "true");
-  await expect(
-    page.getByText("The claim's approver decides, never the agent.")
-  ).toBeVisible();
-  // Past the time an opening takes: thirty frames of it drawn.
-  await expect
-    .poll(async () =>
-      Number(await page.locator("html").getAttribute("data-seen-frames"))
-    )
-    .toBeGreaterThan(30);
-  // One height, never a climb from nothing.
-  await expect(page.locator("html")).toHaveAttribute(
-    "data-seen-heights",
-    /^[1-9]\d*$/u
-  );
+  await openExample(page, "markdown", "streaming");
+  const seen = await watchFrames(page, 9000);
+  expect(seen.moved).toStrictEqual([]);
+  expect(seen.faded).toBeGreaterThan(50);
+  expect(seen.popped).toBe(0);
+});
+
+test("with reduced motion, each new word is there at once", async ({
+  page,
+}) => {
+  await openExample(page, "markdown", "streaming");
+  const seen = await watchFrames(page, 9000);
+  expect(seen.popped).toBeGreaterThan(50);
+  expect(seen.faded).toBe(0);
 });

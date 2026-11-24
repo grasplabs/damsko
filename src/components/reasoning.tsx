@@ -340,9 +340,7 @@ export const ReasoningContent = ({
                 }
               >
                 {markdown ? (
-                  // Silent: the thoughts are not read out as they come, open or closed; that
-                  // thinking started is said once, by Reasoning.
-                  <LazyMarkdown size="xs" streaming={isStreaming} live="off">
+                  <LazyMarkdown size="xs" streaming={isStreaming}>
                     {step.body.trim()}
                   </LazyMarkdown>
                 ) : (

@@ -30,7 +30,6 @@ const known = new Set([
   "inspector-01/facts: northwind.example",
   "markdown/host-links: Source 1",
   "markdown/host-links: Source 2",
-  "markdown/sections-cases: BUTTON",
   "tooltip/link: Reports",
 ]);
 

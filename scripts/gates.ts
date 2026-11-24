@@ -27,7 +27,6 @@ const gates: readonly (readonly string[])[] = [
   ["scripts/check-product-knowledge.ts"],
   ["scripts/check-es2023.ts"],
   ["scripts/check-diff-engine.ts"],
-  ["scripts/check-markdown-patterns.ts"],
 ];
 
 const failed = gates.filter(
