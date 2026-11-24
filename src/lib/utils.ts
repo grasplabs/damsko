@@ -374,9 +374,23 @@ const HOLD = 400;
 let othersSaidAt = Number.NEGATIVE_INFINITY;
 let ours = "";
 
+// A deferred step (the queue's timer, its frame, a region's watch) can run after the page has gone,
+// as a test's environment is torn down with a message still waiting: it then does nothing, and the
+// queue ends.
+const pageGone = (region?: HTMLElement) =>
+  typeof document === "undefined" || region?.isConnected === false;
+
+const stop = () => {
+  waiting.length = 0;
+  speaking = false;
+};
+
 /** A message another part said into `region`: the next of ours waits its hold, so it never cuts that one off. */
 const heedOthers = (region: HTMLElement) => {
   new MutationObserver(() => {
+    if (pageGone(region)) {
+      return;
+    }
     const text = region.textContent;
     if (text !== "" && text !== ours) {
       othersSaidAt = performance.now();
@@ -446,6 +460,10 @@ if (typeof document !== "undefined") {
 }
 
 const sayNext = () => {
+  if (pageGone()) {
+    stop();
+    return;
+  }
   const next = waiting.shift();
   speaking = next !== undefined;
   if (next === undefined) {
@@ -469,6 +487,10 @@ const sayNext = () => {
   // Emptied first, so the same message twice in a row is said twice.
   region.textContent = "";
   requestAnimationFrame(() => {
+    if (pageGone(region)) {
+      stop();
+      return;
+    }
     ours = next.message;
     region.textContent = next.message;
     setTimeout(sayNext, HOLD);
