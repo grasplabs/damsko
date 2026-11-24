@@ -257,9 +257,15 @@ const watchShade = (element: HTMLElement | null) => {
     pressed = event.type === "pointerdown" && event.target === element;
   };
   // UI SDK closes on the press's down, its up or (by touch) its click; React marks the shade closed
-  // in a microtask after. A task later, a shade still open was pressed in vain.
+  // in a microtask after. A task later, a shade still open was pressed in vain. A touch's up comes
+  // before the click that may close, so only that click tells (Chromium makes the click itself a
+  // touch PointerEvent; WebKit a mouse one).
   const over = (event: Event) => {
-    if (event instanceof PointerEvent && event.pointerType === "touch") {
+    if (
+      event.type === "pointerup" &&
+      event instanceof PointerEvent &&
+      event.pointerType === "touch"
+    ) {
       return;
     }
     clearTimeout(check);

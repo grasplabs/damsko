@@ -167,3 +167,97 @@ test("alert-dialog: a press on its shade that did nothing is forgotten, so a clo
   await expect(corner).toHaveAttribute("data-presses", "1");
   await expect(panel).toBeHidden();
 });
+
+declare global {
+  interface Window {
+    /** Every close request UI SDK listens for (`CloseWatcher`), as it made them (see below). */
+    closeWatchers?: (EventTarget & { destroyed: boolean })[];
+  }
+}
+
+/** The phone's back: a close request to the last CloseWatcher UI SDK still listens to. */
+const back = async (page: Page) => {
+  await page.evaluate(() => {
+    window.closeWatchers
+      ?.findLast(({ destroyed }) => !destroyed)
+      ?.dispatchEvent(new Event("close"));
+  });
+};
+
+// On a phone. Chromium makes a tap's click a touch PointerEvent (WebKit a mouse one), and Android's
+// back is a close request, which UI SDK hears through a CloseWatcher on Android alone
+// (foundation/popups/popup.js `watchClose`). A test browser has no back gesture, so the page's
+// CloseWatcher is a stand-in that keeps each one UI SDK makes, and the back is its `close`.
+test.describe("on a touch screen", () => {
+  test.use({
+    hasTouch: true,
+    userAgent:
+      "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36",
+  });
+
+  for (const layer of layers) {
+    for (const close of ["back", ...layer.buttons]) {
+      const how =
+        close === "back"
+          ? "the phone's back"
+          : `a screen reader's click on ${close}`;
+      const first = layer.shadeCloses
+        ? ""
+        : "after a tap on its shade that closes nothing, ";
+      test(`${layer.component}: ${first}closed by ${how}, a tap 0 or 70ms after goes through`, async ({
+        page,
+      }) => {
+        await page.addInitScript(() => {
+          const made: (EventTarget & { destroyed: boolean })[] = [];
+          window.closeWatchers = made;
+          Object.assign(globalThis, {
+            CloseWatcher: class extends EventTarget {
+              destroyed = false;
+              constructor() {
+                super();
+                made.push(this);
+              }
+              destroy() {
+                this.destroyed = true;
+              }
+            },
+          });
+        });
+        const corner = await open(page, layer);
+        let presses = 0;
+        for (const after of [0, 70]) {
+          // oxlint-disable-next-line no-await-in-loop -- one opening after another
+          const panel = await show(page, layer);
+          if (!layer.shadeCloses) {
+            // oxlint-disable-next-line no-await-in-loop -- see above
+            await page.touchscreen.tap(20, 20);
+            // oxlint-disable-next-line no-await-in-loop -- see above
+            await page.waitForTimeout(300);
+            // oxlint-disable-next-line no-await-in-loop -- see above
+            await expect(panel).toBeVisible();
+          }
+          // oxlint-disable-next-line no-await-in-loop -- see above
+          await (close === "back"
+            ? back(page)
+            : panel
+                .getByRole("button", { name: close, exact: true })
+                .last()
+                .evaluate((button: HTMLElement) => {
+                  button.click();
+                }));
+          if (after > 0) {
+            // oxlint-disable-next-line no-await-in-loop -- see above
+            await page.waitForTimeout(after);
+          }
+          // oxlint-disable-next-line no-await-in-loop -- see above
+          await page.touchscreen.tap(20, 20);
+          presses += 1;
+          // oxlint-disable-next-line no-await-in-loop -- see above
+          await expect(corner).toHaveAttribute("data-presses", String(presses));
+          // oxlint-disable-next-line no-await-in-loop -- see above
+          await expect(panel).toBeHidden();
+        }
+      });
+    }
+  }
+});
