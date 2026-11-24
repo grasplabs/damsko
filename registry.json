@@ -19,7 +19,7 @@
       "docs": "https://damsko.joingrasp.com/components/accordion",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -43,7 +43,7 @@
       "docs": "https://damsko.joingrasp.com/components/agent-indicator",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -68,7 +68,7 @@
       "docs": "https://damsko.joingrasp.com/components/alert",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -97,7 +97,7 @@
       "docs": "https://damsko.joingrasp.com/components/alert-dialog",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -231,7 +231,7 @@
       ],
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": []
     },
@@ -257,7 +257,7 @@
       "docs": "https://damsko.joingrasp.com/components/app-shell-01",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -281,7 +281,7 @@
       "docs": "https://damsko.joingrasp.com/components/aspect-ratio",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -308,7 +308,7 @@
       "docs": "https://damsko.joingrasp.com/components/attachment",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -336,7 +336,7 @@
       "docs": "https://damsko.joingrasp.com/components/audio-player",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -367,7 +367,7 @@
       "docs": "https://damsko.joingrasp.com/components/avatar",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -394,7 +394,7 @@
       "docs": "https://damsko.joingrasp.com/components/badge",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -418,7 +418,7 @@
       "docs": "https://damsko.joingrasp.com/components/brand-icon",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -447,7 +447,7 @@
       "docs": "https://damsko.joingrasp.com/components/breadcrumb",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -473,7 +473,7 @@
       "docs": "https://damsko.joingrasp.com/components/bubble",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -502,7 +502,7 @@
       "docs": "https://damsko.joingrasp.com/components/button",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -532,7 +532,7 @@
       "docs": "https://damsko.joingrasp.com/components/button-group",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -559,7 +559,7 @@
       "docs": "https://damsko.joingrasp.com/components/calendar",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -585,7 +585,7 @@
       "docs": "https://damsko.joingrasp.com/components/card",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -617,7 +617,7 @@
       "docs": "https://damsko.joingrasp.com/components/carousel",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -643,7 +643,7 @@
       "docs": "https://damsko.joingrasp.com/components/chain-of-thought",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -669,7 +669,7 @@
       "docs": "https://damsko.joingrasp.com/components/chart",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -701,7 +701,7 @@
       "docs": "https://damsko.joingrasp.com/components/chat",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -728,7 +728,7 @@
       "docs": "https://damsko.joingrasp.com/components/checkbox",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -760,7 +760,7 @@
       "docs": "https://damsko.joingrasp.com/components/code-block",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -801,7 +801,7 @@
       "docs": "https://damsko.joingrasp.com/components/collapsible",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -827,7 +827,7 @@
       "docs": "https://damsko.joingrasp.com/components/combobox",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -855,7 +855,7 @@
       "docs": "https://damsko.joingrasp.com/components/command",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -888,7 +888,7 @@
       "docs": "https://damsko.joingrasp.com/components/confirmation",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -923,7 +923,7 @@
       "docs": "https://damsko.joingrasp.com/components/connect-api-key-01",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -947,7 +947,7 @@
       "docs": "https://damsko.joingrasp.com/components/container",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -979,7 +979,7 @@
       "docs": "https://damsko.joingrasp.com/components/context",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -1005,7 +1005,7 @@
       "docs": "https://damsko.joingrasp.com/components/context-menu",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -1029,7 +1029,7 @@
       "docs": "https://damsko.joingrasp.com/components/copy-button",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -1053,7 +1053,7 @@
       "docs": "https://damsko.joingrasp.com/components/data-grid",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -1105,7 +1105,7 @@
       "docs": "https://damsko.joingrasp.com/components/data-table",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -1148,7 +1148,7 @@
       "docs": "https://damsko.joingrasp.com/components/date-picker",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -1176,7 +1176,7 @@
       "docs": "https://damsko.joingrasp.com/components/dialog",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -1210,7 +1210,7 @@
       "docs": "https://damsko.joingrasp.com/components/diff-viewer",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -1243,7 +1243,7 @@
       "docs": "https://damsko.joingrasp.com/components/drawer",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -1275,7 +1275,7 @@
       "docs": "https://damsko.joingrasp.com/components/dropdown-menu",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -1299,7 +1299,7 @@
       "docs": "https://damsko.joingrasp.com/components/empty",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -1327,7 +1327,7 @@
       "docs": "https://damsko.joingrasp.com/components/field",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -1362,7 +1362,7 @@
       "docs": "https://damsko.joingrasp.com/components/file-upload",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -1473,7 +1473,7 @@
       "docs": "https://damsko.joingrasp.com/components/form",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -1497,7 +1497,7 @@
       "docs": "https://damsko.joingrasp.com/components/heading",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -1526,7 +1526,7 @@
       "docs": "https://damsko.joingrasp.com/components/hold-button",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -1546,7 +1546,7 @@
       ],
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -1592,7 +1592,7 @@
       "docs": "https://damsko.joingrasp.com/components/hover-card",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -1616,7 +1616,7 @@
       "docs": "https://damsko.joingrasp.com/components/icon-tile",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -1646,7 +1646,7 @@
       "docs": "https://damsko.joingrasp.com/components/image-upload",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -1674,7 +1674,7 @@
       "docs": "https://damsko.joingrasp.com/components/inline-citation",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -1700,7 +1700,7 @@
       "docs": "https://damsko.joingrasp.com/components/inline-edit",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -1728,7 +1728,7 @@
       "docs": "https://damsko.joingrasp.com/components/input",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -1756,7 +1756,7 @@
       "docs": "https://damsko.joingrasp.com/components/input-group",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -1782,7 +1782,7 @@
       "docs": "https://damsko.joingrasp.com/components/input-otp",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -1817,7 +1817,7 @@
       "docs": "https://damsko.joingrasp.com/components/inspector-01",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -1845,7 +1845,7 @@
       "docs": "https://damsko.joingrasp.com/components/item",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -1874,7 +1874,7 @@
       "docs": "https://damsko.joingrasp.com/components/kbd",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -1904,7 +1904,7 @@
       "docs": "https://damsko.joingrasp.com/components/key-value",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -1930,7 +1930,7 @@
       "docs": "https://damsko.joingrasp.com/components/label",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -1957,7 +1957,7 @@
       ],
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -2023,7 +2023,7 @@
       "docs": "https://damsko.joingrasp.com/components/link",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -2055,7 +2055,7 @@
       "docs": "https://damsko.joingrasp.com/components/markdown",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -2091,7 +2091,7 @@
       "docs": "https://damsko.joingrasp.com/components/marker",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -2117,7 +2117,7 @@
       "docs": "https://damsko.joingrasp.com/components/menubar",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -2146,7 +2146,7 @@
       "docs": "https://damsko.joingrasp.com/components/message",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -2178,7 +2178,7 @@
       "docs": "https://damsko.joingrasp.com/components/message-scroller",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -2209,7 +2209,7 @@
       "docs": "https://damsko.joingrasp.com/components/model-selector",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -2235,7 +2235,7 @@
       "docs": "https://damsko.joingrasp.com/components/navigation-menu",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -2261,7 +2261,7 @@
       "docs": "https://damsko.joingrasp.com/components/number-field",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -2288,7 +2288,7 @@
       "docs": "https://damsko.joingrasp.com/components/page-header",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -2320,7 +2320,7 @@
       "docs": "https://damsko.joingrasp.com/components/pagination",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -2346,7 +2346,7 @@
       "docs": "https://damsko.joingrasp.com/components/popover",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -2377,7 +2377,7 @@
       "docs": "https://damsko.joingrasp.com/components/progress",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -2415,7 +2415,7 @@
       "docs": "https://damsko.joingrasp.com/components/prompt-input",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -2459,7 +2459,7 @@
       "docs": "https://damsko.joingrasp.com/components/questionnaire",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -2486,7 +2486,7 @@
       "docs": "https://damsko.joingrasp.com/components/radio-group",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -2512,7 +2512,7 @@
       "docs": "https://damsko.joingrasp.com/components/reasoning",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -2538,7 +2538,7 @@
       "docs": "https://damsko.joingrasp.com/components/resizable",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -2564,7 +2564,7 @@
       "docs": "https://damsko.joingrasp.com/components/scroll-area",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -2589,7 +2589,7 @@
       "docs": "https://damsko.joingrasp.com/components/section-header",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -2620,7 +2620,7 @@
       "docs": "https://damsko.joingrasp.com/components/select",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -2651,7 +2651,7 @@
       "docs": "https://damsko.joingrasp.com/components/separator",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -2683,7 +2683,7 @@
       "docs": "https://damsko.joingrasp.com/components/share-dialog-01",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -2712,7 +2712,7 @@
       "docs": "https://damsko.joingrasp.com/components/sheet",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -2736,7 +2736,7 @@
       "docs": "https://damsko.joingrasp.com/components/shimmer",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -2771,7 +2771,7 @@
       "docs": "https://damsko.joingrasp.com/components/side-panel",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -2802,7 +2802,7 @@
       "docs": "https://damsko.joingrasp.com/components/sidebar",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -2831,7 +2831,7 @@
       "docs": "https://damsko.joingrasp.com/components/skeleton",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -2858,7 +2858,7 @@
       "docs": "https://damsko.joingrasp.com/components/slider",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -2890,7 +2890,7 @@
       "docs": "https://damsko.joingrasp.com/components/snippet",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -2915,7 +2915,7 @@
       "docs": "https://damsko.joingrasp.com/components/sources",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -2939,7 +2939,7 @@
       "docs": "https://damsko.joingrasp.com/components/spinner",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -2970,7 +2970,7 @@
       "docs": "https://damsko.joingrasp.com/components/stack-trace",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -3000,7 +3000,7 @@
       "docs": "https://damsko.joingrasp.com/components/stat",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -3030,7 +3030,7 @@
       "docs": "https://damsko.joingrasp.com/components/stepper",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -3061,7 +3061,7 @@
       "docs": "https://damsko.joingrasp.com/components/suggestion",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -3089,7 +3089,7 @@
       "docs": "https://damsko.joingrasp.com/components/switch",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -3113,7 +3113,7 @@
       "docs": "https://damsko.joingrasp.com/components/table",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -3144,7 +3144,7 @@
       "docs": "https://damsko.joingrasp.com/components/table-of-contents",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -3173,7 +3173,7 @@
       "docs": "https://damsko.joingrasp.com/components/tabs",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -3207,7 +3207,7 @@
       "docs": "https://damsko.joingrasp.com/components/tags-input",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -3237,7 +3237,7 @@
       "docs": "https://damsko.joingrasp.com/components/terminal",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -3268,7 +3268,7 @@
       "docs": "https://damsko.joingrasp.com/components/test-results",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -3293,7 +3293,7 @@
       "docs": "https://damsko.joingrasp.com/components/text",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -3319,7 +3319,7 @@
       "docs": "https://damsko.joingrasp.com/components/textarea",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -3345,7 +3345,7 @@
       "docs": "https://damsko.joingrasp.com/components/theme-toggle",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -3373,7 +3373,7 @@
       "docs": "https://damsko.joingrasp.com/components/toast",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -3400,7 +3400,7 @@
       "docs": "https://damsko.joingrasp.com/components/toggle",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -3427,7 +3427,7 @@
       ],
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -3444,7 +3444,7 @@
       "description": "Every colour, space, corner, edge, shadow, time and curve as CSS variables (tokens.css), and the modes and themes (themes.css): import the two once, at the root. With them, base.css: an optional reset for a new app that has none; never import it beside Tailwind, whose preflight is the reset. The font families the tokens name are not included: add @damsko/fonts, and set a family's token (--damsko-font-sans, -serif, -mono) where the app serves that family under another name.",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -3481,7 +3481,7 @@
       "docs": "https://damsko.joingrasp.com/components/tool",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -3512,7 +3512,7 @@
       "docs": "https://damsko.joingrasp.com/components/tooltip",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -3539,7 +3539,7 @@
       "docs": "https://damsko.joingrasp.com/components/trace",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {
@@ -3567,7 +3567,7 @@
       "docs": "https://damsko.joingrasp.com/components/tree-view",
       "meta": {
         "version": "0.1.0",
-        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them."
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
         {

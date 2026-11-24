@@ -77,13 +77,13 @@ SidebarMenuSkeleton draws quiet bars in the rows' own boxes, the same shapes eve
 
 ## Kept as the person left it
 
-`storageKey` keeps the open state in localStorage, and each SidebarCollapsible's fold beside it, under `storageKey:name`. `sidebarStateScript(storageKey)` in the page's head draws both before the page wakes, a group's label saying whether it is open, so nothing moves; focus that stood in a group keeps its place as the page wakes. Or keep it yourself with `open` and `onOpenChange`, from a cookie read on the server.
+`storageKey` keeps the open state in localStorage, and each SidebarCollapsible's fold beside it, under `storageKey:name`. `sidebarStateScript(storageKey)` in the page's head draws both before the page wakes, a group's label saying whether it is open, so nothing moves; focus that stood in a group keeps its place as the page wakes. Or keep it yourself with `open` and `onOpenChange`, from a cookie read on the server, and the phone's sheet with `openMobile` and `onOpenMobileChange`, from a store that outlives the frame.
 
 <Stage path="sidebar/persisted" label="Kept as the person left it" />
 
 ## From the page
 
-`useSidebar()` reads and sets the open state from anywhere inside the provider: a page's own control folds it with `setOpen`, which takes a value or an updater, as React's `setState`.
+`useSidebar()` reads and sets the open state from anywhere inside the provider: a page's own control folds it with `setOpen`, which takes a value or an updater, as React's `setState`. Here the page keeps the state itself (`open`, `openMobile`), and its state is the only one: the trigger, the rail and the keys change it there.
 
 <Stage path="sidebar/from-the-page" label="From the page" />
 
@@ -210,13 +210,13 @@ Use a level for a different area with its own navigation; the pages within one p
       group: "Folding",
       key: "Focus",
       value:
-        "Folded off the canvas while focus is inside, focus goes to the trigger.",
+        "Folded off the canvas while focus is inside, focus goes to the trigger still in reach; opened from a trigger that then goes (one in the page's bar shown only while the sidebar is away), to the sidebar's own trigger, else its current row.",
     },
     {
       group: "Phone",
       key: "Under 1024px",
       value:
-        "A Sheet from its side: Tab stays inside, Escape or the shade closes it, and focus goes back to the trigger.",
+        "A Sheet from its side: Tab stays inside, Escape, the shade or Cmd+B (Ctrl+B) closes it, and focus goes back to the trigger.",
     },
     {
       group: "Levels",
