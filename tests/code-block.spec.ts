@@ -352,12 +352,13 @@ test("code Prism cannot read in time stays plain and whole, and never holds the 
   const workers = countWorkers(page);
   await openExample(page, "code-block", "any");
   await page.getByLabel("Code").fill(slowCode);
-  await fromNow(page);
   await page.getByRole("button", { name: "Show", exact: true }).click();
-  // The worker is stopped when its time is up.
-  await expect.poll(() => workers.stopped, { timeout: 15_000 }).toBe(1);
   const block = page.getByRole("region", { name: "TSX" });
   await expect(block.getByText(longLine, { exact: true })).toBeVisible();
+  // From the code drawn as text, while Prism reads it.
+  await fromNow(page);
+  // The worker is stopped when its time is up.
+  await expect.poll(() => workers.stopped, { timeout: 15_000 }).toBe(1);
   await expect(
     block.getByText("const total = 1;", { exact: true })
   ).toBeVisible();
