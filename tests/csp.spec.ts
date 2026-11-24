@@ -1,14 +1,14 @@
-// The product's Content Security Policy, across the library: the product serves its pages with
-// `img-src 'self' data:` and `worker-src 'none'`, so a picture from a `blob:` URL or a Worker
-// breaks there while it works on this site. Every component example is served here with those
-// directives, and none may be broken by them; an image upload's new picture still shows, its
-// preview being a data: URL.
+// The product's Content Security Policy, across the library, as Damsko needs it: `img-src 'self'
+// data:`, so a picture from a `blob:` URL breaks there while it works on this site, and workers
+// only from the page's own files (`worker-src 'self'`), as CodeBlock reads its code in one. Every
+// component example is served here with those directives, and none may be broken by them; an
+// image upload's new picture still shows, its preview being a data: URL.
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
 import { componentExamples, openExample, pickerFrom } from "./example.ts";
 
-const policy = "img-src 'self' data:; worker-src 'none'";
+const policy = "img-src 'self' data:; worker-src 'self'";
 
 /** Serves every page with the product's policy and records what it refuses. */
 const underPolicy = async (page: Page) => {

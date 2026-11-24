@@ -774,6 +774,11 @@
           "target": "~/src/components/code-block-prism.ts"
         },
         {
+          "path": "src/components/code-block-worker.ts",
+          "type": "registry:file",
+          "target": "~/src/components/code-block-worker.ts"
+        },
+        {
           "path": "src/components/code-block.stylex.ts",
           "type": "registry:file",
           "target": "~/src/components/code-block.stylex.ts"

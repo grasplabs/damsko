@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 
 import { fixedTime, openExample } from "./example.ts";
 
@@ -232,4 +232,164 @@ test("in a right-to-left page code still reads left to right from the left edge"
     expect(words.x).toBeGreaterThanOrEqual(box.x);
     expect(words.x).toBeLessThan(box.x + box.width / 3);
   }
+});
+
+declare global {
+  interface Window {
+    longTasks?: number[];
+  }
+}
+
+/** The page's long tasks from its start, where the browser reports them (Chromium). */
+const watchLongTasks = async (page: Page) => {
+  await page.addInitScript(() => {
+    window.longTasks = [];
+    try {
+      new PerformanceObserver((list) => {
+        for (const entry of list.getEntries()) {
+          window.longTasks?.push(entry.duration);
+        }
+      }).observe({ type: "longtask" });
+    } catch {
+      // Not reported here.
+    }
+  });
+};
+
+const longestTask = async (page: Page) =>
+  Math.max(0, ...(await page.evaluate(() => window.longTasks ?? [])));
+
+/** Whether a run of the code has a colour of its own: drawn in another colour than its line. */
+const isColoured = async (run: Locator) =>
+  (await run.count()) > 0 &&
+  (await run
+    .first()
+    .evaluate(
+      (node) =>
+        node.parentElement !== null &&
+        getComputedStyle(node).color !==
+          getComputedStyle(node.parentElement).color
+    ));
+
+/** How many of the page's workers have been stopped, as it goes. */
+const countStopped = (page: Page) => {
+  const stopped = { count: 0 };
+  page.on("worker", (worker) => {
+    worker.on("close", () => {
+      stopped.count += 1;
+    });
+  });
+  return stopped;
+};
+
+// One TypeScript line Prism takes seconds over (one match of a grammar's over the whole string),
+// then an ordinary one.
+const longLine = `const report = "${"x".repeat(50_000)}";`;
+const slowCode = `${longLine}\nconst total = 1;`;
+
+test("Prism reads the code in a worker, never on the page", async ({
+  page,
+}) => {
+  await openExample(page, "code-block", "basic");
+  const block = page.getByRole("region", { name: "TSX" });
+  await expect
+    .poll(
+      async () => await isColoured(block.getByText("export", { exact: true }))
+    )
+    .toBe(true);
+  expect(await page.evaluate(() => "Prism" in globalThis)).toBe(false);
+});
+
+test("code Prism cannot read in time stays plain and whole, and never holds the page", async ({
+  page,
+}) => {
+  await watchLongTasks(page);
+  const stopped = countStopped(page);
+  await openExample(page, "code-block", "any");
+  await page.getByLabel("Code").fill(slowCode);
+  await page.getByRole("button", { name: "Show", exact: true }).click();
+  // The worker is stopped when its time is up.
+  await expect.poll(() => stopped.count, { timeout: 15_000 }).toBe(1);
+  const block = page.getByRole("region", { name: "TSX" });
+  await expect(block.getByText(longLine, { exact: true })).toBeVisible();
+  await expect(
+    block.getByText("const total = 1;", { exact: true })
+  ).toBeVisible();
+  // Plain: no word is a run of its own.
+  await expect(block.getByText("const", { exact: true })).toHaveCount(0);
+  // Read on the page, Prism would hold it for seconds.
+  expect(await longestTask(page)).toBeLessThan(500);
+  // The next code is read by a new worker, and coloured.
+  await page.getByLabel("Code").fill("export const total = 1;");
+  await page.getByRole("button", { name: "Show", exact: true }).click();
+  await expect
+    .poll(
+      async () => await isColoured(block.getByText("export", { exact: true }))
+    )
+    .toBe(true);
+});
+
+test("while slow code is written the page is never held, and done, it is plain and whole", async ({
+  page,
+}) => {
+  await watchLongTasks(page);
+  const stopped = countStopped(page);
+  await openExample(page, "code-block", "any");
+  await page.getByLabel("Code").fill(slowCode);
+  await page.getByRole("button", { name: "Write it out" }).click();
+  // Stopped once while it is written, when a reading first takes too long, and not read again
+  // until it is done; then read once more, whole, and stopped again.
+  await expect.poll(() => stopped.count, { timeout: 30_000 }).toBe(2);
+  const block = page.getByRole("region", { name: "TSX" });
+  await expect(block.getByText(longLine, { exact: true })).toBeVisible();
+  await expect(
+    block.getByText("const total = 1;", { exact: true })
+  ).toBeVisible();
+  await expect(block.getByText("const", { exact: true })).toHaveCount(0);
+  expect(await longestTask(page)).toBeLessThan(500);
+});
+test("where the page's policy refuses workers, the code is plain and whole", async ({
+  page,
+}) => {
+  await page.route(
+    (url) => url.pathname.startsWith("/examples/"),
+    async (route) => {
+      if (route.request().resourceType() !== "document") {
+        await route.fallback();
+        return;
+      }
+      const response = await route.fetch();
+      await route.fulfill({
+        response,
+        headers: {
+          ...response.headers(),
+          "content-security-policy": "worker-src 'none'",
+        },
+      });
+    }
+  );
+  const errors: string[] = [];
+  page.on("pageerror", (error) => {
+    errors.push(error.message);
+  });
+  await page.addInitScript(() => {
+    document.addEventListener("securitypolicyviolation", (event) => {
+      document.documentElement.dataset.refused = event.effectiveDirective;
+    });
+  });
+  await openExample(page, "code-block", "basic");
+  // The worker was asked for, and refused.
+  await expect(page.locator("html")).toHaveAttribute(
+    "data-refused",
+    "worker-src"
+  );
+  const block = page.getByRole("region", { name: "TSX" });
+  await expect(
+    block.getByText(
+      "export function ReportStatus({ ready }: { ready: boolean }) {",
+      { exact: true }
+    )
+  ).toBeVisible();
+  await expect(block.getByText("export", { exact: true })).toHaveCount(0);
+  expect(errors).toStrictEqual([]);
 });

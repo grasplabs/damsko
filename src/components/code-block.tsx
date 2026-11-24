@@ -1,6 +1,6 @@
 // CodeBlock: code in an answer or a page, in StyleX on our
-// CopyButton. Highlighted with Prism (each language loaded the first time it is shown,
-// code-block-prism.ts), its title and the language's name in a header over it, a copy button that
+// CopyButton. Highlighted with Prism, which reads the code whole in a worker, off the page
+// (code-block-prism.ts), its title and the language's name in a header over it, a copy button that
 // copies the code exactly, line numbers and wrapping as options, highlighted, added and removed
 // lines, and long code folded under Show more. While it is still being written, the header says
 // so, quietly, and the code grows in place, read again at most once a frame.
@@ -55,8 +55,8 @@ import { listOf, nothing, ownValue } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { iconVars, ringInsetMarker } from "../lib/vars.stylex";
 import { Button } from "./button";
-import { grammarOrNull, languageNames, linesOf } from "./code-block-prism";
-import type { Highlight } from "./code-block-prism";
+import { MOST_RUNS, languages, linesOf } from "./code-block-prism";
+import type { Line, Runs } from "./code-block-prism";
 import { codeBlockVars } from "./code-block.stylex";
 import { CopyButton } from "./copy-button";
 import { Spinner } from "./spinner";
@@ -498,27 +498,257 @@ const toneOf = (types: string[]) =>
     .map((type) => ownValue(tones, type))
     .findLast((found) => found !== undefined) ?? null;
 
-/** Prism and the language's grammar once they have loaded, in the browser; null until then. */
-const useHighlight = (language: string): Highlight | null => {
-  // The grammar is kept with its language, so code in a new language is never coloured as the old.
-  const [loaded, setLoaded] = useState<{
-    language: string;
-    found: Highlight | null;
-  } | null>(null);
+/**
+ * How long Prism may read one block in the worker: READ_TICKS ticks of READ_TICK milliseconds, a
+ * second, from when the worker says it has started. Ordinary code takes a few milliseconds, 2,000
+ * lines of TSX about 20. Past it the worker is stopped, and the block stays plain. The time is
+ * counted in ticks of the page's clock, so a page busy elsewhere (a tick waits for it) never stops
+ * a worker that has answered; and from the worker's word, as a worker woken from rest can take a
+ * second to hear (WebKit), for which it has WAIT_TICKS.
+ */
+const READ_TICK = 100;
+const READ_TICKS = 10;
+const WAIT_TICKS = 50;
+
+/**
+ * The worker once it is ready, the port it reads through, and what hears its answer to the read
+ * waiting (one at a time).
+ */
+interface Reader {
+  worker: Worker;
+  port: MessagePort;
+  hear: (data: unknown) => void;
+}
+
+let reader: Promise<Reader | null> | undefined;
+// One block is read at a time, in the order asked.
+let queue: Promise<unknown> = Promise.resolve();
+
+/**
+ * Starts the worker. Where it cannot start (no workers, a page whose policy refuses them, a file
+ * that does not load) every block stays plain.
+ */
+const startReader = async () =>
+  // oxlint-disable-next-line promise/avoid-new -- a worker says it is ready, or failed, by an event
+  await new Promise<Reader | null>((resolve) => {
+    try {
+      const worker = new Worker(
+        // Written as bundlers find a worker: Vite, webpack and Turbopack each build it as a file.
+        // oxlint-disable-next-line unicorn/relative-url-style -- without `./` webpack reads it as a package
+        new URL("./code-block-worker.ts", import.meta.url),
+        { type: "module" }
+      );
+      worker.addEventListener(
+        "message",
+        ({ ports: [port] }) => {
+          if (port === undefined) {
+            resolve(null);
+            return;
+          }
+          const ready: Reader = { worker, port, hear: nothing };
+          port.addEventListener(
+            "message",
+            ({ data }: MessageEvent<unknown>) => {
+              ready.hear(data);
+            }
+          );
+          port.start();
+          resolve(ready);
+        },
+        { once: true }
+      );
+      worker.addEventListener(
+        "error",
+        () => {
+          resolve(null);
+        },
+        { once: true }
+      );
+    } catch {
+      resolve(null);
+    }
+  });
+
+const isRuns = (value: unknown): value is Runs =>
+  typeof value === "object" &&
+  value !== null &&
+  "ends" in value &&
+  value.ends instanceof Uint32Array &&
+  "kinds" in value &&
+  value.kinds instanceof Uint32Array &&
+  "names" in value &&
+  Array.isArray(value.names);
+
+/**
+ * Prism's runs for `code` in `grammar`, from the worker; null when it cannot, and when it takes
+ * too long: the worker is then stopped, and the next block starts another.
+ */
+const readOnce = async (code: string, grammar: string) => {
+  reader ??= startReader();
+  const ready = await reader;
+  if (ready === null) {
+    return null;
+  }
+  // oxlint-disable-next-line promise/avoid-new -- the worker answers by an event, or not in time
+  return await new Promise<Runs | null>((resolve) => {
+    let left = WAIT_TICKS;
+    let late: ReturnType<typeof setTimeout> | undefined;
+    const tick = () => {
+      left -= 1;
+      if (left > 0) {
+        late = setTimeout(tick, READ_TICK);
+        return;
+      }
+      ready.worker.terminate();
+      reader = undefined;
+      resolve(null);
+    };
+    late = setTimeout(tick, READ_TICK);
+    // First that it has started, then the runs.
+    ready.hear = (data) => {
+      if (data === "reading") {
+        left = READ_TICKS;
+        return;
+      }
+      clearTimeout(late);
+      resolve(isRuns(data) ? data : null);
+    };
+    // oxlint-disable-next-line unicorn/require-post-message-target-origin -- a port has no origin to name
+    ready.port.postMessage({ code, grammar });
+  });
+};
+
+const read = async (code: string, grammar: string) => {
+  const before = queue;
+  const mine = (async () => {
+    await before;
+    return await readOnce(code, grammar);
+  })();
+  queue = mine;
+  return await mine;
+};
+
+/** What the worker gave for a block's code: its runs, or null when the code is to stay plain. */
+interface Read {
+  code: string;
+  language: string;
+  runs: Runs | null;
+}
+
+/**
+ * `lines` coloured from the top, over as many frames as it takes at MOST_RUNS each: a long
+ * block takes its colours in a few frames, never in one long one, and the lines not reached yet
+ * are plain. Colours for code that has grown carry on from where they were; for other code they
+ * start again from the top. `colouredFor` is the code the colours are for, null with none.
+ */
+const useFromTheTop = (lines: Line[], colouredFor: string | null): Line[] => {
+  const [reached, setReached] = useState(0);
+  const [was, setWas] = useState(colouredFor);
+  let count = reached;
+  if (was !== colouredFor) {
+    setWas(colouredFor);
+    if (colouredFor === null || !colouredFor.startsWith(was ?? "")) {
+      setReached(0);
+      count = 0;
+    }
+  }
   useEffect(() => {
-    let live = true;
-    const load = async () => {
-      const found = await grammarOrNull(language);
-      if (live) {
-        setLoaded({ language, found });
+    if (colouredFor === null || count >= lines.length) {
+      return nothing;
+    }
+    let next = count;
+    let runs = 0;
+    while (next < lines.length) {
+      const more = lines[next]?.length ?? 0;
+      if (runs > 0 && runs + more > MOST_RUNS) {
+        break;
+      }
+      runs += more;
+      next += 1;
+    }
+    const frame = requestAnimationFrame(() => {
+      setReached(next);
+    });
+    return () => {
+      cancelAnimationFrame(frame);
+    };
+  }, [colouredFor, count, lines]);
+  if (colouredFor === null) {
+    return lines;
+  }
+  return lines.map((line, index) =>
+    index < count || line.length === 0
+      ? line
+      : [{ text: line.map((run) => run.text).join(""), types: [] }]
+  );
+};
+
+/** Prism's grammar for a block's language, by any name people write; none for plain text. */
+const grammarOf = (language: string) =>
+  ownValue(languages, language.toLowerCase())?.grammar;
+
+/** While code is written, how long after one read the next starts, in milliseconds. */
+const WRITING_PAUSE = 200;
+
+/**
+ * `code` read by Prism in the worker, for its first `most` lines: plain until the worker answers,
+ * and kept plain when it cannot. While the code is written, it is read again at most every
+ * WRITING_PAUSE, never per frame; the lines the last read ended keep its colours, and the newest
+ * are plain until the next. Code that took too long while written is read once more when it is
+ * done, whole.
+ */
+const useLinesOf = (
+  code: string,
+  language: string,
+  streaming: boolean,
+  most: number
+): Line[] => {
+  const [last, setLast] = useState<Read | null>(null);
+  const latest = useRef({ code, language });
+  const reading = useRef(false);
+  const gone = useRef(false);
+  useEffect(() => {
+    latest.current = { code, language };
+    if (
+      grammarOf(language) === undefined ||
+      code === "" ||
+      reading.current ||
+      (last?.code === code && last.language === language) ||
+      (streaming && last?.language === language && last.runs === null)
+    ) {
+      return;
+    }
+    reading.current = true;
+    const readLatest = async () => {
+      const asked = latest.current;
+      const grammar = grammarOf(asked.language);
+      const runs =
+        gone.current || grammar === undefined
+          ? null
+          : await read(asked.code, grammar);
+      reading.current = false;
+      if (!gone.current) {
+        setLast({ ...asked, runs });
       }
     };
-    void load();
+    setTimeout(
+      () => {
+        void readLatest();
+      },
+      streaming && last !== null ? WRITING_PAUSE : 0
+    );
+  }, [code, language, streaming, last]);
+  useEffect(() => {
+    gone.current = false;
     return () => {
-      live = false;
+      gone.current = true;
     };
-  }, [language]);
-  return loaded?.language === language ? loaded.found : null;
+  }, []);
+  const coloured =
+    last?.runs && last.language === language
+      ? { code: last.code, runs: last.runs }
+      : null;
+  return useFromTheTop(linesOf(code, coloured, most), coloured?.code ?? null);
 };
 
 /**
@@ -626,28 +856,42 @@ const useBlock = (part: string): Block => {
   return block;
 };
 
+/** Lines of runs as elements, each run in its colour. */
+const drawn = (lines: Line[]): ReactNode[] =>
+  lines.map((line) =>
+    line.map((run, at) => {
+      const tone = toneOf(run.types);
+      // A run with no colour is its text alone: a long file draws thousands fewer elements.
+      return tone === null ? (
+        run.text
+      ) : (
+        // A run has no id; its place in the line is its key, and runs never reorder.
+        <span key={at} {...stylex.props(tone)}>
+          {run.text}
+        </span>
+      );
+    })
+  );
+
 /**
  * `code` highlighted in `language`, as lines of coloured runs to give CodeBlockLines: plain until
- * Prism and the language have loaded. While `streaming`, read again at most once a frame, however
- * fast the code comes.
+ * Prism has read it in its worker, and plain for good when that takes too long. While
+ * `streaming`, the code shown is read at most once a frame, and highlighted again at most every
+ * 200 milliseconds.
  */
 export const useHighlightedCode = (
   code: string,
   language: string,
   streaming = false
-): ReactNode[] => {
-  const highlight = useHighlight(language);
-  const shown = useOncePerFrame(code, streaming);
-  // The compiler keeps the lines until the code or the grammar changes.
-  return linesOf(shown, highlight).map((line) =>
-    line.map((run, at) => (
-      // A run has no id; its place in the line is its key, and runs never reorder.
-      <span key={at} {...stylex.props(toneOf(run.types))}>
-        {run.text}
-      </span>
-    ))
+): ReactNode[] =>
+  drawn(
+    useLinesOf(
+      useOncePerFrame(code, streaming),
+      language,
+      streaming,
+      Number.POSITIVE_INFINITY
+    )
   );
-};
 
 /** Code, highlighted, with its title and language over it, a copy button, and Show more when it is long. */
 export const CodeBlock = ({
@@ -726,7 +970,7 @@ export const CodeBlockTitle = ({ children }: CodeBlockTitleProps) => {
   const key = language.toLowerCase();
   const name =
     languageName ??
-    (key === "text" ? words.plainText : ownValue(languageNames, key)) ??
+    (key === "text" ? words.plainText : ownValue(languages, key)?.name) ??
     language;
   return (
     <>
@@ -856,25 +1100,13 @@ const countLines = (code: string) => {
   return count;
 };
 
-/** The first `most` lines of code. */
-const firstLines = (code: string, most: number) => {
-  let at = -1;
-  for (let line = 0; line < most; line += 1) {
-    at = code.indexOf("\n", at + 1);
-    if (at === -1) {
-      return code;
-    }
-  }
-  return code.slice(0, at);
-};
-
 const noWatch = () => nothing;
 const live = () => true;
 const notLive = () => false;
 
 /**
  * The content's lines: how many there are, and those drawn, at most `most`: its code highlighted, a
- * CodeBlockLine each; or the CodeBlockLines given. Only the lines drawn are highlighted and made.
+ * CodeBlockLine each; or the CodeBlockLines given. Only the lines drawn are made.
  */
 const useLines = (
   children: ReactNode,
@@ -885,11 +1117,9 @@ const useLines = (
   const given = typeof children === "string";
   const parts = given ? [] : listOf(children);
   const count = given ? countLines(children) : parts.length;
-  const drawn = most(count);
-  const highlighted = useHighlightedCode(
-    given ? firstLines(children, drawn) : "",
-    language,
-    streaming
+  const shown = useOncePerFrame(given ? children : "", streaming);
+  const highlighted = drawn(
+    useLinesOf(shown, language, streaming, most(count))
   );
   return {
     count,
@@ -898,7 +1128,7 @@ const useLines = (
           // Lines have no id; a line's place is its key.
           <CodeBlockLine key={index}>{line}</CodeBlockLine>
         ))
-      : parts.slice(0, drawn),
+      : parts.slice(0, most(count)),
   };
 };
 
