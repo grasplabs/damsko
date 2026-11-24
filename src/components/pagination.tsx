@@ -484,7 +484,8 @@ export const PaginationLink = ({
       }
     >
       <span aria-hidden="true" {...stylex.props(tapTarget)} />
-      {words}
+      {/* Without words of its own, the page's number, as UI SDK draws it. */}
+      {words ?? page}
     </LinkPrimitive>
   );
 };
