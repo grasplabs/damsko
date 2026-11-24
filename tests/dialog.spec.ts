@@ -422,3 +422,17 @@ test("opened by a prop, a choice made in a Select inside it does not lose where 
   await expect(dialog).toBeHidden();
   await expect(ask).toBeFocused();
 });
+
+test("in its footer a Button that names no size stands as tall as Close beside it", async ({
+  page,
+}) => {
+  await openExample(page, "dialog", "basic");
+  await page.getByRole("button", { name: "Publish report" }).click();
+  const dialog = page.getByRole("dialog", { name: "Publish the report" });
+  const [cancel, publish] = await Promise.all([
+    dialog.getByRole("button", { name: "Cancel" }).boundingBox(),
+    dialog.getByRole("button", { name: "Publish", exact: true }).boundingBox(),
+  ]);
+  expect(cancel?.height).toBe(32);
+  expect(publish?.height).toBe(32);
+});

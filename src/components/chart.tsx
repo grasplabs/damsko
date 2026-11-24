@@ -558,8 +558,9 @@ export const ChartContainer = ({
             </tr>
           </thead>
           <tbody>
-            {data.map((row) => (
-              <tr key={String(row[xKey])}>
+            {data.map((row, index) => (
+              // A row's place is its key: two rows may share their words ("31" in two months).
+              <tr key={index}>
                 <th scope="row">{row[xKey]}</th>
                 {keys.map((key) => (
                   <td key={key}>
@@ -2017,7 +2018,8 @@ export const ChartBarList = ({
       <ol {...stylex.props(listStyles.list)}>
         {rows.map((row, index) => (
           <BarRow
-            key={String(row[nameKey])}
+            // A row's place is its key: two rows may share their name.
+            key={index}
             chart={chart}
             row={row}
             index={index}

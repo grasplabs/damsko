@@ -197,3 +197,32 @@ test("a toggle that is only an icon shows its name under a pointer and on keyboa
   await page.keyboard.press("Shift+Tab");
   await expect(page.getByRole("tooltip")).toHaveText("Bold");
 });
+
+test.describe("on a narrow phone", () => {
+  test.use({ viewport: { width: 320, height: 640 } });
+
+  test("a group wider than its box puts what does not fit on another row, inside the track", async ({
+    page,
+  }) => {
+    await openExample(page, "toggle", "wrap");
+    const group = page.getByRole("group", { name: "Language" });
+    const box = await group.boundingBox();
+    const items = await group.getByRole("button").evaluateAll((all) =>
+      all.map((item) => {
+        const rect = item.getBoundingClientRect();
+        return {
+          left: rect.left,
+          right: rect.right,
+          top: Math.round(rect.top),
+        };
+      })
+    );
+    expect(items).toHaveLength(5);
+    for (const item of items) {
+      expect(item.left).toBeGreaterThanOrEqual(box?.x ?? 0);
+      expect(item.right).toBeLessThanOrEqual((box?.x ?? 0) + (box?.width ?? 0));
+      expect(item.right).toBeLessThanOrEqual(320);
+    }
+    expect(new Set(items.map((item) => item.top)).size).toBeGreaterThan(1);
+  });
+});

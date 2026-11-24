@@ -31,13 +31,14 @@
 import * as stylex from "@stylexjs/stylex";
 import { Button as ButtonPrimitive } from "@ui-sdk/react/button";
 import { mergeProps } from "@ui-sdk/react/primitive";
-import { isValidElement } from "react";
+import { isValidElement, use } from "react";
 import type { ComponentProps, ReactElement, ReactNode } from "react";
 
 import { useAction } from "../hooks/use-action";
 import type { ActionResult, ActionStatus } from "../hooks/use-action";
 import { useI18n } from "../lib/i18n";
 import { CheckIcon, CircleAlertIcon, Icon } from "../lib/icons";
+import { FooterButtonSize } from "../lib/layer";
 import { focusRing, hyphenate } from "../lib/styles";
 import {
   colors,
@@ -66,6 +67,7 @@ export type ButtonVariant =
   | "default"
   | "secondary"
   | "destructive"
+  | "success"
   | "outline"
   | "ghost"
   | "link";
@@ -93,8 +95,8 @@ interface ButtonBase extends Omit<
    * ordinary button anywhere (the lesser one beside it, a standalone action or trigger),
    * `secondary` for a flat one repeated or dense (the same action on every row; never a filter or
    * an on/off control, which is a Toggle), `ghost` for
-   * toolbars, rows and icon buttons, `destructive` for what cannot be undone, `link` for an action
-   * that reads as words.
+   * toolbars, rows and icon buttons, `destructive` for what cannot be undone, `success` for the yes
+   * that approves or confirms (Approve on a request), `link` for an action that reads as words.
    * @default "default"
    */
   variant?: ButtonVariant;
@@ -333,11 +335,12 @@ const styles = stylex.create({
     flexShrink: 1,
     whiteSpace: "nowrap",
   },
-  // Failed, on every variant: calm. The quiet fill, destructive words, a field's edge tinted
-  // destructive, and one small shake. The alert and the words say it too, so it is never colour alone.
+  // Failed, on every variant: calm. The quiet fill (no light over it), destructive words, a field's
+  // edge tinted destructive, and one small shake. The alert and the words say it too, so it is never colour alone.
   failed: {
     color: { default: colors.destructive, [FORCED]: "ButtonText" },
     backgroundColor: colors.control,
+    backgroundImage: "none",
     boxShadow: sizes.errorBorder,
     animationName: {
       default: stylex.keyframes({
@@ -532,6 +535,20 @@ const variantStyles = stylex.create({
     backgroundColor: colors.destructiveFill,
     boxShadow: shadow.bevelDestructive,
   },
+  // The yes that approves or confirms: a pane of the success light, mint deepened towards pine,
+  // wider than the button so it can move: under a pointer it leans a step deeper, pressed it draws
+  // to its deepest. Its fill is under it, for forced colours.
+  success: {
+    color: colors.successFillForeground,
+    backgroundColor: colors.successFill,
+    backgroundImage: { default: colors.successLight, [FORCED]: "none" },
+    backgroundSize: sizes.successLightSize,
+    backgroundPosition: sizes.successLightRest,
+    boxShadow: shadow.bevelSuccess,
+    transitionProperty:
+      "transform, background-color, box-shadow, color, background-position",
+    transitionDuration: `${motionVars.press}, ${duration.hover}, ${duration.hover}, ${duration.hover}, ${motionVars.mark}`,
+  },
   // The ordinary button: the quiet fill, a field's edge and its lift, so it stands as tall as an
   // input beside it.
   outline: {
@@ -616,6 +633,24 @@ const liveStyles = stylex.create({
       },
     },
   },
+  success: {
+    boxShadow: {
+      default: shadow.bevelSuccess,
+      ":hover": { default: null, [HOVER]: shadow.bevelSuccessHover },
+      ":active": {
+        default: shadow.bevelSuccessPress,
+        [HOVER]: shadow.bevelSuccessPress,
+      },
+    },
+    backgroundPosition: {
+      default: sizes.successLightRest,
+      ":hover": { default: null, [HOVER]: sizes.successLightLean },
+      ":active": {
+        default: sizes.successLightPress,
+        [HOVER]: sizes.successLightPress,
+      },
+    },
+  },
   outline: {
     backgroundColor: {
       default: colors.control,
@@ -648,7 +683,7 @@ const liveStyles = stylex.create({
 
 /** The variants drawn on a fill, which carry the sheen. */
 const filled = (variant: ButtonVariant) =>
-  variant === "default" || variant === "destructive";
+  variant === "default" || variant === "destructive" || variant === "success";
 
 /** Whether the element's props say its press failed (`data-status`, from `withStatus`). */
 const hasFailed = (extra: Record<string, unknown>) =>
@@ -1095,9 +1130,15 @@ const usePress = (
   return { status: action.status, press };
 };
 
+/** The size given, else the footer's in a layer's footer (so its actions are level), else default. */
+const useSize = (given: ButtonSize | undefined): ButtonSize => {
+  const footer = use(FooterButtonSize);
+  return given ?? footer ?? "default";
+};
+
 const Pressable = ({
   variant = "default",
-  size = "default",
+  size: givenSize,
   asChild = false,
   agentConfirm,
   disabled = false,
@@ -1115,6 +1156,7 @@ const Pressable = ({
   ...rest
 }: ButtonProps) => {
   const { agentAsks, agentPresses } = useI18n().action;
+  const size = useSize(givenSize);
   const { status, press } = usePress(onClick, held, {
     loading: loadingText,
     success: successText,

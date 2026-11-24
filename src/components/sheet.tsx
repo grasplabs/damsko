@@ -14,7 +14,7 @@
 //       <SheetBody>…</SheetBody>
 //       <SheetFooter>
 //         <SheetClose>Cancel</SheetClose>
-//         <Button size="sm" {...save.props}>Save</Button>
+//         <Button {...save.props}>Save</Button>
 //       </SheetFooter>
 //     </SheetContent>
 //   </Sheet>
@@ -43,7 +43,7 @@ import type { ComponentProps, ReactNode } from "react";
 import { useReturnFocus } from "../hooks/use-return-focus";
 import { useI18n } from "../lib/i18n";
 import { Icon, XIcon } from "../lib/icons";
-import { keepBodyPut, useLayerBody } from "../lib/layer";
+import { FooterButtonSize, keepBodyPut, useLayerBody } from "../lib/layer";
 import { focusRingInset, scrollbarHidden } from "../lib/styles";
 import {
   colors,
@@ -214,7 +214,16 @@ const styles = stylex.create({
     height: `calc(100% - 2 * ${INSET})`,
     marginBlock: INSET,
     marginInline: INSET,
-    borderRadius: radius.xl,
+    // Holding a sidebar (on a narrow window), the page card's plain round corner, as the original's
+    // frame drew its menu.
+    borderRadius: {
+      default: radius.xl,
+      ":has(> [data-slot=sidebar])": radius.md,
+    },
+    cornerShape: {
+      default: radius.shape,
+      ":has(> [data-slot=sidebar])": "round",
+    },
     // It slides in from its side and back out to it (UI SDK marks the first and last frame), in
     // the library's open time; with reduced motion it is there and gone at once.
     translate: {
@@ -453,7 +462,11 @@ export interface SheetFooterProps extends PartProps {
   children: ReactNode;
 }
 
-/** The actions, at the end of the line, at the sheet's foot. On a phone every Button in it takes an equal part of its width. */
+/**
+ * The actions, at the end of the line, at the sheet's foot. A Button in it that names no size is
+ * small, as SheetClose is, so its actions stand one height. On a phone every Button in it takes an
+ * equal part of its width.
+ */
 export const SheetFooter = ({ children, style }: SheetFooterProps) => (
   <div
     data-slot="sheet-footer"
@@ -464,7 +477,7 @@ export const SheetFooter = ({ children, style }: SheetFooterProps) => (
       style
     )}
   >
-    {children}
+    <FooterButtonSize value="sm">{children}</FooterButtonSize>
   </div>
 );
 

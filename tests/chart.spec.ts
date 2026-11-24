@@ -195,3 +195,31 @@ test("a large sparkline is a slider: the arrow keys pick a week and the figure s
   await page.keyboard.press("Home");
   await expect(slider).toHaveAttribute("aria-valuetext", "Week 33 €412,000");
 });
+
+test("two rows that share a name are each a row of the table, in order, as the data changes too", async ({
+  page,
+}) => {
+  await openExample(page, "chart", "same-names");
+  const table = page.getByRole("table", { name: "Orders by day" });
+  await expect(table.getByRole("rowheader")).toHaveText([
+    "Mon",
+    "Tue",
+    "Wed",
+    "Thu",
+    "Fri",
+    "Mon",
+    "Tue",
+    "Wed",
+  ]);
+  await page.getByRole("button", { name: "Start on another day" }).click();
+  await expect(table.getByRole("rowheader")).toHaveText([
+    "Wed",
+    "Thu",
+    "Fri",
+    "Mon",
+    "Tue",
+    "Wed",
+    "Thu",
+    "Fri",
+  ]);
+});

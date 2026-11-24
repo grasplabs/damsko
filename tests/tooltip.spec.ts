@@ -110,3 +110,20 @@ test("a shortcut's keys stand quiet at the end of the tooltip's line, no key cap
     (box?.x ?? 0) + (box?.width ?? 0) - ((key?.x ?? 0) + (key?.width ?? 0))
   ).toBeLessThan(16);
 });
+
+test.describe("an info mark on a touch screen", () => {
+  test.use({ hasTouch: true, viewport: { width: 390, height: 844 } });
+
+  test("a tap opens what it says, and another closes it", async ({ page }) => {
+    await openExample(page, "tooltip", "info");
+    const mark = page.getByRole("button", {
+      name: "More about who can read it",
+    });
+    await mark.tap();
+    await expect(page.getByRole("tooltip")).toHaveText(
+      "Everyone in the workspace who can open the project"
+    );
+    await mark.tap();
+    await expect(page.getByRole("tooltip")).toBeHidden();
+  });
+});

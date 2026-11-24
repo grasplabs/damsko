@@ -15,6 +15,7 @@ for (const theme of ["light", "dark"] as const) {
         "Duplicate",
         "Edit",
         "Delete workspace",
+        "Approve",
         "Read the guide",
       ].map(async (name) => {
         await expect(page.getByRole("button", { name })).toBeVisible();
@@ -37,6 +38,7 @@ for (const theme of ["light", "dark"] as const) {
       "Duplicate",
       "Edit",
       "Delete workspace",
+      "Approve",
       "Read the guide",
     ]) {
       const button = page.getByRole("button", { name });
@@ -583,3 +585,38 @@ test("a button keeps the room its longest words need, failure's too: Export is a
   expect(failure).toBeGreaterThan(0);
   expect(inner).toBeCloseTo(failure, 0);
 });
+
+for (const theme of ["light", "dark"] as const) {
+  test(`success is the original's approve: the success fill under its light, which leans deeper under a pointer, ${theme}`, async ({
+    page,
+  }) => {
+    await openExample(page, "button", "variants", { theme });
+    const approve = page.getByRole("button", { name: "Approve" });
+    const read = async () =>
+      await approve.evaluate((element) => {
+        const probe = document.createElement("span");
+        probe.style.color = "var(--damsko-success-fill)";
+        element.append(probe);
+        const fill = getComputedStyle(probe).color;
+        probe.remove();
+        const style = getComputedStyle(element);
+        return {
+          fill,
+          ground: style.backgroundColor,
+          light: style.backgroundImage,
+          at: style.backgroundPosition,
+        };
+      });
+    const rest = await read();
+    expect(rest.ground).toBe(rest.fill);
+    expect(rest.light).toContain("linear-gradient");
+    expect(rest.at).toBe("0px 0px");
+    await approve.hover();
+    await expect
+      .poll(async () => {
+        const now = await read();
+        return now.at;
+      })
+      .toBe("0px 50%");
+  });
+}

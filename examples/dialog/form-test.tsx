@@ -83,7 +83,6 @@ export default function DialogFormTest() {
         <DialogFooter>
           <DialogClose>Cancel</DialogClose>
           <Button
-            size="sm"
             onClick={rename}
             loadingText="Renaming"
             errorText="Could not rename"

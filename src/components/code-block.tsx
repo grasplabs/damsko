@@ -161,7 +161,8 @@ export interface CodeBlockContentProps {
    */
   startLine?: number;
   /**
-   * Past this many lines it is folded under Show more. `false` never folds.
+   * Past this many lines it is folded under Show more. `false` never folds and draws every line,
+   * however many: for code that must be read whole (what an action will send).
    * @default 18
    */
   maxLines?: number | false;
@@ -838,8 +839,9 @@ const ShowMore = ({
 };
 
 /**
- * At most this many lines are drawn while the block is open (and before the page is live, or with
- * no script): past them, a line says how many more there are. Copy still takes all of the code.
+ * At most this many lines are drawn while a block that folds is open (and before the page is live,
+ * or with no script): past them, a line says how many more there are. Copy still takes all of the
+ * code. A block that never folds (`maxLines={false}`) draws every line.
  */
 const MOST_DRAWN = 2000;
 
@@ -905,8 +907,9 @@ const useLines = (
 /**
  * Whether Show more has opened it, and for a count of lines: whether it folds, where (null when
  * every line shows), how many lines are drawn and how many are not. Folded, once the page is live,
- * only the lines that show are drawn; else at most MOST_DRAWN, and a line says how many more. With
- * no script nothing folds, so until the page is live it draws as an open block does.
+ * only the lines that show are drawn; else at most MOST_DRAWN (every line when it never folds),
+ * and a line says how many more. With no script nothing folds, so until the page is live it draws
+ * as an open block does.
  */
 const useFold = (maxLines: number | false, streaming: boolean) => {
   const [open, setOpen] = useOpen(streaming);
@@ -917,11 +920,13 @@ const useFold = (maxLines: number | false, streaming: boolean) => {
     const folds = limit !== null && count > limit;
     const foldAt = folds && !open ? limit : null;
     const cut = foldAt !== null && isLive;
+    // Never folded, it is read whole: every line is drawn.
+    const most = maxLines === false ? count : MOST_DRAWN;
     return {
       folds,
       foldAt,
-      drawn: cut ? foldAt : MOST_DRAWN,
-      more: cut ? 0 : Math.max(0, count - MOST_DRAWN),
+      drawn: cut ? foldAt : most,
+      more: cut ? 0 : Math.max(0, count - most),
     };
   };
   return { open, setOpen, linesFor };

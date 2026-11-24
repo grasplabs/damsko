@@ -14,7 +14,7 @@
 //       <DialogBody>…</DialogBody>
 //       <DialogFooter>
 //         <DialogClose>Cancel</DialogClose>
-//         <Button size="sm" {...rename.props}>Rename</Button>
+//         <Button {...rename.props}>Rename</Button>
 //       </DialogFooter>
 //     </DialogContent>
 //   </Dialog>
@@ -45,7 +45,12 @@ import type { ComponentProps, ReactNode } from "react";
 import { useReturnFocus } from "../hooks/use-return-focus";
 import { useI18n } from "../lib/i18n";
 import { Icon, XIcon } from "../lib/icons";
-import { layerStyles, useLayerBody, watchPanel } from "../lib/layer";
+import {
+  FooterButtonSize,
+  layerStyles,
+  useLayerBody,
+  watchPanel,
+} from "../lib/layer";
 import { focusRingInset, scrollbarHidden } from "../lib/styles";
 import {
   colors,
@@ -452,14 +457,18 @@ export interface DialogFooterProps extends PartProps {
   children: ReactNode;
 }
 
-/** The actions, at the end of the line. On a phone every Button in it takes an equal part of its width. */
+/**
+ * The actions, at the end of the line. A Button in it that names no size is small, as DialogClose
+ * is, so its actions stand one height. On a phone every Button in it takes an equal part of its
+ * width.
+ */
 export const DialogFooter = ({ children, style }: DialogFooterProps) => (
   // The marker a Button reads to take its share of the line on a phone.
   <div
     data-slot="dialog-footer"
     {...stylex.props(layerFooterMarker, styles.footer, style)}
   >
-    {children}
+    <FooterButtonSize value="sm">{children}</FooterButtonSize>
   </div>
 );
 

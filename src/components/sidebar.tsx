@@ -431,8 +431,7 @@ const styles = stylex.create({
     paddingBlockEnd: space["1"],
     paddingInline: size.sidebarRowInline,
     borderWidth: 0,
-    borderRadius: radius.lg,
-    cornerShape: radius.shape,
+    borderRadius: radius.sidebarRowRadius,
     backgroundColor: "transparent",
     // Drawn as a button or a link (`asChild`), it answers the pointer as a row's words do.
     color: {
@@ -563,8 +562,7 @@ const styles = stylex.create({
     borderWidth: { default: 0, [FORCED]: size.hairline },
     borderStyle: "solid",
     borderColor: "transparent",
-    borderRadius: radius.lg,
-    cornerShape: radius.shape,
+    borderRadius: radius.sidebarRowRadius,
     overflow: "hidden",
     color: {
       default: colors.sidebarSecondaryForeground,
@@ -620,7 +618,7 @@ const styles = stylex.create({
   },
   // A large row (a person, a workspace), in the words read first; it folds to its picture alone.
   lg: {
-    borderRadius: radius.lg,
+    borderRadius: radius.sidebarRowRadiusLg,
     color: colors.sidebarForeground,
     height: {
       default: size.sidebarMenuButtonHeightLg,

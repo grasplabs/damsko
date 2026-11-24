@@ -42,7 +42,7 @@ export default function DialogCheckFailed() {
         </DialogHeader>
         <DialogFooter>
           <DialogClose>Cancel</DialogClose>
-          <Button size="sm" onClick={test} loadingText="Testing">
+          <Button onClick={test} loadingText="Testing">
             Test
           </Button>
         </DialogFooter>

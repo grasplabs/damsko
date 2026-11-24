@@ -1617,3 +1617,55 @@ test("on a phone's row the server's HTML already folds the model chip's level to
   await wake();
   await expect(chip.getByText("Medium")).toBeHidden();
 });
+
+test("a plain banner stands as the original's strip: its mark 8px in, its words 8px after, 64px tall, and never said as it appears", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await openExample(page, "prompt-input", "banner");
+  const box = page.getByRole("form", { name: "Message, about a file" });
+  const banner = box.locator("[data-slot=prompt-input-banner]");
+  const look = await banner.evaluate((element) => {
+    const strip = element.getBoundingClientRect();
+    const mark = element.querySelector("svg")?.getBoundingClientRect();
+    const words = [...element.querySelectorAll("span")]
+      .find(
+        (span) =>
+          span.childElementCount === 0 &&
+          span.textContent === "Asking about Quarterly plan.pdf"
+      )
+      ?.getBoundingClientRect();
+    return {
+      height: strip.height,
+      markIn: (mark?.left ?? 0) - strip.left,
+      wordsAfter: (words?.left ?? 0) - (mark?.right ?? 0),
+    };
+  });
+  expect(look.height).toBe(64);
+  expect(look.markIn).toBe(8);
+  expect(look.wordsAfter).toBe(8);
+  await expect(box.getByRole("status")).toHaveCount(0);
+  await expect(box.getByRole("alert")).toHaveCount(0);
+  await expect(banner.locator("[aria-live]")).toHaveCount(0);
+});
+
+test("in one row the tools at the end stand a space-2 apart, as the original's", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await openExample(page, "prompt-input", "compact");
+  const chip = page.getByRole("button", { name: /^Model/u });
+  const mic = page.getByRole("button", { name: "Dictate" });
+  const send = page.getByRole("button", { name: "Send" });
+  const [chipBox, micBox, sendBox] = await Promise.all([
+    chip.boundingBox(),
+    mic.boundingBox(),
+    send.boundingBox(),
+  ]);
+  expect(
+    Math.round((micBox?.x ?? 0) - (chipBox?.x ?? 0) - (chipBox?.width ?? 0))
+  ).toBe(8);
+  expect(
+    Math.round((sendBox?.x ?? 0) - (micBox?.x ?? 0) - (micBox?.width ?? 0))
+  ).toBe(8);
+});

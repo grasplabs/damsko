@@ -12,6 +12,8 @@ description: Where a person writes to an assistant, with mentions as real tokens
 
 Enter sends and Shift+Enter starts a line; Enter while an input method composes, or while a menu is open, does neither. Once sent, `status` follows the answer: Submit turns into Stop while it streams, and `onStop` ends it.
 
+The footer's tools stand at its start, a space-1 apart. Those that belong by Submit (the speech button, a model) go in a second `PromptInputTools` with `align="end"`, Submit last among them: at the footer's end, a space-2 apart, and in a one-row prompt input in its end column.
+
 <Stage path="prompt-input/basic" label="Writing and sending" />
 
 ## Send and Stop
@@ -101,7 +103,7 @@ Return a Promise from `onSubmit` that settles when the message is taken, and the
 
 ## A banner above the card
 
-`PromptInputBanner` is a notice that belongs to the prompt input, tucked under the card's top: a quiet strip with an [Alert](/components/alert) in it, a mark, one short line, one `action` at its end (under the words on a narrow card) and, with `onClose`, a close button, which gives the focus to the text. It is said as an Alert is: a `warning` or `destructive` one at once as it appears, a `default` one where it stands. The strip is the same for every `variant`: the mark takes the colour. Use it for what stops or limits writing here: a limit reached, something to connect first, a microphone that is blocked.
+`PromptInputBanner` is a notice that belongs to the prompt input, tucked under the card's top: a quiet strip with an [Alert](/components/alert) in it, a mark, one short line, one `action` at its end (under the words on a narrow card) and, with `onClose`, a close button, which gives the focus to the text. A `warning` or `destructive` one is said at once as it appears, as an alert; a `default` one is a plain note (what the prompt is about, a file it asks about) and no live region: it is read where it stands and never said as the page opens. The mark stands where the card's words start, its words a space-2 after it; with no action, the strip is as tall as its line. The strip is the same for every `variant`: the mark takes the colour. Use it for what stops or limits writing here: a limit reached, something to connect first, a microphone that is blocked.
 
 The banner, the queue and the note stand outside the card, so the PromptInput looks for them among its own children: write them straight in it (a Fragment or a list is fine), not inside a component of your own, where they are not drawn and a development build says so on the console.
 
@@ -351,7 +353,7 @@ const answer: Record<ChatStatus, MessageStatus> = {
     {
       key: "Banner",
       value:
-        "An Alert: `alert` when it warns or stops work, `status` otherwise; closed, focus goes to the text",
+        "An Alert: `alert` when it warns or stops work; a plain note is no live region; closed, focus goes to the text",
     },
     {
       key: "Queue",

@@ -521,6 +521,10 @@ const heldStyles = stylex.create({
   destructive: {
     backgroundColor: { default: null, [HELD]: colors.destructiveFill },
   },
+  success: {
+    backgroundColor: { default: null, [HELD]: colors.successFill },
+    backgroundPosition: { default: null, [HELD]: sizes.successLightRest },
+  },
   bare: { backgroundColor: { default: null, [HELD]: "transparent" } },
 });
 
@@ -557,6 +561,15 @@ const fillStyles = stylex.create({
     "::before": {
       backgroundImage: {
         default: flat(colors.destructiveHold),
+        [FORCED]: flat("Highlight"),
+      },
+    },
+  },
+  // The light at its deepest, as a press draws it.
+  success: {
+    "::before": {
+      backgroundImage: {
+        default: flat(`oklch(from ${colors.successFill} calc(l - 0.06) c h)`),
         [FORCED]: flat("Highlight"),
       },
     },
