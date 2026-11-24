@@ -213,9 +213,9 @@ describe("repair, where remend's own tests found it wanting", () => {
 
   test("a bracket or a note still being written waits", () => {
     expect(repair("[link1 and [link2").text).toBe("");
-    expect(repair("on the rota [the wiki][ro").text).toBe(
-      "on the rota [the wiki]"
-    );
+    // A reference's words wait with its label, which may make them a link.
+    expect(repair("on the rota [the wiki][ro").text).toBe("on the rota ");
+    expect(repair("see ![the plan][pl").text).toBe("see ");
     expect(repair("as the note says[^ol").text).toBe("as the note says");
   });
 
@@ -1720,6 +1720,12 @@ describe("what an answer refers to", () => {
   });
 });
 
+/** A tree as JSON, without the places of its nodes. */
+const placeless = (nodes: unknown) =>
+  JSON.stringify(nodes, (key, value: unknown) =>
+    key === "position" ? undefined : value
+  );
+
 describe(readBlocks, () => {
   test("the finished blocks are kept, and only the last is read again", () => {
     const first = readBlocks("One.\n\nTwo", NOTHING);
@@ -1738,6 +1744,32 @@ describe(readBlocks, () => {
     const { kept } = readBlocks("One.\n\nTwo", NOTHING);
     expect(readBlocks("Else.", kept).kept).toBe(NOTHING);
   });
+
+  // Past the budget of lines, a reload draws the first 1,414 as what they are and the rest as plain
+  // lines; streamed, each block was read by itself and kept, and the kept ones stood at the end.
+  test.each([
+    ["headings", "# a\n".repeat(1500)],
+    ["rules", "---\n".repeat(1500)],
+    ["setext headings", "a\n=\n".repeat(1500)],
+    ["fences", "```\na\n```\n".repeat(1500)],
+    ["a list", "- a\n".repeat(1500)],
+  ])(
+    "%s, streamed, end as they are drawn when the page is opened again",
+    (_, source) => {
+      let kept = NOTHING;
+      for (let end = 61; end < source.length; end += 61) {
+        ({ kept } = readBlocks(
+          repair(bounded(source.slice(0, end))).text,
+          kept
+        ));
+      }
+      const shown = tidy(bounded(source));
+      expect(
+        placeless(readBlocks(shown, kept, false).blocks.map(({ node }) => node))
+      ).toBe(placeless(parseMarkdown(shown).children));
+    },
+    SLOW_TEST
+  );
 });
 
 const blocksOf = (source: string) =>

@@ -529,10 +529,6 @@ const definitionsIn = (source: string): [string, number][] => {
   return found;
 };
 
-/** Whether a line of `source` looks to define a link's target or a note: `[name]: …`, `[^1]: …`. */
-const definesAny = (source: string): boolean =>
-  definitionsIn(source).length > 0;
-
 /** What an answer defines: each name as the parser compares it, as it is written, and where it is defined. */
 type Defined = Map<string, { written: string; at: number }>;
 
@@ -1071,27 +1067,23 @@ const keptWith = (
 /**
  * The blocks of `shown`, given what was kept from reading less of it, and what to keep now. `kept`
  * comes back as it was given when nothing more is finished. Once the answer is written (not
- * `live`), the kept blocks stand and only the last is read again, unless it defines a link or a
- * note, or refers to a note (read as one while written, defined or not): then it is read whole,
- * once, as it is when the page is opened again.
+ * `live`), it is read whole, as it is when the page is opened again: the same budgets spent in the
+ * same places, the same notes and references.
  */
 export const readBlocks = (
   shown: string,
   kept: Kept,
   live = true
 ): { blocks: Placed[]; kept: Kept } => {
-  // Other words than those kept (a new answer in the same place): start again.
-  const held = shown.startsWith(kept.text) ? kept : NOTHING;
-  if (
-    !live &&
-    (held === NOTHING || definesAny(shown) || shown.includes("[^"))
-  ) {
+  if (!live) {
     const blocks = parseMarkdown(shown).children.map((node) => ({
       node,
       base: 0,
     }));
-    return { blocks, kept: NOTHING };
+    return { blocks, kept };
   }
+  // Other words than those kept (a new answer in the same place): start again.
+  const held = shown.startsWith(kept.text) ? kept : NOTHING;
   const base = held.text.length;
   const tail = shown.slice(base);
   const budget: Budget = {
@@ -1102,11 +1094,9 @@ export const readBlocks = (
     names: FREE_MARKS,
   };
   const defined = held.defined ?? new Map();
-  const read = guarded(
-    tail,
-    budget,
-    live ? withNotes(tail, defined) : defined
-  ).children.map((node) => ({ node, base }));
+  const read = guarded(tail, budget, withNotes(tail, defined)).children.map(
+    (node) => ({ node, base })
+  );
   const blocks = [...held.blocks, ...read];
   const cut = read.at(-1)?.node.position?.start.offset;
   const spent = budget.spent + base;

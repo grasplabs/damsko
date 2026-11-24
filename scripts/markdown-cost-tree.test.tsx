@@ -17,9 +17,31 @@ import {
   readBlocks,
 } from "../src/components/markdown/parse.ts";
 import { repair } from "../src/components/markdown/repair.ts";
-import { GATE_TEST, weighAll } from "./markdown-cost.ts";
+import {
+  DRAWN_CEILING,
+  GATE_TEST,
+  weighAll,
+  weighed,
+} from "./markdown-cost.ts";
+import type { Entry, Family } from "./markdown-cost.ts";
+
+/** An entry that draws DRAWN_CEILING characters and one more for each it reads, as quickly as a string is repeated: no time cap is near. */
+const over: Entry = (text) => () =>
+  "x".repeat(text.length * (DRAWN_CEILING + 1));
 
 describe("what an answer costs", () => {
+  test("an answer drawn larger than DRAWN_CEILING characters a character fails the gate, however fast", () => {
+    const plain: Family = {
+      name: "plain words",
+      kind: "single",
+      blocks: false,
+      make: (length) => "a".repeat(length),
+    };
+    expect(weighed(plain, over, 4000)).toBe(
+      `${16_000 * (DRAWN_CEILING + 1)} characters drawn at 16 KB`
+    );
+  });
+
   test(
     "drawn while written: every mark and structure in step with its length",
     () => {

@@ -5,10 +5,10 @@
 //
 //   - growth: at four times the size, under eight times the time on the processor (in step is
 //     four, the square sixteen), the best of up to five runs;
-//   - what is drawn: at the larger size, under 200 characters of HTML for each it reads (an
-//     answer draws under 100), so a rule whose output grows faster than what it reads fails long
-//     before it grows (a table's head as wide as its rows are many drew 7,000 a character at
-//     3.5 KB). Its growth from size to size is no measure: past a budget a block is drawn as
+//   - what is drawn: at the larger size, under 120 characters of HTML for each it reads (an
+//     answer draws under 25, the most a family here draws is about 105), so a rule whose output
+//     grows faster than what it reads fails long before it grows (a table's head as wide as its
+//     rows are many drew 7,000 a character at 3.5 KB). Its growth from size to size is no measure: past a budget a block is drawn as
 //     plain lines, a few times as many characters as before, in step all the same;
 //   - a hard cap at 2 KB, which a path that grows exponentially passes by long before it grows;
 //   - a ceiling per character at the larger size, which a path that is in step but costly for
@@ -370,7 +370,7 @@ const HARD_CAP = 200;
  */
 const CEILING = 0.1;
 /** What one call may draw for each character at the larger size, in characters of HTML. */
-const DRAWN_CEILING = 200;
+export const DRAWN_CEILING = 120;
 
 /** What is run: given an answer, a call that weighs one entry point on it, and gives what it draws, if any. */
 export type Entry = (text: string) => () => unknown;

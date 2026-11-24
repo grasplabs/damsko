@@ -19,6 +19,13 @@ describe("the patterns gate", () => {
     expect(unsafe(source, flags)).not.toBeNull();
   });
 
+  test("fails a pattern it cannot decide in time, though it is safe", () => {
+    expect(unsafe("^(?:ab|cd)+x$", "u")).toBeNull();
+    expect(unsafe("^(?:ab|cd)+x$", "u", 0)).toBe(
+      "cannot be proven safe (timeout)"
+    );
+  });
+
   test("passes every pattern in src/components/markdown", () => {
     expect(
       problemsIn(

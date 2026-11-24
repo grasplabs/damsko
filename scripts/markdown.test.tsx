@@ -64,6 +64,15 @@ const JS = ["java", "script"].join("");
 const textOf = (html: string) =>
   html.replaceAll(/<[^>]+>/gu, "").replaceAll("&quot;", '"');
 
+/** Whether every character of `shown` stands in `later`, in order: nothing shown was taken away. */
+const isWithin = (shown: string, later: string) => {
+  let at = 0;
+  for (const char of later) {
+    at += Number(char === shown[at]);
+  }
+  return at >= shown.length;
+};
+
 /** The level of every heading drawn, in order. */
 const levels = (html: string) =>
   [...html.matchAll(/<h(?<level>\d)\b/gu)].map((match) =>
@@ -747,6 +756,110 @@ describe("components", () => {
           "https://next-line.example.com/d",
         ])
       );
+    },
+    SLOW_TEST
+  );
+
+  // Every kind of link, with a backslash, an entity, a control character or a space at every place
+  // of its address and of its title, a character at a time. A form the stream has not finished may
+  // read as another (a backslash before the `>` that would close it, a space that ends an address):
+  // whatever it reads as, no part is handed an address the finished answer does not have, and what
+  // was shown stays.
+  test(
+    "while written, every address handed on is one the finished answer has, and what was shown stays",
+    () => {
+      const forms: ((address: string, title: string) => string)[] = [
+        (address) => `See [t](${address}) now.`,
+        (address, title) => `See [t](${address} "${title}") now.`,
+        (address) => `See [t](<${address}>) now.`,
+        (address, title) => `See [t](<${address}> '${title}') now.`,
+        (address, title) => `See ![p](${address} (${title})) now.`,
+        (address) => `See ![p](<${address}>) now.`,
+        (address) => `See <${address}> now.`,
+        (address) => `See ${address} now.`,
+        (address, title) => `[r]: ${address} "${title}"\n\nSee [t][r] now.`,
+        (address, title) => `[r]: <${address}> '${title}'\n\nSee ![p][r] now.`,
+      ];
+      const address = "https://e.io/ab";
+      const title = "Ti";
+      // And a backslash before the `>` that would close an address with a space in it.
+      const answers = new Set([
+        String.raw`See [t](<https://exa mple.com/a\>b>) now.`,
+      ]);
+      for (const char of ["\\", "&amp;", "\u0001", " "]) {
+        for (const form of forms) {
+          for (let at = 0; at <= address.length; at += 1) {
+            answers.add(
+              form(address.slice(0, at) + char + address.slice(at), title)
+            );
+          }
+          for (let at = 0; at <= title.length; at += 1) {
+            answers.add(
+              form(address, title.slice(0, at) + char + title.slice(at))
+            );
+          }
+        }
+      }
+      // What each host part is handed, and what Markdown's own link leads to.
+      const seen = (source: string, streaming: boolean) => {
+        const handed = new Set<string>();
+        const hand: MarkdownLinkRenderer = (link) => {
+          handed.add(`${link.type} ${link.href}`);
+        };
+        renderToStaticMarkup(
+          <MarkdownLinkProvider renderLink={hand}>
+            <Markdown
+              streaming={streaming}
+              renderLink={hand}
+              components={{
+                a: ({ href, children }) => {
+                  handed.add(`a ${href}`);
+                  return <i>{children}</i>;
+                },
+                img: ({ src }) => {
+                  handed.add(`img ${src}`);
+                  return null;
+                },
+              }}
+            >
+              {source}
+            </Markdown>
+          </MarkdownLinkProvider>
+        );
+        const own = draw(source, { streaming });
+        return { handed, own, links: anchors(own) };
+      };
+      const found: string[] = [];
+      for (const answer of answers) {
+        const whole = seen(answer, false);
+        let before: { text: string; links: (string | null)[] } = {
+          text: "",
+          links: [],
+        };
+        for (let at = 1; at <= answer.length; at += 1) {
+          const prefix = seen(answer.slice(0, at), true);
+          const text = textOf(prefix.own);
+          const where = JSON.stringify(answer.slice(0, at));
+          for (const handed of prefix.handed) {
+            if (!whole.handed.has(handed)) {
+              found.push(`${where} handed ${handed}`);
+            }
+          }
+          for (const link of prefix.links) {
+            if (!whole.links.includes(link)) {
+              found.push(`${where} leads to ${String(link)}`);
+            }
+          }
+          if (
+            !isWithin(before.text.trimEnd(), text) ||
+            before.links.some((link, index) => prefix.links[index] !== link)
+          ) {
+            found.push(`${where} took back ${before.text}`);
+          }
+          before = { text, links: prefix.links };
+        }
+      }
+      expect(found).toStrictEqual([]);
     },
     SLOW_TEST
   );

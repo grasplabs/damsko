@@ -6,8 +6,10 @@
 // line, list item, heading or fence) is closed: code in a sentence, a link, bold, emphasis, a
 // strike. What is only the start of something waits for what follows: a last line that is so far
 // only a mark, a task's box, a definition, a fence's start or a table's row; a table's head until
-// its row of dashes; a bracket that may yet open a link, a tag, a lone `!`, marks at the very end;
-// a section's opening until its summary is whole; inside a fence, a half-typed closing line.
+// its row of dashes; a bracket that may yet open a link (a reference's words with it), a tag, a
+// lone `!`, a backslash, a character's name, marks at the very end; a section's opening until its
+// summary is whole; inside a fence, a half-typed closing line. And where what may still change
+// starts is said (`complete`), so no address there is handed on (markdown.tsx, handedOf).
 //
 // Only the end is touched: the result is the source up to `kept`, then the marks that close it. So a
 // later prefix only adds to what an earlier one showed, but where a definition arrives: the
@@ -17,10 +19,18 @@
 // reads.
 import { codeLines, containersEnd, fenceRun } from "./parse";
 
-/** The source made whole: `text` is `source.slice(0, kept)` and then the marks that close it. */
+/**
+ * The source made whole: `text` is `source.slice(0, kept)` and then the marks that close it. What
+ * stands before `complete` is as the whole answer will read it; from there on, something is still
+ * open (a link, a bracket, a tag, code) or was closed here, so no address there is proven whole.
+ * `word` is where the word that ends there starts, after a space, a line's end or a `<`: a bare
+ * address in it may still grow.
+ */
 export interface Repaired {
   text: string;
   kept: number;
+  complete: number;
+  word: number;
 }
 
 /** How far back from the end a bracket or a tag still being written is looked for. */
@@ -176,6 +186,10 @@ const endsAddress = (
     ? char === undefined || "<>\n".includes(char)
     : isSpace(char) || (char === ")" && depth === 0);
 
+/** Whether `char` is one a backslash escapes: ASCII punctuation. */
+const isEscapable = (char: string | undefined) =>
+  char !== undefined && char <= "~" && isPunctuation(char);
+
 /**
  * Where a link's address from `from` ends: in angle brackets, at the first `<`, `>` or line's end
  * that no backslash escapes; else at a space or the `)` that closes its parentheses, and how deep
@@ -187,9 +201,18 @@ const addressEnd = (body: string, from: number) => {
   let at = pointy ? from + 1 : from;
   while (!endsAddress(body[at], pointy, depth)) {
     depth += pointy ? 0 : Number(body[at] === "(") - Number(body[at] === ")");
-    at += body[at] === "\\" ? 2 : 1;
+    at += body[at] === "\\" && isEscapable(body[at + 1]) ? 2 : 1;
   }
   return { at, depth };
+};
+
+/** Past the spaces, tabs and line ends in `body` from `at`. */
+const pastSpaces = (body: string, at: number): number => {
+  let end = at;
+  while (end < body.length && isSpace(body[end])) {
+    end += 1;
+  }
+  return end;
 };
 
 /** What closes a title that opens with its mark. */
@@ -206,7 +229,9 @@ const TITLE_ENDS: Partial<Record<string, string>> = {
  * is no link's tail after all (`[a](b c)`), where its address ends, or its title: what was read is
  * not read again, so a run of `](` costs its length.
  */
-const tailAt = (body: string, from: number): number | string => {
+const tailAt = (body: string, after: number): number | string => {
+  // Spaces, and a line's end, may stand before the address.
+  const from = pastSpaces(body, after);
   const found = addressEnd(body, from);
   const { depth } = found;
   let { at } = found;
@@ -222,9 +247,7 @@ const tailAt = (body: string, from: number): number | string => {
     at += 1;
   }
   const address = at;
-  while (at < body.length && isSpace(body[at])) {
-    at += 1;
-  }
+  at = pastSpaces(body, at);
   if (at >= body.length) {
     return ")".repeat(Math.max(0, depth) + 1);
   }
@@ -236,14 +259,14 @@ const tailAt = (body: string, from: number): number | string => {
     return address;
   }
   if (ends !== undefined) {
-    const shut = body.indexOf(ends, at + 1);
+    let shut = body.indexOf(ends, at + 1);
+    while (shut !== -1 && isEscaped(body, shut)) {
+      shut = body.indexOf(ends, shut + 1);
+    }
     if (shut === -1) {
       return `${ends})`;
     }
-    at = shut + 1;
-    while (at < body.length && isSpace(body[at])) {
-      at += 1;
-    }
+    at = pastSpaces(body, shut + 1);
     if (at >= body.length) {
       return ")";
     }
@@ -256,6 +279,11 @@ const tailAt = (body: string, from: number): number | string => {
 interface Open {
   /** The run of backticks code in a sentence is open with, by its length; 0 for none. */
   code: number;
+  /**
+   * Where the first of what is still open starts, or the leaf's length: code, the link, a bracket
+   * nothing closed, a tag not closed on its line. What follows may still change how it reads.
+   */
+  first: number;
   /** Where the link whose tail runs to the end starts (its `[`), or -1; and what closes it. */
   link: number;
   linkClose: string;
@@ -281,6 +309,10 @@ const tagEnd = (body: string, at: number): number => {
   }
   return body[end] === ">" ? end + 1 : at + 1;
 };
+
+/** Whether the `<` at `at`, past which `tagEnd` found no tag, may yet open one, or an address: `<det`, `<https://exa`. */
+const opensTag = (body: string, at: number, end: number) =>
+  end === at + 1 && /[A-Za-z/!?]/u.test(body[end] ?? "");
 
 /**
  * Reads the run of `*`, `_` or `~` at `at` against `marks`, those still open, and returns where it
@@ -331,11 +363,16 @@ const openIn = (body: string): Open => {
   // The brackets still open, innermost last: a `]` closes the innermost.
   const brackets: number[] = [];
   let code = 0;
+  let codeAt = 0;
+  let tag = body.length;
+  const firstOf = (...starts: number[]) =>
+    Math.min(tag, brackets[0] ?? tag, ...starts);
   let at = 0;
   while (at < body.length) {
     const char = body[at] ?? "";
     const run = runAt(body, at);
     if (char === "`") {
+      codeAt = code === 0 ? at : codeAt;
       code = code === 0 || code === run ? run - code : code;
       at += run;
     } else if (char === "\\" || code !== 0) {
@@ -348,16 +385,44 @@ const openIn = (body: string): Open => {
       const tail = body[at + 1] === "(" ? tailAt(body, at + 2) : at + 1;
       if (typeof tail === "string") {
         // A tail with no bracket before it is no link's: its address is words.
-        return bracket === -1
-          ? { code, link: -1, linkClose: "", marks }
-          : { code, link: bracket, linkClose: tail, marks };
+        const link = bracket !== -1;
+        return {
+          code,
+          first: firstOf(link ? bracket : body.length),
+          link: bracket,
+          linkClose: link ? tail : "",
+          marks,
+        };
       }
       at = tail;
+    } else if (char === "<") {
+      const end = tagEnd(body, at);
+      tag = Math.min(tag, opensTag(body, at, end) ? at : tag);
+      at = end;
     } else {
-      at = char === "<" ? tagEnd(body, at) : markRun(marks, body, at, run);
+      at = markRun(marks, body, at, run);
     }
   }
-  return { code, link: -1, linkClose: "", marks };
+  return {
+    code,
+    first: firstOf(code === 0 ? body.length : codeAt),
+    link: -1,
+    linkClose: "",
+    marks,
+  };
+};
+
+/**
+ * `body` as `closers`, what closes what `open` says is open, are put after it: a closing mark closes
+ * only right after a word, so the spaces at its end go; and a backslash then at its very end
+ * (outside code, where it is a character) waits for the character it escapes, as it would escape
+ * the closing mark, or show and then go.
+ */
+const closable = (body: string, open: Open, closers: string): string => {
+  const words = closers === "" ? body : body.trimEnd();
+  return open.code === 0 && isEscaped(words, words.length)
+    ? words.slice(0, -1)
+    : words;
 };
 
 /** What closes what `openIn` found open: code, the link, then the marks, innermost first. */
@@ -388,15 +453,40 @@ const bracketAt = (body: string, from: number): number => {
   return -1;
 };
 
+/** The longest name of a character, as `&` and it stand for one (`&amp;`, `&#x1F600;`). */
+const MAX_ENTITY = 32;
+
+/** Where a character's name still being written at the very end of `body` starts (`&am`), or -1. */
+const entityAt = (body: string): number => {
+  let at = body.length;
+  while (
+    at > body.length - MAX_ENTITY &&
+    /^[\dA-Za-z#]$/u.test(body[at - 1] ?? "")
+  ) {
+    at -= 1;
+  }
+  return body[at - 1] === "&" && !isEscaped(body, at - 1) ? at - 1 : -1;
+};
+
 /**
  * Where something still being written at the very end of `body` starts that waits, or -1: a bracket
- * that may yet open a link (bracketAt), its `!` with it, or a tag or a bare address not yet closed
- * by its `>`. Never inside code in a sentence, nor further back than WINDOW.
+ * that may yet open a link (bracketAt), its `!` with it, a tag or a bare address not yet closed by
+ * its `>`, or a character's name (`&am`, which `;` makes `&`). Never inside code in a sentence, nor
+ * further back than WINDOW.
  */
 const waitingAt = (body: string): number => {
   const from = Math.max(0, body.length - WINDOW, body.lastIndexOf("`") + 1);
   const found: number[] = [];
-  const bracket = bracketAt(body, from);
+  const entity = entityAt(body);
+  if (entity >= from) {
+    found.push(entity);
+  }
+  let bracket = bracketAt(body, from);
+  // A reference's label waits with its words: `[the wiki][wi`.
+  for (let label = bracket; label > from && body[label - 1] === "]";) {
+    label = bracketAt(body.slice(0, label), from);
+    bracket = label === -1 ? bracket : label;
+  }
   if (bracket !== -1) {
     found.push(body[bracket - 1] === "!" ? bracket - 1 : bracket);
   }
@@ -418,7 +508,7 @@ export const repair = (source: string): Repaired => {
   const text = source.slice(0, kept);
   const lines = text.split("\n");
   if (codeLines(lines).open !== "" || isRow(lines.at(-1) ?? "")) {
-    return { text, kept };
+    return { text, kept, complete: kept, word: kept };
   }
   const from = leafFrom(text);
   let body = withoutEndMarks(text.slice(from));
@@ -435,9 +525,14 @@ export const repair = (source: string): Repaired => {
     body = rest;
   }
   const closers = closersOf(open);
-  // A closing mark closes only right after a word, so the space before it goes.
-  const end = from + (closers === "" ? body : body.trimEnd()).length;
-  return { text: text.slice(0, end) + closers, kept: Math.min(kept, end) };
+  const end = from + closable(body, open, closers).length;
+  const own = Math.min(kept, end);
+  const complete = Math.min(own, from + open.first);
+  let word = complete;
+  while (word > from && !isSpace(text[word - 1]) && text[word - 1] !== "<") {
+    word -= 1;
+  }
+  return { text: text.slice(0, end) + closers, kept: own, complete, word };
 };
 
 /**
@@ -469,8 +564,9 @@ export const tidy = (source: string): string => {
     body = cut === -1 ? body : body.slice(0, cut).trimEnd();
   }
   const bare = withoutEndMarks(body);
-  const closers = closersOf(openIn(bare));
+  const left = openIn(bare);
+  const closers = closersOf(left);
   return closers === ""
     ? source.slice(0, from) + body
-    : source.slice(0, from) + bare.trimEnd() + closers;
+    : source.slice(0, from) + closable(bare, left, closers) + closers;
 };

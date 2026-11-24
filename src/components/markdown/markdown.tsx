@@ -10,10 +10,11 @@
 //
 // While it streams, what is half-written is made whole (repair.ts, repair): bold is bold from its
 // first letter, a table is a table from its row of dashes, an open fence is code still being written,
-// a link is its words until its address is whole, then the link in their place, and a note's mark
-// is its number from the start. Nothing shown is taken back, but where a link's definition arrives
-// (its references, shown as written, become the link), and nothing flickers or re-flows when a mark
-// closes. The words come as they are
+// a link is its words until what follows can no longer make it anything else, then the link in
+// their place (handedOf), and a note's mark is its number from the start. Nothing shown is taken
+// back, but where a link's definition arrives (its references, shown as written, become the link)
+// and where an answer ends without a note it refers to (its mark is shown as written), and nothing
+// flickers or re-flows when a mark closes. The words come as they are
 // given: pacing them is the message's job.
 //
 // It knows no router and no citation: the host draws any link it wants to (`renderLink`, or a part
@@ -538,10 +539,12 @@ interface Context {
   provided: MarkdownLinkRenderer | null;
   /** While written: how much of the source is the stream's own (repair closed the rest). */
   kept: number;
-  /** While written: where the stream's own words end, the marks after a bare address apart. */
-  ends: number;
-  /** While written: the bare address the stream ends on, which may still grow. */
-  ending: PhrasingContent | undefined;
+  /**
+   * While written: the links and pictures whose source reaches past what is known complete, and
+   * the bare addresses in the word still being written (repair's `complete` and `word`): what
+   * follows may still make them something else, so none is handed on.
+   */
+  held: ReadonlySet<object>;
   /** Where the block being drawn starts in the source: its nodes' places count from there. */
   base: number;
   footnotes: Map<string, number>;
@@ -586,6 +589,7 @@ interface Walked {
   type: string;
   value?: string;
   children?: readonly Walked[];
+  position?: { start: { offset?: number }; end: { offset?: number } };
 }
 
 /**
@@ -758,8 +762,8 @@ const targetOf = (node: Linked | Pictured, context: Context) => {
 };
 
 /** A bare address the text linked by itself (`<https://…>`, `www.…`, `name@host`). */
-const isAutolink = (node: Linked) => {
-  if (node.type !== "link" || node.children.length !== 1) {
+const isAutolink = (node: Walked & { url?: string }) => {
+  if (node.type !== "link" || node.children?.length !== 1) {
     return false;
   }
   const [only] = node.children;
@@ -771,25 +775,15 @@ const isAutolink = (node: Linked) => {
   );
 };
 
-/** A bare address, no mark round it (`www.…`, `https://…`, `name@host`; `<https://…>` has two). */
-const isBare = (node: Linked | Pictured) => {
-  if (node.type !== "link" || !isAutolink(node)) {
-    return false;
-  }
-  const start = node.position?.start.offset;
-  return (
-    start === undefined || node.children[0]?.position?.start.offset === start
-  );
-};
-
 /**
  * A link's or a picture's address and title, once the stream has proven the address whole, or
  * null: the one place an address is handed on, to the host's `renderLink`, a provider,
  * `components.a` or `components.img`, or Markdown's own Link. Half of one (`https://i`) is another
- * site's, so nothing that loads or leads anywhere is drawn from it. Proven means something the
- * stream gave stands after the address: the link's own closing mark (not one repair added); after a
- * bare address, a character it cannot run on into (the marks it leaves off its end apart); after a
- * reference's definition, its line's end. Once written, every address is whole.
+ * site's, so nothing that loads or leads anywhere is drawn from it. Proven means the node stands
+ * wholly in what is known complete, whatever form it has (`held`: not in what is still open, a
+ * link, a bracket, a tag or code, which what follows may make something else; a bare address not in
+ * the word still being written, which it may run on into), and a reference's definition has its
+ * line's end. Once written, every address is whole.
  */
 const handedOf = (
   node: Linked | Pictured,
@@ -800,18 +794,14 @@ const handedOf = (
   if (!context.streaming || target === null) {
     return target;
   }
-  const end = context.base + (node.position?.end.offset ?? 0);
+  if (context.held.has(node)) {
+    return null;
+  }
   if (node.type === "linkReference" || node.type === "imageReference") {
     const definition = context.definitions.get(node.identifier);
-    return end <= context.kept &&
-      (definition?.end ?? context.kept) < context.kept
-      ? target
-      : null;
+    return (definition?.end ?? context.kept) < context.kept ? target : null;
   }
-  if (isBare(node)) {
-    return node === context.ending ? null : target;
-  }
-  return end <= context.kept ? target : null;
+  return target;
 };
 
 /** What the host draws for a link: the page's own first, then the part around Markdown. */
@@ -1497,28 +1487,48 @@ const Notes = ({
   </ol>
 );
 
-/**
- * The bare address the stream's own words `own` end on, in the block still being written, if they
- * do (handedOf): it may still grow. Found by its words, as the parser places some bare addresses
- * nowhere in the source.
- */
-const endingAddress = (
-  block: RootContent | undefined,
-  own: string
-): PhrasingContent | undefined => {
-  const bare: Linked[] = [];
-  eachNode(block === undefined ? [] : [block], (node) => {
-    if (node.type === "link" && isBare(node)) {
-      bare.push(node);
-    }
-  });
-  const last = bare.at(-1);
-  const [words] = last?.children ?? [];
-  return words?.type === "text" && own.endsWith(words.value) ? last : undefined;
+/** A bare address, no mark round it (`www.…`, `https://…`, `name@host`; `<https://…>` has two). */
+const isBare = (node: Walked & { url?: string }) => {
+  const [words] = node.children ?? [];
+  const start = node.position?.start.offset;
+  return (
+    isAutolink(node) &&
+    (start === undefined || words?.position?.start.offset === start)
+  );
 };
 
-/** What GitHub leaves off the end of a bare address, as words after it (`see https://example.com.`). */
-const AFTER_ADDRESS = new Set("!\"'),.:;?_*~");
+/** The nodes that hold an address. */
+const ADDRESSED = new Set(["link", "linkReference", "image", "imageReference"]);
+
+/**
+ * The links and pictures of `placed`, the block still being written, whose source reaches past
+ * `complete`, and the bare addresses that reach past `word` (handedOf). A node the parser placed
+ * nowhere (a bare address found in words after the parse) ends at most where the node after it
+ * starts, less the words of those after it that have no place either, as no word is longer than
+ * its source. Walked with a stack of its own, and only into nodes that reach that far.
+ */
+const heldIn = (placed: Placed | undefined, complete: number, word: number) => {
+  const held = new Set<object>();
+  const stack: { node: Walked & { url?: string }; end: number }[] =
+    placed === undefined
+      ? []
+      : [{ node: placed.node, end: placed.node.position?.end.offset ?? 0 }];
+  for (let top = stack.pop(); top !== undefined; top = stack.pop()) {
+    const { node, end } = top;
+    const reach = (placed?.base ?? 0) + end;
+    if (reach > word) {
+      if (ADDRESSED.has(node.type) && (reach > complete || isBare(node))) {
+        held.add(node);
+      }
+      let next = end;
+      for (const child of (node.children ?? []).toReversed()) {
+        stack.push({ node: child, end: child.position?.end.offset ?? next });
+        next = child.position?.start.offset ?? next - spokenOf(child).length;
+      }
+    }
+  }
+  return held;
+};
 
 /**
  * What to draw of an answer: while it is written, made whole; once written, tidied if it may have
@@ -1534,19 +1544,16 @@ const useAnswer = (source: string, streaming: boolean, truncated: boolean) => {
     return {
       shown: tidied ? tidy(source) : source,
       kept: Number.POSITIVE_INFINITY,
-      ends: Number.POSITIVE_INFINITY,
+      complete: Number.POSITIVE_INFINITY,
+      word: Number.POSITIVE_INFINITY,
       written: streamed,
       tidied,
     };
   }
-  // `kept`: how much of it is the stream's own; past it, repair closed what was still open.
-  const { text, kept } = repair(source);
-  // `ends`: where the stream's own words end, but for the marks a bare address leaves off its end.
-  let ends = kept;
-  while (ends > 0 && AFTER_ADDRESS.has(text[ends - 1] ?? "")) {
-    ends -= 1;
-  }
-  return { shown: text, kept, ends, written: true, tidied: true };
+  // `kept`: how much of it is the stream's own; past it, repair closed what was still open. Before
+  // `complete`, it reads as the whole answer will; from `word`, a bare address may still grow.
+  const { text, ...made } = repair(source);
+  return { shown: text, ...made, written: true, tidied: true };
 };
 
 /**
@@ -1689,6 +1696,8 @@ const GroupedBlock = ({
   );
 };
 
+const NO_NODES: ReadonlySet<object> = new Set();
+
 /** No elements of the caller's: every one is Markdown's own. */
 const NO_COMPONENTS: MarkdownComponents = {};
 
@@ -1708,7 +1717,7 @@ export const Markdown = ({
 }: MarkdownProps) => {
   const words = useI18n().markdown;
   const prefix = useId().replaceAll(":", "");
-  const { shown, kept, ends, written, tidied } = useAnswer(
+  const { shown, kept, complete, word, written, tidied } = useAnswer(
     bounded(source),
     streaming,
     truncated
@@ -1729,10 +1738,7 @@ export const Markdown = ({
     renderLink,
     provided,
     kept,
-    ends,
-    ending: streaming
-      ? endingAddress(lastBlock, shown.slice(0, ends))
-      : undefined,
+    held: streaming ? heldIn(all.at(-1), complete, word) : NO_NODES,
     base: 0,
     footnotes,
     components,

@@ -15,9 +15,16 @@ import nodePath from "node:path";
 import { checkSync } from "recheck";
 import ts from "typescript6";
 
-/** What is wrong with the pattern `/source/flags`, or null when recheck proves it safe. */
-export const unsafe = (source: string, flags: string): string | null => {
-  const found = checkSync(source, flags, { checker: "automaton" });
+/**
+ * What is wrong with the pattern `/source/flags`, or null when recheck proves it safe within
+ * `timeout` milliseconds (its own default): one it cannot decide in that time fails too.
+ */
+export const unsafe = (
+  source: string,
+  flags: string,
+  timeout = 10_000
+): string | null => {
+  const found = checkSync(source, flags, { checker: "automaton", timeout });
   if (found.status === "safe") {
     return null;
   }
