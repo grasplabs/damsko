@@ -1435,12 +1435,6 @@ export const groups: TokenGroup[] = [
             value: "250ms",
             use: "The margin past a panel's leave time before whatever still runs in it is cancelled, so a close always ends.",
           },
-          {
-            name: "duration-double-press",
-            category: "duration",
-            value: "300ms",
-            use: "How far apart a double press's two presses come: after a press on a shade closed its layer, a press this soon is the shade's too, though the layer has gone.",
-          },
         ],
       },
     ],
