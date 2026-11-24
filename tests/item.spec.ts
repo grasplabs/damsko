@@ -88,6 +88,8 @@ for (const [at, [role, name, reason]] of (
     const row = page.getByRole(role, { name });
     await expect(row).toHaveAttribute("aria-disabled", "true");
     await expect(row).toHaveAccessibleDescription(reason);
+    // A link, a router's too, has no address to open in a new tab.
+    await expect(row).not.toHaveAttribute("href");
     // Reached by Tab, in its place (WebKit on a Mac moves Tab only between fields unless Option is
     // held).
     for (let stop = 0; stop <= at; stop += 1) {

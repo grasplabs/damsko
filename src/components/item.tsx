@@ -692,8 +692,6 @@ const refuse = (event: { preventDefault: () => void }) => {
 /**
  * A row out of use, whatever its press: said unavailable and still a stop for Tab, so its name and
  * its reason can be read; a click, a middle click, Enter or Space does nothing and goes nowhere.
- * Merged last onto the caller's element (a router's link, whose own address stays), so its press
- * is stopped before the element's own handler runs.
  */
 const outOfUse = {
   "aria-disabled": true,
@@ -794,20 +792,20 @@ const TitleWords = ({ children }: { children: ReactNode }): ReactNode => {
     ...stylex.props(styles.press, dense && styles.pressXs),
   };
   // The caller's element (a router's link) carries the title alone; the row holds its other parts.
-  if (element !== undefined) {
+  if (element !== undefined && !disabled) {
     return createElement(
       element.type,
       mergeProps(
         { ...own, "aria-current": active ? "page" : undefined },
-        element.props,
-        disabled ? outOfUse : {}
+        element.props
       ),
       children
     );
   }
-  if (href !== undefined) {
-    // Out of use it has no address, so nothing (a middle click, the menu's "Open in new tab") can
-    // follow it: still a link, and a stop for Tab.
+  if (href !== undefined || element !== undefined) {
+    // Out of use a link has no address, so nothing (a middle click, the menu's "Open in new tab")
+    // can follow it: still a link, and a stop for Tab. A router's link is then this plain one, as
+    // its own element would draw its address whatever it is given.
     return (
       <a
         href={disabled ? undefined : href}
