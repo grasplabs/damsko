@@ -56,7 +56,7 @@ export const targetOf = (path: string) =>
  * stay under Damsko's licence wherever they are installed. No file gets a header for it.
  */
 export const license =
-  "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates and its contractors working for Grasp may use them.";
+  "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them.";
 /** The fonts are not Damsko's: their own licence travels with them. */
 const fontLicense =
   "SIL Open Font License 1.1 (src/styles/fonts/OFL.txt, installed with the files): Geist, Geist Mono and Geist Serif, copyright The Geist Project Authors. The stylesheet is under Damsko's LICENSE.";

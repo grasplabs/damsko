@@ -1,4 +1,8 @@
-// The two scripts that must run before a paint, written inline into the page by the layout
+import { sidebarStateScript } from "@grasp-os/ui/components/sidebar";
+
+import { navOpenKey } from "./name";
+
+// The scripts that must run before a paint, written inline into the page by the layout
 // (site/layouts/Docs.astro). Each runs once per real page load; Astro's router keeps an inline script
 // it has already run, so what must hold after every page change listens for the router's events.
 
@@ -106,7 +110,7 @@ export const scrollInit = `(() => {
  * every page change, so it would start at the top: its place is saved before the swap and put back
  * after it. On a first load, or when the current page's link is out of sight, the link is brought
  * to the middle. Runs right after the sidebar's markup, before it paints, and again once the shell
- * wakes (site:nav-woke, from DocsShell) while the runs a reader kept open open and push the link.
+ * wakes (site:nav-woke, from DocsShell).
  */
 export const sidebarScroll = `(() => {
   const box = () => document.querySelector("[data-site-nav]");
@@ -126,7 +130,7 @@ export const sidebarScroll = `(() => {
     if (sidebar && saved >= 0) sidebar.scrollTop = saved;
     centre();
   });
-  // Awake, the kept runs open (and grow to their height), so the link is followed for a moment.
+  // Awake, the link is followed for a moment, while the runs settle.
   document.addEventListener("site:nav-woke", () => {
     const sidebar = box();
     if (!sidebar) return;
@@ -185,4 +189,21 @@ export const groundInit = `(() => {
     const next = read();
     if (next !== "soft") setAll(event.newDocument, next);
   });
+})();`;
+
+/**
+ * The docs' sidebar as the reader left it, before it paints: folded or open, and each run's fold
+ * (the sidebar's own head script), with the run holding the page kept open first, whatever was kept
+ * for it (<html data-site-run>, from the layout). Astro's router swaps in the next page's sidebar
+ * as the server drew it, so this runs again right after each swap, before the router shows the new
+ * page and before the sidebar's scroll is put back: no frame shows a kept run folded.
+ */
+export const sidebarInit = `(() => {
+  const draw = () => {
+    const run = document.documentElement.dataset.siteRun;
+    if (run) { try { localStorage.setItem(${JSON.stringify(`${navOpenKey}:`)} + run, "true"); } catch {} }
+    ${sidebarStateScript(navOpenKey)}
+  };
+  draw();
+  document.addEventListener("astro:after-swap", draw);
 })();`;
