@@ -802,14 +802,19 @@ const useLinesOf = (
   const latest = useRef({ code, language });
   // Takes back the read asked for, while one is.
   const asking = useRef<(() => void) | null>(null);
+  // The last answer, as it is heard: an effect of a render from before it must not ask again.
+  const heard = useRef<{ code: string; language: string; plain: boolean }>(
+    null
+  );
   useEffect(() => {
     latest.current = { code, language };
+    const was = heard.current;
     if (
       grammarOf(language) === undefined ||
       code === "" ||
       asking.current !== null ||
-      (last?.code === code && last.language === language) ||
-      (streaming && last?.language === language && last.coloured === null)
+      (was?.code === code && was.language === language) ||
+      (streaming && was?.language === language && was.plain)
     ) {
       return;
     }
@@ -820,6 +825,11 @@ const useLinesOf = (
           place: place.current,
           now: () => latest.current,
           answer: (read, readLanguage, runs) => {
+            heard.current = {
+              code: read,
+              language: readLanguage,
+              plain: runs === null,
+            };
             asking.current = null;
             setLast((before) => ({
               code: read,
@@ -832,6 +842,7 @@ const useLinesOf = (
           },
         });
       },
+      // Each answer comes with a render: from then on, while it is written, after a pause.
       streaming && last !== null ? WRITING_PAUSE : 0
     );
     asking.current = () => {
