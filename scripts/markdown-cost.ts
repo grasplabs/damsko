@@ -422,25 +422,33 @@ export const weighed = (
   return `${fast.toFixed(1)} ms at ${small / 1000} KB, ${slow.toFixed(1)} ms at ${large / 1000} KB`;
 };
 
-/** Every family `which` takes weighed through each of `entries` from `small`: what is wrong, one line each. */
+/**
+ * Every family `which` takes weighed through each of `entries` from `small`: what is wrong, one line
+ * each. One found wrong is weighed again once the rest are, and is wrong only if it is again: a path
+ * that grows faster is so every time, and a shared machine's burst of other work, which once slowed
+ * all five runs of one family at 16 KB on CI (8.5 times its 4 KB; four times as a rule), is over by
+ * then.
+ */
 export const weighAll = (
   entries: Record<string, Entry>,
   which: (family: Family) => boolean,
   small: number
 ): string[] => {
-  const found: string[] = [];
+  const wrong: [Family, string, Entry][] = [];
   for (const family of families) {
     if (!which(family)) {
       continue;
     }
     for (const [name, entry] of Object.entries(entries)) {
-      const wrong = weighed(family, entry, small);
-      if (wrong !== null) {
-        found.push(`${family.name}, ${name}: ${wrong}`);
+      if (weighed(family, entry, small) !== null) {
+        wrong.push([family, name, entry]);
       }
     }
   }
-  return found;
+  return wrong.flatMap(([family, name, entry]) => {
+    const again = weighed(family, entry, small);
+    return again === null ? [] : [`${family.name}, ${name}: ${again}`];
+  });
 };
 
 /** How long a test of the gate may run by the clock: a busy machine makes its minute of processor several. */
