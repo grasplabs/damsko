@@ -800,33 +800,17 @@ describe("components", () => {
           }
         }
       }
-      // What each host part is handed, and what Markdown's own link leads to.
+      // What the host's renderLink is handed, and where Markdown's own link then leads: one render
+      // a prefix. Every host part is handed what one check gives (handedOf), and the test above
+      // asks each of them.
       const seen = (source: string, streaming: boolean) => {
         const handed = new Set<string>();
-        const hand: MarkdownLinkRenderer = (link) => {
-          handed.add(`${link.type} ${link.href}`);
-        };
-        renderToStaticMarkup(
-          <MarkdownLinkProvider renderLink={hand}>
-            <Markdown
-              streaming={streaming}
-              renderLink={hand}
-              components={{
-                a: ({ href, children }) => {
-                  handed.add(`a ${href}`);
-                  return <i>{children}</i>;
-                },
-                img: ({ src }) => {
-                  handed.add(`img ${src}`);
-                  return null;
-                },
-              }}
-            >
-              {source}
-            </Markdown>
-          </MarkdownLinkProvider>
-        );
-        const own = draw(source, { streaming });
+        const own = draw(source, {
+          streaming,
+          renderLink: (link) => {
+            handed.add(`${link.type} ${link.href}`);
+          },
+        });
         return { handed, own, links: anchors(own) };
       };
       const found: string[] = [];
