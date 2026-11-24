@@ -65,7 +65,9 @@ test("its views are tabs: one tab stop, the arrow keys between them, each showin
   await page.keyboard.press("ArrowRight");
   await expect(activity).toBeFocused();
   await expect(activity).toHaveAttribute("aria-selected", "true");
-  await expect(panel.getByRole("tabpanel")).toContainText("This week");
+  await expect(panel.getByRole("tabpanel", { name: "Activity" })).toContainText(
+    "This week"
+  );
   expect(await hasFocusRing(activity)).toBe(true);
 });
 
