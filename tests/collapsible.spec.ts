@@ -159,6 +159,14 @@ test("among a page's words its trigger takes their size and weight, and stays on
   );
   expect(high).toBeLessThan(line * 2);
 
+  // Plain: under the pointer and after a press a line under its words, and never a fill.
+  const rest = await fill(trigger);
+  await expect(trigger).toHaveCSS("text-decoration-line", "none");
+  await trigger.hover();
+  await expect(trigger).toHaveCSS("text-decoration-line", "underline");
+  expect(await fill(trigger)).toBe(rest);
+
   await trigger.click();
+  expect(await fill(trigger)).toBe(rest);
   await expect(page.getByText("Only the written notes are kept")).toBeVisible();
 });

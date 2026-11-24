@@ -19,13 +19,14 @@ const layout = stylex.create({
   fit: { width: "fit-content" },
 });
 
-// A line of the page's own words that opens: the trigger at the size and weight of the paragraph
-// above it, in a box only as wide as its words, in the middle of a centred column.
+// A line of the page's own words that opens: `plain`, so no fill stands among the words, the
+// trigger at the size and weight of the paragraph above it, in a box only as wide as its words, in
+// the middle of a centred column.
 export default function CollapsibleInWords() {
   return (
     <div {...stylex.props(layout.column)}>
       <Text size="lg">Everyone on the team is asked the same questions.</Text>
-      <Collapsible fitContent style={layout.fit}>
+      <Collapsible fitContent variant="plain" style={layout.fit}>
         <CollapsibleTrigger size="lg" weight="normal">
           How your answers are handled
         </CollapsibleTrigger>
