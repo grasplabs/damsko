@@ -877,11 +877,13 @@
       "SourcesContent",
       "Source",
       "SourceIcon",
+      "SourceQuote",
       "SourcesProps",
       "SourcesTriggerProps",
       "SourcesContentProps",
       "SourceProps",
       "SourceIconProps",
+      "SourceQuoteProps",
       "SourceAccess"
     ]
   },
@@ -958,7 +960,8 @@
       "BreadcrumbPageProps",
       "BreadcrumbSeparatorProps",
       "BreadcrumbEllipsisProps"
-    ]
+    ],
+    "src/components/breadcrumb.stylex.ts": ["breadcrumbVars"]
   },
   "checkbox": {
     "src/components/checkbox.tsx": [

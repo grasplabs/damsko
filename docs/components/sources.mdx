@@ -18,6 +18,8 @@ Built on [Trace](/components/trace): the trigger is a TraceLine whose title is a
 
 `onOpen` tells the page a source was opened. A source with an `href` stays a link and goes there too; one without is a button that only runs `onOpen`. An address comes from a model or a tool, so it is checked as a link in Markdown is: http, https, mailto or a path on this site leads there, and any other (`javascript:`, `data:`, `//elsewhere`) leaves the title as words.
 
+`index` is the number the answer's citations give a source: it stands after the title and is said with it, so it holds whatever order the list is in. A `SourceQuote` inside the Source is the passage the answer used, up to two lines under where it lives, as Inline citation's `InlineCitationQuote` is; a source that cannot be opened shows none. The head here, its count, an order switch and a fold, is the page's own composition above `SourcesContent`.
+
 <Stage path="sources/open" label="Opened by the page" />
 
 ## Locked and gone
@@ -81,10 +83,32 @@ SourceIcon holds whatever you map a source to: an icon for a file, a site's own 
     },
     {
       group: "List",
+      key: "Title",
+      value: "{text-sm} / {text-sm-line} in {font-weight-medium}",
+      note: "quiet when it cannot be opened",
+      tokens: ["foreground", "muted-foreground"],
+    },
+    {
+      group: "List",
+      key: "Number",
+      value:
+        "`index`, {text-xs} in even figures, {space-2} after the title's last word, never on a line of its own",
+      tokens: ["subtle-foreground"],
+    },
+    {
+      group: "List",
       key: "Where",
       value: "A quiet line under the title, {text-xs}: the host, or `origin`",
       note: "in danger when it could not be opened",
       tokens: ["muted-foreground", "destructive"],
+    },
+    {
+      group: "List",
+      key: "Quote",
+      value:
+        "`SourceQuote`, {text-xs} / {text-xs-line} under where it lives, two lines at most",
+      note: "none when it cannot be opened",
+      tokens: ["body-foreground"],
     },
   ]}
 />
@@ -128,7 +152,7 @@ SourceIcon holds whatever you map a source to: an icon for a file, a site's own 
     {
       key: "Source",
       value:
-        "A link, or a button, named by its title; a link says it opens in a new tab",
+        "A link, or a button, named by its title, then its number; a link says it opens in a new tab",
     },
     {
       key: "Locked or gone",
@@ -176,6 +200,14 @@ SourceIcon holds whatever you map a source to: an icon for a file, a site's own 
   source="src/components/sources.tsx"
   type="SourceIconProps"
   label="SourceIcon"
+/>
+
+### SourceQuote
+
+<Props
+  source="src/components/sources.tsx"
+  type="SourceQuoteProps"
+  label="SourceQuote"
 />
 
 </Reference>

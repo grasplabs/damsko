@@ -14,17 +14,17 @@ A chat at its own address. The switch above the page shows each state the produc
 ## What it is made of
 
 - **App shell** (the `app-shell-01` block): the header carries the chat's title as the last step of the breadcrumb, renamed in place, and the chat's menu (Copy link, Delete with Undo) at its end.
-- **Sidebar**, its Chats group with this chat active, one still answering with the working mark, All chats last.
+- **Sidebar**, its Chats group folding from its label with its count, plain rows with this chat active, one still answering with the working mark, All chats last.
 - A column the **PromptInput**'s width (`prompt-input-width`), the **MessageScroller** over the PromptInput. It scrolls itself and follows new words while you are at the end.
-- The person's **Message**, with Copy. The assistant's **Message** holds, in order: its steps in a **ChainOfThought** (each step active while it runs, folded to one line once done), the answer in **MessageResponse** (streaming while words arrive), the **Sources** it drew on once it is written, then its actions: Copy, thumbs up and down, Write it again (**MessageAction**).
-- The **PromptInput** at the foot: its `status` is `streaming` while the assistant works, so Submit turns into **Stop**; `disabled` while the chat loads.
+- The person's **Message**, with Copy. The assistant's **Message** holds, in order: its steps in a **ChainOfThought** (each step active while it runs, folded to one line once done), the answer in **MessageResponse** (streaming while words arrive), each claim followed by its source's number (a note named "Source 1", the number its row in **Sources** carries, that the page draws through **MarkdownLinkProvider**; it goes nowhere, so it is not a link), the **Sources** it drew on once it is written, then its actions: Copy, thumbs up and down, Write it again (**MessageAction**).
+- The **PromptInput** at the foot, on one row: the plus (**PromptInputActionMenu**), the text, then the model chip (**ModelSelector**; the prompt input folds its level to the maker's mark where the text is short of room, as on a phone, a model's name never; and at rest in a box too narrow for it, away until something is typed), the microphone (**PromptInputSpeechButton**) and Submit. Its `status` is `streaming` while the assistant works, so Submit turns into **Stop**; `disabled` while the chat loads.
 
 A thread's day lines, its Unread line and older messages loading as the reader nears the top are in [Chat thread](/patterns/chat-thread); citations that light their source's row are in [Sources and citations](/patterns/citations).
 
 ## The states
 
 - **Answered**, the first HTML: the whole chat, readable without script.
-- **Answering**: the steps one by one, then the words fading in. Stop keeps what was written: the answer says Stopped under its words and keeps its actions (Message's `stopped` status), and Copy takes what was written.
+- **Answering**: the steps one by one, then the words fading in. Stop keeps what was written: the answer keeps its actions, with Stopped first on their row (Message's `stopped` status), and Copy takes what was written.
 - **Loading the chat**: the shape of a question and its answer (**MessageSkeleton**), the PromptInput disabled.
 - **A new chat**: not this page. It begins where the product starts a chat; this page links there.
 - **The answer failed**: the message says what failed, with Try again (**MessageError**), which plays the answer again.
@@ -47,7 +47,7 @@ One window over the page holds every chat, opened by ⌘K and by the Sidebar's *
 Each is worked round in the example, and each is the library's to fix.
 
 1. **Thinking.** The assistant's thinking before its steps is left out: Reasoning is not in the library yet.
-2. **Citations.** MessageResponse has no inline citation, so the answer cites nothing in its words; its Sources stand under it.
+2. **Citations.** MessageResponse draws no citation of its own: the page turns each `[n](cite:n)` link into its number with `renderLink`.
 
 ## Rules
 

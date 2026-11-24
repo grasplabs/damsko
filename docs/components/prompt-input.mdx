@@ -89,7 +89,7 @@ Return a Promise from `onSubmit` that settles when the message is taken, and the
 
 ## One row
 
-`compact` sets the tools, the text and Submit side by side, 56px tall at every width. Once the words no longer fit their line, or the room beside the tools is under `prompt-input-field-min`, the text takes the card's whole width and the tools and Submit go under it; shorter again, it is one row again.
+`compact` sets the tools, the text and Submit side by side, 56px tall at every width. Once the words no longer fit their line, or the room beside the tools is under `prompt-input-field-min`, the text takes the card's whole width and the tools and Submit go under it; shorter again, it is one row again. The text never gives first: a model chip (ModelSelector) among the tools that shows its level (it has a `tooltip`) folds the level to its maker's mark where with it the text would go under `prompt-input-field-min` (at rest the placeholder's `prompt-input-placeholder-min`), and on a row under 24rem, a phone's, always; a model's name never folds. At rest, where the placeholder would still have too little, the chip is away, out of the tab order and unsaid, until something is typed. The folded chip keeps its name and its tooltip.
 
 <Stage path="prompt-input/compact" label="One row" />
 

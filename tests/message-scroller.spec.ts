@@ -212,6 +212,30 @@ test("while an old chat loads the log is busy, and then stands at its latest tur
   await expect.poll(async () => await gapOf(log)).toBeLessThanOrEqual(2);
 });
 
+test("while an old chat loads, the person's turns wait as empty bubbles and the assistant's as lines", async ({
+  page,
+}) => {
+  await openExample(page, "message-scroller", "loading");
+  const log = theLog(page);
+  await expect(log).toHaveAttribute("aria-busy", "true");
+  const kinds = await log.evaluate((node) =>
+    [...node.querySelectorAll<HTMLElement>("[data-slot=message-skeleton]")].map(
+      (wait) => ({
+        align: wait.dataset.align,
+        pixels: wait.querySelectorAll("[data-slot=skeleton]").length,
+      })
+    )
+  );
+  expect(kinds.filter((kind) => kind.align === "end")).toEqual([
+    { align: "end", pixels: 0 },
+    { align: "end", pixels: 0 },
+    { align: "end", pixels: 0 },
+  ]);
+  expect(
+    kinds.filter((kind) => kind.align === "start").map((kind) => kind.pixels)
+  ).toEqual([3, 2, 4]);
+});
+
 test("a long conversation opens at its latest turn and scrolls back to its first", async ({
   page,
 }) => {

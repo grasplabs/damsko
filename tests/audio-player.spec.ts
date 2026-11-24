@@ -195,6 +195,29 @@ test("a file that cannot play says so in place of the controls", async ({
   await expect(bar.getByRole("button")).toHaveCount(0);
 });
 
+test("a failed bar keeps the bar's height: on a phone its two lines fill it, no taller", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openExample(page, "audio-player", "failed");
+  const alert = page
+    .getByRole("region", { name: "Recording that was moved" })
+    .getByRole("alert");
+  const box = await alert.boundingBox();
+  // Two lines of small words, 20px each, in the bar's 40px.
+  expect(box?.height).toBe(40);
+});
+
+test("a player stands at its own width, beside another of the same", async ({
+  page,
+}) => {
+  await openExample(page, "audio-player", "switch");
+  const box = await page
+    .getByRole("region", { name: "First take" })
+    .boundingBox();
+  expect(box?.width).toBe(640);
+});
+
 test("a moment of the file, heard and sent elsewhere from the page", async ({
   page,
 }) => {

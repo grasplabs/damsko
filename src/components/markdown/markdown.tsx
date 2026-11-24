@@ -198,10 +198,10 @@ const styles = stylex.create({
     whiteSpace: "normal",
     overflowWrap: "anywhere",
   },
-  // Inside a chat message: the message's words in its ink, as a message's plain words are, its
-  // tables at the same size; headings and gaps as the default's.
+  // Inside a chat message: at the message's words' size, its tables too, in the body's ink as
+  // any answer is (what is strong, a heading or a link stands out in ink); headings and gaps as
+  // the default's.
   message: {
-    color: colors.foreground,
     fontSize: size.messageText,
     lineHeight: size.messageTextLine,
     [tableVars.text]: size.messageText,
