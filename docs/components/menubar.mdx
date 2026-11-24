@@ -10,7 +10,7 @@ description: A row of menus, like File, Edit and View, that hold an app's action
 
 ## Menus
 
-The arrows move between menus and through them; a menu out of use keeps its place in the bar. A MenubarSub opens beside its menu on the side with room, on the other side when only that one has room, and over its menu when neither has (on a phone), always whole on the screen and scrolling when it is taller than the window. Over its menu, a tap outside it, on the menu's rows still showing or anywhere else, goes back one level, as Escape does.
+The arrows move between menus and through them; a menu out of use keeps its place in the bar. A MenubarSub opens beside its menu on the side with room, on the other side when only that one has room, and over its menu when neither has (on a phone), always whole on the screen and scrolling when it is taller than the window. Over its menu, a tap on the menu's rows still showing goes back one level, as Escape does; so does a tap anywhere else outside it when a touch or a pen opened the submenu, while after the mouse or the keys a press there closes the whole menu.
 
 The bar holds no open value of its own, as UI SDK's has none: to follow a menu, give its `MenubarMenu` an `onOpenChange`, which runs as it opens and closes and can keep it as it is.
 
