@@ -87,6 +87,8 @@ test("a clipped value is a Tab stop before the button, and the arrow keys scroll
   const value = page.getByText(
     "workspace_8f3a2c91-d4e7-4b6a-905f-1c2d3e4b5a69"
   );
+  // A stop once the page has measured it as clipped; Tab before that passes it by.
+  await expect(value).toHaveAttribute("tabindex", "0");
   await page.keyboard.press("Tab");
   await expect(value).toBeFocused();
   // The stop has a role and a name: the value itself.
