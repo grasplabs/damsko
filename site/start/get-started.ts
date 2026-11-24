@@ -882,7 +882,7 @@ export const sections: Section[] = [
 export const licence = {
   slug: "licence",
   title: "Licence",
-  text: "Installed files stay under Damsko's licence wherever they land, whatever the licence of the repository around them: only Grasp, its affiliates and its contractors working for Grasp may use them. Every registry item says so in its meta.license; no file carries a header for it. The fonts are under their own licence, the SIL Open Font License 1.1: OFL.txt is installed beside them.",
+  text: "Installed files stay under Damsko's licence wherever they land, whatever the licence of the repository around them: only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them. Every registry item says so in its meta.license; no file carries a header for it. The fonts are under their own licence, the SIL Open Font License 1.1: OFL.txt is installed beside them.",
 } as const;
 
 export const nextSection = { slug: "where-next", title: "Where next" } as const;
