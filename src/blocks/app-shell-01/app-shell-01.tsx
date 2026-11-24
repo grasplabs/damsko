@@ -52,7 +52,6 @@ import {
   Sidebar,
   SidebarInset,
   SidebarProvider,
-  SidebarRail,
   SidebarTrigger,
   useSidebar,
 } from "../../components/sidebar";
@@ -258,7 +257,6 @@ const ShellSidebar = ({ children }: { children: ReactNode }) => {
       <div ref={watch} {...stylex.props(styles.contents)}>
         {children}
       </div>
-      <SidebarRail />
     </Sidebar>
   );
 };

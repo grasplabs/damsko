@@ -71,12 +71,12 @@ export default function PromptInputBasic() {
             </PromptInputActionMenu>
           </PromptInputTools>
           {/* At the end, the voice beside Send: the two ways to send what you mean. */}
-          <PromptInputTools>
+          <PromptInputTools align="end">
             <PromptInputSpeechButton
               listening={listening}
               onListeningChange={setListening}
             />
-            <PromptInputSubmit onStop={stop} style={layout.apart} />
+            <PromptInputSubmit onStop={stop} />
           </PromptInputTools>
         </PromptInputFooter>
       </PromptInput>

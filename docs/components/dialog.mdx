@@ -33,6 +33,8 @@ When the body holds more than the window, only the body scrolls.
 
 Under 640px it is a sheet along the bottom, and each Button in its footer takes an equal share of the line, under the thumb. Nothing to set: the window's width decides.
 
+A Button (or HoldButton) placed directly in the footer that names no size is small, as DialogClose is, so Cancel and the main action stand one height without a size on each. The same holds in an AlertDialog's, a Sheet's and a Drawer's footer. A size you give wins, and a popup opened from the footer keeps its own sizes.
+
 <Part title="Using it" />
 
 ## When to use it
@@ -201,7 +203,7 @@ Under 640px it is a sheet along the bottom, and each Button in its footer takes 
       group: "Input",
       key: "Agents",
       value:
-        "Open it by its trigger's name, read its title, press an action by name. A `destructive` Button waits for the person's yes; a failed action answers not ok, with its `errorText`.",
+        "Open it by its trigger's name, read its title, press an action by name. A `destructive` or `success` Button waits for the person's yes; a failed action answers not ok, with its `errorText`.",
     },
     {
       group: "Content",

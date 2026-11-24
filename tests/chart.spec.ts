@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import type { Locator } from "@playwright/test";
 
 import { openExample } from "./example.ts";
 
@@ -194,4 +195,126 @@ test("a large sparkline is a slider: the arrow keys pick a week and the figure s
   await expect(page.getByText("Cash at week end, Week 43")).toBeVisible();
   await page.keyboard.press("Home");
   await expect(slider).toHaveAttribute("aria-valuetext", "Week 33 €412,000");
+});
+
+test("two rows that share a name are each a row of the table, in order, as the data changes too", async ({
+  page,
+}) => {
+  await openExample(page, "chart", "same-names");
+  const table = page.getByRole("table", { name: "Orders by day" });
+  await expect(table.getByRole("rowheader")).toHaveText([
+    "Mon",
+    "Tue",
+    "Wed",
+    "Thu",
+    "Fri",
+    "Mon",
+    "Tue",
+    "Wed",
+  ]);
+  await page.getByRole("button", { name: "Start on another day" }).click();
+  await expect(table.getByRole("rowheader")).toHaveText([
+    "Wed",
+    "Thu",
+    "Fri",
+    "Mon",
+    "Tue",
+    "Wed",
+    "Thu",
+    "Fri",
+  ]);
+});
+
+// Each element is marked with the label it showed; an element that keeps its row keeps its mark.
+const markRows = async (each: Locator) => {
+  await each.evaluateAll((elements) => {
+    for (const element of elements) {
+      if (element instanceof HTMLElement) {
+        element.dataset.was = element.firstElementChild?.textContent ?? "";
+      }
+    }
+  });
+};
+
+const read = async (each: Locator) =>
+  await each.evaluateAll((elements) =>
+    elements.map((element) => ({
+      label: element.firstElementChild?.textContent ?? "",
+      was: element instanceof HTMLElement ? element.dataset.was : undefined,
+    }))
+  );
+
+test("a row added at the top or the rows turned round keep each row's element: the new row is the one that grows, and focus stays on its label", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await openExample(page, "chart", "rows-move");
+  const items = page
+    .getByRole("figure", { name: "Tickets by team", exact: true })
+    .getByRole("listitem");
+  const rows = page
+    .getByRole("table", { name: "Tickets by team, as bars" })
+    .getByRole("row")
+    .filter({ has: page.getByRole("rowheader") });
+  await expect(items).toHaveCount(3);
+  const mark = async () => {
+    await Promise.all([markRows(items), markRows(rows)]);
+  };
+  // The label of the row whose grow began last (once each has begun).
+  const lastGrown = async () =>
+    await items.evaluateAll(async (elements) => {
+      const started = await Promise.all(
+        elements.map(async (element) => {
+          const grows = element.getAnimations({ subtree: true });
+          await Promise.all(grows.map(async (grow) => await grow.ready));
+          return Math.max(...grows.map((grow) => Number(grow.startTime)));
+        })
+      );
+      const latest = started.indexOf(Math.max(...started));
+      return elements[latest]?.firstElementChild?.textContent ?? "";
+    });
+  const focusOn = async (label: string) => {
+    await items.filter({ hasText: label }).evaluate((element) => {
+      if (element instanceof HTMLElement) {
+        element.tabIndex = -1;
+        element.focus();
+      }
+    });
+  };
+  const focused = async () =>
+    await page.evaluate(
+      () => document.activeElement?.firstElementChild?.textContent ?? ""
+    );
+
+  await mark();
+  await focusOn("Alpha");
+  // Pressed without taking focus, so focus stays where it was put.
+  await page
+    .getByRole("button", { name: "Add Delta at the top" })
+    .dispatchEvent("click");
+  await expect(items).toHaveCount(4);
+  const added = [
+    { label: "Delta", was: undefined },
+    { label: "Alpha", was: "Alpha" },
+    { label: "Beta", was: "Beta" },
+    { label: "Gamma", was: "Gamma" },
+  ];
+  expect(await read(items)).toEqual(added);
+  expect(await read(rows)).toEqual(added);
+  expect(await lastGrown()).toBe("Delta");
+  expect(await focused()).toBe("Alpha");
+
+  await mark();
+  await focusOn("Gamma");
+  await page
+    .getByRole("button", { name: "Turn the rows round" })
+    .dispatchEvent("click");
+  await expect(items.first()).toHaveText(/Gamma/u);
+  const turned = ["Gamma", "Beta", "Alpha", "Delta"].map((label) => ({
+    label,
+    was: label,
+  }));
+  expect(await read(items)).toEqual(turned);
+  expect(await read(rows)).toEqual(turned);
+  expect(await focused()).toBe("Gamma");
 });

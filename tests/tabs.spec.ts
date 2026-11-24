@@ -236,3 +236,46 @@ test("on the segmented track the first and last tab stand as far from its sides 
   expect(first.x - track.x).toBeCloseTo(above, 0);
   expect(track.x + track.width - (last.x + last.width)).toBeCloseTo(above, 0);
 });
+
+test("given its box's width, a track shares it equally between its tabs, each icon 10px before its words", async ({
+  page,
+}) => {
+  await openExample(page, "tabs", "fill");
+  const list = page.getByRole("tablist", { name: "Panel" });
+  const tabs = list.getByRole("tab");
+  const [listBox, first, second] = await Promise.all([
+    list.boundingBox(),
+    tabs.nth(0).boundingBox(),
+    tabs.nth(1).boundingBox(),
+  ]);
+  expect(Math.round(listBox?.width ?? 0)).toBe(240);
+  expect(Math.round(first?.width ?? 0)).toBe(Math.round(second?.width ?? 1));
+  // The track's room at its sides and between its tabs is all that is left.
+  expect(
+    Math.round((first?.width ?? 0) + (second?.width ?? 0))
+  ).toBeGreaterThan(220);
+  const gap = await tabs.nth(0).evaluate((tab) => {
+    const icon = tab.querySelector("svg")?.getBoundingClientRect();
+    const range = document.createRange();
+    const words = [...tab.querySelectorAll("span")].find(
+      (span) => span.childElementCount === 0 && span.textContent === "Overview"
+    );
+    if (words === undefined || icon === undefined) {
+      return -1;
+    }
+    range.selectNodeContents(words);
+    return range.getBoundingClientRect().left - icon.right;
+  });
+  expect(Math.round(gap)).toBe(10);
+});
+
+test("at its own width a track keeps each tab its words' width", async ({
+  page,
+}) => {
+  await openExample(page, "tabs", "segmented");
+  const tabs = page.getByRole("tablist", { name: "View" }).getByRole("tab");
+  const widths = await tabs.evaluateAll((all) =>
+    all.map((tab) => Math.round(tab.getBoundingClientRect().width))
+  );
+  expect(new Set(widths).size).toBeGreaterThan(1);
+});

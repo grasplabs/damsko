@@ -84,6 +84,13 @@ export interface TooltipProps extends Omit<
 > {
   /** The trigger and the content. */
   children: ReactNode;
+  /**
+   * A press on the trigger opens and closes it too, so a tap on a touch screen shows it: for an
+   * info mark (a small button that is only there to say more), never for a control that does
+   * something of its own. What it says is announced as a press opens it.
+   * @default false
+   */
+  toggleable?: boolean;
   /** Open now. Pass it with `onOpenChange` to open and close the tooltip yourself. */
   open?: boolean;
   /**

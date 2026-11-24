@@ -80,7 +80,6 @@ const Task = ({
           <DialogClose>{cancel}</DialogClose>
           <Button
             variant={variant}
-            size="sm"
             onClick={run}
             loadingText={loadingText}
             errorText={errorText}

@@ -42,7 +42,7 @@ export default function AlertDialogCheckFailed() {
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <Button size="sm" onClick={test} loadingText="Testing">
+          <Button onClick={test} loadingText="Testing">
             Test
           </Button>
         </AlertDialogFooter>

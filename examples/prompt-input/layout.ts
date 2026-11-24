@@ -12,8 +12,6 @@ export const layout = stylex.create({
   // A control above the prompt input stands at the start, as wide as its words.
   start: { justifySelf: "start" },
   item: { display: "grid", gap: space["2"], minWidth: 0 },
-  // Send at the end, a space-2 from the microphone before it (the tools stand a space-1 apart).
-  apart: { marginInlineStart: space["1"] },
   name: {
     margin: 0,
     color: colors.mutedForeground,

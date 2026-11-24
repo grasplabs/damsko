@@ -119,7 +119,6 @@ export default function FormsDanger() {
               <AlertDialogCancel />
               <Button
                 variant="destructive"
-                size="sm"
                 onClick={remove}
                 loadingText="Deleting"
                 errorText="Not deleted"

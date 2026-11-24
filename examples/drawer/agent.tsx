@@ -82,7 +82,6 @@ const Task = ({
           <DrawerClose>{cancel}</DrawerClose>
           <Button
             variant={variant}
-            size="sm"
             onClick={run}
             loadingText={loadingText}
             errorText={errorText}

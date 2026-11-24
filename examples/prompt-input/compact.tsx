@@ -23,8 +23,6 @@ import {
   PromptInputTextarea,
   PromptInputTools,
 } from "@grasp-os/ui/components/prompt-input";
-import { space } from "@grasp-os/ui/lib/tokens.stylex";
-import * as stylex from "@stylexjs/stylex";
 import { useState } from "react";
 
 import {
@@ -34,13 +32,6 @@ import {
   modelOf,
   models,
 } from "../model-selector/models";
-
-const styles = stylex.create({
-  // The model, dictation and Submit stand together at the row's end, a step apart (the model chip
-  // keeps its own step).
-  end: { gridArea: "end", marginInlineStart: "auto" },
-  apart: { marginInlineStart: space["1"] },
-});
 
 // One row: the plus, the text, and at its end the model, dictation and Submit. Once the words no
 // longer fit their line the text takes the card's whole width and the tools go under it.
@@ -66,7 +57,7 @@ export default function PromptInputCompact() {
             </PromptInputActionMenuContent>
           </PromptInputActionMenu>
         </PromptInputTools>
-        <PromptInputTools style={styles.end}>
+        <PromptInputTools align="end">
           <ModelSelector
             value={model}
             onValueChange={(next) => {
@@ -106,7 +97,7 @@ export default function PromptInputCompact() {
             </ModelSelectorContent>
           </ModelSelector>
           <PromptInputSpeechButton />
-          <PromptInputSubmit style={styles.apart} />
+          <PromptInputSubmit />
         </PromptInputTools>
       </PromptInputFooter>
     </PromptInput>

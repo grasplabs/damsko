@@ -388,3 +388,27 @@ test.describe("on a narrow touch phone", () => {
     expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
   });
 });
+
+test("a chip that says the model's name says it in ink, its chevron quieter, as the original's", async ({
+  page,
+}) => {
+  await openExample(page, "model-selector", "basic");
+  const chip = page.getByRole("button", { name: /^Model/u });
+  const look = await chip.evaluate((element) => {
+    const probe = document.createElement("span");
+    probe.style.color = "var(--damsko-foreground)";
+    element.append(probe);
+    const ink = getComputedStyle(probe).color;
+    probe.remove();
+    const name = element.querySelector("[data-slot=model-selector-name]");
+    // The chip's last part, after its name: the chevron.
+    const chevron = name?.parentElement?.lastElementChild ?? null;
+    return {
+      ink,
+      name: name === null ? "" : getComputedStyle(name).color,
+      chevron: chevron === null ? "" : getComputedStyle(chevron).color,
+    };
+  });
+  expect(look.name).toBe(look.ink);
+  expect(look.chevron).not.toBe(look.ink);
+});
