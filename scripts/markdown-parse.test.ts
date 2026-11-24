@@ -156,6 +156,8 @@ describe("repair, where remend's own tests found it wanting", () => {
       "***first*** and ***second***",
       "**bold and *italic*** more text",
       "___both___ done",
+      "Call foo***bar***baz here.",
+      "**a *b***c and *a **b***c",
     ]) {
       expect(repair(whole).text).toBe(whole);
     }

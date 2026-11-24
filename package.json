@@ -52,6 +52,7 @@
     "babel-plugin-react-compiler": "catalog:",
     "country-flag-icons": "catalog:",
     "github-slugger": "catalog:",
+    "happy-dom": "catalog:",
     "lightningcss": "catalog:",
     "oxc-transform-react": "catalog:",
     "oxfmt": "catalog:",
