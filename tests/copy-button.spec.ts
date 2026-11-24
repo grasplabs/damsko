@@ -14,15 +14,17 @@ const clipboard = async (page: Page) =>
   await page.evaluate(async () => await navigator.clipboard.readText());
 
 test("a press copies the value and says so once", async ({ page }) => {
+  const said = await listenToLiveRegions(page);
   await openExample(page, "copy-button", "basic");
   await page.getByRole("button", { name: "Copy code" }).click();
   await expect
     .poll(async () => await clipboard(page))
     .toContain('import { Badge } from "@grasp-os/ui/components/badge";');
   // The page's one live region says it.
-  await expect(liveRegion(page).filter({ hasText: /^Copied$/u })).toHaveCount(
-    1
-  );
+  await expect.poll(said).toContain("Copied");
+  // A second time would come a message's hold (400ms) after the first.
+  await page.waitForTimeout(600);
+  expect(await said()).toStrictEqual(["Copied"]);
 });
 
 test("a copy is over at once, so only its result is said, never that it is working", async ({
