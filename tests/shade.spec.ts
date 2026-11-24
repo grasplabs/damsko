@@ -156,30 +156,35 @@ const gapsWith = (table: Outcome[], outcome: Outcome) =>
 /**
  * After a press on the shade closed the layer, whether a second press at the same place `gap` ms
  * later reached the page. A round whose second press the browser sent past the layer's leave,
- * though it was meant before it, measures another gap and is taken again.
+ * though it was meant before it, measures another gap: it is taken again, waiting less by as much
+ * as that round was late (a busy machine sends each press late).
  */
 const secondPressReaches = async (
   page: Page,
   layer: Layer,
   input: Input,
   gap: number,
-  tries = 5
+  { wait = gap, tries = 5 } = {}
 ): Promise<boolean> => {
   const corner = page.getByRole("button", { name: "Corner", exact: true });
   const before = Number(await corner.getAttribute("data-presses"));
   const panel = await show(page, layer);
   await press(page, input);
-  if (gap > 0) {
-    await page.waitForTimeout(gap);
+  if (wait > 0) {
+    await page.waitForTimeout(wait);
   }
   await press(page, input);
   await expect(panel).toBeHidden();
   // A click that would come late has come.
   await page.waitForTimeout(300);
   const { leave = Infinity } = layer;
-  if (gap < leave && (await lastGap(page)) >= leave) {
+  const came = await lastGap(page);
+  if (gap < leave && came >= leave) {
     expect(tries, `rounds sent past the ${leave}ms leave`).toBeGreaterThan(1);
-    return await secondPressReaches(page, layer, input, gap, tries - 1);
+    return await secondPressReaches(page, layer, input, gap, {
+      wait: Math.max(0, wait - (came - gap)),
+      tries: tries - 1,
+    });
   }
   return Number(await corner.getAttribute("data-presses")) > before;
 };
