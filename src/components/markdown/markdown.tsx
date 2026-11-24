@@ -8,10 +8,12 @@
 import * as stylex from "@stylexjs/stylex";
 import {
   createContext,
+  createElement,
   Fragment,
   use,
   useEffect,
   useId,
+  useLayoutEffect,
   useRef,
   useState,
 } from "react";
@@ -53,7 +55,7 @@ import { Separator } from "../separator";
 import * as Tables from "../table";
 import { tableVars } from "../table.stylex";
 import * as parse from "./parse";
-import type { RootContent } from "./parse";
+import type { Block, RootContent } from "./parse";
 
 /** A link in the answer, as the host's renderer sees it. */
 export interface MarkdownLink {
@@ -77,7 +79,7 @@ type Phrase = Of<"paragraph">["children"][number];
 type Row = Of<"table">["children"][number];
 /** A node of the syntax tree Markdown draws: a block, a phrase, a list's item, a table's row or cell. */
 export type MarkdownNode =
-  | RootContent
+  | Block
   | Phrase
   | Of<"list">["children"][number]
   | Row
@@ -85,32 +87,10 @@ export type MarkdownNode =
 type Node = MarkdownNode;
 
 /** The elements Markdown draws that a caller may draw instead, by their HTML names. */
-type MarkdownElement =
-  | "a"
-  | "blockquote"
-  | "code"
-  | "del"
-  | "em"
-  | "h1"
-  | "h2"
-  | "h3"
-  | "h4"
-  | "h5"
-  | "h6"
-  | "hr"
-  | "img"
-  | "li"
-  | "ol"
-  | "p"
-  | "pre"
-  | "strong"
-  | "table"
-  | "tbody"
-  | "td"
-  | "th"
-  | "thead"
-  | "tr"
-  | "ul";
+type Blocks = "p" | "blockquote" | "ul" | "ol" | "li" | "hr" | "pre" | "code";
+type Cells = "table" | "thead" | "tbody" | "tr" | "th" | "td";
+type Phrases = "a" | "img" | "strong" | "em" | "del";
+type MarkdownElement = `h${1 | 2 | 3 | 4 | 5 | 6}` | Blocks | Cells | Phrases;
 
 /**
  * Elements drawn in Markdown's place, keyed by HTML element name (a map written for react-markdown
@@ -409,38 +389,41 @@ interface Shared {
   codeMaxLines: number | false;
   inLink?: boolean;
   phrase?: boolean;
+  notes?: boolean;
 }
 const PHRASE = { phrase: true };
 type Kids = (nodes: readonly Node[], within?: Partial<Shared>) => ReactNode;
 interface Part<T> {
   node: T;
   shared: Shared;
-  kids?: Kids;
+  kids: Kids;
   name?: string;
   children?: ReactNode;
 }
 
-// What changes as the answer grows, read only by the nodes that need it: the link definitions, the
-// notes, the last word still being written (a bare address in it may still grow) and the place of
-// the block drawn (a note leads back to its first mark).
+// What changes as the answer grows, read only by the nodes that need it: the link definitions; the
+// notes; the last word still being written (a bare address in it may still grow); where the block
+// still being written was last read to (past many words, what came after it fades as one); and the
+// place of the block drawn (a note leads back to its first mark).
 const NO_DEFINITIONS: Of<"definition">[] = [];
 const Definitions = createContext(NO_DEFINITIONS);
-// The notes in their order, as words, so the value is the same while they are: the ids' prefix,
-// then each note's name, led by `+` once its note has come (`_r_1_ +growth -churn`). A name has no
-// space in it.
+// The notes in their order, as lines, so the value stays the same while they do: the ids' prefix,
+// then for each note `+` once it has come (else `-`), its first mark's id, a space and its name (a
+// name has no space in it).
 const Notes = createContext("");
 const Tail = createContext("");
-const At = createContext(-1);
+const Fresh = createContext(-1);
+const At = createContext("");
 // SAFETY: every node a node of the tree holds is a node of the tree.
 const kidsOf = (node: Node) =>
   ("children" in node ? node.children : []) as Node[];
-const BLOCKY = new Set(["blockquote", "list", "listItem", "table", "tableRow"]);
+const BLOCKY = /^(?:blockquote|list|listItem|table|tableRow|section)$/u;
 const textOf = (node: Node): string =>
   "value" in node
     ? node.value
     : kidsOf(node)
         .map(textOf)
-        .join(BLOCKY.has(node.type) ? " " : "");
+        .join(BLOCKY.test(node.type) ? " " : "");
 const linkOf = (
   node: Linked,
   url: string,
@@ -466,19 +449,26 @@ const linkOf = (
   return link;
 };
 
-/** The caller's element for `tag` (`components`), given its props and the node it draws, else Markdown's own. */
-const el = <T extends MarkdownElement>(
+/**
+ * The element `tag`: the caller's (`components`), given `props` and the node, else Markdown's own,
+ * `own` or the tag itself with `props` and its `looks`.
+ */
+const part = <T extends MarkdownElement>(
   shared: Shared,
   tag: T,
   node: Node,
   props: ComponentProps<T>,
-  own: ReactElement
+  looks: readonly (stylex.StyleXStyles | false)[],
+  own?: ReactElement
 ): ReactElement => {
   // SAFETY: `components` maps each tag to a part that takes that tag's props and the node.
   const Custom = shared.components[tag] as
     | ComponentType<ComponentProps<T> & { node: Node }>
     | undefined;
-  return Custom === undefined ? own : <Custom {...props} node={node} />;
+  if (Custom !== undefined) {
+    return <Custom {...props} node={node} />;
+  }
+  return own ?? createElement(tag, { ...props, ...stylex.props(...looks) });
 };
 
 /**
@@ -529,7 +519,11 @@ const leadTo = (
  * a reference not yet defined, a bare address (its words start where it does) in the word still
  * being written; nor inside a link.
  */
-const Anchor = ({ node, shared, children }: Part<Linked>): ReactNode => {
+const Anchor = ({
+  node,
+  shared,
+  children,
+}: Omit<Part<Linked>, "kids">): ReactNode => {
   const found =
     "url" in node
       ? node
@@ -563,29 +557,77 @@ const Anchor = ({ node, shared, children }: Part<Linked>): ReactNode => {
     : leadTo(node, link, href, shared.components);
 };
 /** Where a note's mark is: the place of its block and where it starts in it. */
-const markId = (prefix: string, at: number, node: Node) =>
-  `${prefix}-ref-${at}-${node.position?.start.offset ?? 0}`;
+const markId = (prefix: string, place: string, node: Node) =>
+  `${prefix}-ref-${place}-${node.position?.start.offset ?? 0}`;
+/** A note in the answer's notes: its number, whether it has come and its first mark's id. */
+const useNote = (name: string) => {
+  const [prefix = "", ...notes] = use(Notes).split("\n");
+  const index = notes.findIndex((line) => line.endsWith(` ${name}`));
+  const [head = ""] = notes[index]?.split(" ") ?? [];
+  return {
+    prefix,
+    number: index + 1,
+    come: head.startsWith("+"),
+    first: head.slice(1),
+  };
+};
 /** A note's mark: its number, leading to the note once the note has come. */
-const NoteMark = ({ node, shared }: Part<Of<"footnoteReference">>) => {
+const NoteMark = ({
+  node,
+  shared,
+}: Omit<Part<Of<"footnoteReference">>, "kids">) => {
   const words = useI18n().markdown;
-  const [prefix = "", ...notes] = use(Notes).split(" ");
-  const at = use(At);
-  const index = notes.findIndex((note) => note.slice(1) === node.identifier);
-  const number = index + 1;
+  const { prefix, number, come } = useNote(node.identifier);
+  const place = use(At);
   if (number === 0) {
     return `[^${node.label ?? node.identifier}]`;
   }
   const shown = <span aria-label={words.footnote(number)}>{number}</span>;
   return (
     <sup {...stylex.props(styles.footnoteMark)}>
-      <span id={markId(prefix, at, node)}>
-        {notes[index]?.startsWith("+") === true && shared.inLink !== true ? (
+      <span id={markId(prefix, place, node)}>
+        {come && shared.inLink !== true ? (
           <Link href={`#${prefix}-fn-${number}`}>{shown}</Link>
         ) : (
           shown
         )}
       </span>
     </sup>
+  );
+};
+/** A list item's or a note's blocks: a paragraph is its words, followed by `after`. */
+const body = (nodes: readonly Node[], kids: Kids, after?: ReactElement) => (
+  <div {...stylex.props(styles.itemBody)}>
+    {nodes.map((child, at) => (
+      <Fragment key={at}>
+        {child.type === "paragraph" ? (
+          <span>
+            {kids(child.children, PHRASE)}
+            {after !== undefined && " "}
+            {after}
+          </span>
+        ) : (
+          kids([child])
+        )}
+      </Fragment>
+    ))}
+  </div>
+);
+/** A note at the foot, leading back to its first mark. */
+const Note = ({
+  node,
+  kids,
+}: Omit<Part<Of<"footnoteDefinition">>, "shared">) => {
+  const words = useI18n().markdown;
+  const { prefix, number, first } = useNote(node.identifier);
+  const back =
+    first === "" ? undefined : (
+      <Link href={`#${first}`}>{words.back(number)}</Link>
+    );
+  return (
+    <li value={number} id={`${prefix}-fn-${number}`}>
+      {body(node.children, kids, back)}
+    </li>
   );
 };
 
@@ -616,14 +658,11 @@ type Draw<T extends Node["type"]> = (
   kids: Kids
 ) => ReactNode;
 
-// A table is named by the heading above it; a row draws its own cells, as many as the head's.
+// A table is named by the heading above it; a row draws its own cells, as many as the head's. One
+// from a model has no bound: at most 1,000 rows are drawn, and a line says how many more.
 const MOST_ROWS = 1000;
 const TableBlock = ({ node, shared, kids, name }: Part<Of<"table">>) => {
   const words = useI18n().markdown;
-  const [written, setWritten] = useState(shared.streaming);
-  if (shared.streaming && !written) {
-    setWritten(true);
-  }
   const [head, ...rows] = node.children;
   const sides = { left: "start", right: "end", center: "center" } as const;
   const align = (head?.children ?? []).map(
@@ -632,82 +671,55 @@ const TableBlock = ({ node, shared, kids, name }: Part<Of<"table">>) => {
   const row = (cells: Row | undefined, tag: "th" | "td") => {
     const Cell = tag === "th" ? Tables.TableHead : Tables.TableCell;
     const drawn = cells?.children.slice(0, align.length).map((cell, at) => {
-      const children = kids?.(cell.children, PHRASE);
+      const children = kids(cell.children, PHRASE);
       const props = { align: node.align?.[at] ?? undefined, children };
+      const own = <Cell align={align[at]}>{children}</Cell>;
       return (
-        <Fragment key={at}>
-          {el(
-            shared,
-            tag,
-            cell,
-            props,
-            <Cell align={align[at]}>{children}</Cell>
-          )}
-        </Fragment>
+        <Fragment key={at}>{part(shared, tag, cell, props, [], own)}</Fragment>
       );
     });
     const own = <Tables.TableRow>{drawn}</Tables.TableRow>;
-    return cells === undefined
-      ? own
-      : el(shared, "tr", cells, { children: drawn }, own);
+    return cells && part(shared, "tr", cells, { children: drawn }, [], own);
   };
   const top = row(head, "th");
-  const header = el(
-    shared,
-    "thead",
-    node,
-    { children: top },
-    <Tables.TableHeader>{top}</Tables.TableHeader>
-  );
-  // A table from a model has no bound: at most 1,000 rows are drawn, and a line says how many more.
   const lines = rows
     .slice(0, MOST_ROWS)
     .map((cells, at) => <Fragment key={at}>{row(cells, "td")}</Fragment>);
-  const more = rows.length - MOST_ROWS;
-  const body = el(
-    shared,
-    "tbody",
-    node,
-    { children: lines },
-    <Tables.TableBody>{lines}</Tables.TableBody>
-  );
   const label = name ?? words.table;
-  return el(
-    shared,
-    "table",
-    node,
-    {
-      "aria-label": label,
-      children: (
-        <>
-          {header}
-          {body}
-        </>
-      ),
-    },
+  const header = <Tables.TableHeader>{top}</Tables.TableHeader>;
+  const children = (
     <>
-      <Tables.Table aria-label={label} streaming={written}>
-        {header}
-        {body}
+      {part(shared, "thead", node, { children: top }, [], header)}
+      {part(
+        shared,
+        "tbody",
+        node,
+        { children: lines },
+        [],
+        <Tables.TableBody>{lines}</Tables.TableBody>
+      )}
+    </>
+  );
+  const more =
+    Math.max(rows.length - MOST_ROWS, 0) +
+    ("more" in node ? Number(node.more) : 0);
+  const own = (
+    <>
+      <Tables.Table aria-label={label} streaming={shared.greedy}>
+        {children}
       </Tables.Table>
       {more > 0 && <p {...stylex.props(styles.more)}>{words.moreRows(more)}</p>}
     </>
   );
+  return part(
+    shared,
+    "table",
+    node,
+    { "aria-label": label, children },
+    [],
+    own
+  );
 };
-// A paragraph in a list item is its words.
-const body = (nodes: readonly Node[], kids: Kids) => (
-  <div {...stylex.props(styles.itemBody)}>
-    {nodes.map((child, at) => (
-      <Fragment key={at}>
-        {child.type === "paragraph" ? (
-          <span>{kids(child.children, PHRASE)}</span>
-        ) : (
-          kids([child])
-        )}
-      </Fragment>
-    ))}
-  </div>
-);
 const MARKS = {
   strong: ["strong", styles.strong],
   emphasis: ["em", styles.emphasis],
@@ -718,15 +730,8 @@ const mark = (
   shared: Shared,
   kids: Kids
 ) => {
-  const [Tag, look] = MARKS[node.type];
-  const children = kids(node.children);
-  return el(
-    shared,
-    Tag,
-    node,
-    { children },
-    <Tag {...stylex.props(look)}>{children}</Tag>
-  );
+  const [tag, look] = MARKS[node.type];
+  return part(shared, tag, node, { children: kids(node.children) }, [look]);
 };
 const anchor = (node: Linked, shared: Shared, kids: Kids) => (
   <Anchor node={node} shared={shared}>
@@ -735,16 +740,105 @@ const anchor = (node: Linked, shared: Shared, kids: Kids) => (
       : (node.alt ?? "")}
   </Anchor>
 );
-// A word in a link does not fade: its words move into the link when it is whole, and would fade
-// again there.
-const wordsOf = (value: string, shared: Shared) =>
-  shared.streaming && shared.inLink !== true
-    ? value.match(/\S+\s*|\s+/gu)?.map((word, at) => (
-        <span key={at} {...stylex.props(fadeIn, styles.word)}>
-          {word}
+/**
+ * Words that may fade in: each its own fade while written, but not in a link (its words move into
+ * the link when it is whole, and would fade again there). Past many words in the block still being
+ * written, the words read since its last read fade as one, and the rest stand.
+ */
+const Words = ({
+  value,
+  shared,
+  from,
+}: {
+  value: string;
+  shared: Shared;
+  from: number;
+}) => {
+  const fresh = use(Fresh);
+  if (!shared.streaming || shared.inLink === true) {
+    return value;
+  }
+  if (fresh >= 0) {
+    const cut = Math.min(Math.max(fresh - from, 0), value.length);
+    return (
+      <>
+        {value.slice(0, cut)}
+        <span key={fresh} {...stylex.props(fadeIn, styles.word)}>
+          {value.slice(cut)}
         </span>
-      ))
-    : value;
+      </>
+    );
+  }
+  return value.match(/\S+\s*|\s+/gu)?.map((word, at) => (
+    <span key={at} {...stylex.props(fadeIn, styles.word)}>
+      {word}
+    </span>
+  ));
+};
+const framed = new Set(["code", "table", "thematicBreak"]);
+/** A block in the answer's column: a framed one fades in whole while written; a section is its own. */
+const Placed = ({
+  node,
+  shared,
+  children,
+}: {
+  node: Node;
+  shared: Shared;
+  children: ReactElement;
+}) =>
+  node.type === "section" ? (
+    children
+  ) : (
+    <div {...stylex.props(shared.streaming && framed.has(node.type) && fadeIn)}>
+      {children}
+    </div>
+  );
+
+/**
+ * A section (parse.ts): the chevron before its summary, its blocks under the summary's first letter,
+ * closed until it is opened. The toggle is named by the summary's words and says whether it is open.
+ */
+const SectionBlock = ({ node, shared, kids }: Part<parse.Section>) => {
+  const id = useId();
+  const place = use(At);
+  const [words] = parse.readBlock(node.summary);
+  return (
+    <Collapsible asChild defaultOpen={node.open}>
+      <div
+        data-slot="markdown-section"
+        {...stylex.props(sectionStyles.section)}
+      >
+        <CollapsibleTrigger asChild>
+          <button
+            type="button"
+            aria-labelledby={id}
+            {...stylex.props(sectionStyles.toggle, focusRing)}
+          >
+            <span aria-hidden="true" {...stylex.props(sectionStyles.chevron)}>
+              <Icon icon={ChevronRightIcon} />
+            </span>
+          </button>
+        </CollapsibleTrigger>
+        <div id={id} {...stylex.props(sectionStyles.summary)}>
+          {words?.type === "paragraph" && kids(words.children, PHRASE)}
+        </div>
+        <CollapsibleContent asChild>
+          <div {...stylex.props(sectionStyles.under)}>
+            <div {...stylex.props(sectionStyles.body)}>
+              {node.children.map((child, at) => (
+                <Placed key={at} node={child} shared={shared}>
+                  {/* oxlint-disable-next-line react/jsx-no-constructed-context-values -- a string */}
+                  <At value={`${place}.${at}`}>{kids([child])}</At>
+                </Placed>
+              ))}
+            </div>
+          </div>
+        </CollapsibleContent>
+      </div>
+    </Collapsible>
+  );
+};
+
 const headings = ["h1", "h2", "h3", "h4", "h5", "h6"] as const;
 const headingLooks = {
   default: [styles.major, styles.minor],
@@ -753,96 +847,64 @@ const headingLooks = {
   xs: [styles.xsHeading, styles.xsHeading],
 };
 const draw: { [T in Node["type"]]?: Draw<T> } = {
-  text: (node, shared) =>
-    shared.softBreaks && node.value.includes("\n")
-      ? node.value.split("\n").map((line, at) => (
-          <Fragment key={at}>
-            {at > 0 && <br />}
-            {wordsOf(line, shared)}
-          </Fragment>
-        ))
-      : wordsOf(node.value, shared),
+  text: (node, shared) => {
+    const from = node.position?.start.offset ?? 0;
+    const lines = shared.softBreaks ? node.value.split("\n") : [node.value];
+    return lines.map((line, at) => (
+      <Fragment key={at}>
+        {at > 0 && <br />}
+        <Words value={line} shared={shared} from={from} />
+      </Fragment>
+    ));
+  },
   strong: mark,
   emphasis: mark,
   delete: mark,
   inlineCode: (node, shared) =>
-    el(
-      shared,
-      "code",
-      node,
-      { children: node.value },
-      <code
-        {...stylex.props(
-          styles.inlineCode,
-          shared.size === "xs" && styles.xsCode
-        )}
-      >
-        {node.value}
-      </code>
-    ),
+    part(shared, "code", node, { children: node.value }, [
+      styles.inlineCode,
+      shared.size === "xs" && styles.xsCode,
+    ]),
   break: () => <br />,
   link: anchor,
   linkReference: anchor,
   image: anchor,
   imageReference: anchor,
   footnoteReference: (node, shared) => <NoteMark node={node} shared={shared} />,
+  footnoteDefinition: (node, shared, kids) =>
+    shared.notes === true && <Note node={node} kids={kids} />,
   html: (node, shared) =>
     shared.phrase === true ? (
       <span {...stylex.props(styles.raw)}>{node.value}</span>
     ) : (
       <p {...stylex.props(styles.paragraph, styles.raw)}>{node.value}</p>
     ),
-  paragraph: (node, shared, kids) => {
-    const children = kids(node.children, PHRASE);
-    return el(
-      shared,
-      "p",
-      node,
-      { children },
-      <p {...stylex.props(styles.paragraph, shared.greedy && styles.greedy)}>
-        {children}
-      </p>
-    );
-  },
+  paragraph: (node, shared, kids) =>
+    part(shared, "p", node, { children: kids(node.children, PHRASE) }, [
+      styles.paragraph,
+      shared.greedy && styles.greedy,
+    ]),
   heading: (node, shared, kids) => {
     // The fifth and sixth depths are drawn and placed as the fourth, from the caller's level on.
     const depth = Math.min(node.depth, 4);
-    const Tag =
+    const tag =
       headings[Math.min(shared.headingLevel - 1 + depth, 6) - 1] ?? "h6";
     const look = headingLooks[shared.size][depth <= 2 ? 0 : 1];
-    const children = kids(node.children, PHRASE);
-    return el(
-      shared,
-      Tag,
-      node,
-      { children },
-      <Tag
-        {...stylex.props(styles.heading, look, shared.greedy && styles.greedy)}
-      >
-        {children}
-      </Tag>
-    );
+    return part(shared, tag, node, { children: kids(node.children, PHRASE) }, [
+      styles.heading,
+      look,
+      shared.greedy && styles.greedy,
+    ]);
   },
   list: (node, shared, kids) => {
     const children = kids(node.children);
     const start = node.start ?? undefined;
     return node.ordered === true
-      ? el(
-          shared,
-          "ol",
-          node,
-          { start, children },
-          <ol start={start} {...stylex.props(styles.list, styles.ordered)}>
-            {children}
-          </ol>
-        )
-      : el(
-          shared,
-          "ul",
-          node,
-          { children },
-          <ul {...stylex.props(styles.list, styles.unordered)}>{children}</ul>
-        );
+      ? part(shared, "ol", node, { start, children }, [
+          styles.list,
+          styles.ordered,
+        ])
+      : part(shared, "ul", node, { children }, [styles.list, styles.unordered]);
   },
   listItem: (node, shared, kids) => {
     const task = typeof node.checked === "boolean";
@@ -852,25 +914,17 @@ const draw: { [T in Node["type"]]?: Draw<T> } = {
         {body(node.children, kids)}
       </>
     );
-    return el(
-      shared,
-      "li",
-      node,
-      { children },
-      <li {...stylex.props(styles.item, task && styles.task)}>{children}</li>
-    );
+    return part(shared, "li", node, { children }, [
+      styles.item,
+      task && styles.task,
+    ]);
   },
-  blockquote: (node, shared, kids) => {
-    const children = kids(node.children);
-    return el(
-      shared,
-      "blockquote",
-      node,
-      { children },
-      <blockquote {...stylex.props(styles.quote)}>{children}</blockquote>
-    );
-  },
-  thematicBreak: (node, shared) => el(shared, "hr", node, {}, <Separator />),
+  blockquote: (node, shared, kids) =>
+    part(shared, "blockquote", node, { children: kids(node.children) }, [
+      styles.quote,
+    ]),
+  thematicBreak: (node, shared) =>
+    part(shared, "hr", node, {}, [], <Separator />),
   code: (node, shared) => {
     const { code: Custom, pre: Pre } = shared.components;
     if (Custom !== undefined || Pre !== undefined) {
@@ -911,8 +965,11 @@ const draw: { [T in Node["type"]]?: Draw<T> } = {
       </Code.CodeBlock>
     );
   },
+  section: (node, shared, kids) => (
+    <SectionBlock node={node} shared={shared} kids={kids} />
+  ),
 };
-const Drawn = ({ node, shared, name }: Part<Node>): ReactNode => {
+const Drawn = ({ node, shared, name }: Omit<Part<Node>, "kids">): ReactNode => {
   const kids: Kids = (nodes, within) =>
     nodes.map((child, at) => (
       <Drawn
@@ -929,168 +986,17 @@ const Drawn = ({ node, shared, name }: Part<Node>): ReactNode => {
   const render = draw[node.type] as Draw<Node["type"]> | undefined;
   return render?.(node, shared, kids) ?? null;
 };
-const phrases = (nodes: readonly Node[], shared: Shared) =>
-  nodes.map((node, at) => (
-    <Drawn key={at} node={node} shared={{ ...shared, ...PHRASE }} />
-  ));
-
-/** The notes at the foot, in the order they are first marked, each leading back to its first mark. */
-const NoteList = ({
-  notes,
-  prefix,
-  shared,
-}: {
-  notes: ReturnType<typeof notesOf>["listed"];
-  prefix: string;
-  shared: Shared;
-}) => {
-  const words = useI18n().markdown;
-  return (
-    <ol {...stylex.props(styles.footnotes)}>
-      {notes.map(({ at, note, number, first }) => {
-        const back = first && (
-          <Link href={`#${markId(prefix, ...first)}`}>
-            {words.back(number)}
-          </Link>
-        );
-        return (
-          <li
-            key={note.identifier}
-            value={number}
-            id={`${prefix}-fn-${number}`}
-          >
-            <At value={at}>
-              {note.children.map((child, index) =>
-                child.type === "paragraph" ? (
-                  <span key={index}>
-                    {phrases(child.children, shared)} {back}
-                  </span>
-                ) : (
-                  <Drawn key={index} node={child} shared={shared} />
-                )
-              )}
-            </At>
-          </li>
-        );
-      })}
-    </ol>
-  );
-};
-
-// ---- Sections: `<details>` with a `<summary>` line, the one form of HTML drawn as what it means --
-//
-// CommonMark reads it as an HTML block holding the opening and the summary, the Markdown blocks of
-// its body, and an HTML block holding the closing; those are grouped again into a section that
-// folds (`<details open>` stands open), and any other HTML stays text. While an answer is written
-// an opening is a section once it is whole, its closing still to come; an answer drawn whole with an
-// opening nothing closes shows it as text. Sections nest, at most 32 deep.
-const OPENING =
-  /^<details(?<attributes>(?:\s+[a-z][a-z-]*(?:="[^"\n]*")?)*)\s*>[ \t]*\n?[ \t]*<summary>(?<summary>[^\n]*)<\/summary>[ \t]*$/u;
-const CLOSING = /^<\/details>[ \t]*$/u;
-interface Section {
-  at: number;
-  node: Node;
-  summary: string;
-  open: boolean;
-  children: Grouped[];
-}
-type Grouped = { at: number; node: Node } | Section;
-const UNDRAWN = /^(?:definition|footnoteDefinition)$/u;
-const htmlOf = (node: Node) => (node.type === "html" ? node.value.trim() : "");
-/** The blocks, each whole section read as one; `unclosed`: an opening nothing closes is one too. */
-const group = (blocks: readonly Node[], unclosed: boolean) => {
-  const root: Grouped[] = [];
-  const open: Section[] = [];
-  let past = 0;
-  const into = () => open.at(-1)?.children ?? root;
-  for (const [at, node] of blocks.entries()) {
-    const { attributes = "", summary } =
-      OPENING.exec(htmlOf(node))?.groups ?? {};
-    const closing = CLOSING.test(htmlOf(node));
-    const section = closing && past === 0 ? open.pop() : undefined;
-    if (summary !== undefined && open.length < 32) {
-      const opens = /(?:^|\s)open(?:\s|=|$)/u.test(attributes);
-      open.push({ at, node, summary, open: opens, children: [] });
-    } else if (section !== undefined) {
-      into().push(section);
-    } else if (!UNDRAWN.test(node.type)) {
-      // An opening past the depth is text, and so is the closing that answers it.
-      if (summary !== undefined) {
-        past += 1;
-      } else if (closing && past > 0) {
-        past -= 1;
-      }
-      into().push({ at, node });
-    }
-  }
-  for (let section = open.pop(); section !== undefined; section = open.pop()) {
-    if (unclosed) {
-      into().push(section);
-    } else {
-      into().push({ at: section.at, node: section.node });
-      for (const child of section.children) {
-        into().push(child);
-      }
-    }
-  }
-  return root;
-};
-const SectionBlock = ({
-  section,
-  shared,
-  children,
-}: {
-  section: Section;
-  shared: Shared;
-  children: ReactNode;
-}) => {
-  const id = useId();
-  const [words] = parse.readBlock(
-    section.summary.trim(),
-    false,
-    shared.streaming
-  );
-  return (
-    <Collapsible asChild defaultOpen={section.open}>
-      <div
-        data-slot="markdown-section"
-        {...stylex.props(sectionStyles.section)}
-      >
-        <CollapsibleTrigger asChild>
-          <button
-            type="button"
-            aria-labelledby={id}
-            {...stylex.props(sectionStyles.toggle, focusRing)}
-          >
-            <span aria-hidden="true" {...stylex.props(sectionStyles.chevron)}>
-              <Icon icon={ChevronRightIcon} />
-            </span>
-          </button>
-        </CollapsibleTrigger>
-        <div id={id} {...stylex.props(sectionStyles.summary)}>
-          {words?.type === "paragraph" && phrases(words.children, shared)}
-        </div>
-        <CollapsibleContent asChild>
-          <div {...stylex.props(sectionStyles.under)}>
-            <div {...stylex.props(sectionStyles.body)}>{children}</div>
-          </div>
-        </CollapsibleContent>
-      </div>
-    </Collapsible>
-  );
-};
-
 const useStarts = (source: string) => {
-  const [cut, setCut] = useState({ source: "", starts: [0] });
+  const [cut, setCut] = useState({ source: "", cut: parse.blockStarts("") });
   if (cut.source === source) {
-    return cut.starts;
+    return cut.cut.starts;
   }
-  const starts = parse.blockStarts(
+  const next = parse.blockStarts(
     source,
-    source.startsWith(cut.source) ? cut.starts : []
+    source.startsWith(cut.source) ? cut.cut : undefined
   );
-  setCut({ source, starts });
-  return starts;
+  setCut({ source, cut: next });
+  return next.starts;
 };
 const FOUND = /^(?:definition|footnoteDefinition|footnoteReference)$/u;
 const found = new WeakMap<Node, Node[]>();
@@ -1112,6 +1018,26 @@ const foundIn = (block: Node) => {
   }
   found.set(block, nodes);
   return nodes;
+};
+/** Each block with its place (`3`, and `3.1` for the second block of a section in the fourth). */
+const placesOf = (
+  blocks: readonly Node[],
+  at = ""
+): (readonly [string, Node])[] =>
+  blocks.flatMap((block, index) => {
+    const place = at === "" ? String(index) : `${at}.${index}`;
+    return block.type === "section"
+      ? placesOf(block.children, place)
+      : [[place, block]];
+  });
+/** The names a whole answer defines, for each block to be read with (parse.ts, `Names`). */
+const namesIn = (blocks: readonly Node[]) => {
+  const all = placesOf(blocks).flatMap(([, block]) => foundIn(block));
+  const of = (type: string) =>
+    all.flatMap((node) =>
+      node.type === type && "identifier" in node ? [node.identifier] : []
+    );
+  return { links: of("definition"), notes: of("footnoteDefinition") };
 };
 /**
  * While written, what a block says once it is finished: never each word, nor code (CodeBlock says
@@ -1135,43 +1061,50 @@ const useSaid = (
     const said = blocks
       .slice(from, finished)
       .map((node, at) => {
-        const html = htmlOf(node);
         if (node.type === "table") {
           return names[from + at] ?? words.table;
         }
-        if (html !== "") {
-          const summary = OPENING.exec(html)?.groups?.summary;
-          return summary ?? (CLOSING.test(html) ? "" : html);
+        if (node.type === "section") {
+          return node.summary;
         }
         return FOUND.test(node.type) || node.type === "code"
           ? ""
           : textOf(node).trim();
       })
-      .filter((part) => part !== "")
+      .filter((text) => text !== "")
       .join(" ");
     if (said !== "") {
       announce(said);
     }
   }, [blocks, finished, live, names, words.table]);
 };
-// While written, a table's row waits for its line's end, and its head for its row of dashes; a
-// task's box, a note's mark or the start of a note, a link's definition (never drawn) and a mark of
-// emphasis or code at the very end wait for the words after them.
-const HALF_ROW = /(?:^|\n) {0,3}\|[^\n]*$/u;
-const HEAD = /(?:^|\n) {0,3}\|[^\n]*\n?$/u;
+// While written, a table's row waits for its line's end, and its head for its row of dashes. A last
+// line that is only the start of a block's mark waits for the characters that decide it: a list's
+// number or bullet, a task's box, a heading's, rule's or underline's marks, a note's start, a link's
+// definition (never drawn), the start of a section's `<details>` or `</details>`. So do a bracket
+// still to be a link, and a mark of emphasis or code, at the very end.
+const PIPE = /^ {0,3}\|/u;
 const DASHES = /^ {0,3}\|?[ \t]*:?-+:?[ \t]*(?:\||$)/mu;
-const STARTS_WAITING =
-  /^[ \t>]*(?:(?:[-*+]|\d{1,9}[.)])[ \t]+\[[ xX]?\]?[ \t]*|\[\^[^\]\s]*\]?:?[ \t]*|\[(?!\^)(?:[^\]\\]|\\.){1,999}\]:.*)$/u;
+const CONTAINERS = /^(?:[ \t>]|[-*+](?=[ \t])|\d{1,9}[.)](?=[ \t]))*/u;
+const UNDECIDED =
+  /^(?:[-*+]|\d{1,9}[.)]?|(?:[-*+=_][ \t]*)+|#{1,6}|\[[ xX]?\]?|\[\^[^\]\s]*\]?:?|\[(?!\^)(?:[^\]\\]|\\.){1,999}\]:.*|<\/?(?:d(?:e(?:t(?:a(?:i(?:ls?)?)?)?)?)?)?)?[ \t]*$/u;
 /** `end` less what waits; each pattern is anchored or found from the end, so none scans back. */
 const lessWaiting = (end: string) => {
   const line = end.lastIndexOf("\n") + 1;
-  if (STARTS_WAITING.test(end.slice(line))) {
+  const last = end.slice(line);
+  const rest = last.replace(CONTAINERS, "");
+  if (last.trim() !== "" && (rest === "" || UNDECIDED.test(rest))) {
     return end.slice(0, line);
   }
   const note = end.lastIndexOf("[^");
   let to = note !== -1 && !/[\]\s]/u.test(end.slice(note)) ? note : end.length;
-  while (to > 0 && "*_~`[ \t".includes(end.charAt(to - 1))) {
-    to -= end.charAt(to - 2) === "!" && end.charAt(to - 1) === "[" ? 2 : 1;
+  // Twice at most: a bracket's pair, then the marks before it (`**[words]`).
+  for (let round = 0; round < 2; round += 1) {
+    while (to > 0 && "*_~`[! \t".includes(end.charAt(to - 1))) {
+      to -= 1;
+    }
+    const bracket = end.lastIndexOf("[", to - 1);
+    to = /^\[[^\]]*\]$/u.test(end.slice(bracket, to)) ? bracket : to;
   }
   return end.slice(0, to);
 };
@@ -1180,37 +1113,54 @@ const lastWord = (text: string) =>
   text.slice(
     Math.max(...[" ", "\n", "\t"].map((c) => text.lastIndexOf(c))) + 1
   );
+const MANY_WORDS = 1000;
 /**
- * The block still being written, read again as it grows; past 8 KB only once it has grown by an
- * eighth, so a huge one (a paragraph of 40,000 lines, a table of thousands of rows) costs no more a
- * chunk than a small one and grows in steps, drawn with the last word it was read with.
+ * The block still being written, read again as it grows: at once while that is quick, and once it
+ * takes long, when four times its last read has passed since, so reading takes at most a fifth of
+ * the time and new words come about every 100 ms however big it is. Its words since the last read
+ * fade as one past 1,000 words (`fresh`, where that read ended).
  */
-const useEnding = (whole: string, streaming: boolean, read: () => Node[]) => {
-  const [kept, setKept] = useState<{ whole: string; nodes: Node[] }>({
-    whole: "",
-    nodes: [],
+const useEnding = (whole: string, paced: boolean, read: () => Block[]) => {
+  const [last, setLast] = useState<{
+    whole: string;
+    nodes: Block[];
+    next: number;
+    fresh: number;
+  }>({ whole: "", nodes: [], next: 0, fresh: -1 });
+  const goesOn = paced && last.whole !== "" && whole.startsWith(last.whole);
+  useLayoutEffect(() => {
+    const again = () => {
+      const start = performance.now();
+      const nodes = read();
+      const now = performance.now();
+      const words = whole.split(/\s+/u).length;
+      const fresh = words > MANY_WORDS ? last.whole.length : -1;
+      setLast({ whole, nodes, next: now + (now - start) * 4, fresh });
+    };
+    const stale = goesOn && whole !== last.whole;
+    const wait = stale ? last.next - performance.now() : Number.NaN;
+    if (wait <= 0) {
+      again();
+    }
+    const timer = wait > 0 ? setTimeout(again, wait) : undefined;
+    return () => {
+      clearTimeout(timer);
+    };
   });
-  const big = streaming && whole.length > 8192;
-  const due =
-    !big ||
-    !whole.startsWith(kept.whole) ||
-    (whole.length - kept.whole.length) * 8 >= whole.length;
-  if (!due) {
-    return kept;
+  if (goesOn) {
+    return last;
   }
-  const now = { whole, nodes: read() };
-  if (big) {
-    setKept(now);
+  const now = { whole, nodes: read(), next: 0, fresh: -1 };
+  if (paced && whole !== last.whole) {
+    setLast(now);
   }
   return now;
 };
-const framed = new Set(["code", "table", "thematicBreak"]);
-const NO_COMPONENTS: MarkdownComponents = {};
 
 /**
- * The answer's top-level nodes: the finished blocks' read once, the block still being written's
- * made whole (`ending`, how many), and the last word still being written. Once written, an answer
- * that defines a name or a note is read whole, so its references resolve as CommonMark says.
+ * The answer's top-level blocks: the finished ones read once, the one still being written made
+ * whole (`ending`, how many), and the last word read. Once written, each block is read with the
+ * names the whole answer defines, so its references resolve as CommonMark says.
  */
 const useBlocks = (
   children: string,
@@ -1218,78 +1168,82 @@ const useBlocks = (
   truncated: boolean
 ) => {
   const source = children.replaceAll(/\r\n?/gu, "\n");
-  const cut = useStarts(source);
-  const starts = !streaming && parse.definesNames(source) ? [0] : cut;
+  const starts = useStarts(source);
   const open = streaming || truncated;
-  const done = (open ? starts.slice(0, -1) : starts).flatMap((start, at) =>
-    parse.readBlock(source.slice(start, starts[at + 1]), false, streaming)
-  );
+  const blocks = open ? starts.slice(0, -1) : starts;
+  const read = (names?: parse.Names) =>
+    blocks.flatMap((start, at) =>
+      parse.readBlock(source.slice(start, starts[at + 1]), { streaming, names })
+    );
+  const plain = read();
+  const names = streaming ? undefined : namesIn(plain);
+  const said =
+    names !== undefined && names.links.length + names.notes.length > 0;
+  const done = said ? read(names) : plain;
   let end = source.slice(open ? starts.at(-1) : source.length);
   // Cut off, a link still being written goes; a row waits for its line's end, a head for its dashes.
   const bracket = end.lastIndexOf("[");
   end =
     truncated && bracket > end.lastIndexOf("]") ? end.slice(0, bracket) : end;
-  const rows = lessWaiting(end).replace(HALF_ROW, "");
-  const whole = DASHES.test(rows) ? rows : rows.replace(HEAD, "");
+  let whole = lessWaiting(end);
+  const row = whole.lastIndexOf("\n") + 1;
+  whole = PIPE.test(whole.slice(row)) ? whole.slice(0, row) : whole;
+  const head = whole.lastIndexOf("\n", whole.length - 2) + 1;
+  const headless = PIPE.test(whole.slice(head)) && !DASHES.test(whole);
+  whole = headless ? whole.slice(0, head) : whole;
   const code = streaming ? parse.openCode(end) : null;
-  const read = useEnding(whole, streaming && code === null, () =>
-    open && code === null ? parse.readBlock(whole, true, streaming) : []
+  const ending = useEnding(whole, streaming && code === null, () =>
+    open && code === null
+      ? parse.readBlock(whole, { open: true, streaming, names })
+      : []
   );
-  // A section's opening shows once it is whole.
-  const ending = (code ?? read.nodes).filter(
-    (node) =>
-      !streaming ||
-      !htmlOf(node).startsWith("<details") ||
-      OPENING.test(htmlOf(node))
-  );
-  const definitions =
-    starts.length === 1
-      ? done
-          .flatMap(foundIn)
-          .flatMap((node) => (node.type === "definition" ? [node] : []))
-      : NO_DEFINITIONS;
+  const nodes = code ?? ending.nodes;
+  const definitions = said
+    ? placesOf(done)
+        .flatMap(([, block]) => foundIn(block))
+        .flatMap((node) => (node.type === "definition" ? [node] : []))
+    : NO_DEFINITIONS;
   return {
-    all: [...done, ...ending],
-    ending: ending.length,
-    tail: lastWord(read.whole),
+    all: [...done, ...nodes],
+    ending: nodes.length,
+    tail: lastWord(ending.whole),
+    fresh: ending.fresh,
     definitions,
   };
 };
 
 /**
  * The notes, numbered in the order they are first marked (once written, only those that came),
- * each with where it is and where its first mark outside the notes is.
+ * each with its place and its first mark outside the notes.
  */
 const notesOf = (all: readonly Node[], streaming: boolean, prefix: string) => {
-  const notes = new Map<string, readonly [number, Of<"footnoteDefinition">]>();
-  const firsts = new Map<string, readonly [number, Node]>();
-  const marked = new Set<string>();
-  for (const [at, block] of all.entries()) {
+  const notes = new Map<string, readonly [string, Of<"footnoteDefinition">]>();
+  const firsts = new Map<string, string>();
+  for (const [place, block] of placesOf(all)) {
     for (const node of foundIn(block)) {
       if (node.type === "footnoteDefinition" && !notes.has(node.identifier)) {
-        notes.set(node.identifier, [at, node]);
-      } else if (node.type === "footnoteReference") {
-        marked.add(node.identifier);
-        if (
-          block.type !== "footnoteDefinition" &&
-          !firsts.has(node.identifier)
-        ) {
-          firsts.set(node.identifier, [at, node]);
-        }
+        notes.set(node.identifier, [place, node]);
+      } else if (
+        node.type === "footnoteReference" &&
+        !firsts.has(node.identifier)
+      ) {
+        firsts.set(
+          node.identifier,
+          block.type === "footnoteDefinition" ? "" : markId(prefix, place, node)
+        );
       }
     }
   }
-  const order = [...marked].filter((id) => streaming || notes.has(id));
+  const order = [...firsts.keys()].filter((id) => streaming || notes.has(id));
+  const lines = order.map(
+    (id) => `${notes.has(id) ? "+" : "-"}${firsts.get(id) ?? ""} ${id}`
+  );
   return {
-    listed: order.flatMap((id, index) => {
-      const [at = 0, note] = notes.get(id) ?? [];
-      const first = firsts.get(id);
-      return note === undefined ? [] : [{ at, note, number: index + 1, first }];
+    listed: order.flatMap((id) => {
+      const note = notes.get(id);
+      return note === undefined ? [] : [note];
     }),
-    value: [
-      prefix,
-      ...order.map((id) => `${notes.has(id) ? "+" : "-"}${id}`),
-    ].join(" "),
+    value: [prefix, ...lines].join("\n"),
   };
 };
 
@@ -1302,6 +1256,7 @@ const namesOf = (all: readonly Node[]) => {
   });
 };
 
+const NO_COMPONENTS: MarkdownComponents = {};
 export const Markdown = ({
   children,
   streaming = false,
@@ -1332,7 +1287,8 @@ export const Markdown = ({
     softBreaks,
     codeMaxLines,
   };
-  const { all, ending, tail, definitions } = useBlocks(
+  const notesShared = { ...shared, notes: true };
+  const { all, ending, tail, fresh, definitions } = useBlocks(
     children,
     streaming,
     truncated
@@ -1342,32 +1298,6 @@ export const Markdown = ({
   const notes = notesOf(all, streaming, prefix);
   const names = namesOf(all);
   useSaid(all, streaming, live === "polite", names);
-  const place = (grouped: Grouped): ReactNode => {
-    const { at, node } = grouped;
-    const inner = (
-      <At value={at}>
-        <Tail value={open && at >= all.length - ending ? tail : ""}>
-          {"children" in grouped ? (
-            <SectionBlock section={grouped} shared={shared}>
-              {grouped.children.map(place)}
-            </SectionBlock>
-          ) : (
-            <Drawn node={node} shared={shared} name={names[at]} />
-          )}
-        </Tail>
-      </At>
-    );
-    return "children" in grouped ? (
-      <Fragment key={at}>{inner}</Fragment>
-    ) : (
-      <div
-        key={at}
-        {...stylex.props(streaming && framed.has(node.type) && fadeIn)}
-      >
-        {inner}
-      </div>
-    );
-  };
   return (
     <div
       data-slot="markdown"
@@ -1376,10 +1306,30 @@ export const Markdown = ({
     >
       <Definitions value={definitions}>
         <Notes value={notes.value}>
-          {group(all, open).map(place)}
+          {all.map((node, at) => {
+            const writing = open && at >= all.length - ending;
+            return FOUND.test(node.type) ? null : (
+              <Placed key={at} node={node} shared={shared}>
+                {/* oxlint-disable-next-line react/jsx-no-constructed-context-values -- a string */}
+                <At value={String(at)}>
+                  <Tail value={writing ? tail : ""}>
+                    <Fresh value={writing ? fresh : -1}>
+                      <Drawn node={node} shared={shared} name={names[at]} />
+                    </Fresh>
+                  </Tail>
+                </At>
+              </Placed>
+            );
+          })}
           {notes.listed.length > 0 && (
             <Tail value={open ? tail : ""}>
-              <NoteList notes={notes.listed} prefix={prefix} shared={shared} />
+              <ol {...stylex.props(styles.footnotes)}>
+                {notes.listed.map(([place, note]) => (
+                  <At key={note.identifier} value={place}>
+                    <Drawn node={note} shared={notesShared} />
+                  </At>
+                ))}
+              </ol>
             </Tail>
           )}
         </Notes>

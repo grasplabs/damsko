@@ -35,6 +35,7 @@ const fixture = (file: string, key: string, field: string) => {
     return typeof joined === "string" ? [{ name, text: joined }] : [];
   });
 };
+const answers = fixture("fixtures/markdown-answers.json", "answers", "lines");
 const specs = [
   ...fixture("fixtures/commonmark-spec.json", "examples", "markdown"),
   ...fixture("fixtures/gfm-spec.json", "examples", "markdown"),
@@ -143,11 +144,19 @@ describe("the parse is micromark's, block by block", () => {
   test("every example reads as the whole parse does, cut into blocks", () => {
     const differing = specs.filter(({ text }) => {
       const source = text.replaceAll(/\r\n?/gu, "\n");
-      const starts = parse.definesNames(source)
-        ? [0]
-        : parse.blockStarts(source);
+      // Each block is read with the names the whole answer defines (parse.ts, `Names`).
+      const nodes = allNodes(parseMarkdown(source).children);
+      const of = (type: string) =>
+        nodes.flatMap((node) =>
+          node.type === type && "identifier" in node ? [node.identifier] : []
+        );
+      const names = {
+        links: of("definition"),
+        notes: of("footnoteDefinition"),
+      };
+      const { starts } = parse.blockStarts(source);
       const blocks = starts.flatMap((start, at) =>
-        parse.readBlock(source.slice(start, starts[at + 1]))
+        parse.readBlock(source.slice(start, starts[at + 1]), { names })
       );
       return shape(blocks) !== shape(parseMarkdown(source).children);
     });
@@ -334,6 +343,10 @@ describe("no address still being written, and none unsafe, is ever handed on", (
   });
 });
 
+/** The kinds of node a block's tree holds. */
+const types = (nodes: parse.Block[]) =>
+  JSON.stringify(nodes).match(/"type":"\w+"/gu) ?? [];
+
 describe("what an answer may hold besides prose", () => {
   test("a task is Checkbox's box, read only, said as done or not", () => {
     const html = draw("- [x] Gather the comments\n- [ ] Share them\n- Plain");
@@ -439,6 +452,54 @@ describe("while it is written, nothing shows that the whole answer will not", ()
     const code = draw("```js\nconst a = 1;\n``", { streaming: true });
     expect(code).toContain("const a = 1;");
     expect(code).not.toContain("``");
+  });
+
+  test("a line that is only the start of a block's mark waits for what decides it", () => {
+    const cases = [
+      ["1. one\n2", "one"],
+      ["Tasks:\n-", "Tasks:"],
+      ["Tasks:\n- [", "Tasks:"],
+      ["Done.\n\n--", "Done."],
+      ["Done.\n\n<", "Done."],
+      ["Done.\n\n</det", "Done."],
+      ["Summary\n=", "Summary"],
+      ["Para\n#", "Para"],
+      ["See [the docs]", "See"],
+    ];
+    const drawn = cases.map(([source = ""]) => {
+      const html = draw(source, { streaming: true });
+      return [source, textOf(html).trim(), count(html, "<h\\d")];
+    });
+    expect(drawn).toStrictEqual(
+      cases.map(([source, words]) => [source, words, 0])
+    );
+  });
+
+  test("no mark of emphasis shows at any prefix, a link being written after it too", () => {
+    const text = answers.find(({ name }) => name === "export")?.text ?? "";
+    const wrong: string[] = [];
+    for (let at = 1; at <= text.length; at += 1) {
+      const html = draw(text.slice(0, at), { streaming: true });
+      const words = textOf(html.replaceAll(/<code[^>]*>[^]*?<\/code>/gu, ""));
+      if (/[*~_]/u.test(words)) {
+        wrong.push(text.slice(Math.max(0, at - 30), at));
+      }
+    }
+    expect(wrong).toStrictEqual([]);
+    expect(text.length).toBeGreaterThan(1000);
+  });
+
+  test("a block read alone knows the answer's names: links and notes defined elsewhere, and every note while written", () => {
+    const names = { links: ["the guide"], notes: ["1"] };
+    const told = parse.readBlock("See [the guide] and a mark[^1].", {
+      names,
+    });
+    expect(types(told)).toContain('"type":"linkReference"');
+    expect(types(told)).toContain('"type":"footnoteReference"');
+    const alone = parse.readBlock("A mark[^2].", { streaming: true });
+    expect(types(alone)).toContain('"type":"footnoteReference"');
+    const whole = parse.readBlock("A mark[^2].");
+    expect(types(whole)).not.toContain('"type":"footnoteReference"');
   });
 
   test("a link's definition still being written is never a link", () => {

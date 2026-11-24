@@ -4,6 +4,8 @@
 // and once it is gone mid-stream nothing is left running.
 //
 //   pnpm exec vp test scripts/markdown-stream.test.tsx
+import { setTimeout as sleep } from "node:timers/promises";
+
 import { act } from "react";
 import type { ReactNode } from "react";
 import { createRoot } from "react-dom/client";
@@ -53,6 +55,32 @@ const wordsEnd = (box: Element) => {
   return words.trimEnd().slice(-20);
 };
 
+// The start of a block's mark shown as words, the next characters still to decide it: a line of a
+// paragraph or a heading, or a later line of an item or a cell; an empty heading.
+const RAW = /(?:^|\n)[ \t]*(?:[-*+#=_<]+|\d{1,9}[.)]?|<\/?[a-z]*)$/u;
+const RAW_LATER = /\n[ \t]*(?:[-*+#=_<]+|\d{1,9}[.)]?|<\/?[a-z]*)$/u;
+/** Whether the last block of words drawn ends in the start of a block's mark, code left out. */
+const rawStart = (box: Element) => {
+  const blocks = [
+    ...box.querySelectorAll("p, li, h1, h2, h3, h4, h5, h6, td, th"),
+  ].filter((block) => block.closest("[data-slot=code-block]") === null);
+  const last = blocks.at(-1);
+  // Words in a mark of their own (`**1.**`) are words.
+  const walker = document.createTreeWalker(last ?? box, NodeFilter.SHOW_TEXT);
+  let end: Node | null = null;
+  for (let text = walker.nextNode(); text; text = walker.nextNode()) {
+    end = text;
+  }
+  if (end?.parentElement?.closest("strong, em, del, a, code, sup")) {
+    return false;
+  }
+  const text = last?.textContent ?? "x";
+  return (
+    (last?.matches("li, td, th") === true ? RAW_LATER : RAW).test(text) ||
+    (last?.matches("h1, h2, h3, h4, h5, h6") === true && text === "")
+  );
+};
+
 /** Draws into a root of its own, and gives back the root's shape after each `step`. */
 const live = () => {
   const box = document.createElement("div");
@@ -73,6 +101,9 @@ describe("a stream that ends draws what the whole answer draws, and no raw mark 
   test.each([1, 7, 64])(
     "every sample answer, in chunks of %i characters",
     (chunk) => {
+      // A clock that stands still: every chunk is read as it comes (no read takes any time), so
+      // what is drawn is what that chunk draws.
+      vi.useFakeTimers({ toFake: ["performance"] });
       const marks: string[] = [];
       const differing = answers.filter(({ text }) => {
         const whole = live();
@@ -80,7 +111,10 @@ describe("a stream that ends draws what the whole answer draws, and no raw mark 
         for (let at = chunk; at < text.length; at += chunk) {
           streamed.render(<Markdown streaming>{text.slice(0, at)}</Markdown>);
           const end = wordsEnd(streamed.box);
-          if (/[*_~`]$/u.test(end)) {
+          // A bracket the source ends in, still to be a link, drawn as it is.
+          const pair = /\[[^\]\n]*\]$/u.exec(text.slice(0, at))?.[0];
+          const bracket = pair !== undefined && end.endsWith(pair);
+          if (/[*_~`]$/u.test(end) || bracket || rawStart(streamed.box)) {
             marks.push(`${at}: …${end}`);
           }
         }
@@ -94,7 +128,8 @@ describe("a stream that ends draws what the whole answer draws, and no raw mark 
         return !same;
       });
       expect(differing.map(({ name }) => name)).toStrictEqual([]);
-      // While written, no mark of emphasis or code shows at the end of the words.
+      vi.useRealTimers();
+      // While written, no mark of emphasis or code, and no start of a block's mark, shows at the end.
       expect(marks).toStrictEqual([]);
       expect(answers.length).toBeGreaterThan(50);
     },
@@ -102,18 +137,26 @@ describe("a stream that ends draws what the whole answer draws, and no raw mark 
   );
 });
 
-describe("a huge block still being written costs no more a chunk than a small one", () => {
-  test("past 8 KB, it is read again only once it has grown by an eighth", () => {
-    const text = "word and words\n".repeat(2000);
+describe("a block that takes long to read is read again as often as a fifth of the time allows", () => {
+  test("a small one at every chunk; a big one once four times its last read has passed, chunk or not", async () => {
+    const text = `${"words in a long line ".repeat(10)}\n`.repeat(1000);
     const { box, root, render } = live();
     const shown = (at: number) => {
       render(<Markdown streaming>{text.slice(0, at)}</Markdown>);
       return box.textContent.length;
     };
-    const first = shown(16_384);
-    expect(shown(16_384 + 512)).toBe(first);
-    expect(shown(16_384 + 2600)).toBeGreaterThan(first);
-    expect(shown(4096)).toBeLessThan(shown(4096 + 16));
+    expect(shown(100)).toBeLessThan(shown(140));
+    shown(150_000);
+    await act(async () => {
+      await sleep(100);
+    });
+    const read = shown(150_040);
+    expect(read).toBeGreaterThan(149_000);
+    expect(shown(150_080)).toBe(read);
+    await act(async () => {
+      await sleep(1000);
+    });
+    expect(box.textContent.length).toBeGreaterThan(read);
     act(() => {
       root.unmount();
     });

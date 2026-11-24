@@ -192,11 +192,14 @@ test("a task's box is round at the corner, its tick the icon's own size", async 
         ["round", "superellipse(1)"].includes(
           look.getPropertyValue("corner-shape")
         ),
-      radius: look.borderTopLeftRadius,
+      // The system's small corner, 6px, or 4px where no corner-shape is drawn (tokens.css).
+      radius:
+        look.borderTopLeftRadius ===
+        getComputedStyle(face).getPropertyValue("--damsko-radius-sm").trim(),
       tick: mark.getBoundingClientRect().width,
     };
   });
-  expect(box).toEqual({ round: true, radius: "6px", tick: 16 });
+  expect(box).toEqual({ round: true, radius: true, tick: 16 });
 });
 
 test("footnotes: a mark leads to its note at the foot, and the note leads back", async ({
@@ -488,7 +491,8 @@ test("while it is written, a table and a code block keep their place and each ne
   await openExample(page, "markdown", "streaming");
   const seen = await watchFrames(page, 9000);
   expect(seen.moved).toStrictEqual([]);
-  expect(seen.faded).toBeGreaterThan(50);
+  // One pass of the example draws 32 words outside its link; 9 s holds at least one in any engine.
+  expect(seen.faded).toBeGreaterThan(30);
   expect(seen.popped).toBe(0);
 });
 
@@ -497,7 +501,7 @@ test("with reduced motion, each new word is there at once", async ({
 }) => {
   await openExample(page, "markdown", "streaming");
   const seen = await watchFrames(page, 9000);
-  expect(seen.popped).toBeGreaterThan(50);
+  expect(seen.popped).toBeGreaterThan(30);
   expect(seen.faded).toBe(0);
 });
 

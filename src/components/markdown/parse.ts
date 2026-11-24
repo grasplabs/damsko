@@ -19,25 +19,45 @@ const OFF =
 const GFM = [gfm({ singleTilde: false })];
 const PLAIN = [...GFM, { disable: { null: OFF.split(" ") } }];
 const FROM = [gfmFromMarkdown()];
-// micromark reads `[^1]` as a note's mark only once it has read the note (`gfmFootnotes`), which a
-// block read alone, or an answer still being written, may not hold yet: while written, the list of
-// notes read holds every name, so a mark is one from the start.
-const EVERY = Object.assign<string[], object>([], { includes: () => true });
-const everyNote: ReturnType<typeof gfm> = {
-  text: {
-    91: {
-      add: "before" as const,
-      tokenize<State>(
-        this: { parser: { gfmFootnotes?: string[] } },
-        _: unknown,
-        __: unknown,
-        nok: State
-      ) {
-        this.parser.gfmFootnotes = EVERY;
-        return nok;
-      },
+/** The names an answer defines, as the tree has them; `notes: null`, every name is a note's. */
+export interface Names {
+  links: readonly string[];
+  notes: readonly string[] | null;
+}
+const NO_NAMES: Names = { links: [], notes: [] };
+// micromark reads `[label]` as a reference, and `[^label]` as a note's mark, only once it has read
+// the definition in the same read: its parse context's `defined` (micromark's own) and
+// `gfmFootnotes` (the footnote extension's) say which. No option sets them, so a block read alone
+// is told the names the whole answer defines by a construct that runs first at each `[` or `!`
+// and widens both lists; while an answer is written, every name is a note's, its note perhaps still
+// to come. scripts/markdown.test.tsx ("a block read alone knows the answer's names") pins this.
+const toldParsers = new WeakSet<object>();
+const knows =
+  (names: readonly string[] | null, own: readonly string[]) => (id: string) =>
+    names === null || names.includes(id.toLowerCase()) || own.includes(id);
+const told = ({ links, notes }: Names) => {
+  const construct = {
+    add: "before" as const,
+    tokenize<State>(
+      this: { parser: { defined: string[]; gfmFootnotes?: string[] } },
+      _: unknown,
+      __: unknown,
+      nok: State
+    ) {
+      const { parser } = this;
+      if (!toldParsers.has(parser)) {
+        toldParsers.add(parser);
+        const own = parser.gfmFootnotes ?? [];
+        parser.defined.includes = knows(links, [...parser.defined]);
+        parser.gfmFootnotes = Object.assign(own, {
+          includes: knows(notes, [...own]),
+        });
+      }
+      return nok;
     },
-  },
+  };
+  // Before a link's or a picture's first mark (`[`, `!`).
+  return { text: { 33: construct, 91: construct } };
 };
 const FENCE = /^ {0,3}(?<fence>`{3,}|~{3,})(?<info>.*)$/u;
 const closes = (line: string, open: string) => {
@@ -59,24 +79,26 @@ const bounded = (source: string) => {
   let fence = "";
   let marks = 0;
   let many = false;
-  const lines = source.split("\n").map((line) => {
-    if (fence !== "") {
-      fence = closes(line, fence) ? "" : fence;
-      return line;
-    }
-    fence = FENCE.exec(line)?.groups?.fence ?? "";
+  const out: string[] = [];
+  for (const [at, line] of source.split("\n").entries()) {
+    const was = fence;
+    fence = was === "" ? (FENCE.exec(line)?.groups?.fence ?? "") : fence;
+    fence = was !== "" && closes(line, was) ? "" : fence;
     // A fence, a list item, a row, a heading or a blank line starts a part of its own.
-    marks = fence !== "" || /^[ \t>]*(?:[-*+|#\d]|$)/u.test(line) ? 0 : marks;
-    marks += line.replaceAll(/[^*_~[\]]/gu, "").length;
-    many ||= fence === "" && marks > 1000;
-    return line.replace(DEEP, (lead) => lead.slice(-64));
-  });
-  return { text: lines.join("\n"), many };
+    const starts = fence !== "" || /^[ \t>]*(?:[-*+|#\d]|$)/u.test(line);
+    marks = (starts ? 0 : marks) + line.replaceAll(/[^*_~[\]]/gu, "").length;
+    many ||= was === "" && marks > 1000;
+    out.push(
+      at === 0 ? "" : "\n",
+      was === "" ? line.replace(DEEP, (lead) => lead.slice(-64)) : line
+    );
+  }
+  return { text: out.join(""), many };
 };
-const read = (source: string, notes = false): MarkdownRoot => {
+const read = (source: string, names = NO_NAMES): MarkdownRoot => {
   const { text, many } = bounded(source);
   try {
-    const extensions = [...(many ? PLAIN : GFM), ...(notes ? [everyNote] : [])];
+    const extensions = [...(many ? PLAIN : GFM), told(names)];
     return fromMarkdown(text, { extensions, mdastExtensions: FROM });
   } catch {
     // Nesting deep enough to exhaust the stack (thousands of `>` on a line): its words.
@@ -91,7 +113,8 @@ const read = (source: string, notes = false): MarkdownRoot => {
 export const parseMarkdown = (source: string) => read(source);
 
 // After a blank line, a line at the margin that no list item starts starts a block of its own; a
-// fence, or HTML that may hold blank lines (CommonMark's kinds 1 to 5), runs on to its end.
+// fence, HTML that may hold blank lines (CommonMark's kinds 1 to 5) and a section run on to their
+// end.
 const STARTS = /^(?![-*+](?:[ \t]|$)|\d{1,9}[.)](?:[ \t]|$))\S/u;
 const HTML =
   /^ {0,3}<(?<open>pre|script|style|textarea|!--|\?|!\[CDATA\[|![a-z])/iu;
@@ -101,46 +124,87 @@ const ENDS: Record<string, string> = {
   "![cdata[": "]]>",
 };
 
+const OPENS = /^<details\b/iu;
+const CLOSES = /^<\/details>[ \t]*$/iu;
+/** What a block still open waits for: given its next line, what it then waits for, or null once it ends. */
+type End = (next: string) => End | null;
+const until = (ends: (next: string) => boolean): End => {
+  const end: End = (next) => (ends(next) ? null : end);
+  return end;
+};
+/** A section's end: the `</details>` that closes its `<details>`, fenced code aside. */
+const sectionEnd =
+  (depth: number, fence: string): End =>
+  (next) => {
+    if (fence !== "") {
+      return sectionEnd(depth, closes(next, fence) ? "" : fence);
+    }
+    const now = depth + Number(OPENS.test(next)) - Number(CLOSES.test(next));
+    return now === 0
+      ? null
+      : sectionEnd(now, FENCE.exec(next)?.groups?.fence ?? "");
+  };
+
 /** What ends the block `line` opens, if it does not end on that line. */
-const endOf = (line: string): ((next: string) => boolean) | null => {
+const endOf = (line: string): End | null => {
   const fence = FENCE.exec(line)?.groups?.fence;
   if (fence !== undefined) {
-    return (next) => closes(next, fence);
+    return until((next) => closes(next, fence));
+  }
+  if (OPENS.test(line)) {
+    return sectionEnd(1, "");
   }
   const open = HTML.exec(line)?.groups?.open?.toLowerCase() ?? "";
   const end = ENDS[open] ?? (/^[a-z]{2}/u.test(open) ? `</${open}>` : ">");
   const ends = (next: string) => next.toLowerCase().includes(end);
-  return open === "" || ends(line.slice(open.length + 1)) ? null : ends;
+  return open === "" || ends(line.slice(open.length + 1)) ? null : until(ends);
 };
 
-// A reference is a link, or a note's mark, only where its definition is read with it, so a whole
-// answer that defines a name or a note (or seems to) is read whole; while it streams, a reference to
-// a link is its words.
-const DEFINES = /^[ \t>*+\d.)-]*\[(?:[^\]\\]|\\.){1,999}\]:/mu;
-export const definesNames = (source: string) => DEFINES.test(source);
-/**
- * Where each top-level block of `source` starts. `known`: the starts of a shorter answer this one
- * goes on from; all but the last stand, and the rest is read on from there.
- */
-export const blockStarts = (source: string, known: readonly number[] = []) => {
-  const starts = known.length > 1 ? known.slice(0, -1) : [0];
-  let ends: ((next: string) => boolean) | null = null;
-  let blank = false;
-  for (let at = starts.at(-1) ?? 0; at < source.length;) {
+/** Where each top-level block starts, and where the scan may go on from: before a line still growing. */
+export interface Cut {
+  starts: number[];
+  at: number;
+  count: number;
+  end: End | null;
+  blank: boolean;
+  run: number;
+}
+const FIRST: Cut = {
+  starts: [0],
+  at: 0,
+  count: 1,
+  end: null,
+  blank: false,
+  run: 0,
+};
+/** Where each top-level block of `source` starts, the scan going on from `from` (a shorter one's). */
+export const blockStarts = (source: string, from = FIRST): Cut => {
+  const starts = from.starts.slice(0, from.count);
+  let { at, end, blank, run } = from;
+  let kept = { ...from, starts };
+  while (at < source.length) {
     const next = source.indexOf("\n", at) + 1 || source.length;
     const line = source.slice(at, next).trimEnd();
-    if (ends === null) {
-      if (blank && STARTS.test(line) && at > (starts.at(-1) ?? 0)) {
+    if (end === null) {
+      // A paragraph of more than 1,000 lines goes on as another: micromark weighs a paragraph's
+      // lines as their number squared, and the block being written is read again as it grows.
+      run = STARTS.test(line) && /^[^>|<]/u.test(line) ? run + 1 : 0;
+      const starting = blank ? STARTS.test(line) : run > 1000;
+      if (starting && at > (starts.at(-1) ?? 0)) {
         starts.push(at);
+        run = 1;
       }
-      ends = endOf(line);
-    } else if (ends(line)) {
-      ends = null;
+      end = endOf(line);
+    } else {
+      end = end(line);
     }
-    blank = ends === null && line === "";
+    blank = end === null && line === "";
     at = next;
+    if (source.charAt(next - 1) === "\n") {
+      kept = { starts, at, count: starts.length, end, blank, run };
+    }
   }
-  return starts;
+  return { ...kept, starts };
 };
 
 /**
@@ -160,27 +224,143 @@ export const openCode = (block: string) => {
   return [{ type: "code" as const, lang: lang === "" ? null : lang, value }];
 };
 
-const cache = new Map<string, RootContent[]>();
 const REPAIR = {
   singleTilde: false,
   comparisonOperators: false,
   katex: false,
 } as const;
-
 /**
- * A block's nodes, read once while it is the same. `open`: the block still being written, made
- * whole first (remend: bold from its first letter, a half link one to nowhere, a half picture's
- * address nowhere) and not kept, with none of remend's rewrites that would draw a whole answer
- * otherwise. `streaming`: every `[^name]` is a note's mark, its note perhaps still to come.
+ * The block still being written made whole (remend: bold from its first letter, a half link one to
+ * nowhere, a half picture's address nowhere), with none of its rewrites that would draw a whole
+ * answer otherwise. remend closes no emphasis opened before the half link it ends in, so that is
+ * closed after it, as remend closes it for the words before.
  */
-export const readBlock = (block: string, open = false, streaming = false) => {
-  const source = open ? remend(block, REPAIR) : block;
-  const notes = streaming && source.includes("[^");
-  const key = notes ? `\0${source}` : source;
-  const nodes = cache.get(key) ?? read(source, notes).children;
+const repair = (block: string) => {
+  // An address whose parentheses balance (`…_(format)`) is still open: remend would take its first
+  // `)` for the link's end, so it is cut back to its `](`, a half link.
+  const at = block.lastIndexOf("](");
+  const address = block.slice(at + 2);
+  const parens = address.split("(").length - address.split(")").length;
+  const open =
+    at !== -1 && !/\s/u.test(address) && address.includes(")") && parens >= 0;
+  const whole = remend(open ? block.slice(0, at + 2) : block, REPAIR);
+  const end = whole.lastIndexOf("](streamdown:incomplete-");
+  if (end === -1 || whole.indexOf(")", end) !== whole.length - 1) {
+    return whole;
+  }
+  const before = whole.slice(0, whole.lastIndexOf("[", end)).replace(/!$/u, "");
+  const closed = remend(`${before}x`, REPAIR);
+  return closed.startsWith(`${before}x`)
+    ? whole + closed.slice(before.length + 1)
+    : whole;
+};
+
+/** A section: `<details>` with its `<summary>` line, its body read as blocks of its own. */
+export interface Section {
+  type: "section";
+  summary: string;
+  open: boolean;
+  children: Block[];
+  position?: undefined;
+}
+export type Block = RootContent | Section;
+/** How a block is read: still being written (`open`), while the answer streams, with its names. */
+export interface Reading {
+  open?: boolean;
+  streaming?: boolean;
+  names?: Names;
+  depth?: number;
+}
+const OPENING =
+  /^<details(?<attributes>(?:\s+[a-z][a-z-]*(?:="[^"\n]*")?)*)\s*>[ \t]*\n?[ \t]*<summary>(?<summary>[^\n]*)<\/summary>[ \t]*(?:\n|$)/u;
+/**
+ * A section, nested at most 32 deep; once written, only one that closes (an answer drawn whole
+ * with an opening nothing closes shows it as text). While written, its opening waits until whole.
+ */
+const sectionOf = (
+  block: string,
+  reading: Reading,
+  readChild: (text: string, reading: Reading) => Block[]
+): Block[] | null => {
+  const { depth = 0, open = false } = reading;
+  const opening = OPENING.exec(block);
+  const body = block.slice(opening?.[0].length ?? 0).trimEnd();
+  const closed = /(?:^|\n)<\/details>$/u.test(body);
+  if (opening === null || depth >= 32 || !(closed || open)) {
+    return open && OPENS.test(block) && opening === null ? [] : null;
+  }
+  const { attributes = "", summary = "" } = opening.groups ?? {};
+  const inner = closed ? body.slice(0, body.lastIndexOf("</details>")) : body;
+  const { starts } = blockStarts(inner);
+  const children = starts.flatMap((start, at): Block[] => {
+    const last = open && !closed && at === starts.length - 1;
+    const text = inner.slice(start, starts[at + 1]);
+    return (
+      (last ? openCode(text) : null) ??
+      readChild(text, { ...reading, open: last, depth: depth + 1 })
+    );
+  });
+  return [
+    {
+      type: "section",
+      summary: summary.trim(),
+      open: /(?:^|\s)open(?:\s|=|$)/u.test(attributes),
+      children,
+    },
+  ];
+};
+
+const DASH_ROW = /^ {0,3}\|?[ \t]*:?-+:?[ \t]*(?:\||$)/u;
+/**
+ * A table from a model has no bound: past its first 1,000 rows, only how many more there are is
+ * read (`more` on the table).
+ */
+const lessRows = (block: string) => {
+  const head = block.indexOf("\n");
+  const second = block.indexOf("\n", head + 1);
+  const dashes = block.slice(head + 1, second === -1 ? undefined : second);
+  let cut = head;
+  for (let row = 0; row <= 1000 && cut !== -1; row += 1) {
+    cut = block.indexOf("\n", cut + 1);
+  }
+  const table =
+    head !== -1 && block.slice(0, head).includes("|") && DASH_ROW.test(dashes);
+  if (!table || cut === -1) {
+    return { text: block, more: 0 };
+  }
+  const rest = block.slice(cut + 1).split("\n");
+  return {
+    text: block.slice(0, cut),
+    more: rest.filter((line) => line.trim() !== "").length,
+  };
+};
+
+// Blocks read once, while the same, up to 2 MB of their source in all.
+const cache = new Map<string, Block[]>();
+let cached = 0;
+
+/** A block's nodes, read once while it is the same; the block still being written is not kept. */
+export const readBlock = (block: string, reading: Reading = {}): Block[] => {
+  const { open = false, streaming = false, names = NO_NAMES } = reading;
+  const given =
+    streaming && block.includes("[^") ? { ...names, notes: null } : names;
+  const key = `${JSON.stringify(given)}${block}`;
+  const known = open ? undefined : cache.get(key);
+  if (known !== undefined) {
+    return known;
+  }
+  const { text, more } = lessRows(open ? repair(block) : block);
+  const nodes =
+    sectionOf(text, reading, readBlock) ?? read(text, given).children;
+  const [table] = nodes;
+  if (more > 0 && table?.type === "table") {
+    Object.assign(table, { more });
+  }
   if (!open) {
-    if (cache.size > 5000) {
+    cached += key.length;
+    if (cached > 2_000_000) {
       cache.clear();
+      cached = key.length;
     }
     cache.set(key, nodes);
   }
