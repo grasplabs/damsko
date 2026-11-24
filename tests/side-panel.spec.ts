@@ -222,16 +222,19 @@ test("a cover can be the system's faint dither, and a section's action is muted 
   expect(row).toBeCloseTo(panel?.width ?? 0, 0);
   await openExample(page, "side-panel", "basic");
   const add = page.getByRole("button", { name: "Add", exact: true });
-  const [ink, muted] = await add.evaluate((button) => {
-    const probe = document.createElement("span");
-    probe.style.color = "var(--damsko-muted-foreground)";
-    button.append(probe);
-    const pair = [
-      getComputedStyle(button).color,
-      getComputedStyle(probe).color,
-    ];
-    probe.remove();
-    return pair;
-  });
-  expect(ink).toBe(muted);
+  // Its ink and the muted token's, side by side; polled, as under load the ink was once read
+  // still easing to it (a colour between the two) when the page was live.
+  const inks = async () =>
+    await add.evaluate((button) => {
+      const probe = document.createElement("span");
+      probe.style.color = "var(--damsko-muted-foreground)";
+      button.append(probe);
+      const pair = [
+        getComputedStyle(button).color,
+        getComputedStyle(probe).color,
+      ];
+      probe.remove();
+      return pair[0] === pair[1];
+    });
+  await expect.poll(inks).toBe(true);
 });
