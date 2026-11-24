@@ -70,22 +70,41 @@ const film = async (page: Page, act: () => Promise<void>) => {
 // apart from the same word drawn live.
 const NOISE = 30;
 
+interface Judging {
+  /** A frame that does not yet draw this as the last frame does is passed over (null). */
+  drawn?: Box;
+  /**
+   * The frames are of the router's crossfade, so a frame may draw the two states with weights that
+   * do not sum to one (strayPixels).
+   */
+  crossfade?: boolean;
+}
+
 /**
  * For each frame, how many pixels in `box` differ from both the first frame and the last, where
  * those two agree: a pixel of a blend of the two states lies between them, one of neither does not.
- * Given `drawn`, a frame that does not yet draw it as the last frame does is passed over (null).
  * Read in a page of its own, from the frames' PNG data. With them, the worst frame's `box` and a
  * picture of where it strays (red), as PNG data.
+ *
+ * The crossfade draws the two states one over the other, with weights that sum to one, so where
+ * the states are the same a frame draws them as they are. Not always: as it starts, Chromium can
+ * draw a frame with its two halves out of step, and the whole page comes out lighter, either as
+ * though at 0.6 over the white under it, or up to 1.6 times as bright, clipped at white (on CI
+ * about 1 run in 7 at 1x CPU, never on a Mac). Either way such a frame draws each channel `c` of
+ * what both states show as `a·c + b`, one `a` and `b` for the whole page. So for a crossfade they
+ * are read from the frame, where the two states are the same outside `box`, and each pixel in
+ * `box` is judged against the states drawn that way: a frame with the sidebar's own pixels in
+ * neither state still strays, however light the page.
  */
 const strayPixels = async (
   page: Page,
   frames: string[],
   box: Box,
-  drawn?: Box
+  { drawn, crossfade = false }: Judging = {}
 ) => {
   const lab = await page.context().newPage();
   const found = await lab.evaluate(
-    async ({ all, at, end, noise, view }) => {
+    async ({ all, at, blend, end, noise, view }) => {
       const canvas = new OffscreenCanvas(view.width, view.height);
       const context = canvas.getContext("2d", { willReadFrequently: true });
       const cropped = new OffscreenCanvas(at.width, at.height);
@@ -107,14 +126,74 @@ const strayPixels = async (
       const pixels = pictures.map((picture) => read(picture, at));
       const first = pixels[0]?.data;
       const last = pixels.at(-1)?.data;
+      const [firstPicture] = pictures;
       const lastPicture = pictures.at(-1);
       if (
         first === undefined ||
         last === undefined ||
+        firstPicture === undefined ||
         lastPicture === undefined
       ) {
         throw new Error("No frames.");
       }
+      // The weights of a crossfade's frame: a and b, from the channels outside `at` that are the
+      // same in the two states, each short of white in the frame (white may be clipped), by least
+      // squares.
+      const whole = { x: 0, y: 0, width: view.width, height: view.height };
+      const firstWhole = read(firstPicture, whole).data;
+      const lastWhole = read(lastPicture, whole).data;
+      const sameOutside = () => {
+        const channels: number[] = [];
+        for (let index = 0; index < firstWhole.length; index += 4) {
+          const x = (index / 4) % view.width;
+          const y = Math.floor(index / 4 / view.width);
+          const inside =
+            x >= at.x &&
+            x < at.x + at.width &&
+            y >= at.y &&
+            y < at.y + at.height;
+          let same = true;
+          for (let channel = index; channel < index + 3; channel += 1) {
+            same &&=
+              Math.abs(
+                (firstWhole[channel] ?? 0) - (lastWhole[channel] ?? 0)
+              ) <= 2;
+          }
+          if (!inside && same) {
+            channels.push(index, index + 1, index + 2);
+          }
+        }
+        return channels;
+      };
+      const fitAt = blend ? sameOutside() : [];
+      const weightsOf = (picture: ImageBitmap) => {
+        if (!blend) {
+          return { a: 1, b: 0 };
+        }
+        const now = read(picture, whole).data;
+        let count = 0;
+        let sumBefore = 0;
+        let sumNow = 0;
+        let sumSquares = 0;
+        let sumProducts = 0;
+        for (const channel of fitAt) {
+          const shown = now[channel] ?? 0;
+          const before = firstWhole[channel] ?? 0;
+          if (shown < 250) {
+            count += 1;
+            sumBefore += before;
+            sumNow += shown;
+            sumSquares += before * before;
+            sumProducts += before * shown;
+          }
+        }
+        const spread = count * sumSquares - sumBefore * sumBefore;
+        if (spread === 0) {
+          return { a: 1, b: 0 };
+        }
+        const a = (count * sumProducts - sumBefore * sumNow) / spread;
+        return { a, b: (sumNow - a * sumBefore) / count };
+      };
       const witness =
         end === undefined ? undefined : read(lastPicture, end).data;
       // Whether the frame draws `end` as the last frame does: its pixels within a blend's reach.
@@ -135,10 +214,13 @@ const strayPixels = async (
         return off <= noise;
       };
       const judged = pictures.map(drawsEnd);
-      const strays = pixels.map(({ data: frame }, frameIndex) => {
-        if (judged[frameIndex] !== true) {
+      const strays = pictures.map((picture, frameIndex) => {
+        const frame = pixels[frameIndex]?.data;
+        if (judged[frameIndex] !== true || frame === undefined) {
           return null;
         }
+        const { a, b } = weightsOf(picture);
+        const shownAs = (value: number) => Math.min(255, a * value + b);
         const strayAt: number[] = [];
         for (let index = 0; index < frame.length; index += 4) {
           let agree = true;
@@ -149,8 +231,8 @@ const strayPixels = async (
             const after = last[channel] ?? 0;
             const now = frame[channel] ?? 0;
             agree &&= Math.abs(before - after) <= 12;
-            fromFirst = Math.max(fromFirst, Math.abs(now - before));
-            fromLast = Math.max(fromLast, Math.abs(now - after));
+            fromFirst = Math.max(fromFirst, Math.abs(now - shownAs(before)));
+            fromLast = Math.max(fromLast, Math.abs(now - shownAs(after)));
           }
           if (agree && fromFirst > 40 && fromLast > 40) {
             strayAt.push(index);
@@ -196,6 +278,7 @@ const strayPixels = async (
     {
       all: frames,
       at: box,
+      blend: crossfade,
       end: drawn,
       noise: NOISE,
       view: VIEW,
@@ -215,9 +298,9 @@ const expectNoStrayFrame = async (
   testInfo: TestInfo,
   frames: string[],
   box: Box,
-  drawn?: Box
+  judging?: Judging
 ) => {
-  const found = await strayPixels(page, frames, box, drawn);
+  const found = await strayPixels(page, frames, box, judging);
   const { counts, worst } = found;
   const most = counts[worst] ?? 0;
   if (most > NOISE) {
@@ -306,7 +389,9 @@ for (const rate of [1, 6]) {
     await cdp.send("Emulation.setCPUThrottlingRate", { rate: 1 });
     // The page changed in sight: the swap, the fade and the shell waking drew frames of their own.
     expect(frames.length).toBeGreaterThan(4);
-    await expectNoStrayFrame(page, testInfo, frames, sidebar);
+    await expectNoStrayFrame(page, testInfo, frames, sidebar, {
+      crossfade: true,
+    });
   });
 }
 
@@ -357,13 +442,9 @@ for (const rate of [1, 6, 20]) {
       await settled(page);
     });
     await cdp.send("Emulation.setCPUThrottlingRate", { rate: 1 });
-    const counts = await expectNoStrayFrame(
-      page,
-      testInfo,
-      frames,
-      trigger,
-      end
-    );
+    const counts = await expectNoStrayFrame(page, testInfo, frames, trigger, {
+      drawn: end,
+    });
     // The reloaded page's bar was judged before the frames stopped: not every frame was passed over.
     expect(counts.slice(1, -1).some((count) => count !== null)).toBe(true);
   });
