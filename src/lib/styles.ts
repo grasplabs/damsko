@@ -19,6 +19,7 @@ import {
   space,
 } from "./tokens.stylex";
 import {
+  pixel,
   fieldControlMarker,
   focusMarker,
   iconVars,
@@ -1234,6 +1235,33 @@ const tileStyles = stylex.create({
 
 /** A tile's edge: the system's strong edge, and in forced colours, where shadows drop, a hairline. */
 export const tileEdge = tileStyles.edge;
+
+// ---- Texture ------------------------------------------------------------------------------------
+
+const textureStyles = stylex.create({
+  texture: {
+    position: "absolute",
+    inset: 0,
+    pointerEvents: "none",
+    opacity: size.textureStrength,
+    backgroundImage: {
+      default: `radial-gradient(120% 90% at 0% 0%, ${colors.mint}, transparent 70%)`,
+      ":dir(rtl)": `radial-gradient(120% 90% at 100% 0%, ${colors.mint}, transparent 70%)`,
+    },
+    // The dither: the system's one pixel, a 2px square in every 3px.
+    maskImage: pixel.mask,
+    maskSize: "3px 3px",
+    display: { default: "block", [FORCED]: "none" },
+  },
+});
+
+/**
+ * The faint dither of light behind the head of the one thing a page is about: mint light from the
+ * top corner at the start (the right, right to left), seen through the system's pixel. It fills its
+ * positioned box. Decoration: hidden from a screen reader, takes no pointer, never moves, not drawn
+ * in forced colours. Page header's banner draws it; a page puts it in a SidePanel's `cover`.
+ */
+export const { texture } = textureStyles;
 
 // ---- A choice in a Field's row ------------------------------------------------------------------
 //

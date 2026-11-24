@@ -4,6 +4,8 @@
 // reading a long answer a block at a time; and the one HTML form read as a section.
 //
 //   pnpm exec vp test scripts/markdown-parse.test.ts
+import { fileURLToPath } from "node:url";
+
 import { fromMarkdown } from "mdast-util-from-markdown";
 import { gfmFromMarkdown } from "mdast-util-gfm";
 import { gfm } from "micromark-extension-gfm";
@@ -13,14 +15,13 @@ import {
   bounded,
   groupSections,
   NOTHING,
-  openFence,
   parseMarkdown,
   readBlocks,
-  repair,
   schemeOf,
   sectionSaid,
-  tidy,
 } from "../src/components/markdown/parse.ts";
+import { openFence, repair, tidy } from "../src/components/markdown/repair.ts";
+import { isRecord, readJson } from "./json.ts";
 
 describe(parseMarkdown, () => {
   test("GitHub's additions are read: a table, a task, a strike, a bare address, a note", () => {
@@ -129,31 +130,36 @@ describe(repair, () => {
     }
   });
 
+  // What is held back is held back alone: the space before it stays, so nothing shown goes.
   test("a short bracket at the very end waits, as it may yet open a link", () => {
-    expect(repair("See [the gui").text).toBe("See");
-    expect(repair("see [1]").text).toBe("see");
+    expect(repair("See [the gui").text).toBe("See ");
+    expect(repair("see [1]").text).toBe("see ");
     expect(repair("**under 3% [2").text).toBe("**under 3%**");
   });
 
-  test("a task's box is not a link", () => {
-    expect(repair("- [ ").text).toBe("- [ ");
-    expect(repair("- [x]").text).toBe("- [x]");
+  test("a task's box waits for its words, and is no link", () => {
+    expect(repair("Done.\n\n- [ ").text).toBe("Done.\n\n");
+    expect(repair("Done.\n\n- [x]").text).toBe("Done.\n\n");
+    expect(repair("- [x] Sent").text).toBe("- [x] Sent");
   });
 
-  test("a table is a table from its head, and a row waits for its line", () => {
-    expect(repair("| Team | Open |\n").text).toBe(
+  test("a table's head waits for its row of dashes, and a row for its line", () => {
+    expect(repair("| Team | Open |\n").text).toBe("");
+    expect(repair("| Team | Open |\n| --- | -").text).toBe("");
+    expect(repair("| Team | Open |\n| --- | --- |\n").text).toBe(
       "| Team | Open |\n| --- | --- |\n"
     );
     expect(repair("| Team | Open |\n| --- | --- |\n| Sup").text).toBe(
       "| Team | Open |\n| --- | --- |\n"
     );
-    // A body row that ends with its last pipe is whole before its line ends.
     expect(repair("| Team | Open |\n| --- | --- |\n| Sales | 2 |").text).toBe(
-      "| Team | Open |\n| --- | --- |\n| Sales | 2 |"
+      "| Team | Open |\n| --- | --- |\n"
     );
-    expect(
-      parseMarkdown(repair("| Team | Open |\n").text).children[0]?.type
-    ).toBe("table");
+  });
+
+  test("two rows with no dashes between are words, shown once the second is whole", () => {
+    expect(repair("| a |\n| b").text).toBe("");
+    expect(repair("| a |\n| b |\n").text).toBe("| a |\n| b |\n");
   });
 
   test("bold, emphasis and code left open are closed while written", () => {
@@ -176,7 +182,94 @@ describe(repair, () => {
   });
 });
 
+describe("repair, where remend's own tests found it wanting", () => {
+  test("bold and emphasis close innermost first, a run of three as both", () => {
+    expect(repair("***first*** and ***second").text).toBe(
+      "***first*** and ***second***"
+    );
+    for (const whole of [
+      "***first*** and ***second***",
+      "**bold and *italic*** more text",
+      "___both___ done",
+      "Call foo***bar***baz here.",
+      "**a *b***c and *a **b***c",
+    ]) {
+      expect(repair(whole).text).toBe(whole);
+    }
+  });
+
+  test("a mark is read as CommonMark reads it, by what stands on each side", () => {
+    for (const words of [
+      "A_1 and x_i are subscripts, $n_{break}$ too",
+      "5*3 = 15, written with a star",
+      "20~25°C, and about ~5 minutes",
+      "\\_fully\\_escaped\\_",
+    ]) {
+      expect(repair(words).text).toBe(words);
+    }
+    expect(repair("before *a*b after *c").text).toBe("before *a*b after *c*");
+  });
+
+  test("a run like one still open did not close it, so neither is closed", () => {
+    for (const words of [
+      "**太字（説明）**と続き",
+      "***重要な情報（詳細）***続き",
+    ]) {
+      expect(repair(words).text).toBe(words);
+    }
+  });
+
+  test("code in a fence is code, however deep in quotes and lists, and its fence ends with them", () => {
+    for (const code of [
+      "1.  Install:\n    ```bash\n    npm install foo",
+      "~~~\ncode with __stuff\n~~~\ndone",
+      "> ```js\n> const x = a__b",
+    ]) {
+      expect(repair(code).text).toBe(code);
+    }
+    expect(repair("> ```\n> a__b\n\nafter __open").text).toBe(
+      "> ```\n> a__b\n\nafter __open__"
+    );
+  });
+
+  test("marks close in the block still being written, not across a list's items", () => {
+    expect(repair("* Item with *incomplete italic\n* Another item").text).toBe(
+      "* Item with *incomplete italic\n* Another item"
+    );
+    // A line just begun ends nothing: the paragraph may go on on it.
+    expect(repair("**bold\n").text).toBe("**bold**");
+  });
+
+  test("a tag or a bare address not yet closed waits, and so does a section's opening", () => {
+    expect(repair('Hello <div class="foo').text).toBe("Hello ");
+    expect(repair("See <https://exa").text).toBe("See ");
+    expect(repair("Done.\n\n<details>\n<summary>The lo").text).toBe(
+      "Done.\n\n"
+    );
+  });
+
+  test("a bracket or a note still being written waits", () => {
+    expect(repair("[link1 and [link2").text).toBe("");
+    // A reference's words wait with its label, which may make them a link.
+    expect(repair("on the rota [the wiki][ro").text).toBe("on the rota ");
+    expect(repair("see ![the plan][pl").text).toBe("see ");
+    expect(repair("as the note says[^ol").text).toBe("as the note says");
+  });
+
+  test("a link's definition waits for its line's end", () => {
+    expect(
+      repair('Words.\n\n[rota]: https://wiki.example.com/rota "On-c').text
+    ).toBe("Words.\n\n");
+  });
+});
+
 describe(tidy, () => {
+  test("a task's box with no words yet stays as it is", () => {
+    for (const box of ["Done.\n\n- [x]", "Done.\n\n- [ ]", "- [X]"]) {
+      expect(tidy(box)).toBe(box);
+    }
+  });
+
   test("a link still being written goes, its words with it", () => {
     expect(tidy("Your own rule allows a rise [2")).toBe(
       "Your own rule allows a rise"
@@ -324,8 +417,9 @@ const growthOf = (small: () => unknown, whole: () => unknown, limit = 24) => {
 
 describe("the end of a long answer, read on every word that arrives", () => {
   // Each took half a second or more at 40 KB, for every few words, while its patterns weighed every
-  // way to split the run; now it takes time in step with the length. Four times the text: in step
-  // is 4, the square is 16.
+  // way to split the run; now it takes time in step with the length. 100 KB against 400 KB, four
+  // times the text: in step is 4, the square is 16. (At 400 KB each takes milliseconds, a tenth of
+  // a second at most: long enough to weigh well, short enough to run often.)
   test.each([
     ["a run of stars", (n: number) => `${"*".repeat(n)}a`],
     [
@@ -340,12 +434,22 @@ describe("the end of a long answer, read on every word that arrives", () => {
       "brackets and parentheses that open no link",
       (n: number) => `[a](b "${"](".repeat(n / 2)}" c`,
     ],
+    // Thousands of marks that each open and none closes: each new one is weighed against those
+    // still open, so they must not all be weighed again (400 KB of `*a ` took 39 s when they were).
+    ["stars that open", (n: number) => "*a ".repeat(n / 3)],
+    ["underscores that open", (n: number) => "_a ".repeat(n / 3)],
+    ["double stars that open", (n: number) => "**a ".repeat(n / 4)],
+    ["strikes that open", (n: number) => "~~a ".repeat(n / 4)],
+    ["stars that open in a quote", (n: number) => "> *a\n".repeat(n / 5)],
+    ["brackets that open", (n: number) => "[a ".repeat(n / 3)],
+    ["backticks that open", (n: number) => "`a ".repeat(n / 3)],
+    ["tags that open", (n: number) => "<a ".repeat(n / 3)],
   ])(
     "%s",
     (_, make) => {
       for (const read of [repair, tidy]) {
-        const quarter = make(10_000);
-        const whole = make(40_000);
+        const quarter = make(100_000);
+        const whole = make(400_000);
         const growth = growthOf(
           () => read(quarter),
           () => read(whole),
@@ -361,6 +465,60 @@ describe("the end of a long answer, read on every word that arrives", () => {
 /** `unit` again and again, to `length` characters at least. */
 const filled = (unit: string) => (length: number) =>
   unit.repeat(Math.ceil(length / unit.length));
+
+describe("an answer streamed in chunks", () => {
+  // Every chunk repairs the answer so far: 25 KB in 250 chunks of 100 characters. Its repair reads
+  // only what follows the last blank line, and the marks of that, each against those still open,
+  // so in all it costs a few tenths of a second at most, not the 6 to 16 seconds it took when every
+  // mark was weighed against all those open; and the ten answers one after another, read a block at
+  // a time as Markdown reads them, less again. (A block with no blank line in it, as the quote here,
+  // is read again whole on every chunk, as it always was: that is the parse, not the repair.) Timed
+  // in this process's time on the processor.
+  const fixture = readJson(
+    fileURLToPath(new URL("fixtures/markdown-answers.json", import.meta.url))
+  );
+  const list = isRecord(fixture) ? fixture.answers : [];
+  const answers = (Array.isArray(list) ? list : [])
+    .map((answer: unknown) =>
+      isRecord(answer) && Array.isArray(answer.lines)
+        ? answer.lines.join("\n")
+        : ""
+    )
+    .join("\n\n");
+
+  test.each([
+    [
+      "the ten answers, again and again",
+      filled(`${answers}\n\n`)(25_000),
+      true,
+    ],
+    ["stars that open", "*a ".repeat(8500), false],
+    ["underscores that open", "_a ".repeat(8500), false],
+    ["stars that open in a quote", "> *a\n".repeat(5000), false],
+  ])(
+    "%s: 25 KB in 250 chunks",
+    (_, text, blocks) => {
+      let repairing = 0;
+      let reading = 0;
+      let kept = NOTHING;
+      for (let chunk = 1; chunk <= 250; chunk += 1) {
+        const start = now();
+        const shown = repair(bounded(text.slice(0, chunk * 100))).text;
+        const repaired = now();
+        if (blocks) {
+          ({ kept } = readBlocks(shown, kept));
+        }
+        repairing += repaired - start;
+        reading += now() - repaired;
+      }
+      // A slow machine is allowed many times a laptop's few tenths of a second, and still half the
+      // least the old weighing took.
+      expect(repairing).toBeLessThan(3000);
+      expect(reading).toBeLessThan(3000);
+    },
+    SLOW_TEST
+  );
+});
 
 /** A node of a tree, as far as these tests read it. */
 interface Tree {
@@ -527,7 +685,7 @@ describe("a paragraph longer than any answer's", () => {
   // Each paragraph just under the bound costs its most, emphasis in emphasis half a second for one
   // of them: 64,000 characters of those, which were read for their marks whatever they held, took
   // 3.5 s. Now a paragraph with more than 128 marks spends its marks squared from a budget that
-  // half a second's reading spends, and those after it are plain text. One run of each, timed.
+  // a tenth of a second's reading spends, and those after it are plain text. One run of each, timed.
   test.each([
     ["closing stars", "a* ".repeat(2667)],
     [
@@ -549,8 +707,8 @@ describe("a paragraph longer than any answer's", () => {
   test(
     "a paragraph dense with marks is read for them while the budget lasts, and a paragraph of few marks after it too",
     () => {
-      // 2,000 marks: its square is two thirds of the budget.
-      const dense = "*a* ".repeat(1000).trim();
+      // 1,000 marks: its square is two thirds of the budget.
+      const dense = "*a* ".repeat(500).trim();
       const short = "Some **bold** and [a link](https://example.com).";
       const tree = parseMarkdown([dense, dense, short, dense].join("\n\n"));
       expect(tree.children.map((node) => hasMarks(node))).toStrictEqual([
@@ -940,16 +1098,16 @@ describe("an answer of more lines than any answer's", () => {
       const source = `${counted((at) => `- item ${at} is **here**\n`)(5000)}\nAfter **it**.\n`;
       const [list, plain, after] = parseMarkdown(source).children;
       const items = list?.type === "list" ? list.children : [];
-      // The square of 2,828 is the last under 8,000,000.
-      expect(items).toHaveLength(2828);
+      // The square of 1,414 is the last under 2,000,000.
+      expect(items).toHaveLength(1414);
       expect(shapeOf(items.at(-1) ?? { type: "none" })).toBe(
         "listItem(paragraph(text,strong(text)))"
       );
       expect(
         countOf(plain ?? { type: "none" }, ["text", "break"])
       ).toStrictEqual({
-        text: 2172,
-        break: 2171,
+        text: 3586,
+        break: 3585,
       });
       expect(wordsOf(plain ?? { type: "none" })).toContain(
         "- item 4999 is **here**"
@@ -963,11 +1121,11 @@ describe("an answer of more lines than any answer's", () => {
   );
 
   test(
-    "a list of 2,000 items is one list, and what follows it is read for its marks",
+    "a list of 1,000 items is one list, and what follows it is read for its marks",
     () => {
-      const source = `${counted((at) => `- item ${at}\n`)(2000)}\nAfter **it**.\n`;
+      const source = `${counted((at) => `- item ${at}\n`)(1000)}\nAfter **it**.\n`;
       const [list, after] = parseMarkdown(source).children;
-      expect(list?.type === "list" && list.children).toHaveLength(2000);
+      expect(list?.type === "list" && list.children).toHaveLength(1000);
       expect(shapeOf(after ?? { type: "none" })).toBe(
         "paragraph(text,strong(text),text)"
       );
@@ -1454,8 +1612,8 @@ describe("while a long block is written", () => {
   );
 
   test("a paragraph shown as plain text for want of budget stays plain as more is written", () => {
-    // 2,448 marks: its square is all but the budget. Its end comes with a paragraph of 140 more.
-    const dense = `${"*a* ".repeat(1224)}\n\n`;
+    // 1,224 marks: its square is all but the budget. Its end comes with a paragraph of 140 more.
+    const dense = `${"*a* ".repeat(612)}\n\n`;
     const next = "*b* ".repeat(110);
     let kept = NOTHING;
     const marked: boolean[] = [];
@@ -1471,6 +1629,22 @@ describe("while a long block is written", () => {
     expect(marked).toStrictEqual([true, false, false]);
   });
 
+  test("the budget of marks is the answer's: streamed, it ends as it is read whole", () => {
+    // 80 paragraphs of 100 bold words: 400 marks each, so nine fit the budget. A stream once read
+    // every paragraph with all of it, so all 80 were bold until the page was opened again.
+    const source = lines(
+      80,
+      (at) =>
+        `${Array.from({ length: 100 }, (_, word) => `**b${word}**`).join(" ")} p${at}\n\n`
+    );
+    const bold = (blocks: Tree[]) =>
+      blocks.filter((block) => (countOf(block, ["strong"]).strong ?? 0) > 0)
+        .length;
+    const steps = written(source, 1024);
+    expect(bold(parseMarkdown(source).children)).toBe(9);
+    expect(bold(steps.at(-1) ?? [])).toBe(9);
+  });
+
   test(
     "a list written past the budget keeps its items a list, and the lines after them plain",
     () => {
@@ -1479,11 +1653,11 @@ describe("while a long block is written", () => {
       for (const [list, ...rest] of written(source, 6007)) {
         const items = list?.children?.length ?? 0;
         expect(items).toBeGreaterThanOrEqual(before);
-        expect(items).toBeLessThanOrEqual(2828);
+        expect(items).toBeLessThanOrEqual(1414);
         expect(rest.every((block) => !hasMarks(block))).toBeTruthy();
         before = items;
       }
-      expect(before).toBe(2828);
+      expect(before).toBe(1414);
     },
     SLOW_TEST
   );
@@ -1515,6 +1689,80 @@ describe("while a long block is written", () => {
   );
 });
 
+describe("what an answer refers to", () => {
+  test("a link defined in a finished block is a link in the blocks after it", () => {
+    const { kept } = readBlocks(
+      "[docs]: https://example.com/docs\n\nRead",
+      NOTHING
+    );
+    const { blocks } = readBlocks(
+      "[docs]: https://example.com/docs\n\nRead [docs].",
+      kept
+    );
+    expect(kept.blocks).toHaveLength(1);
+    expect(shapeOf(blocks.at(-1)?.node ?? { type: "none" })).toBe(
+      "paragraph(text,linkReference(text),text)"
+    );
+  });
+
+  test("a note whose definition has not arrived is a note; a reference to a link its words as written", () => {
+    const source = "A claim[^1], [the wiki][wiki], m[0][1] and [x][].";
+    const [node] = readBlocks(source, NOTHING).blocks;
+    expect(shapeOf(node?.node ?? { type: "none" })).toBe(
+      "paragraph(text,footnoteReference,text)"
+    );
+    expect(wordsOf(node?.node ?? { type: "none" })).toBe(
+      source.replace("[^1]", "")
+    );
+    const [whole] = parseMarkdown(source).children;
+    expect(wordsOf(whole ?? { type: "none" })).toBe(source);
+  });
+
+  test("once written, an answer that refers to a note none defines is read whole: the mark as written", () => {
+    const answer = "A claim[^x] and m[0][1].\n\nMore words.";
+    const { kept } = readBlocks(answer, NOTHING);
+    expect(shapeOf(kept.blocks[0]?.node ?? { type: "none" })).toBe(
+      "paragraph(text,footnoteReference,text)"
+    );
+    const { blocks } = readBlocks(answer, kept, false);
+    expect(wordsOf(blocks[0]?.node ?? { type: "none" })).toBe(
+      "A claim[^x] and m[0][1]."
+    );
+  });
+
+  test("the block being written is read with at most 128 of the names the blocks before it define", () => {
+    // The parser looks each reference up among every name defined: 8,000 definitions and a
+    // paragraph using them took 320 ms a chunk to read, against 25 ms with none.
+    const definitions = lines(
+      200,
+      (at) => `[x${at}]: https://a.example/${at}\n`
+    );
+    const uses = lines(200, (at) => `[x${at}] `);
+    const { kept } = readBlocks(`${definitions}\nWords`, NOTHING);
+    const last = readBlocks(`${definitions}\n${uses}`, kept).blocks.at(-1);
+    expect(
+      countOf(last?.node ?? { type: "none" }, ["linkReference"])
+    ).toStrictEqual({ linkReference: 128 });
+    expect(
+      countOf(parseMarkdown(`${definitions}\n${uses}`), ["linkReference"])
+    ).toStrictEqual({ linkReference: 200 });
+  });
+
+  test("a strike is two tildes", () => {
+    expect(
+      shapeOf(
+        parseMarkdown("20~25°C and ~~gone~~").children[0] ?? { type: "none" }
+      )
+    ).toBe("paragraph(text,delete(text))");
+  });
+});
+
+/** A tree as JSON, without the places of its nodes. */
+const placeless = (nodes: unknown) =>
+  JSON.stringify(nodes, (key, value: unknown) =>
+    key === "position" ? undefined : value
+  );
+
 describe(readBlocks, () => {
   test("the finished blocks are kept, and only the last is read again", () => {
     const first = readBlocks("One.\n\nTwo", NOTHING);
@@ -1533,6 +1781,32 @@ describe(readBlocks, () => {
     const { kept } = readBlocks("One.\n\nTwo", NOTHING);
     expect(readBlocks("Else.", kept).kept).toBe(NOTHING);
   });
+
+  // Past the budget of lines, a reload draws the first 1,414 as what they are and the rest as plain
+  // lines; streamed, each block was read by itself and kept, and the kept ones stood at the end.
+  test.each([
+    ["headings", "# a\n".repeat(1500)],
+    ["rules", "---\n".repeat(1500)],
+    ["setext headings", "a\n=\n".repeat(1500)],
+    ["fences", "```\na\n```\n".repeat(1500)],
+    ["a list", "- a\n".repeat(1500)],
+  ])(
+    "%s, streamed, end as they are drawn when the page is opened again",
+    (_, source) => {
+      let kept = NOTHING;
+      for (let end = 61; end < source.length; end += 61) {
+        ({ kept } = readBlocks(
+          repair(bounded(source.slice(0, end))).text,
+          kept
+        ));
+      }
+      const shown = tidy(bounded(source));
+      expect(
+        placeless(readBlocks(shown, kept, false).blocks.map(({ node }) => node))
+      ).toBe(placeless(parseMarkdown(shown).children));
+    },
+    SLOW_TEST
+  );
 });
 
 const blocksOf = (source: string) =>

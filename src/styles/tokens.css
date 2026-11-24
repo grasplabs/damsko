@@ -18,6 +18,8 @@
   --damsko-brand-ink: oklch(0.267 0.048 169.88);
   /* The last stop: the dark at the centre of the glass. */
   --damsko-brand-night: oklch(0.173 0.028 169.36);
+  /* How strongly the light shows as a faint dither behind the head of the one thing a page is about (a banner, a side panel's cover): a texture you find, not a pattern you see. */
+  --damsko-texture-strength: 0.3;
   /* Colour: grounds. */
   /* The page: the ground most things stand on. */
   --damsko-background: light-dark(oklch(0.992 0.002 165.08), var(--damsko-brand-night));
@@ -478,6 +480,8 @@
   --damsko-tooltip: light-dark(oklch(0.173 0.028 169.36 / 0.9), oklch(0.37 0.03 168 / 0.9));
   /* The words on a tooltip. */
   --damsko-tooltip-foreground: oklch(0.965 0.014 150);
+  /* The quiet words on a tooltip: the keys of its shortcut, at the end of its line. */
+  --damsko-tooltip-muted-foreground: oklch(0.78 0.025 158);
   /* How long the pointer rests on a control before its tooltip opens. The next one opens at once. */
   --damsko-tooltip-delay: 300ms;
   /* How far a tooltip stands off its trigger: clear of the pointer resting on it. */
@@ -881,6 +885,8 @@
   --damsko-prompt-input-mention-width: 18rem;
   /* The least width of a one-row prompt input's text: with less room beside the tools, the text takes the row and the tools go under it. The text never gives. */
   --damsko-prompt-input-field-min: 8rem;
+  /* The least width of a one-row prompt input's placeholder at rest: with less room, its model chip's level folds to the maker's mark, then the chip folds away until something is typed. Only then is the placeholder cut. */
+  --damsko-prompt-input-placeholder-min: 6rem;
   /* The working light over a prompt input's top edge: lime, sea and mint in beams with gaps between, ending as it starts so it loops without a seam. */
   --damsko-prompt-input-light: linear-gradient(90deg, var(--damsko-brand-mint) 0%, var(--damsko-brand-sea) 12%, transparent 22%, var(--damsko-brand-lime) 34%, var(--damsko-brand-mint) 44%, transparent 54%, var(--damsko-brand-sea) 64%, var(--damsko-brand-lime) 76%, transparent 88%, var(--damsko-brand-mint) 100%);
   /* The working light in one accent colour, the colour set on the light's layer. */
@@ -1120,8 +1126,6 @@
   /* Page header: page header. */
   /* The width of a page title's placeholder while the page loads. */
   --damsko-page-title-wait: 280px;
-  /* How strongly the dither shows behind an inspector's head: a texture you find, not a pattern you see. */
-  --damsko-page-header-dither-strength: 0.3;
   /* Stepper: stepper. */
   /* The circle that marks a step in a stepper: a chip's height. */
   --damsko-stepper-mark: var(--damsko-chip);

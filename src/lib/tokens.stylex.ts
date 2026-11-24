@@ -100,6 +100,7 @@ export const colors = stylex.defineConsts({
   accentHighlight: "var(--damsko-accent-highlight)",
   tooltip: "var(--damsko-tooltip)",
   tooltipForeground: "var(--damsko-tooltip-foreground)",
+  tooltipMutedForeground: "var(--damsko-tooltip-muted-foreground)",
   // Switch: switch.
   switchLight: "var(--damsko-switch-light)",
   switchTrackHover: "var(--damsko-switch-track-hover)",
@@ -464,6 +465,8 @@ export const duration = stylex.defineConsts({
 });
 
 export const size = stylex.defineConsts({
+  // Colour: the light.
+  textureStrength: "var(--damsko-texture-strength)",
   // Elevation: edge and lifts.
   borderStrong: "var(--damsko-border-strong)",
   // Sizes: targets and controls.
@@ -658,6 +661,7 @@ export const size = stylex.defineConsts({
   attachmentThumb: "var(--damsko-attachment-thumb)",
   promptInputMentionWidth: "var(--damsko-prompt-input-mention-width)",
   promptInputFieldMin: "var(--damsko-prompt-input-field-min)",
+  promptInputPlaceholderMin: "var(--damsko-prompt-input-placeholder-min)",
   promptInputGlassBlur: "var(--damsko-prompt-input-glass-blur)",
   promptInputLightOpacity: "var(--damsko-prompt-input-light-opacity)",
   // Message: message.
@@ -722,7 +726,6 @@ export const size = stylex.defineConsts({
   linkMarkGap: "var(--damsko-link-mark-gap)",
   // Page header: page header.
   pageTitleWait: "var(--damsko-page-title-wait)",
-  pageHeaderDitherStrength: "var(--damsko-page-header-dither-strength)",
   // Stepper: stepper.
   stepperMark: "var(--damsko-stepper-mark)",
   stepperPitch: "var(--damsko-stepper-pitch)",

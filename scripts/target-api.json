@@ -877,11 +877,13 @@
       "SourcesContent",
       "Source",
       "SourceIcon",
+      "SourceQuote",
       "SourcesProps",
       "SourcesTriggerProps",
       "SourcesContentProps",
       "SourceProps",
       "SourceIconProps",
+      "SourceQuoteProps",
       "SourceAccess"
     ]
   },
@@ -958,7 +960,8 @@
       "BreadcrumbPageProps",
       "BreadcrumbSeparatorProps",
       "BreadcrumbEllipsisProps"
-    ]
+    ],
+    "src/components/breadcrumb.stylex.ts": ["breadcrumbVars"]
   },
   "checkbox": {
     "src/components/checkbox.tsx": [
@@ -1347,6 +1350,8 @@
       "MarkdownLinkProvider",
       "parseMarkdown",
       "MarkdownProps",
+      "MarkdownComponents",
+      "MarkdownNode",
       "MarkdownLink",
       "MarkdownLinkRenderer",
       "MarkdownSoftBreaks",
@@ -1355,6 +1360,7 @@
     "src/components/markdown/markdown.tsx": null,
     "src/components/markdown/pace.ts": null,
     "src/components/markdown/parse.ts": null,
+    "src/components/markdown/repair.ts": null,
     "src/components/markdown/reveal.tsx": null
   },
   "model-selector": {

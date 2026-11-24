@@ -24,6 +24,7 @@ import type {
   MarkdownLinkRenderer,
   MarkdownProps,
 } from "../src/components/markdown/index.ts";
+import { addressAnswers, isWithin } from "./markdown-addresses.ts";
 
 const draw = (
   source: string,
@@ -542,7 +543,7 @@ describe("answers no real answer looks like", () => {
         `${"<details>\n<summary>s</summary>\n\n".repeat(n)}${"</details>\n\n".repeat(n)}`,
       1600,
     ],
-    // Both past the budget of lines: the list's first 2,828 items are drawn as one, the rest as lines.
+    // Both past the budget of lines: the list's first 1,414 items are drawn as one, the rest as lines.
     ["a list of 24,000 items", (n: number) => "- a\n".repeat(n), 24_000],
     [
       "lists of fifty items, a paragraph between",
@@ -570,20 +571,20 @@ describe("answers no real answer looks like", () => {
 
 describe("an answer longer than one piece", () => {
   test(
-    "a list of 2,000 items is one list, and an ordered one counts on from its start",
+    "a list of 1,000 items is one list, and an ordered one counts on from its start",
     () => {
-      const items = Array.from({ length: 2000 }, (_, at) => `item ${at}`);
+      const items = Array.from({ length: 1000 }, (_, at) => `item ${at}`);
       const bullets = draw(items.map((item) => `- ${item}`).join("\n"));
       expect(bullets.match(/<ul\b/gu)).toHaveLength(1);
-      expect(bullets.match(/<li\b/gu)).toHaveLength(2000);
+      expect(bullets.match(/<li\b/gu)).toHaveLength(1000);
       const numbered = draw(
         items.map((item, at) => `${at + 5}. ${item}`).join("\n")
       );
       expect(numbered.match(/<ol\b[^>]*>/gu)).toStrictEqual([
         expect.stringContaining('start="5"'),
       ]);
-      expect(numbered.match(/<li\b/gu)).toHaveLength(2000);
-      expect(textOf(numbered)).toContain("item 1999");
+      expect(numbered.match(/<li\b/gu)).toHaveLength(1000);
+      expect(textOf(numbered)).toContain("item 999");
     },
     SLOW_TEST
   );
@@ -627,5 +628,311 @@ describe("footnotes", () => {
       "1-3",
     ]);
     expect(html).toContain(`href="#${ids[0] ?? ""}"`);
+  });
+});
+
+describe("components", () => {
+  test("a caller's `a` and `code` draw links and code, given the element's props and the node", () => {
+    const html = draw(
+      'See [the guide](https://example.com/guide "Guide") and `x`.\n\n```ts\nconst a = 1;\n```',
+      {
+        components: {
+          a: ({ href, title, children, node }) => (
+            <i data-href={href} data-title={title} data-node={node.type}>
+              {children}
+            </i>
+          ),
+          code: ({ className, children, node }) => (
+            <kbd data-class={className} data-node={node.type}>
+              {children}
+            </kbd>
+          ),
+        },
+      }
+    );
+    expect(html).toContain(
+      '<i data-href="https://example.com/guide" data-title="Guide" data-node="link">the guide</i>'
+    );
+    expect(html).toContain('<kbd data-node="inlineCode">x</kbd>');
+    expect(html).toContain(
+      '<kbd data-class="language-ts" data-node="code">const a = 1;</kbd>'
+    );
+    expect(anchors(html)).toStrictEqual([]);
+  });
+
+  test("`a` is given only a link Markdown would draw, its address encoded as CommonMark has it", () => {
+    const seen: (string | undefined)[] = [];
+    const html = draw(
+      `[x](${JS}:alert(1)) [y](/relative) [z](data:text/html,x) <https://example.com/a\\b>`,
+      {
+        components: {
+          a: ({ href, children }) => {
+            seen.push(href);
+            return <i>{children}</i>;
+          },
+        },
+      }
+    );
+    expect(seen).toStrictEqual(["https://example.com/a%5Cb"]);
+    expect(textOf(html)).toContain("x y z");
+  });
+
+  test("a picture is drawn only by a caller's `img`, and only from http or https", () => {
+    const source =
+      '![chart](https://img.example.com/c.png "Chart") ![x](data:image/png;base64,AAAA)';
+    expect(draw(source)).not.toMatch(/<img/u);
+    const html = draw(source, {
+      components: {
+        img: ({ src, alt, title }) => <img src={src} alt={alt} title={title} />,
+      },
+    });
+    expect(html.match(/<img [^>]*>/gu)).toStrictEqual([
+      '<img src="https://img.example.com/c.png" alt="chart" title="Chart"/>',
+    ]);
+  });
+
+  test(
+    "while written, no caller's part is handed half an address: not `a`, `img`, `renderLink` or a provider",
+    () => {
+      // Half of an address (`https://i`, `https://bare.exa`) is another site's: a picture drawn from
+      // it loads from there, a link leads there. Each kind of address, a character at a time: a
+      // picture, a link, one in angle brackets, a link's address in them, spaces and all, a bare one
+      // and a bare `www.`, and pictures and links by reference to a definition of any length, its
+      // address on its line or the next.
+      const long = `https://images.example.com/${"x".repeat(260)}.png`;
+      const answer = [
+        "A chart: ![chart](https://images.example.com/q3.png), [the report](https://example.com/q3), <https://auto.example.com/x>, [spaced](<https://exa mple.com/a>) and https://bare.example.com/path now, or visit www.example.org today.",
+        "![c][c] and [d][d].",
+        `[c]: ${long}`,
+        "[d]:\n  https://next-line.example.com/d",
+        "",
+        "Then visit www.example.org",
+      ].join("\n\n");
+      const handed = new Set<string | undefined>();
+      const hand: MarkdownLinkRenderer = (link) => {
+        handed.add(link.href);
+      };
+      for (let at = 1; at <= answer.length; at += 1) {
+        const source = answer.slice(0, at);
+        draw(source, {
+          streaming: true,
+          components: {
+            a: ({ href, children }) => {
+              handed.add(href);
+              return <i>{children}</i>;
+            },
+            img: ({ src }) => {
+              handed.add(src);
+              return null;
+            },
+          },
+        });
+        draw(source, { streaming: true, renderLink: hand });
+        renderToStaticMarkup(
+          <MarkdownLinkProvider renderLink={hand}>
+            <Markdown streaming>{source}</Markdown>
+          </MarkdownLinkProvider>
+        );
+      }
+      expect(handed).toStrictEqual(
+        new Set([
+          "https://images.example.com/q3.png",
+          "https://example.com/q3",
+          "https://auto.example.com/x",
+          "https://exa mple.com/a",
+          "https://bare.example.com/path",
+          // As the host's renderLink is handed it, and as `a` is (its address checked).
+          "http://www.example.org",
+          "http://www.example.org/",
+          long,
+          "https://next-line.example.com/d",
+        ])
+      );
+    },
+    SLOW_TEST
+  );
+
+  // Every kind of link, with a backslash, an entity, a control character or a space at every place
+  // of its address and of its title, a character at a time. A form the stream has not finished may
+  // read as another (a backslash before the `>` that would close it, a space that ends an address):
+  // whatever it reads as, no part is handed an address the finished answer does not have, and what
+  // was shown stays.
+  test(
+    "while written, every address handed on is one the finished answer has, and what was shown stays",
+    () => {
+      const answers = addressAnswers();
+      // What the host's renderLink is handed, and where Markdown's own link then leads: one render
+      // a prefix. Every host part is handed what one check gives (handedOf), and the test above
+      // asks each of them.
+      const seen = (source: string, streaming: boolean) => {
+        const handed = new Set<string>();
+        const own = draw(source, {
+          streaming,
+          renderLink: (link) => {
+            handed.add(`${link.type} ${link.href}`);
+          },
+        });
+        return { handed, own, links: anchors(own) };
+      };
+      const found: string[] = [];
+      for (const answer of answers) {
+        const whole = seen(answer, false);
+        let before: { text: string; links: (string | null)[] } = {
+          text: "",
+          links: [],
+        };
+        for (let at = 1; at <= answer.length; at += 1) {
+          const prefix = seen(answer.slice(0, at), true);
+          const text = textOf(prefix.own);
+          const where = JSON.stringify(answer.slice(0, at));
+          for (const handed of prefix.handed) {
+            if (!whole.handed.has(handed)) {
+              found.push(`${where} handed ${handed}`);
+            }
+          }
+          for (const link of prefix.links) {
+            if (!whole.links.includes(link)) {
+              found.push(`${where} leads to ${String(link)}`);
+            }
+          }
+          if (
+            !isWithin(before.text.trimEnd(), text) ||
+            before.links.some((link, index) => prefix.links[index] !== link)
+          ) {
+            found.push(`${where} took back ${before.text}`);
+          }
+          before = { text, links: prefix.links };
+        }
+      }
+      expect(found).toStrictEqual([]);
+    },
+    SLOW_TEST
+  );
+
+  test("headings by the level they are drawn at; a row's own cells, as many as the head at most", () => {
+    const html = draw("# Top\n\n| a | b |\n| - | -: |\n| 1 |\n| 1 | 2 | 3 |", {
+      headingLevel: 2,
+      components: {
+        h2: ({ children }) => <b data-level="2">{children}</b>,
+        td: ({ children, align }) => <td data-align={align}>{children}</td>,
+      },
+    });
+    expect(html).toContain('<b data-level="2">Top</b>');
+    expect(html.match(/<td\b[^>]*>[^<]*<\/td>/gu)).toStrictEqual([
+      "<td>1</td>",
+      "<td>1</td>",
+      '<td data-align="right">2</td>',
+    ]);
+  });
+});
+
+describe("links' titles and notes while written", () => {
+  test("a link's title is its tooltip", () => {
+    expect(draw('[x](https://example.com "The title")')).toMatch(
+      /<a [^>]*title="The title"/u
+    );
+  });
+
+  test("a note's mark is its number before its note arrives; a reference its words as written until its definition does", () => {
+    const before = draw("A claim[^1] in [the wiki][wiki], m[0][1] and [x][].", {
+      streaming: true,
+    });
+    expect(textOf(before)).toBe(
+      "A claim1 in [the wiki][wiki], m[0][1] and [x][]."
+    );
+    expect(
+      anchors(before).filter((href) => href === null || !href.startsWith("#"))
+    ).toStrictEqual([]);
+    const after = draw(
+      "A claim[^1] in [the wiki][wiki].\n\n[^1]: The note.\n[wiki]: https://example.com/wiki\n",
+      { streaming: true }
+    );
+    expect(after).toMatch(/<sup\b[^>]*>.*Footnote 1.*<\/sup>/u);
+    expect(anchors(after)).toContain("https://example.com/wiki");
+  });
+
+  test("a section is one from its summary while written, and stays so once tidied", () => {
+    const open = "<details>\n<summary>More</summary>\n\nWords.";
+    expect(draw(open, { streaming: true })).toContain(
+      'data-slot="markdown-section"'
+    );
+    expect(draw(open, { truncated: true })).toContain(
+      'data-slot="markdown-section"'
+    );
+    expect(draw(open)).not.toContain('data-slot="markdown-section"');
+  });
+});
+
+/** What a reader sees of each prefix of `answer`, drawn while written, and once it is done. */
+const shownAsWritten = (
+  answer: string,
+  props: Omit<MarkdownProps, "children"> = {}
+) => [
+  ...Array.from({ length: answer.length }, (_, at) =>
+    textOf(draw(answer.slice(0, at + 1), { ...props, streaming: true }))
+  ),
+  textOf(draw(answer, props)),
+];
+
+/** Where a prefix took back what the one before it showed. */
+const takenBack = (seen: string[]) =>
+  seen.flatMap((text, at) =>
+    at > 0 && !text.startsWith((seen[at - 1] ?? "").trimEnd())
+      ? [`${seen[at - 1] ?? ""} -> ${text}`]
+      : []
+  );
+
+/** The numbers of the notes' marks drawn, in order. */
+const noteNumbers = (html: string) =>
+  [...html.matchAll(/Footnote (?<number>\d+)/gu)]
+    .map((match) => match.groups?.number)
+    .join(" ");
+
+/** A host's links, drawn as their words in bold. */
+const bold: MarkdownLinkRenderer = (link) => <b>{link.children}</b>;
+
+describe("what the earlier streaming rules got wrong", () => {
+  test("an address being typed is shown and stays, with the host drawing links, to the end", () => {
+    for (const answer of [
+      "The docs live at https://example.com/docs",
+      "Write to nick@example.com.",
+      "See https:// and https://example.com/a for more.",
+    ]) {
+      const seen = shownAsWritten(answer, { renderLink: bold });
+      expect(takenBack(seen)).toStrictEqual([]);
+      expect(seen.at(-1)).toBe(answer);
+    }
+  });
+
+  test("a note's mark shows the number the whole answer gives it, at every prefix, when every note is defined", () => {
+    // The notes defined in another order than they are used: numbered by their definitions as
+    // they came, `[^b]` was 1 and then 2.
+    const answer =
+      "One[^b] two[^a], m[0][1] and [x][y] three[^b].\n\n[^a]: A.\n[^b]: B.\n";
+    const whole = draw(answer);
+    expect(noteNumbers(whole)).toBe("1 2 1");
+    expect(textOf(whole)).toContain("m[0][1] and [x][y]");
+    const prefixes = Array.from({ length: answer.length }, (_, at) =>
+      draw(answer.slice(0, at + 1), { streaming: true })
+    );
+    expect(
+      prefixes.filter(
+        (html) => !noteNumbers(whole).startsWith(noteNumbers(html))
+      )
+    ).toStrictEqual([]);
+    expect(
+      prefixes.filter((html) => textOf(html).includes("[^"))
+    ).toStrictEqual([]);
+    expect(
+      prefixes
+        .slice(answer.indexOf("[y]") + 3)
+        .filter((html) => !textOf(html).includes("m[0][1] and [x][y]"))
+    ).toStrictEqual([]);
+  });
+
+  test("a list item's `>` and a number is a quote at every prefix, never words with a `>`", () => {
+    const seen = shownAsWritten("- > 2024 was the year we grew.\n- > 25: rich");
+    expect(seen.filter((text) => text.includes(">"))).toStrictEqual([]);
+    expect(takenBack(seen)).toStrictEqual([]);
   });
 });

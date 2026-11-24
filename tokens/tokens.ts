@@ -188,6 +188,12 @@ export const groups: TokenGroup[] = [
             value: "oklch(0.173 0.028 169.36)",
             use: "The last stop: the dark at the centre of the glass.",
           },
+          {
+            name: "texture-strength",
+            category: "size",
+            value: "0.3",
+            use: "How strongly the light shows as a faint dither behind the head of the one thing a page is about (a banner, a side panel's cover): a texture you find, not a pattern you see.",
+          },
         ],
       },
       {
@@ -1773,6 +1779,12 @@ export const groups: TokenGroup[] = [
             use: "The words on a tooltip.",
           },
           {
+            name: "tooltip-muted-foreground",
+            category: "colors",
+            value: "oklch(0.78 0.025 158)",
+            use: "The quiet words on a tooltip: the keys of its shortcut, at the end of its line.",
+          },
+          {
             name: "tooltip-delay",
             category: "duration",
             value: "300ms",
@@ -3279,6 +3291,12 @@ export const groups: TokenGroup[] = [
             use: "The least width of a one-row prompt input's text: with less room beside the tools, the text takes the row and the tools go under it. The text never gives.",
           },
           {
+            name: "prompt-input-placeholder-min",
+            category: "size",
+            value: "6rem",
+            use: "The least width of a one-row prompt input's placeholder at rest: with less room, its model chip's level folds to the maker's mark, then the chip folds away until something is typed. Only then is the placeholder cut.",
+          },
+          {
             name: "prompt-input-light",
             category: "colors",
             value:
@@ -4176,12 +4194,6 @@ export const groups: TokenGroup[] = [
             value: "280px",
             use: "The width of a page title's placeholder while the page loads.",
           },
-          {
-            name: "page-header-dither-strength",
-            category: "size",
-            value: "0.3",
-            use: "How strongly the dither shows behind an inspector's head: a texture you find, not a pattern you see.",
-          },
         ],
       },
     ],
@@ -4792,6 +4804,7 @@ export const contrastPairs: ContrastPair[] = [
   { kind: "text", on: "code-block-marked", text: "body-foreground" },
   // A tooltip's words on its fill.
   { kind: "text", on: "tooltip", text: "tooltip-foreground" },
+  { kind: "text", on: "tooltip", text: "tooltip-muted-foreground" },
   // A sidebar's rows on its ground, and the current row's words on its fill.
   ...["foreground", "muted-foreground"].map((text): ContrastPair => ({
     kind: "text",

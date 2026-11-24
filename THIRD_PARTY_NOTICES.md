@@ -145,3 +145,31 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
 ## Simple Icons
 
 Most of the brand marks the docs' examples show (`examples/brand-icon/logos.ts`, each with its source on the line above it) are drawn from Simple Icons (https://simpleicons.org), whose icon data is released under CC0 1.0 Universal (https://creativecommons.org/publicdomain/zero/1.0/): no notice is required, and this one is a courtesy. The marks themselves are trademarks of their owners, shown to name their products; Damsko ships none of them.
+
+## CommonMark Spec and GitHub Flavored Markdown Spec
+
+The Markdown tests' fixtures `scripts/fixtures/commonmark-spec.json` and `scripts/fixtures/gfm-spec.json` hold examples copied from these, each example's Markdown and the HTML its spec gives, with its number and section. They are tests, not shipped, and stay under their licence, Creative Commons Attribution-ShareAlike 4.0 International (https://creativecommons.org/licenses/by-sa/4.0/):
+
+- the CommonMark Spec 0.31.2, by John MacFarlane (https://spec.commonmark.org/0.31.2/, from its `spec.json`);
+- the GitHub Flavored Markdown Spec 0.29, by GitHub, Inc., based on the CommonMark Spec (https://github.github.com/gfm/), its extension examples, from cmark-gfm's `test/spec.txt` at 7fe8904ee31fa24b772ae565c4908b1394850de6 (https://github.com/github/cmark-gfm);
+- cmark-gfm's extensions test, by Yuki Izumi, from its `test/extensions.txt` at the same commit.
+
+## Streamdown and remend
+
+The Markdown tests' fixture `scripts/fixtures/streamdown-inputs.json` holds the Markdown inputs written out in the tests of Streamdown and remend (https://github.com/vercel/streamdown, `packages/streamdown/__tests__` and `packages/remend/__tests__` at 147f33903bb3948e81c3f7aad5f0c07de330967e), each with what remend 1.5.0 makes of it. It is a test, not shipped.
+
+```text
+Copyright 2023 Vercel, Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+```

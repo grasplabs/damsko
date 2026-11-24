@@ -40,7 +40,7 @@ A row with `href`, `onClick` or `asChild` may still hold `ItemActions`, wherever
 
 ## A person or a provider
 
-An Avatar or a logo in `ItemMedia align="center"` stands in the middle of its row. In a narrow row the actions drop under the words.
+An Avatar or a logo, drawn as it is, stands in the middle of its row with `ItemMedia align="center"`; an icon square (`variant="icon"`) or a picture (`variant="image"`) stands there already, as `center` is their default. In a narrow row the actions drop under the words.
 
 <Stage path="item/members" label="A person or a provider" />
 
@@ -186,7 +186,7 @@ Only a row with a press (`href`, `onClick`, `asChild`) has states: hover, keyboa
       key: "Media",
       value:
         "An Avatar (`xs`, `sm`) or a Brand icon, in the middle of the row, on all its words",
-      note: '`align="center"`; `start` keeps it on the title\'s line',
+      note: '`align="center"`, the default for an icon square or a picture; `start` keeps it on the title\'s line',
     },
     {
       group: "Parts",

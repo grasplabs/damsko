@@ -12,7 +12,8 @@ import { size, space } from "@grasp-os/ui/lib/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
 import { useEffect, useState } from "react";
 
-// A run as it happens: each step waits, works, then finishes, and the line follows the work. It
+// A run as it happens: each step waits, works, then finishes, and the line follows the work. A
+// finished step with nothing more to say says how long it took. It
 // opens held on its second step, the same on every load, so the page reads the same each time it
 // is looked at; Play runs it, and it starts again a few seconds after it ends.
 const plan = [
@@ -50,6 +51,9 @@ const plan = [
     time: 1700,
   },
 ];
+
+/** How long a step took, as a quiet note once it is done ("0.9s"). */
+const took = (ms: number) => `${(ms / 1000).toFixed(1)}s`;
 
 const statusAt = (index: number, at: number): ChainOfThoughtStepStatus => {
   if (index < at) {
@@ -102,7 +106,10 @@ export default function ChainOfThoughtLive() {
               <ChainOfThoughtStep
                 key={step.id}
                 label={status === "active" ? step.doing : step.done}
-                description={step.description}
+                description={
+                  step.description ??
+                  (status === "complete" ? took(step.time) : undefined)
+                }
                 status={status}
               />
             );

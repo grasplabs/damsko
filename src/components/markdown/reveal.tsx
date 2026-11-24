@@ -7,16 +7,18 @@
 // never starts its fade again; when the tree is read anew and a span is made afresh (a link that is
 // whole, a line that turns out to be a heading's underline), it is set where its fade had got to.
 //
-// Once a block is finished and its last words have faded (duration-stream later), it is drawn as
-// plain text again. Words there when the stream started are no news, and a page drawn on the
-// server has no spans: the fade starts in the browser.
+// Once a block's last words have faded (it ends before `fresh`), it is drawn as plain text again,
+// and the last words of an answer fade to their end after the stream has. Words there when the
+// stream started are no news, and a page drawn on the server has no spans: the fade starts in the
+// browser.
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 
 import { fadeInStream } from "../../lib/styles";
 import { durations } from "../../lib/tokens.values";
+import type { Paced } from "./pace";
 
 /** The words being shown in one answer as it is written, and when each was first shown. */
 export interface Reveal {
@@ -28,138 +30,66 @@ export interface Reveal {
   steps: readonly number[];
 }
 
-type Attach = Pick<Reveal, "attach">;
-
 /** A reveal for a stream that starts with `since` characters there: none of them is news. */
-const revealFrom = (since: number): Attach => {
+const revealFrom = (since: number): Reveal["attach"] => {
   // When each word still fading in was first shown, by where it starts. Words are shown in order,
   // so the times grow with the places.
   const born = new Map<number, number>();
-  const met = new WeakSet<Element>();
   // How far words have been shown: a span made afresh before it is part of a word already shown.
   let reached = since;
-  return {
-    attach: (node) => {
-      if (node === null || met.has(node)) {
-        return;
-      }
-      met.add(node);
-      const at = Number(node.dataset.at);
-      const now = performance.now();
-      let first = born.get(at);
-      if (first === undefined) {
-        // New, or part of a word already shown (cut at another place): as that word, or long ago.
-        first = at >= reached ? now : Number.NEGATIVE_INFINITY;
-        let part = Number.NEGATIVE_INFINITY;
-        for (const [start, shown] of born) {
-          if (start <= at && start > part && at < reached) {
-            part = start;
-            first = shown;
-          }
-        }
-      }
+  return (node) => {
+    if (node === null) {
+      return;
+    }
+    const at = Number(node.dataset.at);
+    const now = performance.now();
+    let first = born.get(at);
+    if (first === undefined) {
+      // New, or part of a word already shown (cut at another place): as that word, or long ago.
+      first = at >= reached ? now : Number.NEGATIVE_INFINITY;
+      let part = Number.NEGATIVE_INFINITY;
       for (const [start, shown] of born) {
-        if (now - shown >= durations.stream) {
-          born.delete(start);
+        if (start <= at && start > part && at < reached) {
+          part = start;
+          first = shown;
         }
       }
-      born.set(at, first);
-      reached = Math.max(reached, at + (node.textContent?.length ?? 0));
-      const age = now - first;
-      if (age >= durations.stream) {
-        node.style.animationName = "none";
-      } else if (age > 0) {
-        node.style.animationDelay = `${-age}ms`;
+    }
+    for (const [start, shown] of born) {
+      if (now - shown >= durations.stream) {
+        born.delete(start);
       }
-    },
+    }
+    born.set(at, first);
+    reached = Math.max(reached, at + (node.textContent?.length ?? 0));
+    const age = now - first;
+    if (age >= durations.stream) {
+      node.style.animationName = "none";
+    } else if (age > 0) {
+      node.style.animationDelay = `${-age}ms`;
+    }
   };
 };
 
 /**
- * The reveal of an answer that is written with `length` characters shown (`paced`, usePace's), or
- * null when it is not `on`. A stream that starts, or an answer replaced by another (`round`),
- * starts a new one: what is there when it starts is no news.
+ * How an answer's words fade in as they are shown (`paced`, usePace's), or null while none is: not
+ * `on`, or every word shown has faded in. Each round of the pace (a stream that starts, an answer
+ * replaced by another) starts a new one: what is there when it starts is no news.
  */
 export const useReveal = (
-  length: number,
-  writing: boolean,
-  on: boolean,
-  {
-    round,
-    fresh,
-    steps,
-  }: { round: number; fresh: number; steps: readonly number[] }
+  { text, round, fresh, steps }: Paced,
+  on: boolean
 ): Reveal | null => {
   const [held, setHeld] = useState(() => ({
-    writing,
     round,
-    reveal: on ? revealFrom(length) : null,
+    attach: revealFrom(text.length),
   }));
-  if (
-    held.writing !== writing ||
-    held.round !== round ||
-    (held.reveal !== null) !== on
-  ) {
-    const starts = (writing && !held.writing) || held.round !== round;
-    const kept = starts ? null : held.reveal;
-    setHeld({
-      writing,
-      round,
-      reveal: on ? (kept ?? revealFrom(length)) : null,
-    });
+  if (held.round !== round) {
+    setHeld({ round, attach: revealFrom(text.length) });
   }
-  return held.reveal === null ? null : { ...held.reveal, fresh, steps };
-};
-
-/**
- * How many of the answer's first blocks are drawn as plain text: every block once its last words
- * have faded in (duration-stream after it is finished), and all of them a moment after the answer
- * is written. `finished` counts the blocks no longer being written. While `hold` (a selection is
- * being made), none settles.
- */
-export const useSettled = (
-  finished: number,
-  writing: boolean,
-  hold: boolean
-): number => {
-  const target = writing ? finished : Number.POSITIVE_INFINITY;
-  const [settled, setSettled] = useState(target);
-  const [wasWriting, setWasWriting] = useState(writing);
-  if (wasWriting !== writing) {
-    setWasWriting(writing);
-    // A stream that starts: the blocks it starts with were there before it.
-    if (writing) {
-      setSettled(finished);
-    }
-  }
-  // Fewer blocks than were settled: the answer was replaced.
-  if (target < settled) {
-    setSettled(target);
-  }
-  const behind = settled < target && !hold;
-  // Each wait runs to its end, however many blocks finish meanwhile, so a fast stream still
-  // settles; none outlives the answer.
-  const waits = useRef(new Set<ReturnType<typeof setTimeout>>());
-  useEffect(() => {
-    if (!behind) {
-      return;
-    }
-    const all = waits.current;
-    const wait = setTimeout(() => {
-      all.delete(wait);
-      setSettled((now) => Math.max(now, target));
-    }, durations.stream);
-    all.add(wait);
-  }, [behind, target]);
-  useEffect(() => {
-    const all = waits.current;
-    return () => {
-      for (const wait of all) {
-        clearTimeout(wait);
-      }
-    };
-  }, []);
-  return settled;
+  return on && fresh < text.length
+    ? { attach: held.attach, fresh, steps }
+    : null;
 };
 
 /**

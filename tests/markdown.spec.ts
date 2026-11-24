@@ -314,6 +314,26 @@ test("the host draws links: out asks first, a path goes through its router, a ci
   await expect(dialog).toBeHidden();
 });
 
+test("your own elements: a link names its site, fenced code is the product's CodeBlock, a script link never reaches them", async ({
+  page,
+}) => {
+  await openExample(page, "markdown", "components");
+  await expect(
+    page.getByRole("link", {
+      name: /^the reporting service \(reports\.example\.com\)/u,
+    })
+  ).toHaveAttribute("href", "https://reports.example.com/docs");
+  const code = page.getByRole("region", { name: /report\.ts/u });
+  await expect(code).toContainText(
+    'export const totals = await report.daily({ team: "support" });'
+  );
+  await expect(page.getByText("daily_totals")).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: /link the model was tricked into/u })
+  ).toHaveCount(0);
+  await expect(page.getByText("link the model was tricked into")).toBeVisible();
+});
+
 test("a task's box is round at the corner, its tick the icon's own size", async ({
   page,
 }) => {
@@ -589,7 +609,7 @@ test("with reduced motion, the words show as they arrive: no fade and no spans",
   expect(watched.shown.length).toBeLessThan(40);
 });
 
-test("a hidden tab shows all that has arrived at once, and turned off the words come as given", async ({
+test("a frame that comes late, as on a hidden tab, shows at once all that came before it, and turned off the words come as given", async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
@@ -600,13 +620,8 @@ test("a hidden tab shows all that has arrived at once, and turned off the words 
   await page.clock.runFor(1050);
   const answer = page.locator("[data-slot=markdown]");
   await expect(answer).not.toContainText("which sends");
-  await page.evaluate(() => {
-    Object.defineProperty(document, "visibilityState", {
-      configurable: true,
-      get: () => "hidden",
-    });
-    document.dispatchEvent(new Event("visibilitychange"));
-  });
+  // No frame for two seconds, as while the tab is hidden, then one.
+  await page.clock.fastForward(2000);
   await expect(answer).toContainText("which sends");
   await page.getByRole("button", { name: "Off" }).click();
   await page.clock.runFor(30);

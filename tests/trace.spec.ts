@@ -328,3 +328,23 @@ test("a subagent's row names the run and its model, and opens on its tool calls,
   await expect(run).toHaveAttribute("aria-expanded", "false");
   await expect(found).toBeHidden();
 });
+
+for (const [component, example] of [
+  ["trace", "steps"],
+  ["trace", "script"],
+  ["chain-of-thought", "script"],
+] as const) {
+  test(`one working mark in a trace, on its last running step: ${component}/${example}`, async ({
+    page,
+  }) => {
+    await openExample(page, component, example);
+    // The working mark is drawn as the Agent indicator's pixels; it is decoration, so count what shows.
+    const shown = await page.evaluate(
+      () =>
+        [...document.querySelectorAll("[data-slot=agent-indicator]")].filter(
+          (mark) => mark.getClientRects().length > 0
+        ).length
+    );
+    expect(shown).toBe(1);
+  });
+}

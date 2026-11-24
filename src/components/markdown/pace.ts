@@ -13,19 +13,18 @@
 // - A word still being written (no space after it yet) waits for its end, so it never shows in two
 //   halves; after STREAM_LAG with nothing more, it shows as it is.
 // - When the stream ends, what is left runs out at the same pace, within STREAM_LAG.
-// - At once: when the tab is hidden (nothing is shown there, so nothing is waited for), and the
-//   words there when it is first drawn.
+// - At once: the words there when a stream starts, and on a frame that comes late (a hidden tab, a
+//   page that was busy), everything that came longer than STREAM_LAG before it.
 //
-// It runs once a frame (requestAnimationFrame) while there is something to let out, and only then:
-// Markdown is drawn again at most once a frame. `unitsOf` is how it and the fade (reveal.tsx) cut
-// text into words.
+// It runs once a frame (requestAnimationFrame) while there is something to let out or still fading
+// in, and only then: Markdown is drawn again at most once a frame. `unitsOf` is how it cuts text
+// into words.
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { durations } from "../../lib/tokens.values";
 import { nothing } from "../../lib/utils";
-import { unseenIn } from "./parse";
 
 /** What is let out at a time: a word with the spaces and marks after it, or one character. */
 export type Unit = "word" | "character";
@@ -81,10 +80,6 @@ const FLOOR = 0.045;
 const WEIGHT = 0.3;
 /** The gap between chunks a stream is taken to have before its second chunk. */
 const FIRST_GAP = 100;
-/** A frame this late (a hidden tab, a page that was busy): what is behind shows at once. */
-const STALE_FRAME = 1000;
-/** How far before what shows a link's tail is looked for: one may have begun there. */
-const LOOK_BACK = 256;
 
 /** What the pace keeps between frames. */
 export interface Pace {
@@ -98,7 +93,10 @@ export interface Pace {
   gap: number;
   /** When the last chunk arrived, or null before the first. */
   arrived: number | null;
-  /** Each chunk not yet shown in full: where it ends, and by when it shows (STREAM_LAG after it came). */
+  /**
+   * Each chunk not yet shown in full: where it ends, and by when it shows (STREAM_LAG after it came).
+   * Of those already due, only the last is kept: it reaches furthest, so it is the one that counts.
+   */
   due: readonly (readonly [end: number, by: number])[];
   /** No more is coming: the last word is whole. */
   ended: boolean;
@@ -142,7 +140,11 @@ export const arrive = (
     credit: Math.max(pace.credit, first),
     speed: Math.max(FLOOR, (text.length - pace.shown - first) / gap),
     due: [
-      ...pace.due.filter(([end]) => end > pace.shown),
+      ...pace.due.filter(
+        ([upTo, by], index, due) =>
+          upTo > pace.shown &&
+          (by > now || (due[index + 1]?.[1] ?? Number.POSITIVE_INFINITY) > now)
+      ),
       [text.length, now + STREAM_LAG],
     ],
   };
@@ -153,28 +155,6 @@ export const end = (pace: Pace): Pace => ({ ...pace, ended: true });
 
 /** Whether text ends a word: a space after it. A word still being written has none yet. */
 const ENDS = /\s$/u;
-
-/** What letting out `ahead` from `start` to `end` costs: its characters that are shown. */
-const costOf = (unseen: [number, number][], start: number, to: number) =>
-  unseen.reduce(
-    (cost, [from, until]) =>
-      cost - Math.max(0, Math.min(to, until) - Math.max(start, from)),
-    to - start
-  );
-
-/**
- * Where `ahead` (the text from `from` on) has characters that are never shown (parse.ts): a link's
- * tail, which may have begun just before it, and a table's row of dashes.
- */
-const unseenOf = (text: string, from: number, ahead: string) => {
-  const back = Math.max(0, from - LOOK_BACK);
-  return unseenIn(text.slice(back, from + ahead.length)).map(
-    ([start, until]): [number, number] => [
-      start - from + back,
-      until - from + back,
-    ]
-  );
-};
 
 /**
  * How far the text must show by the end of a frame `elapsed` long, at `now`, so that each chunk
@@ -192,7 +172,8 @@ const leastOf = (pace: Pace, now: number, elapsed: number) => {
 /**
  * The pace `elapsed` milliseconds later, at `now`, with `text` arrived so far: as many whole units
  * let out as the time has earned at its speed, MOST_UNITS at most, and never fewer than keep every
- * chunk within STREAM_LAG. A last word with no end yet waits for one, for STREAM_LAG at most.
+ * chunk within STREAM_LAG; so a frame that comes late shows at once all that is overdue. A last
+ * word with no end yet waits for one, for STREAM_LAG at most.
  */
 export const advance = (
   pace: Pace,
@@ -206,9 +187,6 @@ export const advance = (
     return pace.credit === 0 && pace.due.length === 0
       ? pace
       : { ...pace, credit: 0, due: [] };
-  }
-  if (elapsed >= STALE_FRAME) {
-    return { ...pace, shown: text.length, credit: 0, due: [] };
   }
   const from = pace.shown;
   const least = Math.ceil(leastOf(pace, now, elapsed));
@@ -228,11 +206,10 @@ export const advance = (
         unit === "character" ||
         ENDS.test(ahead) ||
         waited >= STREAM_LAG;
-  const unseen = unseenOf(text, from, ahead);
   let shown = from;
   for (let index = 1; index <= starts.length; index += 1) {
     const to = from + (starts[index] ?? ahead.length);
-    const cost = costOf(unseen, shown - from, to - from);
+    const cost = to - shown;
     if (index === starts.length && !lastEnds) {
       break;
     }
@@ -261,7 +238,7 @@ export interface Paced {
   writing: boolean;
   /**
    * Where the words shown in the last duration-stream start: those after it are still fading in,
-   * those before it are plain text.
+   * those before it are plain text. The text's length once nothing is fading.
    */
   fresh: number;
   /**
@@ -270,8 +247,8 @@ export interface Paced {
    */
   steps: readonly number[];
   /**
-   * Counts up each time the text is replaced by another while it is paced (it no longer goes on
-   * from what was shown): what is shown of the new one is all news.
+   * Counts up each time what is there becomes no news: a stream that starts, pacing turned on or
+   * off, or the text replaced by a shorter one (an answer written again).
    */
   round: number;
 }
@@ -280,14 +257,44 @@ interface Shown {
   shown: number;
   fresh: number;
   steps: readonly number[];
+  round: number;
 }
+
+/**
+ * What shows of `text`, and whether it is paced: from when a stream starts until what it left has
+ * all been let out. What is there when a round starts (a stream that starts, pacing turned on or
+ * off, the text replaced by a shorter one) is no news: all of it shows.
+ */
+const useShown = (text: string, streaming: boolean, on: boolean) => {
+  const all = (round: number): Shown => ({
+    shown: text.length,
+    fresh: text.length,
+    steps: [],
+    round,
+  });
+  const [state, setState] = useState(() => all(0));
+  const [was, setWas] = useState({ streaming, on, paced: on && streaming });
+  const starts = was.on !== on || (streaming && !was.streaming);
+  const restarts = starts || (was.paced && state.shown > text.length);
+  const current = restarts ? all(state.round + 1) : state;
+  const paced =
+    on && (streaming || (!starts && was.paced && current.shown < text.length));
+  if (was.streaming !== streaming || was.on !== on || was.paced !== paced) {
+    setWas({ streaming, on, paced });
+  }
+  if (restarts) {
+    setState(current);
+  }
+  return { current, setState, paced };
+};
 
 /**
  * `text`, as much as has arrived, shown at a steady pace while `streaming` (and `on`): whole units a
  * frame, at the pace they arrive, never more than STREAM_LAG behind; once the stream ends, what is
- * left runs out at that pace. All of it at once when the tab is hidden, or not `on`; what there was
- * when the stream started shows at once. While `hold`, the words shown keep fading as they are
- * (`fresh` stays), so nothing a selection touches is drawn anew.
+ * left runs out at that pace. What is there when a stream starts shows at once, and so does any
+ * change while none is paced. The words shown keep fading in after the stream ends, until the last
+ * has; while `hold`, they keep fading as they are (`fresh` stays), so nothing a selection touches is
+ * drawn anew.
  */
 export const usePace = (
   text: string,
@@ -298,80 +305,69 @@ export const usePace = (
     hold,
   }: { streaming: boolean; on: boolean; unit: Unit; hold: boolean }
 ): Paced => {
-  const all: Shown = { shown: text.length, fresh: text.length, steps: [] };
-  const [state, setState] = useState(all);
-  const [round, setRound] = useState(0);
-  // `ended`: the stream has ended, and what it left runs out.
-  const [was, setWas] = useState({ streaming, on, ended: false });
-  // A stream that starts, or pacing turned on or off: what is there is no news.
-  const starts = was.on !== on || (streaming && !was.streaming);
-  const ended = !starts && !streaming && (was.ended || was.streaming);
-  if (starts || was.streaming !== streaming) {
-    setWas({ streaming, on, ended });
-  }
-  if (starts) {
-    setState(all);
-  }
-  const writing = on && (streaming || (ended && state.shown < text.length));
-  if (writing && state.shown > text.length) {
-    // Replaced by a shorter text (an answer written again): from there.
-    setState(all);
-    setRound(round + 1);
-  }
+  const { current, setState, paced } = useShown(text, streaming, on);
+  const fading = on && current.fresh < current.shown;
+  const running = (paced && current.shown < text.length) || (fading && !hold);
   const latest = useRef(text);
   const pace = useRef(startPace(text.length));
+  const started = useRef(current.round);
   // When each step of words was shown, for as long as they fade in (or are held).
   const marks = useRef<[number, number][]>([]);
   const held = useRef(hold);
   useEffect(() => {
     held.current = hold;
   }, [hold]);
-  // Each arrival sets the pace, and the end of the stream is noted. Not writing, all of it shows.
-  useEffect(() => {
+  // Each arrival sets the pace, and the end of the stream is noted. A round starts from what is
+  // there; not paced, all of it shows. Before any frame can come, so none goes on from the round
+  // before.
+  useLayoutEffect(() => {
     const arrived = latest.current !== text;
     latest.current = text;
-    if (!writing || pace.current.shown > text.length) {
+    if (started.current !== current.round) {
+      started.current = current.round;
       pace.current = startPace(text.length);
       marks.current = [];
-      return;
+    } else if (!paced) {
+      pace.current = startPace(text.length);
+    } else if (arrived) {
+      pace.current = arrive(pace.current, text, performance.now(), unit);
     }
-    const now = arrived
-      ? arrive(pace.current, text, performance.now(), unit)
-      : pace.current;
-    pace.current = streaming ? now : end(now);
-  }, [text, writing, streaming, unit]);
-  const behind = writing && state.shown < text.length;
+    if (!streaming) {
+      pace.current = end(pace.current);
+    }
+  }, [text, paced, streaming, unit, current.round]);
   useEffect(() => {
-    if (!behind) {
+    if (!running) {
       return nothing;
     }
     let last = performance.now();
     let frame = 0;
-    const tick = (now: number) => {
+    const tick = (time: number) => {
       const from = pace.current;
-      const next = advance(from, latest.current, now, now - last, unit);
-      last = now;
+      const next = advance(from, latest.current, time, time - last, unit);
+      last = time;
       pace.current = next;
-      const shown = marks.current;
-      if (next.shown !== from.shown) {
-        shown.push([next.shown, now]);
+      const steps = marks.current;
+      if (next.shown > from.shown) {
+        steps.push([next.shown, time]);
       }
       let fresh: number | undefined;
       while (
         !held.current &&
-        (shown[0]?.[1] ?? now) <= now - durations.stream
+        (steps[0]?.[1] ?? time) <= time - durations.stream
       ) {
-        fresh = shown.shift()?.[0];
+        fresh = steps.shift()?.[0];
       }
+      // Nothing left fading (none was ever marked, or a round began): all of it is plain.
+      if (steps.length === 0 && !held.current) {
+        fresh = next.shown;
+      }
+      const ends = steps.map(([upTo]) => upTo);
       setState((then) => {
         const seen = fresh ?? then.fresh;
         return then.shown === next.shown && then.fresh === seen
           ? then
-          : {
-              shown: next.shown,
-              fresh: seen,
-              steps: shown.map(([upTo]) => upTo),
-            };
+          : { ...then, shown: next.shown, fresh: seen, steps: ends };
       });
       frame = requestAnimationFrame(tick);
     };
@@ -379,34 +375,12 @@ export const usePace = (
     return () => {
       cancelAnimationFrame(frame);
     };
-  }, [behind, unit]);
-  // A hidden tab draws nothing: on the way out and on the way back, all that has arrived shows.
-  useEffect(() => {
-    if (!writing) {
-      return nothing;
-    }
-    const caughtUp = () => {
-      const { length } = latest.current;
-      pace.current = { ...pace.current, shown: length, credit: 0, due: [] };
-      marks.current = [];
-      setState({ shown: length, fresh: length, steps: [] });
-    };
-    document.addEventListener("visibilitychange", caughtUp);
-    return () => {
-      document.removeEventListener("visibilitychange", caughtUp);
-    };
-  }, [writing]);
-  if (writing) {
-    return {
-      text: text.slice(0, Math.min(state.shown, text.length)),
-      writing,
-      fresh: Math.min(state.fresh, text.length),
-      steps: state.steps,
-      round,
-    };
-  }
-  // Written, all of it shows; held, what is fading keeps its spans until the selection goes.
-  return hold
-    ? { text, writing, fresh: state.fresh, steps: state.steps, round }
-    : { text, writing, fresh: text.length, steps: [], round };
+  }, [running, unit, setState]);
+  return {
+    text: paced ? text.slice(0, Math.min(current.shown, text.length)) : text,
+    writing: paced,
+    fresh: fading ? Math.min(current.fresh, text.length) : text.length,
+    steps: fading ? current.steps : [],
+    round: current.round,
+  };
 };

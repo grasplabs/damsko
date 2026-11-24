@@ -3,7 +3,6 @@ import {
   Message,
   MessageContent,
   MessageError,
-  MessageResponse,
 } from "@grasp-os/ui/components/message";
 import type { MessageStatus } from "@grasp-os/ui/components/message";
 import * as stylex from "@stylexjs/stylex";
@@ -37,9 +36,8 @@ export default function MessageState({
               <BubbleContent>Is it done?</BubbleContent>
             </Bubble>
           )}
-          {status !== "error" && align === "start" && (
-            <MessageResponse>Done by Friday.</MessageResponse>
-          )}
+          {/* A plain answer, not Markdown: its words in the page's ink. */}
+          {status !== "error" && align === "start" && "Done by Friday."}
         </MessageContent>
       </Message>
     </div>
