@@ -557,8 +557,8 @@ export interface I18nCatalog {
     external: string;
   };
   markdown: {
-    /** The link from a footnote back to where it is used, from its number. */
-    back: (number: number) => string;
+    /** The link from a footnote back to where it is used, from its number and which mark it is. */
+    back: (number: number, mark: number) => string;
     /** What a ticked task says to a screen reader. */
     done: string;
     /** A footnote's mark, said to a screen reader, from its number. */
@@ -1289,7 +1289,10 @@ const english: I18nCatalog = {
     external: "opens in a new tab",
   },
   markdown: {
-    back: (number: number) => `Back to reference ${number}`,
+    back: (number: number, mark: number) =>
+      mark > 1
+        ? `Back to reference ${number}-${mark}`
+        : `Back to reference ${number}`,
     done: "Done",
     footnote: (number: number) => `Footnote ${number}`,
     moreRows: (count: number) =>

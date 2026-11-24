@@ -1,5 +1,5 @@
 {
-  "about": "75 answers as a model writes them, written for Damsko's tests: prose, nested and ordered lists, tasks, fenced code in ten languages, tables, inline, reference and bare links, citations, footnotes, maths-like text, <details>, and text in eight languages besides English. Each is streamed a character at a time (scripts/markdown-stream.test.tsx).",
+  "about": "95 answers as a model writes them, written for Damsko's tests: prose, nested and ordered lists, tasks, fenced code in ten languages, tables, inline, reference and bare links, citations, footnotes, maths-like text, <details>, and text in eight languages besides English. Each is streamed a character at a time (scripts/markdown-stream.test.tsx).",
   "answers": [
     {
       "name": "export",
@@ -1701,6 +1701,292 @@
         "",
         "After the sections."
       ]
+    },
+    {
+      "name": "m1",
+      "about": "Release notes: headings, nested lists, a bold link, code, a table",
+      "lines": [
+        "# Release 4.2",
+        "",
+        "## What changed",
+        "",
+        "- **Search** is faster:",
+        "  - indexes build in the background",
+        "  - results stream as they arrive",
+        "- See **[the migration guide](https://example.com/docs/migrate)** before upgrading.",
+        "",
+        "| Area | Before | After |",
+        "| :--- | ---: | :---: |",
+        "| Index build | 42 s | 9 s |",
+        "| First result | 1.8 s | 0.3 s |",
+        "",
+        "```bash",
+        "npm install @acme/search@4.2.0",
+        "```",
+        "",
+        "> Upgrading from 3.x? Read the guide first."
+      ]
+    },
+    {
+      "name": "m2",
+      "about": "Python and TypeScript code, inline code, a numbered list",
+      "lines": [
+        "Here is how to parse the dates in both languages.",
+        "",
+        "1. In Python, use `datetime.fromisoformat`:",
+        "",
+        "   ```python",
+        "   from datetime import datetime",
+        "",
+        "   def parse(value: str) -> datetime:",
+        "       return datetime.fromisoformat(value)",
+        "   ```",
+        "",
+        "2. In TypeScript, `Date.parse` is enough for ISO strings:",
+        "",
+        "   ```ts",
+        "   export const parse = (value: string): Date => new Date(Date.parse(value));",
+        "   ```",
+        "",
+        "3. Store them as UTC, always."
+      ]
+    },
+    {
+      "name": "m3",
+      "about": "Links of every form",
+      "lines": [
+        "Sources, in every form a model writes them:",
+        "",
+        "- An inline link: [the RFC](https://www.rfc-editor.org/rfc/rfc3339 \"RFC 3339\").",
+        "- An autolink: <https://example.com/autolink>.",
+        "- A bare address: https://example.com/bare and www.example.org/www.",
+        "- An email: team@example.com and <mailto:help@example.com>.",
+        "- A reference: [the spec][spec] and a collapsed one, [Spec][].",
+        "- A relative link: [our docs](/docs/dates).",
+        "",
+        "[spec]: https://example.com/spec \"The spec\"",
+        "[Spec]: https://example.com/spec-collapsed"
+      ]
+    },
+    {
+      "name": "m4",
+      "about": "Task list with nesting and states",
+      "lines": [
+        "Launch checklist:",
+        "",
+        "- [x] Write the announcement",
+        "- [x] Record the demo",
+        "- [ ] Update the pricing page",
+        "  - [x] Draft",
+        "  - [ ] Legal review",
+        "- [ ] Email the waitlist",
+        "",
+        "Two items remain."
+      ]
+    },
+    {
+      "name": "m5",
+      "about": "Footnotes and a quote",
+      "lines": [
+        "Retention improved after the change[^1], though the sample is small[^small].",
+        "",
+        "> Correlation is not causation, but it is a hint.",
+        "",
+        "The second cohort confirmed it[^1].",
+        "",
+        "[^1]: Measured over 30 days, from first login.",
+        "[^small]: 412 users in each arm."
+      ]
+    },
+    {
+      "name": "m6",
+      "about": "Maths, inline and block",
+      "lines": [
+        "The area of a circle is $A = \\pi r^2$, and its circumference is $C = 2\\pi r$.",
+        "",
+        "For a sphere:",
+        "",
+        "$$",
+        "V = \\frac{4}{3}\\pi r^3",
+        "$$",
+        "",
+        "So doubling $r$ multiplies the volume by $2^3 = 8$."
+      ]
+    },
+    {
+      "name": "m7",
+      "about": "A details block with a list and code",
+      "lines": [
+        "The short answer is yes.",
+        "",
+        "<details>",
+        "<summary>Why, in detail</summary>",
+        "",
+        "- The cache is per region.",
+        "- Each region warms independently.",
+        "",
+        "```yaml",
+        "cache:",
+        "  regions: [eu, us]",
+        "```",
+        "",
+        "</details>",
+        "",
+        "Ask if you want the numbers."
+      ]
+    },
+    {
+      "name": "m8",
+      "about": "Images, with and without alt words",
+      "lines": [
+        "The chart shows the trend:",
+        "",
+        "![Monthly active users, 2026](https://example.com/charts/mau.png \"MAU\")",
+        "",
+        "And the raw export, if the picture does not load: ![](https://example.com/charts/mau-raw.png)"
+      ]
+    },
+    {
+      "name": "m9",
+      "about": "Go, Rust and SQL",
+      "lines": [
+        "Three ways to count rows.",
+        "",
+        "```go",
+        "count, err := db.QueryRow(\"SELECT COUNT(*) FROM orders\").Scan(&n)",
+        "```",
+        "",
+        "```rust",
+        "let count: i64 = sqlx::query_scalar(\"SELECT COUNT(*) FROM orders\").fetch_one(&pool).await?;",
+        "```",
+        "",
+        "```sql",
+        "SELECT COUNT(*) AS orders FROM orders WHERE created_at > now() - interval '7 days';",
+        "```"
+      ]
+    },
+    {
+      "name": "m10",
+      "about": "Headings at every level",
+      "lines": [
+        "# One",
+        "## Two",
+        "### Three",
+        "#### Four",
+        "##### Five",
+        "###### Six",
+        "",
+        "Body text under them."
+      ]
+    },
+    {
+      "name": "m11",
+      "about": "Emphasis of every kind",
+      "lines": [
+        "This has *emphasis*, **strong**, ***both***, ~~struck~~, `code`, and **bold with *nested* emphasis**.",
+        "",
+        "A line with a hard break  ",
+        "and the next line."
+      ]
+    },
+    {
+      "name": "m12",
+      "about": "A wide table with links and code in cells",
+      "lines": [
+        "| Endpoint | Method | Docs | Notes |",
+        "| --- | :---: | --- | --- |",
+        "| `/users` | GET | [docs](https://example.com/api/users) | paginated |",
+        "| `/users/:id` | PATCH | [docs](https://example.com/api/user) | **admin only** |",
+        "| `/health` | GET | — | no auth |"
+      ]
+    },
+    {
+      "name": "m13",
+      "about": "An ordered list starting at 3, with paragraphs",
+      "lines": [
+        "Continuing from step 2:",
+        "",
+        "3. Open the settings.",
+        "",
+        "   Choose **Integrations**.",
+        "",
+        "4. Connect the account.",
+        "5. Save."
+      ]
+    },
+    {
+      "name": "m14",
+      "about": "A quote with a list and code inside",
+      "lines": [
+        "> **Note**",
+        ">",
+        "> - Keys rotate every 90 days.",
+        "> - Old keys work for 7 more days.",
+        ">",
+        "> ```js",
+        "> rotate({ days: 90 });",
+        "> ```"
+      ]
+    },
+    {
+      "name": "m15",
+      "about": "A rule between sections, and HTML that stays text",
+      "lines": [
+        "First section.",
+        "",
+        "---",
+        "",
+        "Second section, with <kbd>Ctrl</kbd> + <kbd>C</kbd> written as HTML.",
+        "",
+        "***",
+        "",
+        "Third."
+      ]
+    },
+    {
+      "name": "m16",
+      "about": "CJK and RTL text with marks",
+      "lines": [
+        "**要点**：缓存按区域划分，每个区域独立预热。参见[文档](https://example.com/zh)。",
+        "",
+        "**ملاحظة**: يتم تدوير المفاتيح كل ٩٠ يومًا. راجع [الدليل](https://example.com/ar)."
+      ]
+    },
+    {
+      "name": "m17",
+      "about": "Ends in an unfinished bold link",
+      "lines": [
+        "The details are in the **[full report](https://example.com/reports/2026"
+      ]
+    },
+    {
+      "name": "m18",
+      "about": "Ends in an unfinished table row",
+      "lines": [
+        "| Region | Revenue |",
+        "| --- | ---: |",
+        "| North | 1.2M |",
+        "| South | 0."
+      ]
+    },
+    {
+      "name": "m19",
+      "about": "Ends in an unfinished code fence and list",
+      "lines": [
+        "Steps:",
+        "",
+        "1. Install it.",
+        "2. Run:",
+        "",
+        "```bash",
+        "acme init --region eu",
+        "acme deploy"
+      ]
+    },
+    {
+      "name": "m20",
+      "about": "Ends mid-footnote and mid-emphasis",
+      "lines": ["The rate fell by a third[^1], which is *significant for a"]
     }
   ]
 }

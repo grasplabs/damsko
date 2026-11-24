@@ -514,6 +514,30 @@ const leadTo = (
 };
 
 /**
+ * A link or a picture whose address can still change: a picture is nothing yet; a link its words,
+ * keeping the room its arrow will take when it is Markdown's own (keepsRoom).
+ */
+const held = (
+  url: string | undefined,
+  shared: Shared,
+  tail: string,
+  children: ReactNode
+): ReactNode => {
+  if (url === "streamdown:incomplete-image") {
+    return null;
+  }
+  return keepsRoom(url, shared, tail) ? (
+    <>
+      <span aria-hidden="true" {...stylex.props(styles.linkLead)} />
+      {children}
+      <span aria-hidden="true" {...stylex.props(styles.arrowRoom)} />
+    </>
+  ) : (
+    children
+  );
+};
+
+/**
  * A link or a picture: the host's, else the caller's `a` or `img`, else Markdown's own Link where
  * the address may lead, else its words. Never while its address can change: a half link or picture,
  * a reference not yet defined, a bare address (its words start where it does) in the word still
@@ -538,20 +562,12 @@ const Anchor = ({
     growing ||
     shared.inLink === true
   ) {
-    return keepsRoom(found?.url, shared, tail) ? (
-      <>
-        <span aria-hidden="true" {...stylex.props(styles.linkLead)} />
-        {children}
-        <span aria-hidden="true" {...stylex.props(styles.arrowRoom)} />
-      </>
-    ) : (
-      children
-    );
+    return held(found?.url, shared, tail, children);
   }
   const link = linkOf(node, found.url, found.title, children);
   const drawn = shared.renderLink?.(link);
   const hosted = drawn === undefined ? shared.provided?.(link) : drawn;
-  const href = safeHref(found.url, { relative: true });
+  const href = safeHref(parse.encodedHref(found.url), { relative: true });
   return hosted !== undefined || href === null
     ? (hosted ?? children)
     : leadTo(node, link, href, shared.components);
@@ -559,17 +575,16 @@ const Anchor = ({
 /** Where a note's mark is: the place of its block and where it starts in it. */
 const markId = (prefix: string, place: string, node: Node) =>
   `${prefix}-ref-${place}-${node.position?.start.offset ?? 0}`;
-/** A note in the answer's notes: its number, whether it has come and its first mark's id. */
+/** A note in the answer's notes: its number, whether it has come and its marks' ids. */
 const useNote = (name: string) => {
   const [prefix = "", ...notes] = use(Notes).split("\n");
   const index = notes.findIndex((line) => line.endsWith(` ${name}`));
   const [head = ""] = notes[index]?.split(" ") ?? [];
-  return {
-    prefix,
-    number: index + 1,
-    come: head.startsWith("+"),
-    first: head.slice(1),
-  };
+  const marks = head
+    .slice(1)
+    .split(",")
+    .filter((mark) => mark !== "");
+  return { prefix, number: index + 1, come: head.startsWith("+"), marks };
 };
 /** A note's mark: its number, leading to the note once the note has come. */
 const NoteMark = ({
@@ -611,22 +626,31 @@ const body = (nodes: readonly Node[], kids: Kids, after?: ReactElement) => (
         )}
       </Fragment>
     ))}
+    {!nodes.some((child) => child.type === "paragraph") && after}
   </div>
 );
-/** A note at the foot, leading back to its first mark. */
+/** A note at the foot, leading back to each of its marks: `↩`, `↩²`. */
 const Note = ({
   node,
   kids,
 }: Omit<Part<Of<"footnoteDefinition">>, "shared">) => {
   const words = useI18n().markdown;
-  const { prefix, number, first } = useNote(node.identifier);
-  const back =
-    first === "" ? undefined : (
-      <Link href={`#${first}`}>{words.back(number)}</Link>
-    );
+  const { prefix, number, marks } = useNote(node.identifier);
+  const back = marks.length > 0 && (
+    <>
+      {marks.map((mark, at) => (
+        <Fragment key={mark}>
+          {at > 0 && " "}
+          <Link href={`#${mark}`} aria-label={words.back(number, at + 1)}>
+            ↩{at > 0 && <sup>{at + 1}</sup>}
+          </Link>
+        </Fragment>
+      ))}
+    </>
+  );
   return (
     <li value={number} id={`${prefix}-fn-${number}`}>
-      {body(node.children, kids, back)}
+      {body(node.children, kids, back === false ? undefined : back)}
     </li>
   );
 };
@@ -740,6 +764,10 @@ const anchor = (node: Linked, shared: Shared, kids: Kids) => (
       : (node.alt ?? "")}
   </Anchor>
 );
+// A word with what follows it; in scripts written without spaces (Chinese, Japanese, Korean, and
+// their punctuation), each character, as Streamdown animates them.
+const WORDS =
+  /[\p{sc=Han}\p{sc=Hiragana}\p{sc=Katakana}\p{sc=Hangul}\u3000-\u303F\uFF00-\uFFEF]\s*|[^\s\p{sc=Han}\p{sc=Hiragana}\p{sc=Katakana}\p{sc=Hangul}\u3000-\u303F\uFF00-\uFFEF]+\s*|\s+/gu;
 /**
  * Words that may fade in: each its own fade while written, but not in a link (its words move into
  * the link when it is whole, and would fade again there). Past many words in the block still being
@@ -769,7 +797,7 @@ const Words = ({
       </>
     );
   }
-  return value.match(/\S+\s*|\s+/gu)?.map((word, at) => (
+  return value.match(WORDS)?.map((word, at) => (
     <span key={at} {...stylex.props(fadeIn, styles.word)}>
       {word}
     </span>
@@ -885,8 +913,8 @@ const draw: { [T in Node["type"]]?: Draw<T> } = {
       shared.greedy && styles.greedy,
     ]),
   heading: (node, shared, kids) => {
-    // The fifth and sixth depths are drawn and placed as the fourth, from the caller's level on.
-    const depth = Math.min(node.depth, 4);
+    // From the caller's level on; the look is a step up for the first two depths.
+    const { depth } = node;
     const tag =
       headings[Math.min(shared.headingLevel - 1 + depth, 6) - 1] ?? "h6";
     const look = headingLooks[shared.size][depth <= 2 ? 0 : 1];
@@ -1030,14 +1058,31 @@ const placesOf = (
       ? placesOf(block.children, place)
       : [[place, block]];
   });
-/** The names a whole answer defines, for each block to be read with (parse.ts, `Names`). */
-const namesIn = (blocks: readonly Node[]) => {
+const DEFINED =
+  /^[ \t>]*\[(?<note>\^?)(?<label>(?:[^\]\\\n]|\\.){1,999})\]:/gmu;
+/**
+ * The names an answer defines (parse.ts, `Names`): in the blocks read, and at a line's start in
+ * the block still being written.
+ */
+const namesIn = (blocks: readonly Node[], writing: string) => {
   const all = placesOf(blocks).flatMap(([, block]) => foundIn(block));
-  const of = (type: string) =>
-    all.flatMap((node) =>
+  // A link's definition counts once its line is whole (its address may still grow); a note's once
+  // its name is.
+  const whole = writing.slice(0, writing.lastIndexOf("\n") + 1);
+  const of = (type: string, note: string, text: string) => [
+    ...all.flatMap((node) =>
       node.type === type && "identifier" in node ? [node.identifier] : []
-    );
-  return { links: of("definition"), notes: of("footnoteDefinition") };
+    ),
+    ...[...text.matchAll(DEFINED)].flatMap(({ groups }) =>
+      groups?.note === note
+        ? [(groups.label ?? "").replaceAll(/\s+/gu, " ").trim().toLowerCase()]
+        : []
+    ),
+  ];
+  return {
+    links: of("definition", "", whole),
+    notes: of("footnoteDefinition", "^", writing),
+  };
 };
 /**
  * While written, what a block says once it is finished: never each word, nor code (CodeBlock says
@@ -1078,7 +1123,7 @@ const useSaid = (
     }
   }, [blocks, finished, live, names, words.table]);
 };
-// While written, a table's row waits for its line's end, and its head for its row of dashes. A last
+// While written, a table's head waits for its row of dashes. A last
 // line that is only the start of a block's mark waits for the characters that decide it: a list's
 // number or bullet, a task's box, a heading's, rule's or underline's marks, a note's start, a link's
 // definition (never drawn), the start of a section's `<details>` or `</details>`. So do a bracket
@@ -1090,23 +1135,25 @@ const UNDECIDED =
   /^(?:[-*+]|\d{1,9}[.)]?|(?:[-*+=_][ \t]*)+|#{1,6}|\[[ xX]?\]?|\[\^[^\]\s]*\]?:?|\[(?!\^)(?:[^\]\\]|\\.){1,999}\]:.*|<\/?(?:d(?:e(?:t(?:a(?:i(?:ls?)?)?)?)?)?)?)?[ \t]*$/u;
 /** `end` less what waits; each pattern is anchored or found from the end, so none scans back. */
 const lessWaiting = (end: string) => {
-  const line = end.lastIndexOf("\n") + 1;
-  const last = end.slice(line);
-  const rest = last.replace(CONTAINERS, "");
-  if (last.trim() !== "" && (rest === "" || UNDECIDED.test(rest))) {
-    return end.slice(0, line);
-  }
   const note = end.lastIndexOf("[^");
   let to = note !== -1 && !/[\]\s]/u.test(end.slice(note)) ? note : end.length;
+  // In code still open, every character is code.
+  if (parse.inOpenFence(end)) {
+    return end;
+  }
   // Twice at most: a bracket's pair, then the marks before it (`**[words]`).
   for (let round = 0; round < 2; round += 1) {
-    while (to > 0 && "*_~`[! \t".includes(end.charAt(to - 1))) {
-      to -= 1;
+    while (to > 0 && "*_~`[ \t".includes(end.charAt(to - 1))) {
+      to -= end.slice(to - 2, to) === "![" ? 2 : 1;
     }
     const bracket = end.lastIndexOf("[", to - 1);
     to = /^\[[^\]]*\]$/u.test(end.slice(bracket, to)) ? bracket : to;
   }
-  return end.slice(0, to);
+  const line = end.lastIndexOf("\n", to - 1) + 1;
+  const last = end.slice(line, to);
+  const rest = last.replace(CONTAINERS, "");
+  const undecided = last.trim() !== "" && (rest === "" || UNDECIDED.test(rest));
+  return end.slice(0, undecided ? line : to);
 };
 /** The last word of `text`: a bare address in it may still grow. */
 const lastWord = (text: string) =>
@@ -1173,33 +1220,36 @@ const useBlocks = (
   const blocks = open ? starts.slice(0, -1) : starts;
   const read = (names?: parse.Names) =>
     blocks.flatMap((start, at) =>
-      parse.readBlock(source.slice(start, starts[at + 1]), { streaming, names })
+      parse.readBlock(source.slice(start, starts[at + 1]), { names })
     );
   const plain = read();
-  const names = streaming ? undefined : namesIn(plain);
-  const said =
-    names !== undefined && names.links.length + names.notes.length > 0;
-  const done = said ? read(names) : plain;
   let end = source.slice(open ? starts.at(-1) : source.length);
   // Cut off, a link still being written goes; a row waits for its line's end, a head for its dashes.
   const bracket = end.lastIndexOf("[");
   end =
     truncated && bracket > end.lastIndexOf("]") ? end.slice(0, bracket) : end;
+  // A table's head waits for its whole row of dashes, and is never drawn as pipes.
   let whole = lessWaiting(end);
-  const row = whole.lastIndexOf("\n") + 1;
-  whole = PIPE.test(whole.slice(row)) ? whole.slice(0, row) : whole;
-  const head = whole.lastIndexOf("\n", whole.length - 2) + 1;
-  const headless = PIPE.test(whole.slice(head)) && !DASHES.test(whole);
-  whole = headless ? whole.slice(0, head) : whole;
+  for (let row = 0; row < 2; row += 1) {
+    const complete = whole.slice(0, whole.lastIndexOf("\n") + 1);
+    const last = whole.lastIndexOf("\n", whole.length - 2) + 1;
+    if (DASHES.test(complete) || !PIPE.test(whole.slice(last))) {
+      break;
+    }
+    whole = whole.slice(0, last);
+  }
+  // Each block is read with the names the answer defines so far, so a reference or a note's mark
+  // is one once its definition has come (a whole line of it), and as written until then.
+  const names = namesIn(plain, end);
+  const said = names.links.length + names.notes.length > 0;
+  const done = said ? read(names) : plain;
   const code = streaming ? parse.openCode(end) : null;
   const ending = useEnding(whole, streaming && code === null, () =>
-    open && code === null
-      ? parse.readBlock(whole, { open: true, streaming, names })
-      : []
+    open && code === null ? parse.readBlock(whole, { open: true, names }) : []
   );
   const nodes = code ?? ending.nodes;
   const definitions = said
-    ? placesOf(done)
+    ? placesOf([...done, ...nodes])
         .flatMap(([, block]) => foundIn(block))
         .flatMap((node) => (node.type === "definition" ? [node] : []))
     : NO_DEFINITIONS;
@@ -1213,30 +1263,29 @@ const useBlocks = (
 };
 
 /**
- * The notes, numbered in the order they are first marked (once written, only those that came),
- * each with its place and its first mark outside the notes.
+ * The notes, numbered in the order they are first marked, each with its place and its marks
+ * outside the notes.
  */
-const notesOf = (all: readonly Node[], streaming: boolean, prefix: string) => {
+const notesOf = (all: readonly Node[], prefix: string) => {
   const notes = new Map<string, readonly [string, Of<"footnoteDefinition">]>();
-  const firsts = new Map<string, string>();
+  const marks = new Map<string, string[]>();
   for (const [place, block] of placesOf(all)) {
     for (const node of foundIn(block)) {
       if (node.type === "footnoteDefinition" && !notes.has(node.identifier)) {
         notes.set(node.identifier, [place, node]);
-      } else if (
-        node.type === "footnoteReference" &&
-        !firsts.has(node.identifier)
-      ) {
-        firsts.set(
-          node.identifier,
-          block.type === "footnoteDefinition" ? "" : markId(prefix, place, node)
-        );
+      } else if (node.type === "footnoteReference") {
+        const ids = marks.get(node.identifier) ?? [];
+        marks.set(node.identifier, ids);
+        if (block.type !== "footnoteDefinition") {
+          ids.push(markId(prefix, place, node));
+        }
       }
     }
   }
-  const order = [...firsts.keys()].filter((id) => streaming || notes.has(id));
+  const order = [...marks.keys()];
   const lines = order.map(
-    (id) => `${notes.has(id) ? "+" : "-"}${firsts.get(id) ?? ""} ${id}`
+    (id) =>
+      `${notes.has(id) ? "+" : "-"}${(marks.get(id) ?? []).join(",")} ${id}`
   );
   return {
     listed: order.flatMap((id) => {
@@ -1295,7 +1344,7 @@ export const Markdown = ({
   );
   const open = streaming || truncated;
   const prefix = useId();
-  const notes = notesOf(all, streaming, prefix);
+  const notes = notesOf(all, prefix);
   const names = namesOf(all);
   useSaid(all, streaming, live === "polite", names);
   return (

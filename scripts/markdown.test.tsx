@@ -92,9 +92,13 @@ const notePartsOf = (
   }
   if (node.type === "footnoteDefinition") {
     const paragraphs = node.children.filter((kid) => kid.type === "paragraph");
+    const marks = Number(defined.get(`^${node.identifier}`) ?? 0);
+    // `↩`, `↩²`, `↩³`: a way back per mark, after each paragraph.
+    const each = Math.max(paragraphs.length, 1);
     return [
       ["<li", 1],
-      ["<a\\b", paragraphs.length],
+      ["<a\\b", each * marks],
+      ["<sup", each * Math.max(marks - 1, 0)],
     ];
   }
   return [];
@@ -123,7 +127,7 @@ const partsOf = (
     }
   }
   if (node.type === "heading") {
-    parts.push([`<h${Math.min(node.depth, 4)}\\b`, 1]);
+    parts.push([`<h${node.depth}\\b`, 1]);
   }
   const block = place === "block" || (place === "item" && node.type === "html");
   if (block && (node.type === "paragraph" || node.type === "html")) {
@@ -173,14 +177,22 @@ describe("the parse is micromark's, block by block", () => {
           .toReversed()
           .map((node) => [node.identifier, node.url])
       );
-      const marked = new Set(
-        allNodes(tree.children).flatMap((node) =>
-          node.type === "footnoteReference" ? [node.identifier] : []
-        )
+      // Each note's marks outside the notes, each a way back from the note.
+      const outside = tree.children.filter(
+        (node) => node.type !== "footnoteDefinition"
       );
+      const marks = new Map<string, number>();
+      for (const node of allNodes(outside)) {
+        if (node.type === "footnoteReference") {
+          marks.set(node.identifier, (marks.get(node.identifier) ?? 0) + 1);
+        }
+      }
       for (const node of allNodes(tree.children)) {
-        if (node.type === "footnoteDefinition" && marked.has(node.identifier)) {
-          defined.set(`^${node.identifier}`, "");
+        if (node.type === "footnoteDefinition" && marks.has(node.identifier)) {
+          defined.set(
+            `^${node.identifier}`,
+            String(marks.get(node.identifier))
+          );
         }
       }
       const want: Record<string, number> = {};
@@ -359,26 +371,26 @@ describe("what an answer may hold besides prose", () => {
     const source =
       "B[^b], A[^a], B again[^b].\n\n[^a]: Note A.\n\n[^b]: Note B.";
     const html = draw(source);
-    expect(textOf(html)).toBe(
-      "B1, A2, B again1.Note B. Back to reference 1Note A. Back to reference 2"
-    );
+    expect(textOf(html)).toBe("B1, A2, B again1.Note B. ↩ ↩2Note A. ↩");
+    expect(html).toContain('aria-label="Back to reference 1-2"');
     const hrefs = [...html.matchAll(/href="#(?<id>[^"]*)"/gu)].map(
       (found) => found.groups?.id ?? ""
     );
-    expect(hrefs).toHaveLength(5);
+    expect(hrefs).toHaveLength(6);
     for (const id of hrefs) {
       expect(count(html, ` id="${id}"`)).toBe(1);
     }
   });
 
-  test("while written, a mark whose note has not come is its number, leading nowhere; once whole, as written", () => {
+  test("a mark is as written until its note has come, while written too, as Streamdown draws it", () => {
     const source = "First[^x] and[^y].\n\n[^y]: Why.";
-    const streamed = draw(source.slice(0, 18), { streaming: true });
-    expect(textOf(streamed)).toBe("First1 and2.");
-    expect(count(streamed, "<a\\b")).toBe(0);
-    expect(textOf(draw(source))).toBe(
-      "First[^x] and1.Why. Back to reference 1"
+    expect(textOf(draw(source.slice(0, 18), { streaming: true }))).toBe(
+      "First[^x] and[^y]."
     );
+    expect(textOf(draw(source, { streaming: true }))).toBe(
+      "First[^x] and1.Why. ↩"
+    );
+    expect(textOf(draw(source))).toBe("First[^x] and1.Why. ↩");
   });
 
   test("a caller's elements draw in Markdown's place, given the element's props and the node", () => {
@@ -407,6 +419,11 @@ describe("what an answer may hold besides prose", () => {
     expect(html).toContain(
       '<kbd data-class="language-ts" data-node="code">const a = 1;</kbd>'
     );
+  });
+
+  test("while written, each word fades in, and each character where words have no spaces", () => {
+    const html = draw("你好 world and more", { streaming: true });
+    expect(count(html, "<span")).toBe(5);
   });
 
   test("soft breaks: a single newline is a line break when asked, a space otherwise", () => {
@@ -489,17 +506,15 @@ describe("while it is written, nothing shows that the whole answer will not", ()
     expect(text.length).toBeGreaterThan(1000);
   });
 
-  test("a block read alone knows the answer's names: links and notes defined elsewhere, and every note while written", () => {
+  test("a block read alone knows the answer's names: links and notes defined elsewhere", () => {
     const names = { links: ["the guide"], notes: ["1"] };
     const told = parse.readBlock("See [the guide] and a mark[^1].", {
       names,
     });
     expect(types(told)).toContain('"type":"linkReference"');
     expect(types(told)).toContain('"type":"footnoteReference"');
-    const alone = parse.readBlock("A mark[^2].", { streaming: true });
-    expect(types(alone)).toContain('"type":"footnoteReference"');
-    const whole = parse.readBlock("A mark[^2].");
-    expect(types(whole)).not.toContain('"type":"footnoteReference"');
+    const alone = parse.readBlock("A mark[^2].");
+    expect(types(alone)).not.toContain('"type":"footnoteReference"');
   });
 
   test("a link's definition still being written is never a link", () => {

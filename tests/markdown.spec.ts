@@ -210,8 +210,8 @@ test("footnotes: a mark leads to its note at the foot, and the note leads back",
   await expect(marks).toHaveText(["1", "2", "1"]);
   const notes = page.getByRole("list").last().getByRole("listitem");
   await expect(notes).toHaveText([
-    /^Year on year, in euros, before currency effects\. Back to reference 1$/u,
-    /^Churn counts cancelled seats only, not downgrades\. Back to reference 2$/u,
+    "Year on year, in euros, before currency effects. ↩ ↩2",
+    "Churn counts cancelled seats only, not downgrades. ↩",
   ]);
   await marks.nth(1).click();
   await expect(page).toHaveURL(/-fn-2$/u);
@@ -235,7 +235,7 @@ test("while it is written: no pipes, no fence marks, no brackets, and the table 
   expect(seen.tables).toBeGreaterThan(0);
 });
 
-test("caught part way: an open fence is code being written, a half link its words, a half table a table", async ({
+test("caught part way: an open fence is code being written, a half link its words, a half table a table with its half row", async ({
   page,
 }) => {
   await openExample(page, "markdown", "half-written");
@@ -254,7 +254,8 @@ test("caught part way: an open fence is code being written, a half link its word
     name: "A table still being written",
   });
   await expect(table.getByRole("row", { name: "Support 58 4" })).toBeVisible();
-  await expect(table.getByRole("row")).toHaveCount(2);
+  // Its half row is drawn as it is written, as Streamdown draws it.
+  await expect(table.getByRole("row")).toHaveCount(3);
   await expect(table.getByText("|")).toHaveCount(0);
 });
 

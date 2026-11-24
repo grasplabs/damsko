@@ -19,22 +19,22 @@ const OFF =
 const GFM = [gfm({ singleTilde: false })];
 const PLAIN = [...GFM, { disable: { null: OFF.split(" ") } }];
 const FROM = [gfmFromMarkdown()];
-/** The names an answer defines, as the tree has them; `notes: null`, every name is a note's. */
+/** The names an answer defines, as the tree has them. */
 export interface Names {
   links: readonly string[];
-  notes: readonly string[] | null;
+  notes: readonly string[];
 }
 const NO_NAMES: Names = { links: [], notes: [] };
 // micromark reads `[label]` as a reference, and `[^label]` as a note's mark, only once it has read
 // the definition in the same read: its parse context's `defined` (micromark's own) and
 // `gfmFootnotes` (the footnote extension's) say which. No option sets them, so a block read alone
 // is told the names the whole answer defines by a construct that runs first at each `[` or `!`
-// and widens both lists; while an answer is written, every name is a note's, its note perhaps still
-// to come. scripts/markdown.test.tsx ("a block read alone knows the answer's names") pins this.
+// and widens both lists. scripts/markdown.test.tsx ("a block read alone knows the answer's
+// names") pins this.
 const toldParsers = new WeakSet<object>();
 const knows =
-  (names: readonly string[] | null, own: readonly string[]) => (id: string) =>
-    names === null || names.includes(id.toLowerCase()) || own.includes(id);
+  (names: readonly string[], own: readonly string[]) => (id: string) =>
+    names.includes(id.toLowerCase()) || own.includes(id);
 const told = ({ links, notes }: Names) => {
   const construct = {
     add: "before" as const,
@@ -207,6 +207,21 @@ export const blockStarts = (source: string, from = FIRST): Cut => {
   return { ...kept, starts };
 };
 
+/** Whether `text` ends inside fenced code that is still open. */
+export const inOpenFence = (text: string) => {
+  let fence = "";
+  for (const line of text.split("\n")) {
+    // A fence may open inside a quote or a list item.
+    const bare = line.replace(/^[ \t>]*(?:(?:[-*+]|\d{1,9}[.)])[ \t]+)?/u, "");
+    if (fence === "") {
+      fence = FENCE.exec(bare)?.groups?.fence ?? "";
+    } else if (closes(bare, fence)) {
+      fence = "";
+    }
+  }
+  return fence !== "";
+};
+
 /**
  * A block that opens a fence and does not close it: its code, never read by the parser, less a
  * closing fence still being typed.
@@ -264,10 +279,9 @@ export interface Section {
   position?: undefined;
 }
 export type Block = RootContent | Section;
-/** How a block is read: still being written (`open`), while the answer streams, with its names. */
+/** How a block is read: still being written (`open`), with the names the answer defines. */
 export interface Reading {
   open?: boolean;
-  streaming?: boolean;
   names?: Names;
   depth?: number;
 }
@@ -341,17 +355,15 @@ let cached = 0;
 
 /** A block's nodes, read once while it is the same; the block still being written is not kept. */
 export const readBlock = (block: string, reading: Reading = {}): Block[] => {
-  const { open = false, streaming = false, names = NO_NAMES } = reading;
-  const given =
-    streaming && block.includes("[^") ? { ...names, notes: null } : names;
-  const key = `${JSON.stringify(given)}${block}`;
+  const { open = false, names = NO_NAMES } = reading;
+  const key = `${JSON.stringify(names)}${block}`;
   const known = open ? undefined : cache.get(key);
   if (known !== undefined) {
     return known;
   }
   const { text, more } = lessRows(open ? repair(block) : block);
   const nodes =
-    sectionOf(text, reading, readBlock) ?? read(text, given).children;
+    sectionOf(text, reading, readBlock) ?? read(text, names).children;
   const [table] = nodes;
   if (more > 0 && table?.type === "table") {
     Object.assign(table, { more });
@@ -366,6 +378,15 @@ export const readBlock = (block: string, reading: Reading = {}): Block[] => {
   }
   return nodes;
 };
+
+/**
+ * An address as CommonMark writes it into a page: a character outside an address's own set is
+ * percent-encoded, and an encoding already there is kept.
+ */
+export const encodedHref = (url: string) =>
+  url.replaceAll(/%(?![\da-f]{2})|[^\w!#$&'()*+,./:;=?@~%-]/giu, (char) =>
+    encodeURIComponent(char)
+  );
 
 /** Where a link or a picture still being written leads once remend has made it whole: nowhere. */
 export const HALF = new Set([
