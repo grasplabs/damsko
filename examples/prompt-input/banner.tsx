@@ -14,7 +14,13 @@ import {
   PromptInputTextarea,
   PromptInputTools,
 } from "@grasp-os/ui/components/prompt-input";
-import { Icon, LinkIcon, MicIcon, RefreshCwIcon } from "@grasp-os/ui/lib/icons";
+import {
+  FileIcon,
+  Icon,
+  LinkIcon,
+  MicIcon,
+  RefreshCwIcon,
+} from "@grasp-os/ui/lib/icons";
 import * as stylex from "@stylexjs/stylex";
 import { useState } from "react";
 
@@ -41,7 +47,8 @@ const Box = ({ name }: { name: string }) => (
 
 // A notice that belongs to the prompt input stands in a banner tucked under the card's top: a
 // mark, one short line and one action. The first stops work until something is connected; the
-// second says why a dictation stopped, offers another go, and can be closed.
+// second says why a dictation stopped, offers another go, and can be closed; the third, a plain
+// note, says what the prompt is about, and is read where it stands rather than said as it appears.
 export default function PromptInputBannerExample() {
   const [shown, setShown] = useState(true);
   return (
@@ -79,6 +86,12 @@ export default function PromptInputBannerExample() {
           </PromptInputBanner>
         )}
         <Box name="Message, no microphone" />
+      </PromptInput>
+      <PromptInput aria-label="Message, about a file" onSubmit={() => {}}>
+        <PromptInputBanner icon={FileIcon}>
+          Asking about Quarterly plan.pdf
+        </PromptInputBanner>
+        <Box name="Message, about a file" />
       </PromptInput>
     </div>
   );

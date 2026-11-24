@@ -339,20 +339,12 @@ const FORCED = media.forcedColors;
 const HOVER = media.hover;
 
 const styles = stylex.create({
-  // In a one-row prompt input the chip keeps a step after it: an empty box after the chip takes the
-  // tools' gap a second time, so the next tool stands space-2 from it. At rest with no room for it
-  // the chip is away, and its step with it: unseen, out of the tab order and unsaid, until something
-  // is typed (prompt-input.tsx, `useRowFit`).
+  // In a one-row prompt input at rest with no room for it the chip is away: unseen, out of the tab
+  // order and unsaid, until something is typed (prompt-input.tsx, `useRowFit`).
   root: {
     display: {
       default: "contents",
       [stylex.when.ancestor(":is([data-away])", promptInputRowMarker)]: "none",
-    },
-    "::after": {
-      content: {
-        default: null,
-        [stylex.when.ancestor(":is(*)", promptInputRowMarker)]: '""',
-      },
     },
   },
   // The chip's mark, words and chevron, a step apart and a size down from the Button's. The words
@@ -597,6 +589,8 @@ const styles = stylex.create({
       [stylex.when.ancestor(":is([data-fold])", promptInputRowMarker)]: "none",
     },
   },
+  // A model's name in the chip stands in ink, its level and chevron quieter, as the original's chip.
+  nameInChip: { color: { default: colors.foreground, [FORCED]: "inherit" } },
   logo: { display: "inline-flex", flexShrink: 0 },
 });
 
@@ -638,8 +632,11 @@ interface Row {
 
 const RowContext = createContext<Row | null>(null);
 
-/** Whether a part stands in a chip that shows the level alone (its tooltip says the model). */
-const LevelContext = createContext(false);
+/**
+ * What a part in the chip shows: `level`, the level alone (its tooltip says the model); `name`, the
+ * model's name. Outside the chip, neither.
+ */
+const ChipWords = createContext<"level" | "name" | undefined>(undefined);
 
 const useRoot = (part: string): Root => {
   const root = use(RootContext);
@@ -773,7 +770,7 @@ export const ModelSelectorTrigger = ({
   ) : (
     <Button variant="ghost" size="xs" style={style}>
       <span {...stylex.props(styles.chip)}>
-        <LevelContext value={tip}>{children}</LevelContext>
+        <ChipWords value={tip ? "level" : "name"}>{children}</ChipWords>
         <span aria-hidden="true" {...stylex.props(styles.chevron)}>
           <Icon icon={ChevronDownIcon} />
         </span>
@@ -1158,12 +1155,18 @@ export const ModelSelectorName = ({
   children,
   style,
 }: ModelSelectorNameProps) => {
-  const level = use(LevelContext);
+  const words = use(ChipWords);
+  const level = words === "level";
   return (
     <span
       data-slot="model-selector-name"
       data-level={level || undefined}
-      {...stylex.props(styles.name, level && styles.levelFolds, style)}
+      {...stylex.props(
+        styles.name,
+        level && styles.levelFolds,
+        words === "name" && styles.nameInChip,
+        style
+      )}
     >
       {children}
     </span>

@@ -276,3 +276,82 @@ test("in a side panel's card an xs row's detail stays whole on one line, and its
   );
   expect(givesWay).toBe(true);
 });
+
+test.describe("in a list that stacks", () => {
+  for (const [width, stacked] of [
+    [390, true],
+    [1280, false],
+  ] as const) {
+    test(`at ${width}px an xs row's detail ${stacked ? "stands under its name, which wraps whole" : "stays on the name's line"}`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height: 800 });
+      await openExample(page, "item", "stack");
+      const row = page
+        .getByRole("list", { name: "Files" })
+        .getByRole("listitem")
+        .nth(0);
+      const name = row.getByText(
+        "Notes from the planning day with the whole team",
+        {
+          exact: true,
+        }
+      );
+      const detail = row.getByText("Upload · Only you · 24 Nov 2026", {
+        exact: true,
+      });
+      const [nameBox, detailBox] = await Promise.all([
+        name.boundingBox(),
+        detail.boundingBox(),
+      ]);
+      const cut = await name.evaluate(
+        (element) => element.scrollWidth > element.clientWidth
+      );
+      if (stacked) {
+        expect(detailBox?.y ?? 0).toBeGreaterThanOrEqual(
+          (nameBox?.y ?? 0) + (nameBox?.height ?? 0) - 1
+        );
+        expect(cut).toBe(false);
+      } else {
+        expect(Math.round(detailBox?.y ?? 0)).toBe(Math.round(nameBox?.y ?? 1));
+      }
+    });
+  }
+});
+
+for (const [name, detail] of [
+  ["Amara Okafor", "Admin"],
+  ["Jonas Weber", "Editor"],
+] as const) {
+  test(`in a narrow list that stacks, ${name}'s row, of another size than xs, has its detail under the name`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 800 });
+    await openExample(page, "item", "stack-sizes");
+    const row = page
+      .getByRole("list", { name: "People" })
+      .getByRole("listitem")
+      .filter({ hasText: name });
+    const words = row.getByText(name, { exact: false }).first();
+    const [title, under] = await Promise.all([
+      words.evaluate((element) => {
+        const range = document.createRange();
+        const text = [...element.childNodes].find(
+          (node) =>
+            node.nodeType === Node.TEXT_NODE &&
+            (node.textContent ?? "").trim() !== ""
+        );
+        if (text === undefined) {
+          return null;
+        }
+        range.selectNodeContents(text);
+        const box = range.getBoundingClientRect();
+        return { left: box.left, bottom: box.bottom };
+      }),
+      row.getByText(detail, { exact: true }).boundingBox(),
+    ]);
+    expect(title).not.toBeNull();
+    expect(under?.y ?? 0).toBeGreaterThanOrEqual((title?.bottom ?? 0) - 1);
+    expect(Math.round(under?.x ?? 0)).toBe(Math.round(title?.left ?? 1));
+  });
+}

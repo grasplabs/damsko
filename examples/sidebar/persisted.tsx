@@ -8,7 +8,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
-  SidebarRail,
   SidebarTrigger,
   sidebarStateScript,
 } from "@grasp-os/ui/components/sidebar";
@@ -93,7 +92,6 @@ export default function SidebarPersisted() {
               </SidebarGroupContent>
             </SidebarGroup>
           </SidebarContent>
-          <SidebarRail />
         </Sidebar>
         <SidebarInset>
           <header {...stylex.props(layout.bar)}>

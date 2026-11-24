@@ -45,7 +45,6 @@ export default function DialogNested() {
           <DialogClose>Close</DialogClose>
           <Button
             variant="destructive"
-            size="sm"
             onClick={() => {
               setAsking("Delete the report?");
             }}

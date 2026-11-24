@@ -140,3 +140,20 @@ test("a grave yes is held, and a tap asks once more first", async ({
     page.getByText("Paid: £1,240 to Northwind Supplies.")
   ).toBeVisible();
 });
+
+test("its yes is drawn as the original's approve, in the success fill", async ({
+  page,
+}) => {
+  await openExample(page, "confirmation", "basic");
+  const approve = page.getByRole("button", { name: "Approve" });
+  await expect(approve).toHaveAttribute("data-variant", "success");
+  const same = await approve.evaluate((element) => {
+    const probe = document.createElement("span");
+    probe.style.color = "var(--damsko-success-fill)";
+    element.append(probe);
+    const fill = getComputedStyle(probe).color;
+    probe.remove();
+    return getComputedStyle(element).backgroundColor === fill;
+  });
+  expect(same).toBe(true);
+});

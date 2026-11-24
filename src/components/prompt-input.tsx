@@ -379,6 +379,13 @@ export interface PromptInputFooterProps {
 export interface PromptInputToolsProps {
   /** The tools before Submit: the action menu, a model selector, the speech button. */
   children: ReactNode;
+  /**
+   * Which end of the footer they stand at: `start`, a space-1 apart (the action menu, the model);
+   * `end`, at the footer's end a space-2 apart, Submit among them last (the model, the speech
+   * button, Submit).
+   * @default "start"
+   */
+  align?: "start" | "end";
   /** Layout only. */
   style?: LayoutStyle;
 }
@@ -518,9 +525,10 @@ export interface PromptInputBannerProps {
    */
   icon?: IconData | false;
   /**
-   * What it means: `default` a plain note, read where it stands; `warning` or `destructive` when
-   * it stops work, said at once as it appears. The strip is the same quiet one for each: the
-   * mark takes the colour.
+   * What it means: `default` a plain note (what the prompt is about), read where it stands and
+   * never said as it appears, and it describes the text; `warning` or `destructive` when it stops
+   * work, said at once as it appears. The strip is the same quiet one for each: the mark takes the
+   * colour.
    * @default "default"
    */
   variant?: "default" | "warning" | "destructive";
@@ -1273,6 +1281,9 @@ const styles = stylex.create({
     minWidth: 0,
   },
   compactTools: { gridArea: "start" },
+  // The tools at the footer's end, with Submit: a space-2 apart, as the original's end side.
+  toolsEnd: { gap: space["2"], marginInlineStart: "auto" },
+  compactToolsEnd: { gridArea: "end", justifySelf: "end" },
   end: {
     position: "relative",
     display: "inline-flex",
@@ -1333,13 +1344,15 @@ const styles = stylex.create({
   // A banner above the card: the quiet strip, in from the card's sides so its side lies inside the
   // card's rounded corner, its foot behind the card's top so the two read as one piece. An Alert
   // stands in it without a fill of its own: what the notice means is in its mark's colour, and in
-  // how the Alert says it.
+  // how the Alert says it. In from its sides by the card's text inset less its own, so the mark
+  // starts where the card's words and its first tool do.
   banner: {
     position: "relative",
     zIndex: 1,
     marginInline: space["2"],
     marginBlockEnd: `calc(-1 * ${radius.xl})`,
-    padding: space["3"],
+    paddingBlockStart: space["3"],
+    paddingInline: `calc(${space["4"]} - ${space["2"]})`,
     // Room for the card's corner to lie over its foot.
     paddingBlockEnd: `calc(${space["3"]} + ${radius.xl})`,
     borderStartStartRadius: radius.xl,
@@ -1350,12 +1363,16 @@ const styles = stylex.create({
     // Forced colours drop the fill and the shadow: a real line draws the strip.
     outline: { default: "none", [FORCED]: `${size.hairline} solid CanvasText` },
   },
-  // The mark and the words: level with the action's button where it stands beside them.
+  // The mark and the words, a space-2 apart.
   bannerLine: {
     display: "flex",
     alignItems: "flex-start",
-    gap: space["1"],
+    gap: space["2"],
     minWidth: 0,
+  },
+  // Level with the action's button, or the close button, where one stands beside them; with
+  // neither, no room is kept, so a note alone is as tall as its line.
+  bannerLineBesideAction: {
     marginBlockStart: {
       default: 0,
       [WIDE]: `calc((${size.controlSm} - ${font.textSmLine}) / 2)`,
@@ -1382,7 +1399,7 @@ const styles = stylex.create({
     alignSelf: "flex-start",
     gap: space["2"],
     marginInlineStart: {
-      default: `calc(${size.iconSm} + ${space["1"]})`,
+      default: `calc(${size.iconSm} + ${space["2"]})`,
       [WIDE]: 0,
     },
   },
@@ -1634,6 +1651,10 @@ interface PromptInputContextValue {
   changeDrawn: (by: number) => void;
   /** The id of the band under the card, which describes the text while it says a send failed. */
   noteId: string;
+  /** The ids of the plain banners' words above the card, which describe the text. */
+  bannerIds: readonly string[];
+  /** Adds a plain banner's words to what describes the text (`true`), or takes them off. */
+  changeBannerIds: (change: readonly [string, boolean]) => void;
   /** The footer's element, where a dictation's bar is drawn, and what says it is there. */
   footer: HTMLElement | null;
   setFooter: (footer: HTMLElement | null) => void;
@@ -1751,6 +1772,10 @@ const settle = async (
 
 /** Adds `by` to a count: the reducer of a count its parts change (`change(1)`, then `change(-1)`). */
 const countBy = (now: number, by: number) => now + by;
+const listBy = (
+  now: readonly string[],
+  [id, on]: readonly [string, boolean]
+): readonly string[] => (on ? [...now, id] : now.filter((each) => each !== id));
 
 /** Says `on(true)` while `send` runs, and `on(false)` once it is done, however it ends. */
 const during = async (
@@ -2700,7 +2725,22 @@ export const PromptInputBanner = ({
 }: PromptInputBannerProps) => {
   const words = useI18n().alert;
   const form = usePromptInput();
-  if (!useOutside()) {
+  const drawn = useOutside();
+  // A plain note is never said as it appears: it describes the text instead, so a screen reader
+  // still hears it there.
+  const wordsId = useId();
+  const describes = drawn && variant === "default";
+  const describe = form?.changeBannerIds;
+  useEffect(() => {
+    if (!describes || describe === undefined) {
+      return nothing;
+    }
+    describe([wordsId, true]);
+    return () => {
+      describe([wordsId, false]);
+    };
+  }, [describes, describe, wordsId]);
+  if (!drawn) {
     return null;
   }
   const mark = icon === false ? undefined : (icon ?? bannerIcons[variant]);
@@ -2712,14 +2752,16 @@ export const PromptInputBanner = ({
     >
       <Alert
         appearance="subtle"
-        // Said at once when it warns or stops work, else read where it stands.
-        live={variant === "default" ? "polite" : "assertive"}
+        // Said at once when it warns or stops work; a plain note (what the prompt is about) is no
+        // news, so it is read where it stands and never said as the page opens.
+        live={variant === "default" ? "off" : "assertive"}
         icon={false}
       >
         <AlertTitle>
           <span
             {...stylex.props(
               styles.bannerLine,
+              (!isBlank(action) || closable) && styles.bannerLineBesideAction,
               closable && styles.bannerLineClosable
             )}
           >
@@ -2735,7 +2777,12 @@ export const PromptInputBanner = ({
                 <Icon icon={mark} />
               </span>
             )}
-            <span {...stylex.props(styles.bannerWords)}>{children}</span>
+            <span
+              id={describes ? wordsId : undefined}
+              {...stylex.props(styles.bannerWords)}
+            >
+              {children}
+            </span>
           </span>
         </AlertTitle>
         {!isBlank(action) && (
@@ -2939,6 +2986,7 @@ export const PromptInput = ({
   const warned = useRef(false);
   const failure = useFailure(status);
   const noteId = useId();
+  const [bannerIds, changeBannerIds] = useReducer(listBy, []);
   const form = useRef<HTMLFormElement | null>(null);
   const card = useRef<HTMLFieldSetElement | null>(null);
   const picker = useRef<HTMLInputElement | null>(null);
@@ -3164,6 +3212,8 @@ export const PromptInput = ({
           changeWritten,
           changeDrawn,
           noteId,
+          bannerIds,
+          changeBannerIds,
           footer,
           setFooter,
           dictating,
@@ -3442,12 +3492,18 @@ export const PromptInputTextarea = ({
       controller?.focus({ at: "end" });
     }
   }, [autoFocus, controller]);
+  // A plain banner above says what the prompt is about (it is never said as it appears); the band
+  // under the card says why the words are still here.
+  const describers = [...(form?.bannerIds ?? [])];
+  if (form?.failed === true) {
+    describers.push(form.noteId);
+  }
+  const describedBy = describers.join(" ");
   const editor = (
     <TokenInputEditor
       aria-label={ariaLabel}
       aria-labelledby={labelledBy}
-      // The band under the card says why the words are still here.
-      aria-describedby={form?.failed === true ? form.noteId : undefined}
+      aria-describedby={describedBy === "" ? undefined : describedBy}
       placeholder={placeholder}
       onKeyDown={onKeyDown}
       ref={(element: HTMLDivElement | null) => {
@@ -3520,16 +3576,23 @@ export const PromptInputFooter = ({
   );
 };
 
-/** The tools before Submit. */
+/** The tools at the footer's start; with `align="end"`, those by Submit, Submit among them. */
 export const PromptInputTools = ({
   children,
+  align = "start",
   style,
 }: PromptInputToolsProps) => {
   const compact = usePromptInput()?.compact === true;
+  const end = align === "end";
   return (
     <div
       data-slot="prompt-input-tools"
-      {...stylex.props(styles.tools, compact && styles.compactTools, style)}
+      {...stylex.props(
+        styles.tools,
+        end && styles.toolsEnd,
+        compact && (end ? styles.compactToolsEnd : styles.compactTools),
+        style
+      )}
     >
       {children}
     </div>

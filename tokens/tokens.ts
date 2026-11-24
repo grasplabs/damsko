@@ -744,7 +744,7 @@ export const groups: TokenGroup[] = [
             name: "radius-lg",
             category: "radius",
             value: "calc({radius} - 4px)",
-            use: "A row: a menu or list item, a tree or sidebar row, a trigger that runs the width. The base less the 4px a container keeps round its rows, capped at half the row's height.",
+            use: "A row: a menu or list item, a tree row, a trigger that runs the width. The base less the 4px a container keeps round its rows, capped at half the row's height.",
           },
           {
             name: "radius-xl",
@@ -1100,11 +1100,24 @@ export const groups: TokenGroup[] = [
             use: "Where the approve light moves under a pointer: a step deeper.",
           },
           {
+            name: "success-light-press",
+            category: "size",
+            value: "0 100%",
+            use: "Where the approve light moves while pressed: its deepest part.",
+          },
+          {
             name: "success-glow",
             category: "colors",
             value: "oklch(0.8005 0.1625 165.25 / 0.5)",
             dark: "oklch(0.85 0.15 150 / 0.36)",
             use: "The mint an approving action casts under itself at rest: its light spilling onto the ground.",
+          },
+          {
+            name: "success-glow-hover",
+            category: "colors",
+            value: "oklch(0.8005 0.1625 165.25 / 0.7)",
+            dark: "oklch(0.85 0.15 150 / 0.52)",
+            use: "success-glow under a pointer: one step stronger.",
           },
           {
             name: "button-sheen",
@@ -1222,6 +1235,20 @@ export const groups: TokenGroup[] = [
             value:
               "{bevel-success-face}, 0 1px 3px -3px {success-glow}, {input-shadow}",
             use: "The bevelled edge of an approving action at rest, with its glow: held inside the field's lift under it, so beside another button it draws no taller (tests/button.spec.ts, its test of one height per size).",
+          },
+          {
+            name: "bevel-success-hover",
+            category: "shadow",
+            value:
+              "{bevel-success-face}, 0 4px 12px -7px {success-glow-hover}, {button-shadow-hover}",
+            use: "bevel-success under a pointer: the drop grows and the glow comes up.",
+          },
+          {
+            name: "bevel-success-press",
+            category: "shadow",
+            value:
+              "{bevel-success-face}, 0 2px 6px -6px {success-glow}, {button-shadow-active}",
+            use: "bevel-success while pressed: the drop and the glow tighten.",
           },
         ],
       },
@@ -3534,6 +3561,18 @@ export const groups: TokenGroup[] = [
             category: "size",
             value: "8px",
             use: "A row's padding at its sides.",
+          },
+          {
+            name: "sidebar-row-radius",
+            category: "radius",
+            value: "6px",
+            use: "A row's corner, and a group's label's: a plain round corner, as the original's frame drew its rows. Its own token, not the row corner: the frame's rows are tighter than a list's.",
+          },
+          {
+            name: "sidebar-row-radius-lg",
+            category: "radius",
+            value: "10px",
+            use: "A large row's corner (the person at the sidebar's foot): the page card's corner and the rows' inset less the gutter, so it nests in the sidebar's foot.",
           },
           {
             name: "sidebar-icon-gap",

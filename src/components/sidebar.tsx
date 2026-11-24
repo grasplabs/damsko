@@ -1,6 +1,6 @@
 // Sidebar: an app's main places down one side: a provider that holds whether it is open, the
-// sidebar with its header, its content in groups of menus and its footer, a trigger and a rail that
-// fold it, and the page beside it (SidebarInset).
+// sidebar with its header, its content in groups of menus and its footer, a trigger that folds it
+// (and the keys), and the page beside it (SidebarInset).
 //
 //   <SidebarProvider>
 //     <Sidebar>
@@ -19,7 +19,6 @@
 //         </SidebarGroup>
 //       </SidebarContent>
 //       <SidebarFooter>…</SidebarFooter>
-//       <SidebarRail />
 //     </Sidebar>
 //     <SidebarInset>
 //       <SidebarTrigger />
@@ -208,8 +207,8 @@ const styles = stylex.create({
     width: size.sidebarWidth,
   },
 
-  // The panel: as tall as the window at most, held in view while the page scrolls past. A layer
-  // above the page, so its rail takes the pointer on both sides of its edge.
+  // The panel: as tall as the window at most, held in view while the page scrolls past, a layer
+  // above the page.
   container: {
     position: "sticky",
     insetBlockStart: 0,
@@ -295,27 +294,6 @@ const styles = stylex.create({
     borderRadius: "inherit",
     cornerShape: "inherit",
   },
-
-  // The rail along its inner edge: pressed, it folds or opens the sidebar. A line shows under the
-  // pointer. It stays in reach while the sidebar is off the canvas, at the window's edge.
-  rail: {
-    position: "absolute",
-    insetBlock: 0,
-    zIndex: 1,
-    width: space["4"],
-    padding: 0,
-    borderWidth: 0,
-    visibility: "visible",
-    cursor: "ew-resize",
-    backgroundColor: "transparent",
-    backgroundImage: {
-      default: null,
-      ":hover": `linear-gradient(to right, transparent calc(50% - ${size.hairline}), ${colors.border} calc(50% - ${size.hairline}), ${colors.border} calc(50% + ${size.hairline}), transparent calc(50% + ${size.hairline}))`,
-    },
-    display: { default: "block", [BELOW]: "none" },
-  },
-  railStart: { insetInlineEnd: `calc(-1 * ${space["2"]})` },
-  railEnd: { insetInlineStart: `calc(-1 * ${space["2"]})` },
 
   // The page beside it.
   inset: {
@@ -431,8 +409,7 @@ const styles = stylex.create({
     paddingBlockEnd: space["1"],
     paddingInline: size.sidebarRowInline,
     borderWidth: 0,
-    borderRadius: radius.lg,
-    cornerShape: radius.shape,
+    borderRadius: radius.sidebarRowRadius,
     backgroundColor: "transparent",
     // Drawn as a button or a link (`asChild`), it answers the pointer as a row's words do.
     color: {
@@ -481,7 +458,9 @@ const styles = stylex.create({
     borderWidth: { default: 0, [FORCED]: size.hairline },
     borderStyle: "solid",
     borderColor: "ButtonText",
-    borderRadius: radius.lg,
+    // A small icon Button's corner, capped at half its height, as the original drew its row's
+    // action: not the row's own.
+    borderRadius: `min(${radius.xl}, calc(${ACTION} / 2))`,
     cornerShape: radius.shape,
     color: {
       default: colors.sidebarSecondaryForeground,
@@ -563,8 +542,7 @@ const styles = stylex.create({
     borderWidth: { default: 0, [FORCED]: size.hairline },
     borderStyle: "solid",
     borderColor: "transparent",
-    borderRadius: radius.lg,
-    cornerShape: radius.shape,
+    borderRadius: radius.sidebarRowRadius,
     overflow: "hidden",
     color: {
       default: colors.sidebarSecondaryForeground,
@@ -620,7 +598,7 @@ const styles = stylex.create({
   },
   // A large row (a person, a workspace), in the words read first; it folds to its picture alone.
   lg: {
-    borderRadius: radius.lg,
+    borderRadius: radius.sidebarRowRadiusLg,
     color: colors.sidebarForeground,
     height: {
       default: size.sidebarMenuButtonHeightLg,
@@ -987,7 +965,7 @@ export interface SidebarProviderProps {
    * @default true
    */
   defaultOpen?: boolean;
-  /** Runs with the new state when the trigger, the rail or the keys fold or open it. */
+  /** Runs with the new state when the trigger or the keys fold or open it. */
   onOpenChange?: (open: boolean) => void;
   /**
    * The sheet is open now, on a narrow window. Pass it with `onOpenMobileChange` to keep the state
@@ -1044,7 +1022,7 @@ export const SidebarProvider = ({
   const id = useId();
   const element = useRef<HTMLDivElement | null>(null);
 
-  // What held focus as the trigger, the rail or the keys folded or opened it. Once the change is
+  // What held focus as the trigger or the keys folded or opened it. Once the change is
   // drawn, if that went out of reach (folded away with it, hidden on the rail, or a trigger in the
   // page that shows only while the sidebar is away), focus goes to a trigger still in reach, else
   // to the open sidebar's current row.
@@ -1172,7 +1150,7 @@ export const sidebarStateScript = (storageKey: string): string =>
 
 /** Every prop a Sidebar takes. */
 export interface SidebarProps {
-  /** Its SidebarHeader, SidebarContent, SidebarFooter and SidebarRail, top to bottom. */
+  /** Its SidebarHeader, SidebarContent and SidebarFooter, top to bottom. */
   children: ReactNode;
   /**
    * The side it stands on. Both follow the reading direction: `start` is the left in English.
@@ -1353,40 +1331,6 @@ export const SidebarTrigger = ({
     >
       <Icon icon={PanelLeftIcon} />
     </button>
-  );
-};
-
-/** Every prop a SidebarRail takes. */
-export interface SidebarRailProps {
-  /** Layout only. */
-  style?: LayoutStyle;
-}
-
-/**
- * The thin rail along the sidebar's inner edge: a press folds or opens it. For a pointer: the
- * keyboard has the trigger and the keys, so it is no tab stop.
- */
-export const SidebarRail = ({ style }: SidebarRailProps) => {
-  const { toggle } = useI18n().sidebar;
-  const { open, toggleSidebar, id, keys } = useSidebarState("SidebarRail");
-  const side = use(SideContext);
-  return (
-    <button
-      type="button"
-      data-slot="sidebar-rail"
-      aria-label={toggle}
-      aria-expanded={open}
-      aria-controls={id}
-      aria-keyshortcuts={keys?.aria}
-      tabIndex={-1}
-      title={titled(toggle, keys)}
-      onClick={toggleSidebar}
-      {...stylex.props(
-        styles.rail,
-        side === "start" ? styles.railStart : styles.railEnd,
-        style
-      )}
-    />
   );
 };
 
