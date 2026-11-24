@@ -367,6 +367,9 @@ const styles = stylex.create({
   },
   // The list scrolls past popup-height.
   list: {
+    // Its items stand one under the other, never side by side: a control at an item's end reaches
+    // its full touch target across.
+    "--tap-room-inline": size.tapTarget,
     boxSizing: "border-box",
     maxHeight: size.popupHeight,
     overflowY: "auto",

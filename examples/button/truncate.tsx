@@ -10,6 +10,8 @@ const layout = stylex.create({
     display: "flex",
     alignItems: "center",
     gap: space["1"],
+    // Each control's touch target reaches the middle of the gap to the next (tapTarget).
+    "--tap-room-inline": `calc(${space["1"]} / 2)`,
     boxSizing: "border-box",
     paddingBlock: space["1"],
     paddingInline: space["2"],

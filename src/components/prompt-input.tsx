@@ -1067,6 +1067,8 @@ const styles = stylex.create({
   compactTall: {
     gridTemplateAreas:
       '"header header header" "field field field" "start . end"',
+    // The text a step above the row: each control's touch target reaches the middle between.
+    "--tap-room-block": `calc(${space["2"]} / 2)`,
   },
   // A file is dragged over the page: the card is a target, tinted in mint, its words say what a
   // drop does. Over the card itself the tint and the edge go a step stronger.
@@ -1246,6 +1248,8 @@ const styles = stylex.create({
     alignItems: "center",
     justifyContent: "space-between",
     gap: space["2"],
+    // Each control's touch target reaches the middle of the gap to the next (tapTarget).
+    "--tap-room-inline": `calc(${space["2"]} / 2)`,
     minWidth: 0,
     marginBlockStart: space["6"],
     paddingInline: space["2"],
@@ -1261,17 +1265,27 @@ const styles = stylex.create({
     flexWrap: "wrap",
     alignItems: "center",
     gap: space["1"],
+    // Each control's touch target reaches the middle of the gap to the next (tapTarget).
+    "--tap-room-inline": `calc(${space["1"]} / 2)`,
     minWidth: 0,
   },
-  compactTools: { gridArea: "start" },
+  // On one row with the text, a step from it: the tools' and Submit's touch targets stop at the
+  // middle of that step on every side.
+  compactTools: { gridArea: "start", "--tap-reach": `calc(${space["2"]} / 2)` },
   end: {
     position: "relative",
     display: "inline-flex",
     alignItems: "center",
     gap: space["2"],
+    // Each control's touch target reaches the middle of the gap to the next (tapTarget).
+    "--tap-room-inline": `calc(${space["2"]} / 2)`,
     marginInlineStart: "auto",
   },
-  compactEnd: { gridArea: "end", justifySelf: "end" },
+  compactEnd: {
+    gridArea: "end",
+    justifySelf: "end",
+    "--tap-reach": `calc(${space["2"]} / 2)`,
+  },
   count: {
     paddingInline: space["1"],
     color: colors.mutedForeground,
@@ -1406,6 +1420,8 @@ const styles = stylex.create({
   queueList: {
     display: "grid",
     gap: space["1"],
+    // Each control's touch target reaches the middle of the gap to the next (tapTarget).
+    "--tap-room-block": `calc(${space["1"]} / 2)`,
     margin: 0,
     padding: 0,
     paddingBlockEnd: space["2"],
@@ -1430,6 +1446,8 @@ const styles = stylex.create({
     alignItems: "center",
     flexShrink: 0,
     gap: space["1"],
+    // Each control's touch target reaches the middle of the gap to the next (tapTarget).
+    "--tap-room-inline": `calc(${space["1"]} / 2)`,
   },
   // While the page loads: a part kept in its room but not drawn, and the text's quiet line.
   kept: { display: "inline-flex", opacity: 0 },

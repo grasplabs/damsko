@@ -358,6 +358,14 @@ const styles = stylex.create({
       default: space["1"],
       [media.pointerCoarse]: `calc(${size.tapTarget} - ${size.controlSm})`,
     },
+    "--tap-room-inline": {
+      default: `calc(${space["1"]} / 2)`,
+      [media.pointerCoarse]: `calc((${size.tapTarget} - ${size.controlSm}) / 2)`,
+    },
+    "--tap-room-block": {
+      default: `calc(${space["1"]} / 2)`,
+      [media.pointerCoarse]: `calc((${size.tapTarget} - ${size.controlSm}) / 2)`,
+    },
     // The first icon stands under the first letter of the words; at the end, the last under the
     // bubble's edge.
     marginInlineStart: `calc(-1 * (${size.controlSm} - ${size.iconSm}) / 2)`,

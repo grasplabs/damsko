@@ -310,6 +310,12 @@ const styles = stylex.create({
       default: 0,
       ":not(:only-child)": `calc(${space["2"]} - ${ROOM})`,
     },
+    // Among steps, its trigger's touch target reaches the edge of its row, where the next row's
+    // starts.
+    "--tap-room-block": {
+      default: null,
+      ":not(:only-child)": `calc(${space["2"]} - ${ROOM})`,
+    },
   },
   // The trigger: the original's activity line, only as wide as its line and chevron (a card's width
   // in a card), at the text's own weight and line, muted until the pointer is on it or it is open,

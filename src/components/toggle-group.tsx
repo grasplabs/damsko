@@ -16,7 +16,7 @@ import type { ToggleState } from "@ui-sdk/react/toggle";
 import { createContext, useContext } from "react";
 import type { ComponentProps, ReactNode } from "react";
 
-import { focusRing, segmentedStyles } from "../lib/styles";
+import { focusRing, segmentedStyles, tapTarget } from "../lib/styles";
 import {
   colors,
   media,
@@ -124,12 +124,16 @@ const styles = stylex.create({
     display: "inline-flex",
     alignItems: "center",
     gap: sizes.toggleGap,
+    // Each item's touch target reaches the middle of the gap to the next (tapTarget).
+    "--tap-room-inline": `calc(${sizes.toggleGap} / 2)`,
     boxSizing: "border-box",
     maxWidth: "100%",
   },
   vertical: {
     flexDirection: "column",
     alignItems: "stretch",
+    "--tap-room-inline": sizes.tapTarget,
+    "--tap-room-block": `calc(${sizes.toggleGap} / 2)`,
   },
   // Across its box (fullWidth). Its items share the width, each growing from its own words' width,
   // so every word shows while they fit (equal parts would cut "Extra high" beside "Low"), and each
@@ -179,16 +183,6 @@ const styles = stylex.create({
     opacity: sizes.opacityDisabled,
     cursor: "not-allowed",
     transform: "none",
-  },
-  // A finger needs 44px: an invisible area inside the item reaches past its top and bottom on
-  // touch. Never past its sides, where it would lie over its neighbour and take that one's press.
-  target: {
-    position: "absolute",
-    insetInline: 0,
-    insetBlock: {
-      default: 0,
-      [media.pointerCoarse]: `calc((100% - ${sizes.tapTarget}) / 2)`,
-    },
   },
 });
 
@@ -270,7 +264,7 @@ const Item = ({
         )
       }
     >
-      <span aria-hidden="true" {...stylex.props(styles.target)} />
+      <span aria-hidden="true" {...stylex.props(tapTarget)} />
       {shared && !icon ? (
         <span {...stylex.props(styles.words)}>{children}</span>
       ) : (

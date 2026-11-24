@@ -268,7 +268,13 @@ const styles = stylex.create({
     maxWidth: `min(${sizes.attachmentMaxWidth}, 100cqi, 100%)`,
     padding: space["1"],
     paddingInlineEnd: space["2"],
-    overflow: "hidden",
+    // Clipped, never a box that scrolls; on a touch screen its actions' targets may reach past its
+    // end by what its padding leaves of their 44px.
+    overflow: "clip",
+    overflowClipMargin: {
+      default: null,
+      [COARSE]: `max(0px, calc((${sizes.tapTarget} - ${sizes.badgeHeight}) / 2 - ${space["2"]}))`,
+    },
     cornerShape: radius.shape,
     backgroundColor: colors.muted,
     fontFamily: font.sans,
@@ -394,6 +400,15 @@ const styles = stylex.create({
       default: space["1"],
       [COARSE]: `calc(${sizes.tapTarget} - ${sizes.badgeHeight})`,
     },
+    "--tap-room-inline": {
+      default: `calc(${space["1"]} / 2)`,
+      [COARSE]: `calc((${sizes.tapTarget} - ${sizes.badgeHeight}) / 2)`,
+    },
+    // On a card that opens, the actions stand on its trigger: their targets keep to their circles.
+    "--tap-reach": {
+      default: null,
+      ":has(~ :is(a[href], button))": "0px",
+    },
     flexShrink: 0,
     opacity: {
       default: 1,
@@ -407,10 +422,13 @@ const styles = stylex.create({
     transitionDuration: duration.hover,
     transitionTimingFunction: duration.ease,
   },
+  // On the card that opens: each action's target keeps to its own circle, so a press on the card
+  // round it opens the card.
   actionsVertical: {
     position: "absolute",
     top: space["2"],
     insetInlineEnd: space["2"],
+    "--tap-reach": "0px",
   },
   // An action: a small circle, quiet until a pointer is on it, with a finger's room round it on
   // a touch screen (tapTarget).

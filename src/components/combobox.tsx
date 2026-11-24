@@ -60,6 +60,7 @@ import {
   inputStyles,
   listStyles,
   scrollbarHidden,
+  tapTarget,
 } from "../lib/styles";
 import {
   colors,
@@ -197,7 +198,6 @@ export interface ComboboxOptionsProps {
 // ---- The look --------------------------------------------------------------------------------------
 
 const HOVER = media.hover;
-const COARSE = media.pointerCoarse;
 const FORCED = media.forcedColors;
 // Focus from the keys, never after a press (lib/styles marks a pointer's focus).
 const KEYBOARD = ":focus-visible:not([data-focus-pointer])";
@@ -211,8 +211,10 @@ const FADE_END = `linear-gradient(to right, currentColor calc(100% - ${space[5]}
 const FADE_END_RTL = `linear-gradient(to left, currentColor calc(100% - ${space[5]}), transparent), linear-gradient(transparent, transparent)`;
 
 const styles = stylex.create({
-  // The box holds the input, its touch target and the chevron. It is as wide as its column.
+  // The box holds the input, its touch target and the chevron. It is as wide as its column. The
+  // chevron stands on the input's end: its touch target stops at its own edge towards it.
   box: {
+    "--tap-room-inline": "0px",
     position: "relative",
     display: "flex",
     alignItems: "stretch",
@@ -406,18 +408,6 @@ const styles = stylex.create({
     transitionDuration: duration.hover,
     transitionTimingFunction: duration.ease,
   },
-  // On a touch screen the chevron's press area is 44px tall and wide, unseen.
-  triggerTarget: {
-    position: "absolute",
-    insetBlock: {
-      default: 0,
-      [COARSE]: `min(0px, calc((100% - ${size.tapTarget}) / 2))`,
-    },
-    insetInline: {
-      default: 0,
-      [COARSE]: `min(0px, calc((100% - ${size.tapTarget}) / 2))`,
-    },
-  },
   triggerOff: {
     cursor: "default",
     pointerEvents: "none",
@@ -444,12 +434,6 @@ const sizeStyles = {
   default: inputStyles.default,
   lg: inputStyles.lg,
 } as const;
-const targetStyles = {
-  sm: inputStyles.targetSm,
-  default: inputStyles.targetDefault,
-  lg: inputStyles.targetLg,
-} as const;
-
 const asItem = (entry: ComboboxItem | string): ComboboxItem =>
   typeof entry === "string" ? { value: entry, label: entry } : entry;
 
@@ -717,10 +701,7 @@ export const Combobox = ({
     >
       {/* The box that holds the field, its touch target and the chevron. */}
       <div data-slot="combobox" {...stylex.props(styles.box, style)}>
-        <span
-          aria-hidden="true"
-          {...stylex.props(inputStyles.target, targetStyles[scale])}
-        />
+        <span aria-hidden="true" {...stylex.props(tapTarget)} />
         {/* Before the input, so the input's words begin after it while it is there. */}
         <ComboboxValue>
           {(state: ComboboxValueState): ReactNode => {
@@ -785,10 +766,7 @@ export const Combobox = ({
         >
           {(state: ComboboxTriggerState) => (
             <>
-              <span
-                aria-hidden="true"
-                {...stylex.props(styles.triggerTarget)}
-              />
+              <span aria-hidden="true" {...stylex.props(tapTarget)} />
               <span
                 aria-hidden="true"
                 {...stylex.props(

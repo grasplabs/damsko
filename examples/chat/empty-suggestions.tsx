@@ -25,6 +25,9 @@ const layout = stylex.create({
     flexWrap: "wrap",
     justifyContent: "center",
     gap: 8,
+    // Wrapped onto lines: each button's touch target reaches the middle of the gap to the next.
+    "--tap-room-inline": "4px",
+    "--tap-room-block": "4px",
   },
 });
 
