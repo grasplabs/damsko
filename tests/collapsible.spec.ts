@@ -12,6 +12,13 @@ const fill = async (element: Locator): Promise<string> =>
     return getComputedStyle(node).backgroundColor;
   });
 
+// The size and weight its words are set in.
+const typeOf = async (element: Locator) =>
+  await element.evaluate((node) => {
+    const style = getComputedStyle(node);
+    return { size: style.fontSize, weight: style.fontWeight };
+  });
+
 test("a click on its trigger opens the panel and another closes it", async ({
   page,
 }) => {
@@ -131,4 +138,27 @@ test("content drawn as its one child opens as a panel does, as that element", as
   await expect(list.getByRole("listitem")).toHaveCount(2);
   await trigger.click();
   await expect(list).toBeHidden();
+});
+
+test("among a page's words its trigger takes their size and weight, and stays on one line in a box that shrinks to fit", async ({
+  page,
+}) => {
+  await openExample(page, "collapsible", "in-words");
+  const trigger = page.getByRole("button", {
+    name: "How your answers are handled",
+  });
+  const words = page.getByText("Everyone on the team is asked");
+  expect(await typeOf(trigger)).toStrictEqual(await typeOf(words));
+
+  // One line: no taller than two of its own lines would be.
+  const high = await trigger.evaluate(
+    (node) => node.getBoundingClientRect().height
+  );
+  const line = await trigger.evaluate((node) =>
+    Number(getComputedStyle(node).lineHeight.replace("px", ""))
+  );
+  expect(high).toBeLessThan(line * 2);
+
+  await trigger.click();
+  await expect(page.getByText("Only the written notes are kept")).toBeVisible();
 });

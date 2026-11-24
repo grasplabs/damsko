@@ -39,4 +39,5 @@ The first release.
 - `@damsko/tokens` brings `styles/base.css`, an optional reset for a new app, in the cascade layer `base`; it is not for an app beside Tailwind, and no component leans on it.
 - `@damsko/all` is every item by name, with no file of its own: one command installs or updates them all (`shadcn add @damsko/all --overwrite`). Each item's npm packages are exact and minimal, held to an install of that item alone.
 - Every registry item says its version, commit and licence in `meta`, and every release is served at `/r/<tag>/{name}.json`, the address a product pins, from the archive its tag's release carries (`registry-<tag>.tgz` and its checksum).
+- CollapsibleTrigger takes Text's `size` (`sm`, `default`, `lg`) and `weight` (`normal`, `medium`), so a trigger among a page's words keeps their style; with `fitContent` it no longer wraps in a box that shrinks to fit. `MessageSquareFilledIcon` and `PauseFilledIcon` join the filled forms in `lib/icons`.
 - The toolchain is the product repository's: pnpm, Vite+ with Oxfmt, Oxlint and Ultracite, TypeScript 7 with the product's strict flags, Vitest.
