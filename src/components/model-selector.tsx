@@ -149,7 +149,9 @@ export interface ModelSelectorTriggerProps {
   children: ReactNode;
   /**
    * The model and its level in words ("Model A, Medium"), shown in a tooltip over the chip, for a
-   * chip that shows less than that (the level alone). It also names the trigger.
+   * chip that shows less than that (the level alone). It also names the trigger. In a one-row
+   * prompt input that level folds to the maker's mark where the row is short of room; a chip
+   * without a tooltip says the model's name, which never folds.
    */
   tooltip?: string;
   /**
@@ -342,10 +344,7 @@ const styles = stylex.create({
   root: {
     display: {
       default: "contents",
-      [stylex.when.ancestor(
-        ":is([data-model-chip=hidden])",
-        promptInputRowMarker
-      )]: "none",
+      [stylex.when.ancestor(":is([data-away])", promptInputRowMarker)]: "none",
     },
   },
   // The chip's mark, words and chevron, a step apart and a size down from the Button's. The words
@@ -580,13 +579,14 @@ const styles = stylex.create({
     textOverflow: "ellipsis",
     whiteSpace: "nowrap",
   },
-  // In the chip, where a one-row prompt input is short of room for the text, the words fold away
-  // and the maker's mark stands alone; the chip's name and its tooltip still say them.
-  nameFolds: {
+  // A chip's level, in a one-row prompt input: on a phone's row, and wherever the row says so
+  // (with it the text would go under its least width), it folds to the maker's mark. The chip's
+  // name and its tooltip still say it. A model's name never folds.
+  levelFolds: {
     display: {
       default: null,
-      [stylex.when.ancestor(":is([data-model-chip])", promptInputRowMarker)]:
-        "none",
+      "@container prompt-input-row (width < 24rem)": "none",
+      [stylex.when.ancestor(":is([data-fold])", promptInputRowMarker)]: "none",
     },
   },
   logo: { display: "inline-flex", flexShrink: 0 },
@@ -630,8 +630,8 @@ interface Row {
 
 const RowContext = createContext<Row | null>(null);
 
-/** Whether a part stands in the trigger's chip, not in the panel. */
-const ChipContext = createContext(false);
+/** Whether a part stands in a chip that shows the level alone (its tooltip says the model). */
+const LevelContext = createContext(false);
 
 const useRoot = (part: string): Root => {
   const root = use(RootContext);
@@ -757,13 +757,15 @@ export const ModelSelectorTrigger = ({
   const label =
     named ??
     (shows === "" ? words.trigger : words.triggerWith(words.trigger, shows));
-  // A chip of the caller's own (`asChild`) keeps its words: the row's fold is for this chip's.
+  // With a tooltip, the chip's words are the level alone: in a one-row prompt input they fold to
+  // the maker's mark (`levelFolds`). A chip of the caller's own (`asChild`) keeps its words.
+  const tip = tooltip !== undefined && tooltip !== "";
   const chip = asChild ? (
     children
   ) : (
     <Button variant="ghost" size="xs" style={style}>
       <span {...stylex.props(styles.chip)}>
-        <ChipContext value>{children}</ChipContext>
+        <LevelContext value={tip}>{children}</LevelContext>
         <span aria-hidden="true" {...stylex.props(styles.chevron)}>
           <Icon icon={ChevronDownIcon} />
         </span>
@@ -771,7 +773,6 @@ export const ModelSelectorTrigger = ({
     </Button>
   );
   // One tree whether or not there is a tooltip, so the chip is never drawn anew while it is open.
-  const tip = tooltip !== undefined && tooltip !== "";
   return (
     <Tooltip disabled={!tip}>
       <PopoverTrigger asChild aria-label={label} disabled={disabled}>
@@ -1149,12 +1150,12 @@ export const ModelSelectorName = ({
   children,
   style,
 }: ModelSelectorNameProps) => {
-  const inChip = use(ChipContext);
+  const level = use(LevelContext);
   return (
     <span
       data-slot="model-selector-name"
-      data-in-chip={inChip || undefined}
-      {...stylex.props(styles.name, inChip && styles.nameFolds, style)}
+      data-level={level || undefined}
+      {...stylex.props(styles.name, level && styles.levelFolds, style)}
     >
       {children}
     </span>

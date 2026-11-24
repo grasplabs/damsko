@@ -1062,6 +1062,10 @@ const styles = stylex.create({
   // controls is 56px tall. The rows are named, so the text can take the whole width over a foot
   // row of the tools and Submit (compactTall) with nothing moved in the page.
   compact: {
+    // The row answers to its own width: on a phone's, a model chip's level folds to the maker's
+    // mark (model-selector.tsx).
+    containerType: "inline-size",
+    containerName: "prompt-input-row",
     gridTemplateColumns: "auto minmax(0, 1fr) auto",
     gridTemplateAreas: '"header header header" "start field end"',
     alignItems: "center",
@@ -2204,21 +2208,34 @@ const tokenPx = (element: Element, token: string) => {
     : px(value);
 };
 
-/** What the one row decides about its room (`rowFit`). */
+/** What the one row decides about its room (`rowFit`), as the original's composer does. */
 interface RowFit {
   /** The text has the card's whole width, the tools and Submit under it. */
   tall: boolean;
-  /** The model chips (ModelSelector) among the tools: whole, their maker's mark alone, or away. */
-  chip: "whole" | "mark" | "hidden";
+  /** A model chip's level folds to its maker's mark. */
+  fold: boolean;
+  /** At rest, the model chips are away until something is typed. */
+  away: boolean;
 }
 
 /** What the row keeps between reads: the room the chips need to come back, and to unfold. */
 interface RowRoom {
   /** The chips' width and the gap each keeps, while they show. */
   chips: number;
-  /** The sides' width while the chips show whole. */
-  whole: number;
+  /** The sides' width while a level shows. */
+  wide: number;
 }
+
+/** Every group of tools in the one row, and Submit where it stands apart from them. */
+const sidesOf = (card: HTMLElement) =>
+  [
+    ...card.querySelectorAll<HTMLElement>(
+      '[data-slot="prompt-input-tools"], [data-slot="prompt-input-end"]'
+    ),
+  ].filter(
+    (side) =>
+      side.parentElement?.closest('[data-slot="prompt-input-tools"]') === null
+  );
 
 /** A model chip's width in its row and the gap it keeps there: what it takes while it shows. */
 const chipRoom = (chip: HTMLElement) => {
@@ -2236,17 +2253,19 @@ const chipRoom = (chip: HTMLElement) => {
 };
 
 /**
- * How the one row fits its room, as the original's composer decides it. The text never gives:
- * first a model chip among the tools folds to its maker's mark, where whole it would leave the
- * text under its least width (`prompt-input-field-min`; at rest the placeholder's,
- * `prompt-input-placeholder-min`), and on a phone's row (under `prompt-input-chip-fold`) always.
- * Then, at rest, the chip folds away while even its mark leaves the placeholder under its least,
- * and comes back once something is typed; only where nothing is left to fold is the placeholder
- * cut. With words, they outgrow their line when they take two lines, or one wider than the room
- * between the tools and Submit, or that room is under the text's least: the text then takes the
- * card's whole width and the tools go under it. Every width is read from the card and its two
- * sides, which stand alike in both forms, so the answer never depends on the form it changes and
- * nothing flickers at the edge. A change of the chip is drawn before the next answer is read.
+ * How the one row fits its room, step for step as the original's composer decides it. The text
+ * never gives. First a model chip's level (its words, where they are the level: ModelSelectorName
+ * in a trigger with a tooltip) folds to the maker's mark, while with it the text would go under
+ * its least width (`prompt-input-field-min`; at rest the placeholder's,
+ * `prompt-input-placeholder-min`); a model's name never folds. On a phone's row the level is
+ * folded by a container query alone (model-selector.tsx). Then, at rest, the chips are away while
+ * the placeholder would still be under its least, and come back once something is typed; only
+ * where nothing is left to fold is the placeholder cut. With words, they outgrow their line when
+ * they take two lines, or one wider than the room between the tools and Submit, or that room is
+ * under the text's least: the text then takes the card's whole width and the tools go under it.
+ * Every width is read from the card and its sides, which stand alike in both forms, so the answer
+ * never depends on the form it changes and nothing flickers at the edge. A fold or an away that
+ * changes is drawn before the rest is read.
  */
 const rowFit = (
   card: HTMLElement,
@@ -2260,66 +2279,54 @@ const rowFit = (
     return null;
   }
   const look = getComputedStyle(card);
-  // Every group of tools, and Submit where it stands apart from them.
-  const sides = [
-    ...card.querySelectorAll<HTMLElement>(
-      '[data-slot="prompt-input-tools"], [data-slot="prompt-input-end"]'
-    ),
-  ].filter(
-    (side) =>
-      side.parentElement?.closest('[data-slot="prompt-input-tools"]') === null
-  );
-  const sidesWidth = sides
-    .map((side) => side.getBoundingClientRect().width)
-    .reduce((sum, width) => sum + width, 0);
+  const sides = sidesOf(card);
   const chips = sides.flatMap((side) => [
     ...side.querySelectorAll<HTMLElement>('[data-slot="model-selector"]'),
   ]);
-  const hidden = was.chip === "hidden";
-  if (!hidden) {
+  if (!was.away) {
     room.chips = chips.map(chipRoom).reduce((sum, width) => sum + width, 0);
   }
-  // The sides with the chips in sight, as they stand now: what the text has beside them.
-  const shown = sidesWidth + (hidden ? room.chips : 0);
-  // A chip's words (ModelSelectorName in its trigger): what folds.
-  const words = chips
-    .map((chip) => chip.querySelector("[data-in-chip]"))
-    .filter((name) => name !== null);
-  const whole = words.some((name) => name.getClientRects().length > 0);
-  if (whole) {
-    room.whole = shown;
+  // The sides as they stand with the chips in sight, away or not.
+  const sidesWidth =
+    sides
+      .map((side) => side.getBoundingClientRect().width)
+      .reduce((sum, width) => sum + width, 0) + (was.away ? room.chips : 0);
+  const levels = chips
+    .map((chip) => chip.querySelector("[data-level]"))
+    .filter((level) => level !== null);
+  if (!was.fold && levels.some((level) => level.getClientRects().length > 0)) {
+    room.wide = sidesWidth;
   }
-  const inner =
-    card.clientWidth - px(look.paddingInlineStart) - px(look.paddingInlineEnd);
-  const beside = inner - 2 * px(look.columnGap);
+  const beside =
+    card.clientWidth -
+    px(look.paddingInlineStart) -
+    px(look.paddingInlineEnd) -
+    2 * px(look.columnGap);
   const resting = editor.dataset.empty !== undefined;
   const least = resting
     ? tokenPx(card, size.promptInputPlaceholderMin)
     : px(getComputedStyle(editor.parentElement ?? editor).minWidth);
-  const folds =
-    words.length > 0 &&
-    (inner < tokenPx(card, size.promptInputChipFold) ||
-      beside - Math.max(room.whole, shown) < least);
-  const folded = folds ? "mark" : "whole";
-  if (!hidden && folded !== was.chip) {
+  // Folded only while the level would leave the text under its least width.
+  const fold =
+    levels.length > 0 && beside - Math.max(room.wide, sidesWidth) < least;
+  if (fold !== was.fold) {
     // The sides change width with the fold: the rest is read once it is drawn.
-    return { tall: was.tall, chip: folded };
+    return { ...was, fold };
   }
-  // At rest, after the fold, the chip goes while even as it stands the placeholder is under its least.
-  const chip =
-    resting && chips.length > 0 && beside - shown < least ? "hidden" : folded;
-  if (chip !== was.chip) {
-    return { tall: was.tall, chip };
+  // At rest, after the level, the chips are away while the placeholder would be under its least.
+  const away = resting && chips.length > 0 && beside - sidesWidth < least;
+  if (away !== was.away) {
+    return { ...was, away };
   }
   if (resting) {
-    return { tall: false, chip };
+    return { tall: false, fold, away };
   }
   const text = beside - sidesWidth;
   const own = getComputedStyle(editor);
   const lines =
     (editor.scrollHeight - px(own.paddingBlockStart)) / px(own.lineHeight);
   if (lines > 1.5 || text < least) {
-    return { tall: true, chip };
+    return { tall: true, fold, away };
   }
   const typed = document.createRange();
   typed.selectNodeContents(editor);
@@ -2328,24 +2335,26 @@ const rowFit = (
     tall:
       typed.getBoundingClientRect().width + 2 >
       text - px(own.paddingInlineStart) - px(own.paddingInlineEnd),
-    chip,
+    fold,
+    away,
   };
 };
 
-const ROW_AT_REST: RowFit = { tall: false, chip: "whole" };
+const ROW_AT_REST: RowFit = { tall: false, fold: false, away: false };
 
 /**
  * In one row, how it fits its room (`rowFit`): read as the card comes, and again, before paint,
- * as anything in it changes (the words, a tool that comes or goes, the chip folding) or it
- * changes width. While something stands in the text's place the answer stays as it was.
+ * as anything in it changes (the words, a choice in a chip, a tool that comes or goes, a fold),
+ * as the card or one of its sides changes width (a chip laid out late, its font come in). While
+ * something stands in the text's place the answer stays as it was.
  */
 const useRowFit = (
   on: boolean,
   card: { current: HTMLElement | null },
   dictating: boolean
-): { tall: boolean; chip: "mark" | "hidden" | undefined } => {
+): { tall: boolean; fold: true | undefined; away: true | undefined } => {
   const [fit, setFit] = useState(ROW_AT_REST);
-  const room = useRef<RowRoom>({ chips: 0, whole: 0 });
+  const room = useRef<RowRoom>({ chips: 0, wide: 0 });
   useLayoutEffect(() => {
     const box = card.current;
     if (!on || box === null) {
@@ -2353,13 +2362,20 @@ const useRowFit = (
     }
     const read = () => {
       const next = rowFit(box, fit, room.current);
-      if (next !== null && (next.tall !== fit.tall || next.chip !== fit.chip)) {
+      if (
+        next !== null &&
+        (next.tall !== fit.tall ||
+          next.fold !== fit.fold ||
+          next.away !== fit.away)
+      ) {
         setFit(next);
       }
     };
     read();
     const resized = new ResizeObserver(read);
-    resized.observe(box);
+    for (const part of [box, ...sidesOf(box)]) {
+      resized.observe(part);
+    }
     const changed = new MutationObserver(read);
     changed.observe(box, {
       characterData: true,
@@ -2372,13 +2388,14 @@ const useRowFit = (
     };
   }, [on, card, fit]);
   if (!on) {
-    return { tall: false, chip: undefined };
+    return { tall: false, fold: undefined, away: undefined };
   }
-  // A dictation's bar is the foot row, so the words stand over it. A chip shown whole is said by
-  // no mark on the card.
+  // A dictation's bar is the foot row, so the words stand over it. The fold and the away are the
+  // card's marks (`data-fold`, `data-away`), there only while they hold.
   return {
     tall: fit.tall || dictating,
-    chip: fit.chip === "whole" ? undefined : fit.chip,
+    fold: fit.fold || undefined,
+    away: fit.away || undefined,
   };
 };
 
@@ -3197,7 +3214,8 @@ export const PromptInput = ({
                   // Still while the page loads: nothing in it is focused or read out.
                   inert={loading}
                   aria-hidden={loading || undefined}
-                  data-model-chip={row.chip}
+                  data-fold={row.fold}
+                  data-away={row.away}
                   onPointerDown={onPointerDown}
                   {...stylex.props(
                     // The rings of the controls in the card are drawn inside them.

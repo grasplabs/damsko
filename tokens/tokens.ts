@@ -3288,13 +3288,7 @@ export const groups: TokenGroup[] = [
             name: "prompt-input-placeholder-min",
             category: "size",
             value: "6rem",
-            use: "The least width of a one-row prompt input's placeholder at rest: with less room, its model chip folds to the maker's mark, then folds away until something is typed. Only then is the placeholder cut.",
-          },
-          {
-            name: "prompt-input-chip-fold",
-            category: "size",
-            value: "24rem",
-            use: "Under this width of a one-row prompt input's row (a phone's), its model chip shows only the maker's mark, whatever room the text has.",
+            use: "The least width of a one-row prompt input's placeholder at rest: with less room, its model chip's level folds to the maker's mark, then the chip folds away until something is typed. Only then is the placeholder cut.",
           },
           {
             name: "prompt-input-light",

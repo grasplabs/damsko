@@ -91,8 +91,8 @@ export const sidePanelCardMarker = stylex.defineMarker();
 
 /**
  * The marker of a one-row prompt input's card, so a model chip in it answers what the row decides
- * about its room (`data-model-chip`): `mark`, it shows only its maker's mark; `hidden`, it is away
- * until something is typed (prompt-input.tsx, `useRowFit`).
+ * about its room: `data-fold`, its level folds to the maker's mark; `data-away`, it is away until
+ * something is typed (prompt-input.tsx, `useRowFit`).
  */
 export const promptInputRowMarker = stylex.defineMarker();
 

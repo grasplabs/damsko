@@ -5,16 +5,17 @@ import {
   fixedTime,
   listenToLiveRegions,
   openExample,
+  openExampleAsleep,
   pickerFrom,
 } from "./example.ts";
 
-/** One prompt input of the Send example, by its name. */
 /** A part's width as drawn, in whole pixels. */
 const widthOf = async (part: Locator): Promise<number> => {
   const box = await part.boundingBox();
   return Math.round(box?.width ?? 0);
 };
 
+/** One prompt input of the Send example, by its name. */
 const form = (page: Page, name: string) =>
   page.getByRole("form", { name: `Message, ${name}` });
 
@@ -1596,4 +1597,23 @@ test("at rest in a row too narrow even for the mark, the model chip is away, out
   await page.keyboard.type("And churn among teams of five?");
   await expect(chip.getByText("Medium")).toBeHidden();
   expect(await widthOf(chip)).toBe(52);
+});
+
+test("on a phone's row the server's HTML already folds the model chip's level to its mark, so the placeholder is whole before the scripts run", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 430, height: 900 });
+  const wake = await openExampleAsleep(page, "patterns", "chat-page");
+  const box = page.getByRole("form", { name: "Message the assistant" });
+  const chip = box.getByRole("button", { name: /^Model: /u });
+  await expect(chip).toBeVisible();
+  await expect(chip.getByText("Medium")).toBeHidden();
+  const field = box.getByRole("textbox", { name: "Message" });
+  expect(
+    await field.evaluate(
+      (element) => element.scrollWidth <= element.clientWidth
+    )
+  ).toBe(true);
+  await wake();
+  await expect(chip.getByText("Medium")).toBeHidden();
 });

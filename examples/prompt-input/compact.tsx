@@ -23,7 +23,7 @@ import {
   PromptInputTextarea,
   PromptInputTools,
 } from "@grasp-os/ui/components/prompt-input";
-import { media, space } from "@grasp-os/ui/lib/tokens.stylex";
+import { space } from "@grasp-os/ui/lib/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
 import { useState } from "react";
 
@@ -39,9 +39,6 @@ const styles = stylex.create({
   // The model, dictation and Submit stand together at the row's end, a step apart.
   end: { gridArea: "end", marginInlineStart: "auto" },
   apart: { marginInlineStart: space["1"] },
-  chip: {},
-  // On a phone the chip is the maker's mark alone: its tooltip and its name say the rest.
-  level: { display: { default: null, [media.maxSm]: "none" } },
 });
 
 // One row: the plus, the text, and at its end the model, dictation and Submit. Once the words no
@@ -54,7 +51,6 @@ export default function PromptInputCompact() {
   const levels = current?.levels ?? [];
   const level = levels.find((each) => each.value === effort)?.label;
   const name = current?.name ?? "";
-  const said = level === undefined ? name : `${name}, ${level}`;
   return (
     <PromptInput compact onSubmit={() => undefined}>
       <PromptInputBody>
@@ -79,11 +75,13 @@ export default function PromptInputCompact() {
             effort={effort}
             onEffortChange={setEffort}
           >
-            <ModelSelectorTrigger tooltip={said} style={styles.chip}>
+            {/* The level alone, the model in its tooltip: short of room, the row folds the level
+                to the maker's mark. A model with no levels says its name, which never folds. */}
+            <ModelSelectorTrigger
+              tooltip={level === undefined ? undefined : `${name}, ${level}`}
+            >
               {logo === undefined ? null : <ModelSelectorLogo logo={logo} />}
-              <ModelSelectorName style={styles.level}>
-                {level ?? name}
-              </ModelSelectorName>
+              <ModelSelectorName>{level ?? name}</ModelSelectorName>
             </ModelSelectorTrigger>
             <ModelSelectorContent side="top" align="end">
               <ModelSelectorList>
