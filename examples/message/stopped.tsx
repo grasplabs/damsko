@@ -11,8 +11,8 @@ import {
 } from "@grasp-os/ui/components/message";
 import type { MessageStatus } from "@grasp-os/ui/components/message";
 import { Icon, RefreshCwIcon } from "@grasp-os/ui/lib/icons";
-// An answer stopped part way: its words kept as written, Stopped under them, and its actions still
-// there, Copy and Write it again among them.
+// An answer stopped part way: its words kept as written, and its actions still there with Stopped
+// first on their row, Copy and Write it again among them.
 import * as stylex from "@stylexjs/stylex";
 import { useState } from "react";
 

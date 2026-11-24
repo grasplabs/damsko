@@ -24,15 +24,16 @@ import {
   InboxIcon,
   LayoutDashboardIcon,
 } from "@grasp-os/ui/lib/icons";
-import { colors, size, space } from "@grasp-os/ui/lib/tokens.stylex";
+import { colors, radius, size, space } from "@grasp-os/ui/lib/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
 
 const layout = stylex.create({
+  // The app's window: the card's corner plus the room round it, so the two corners nest.
   frame: {
     width: "100%",
     height: 600,
     overflow: "hidden",
-    borderRadius: space["3"],
+    borderRadius: `calc(${radius.md} + ${size.sidebarCardGap})`,
     boxShadow: `0 0 0 ${size.hairline} ${colors.border}`,
   },
   shell: { height: "100%", minHeight: 0 },
@@ -82,7 +83,11 @@ export default function AppShellPanel() {
           </SidebarContent>
         }
         title="Launch notes"
-        actions={<Button size="sm">Share</Button>}
+        actions={
+          <Button variant="outline" size="sm">
+            Share
+          </Button>
+        }
         panel={
           <SidePanel aria-label="Note details">
             <SidePanelHeader title="Details" />

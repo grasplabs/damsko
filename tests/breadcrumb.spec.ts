@@ -186,3 +186,14 @@ test("a step drawn as a button is pressed by the keyboard, and the page it opens
   await expect(here).toBeFocused();
   await expect(nav.getByText("Policies")).toHaveCount(0);
 });
+
+test("a separator with children draws them in place of the chevron: a slash between every two steps, unsaid", async ({
+  page,
+}) => {
+  await openExample(page, "breadcrumb", "separator");
+  const nav = page.getByRole("navigation", { name: "Breadcrumb" });
+  await expect(nav.getByText("/", { exact: true })).toHaveCount(2);
+  await expect(nav.getByText("/", { exact: true }).first()).toBeVisible();
+  // Only the steps are items: what stands between them is not said.
+  await expect(nav.getByRole("listitem")).toHaveCount(3);
+});

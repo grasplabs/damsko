@@ -642,3 +642,12 @@ test("columns that come after the table opens join at the end, hidden if they st
     page.getByRole("menuitemcheckbox", { name: "Pages" })
   ).toBeChecked();
 });
+
+test("a narrow table keeps the person whole: their initials, their name and their email", async ({
+  page,
+}) => {
+  await openExample(page, "data-table", "members-narrow");
+  const table = page.getByRole("table", { name: "Members" });
+  await expect(table.getByText("amara@contoso.example")).toBeVisible();
+  await expect(table.getByText("AO", { exact: true })).toBeVisible();
+});

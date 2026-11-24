@@ -228,6 +228,27 @@ for (const theme of ["light", "dark"] as const) {
   });
 }
 
+test("an icon in its square stands in the middle of its row, on the title and its line", async ({
+  page,
+}) => {
+  await openExample(page, "item", "icon");
+  const title = page.getByText("Shared inbox");
+  const middles = await title.evaluate((node) => {
+    const row = node.closest("[data-slot=item]");
+    const tile = row
+      ?.querySelector("[data-slot=item-media]")
+      ?.getBoundingClientRect();
+    const words = row
+      ?.querySelector("[data-slot=item-content]")
+      ?.getBoundingClientRect();
+    return {
+      tile: (tile?.top ?? 0) + (tile?.height ?? 0) / 2,
+      words: (words?.top ?? 0) + (words?.height ?? 0) / 2,
+    };
+  });
+  expect(Math.abs(middles.tile - middles.words)).toBeLessThanOrEqual(0.5);
+});
+
 test("in a side panel's card an xs row's detail stays whole on one line, and its name gives way", async ({
   page,
 }) => {

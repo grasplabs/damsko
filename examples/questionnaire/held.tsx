@@ -6,6 +6,7 @@ import {
   QuestionnaireChoice,
   QuestionnaireChoiceDescription,
   QuestionnaireChoices,
+  QuestionnaireInput,
   QuestionnaireItem,
   QuestionnaireProgress,
   QuestionnaireSubmit,
@@ -35,6 +36,7 @@ export default function QuestionnaireHeld() {
             Supplier review
           </QuestionnaireChoice>
         </QuestionnaireChoices>
+        <QuestionnaireInput />
       </QuestionnaireItem>
       <QuestionnaireActions>
         <QuestionnaireSubmit

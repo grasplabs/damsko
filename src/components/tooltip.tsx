@@ -307,7 +307,8 @@ const styles = stylex.create({
     transitionTimingFunction: duration.ease,
   },
   // The words. With a shortcut (a Kbd) they are a wrapping row: the words keep their line whole and
-  // the keys stand at its end, or under the words when both do not fit.
+  // the keys stand at its end, quiet (Kbd draws itself so here), or at the end of a line of their
+  // own under the words when both do not fit.
   words: {
     display: { default: "block", ":has([data-slot=kbd])": "flex" },
     flexWrap: "wrap",
