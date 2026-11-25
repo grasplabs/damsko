@@ -68,6 +68,13 @@ const closes = (line: string, open: string) => {
     info.trim() === ""
   );
 };
+/** The fence open after `line`, `fence` the one open before it (`` when none). */
+const fenceAfter = (fence: string, line: string) => {
+  if (fence === "") {
+    return FENCE.exec(line)?.groups?.fence ?? "";
+  }
+  return closes(line, fence) ? "" : fence;
+};
 // A line led by more than 64 characters of indent and container marks: a list or a quote nested
 // past 32 deep, which micromark weighs as its depth squared (400 deep: 5 s for 80 KB).
 const DEEP = /^(?:[ \t]|(?:[-*+>]|\d{1,9}[.)])(?=[ \t])){65,}/u;
@@ -82,8 +89,7 @@ const bounded = (source: string) => {
   const out: string[] = [];
   for (const [at, line] of source.split("\n").entries()) {
     const was = fence;
-    fence = was === "" ? (FENCE.exec(line)?.groups?.fence ?? "") : fence;
-    fence = was !== "" && closes(line, was) ? "" : fence;
+    fence = fenceAfter(was, line);
     // A fence, a list item, a row, a heading or a blank line starts a part of its own.
     const starts = fence !== "" || /^[ \t>]*(?:[-*+|#\d]|$)/u.test(line);
     marks = (starts ? 0 : marks) + line.replaceAll(/[^*_~[\]]/gu, "").length;
@@ -137,12 +143,10 @@ const sectionEnd =
   (depth: number, fence: string): End =>
   (next) => {
     if (fence !== "") {
-      return sectionEnd(depth, closes(next, fence) ? "" : fence);
+      return sectionEnd(depth, fenceAfter(fence, next));
     }
     const now = depth + Number(OPENS.test(next)) - Number(CLOSES.test(next));
-    return now === 0
-      ? null
-      : sectionEnd(now, FENCE.exec(next)?.groups?.fence ?? "");
+    return now === 0 ? null : sectionEnd(now, fenceAfter("", next));
   };
 
 /** What ends the block `line` opens, if it does not end on that line. */
@@ -213,11 +217,7 @@ export const inOpenFence = (text: string) => {
   for (const line of text.split("\n")) {
     // A fence may open inside a quote or a list item.
     const bare = line.replace(/^[ \t>]*(?:(?:[-*+]|\d{1,9}[.)])[ \t]+)?/u, "");
-    if (fence === "") {
-      fence = FENCE.exec(bare)?.groups?.fence ?? "";
-    } else if (closes(bare, fence)) {
-      fence = "";
-    }
+    fence = fenceAfter(fence, bare);
   }
   return fence !== "";
 };
@@ -270,12 +270,16 @@ const repair = (block: string) => {
     : whole;
 };
 
-/** A section: `<details>` with its `<summary>` line, its body read as blocks of its own. */
+/**
+ * A section: `<details>` with its `<summary>` line, its body read as blocks of its own; with where
+ * its summary and each of its blocks start in its source (their positions are their own).
+ */
 export interface Section {
   type: "section";
   summary: string;
   open: boolean;
   children: Block[];
+  starts: { summary: number; children: number[] };
   position?: undefined;
 }
 export type Block = RootContent | Section;
@@ -298,28 +302,41 @@ const sectionOf = (
 ): Block[] | null => {
   const { depth = 0, open = false } = reading;
   const opening = OPENING.exec(block);
-  const body = block.slice(opening?.[0].length ?? 0).trimEnd();
-  const closed = /(?:^|\n)<\/details>$/u.test(body);
-  if (opening === null || depth >= 32 || !(closed || open)) {
-    return open && OPENS.test(block) && opening === null ? [] : null;
+  if (opening === null) {
+    return open && OPENS.test(block) ? [] : null;
+  }
+  const body = block.slice(opening[0].length).trimEnd();
+  // Closed by its own `</details>`, not by a section's inside it (fenced code aside).
+  let end: End | null = sectionEnd(1, "");
+  for (const line of body.split("\n")) {
+    end = end?.(line) ?? null;
+  }
+  const closed = end === null && /(?:^|\n)<\/details>$/u.test(body);
+  if (depth >= 32 || !(closed || open)) {
+    return null;
   }
   const { attributes = "", summary = "" } = opening.groups ?? {};
   const inner = closed ? body.slice(0, body.lastIndexOf("</details>")) : body;
   const { starts } = blockStarts(inner);
-  const children = starts.flatMap((start, at): Block[] => {
+  const children = starts.flatMap((start, at) => {
     const last = open && !closed && at === starts.length - 1;
     const text = inner.slice(start, starts[at + 1]);
-    return (
+    const blocks =
       (last ? openCode(text) : null) ??
-      readChild(text, { ...reading, open: last, depth: depth + 1 })
-    );
+      readChild(text, { ...reading, open: last, depth: depth + 1 });
+    return blocks.map((child) => [opening[0].length + start, child] as const);
   });
+  const lead = opening[0].indexOf("<summary>") + 9;
   return [
     {
       type: "section",
       summary: summary.trim(),
       open: /(?:^|\s)open(?:\s|=|$)/u.test(attributes),
-      children,
+      children: children.map(([, child]) => child),
+      starts: {
+        summary: lead + summary.length - summary.trimStart().length,
+        children: children.map(([at]) => at),
+      },
     },
   ];
 };

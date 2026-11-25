@@ -563,9 +563,14 @@ const watchCases = async (page: Page, ms: number) =>
           }
           return seen;
         };
-        /** One text: a link's words fading again once shown, or a fence still being typed as code. */
+        /** One text: words fading again once shown, or a fence still being typed as code. */
         const look = (text: Node, inCode: boolean) => {
-          for (const phrase of ["full", "www.example"]) {
+          for (const phrase of [
+            "full",
+            "www.example",
+            "gradually",
+            "eventually",
+          ]) {
             if (text.textContent?.includes(phrase) === true) {
               if (opacityOf(text) > 0.99) {
                 shown.add(phrase);
@@ -579,8 +584,9 @@ const watchCases = async (page: Page, ms: number) =>
           }
         };
         const frame = () => {
+          // The answer starts again (a mark becoming a note's number shortens it a little).
           const now = root?.textContent?.length ?? 0;
-          if (now < length) {
+          if (now < length / 2) {
             shown.clear();
           }
           length = now;
@@ -612,10 +618,41 @@ const watchCases = async (page: Page, ms: number) =>
     await page.evaluate((wait) => performance.now() + wait, ms)
   );
 
-test("while it is written, a link's words never fade again, no line is a heading for a moment, and no raw mark shows", async ({
+test("while it is written, words never fade again as a link, a note or a reference resolves, no line is a heading for a moment, and no raw mark shows", async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await openExample(page, "markdown", "stream-cases");
   expect(await watchCases(page, 12_000)).toStrictEqual([]);
+});
+
+test("streaming a table of 300 rows and a paragraph of 2,000 words starts a fade per word at most, and never an empty one", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.addInitScript(() => {
+    let started = 0;
+    let empty = 0;
+    document.addEventListener(
+      "animationstart",
+      (event) => {
+        started += 1;
+        if (
+          event.target instanceof Element &&
+          event.target.textContent === ""
+        ) {
+          empty += 1;
+        }
+        document.documentElement.dataset.fades = `${started} ${empty}`;
+      },
+      true
+    );
+  });
+  await openExample(page, "markdown", "stream-long");
+  await expect(page.locator("[data-done]")).toBeAttached({ timeout: 30_000 });
+  const fades = await page.locator("html").getAttribute("data-fades");
+  const [started = 0, empty = 0] = (fades ?? "").split(" ").map(Number);
+  // Over 3,000 words: a fade for each of the first 1,000 of a block, then one for each read.
+  expect(empty).toBe(0);
+  expect(started).toBeLessThan(2500);
 });

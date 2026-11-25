@@ -193,7 +193,6 @@ const styles = stylex.create({
   },
   major: { fontSize: font.textLg, lineHeight: font.textLgLine },
   minor: { fontSize: font.textBase, lineHeight: font.textBaseLine },
-  smallMajor: { fontSize: font.textBase, lineHeight: font.textBaseLine },
   smallMinor: { fontSize: font.textSm, lineHeight: font.textSmLine },
   xsHeading: { fontSize: size.messageText, lineHeight: size.messageTextLine },
   strong: { fontWeight: font.weightMedium, color: colors.foreground },
@@ -402,17 +401,24 @@ interface Part<T> {
 }
 
 // What changes as the answer grows, read only by the nodes that need it: the link definitions; the
-// notes; the last word still being written (a bare address in it may still grow); where the block
-// still being written was last read to (past many words, what came after it fades as one); and the
-// place of the block drawn (a note leads back to its first mark).
+// notes; the last word still being written (a bare address in it may still grow); how much of the
+// block drawn had been shown before (its words never fade again), and whether the block being
+// written has many words (what came since its last read then fades as one); and the place of the
+// block drawn (a note leads back to its first mark).
 const NO_DEFINITIONS: Of<"definition">[] = [];
 const Definitions = createContext(NO_DEFINITIONS);
-// The notes in their order, as lines, so the value stays the same while they do: the ids' prefix,
-// then for each note `+` once it has come (else `-`), its first mark's id, a space and its name (a
-// name has no space in it).
-const Notes = createContext("");
+/** A note marked in the answer: its ids' prefix, its number, whether it has come, its marks' ids. */
+interface Marked {
+  prefix: string;
+  number: number;
+  come: boolean;
+  marks: readonly string[];
+}
+const NO_NOTES: ReadonlyMap<string, Marked> = new Map();
+const Notes = createContext(NO_NOTES);
 const Tail = createContext("");
-const Fresh = createContext(-1);
+const Shown = createContext(0);
+const Many = createContext(false);
 const At = createContext("");
 // SAFETY: every node a node of the tree holds is a node of the tree.
 const kidsOf = (node: Node) =>
@@ -471,23 +477,6 @@ const part = <T extends MarkdownElement>(
   return own ?? createElement(tag, { ...props, ...stylex.props(...looks) });
 };
 
-/**
- * While written, whether a half link of Markdown's own keeps the room Link's arrow will take: so far
- * its address is nothing, the first letters of a web address, or one.
- */
-const keepsRoom = (url: string | undefined, shared: Shared, tail: string) => {
-  const so = /\]\((?<url>[^\s)]*)$/u.exec(tail)?.groups?.url ?? "https://";
-  return (
-    shared.streaming &&
-    shared.inLink !== true &&
-    url === "streamdown:incomplete-link" &&
-    shared.renderLink === undefined &&
-    shared.provided === null &&
-    shared.components.a === undefined &&
-    (/^https?:\/\//u.test(so) ||
-      ["http://", "https://"].some((web) => web.startsWith(so)))
-  );
-};
 /** A link or a picture at an address it may lead to, whole: the caller's `a` or `img`, else Link. */
 const leadTo = (
   node: Linked,
@@ -515,7 +504,8 @@ const leadTo = (
 
 /**
  * A link or a picture whose address can still change: a picture is nothing yet; a link its words,
- * keeping the room its arrow will take when it is Markdown's own (keepsRoom).
+ * keeping the room its arrow will take while it is Markdown's own and its address so far is
+ * nothing, the first letters of a web address, or one.
  */
 const held = (
   url: string | undefined,
@@ -526,7 +516,17 @@ const held = (
   if (url === "streamdown:incomplete-image") {
     return null;
   }
-  return keepsRoom(url, shared, tail) ? (
+  const so = /\]\((?<url>[^\s)]*)$/u.exec(tail)?.groups?.url ?? "https://";
+  const own =
+    shared.renderLink === undefined &&
+    shared.provided === null &&
+    shared.components.a === undefined;
+  return shared.streaming &&
+    shared.inLink !== true &&
+    url === "streamdown:incomplete-link" &&
+    own &&
+    (/^https?:\/\//u.test(so) ||
+      ["http://", "https://"].some((web) => web.startsWith(so))) ? (
     <>
       <span aria-hidden="true" {...stylex.props(styles.linkLead)} />
       {children}
@@ -575,17 +575,9 @@ const Anchor = ({
 /** Where a note's mark is: the place of its block and where it starts in it. */
 const markId = (prefix: string, place: string, node: Node) =>
   `${prefix}-ref-${place}-${node.position?.start.offset ?? 0}`;
-/** A note in the answer's notes: its number, whether it has come and its marks' ids. */
-const useNote = (name: string) => {
-  const [prefix = "", ...notes] = use(Notes).split("\n");
-  const index = notes.findIndex((line) => line.endsWith(` ${name}`));
-  const [head = ""] = notes[index]?.split(" ") ?? [];
-  const marks = head
-    .slice(1)
-    .split(",")
-    .filter((mark) => mark !== "");
-  return { prefix, number: index + 1, come: head.startsWith("+"), marks };
-};
+/** A note in the answer's notes, by its name: number 0 while nothing marks it. */
+const useNote = (name: string) =>
+  use(Notes).get(name) ?? { prefix: "", number: 0, come: false, marks: [] };
 /** A note's mark: its number, leading to the note once the note has come. */
 const NoteMark = ({
   node,
@@ -782,26 +774,35 @@ const Words = ({
   shared: Shared;
   from: number;
 }) => {
-  const fresh = use(Fresh);
-  if (!shared.streaming || shared.inLink === true) {
+  const shown = use(Shown) - from;
+  const many = use(Many);
+  // Where its words start to fade: what had been shown when it was first drawn, and past many words
+  // where the last read ended.
+  const [kept, setKept] = useState({ shown, many });
+  if (many && (!kept.many || shown > kept.shown)) {
+    setKept({ shown, many });
+  }
+  const cut = Math.min(Math.max(kept.shown, 0), value.length);
+  if (!shared.streaming || shared.inLink === true || cut === value.length) {
     return value;
   }
-  if (fresh >= 0) {
-    const cut = Math.min(Math.max(fresh - from, 0), value.length);
-    return (
-      <>
-        {value.slice(0, cut)}
-        <span key={fresh} {...stylex.props(fadeIn, styles.word)}>
-          {value.slice(cut)}
+  const rest = value.slice(cut);
+  return (
+    <>
+      {value.slice(0, cut)}
+      {kept.many ? (
+        <span key={kept.shown} {...stylex.props(fadeIn, styles.word)}>
+          {rest}
         </span>
-      </>
-    );
-  }
-  return value.match(WORDS)?.map((word, at) => (
-    <span key={at} {...stylex.props(fadeIn, styles.word)}>
-      {word}
-    </span>
-  ));
+      ) : (
+        rest.match(WORDS)?.map((word, at) => (
+          <span key={at} {...stylex.props(fadeIn, styles.word)}>
+            {word}
+          </span>
+        ))
+      )}
+    </>
+  );
 };
 const framed = new Set(["code", "table", "thematicBreak"]);
 /** A block in the answer's column: a framed one fades in whole while written; a section is its own. */
@@ -829,6 +830,7 @@ const Placed = ({
 const SectionBlock = ({ node, shared, kids }: Part<parse.Section>) => {
   const id = useId();
   const place = use(At);
+  const shown = use(Shown);
   const [words] = parse.readBlock(node.summary);
   return (
     <Collapsible asChild defaultOpen={node.open}>
@@ -848,7 +850,9 @@ const SectionBlock = ({ node, shared, kids }: Part<parse.Section>) => {
           </button>
         </CollapsibleTrigger>
         <div id={id} {...stylex.props(sectionStyles.summary)}>
-          {words?.type === "paragraph" && kids(words.children, PHRASE)}
+          <Shown value={shown - node.starts.summary}>
+            {words?.type === "paragraph" && kids(words.children, PHRASE)}
+          </Shown>
         </div>
         <CollapsibleContent asChild>
           <div {...stylex.props(sectionStyles.under)}>
@@ -856,7 +860,11 @@ const SectionBlock = ({ node, shared, kids }: Part<parse.Section>) => {
               {node.children.map((child, at) => (
                 <Placed key={at} node={child} shared={shared}>
                   {/* oxlint-disable-next-line react/jsx-no-constructed-context-values -- a string */}
-                  <At value={`${place}.${at}`}>{kids([child])}</At>
+                  <At value={`${place}.${at}`}>
+                    <Shown value={shown - (node.starts.children[at] ?? 0)}>
+                      {kids([child])}
+                    </Shown>
+                  </At>
                 </Placed>
               ))}
             </div>
@@ -868,22 +876,25 @@ const SectionBlock = ({ node, shared, kids }: Part<parse.Section>) => {
 };
 
 const headings = ["h1", "h2", "h3", "h4", "h5", "h6"] as const;
-const headingLooks = {
-  default: [styles.major, styles.minor],
-  message: [styles.major, styles.minor],
-  sm: [styles.smallMajor, styles.smallMinor],
+const headingLooks: Partial<
+  Record<Shared["size"], readonly stylex.StyleXStyles[]>
+> = {
+  sm: [styles.minor, styles.smallMinor],
   xs: [styles.xsHeading, styles.xsHeading],
 };
 const draw: { [T in Node["type"]]?: Draw<T> } = {
   text: (node, shared) => {
-    const from = node.position?.start.offset ?? 0;
+    let from = node.position?.start.offset ?? 0;
     const lines = shared.softBreaks ? node.value.split("\n") : [node.value];
-    return lines.map((line, at) => (
-      <Fragment key={at}>
-        {at > 0 && <br />}
-        <Words value={line} shared={shared} from={from} />
-      </Fragment>
-    ));
+    return lines.map((line, at) => {
+      from += at > 0 ? (lines[at - 1]?.length ?? 0) + 1 : 0;
+      return (
+        <Fragment key={at}>
+          {at > 0 && <br />}
+          <Words value={line} shared={shared} from={from} />
+        </Fragment>
+      );
+    });
   },
   strong: mark,
   emphasis: mark,
@@ -917,7 +928,8 @@ const draw: { [T in Node["type"]]?: Draw<T> } = {
     const { depth } = node;
     const tag =
       headings[Math.min(shared.headingLevel - 1 + depth, 6) - 1] ?? "h6";
-    const look = headingLooks[shared.size][depth <= 2 ? 0 : 1];
+    const looks = headingLooks[shared.size] ?? [styles.major, styles.minor];
+    const look = looks[depth <= 2 ? 0 : 1];
     return part(shared, tag, node, { children: kids(node.children, PHRASE) }, [
       styles.heading,
       look,
@@ -1058,32 +1070,16 @@ const placesOf = (
       ? placesOf(block.children, place)
       : [[place, block]];
   });
+// A line that may start a definition, in a quote or a list item too: a link's, or (`^`) a note's.
 const DEFINED =
-  /^[ \t>]*\[(?<note>\^?)(?<label>(?:[^\]\\\n]|\\.){1,999})\]:/gmu;
-/**
- * The names an answer defines (parse.ts, `Names`): in the blocks read, and at a line's start in
- * the block still being written.
- */
-const namesIn = (blocks: readonly Node[], writing: string) => {
-  const all = placesOf(blocks).flatMap(([, block]) => foundIn(block));
-  // A link's definition counts once its line is whole (its address may still grow); a note's once
-  // its name is.
-  const whole = writing.slice(0, writing.lastIndexOf("\n") + 1);
-  const of = (type: string, note: string, text: string) => [
-    ...all.flatMap((node) =>
-      node.type === type && "identifier" in node ? [node.identifier] : []
-    ),
-    ...[...text.matchAll(DEFINED)].flatMap(({ groups }) =>
-      groups?.note === note
-        ? [(groups.label ?? "").replaceAll(/\s+/gu, " ").trim().toLowerCase()]
-        : []
-    ),
-  ];
-  return {
-    links: of("definition", "", whole),
-    notes: of("footnoteDefinition", "^", writing),
-  };
-};
+  /^(?:[ \t>]|[-*+][ \t]|\d{1,9}[.)][ \t])*\[(?<note>\^?)(?<label>(?:[^[\]\\]|\\.){1,999})\]:/gmu;
+/** The names of the notes `text` defines. */
+const notesIn = (text: string) =>
+  [...text.matchAll(DEFINED)].flatMap(({ groups }) =>
+    groups?.note === "^"
+      ? [(groups.label ?? "").replaceAll(/\s+/gu, " ").trim().toLowerCase()]
+      : []
+  );
 /**
  * While written, what a block says once it is finished: never each word, nor code (CodeBlock says
  * it is being written); a table says its name, a section its summary.
@@ -1153,7 +1149,17 @@ const lessWaiting = (end: string) => {
   const last = end.slice(line, to);
   const rest = last.replace(CONTAINERS, "");
   const undecided = last.trim() !== "" && (rest === "" || UNDECIDED.test(rest));
-  return end.slice(0, undecided ? line : to);
+  let whole = end.slice(0, undecided ? line : to);
+  // A table's head waits for its whole row of dashes, and is never drawn as pipes.
+  for (let row = 0; row < 2; row += 1) {
+    const head = whole.lastIndexOf("\n", whole.length - 2) + 1;
+    const complete = whole.slice(0, whole.lastIndexOf("\n") + 1);
+    if (DASHES.test(complete) || !PIPE.test(whole.slice(head))) {
+      break;
+    }
+    whole = whole.slice(0, head);
+  }
+  return whole;
 };
 /** The last word of `text`: a bare address in it may still grow. */
 const lastWord = (text: string) =>
@@ -1164,25 +1170,24 @@ const MANY_WORDS = 1000;
 /**
  * The block still being written, read again as it grows: at once while that is quick, and once it
  * takes long, when four times its last read has passed since, so reading takes at most a fifth of
- * the time and new words come about every 100 ms however big it is. Its words since the last read
- * fade as one past 1,000 words (`fresh`, where that read ended).
+ * the time and new words come about every 100 ms however big it is. Past 1,000 words (`many`), its
+ * words since the last read fade as one.
  */
 const useEnding = (whole: string, paced: boolean, read: () => Block[]) => {
   const [last, setLast] = useState<{
     whole: string;
     nodes: Block[];
     next: number;
-    fresh: number;
-  }>({ whole: "", nodes: [], next: 0, fresh: -1 });
+    many: boolean;
+  }>({ whole: "", nodes: [], next: 0, many: false });
   const goesOn = paced && last.whole !== "" && whole.startsWith(last.whole);
   useLayoutEffect(() => {
     const again = () => {
       const start = performance.now();
       const nodes = read();
       const now = performance.now();
-      const words = whole.split(/\s+/u).length;
-      const fresh = words > MANY_WORDS ? last.whole.length : -1;
-      setLast({ whole, nodes, next: now + (now - start) * 4, fresh });
+      const many = whole.split(/\s+/u).length > MANY_WORDS;
+      setLast({ whole, nodes, next: now + (now - start) * 4, many });
     };
     const stale = goesOn && whole !== last.whole;
     const wait = stale ? last.next - performance.now() : Number.NaN;
@@ -1197,7 +1202,7 @@ const useEnding = (whole: string, paced: boolean, read: () => Block[]) => {
   if (goesOn) {
     return last;
   }
-  const now = { whole, nodes: read(), next: 0, fresh: -1 };
+  const now = { whole, nodes: read(), next: 0, many: false };
   if (paced && whole !== last.whole) {
     setLast(now);
   }
@@ -1206,8 +1211,10 @@ const useEnding = (whole: string, paced: boolean, read: () => Block[]) => {
 
 /**
  * The answer's top-level blocks: the finished ones read once, the one still being written made
- * whole (`ending`, how many), and the last word read. Once written, each block is read with the
- * names the whole answer defines, so its references resolve as CommonMark says.
+ * whole (`ending`, how many), and the last word read; with how much of each had been shown before
+ * this read (`shown`). Each block is read with the names the answer defines so far, so a reference
+ * resolves as CommonMark says once its definition is finished (in a finished block: its address
+ * and title can no longer change), and a note's mark once its note's name is whole.
  */
 const useBlocks = (
   children: string,
@@ -1217,48 +1224,68 @@ const useBlocks = (
   const source = children.replaceAll(/\r\n?/gu, "\n");
   const starts = useStarts(source);
   const open = streaming || truncated;
-  const blocks = open ? starts.slice(0, -1) : starts;
-  const read = (names?: parse.Names) =>
-    blocks.flatMap((start, at) =>
-      parse.readBlock(source.slice(start, starts[at + 1]), { names })
-    );
-  const plain = read();
-  let end = source.slice(open ? starts.at(-1) : source.length);
-  // Cut off, a link still being written goes; a row waits for its line's end, a head for its dashes.
+  const last = open ? (starts.at(-1) ?? 0) : source.length;
+  let end = source.slice(last);
+  // Cut off, a link still being written goes.
   const bracket = end.lastIndexOf("[");
   end =
     truncated && bracket > end.lastIndexOf("]") ? end.slice(0, bracket) : end;
-  // A table's head waits for its whole row of dashes, and is never drawn as pipes.
-  let whole = lessWaiting(end);
-  for (let row = 0; row < 2; row += 1) {
-    const complete = whole.slice(0, whole.lastIndexOf("\n") + 1);
-    const last = whole.lastIndexOf("\n", whole.length - 2) + 1;
-    if (DASHES.test(complete) || !PIPE.test(whole.slice(last))) {
-      break;
-    }
-    whole = whole.slice(0, last);
-  }
-  // Each block is read with the names the answer defines so far, so a reference or a note's mark
-  // is one once its definition has come (a whole line of it), and as written until then.
-  const names = namesIn(plain, end);
-  const said = names.links.length + names.notes.length > 0;
-  const done = said ? read(names) : plain;
+  const texts = (open ? starts.slice(0, -1) : starts).map((start, at) => {
+    const to = starts[at + 1] ?? source.length;
+    return { start, to, text: source.slice(start, to) };
+  });
+  // The definitions and notes in the finished blocks that may hold one, read without names.
+  const defined = texts
+    .filter(({ text }) => text.search(DEFINED) !== -1)
+    .flatMap(({ text }) => placesOf(parse.readBlock(text)))
+    .flatMap(([, block]) => foundIn(block));
+  const links = defined.flatMap((node) =>
+    node.type === "definition" ? [node] : []
+  );
+  const names = {
+    links: links.map((node) => node.identifier),
+    notes: [
+      ...defined.flatMap((node) =>
+        node.type === "footnoteDefinition" ? [node.identifier] : []
+      ),
+      ...notesIn(end),
+    ],
+  };
+  const blocks = texts.map(({ start, to, text }) => ({
+    start,
+    to,
+    nodes: parse.readBlock(text, { names }),
+  }));
+  const done = blocks.flatMap((block) => block.nodes);
   const code = streaming ? parse.openCode(end) : null;
+  const whole = lessWaiting(end);
   const ending = useEnding(whole, streaming && code === null, () =>
     open && code === null ? parse.readBlock(whole, { open: true, names }) : []
   );
   const nodes = code ?? ending.nodes;
-  const definitions = said
-    ? placesOf([...done, ...nodes])
-        .flatMap(([, block]) => foundIn(block))
-        .flatMap((node) => (node.type === "definition" ? [node] : []))
-    : NO_DEFINITIONS;
+  // Words shown before are never faded again: a block shown whole before is shown (Infinity).
+  const reach = last + ending.whole.length;
+  const [seen, setSeen] = useState({ reach: 0, before: 0 });
+  if (seen.reach !== reach) {
+    setSeen({ reach, before: seen.reach });
+  }
+  const shown = [
+    ...blocks.flatMap((block) =>
+      block.nodes.map(() =>
+        seen.before >= block.to
+          ? Number.POSITIVE_INFINITY
+          : seen.before - block.start
+      )
+    ),
+    ...nodes.map(() => seen.before - last),
+  ];
   return {
     all: [...done, ...nodes],
     ending: nodes.length,
     tail: lastWord(ending.whole),
-    fresh: ending.fresh,
-    definitions,
+    many: ending.many,
+    shown,
+    definitions: links.length > 0 ? links : NO_DEFINITIONS,
   };
 };
 
@@ -1282,17 +1309,21 @@ const notesOf = (all: readonly Node[], prefix: string) => {
       }
     }
   }
-  const order = [...marks.keys()];
-  const lines = order.map(
-    (id) =>
-      `${notes.has(id) ? "+" : "-"}${(marks.get(id) ?? []).join(",")} ${id}`
-  );
+  const order = [...marks];
   return {
-    listed: order.flatMap((id) => {
+    listed: order.flatMap(([id]) => {
       const note = notes.get(id);
       return note === undefined ? [] : [note];
     }),
-    value: [prefix, ...lines].join("\n"),
+    value:
+      order.length === 0
+        ? NO_NOTES
+        : new Map(
+            order.map(([id, ids], at) => [
+              id,
+              { prefix, number: at + 1, come: notes.has(id), marks: ids },
+            ])
+          ),
   };
 };
 
@@ -1337,7 +1368,7 @@ export const Markdown = ({
     codeMaxLines,
   };
   const notesShared = { ...shared, notes: true };
-  const { all, ending, tail, fresh, definitions } = useBlocks(
+  const { all, ending, tail, many, shown, definitions } = useBlocks(
     children,
     streaming,
     truncated
@@ -1362,9 +1393,11 @@ export const Markdown = ({
                 {/* oxlint-disable-next-line react/jsx-no-constructed-context-values -- a string */}
                 <At value={String(at)}>
                   <Tail value={writing ? tail : ""}>
-                    <Fresh value={writing ? fresh : -1}>
-                      <Drawn node={node} shared={shared} name={names[at]} />
-                    </Fresh>
+                    <Shown value={shown[at] ?? 0}>
+                      <Many value={writing && many}>
+                        <Drawn node={node} shared={shared} name={names[at]} />
+                      </Many>
+                    </Shown>
                   </Tail>
                 </At>
               </Placed>
@@ -1375,7 +1408,9 @@ export const Markdown = ({
               <ol {...stylex.props(styles.footnotes)}>
                 {notes.listed.map(([place, note]) => (
                   <At key={note.identifier} value={place}>
-                    <Drawn node={note} shared={notesShared} />
+                    <Shown value={shown[Number(place.split(".")[0])] ?? 0}>
+                      <Drawn node={note} shared={notesShared} />
+                    </Shown>
                   </At>
                 ))}
               </ol>

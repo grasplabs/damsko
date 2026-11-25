@@ -287,6 +287,12 @@ const links = [
   "Autolink <mailto:a@example.com> and <tel:+31201234>.",
   "A [link](  https://example.com/padded  ) padded.",
   "[Def first]\n\n[def first]: https://example.com/first\n[def first]: https://example.com/second",
+  // A definition counts once finished: its address and title can no longer change.
+  "See [a] and ![pic][a].\n\n[a]:\nhttps://example.com/long/path",
+  'See [a] and ![pic][a].\n\n[a]:\nhttps://example.com/titled/path\n"The title"',
+  "See [a] and ![pic][a].\n\n[a]:\n<https://example.com/angle/path>",
+  "> See [a] and ![pic][a].\n>\n> [a]:\n> https://example.com/quoted/path",
+  "- See [a] and ![pic][a].\n\n- [a]:\n  https://example.com/listed/path",
 ];
 
 describe("no address still being written, and none unsafe, is ever handed on", () => {
@@ -351,7 +357,7 @@ describe("no address still being written, and none unsafe, is ever handed on", (
       }
     }
     expect(wrong).toStrictEqual([]);
-    expect(links).toHaveLength(52);
+    expect(links).toHaveLength(57);
   }, 120_000);
 });
 

@@ -73,15 +73,21 @@ const alignOf = (cell: Element) => {
 
 // What Markdown deliberately draws otherwise than Streamdown, each with why (the PR description has
 // the list): an entry may differ from Streamdown's only in one of these ways, and how many entries
-// differ in each is held, so a new difference fails here.
-const MARK_AT_END =
-  /(?:\*\*|__|~~|[*_`]|^\s*p (?:\d+|[-=#<]+)|\[[^\]]*\]|\])(?: ↩)?$|[-=#<] ?$/u;
+// differ in each is held, so a new difference fails here. The first way that explains an entry is
+// its kind, the narrowest first.
 /** A line with each link drawn as its words. */
 const unlinked = (line: string) =>
   line.replaceAll(/\[(?<words>[^\]]*)\]\([^)]*\)/gu, "$<words>");
 const deliberate: [string, (streamdown: string, ours: string) => boolean][] = [
-  // Raw HTML is never set as HTML (only `<details>` with its summary is read).
-  ["raw HTML shown as text", (_, ours) => /<[a-z/!?]/iu.test(ours)],
+  // Raw HTML is never set as HTML (only `<details>` with its summary is read): a tag ours shows
+  // that Streamdown does not.
+  [
+    "raw HTML shown as text",
+    (streamdown, ours) =>
+      (ours.match(/<[a-z/!?][^>\n]*>?/giu) ?? []).some(
+        (tag) => !streamdown.includes(tag)
+      ),
+  ],
   // A link of Markdown's own leads only where safeHref allows: Streamdown blocks some ours draws
   // (a path on this site) and draws some ours leaves as words (other schemes).
   [
@@ -96,6 +102,8 @@ const deliberate: [string, (streamdown: string, ours: string) => boolean][] = [
     "pictures never loaded",
     (streamdown, ours) => streamdown.includes("![") && !ours.includes("!["),
   ],
+  // While written, a table's head shows once its row of dashes has come, never as pipes.
+  ["a table's head waits", (streamdown) => /^\s*p \|/mu.test(streamdown)],
   // While written, no address still being written is drawn: a half link, or a bare address in
   // the word still being written, is its words.
   [
@@ -104,32 +112,34 @@ const deliberate: [string, (streamdown: string, ours: string) => boolean][] = [
       streamdown.includes("streamdown:incomplete") ||
       (streamdown.includes("](") && unlinked(streamdown) === ours),
   ],
-  // While written, a raw mark or a line's start that the next characters decide waits for them;
-  // so does a definition, until its line is whole.
+  // `20~25°C` is a tilde: strike-through is two.
+  [
+    "one tilde is a tilde",
+    (streamdown, ours) =>
+      streamdown.replaceAll("~~", "~") === ours.replaceAll("~~", "~"),
+  ],
+  // While written, a raw mark of emphasis or code at the very end waits for what follows it.
   [
     "raw marks wait",
-    (streamdown, ours) =>
-      MARK_AT_END.test(streamdown.trim()) ||
-      /\[\^[\w-]+\]|^p \[[^\]]+\]: |^\s*ol$/mu.test(streamdown) ||
-      /\[\^[\w-]+\]/u.test(ours),
+    (streamdown) => /(?:\*\*|__|~~|[*_`])(?: ↩)?$/u.test(streamdown.trim()),
+  ],
+  // While written, a line's start that the next characters decide waits for them: a heading's
+  // `#`, a quote's `>`, a list's number or bullet, a task's box, an underline; so does a
+  // definition, until it is finished.
+  [
+    "a line's start waits",
+    (streamdown) =>
+      /^\s*(?:p (?:#{1,6}|>|[-*+]|\d{1,9}[.)]?|[-=]+|\[[ xX]?\]|\[[^\]]+\]: .*)|[ou]l|li)$/mu.test(
+        streamdown
+      ),
   ],
   // A table's row draws the cells written, no empty ones after them (a wide head over many rows).
   [
     "no empty cells added",
     (streamdown) => /\| (?:[rc]:)? ?\|/u.test(streamdown),
   ],
-  // `20~25°C` is a tilde: strike-through is two.
-  [
-    "one tilde is a tilde",
-    (streamdown, ours) => streamdown.includes("~~") && !ours.includes("~~"),
-  ],
-  // While written, a table's head shows once its row of dashes has come, never as pipes.
-  ["a table's head waits", (streamdown) => /^\s*p \|/mu.test(streamdown)],
-  // A section shows once its summary line is whole; a list item once its words begin.
-  [
-    "a section and an item wait",
-    (streamdown) => /^\s*(?:details|li)\b/mu.test(streamdown),
-  ],
+  // A section shows once its summary line is whole.
+  ["a section waits", (streamdown) => /^\s*details\b/mu.test(streamdown)],
   // `- > 25` is a quote in an item, as CommonMark reads it, also while written.
   [
     "a quote in an item",
@@ -191,17 +201,18 @@ describe("drawn as Streamdown draws it", () => {
       }
     }
     expect(kinds).toStrictEqual({
+      "a line's start waits": 7,
       "a mark in a link": 3,
       "a quote in an item": 4,
-      "a section and an item wait": 4,
-      "a table's head waits": 7,
+      "a section waits": 2,
+      "a table's head waits": 9,
       "addresses by safeHref": 51,
       "addresses still being written are words": 20,
-      "no empty cells added": 20,
-      "one tilde is a tilde": 2,
+      "no empty cells added": 18,
+      "one tilde is a tilde": 3,
       "pictures never loaded": 17,
-      "raw HTML shown as text": 82,
-      "raw marks wait": 11,
+      "raw HTML shown as text": 80,
+      "raw marks wait": 6,
     });
     expect(entries.length).toBeGreaterThan(1000);
   }, 600_000);
