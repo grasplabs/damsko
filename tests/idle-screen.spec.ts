@@ -11,6 +11,11 @@ import type { Page } from "@playwright/test";
 import { idleSeconds } from "../site/behaviour/idle-time.ts";
 
 const wait = idleSeconds * 1000;
+/**
+ * A move, or the scroll a focus brings, reaches the page with its next frame, which comes only as
+ * the clock runs: the wait after it starts that much later.
+ */
+const frameLate = 500;
 
 /** The docs page, asking for the screen after the whole wait (an automated browser must ask). */
 const open = async (page: Page, query = `?idle=${idleSeconds}`) => {
@@ -86,7 +91,7 @@ test.describe("with motion", () => {
     await link.focus();
     const at = page.url();
     const scrolled = await page.evaluate(() => scrollY);
-    await page.clock.runFor(wait);
+    await page.clock.runFor(wait + frameLate);
     const line = page.getByText("Move to return");
     await untilSeen(page);
     const reached = await record(page);
@@ -113,7 +118,7 @@ test.describe("with motion", () => {
     const at = page.url();
     // The pointer is already over the link; the screen comes, and the press is the first input.
     await page.mouse.move((box?.x ?? 0) + 4, (box?.y ?? 0) + 4);
-    await page.clock.runFor(wait);
+    await page.clock.runFor(wait + frameLate);
     const line = page.getByText("Move to return");
     await untilSeen(page);
     const reached = await record(page);
@@ -140,7 +145,7 @@ test.describe("with motion", () => {
       .first()
       .boundingBox();
     await page.mouse.move((box?.x ?? 0) + 4, (box?.y ?? 0) + 4);
-    await page.clock.runFor(wait);
+    await page.clock.runFor(wait + frameLate);
     const line = page.getByText("Move to return");
     await expect(line).toBeAttached();
     const reached = await record(page);
@@ -239,7 +244,7 @@ test.describe("with motion", () => {
       // oxlint-disable-next-line no-await-in-loop -- one after the other
       await page.mouse.move(x, x);
       // oxlint-disable-next-line no-await-in-loop -- one after the other
-      await page.clock.runFor(1000);
+      await page.clock.runFor(1000 + frameLate);
       // oxlint-disable-next-line no-await-in-loop -- one after the other
       await expect(line).toHaveCount(1);
     }
