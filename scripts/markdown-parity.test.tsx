@@ -193,7 +193,7 @@ describe("drawn as Streamdown draws it", () => {
       const shown = draw(text.slice(0, at));
       // While written, the word at the very end waits for what follows it (a space, or a character
       // of a script without spaces), so it comes whole and fades in once, where Streamdown draws it
-      // as it grows; a run longer than 32 characters comes 32 at a time. A space after it finishes
+      // as it grows; a run longer than 32 characters comes 32 at a time, past 256 as it comes. A space after it finishes
       // it, and what is drawn then is held to Streamdown as the rest.
       const ours =
         streaming && shown !== roles ? draw(`${text.slice(0, at)} `) : shown;

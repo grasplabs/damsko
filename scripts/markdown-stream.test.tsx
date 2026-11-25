@@ -292,9 +292,9 @@ describe("while written a character at a time, each word comes whole", () => {
     vi.useRealTimers();
   });
 
-  test("a run longer than 32 characters comes 32 at a time, and nothing waits once it is written", () => {
+  test("a run longer than 32 characters comes 32 at a time, past 256 as it comes, and nothing waits once it is written", () => {
     vi.useFakeTimers({ toFake: ["performance"] });
-    const text = "a=1;b=2;".repeat(16);
+    const text = "a=1;b=2;".repeat(40);
     const { box, root, render } = live();
     const held: number[] = [];
     for (let at = 1; at <= text.length; at += 1) {
@@ -308,6 +308,9 @@ describe("while written a character at a time, each word comes whole", () => {
     });
     vi.useRealTimers();
     expect(Math.max(...held)).toBe(31);
+    expect(held).toStrictEqual(
+      held.map((_, at) => (at + 1 < 256 ? (at + 1) % 32 : 0))
+    );
   });
 });
 

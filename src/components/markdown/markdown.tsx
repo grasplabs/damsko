@@ -1384,22 +1384,19 @@ const UNFINISHED = new RegExp(String.raw`[^\s${UNSPACED}]*$`, "u");
 // The most of one word held back: a longer run (an address, a line of minified code) comes this many
 // characters at a time.
 const LONGEST_WORD = 32;
+// How far back the word at the end is looked for: a longer run shows as it comes.
+const LOOK_BACK = 256;
 // How long the word at the end waits once nothing more comes: a stall shows it.
 const WAIT = 250;
 /**
  * Where the text shown ends while it is written: before the word at its end, which shows once what
  * follows it has come, so each word comes whole, fades in once and never types itself out. Found
- * from the end, at most LONGEST_WORD characters back, so it costs the same however long the answer.
+ * from the end, at most LOOK_BACK characters back, so it costs the same however long the answer.
  */
 const wordsEnd = (text: string) => {
-  const tail = text.slice(-LONGEST_WORD);
-  const word = UNFINISHED.exec(tail)?.[0].length ?? 0;
-  if (word < tail.length) {
-    return text.length - word;
-  }
-  // A run as long as the most held: what it has of whole steps of LONGEST_WORD, never half a
-  // character written as two (outside the basic plane: emoji, rare Han).
-  const cut = text.length - (text.length % LONGEST_WORD);
+  const word = UNFINISHED.exec(text.slice(-LOOK_BACK))?.[0].length ?? 0;
+  const cut = text.length - (word < LOOK_BACK ? word % LONGEST_WORD : 0);
+  // Never half a character written as two (outside the basic plane: emoji, rare Han).
   return (text.codePointAt(cut - 1) ?? 0) > 0xff_ff ? cut - 1 : cut;
 };
 /**
