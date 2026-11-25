@@ -26,6 +26,9 @@ const noModuleMocks = ["mock", "doMock", "hoisted"].map((property) => ({
     "Don't mock modules. Pass the dependency through a real interface instead.",
 }));
 
+/** The unit tests that weigh time (see `test.projects`). */
+const TIMED = ["scripts/markdown.test.tsx"];
+
 export default defineConfig({
   lint: {
     extends: [core, react, tanstack, vitest, shadcn],
@@ -292,8 +295,31 @@ export default defineConfig({
   // StyleX compiled for the unit tests that render a component.
   plugins: [stylex()],
   test: {
-    include: ["scripts/**/*.test.{ts,tsx}"],
     environment: "node",
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: "unit",
+          include: ["scripts/**/*.test.{ts,tsx}"],
+          exclude: TIMED,
+        },
+      },
+      // The files that weigh Markdown's time, after the rest and one at a time: time on the
+      // processor grows with the size of what is read faster on a machine whose cores are busy with
+      // other files (its caches are shared), so a measure of growth beside them is not one of the
+      // code. On a slow CI runner beside the rest, families that grow four times at four times the
+      // size measured 8 and 9 times.
+      {
+        extends: true,
+        test: {
+          name: "timed",
+          include: TIMED,
+          fileParallelism: false,
+          sequence: { groupOrder: 1 },
+        },
+      },
+    ],
   },
   staged: {
     "*": ["secretlint", "vp check --fix"],

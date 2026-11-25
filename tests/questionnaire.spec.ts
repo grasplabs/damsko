@@ -99,6 +99,9 @@ test("sending held by the page: Send stays a Tab stop described by the reason, a
   await expect(second).toBeChecked();
   await page.keyboard.press("Enter");
   await expect(second).toBeChecked();
+  // The answer of its own, then Send.
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("textbox", { name: "Other" })).toBeFocused();
   await page.keyboard.press("Tab");
   await expect(send).toBeFocused();
   await page.keyboard.press("Enter");

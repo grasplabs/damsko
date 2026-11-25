@@ -230,6 +230,14 @@ export interface I18nCatalog {
     /** Said in the list when nothing matches. */
     empty: string;
     notChoice: (value: string) => string;
+    /** The name of a chosen value's remove button, with several values ("Remove Amara Okafor"). */
+    remove: (label: string) => string;
+    /** Said when a chosen value is taken away, with several values ("Amara Okafor removed"). */
+    removed: (label: string) => string;
+    /** Said as the list narrows to what was typed ("3 results"); none is `empty`. */
+    results: (count: number) => string;
+    /** Said while the items are still loading. */
+    loading: string;
     /** The name of the button that opens the list. */
     trigger: string;
   };
@@ -557,12 +565,14 @@ export interface I18nCatalog {
     external: string;
   };
   markdown: {
-    /** The link from a footnote back to where it is used, from its number. */
-    back: (number: number) => string;
+    /** The link from a footnote back to where it is used, from its number and which mark it is. */
+    back: (number: number, mark: number) => string;
     /** What a ticked task says to a screen reader. */
     done: string;
     /** A footnote's mark, said to a screen reader, from its number. */
     footnote: (number: number) => string;
+    /** Under a table drawn only in part, how many rows are not drawn. */
+    moreRows: (count: number) => string;
     /** What a task not yet ticked says. */
     notDone: string;
     /** A table's name when no heading stands above it (`tableLabel`). */
@@ -1000,6 +1010,11 @@ const english: I18nCatalog = {
   combobox: {
     empty: "No results",
     notChoice: (value: string) => `${value} is not one of the choices`,
+    remove: (label: string) => `Remove ${label}`,
+    removed: (label: string) => `${label} removed`,
+    results: (count: number) =>
+      count === 1 ? "1 result" : `${String(count)} results`,
+    loading: "Loading",
     trigger: "Show the choices",
   },
   command: {
@@ -1287,9 +1302,14 @@ const english: I18nCatalog = {
     external: "opens in a new tab",
   },
   markdown: {
-    back: (number: number) => `Back to reference ${number}`,
+    back: (number: number, mark: number) =>
+      mark > 1
+        ? `Back to reference ${number}-${mark}`
+        : `Back to reference ${number}`,
     done: "Done",
     footnote: (number: number) => `Footnote ${number}`,
+    moreRows: (count: number) =>
+      count === 1 ? "1 more row" : `${count} more rows`,
     notDone: "Not done",
     table: "Table",
   },

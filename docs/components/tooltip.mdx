@@ -59,6 +59,12 @@ With `asChild` the trigger is a router's own link, or any element the host draws
 
 <Stage path="tooltip/link" label="On a link or the host's own element" />
 
+## An info mark
+
+A small button that is only there to say more about what stands beside it (a title, a setting) takes `toggleable` on its Tooltip: a press opens and closes it too, so a tap on a touch screen shows it, and what it says is announced as a press opens it. Hover and keyboard focus open it as before. Never on a control that does something of its own.
+
+<Stage path="tooltip/info" label="An info mark" />
+
 <Part title="Using it" />
 
 ## When to use it
@@ -96,7 +102,8 @@ With `asChild` the trigger is a router's own link, or any element the host draws
       group: "Type",
       key: "Shortcut",
       value: "{text-xs} / {text-xs-line}, {font-weight-normal}",
-      note: "a Kbd, as Kbd draws it",
+      note: "a Kbd, which in a tooltip is quiet words at the line's end, no key cap",
+      tokens: ["tooltip-muted-foreground"],
     },
     {
       group: "Surface",

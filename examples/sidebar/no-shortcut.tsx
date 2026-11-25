@@ -8,7 +8,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
-  SidebarRail,
   SidebarTrigger,
 } from "@grasp-os/ui/components/sidebar";
 import {
@@ -56,8 +55,8 @@ const places = [
   { name: "Projects", icon: FolderKanbanIcon },
 ];
 
-// With no keyboard shortcut (`keyboardShortcut={false}`): the trigger and the rail fold it, and no
-// key does; its buttons name no keys.
+// With no keyboard shortcut (`keyboardShortcut={false}`): the trigger folds it, and no key does;
+// its buttons name no keys.
 export default function SidebarNoShortcut() {
   return (
     <div {...stylex.props(layout.frame)}>
@@ -84,7 +83,6 @@ export default function SidebarNoShortcut() {
               </SidebarGroupContent>
             </SidebarGroup>
           </SidebarContent>
-          <SidebarRail />
         </Sidebar>
         <SidebarInset>
           <header {...stylex.props(layout.bar)}>

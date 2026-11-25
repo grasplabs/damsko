@@ -220,7 +220,6 @@ export function InviteDialog({
         <DialogFooter>
           <DialogClose>Cancel</DialogClose>
           <Button
-            size="sm"
             variant="default"
             onClick={send}
             loadingText="Sending"

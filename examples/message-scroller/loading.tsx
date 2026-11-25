@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@grasp-os/ui/components/button";
+import { MessageSkeleton } from "@grasp-os/ui/components/message";
 import {
   MessageScroller,
   MessageScrollerButton,
@@ -9,7 +10,6 @@ import {
   MessageScrollerProvider,
   MessageScrollerViewport,
 } from "@grasp-os/ui/components/message-scroller";
-import { Skeleton } from "@grasp-os/ui/components/skeleton";
 import { size, space } from "@grasp-os/ui/lib/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
 import { useEffect, useState } from "react";
@@ -27,11 +27,12 @@ const turns: Turn[] = Array.from({ length: 8 }, (_, n) => ({
       : `Here is part ${Math.ceil(n / 2)} of the summary, with the numbers for each region.`,
 }));
 
-// Three pairs of placeholders, the person's turn and the assistant's, while it loads.
+// Three pairs of placeholders, the person's turn and the assistant's, while it loads: how many
+// lines of words each stands for.
 const placeholders = [
-  { key: "first", user: "40%", assistant: 3 },
-  { key: "second", user: "55%", assistant: 2 },
-  { key: "third", user: "35%", assistant: 4 },
+  { key: "first", user: 1, assistant: 3 },
+  { key: "second", user: 2, assistant: 2 },
+  { key: "third", user: 1, assistant: 4 },
 ] as const;
 
 const layout = stylex.create({
@@ -43,11 +44,10 @@ const layout = stylex.create({
     maxWidth: `calc(${size.popupWidth} * 1.8)`,
   },
   pair: { display: "grid", gap: space["4"] },
-  user: { justifySelf: "end", width: "40%" },
-  lines: { display: "grid", gap: space["2"], width: "80%" },
 });
 
-// An old chat opening: the shape of its turns while it loads, then the turns where the shapes
+// An old chat opening: the shape of its turns while it loads (MessageSkeleton: the person's empty
+// bubble, the assistant's lines of words), then the turns where the shapes
 // stood, at the latest. It loads again from the button.
 export default function MessageScrollerLoading() {
   const [loading, setLoading] = useState(true);
@@ -73,15 +73,8 @@ export default function MessageScrollerLoading() {
                   ? placeholders.map((pair) => (
                       <MessageScrollerItem key={pair.key}>
                         <div {...stylex.props(layout.pair)}>
-                          <Skeleton variant="rectangular" style={layout.user} />
-                          <div {...stylex.props(layout.lines)}>
-                            {Array.from(
-                              { length: pair.assistant },
-                              (_, line) => (
-                                <Skeleton key={line} />
-                              )
-                            )}
-                          </div>
+                          <MessageSkeleton align="end" lines={pair.user} />
+                          <MessageSkeleton lines={pair.assistant} />
                         </div>
                       </MessageScrollerItem>
                     ))

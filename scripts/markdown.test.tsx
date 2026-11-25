@@ -1,631 +1,680 @@
-// Markdown and untrusted text, drawn on the server (react-dom/server, StyleX compiled by its
-// plugin): every link and picture in an answer as the host's renderLink sees it, and as Markdown
-// draws it without one. An answer's links can come from prompt-injected text (a web page, a
-// document, a tool result), so:
-//   - renderLink sees every link, any scheme, its address as written, before Markdown's filter;
-//   - a link the host drew gets no anchor from Markdown;
-//   - without renderLink only http, https and mailto lead anywhere; javascript:, data:, vbscript:,
-//     file: and relative paths are words, in any case and with tabs or spaces in the scheme;
-//   - raw HTML is text (no element is made from it), and a picture is never loaded;
-//   - the same holds for every prefix of a hostile answer while it is still being written, and
-//     when it is cut off there (`truncated`).
+// Markdown through its interface, drawn on the server. The parse is micromark's, so what is ours is
+// held here: the cut into blocks reads every CommonMark and GFM example as the whole parse does,
+// and each kind of node draws its part; no address still being written, or unsafe, is ever handed
+// on; and time and size grow in step with the answer, hostile ones too. Streaming in a DOM:
+// markdown-stream.test.tsx.
 //
 //   pnpm exec vp test scripts/markdown.test.tsx
-import type { ReactNode } from "react";
+import { setTimeout as sleep } from "node:timers/promises";
+import { fileURLToPath } from "node:url";
+
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test } from "vitest";
 
 import {
   Markdown,
   MarkdownLinkProvider,
+  parseMarkdown,
 } from "../src/components/markdown/index.ts";
 import type {
-  MarkdownLink,
+  MarkdownComponents,
   MarkdownLinkRenderer,
   MarkdownProps,
 } from "../src/components/markdown/index.ts";
+import * as parse from "../src/components/markdown/parse.ts";
+import { safeHref } from "../src/lib/utils.ts";
+import { isRecord, readJson } from "./json.ts";
 
-const draw = (
-  source: string,
-  props: Omit<MarkdownProps, "children"> = {}
-): string => renderToStaticMarkup(<Markdown {...props}>{source}</Markdown>);
-
-/**
- * How long a test that draws an answer many times over may run, in milliseconds. It takes a second
- * of this process's time on the processor at most; on a machine busy with others that can be many
- * times as long by the clock, which a test's default five seconds go by.
- */
-const SLOW_TEST = 120_000;
-
-/** The words a node holds, for comparing what renderLink was handed. */
-const wordsOf = (node: ReactNode) =>
-  renderToStaticMarkup(<span>{node}</span>).replaceAll(/<[^>]+>/gu, "");
-
-/** Every <a …> and the href it carries. */
-const anchors = (html: string) =>
-  [...html.matchAll(/<a\b(?<attributes>[^>]*)>/gu)].map(
-    (match) =>
-      /\bhref="(?<href>[^"]*)"/u.exec(match.groups?.attributes ?? "")?.groups
-        ?.href ?? null
-  );
-
-/** Elements made that must never be: a picture, a script, a frame, an inline handler. */
-const madeFromHtml = (html: string) =>
-  [
-    ...html.matchAll(
-      /<(?:img|script|iframe|object|embed|style|b)\b|\son\w+="/gu
-    ),
-  ].map((match) => match[0]);
-
-// A script link's scheme, written so no lint takes the test's own strings for one.
-const JS = ["java", "script"].join("");
-
-/** What a reader sees of drawn HTML: its text, the tags gone. */
-const textOf = (html: string) =>
-  html.replaceAll(/<[^>]+>/gu, "").replaceAll("&quot;", '"');
-
-/** The level of every heading drawn, in order. */
-const levels = (html: string) =>
-  [...html.matchAll(/<h(?<level>\d)\b/gu)].map((match) =>
-    Number(match.groups?.level)
-  );
-
-/** The page's own renderer in the test of who is asked first: it draws citations. */
-const pageRenderer: MarkdownLinkRenderer = (link) =>
-  link.scheme === "cite" ? <b data-by="page">{link.children}</b> : undefined;
-
-/** The provider's: web links and citations. */
-const providedRenderer: MarkdownLinkRenderer = (link) =>
-  link.scheme === "https" || link.scheme === "cite" ? (
-    <i data-by="provider">{link.children}</i>
-  ) : undefined;
-
-const leadsSomewhereBad = (href: string | null) =>
-  href !== null && !/^(?:https?:|mailto:|#)/iu.test(href);
-
-const everyScheme = [
-  '[web](https://example.com/a?b=1 "Web title")',
-  "[mail](mailto:noor@example.com)",
-  `[js](${JS}:alert(1))`,
-  `[mixed](${JS.toUpperCase()}:alert(1))`,
-  "[data](data:text/html,<b>x</b>)",
-  "[vb](vbscript:msgbox)",
-  "[file](file:///etc/passwd)",
-  '[note](cite:42 "The quote it cites")',
-  "[relative](./private/page)",
-  "[here](#section)",
-  "<https://auto.example.com>",
-  "www.literal.example.com",
-  '![a chart](https://img.example.com/c.png "Chart title")',
-  "[ref][r] and ![pic][p]",
-  "",
-  '[r]: https://ref.example.com "Ref title"',
-  '[p]: https://img.example.com/p.png "Pic title"',
-].join("\n");
-
-const hostile = [
-  "[x](javascript:alert(1))",
-  "[x](JaVaScRiPt:alert(1))",
-  "[x](java\tscript:alert(1))",
-  "[x]( javascript:alert(1))",
-  "[x](\u0001javascript:alert(1))",
-  "[x](data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==)",
-  "[x](vbscript:msgbox(1))",
-  "[x](file:///etc/passwd)",
-  "[x](/relative/path) and [y](../up)",
-  `<a href="${JS}:alert(1)">raw link</a>`,
-  '<img src="https://evil.example.com/x.png" onerror="alert(1)">',
-  "<script>alert(1)</script>",
-  '<iframe src="https://evil.example.com"></iframe>',
-  "![tracker](https://evil.example.com/pixel.gif?secret=1)",
-  "[a [b](https://inner.example.com) c](https://outer.example.com)",
-  "Visit https://autolinked.example.com/path now.",
+/** Each item of a fixture's list `key`: its name, and its Markdown (joined when given as lines). */
+const fixture = (file: string, key: string, field: string) => {
+  const value = readJson(fileURLToPath(new URL(file, import.meta.url)));
+  const list = isRecord(value) ? value[key] : undefined;
+  return (Array.isArray(list) ? list : []).flatMap((item: unknown) => {
+    const text = isRecord(item) ? item[field] : undefined;
+    const joined = Array.isArray(text) ? text.join("\n") : text;
+    const name = isRecord(item) ? String(item.example ?? item.name) : "";
+    return typeof joined === "string" ? [{ name, text: joined }] : [];
+  });
+};
+const answers = fixture("fixtures/markdown-answers.json", "answers", "lines");
+const specs = [
+  ...fixture("fixtures/commonmark-spec.json", "examples", "markdown"),
+  ...fixture("fixtures/gfm-spec.json", "examples", "markdown"),
 ];
 
-/** Every prefix of the hostile answer, drawn so, that leads somewhere bad or makes an element. */
-const badPrefixes = (props: Omit<MarkdownProps, "children">) => {
-  const answer = hostile.join("\n\n");
-  return Array.from({ length: answer.length }, (_, at) => {
-    const html = draw(answer.slice(0, at + 1), props);
-    return [
-      ...anchors(html).filter(leadsSomewhereBad),
-      ...madeFromHtml(html),
-    ].map((made) => `at ${at + 1} characters: ${made}`);
-  }).flat();
+const draw = (source: string, props: Partial<MarkdownProps> = {}) =>
+  renderToStaticMarkup(<Markdown {...props}>{source}</Markdown>);
+
+const count = (html: string, pattern: string) =>
+  html.match(new RegExp(pattern, "gu"))?.length ?? 0;
+/** What the HTML says, its tags dropped. */
+const textOf = (html: string) => html.replaceAll(/<[^>]*>/gu, "");
+
+type Tree = ReturnType<typeof parseMarkdown>["children"][number];
+// SAFETY: every node a node of the tree holds is a node of the tree.
+const kids = (node: Tree) =>
+  ("children" in node ? node.children : []) as Tree[];
+
+const shape = (nodes: unknown) =>
+  JSON.stringify(nodes, (key, value: unknown) =>
+    key === "position" ? undefined : value
+  );
+
+const allNodes = (nodes: Tree[]): Tree[] =>
+  nodes.flatMap((node) => [node, ...allNodes(kids(node))]);
+const definitionsIn = (nodes: Tree[]) =>
+  allNodes(nodes).flatMap((node) => (node.type === "definition" ? [node] : []));
+
+const tags: Record<string, string> = {
+  blockquote: "<blockquote",
+  list: "<[ou]l",
+  listItem: "<li",
+  table: "<table",
+  strong: "<strong",
+  emphasis: "<em\\b",
+  delete: "<del",
+  break: "<br",
+  inlineCode: "<code class",
+  code: 'data-slot="code-block"',
+  thematicBreak: '<hr|role="separator"',
 };
 
-describe("renderLink", () => {
-  test("sees every link and picture, any scheme, before the filter", () => {
-    const seen: MarkdownLink[] = [];
-    draw(everyScheme, {
-      renderLink: (link) => {
-        seen.push(link);
-        return <button type="button">{link.children}</button>;
-      },
-    });
-    expect(
-      seen.map((link) => [
-        link.href,
-        link.scheme,
-        link.type,
-        link.title,
-        wordsOf(link.children),
-      ])
-    ).toStrictEqual([
-      ["https://example.com/a?b=1", "https", "link", "Web title", "web"],
-      ["mailto:noor@example.com", "mailto", "link", undefined, "mail"],
-      [`${JS}:alert(1)`, JS, "link", undefined, "js"],
-      [`${JS.toUpperCase()}:alert(1)`, JS, "link", undefined, "mixed"],
-      ["data:text/html,<b>x</b>", "data", "link", undefined, "data"],
-      ["vbscript:msgbox", "vbscript", "link", undefined, "vb"],
-      ["file:///etc/passwd", "file", "link", undefined, "file"],
-      ["cite:42", "cite", "link", "The quote it cites", "note"],
-      ["./private/page", "", "link", undefined, "relative"],
-      ["#section", "", "link", undefined, "here"],
-      [
-        "https://auto.example.com",
-        "https",
-        "autolink",
-        undefined,
-        "https://auto.example.com",
-      ],
-      [
-        "http://www.literal.example.com",
-        "http",
-        "autolink",
-        undefined,
-        "www.literal.example.com",
-      ],
-      [
-        "https://img.example.com/c.png",
-        "https",
-        "image",
-        "Chart title",
-        "a chart",
-      ],
-      ["https://ref.example.com", "https", "link", "Ref title", "ref"],
-      ["https://img.example.com/p.png", "https", "image", "Pic title", "pic"],
-    ]);
-  });
-
-  test("a link the host drew gets no anchor; footnotes stay Markdown's own", () => {
-    const html = draw(`${everyScheme}\n\nA note.[^1]\n\n[^1]: The note.`, {
-      renderLink: (link) => (
-        <button type="button" data-asked={link.href}>
-          {link.children}
-        </button>
-      ),
-    });
-    const hrefs = anchors(html);
-    expect(
-      hrefs.filter((href) => href?.startsWith("#") !== true)
-    ).toStrictEqual([]);
-    expect(hrefs.filter((href) => href?.startsWith("#") === true)).toHaveLength(
-      2
-    );
-    expect(html).toContain('data-asked="cite:42"');
-  });
-
-  test("undefined draws Markdown's own, as having none", () => {
-    expect(draw(everyScheme, { renderLink: () => {} })).toBe(draw(everyScheme));
-  });
-
-  test("the page's own is asked first, then the provider around it", () => {
-    const html = renderToStaticMarkup(
-      <MarkdownLinkProvider renderLink={providedRenderer}>
-        <Markdown renderLink={pageRenderer}>
-          [a](cite:1) [b](https://example.com) [c](mailto:x@example.com)
-        </Markdown>
-      </MarkdownLinkProvider>
-    );
-    expect(html).toContain('<b data-by="page">a</b>');
-    expect(html).toContain('<i data-by="provider">b</i>');
-    expect(anchors(html)).toStrictEqual(["mailto:x@example.com"]);
-  });
-});
-
-describe("Markdown's own links", () => {
-  test("only http, https and mailto lead anywhere; a web link opens safely, a mail link in place", () => {
-    const html = draw(everyScheme);
-    const hrefs = anchors(html);
-    expect(hrefs.filter(leadsSomewhereBad)).toStrictEqual([]);
-    expect(hrefs).toStrictEqual([
-      "https://example.com/a?b=1",
-      "mailto:noor@example.com",
-      "https://auto.example.com/",
-      "http://www.literal.example.com/",
-      "https://img.example.com/c.png",
-      "https://ref.example.com/",
-      "https://img.example.com/p.png",
-    ]);
-    expect(html).toMatch(
-      /<a [^>]*href="https:\/\/example\.com\/a\?b=1"[^>]*target="_blank"[^>]*rel="noopener noreferrer"/u
-    );
-    expect(html).not.toMatch(/<a [^>]*href="mailto:[^"]*"[^>]*target=/u);
-  });
-
-  test("script and data links are their words", () => {
-    const html = draw(
-      "A [script link](javascript:alert(1)) and a [data link](data:text/html,x)."
-    );
-    expect(anchors(html)).toStrictEqual([]);
-    expect(html).toContain("A script link and a data link.");
-  });
-});
-
-describe("untrusted text", () => {
-  test("hostile links and raw HTML lead nowhere and make no element", () => {
-    const bad = hostile.flatMap((source) => {
-      const html = draw(source);
-      return [
-        ...anchors(html).filter(leadsSomewhereBad),
-        ...madeFromHtml(html),
-      ].map((made) => `${source}: ${made}`);
-    });
-    expect(bad).toStrictEqual([]);
-  });
-
-  test("raw HTML is shown as its own text", () => {
-    expect(textOf(draw(`<a href="${JS}:alert(1)">raw link</a>`))).toBe(
-      `&lt;a href="${JS}:alert(1)"&gt;raw link&lt;/a&gt;`
-    );
-    expect(textOf(draw('Words <b onmouseover="alert(1)">bold</b>.'))).toBe(
-      'Words &lt;b onmouseover="alert(1)"&gt;bold&lt;/b&gt;.'
-    );
-  });
-
-  test("never an anchor inside an anchor; a bare address links itself", () => {
-    expect(
-      draw("[a [b](https://inner.example.com) c](https://outer.example.com)")
-    ).not.toMatch(/<a\b(?:(?!<\/a>).)*<a\b/su);
-    expect(
-      anchors(draw("Visit https://autolinked.example.com/path now."))
-    ).toContain("https://autolinked.example.com/path");
-  });
-
-  test(
-    "every prefix of a hostile answer, while it is written",
-    () => {
-      expect(badPrefixes({ streaming: true })).toStrictEqual([]);
-    },
-    SLOW_TEST
-  );
-
-  test(
-    "every prefix of a hostile answer, cut off there",
-    () => {
-      expect(badPrefixes({ truncated: true })).toStrictEqual([]);
-    },
-    SLOW_TEST
-  );
-});
-
-describe("code fences", () => {
-  // A fence's tag is the writer's words: one that names what every object holds is plain code.
-  test.each(["__proto__", "constructor", "toString", "hasOwnProperty"])(
-    "tagged %s is plain code under its own tag",
-    (tag) => {
-      const html = draw(`\`\`\`${tag}\nconst a = 1;\n\`\`\``);
-      expect(html).toContain(`data-language="${tag}"`);
-      expect(textOf(html)).toContain(tag);
-      expect(textOf(html)).toContain("const a = 1;");
-      expect(html).not.toContain("function");
-    }
-  );
-});
-
-describe("pictures", () => {
-  const sources = [
-    "![tracker](https://evil.example.com/p.gif)",
-    "![](https://evil.example.com/p.gif)",
-    "![ref][t]\n\n[t]: https://evil.example.com/p.gif",
-  ];
-
-  test("are never loaded, before or after the host's answer", () => {
-    for (const source of sources) {
-      for (const html of [
-        draw(source),
-        draw(source, { renderLink: () => {} }),
-        draw(source, { renderLink: (link) => <span>{link.children}</span> }),
-      ]) {
-        expect(html).not.toMatch(/<img|srcset=|<picture|<source|url\(/u);
-      }
-    }
-  });
-
-  test("are drawn only by the host's renderer, as it chooses", () => {
-    const html = draw("![a chart](https://img.example.com/c.png)", {
-      renderLink: (link) =>
-        link.type === "image" ? (
-          <span data-picture={link.href}>{link.children}</span>
-        ) : undefined,
-    });
-    expect(html).toContain(
-      '<span data-picture="https://img.example.com/c.png">a chart</span>'
-    );
-  });
-});
-
-describe("headings", () => {
-  test("start at h1, the fifth and sixth as the fourth", () => {
-    expect(
-      levels(draw("# a\n\n## b\n\n### c\n\n#### d\n\n##### e\n\n###### f"))
-    ).toStrictEqual([1, 2, 3, 4, 4, 4]);
-  });
-
-  test("start at the caller's level, never past h6", () => {
-    expect(
-      levels(draw("# a\n\n## b\n\n### c\n\n#### d", { headingLevel: 3 }))
-    ).toStrictEqual([3, 4, 5, 6]);
-    expect(levels(draw("# a\n\n#### d", { headingLevel: 5 }))).toStrictEqual([
-      5, 6,
-    ]);
-  });
-});
-
-describe("while written", () => {
-  test("an open fence is a CodeBlock being written, its marks never words", () => {
-    const html = draw("Run:\n\n```python\ndef closed(", { streaming: true });
-    expect(html).toContain('data-streaming="true"');
-    expect(html).not.toContain("```");
-  });
-
-  test("a half link is its words, leading nowhere until its address is whole", () => {
-    const link = draw("See [the weekly report](https://exa", {
-      streaming: true,
-    });
-    expect(anchors(link)).toStrictEqual([]);
-    expect(link).not.toMatch(/[[\]]/u);
-    expect(link).toContain("the weekly report");
-    expect(
-      anchors(
-        draw("See [the weekly report](https://example.com/weekly) and", {
-          streaming: true,
-        })
-      )
-    ).toStrictEqual(["https://example.com/weekly"]);
-  });
-
-  test("a half table is a table, its half row waiting", () => {
-    const table = draw("| Team | Open |\n| :-- | --: |\n| Sup", {
-      streaming: true,
-    });
-    expect(table).toContain("<table");
-    expect(table).not.toContain("|");
-  });
-
-  test("a half link whose address holds an underscore, a parenthesis or a title is its words", () => {
-    for (const source of [
-      "See [the spec](https://example.com/a_b",
-      "See [Foo](https://en.wikipedia.org/wiki/Foo_(bar",
-      'See [text](https://example.com "A title"',
-      `See [x](${JS}:alert(1`,
-    ]) {
-      const html = draw(source, { streaming: true });
-      expect(anchors(html)).toStrictEqual([]);
-      expect(textOf(html)).toMatch(/^See \w+/u);
-      expect(textOf(html)).not.toMatch(/[[\]()_"]/u);
-    }
-  });
-
-  // Two answers with links whose addresses hold underscores and parentheses, and links with titles,
-  // read as they arrive, a character at a time.
-  const linked = [
-    [
-      'The export runs nightly. See [the export spec](https://example.com/docs/export_v2 "Export, version 2") for its fields, and [Comma-separated values](https://en.wikipedia.org/wiki/Comma-separated_values_(format)) for the format.',
-      "",
-      "It follows **[RFC 4180](https://www.rfc-editor.org/rfc/rfc4180 'Common Format')**, as most tools do, and writes `snake_case` headers.",
-    ].join("\n"),
-    [
-      'Your quota is 40 requests a minute [1](cite:1 "Quota policy, section 4"). Bursts above it are queued, as [the rate_limit docs](https://api.example.com/docs/rate_limit_(burst)) explain.',
-      "",
-      "- Raise it with [a request](https://example.com/forms/quota_increase?team=core_data).",
-      '- See *[the changelog](https://example.com/_changelog/2026 "What changed")* for when it last moved.',
-    ].join("\n"),
-  ];
-
-  test.each(linked)(
-    "no prefix shows a link's marks, and nothing shown is taken back: %#",
-    (answer) => {
-      const found: string[] = [];
-      let before = "";
-      for (let at = 1; at <= answer.length; at += 1) {
-        const text = textOf(draw(answer.slice(0, at), { streaming: true }));
-        if (/\]\(|\[[^\]]*\]$/u.test(text)) {
-          found.push(`raw marks at ${at}: ${text}`);
-        }
-        if (!text.startsWith(before.trimEnd())) {
-          found.push(`taken back at ${at}: ${before} -> ${text}`);
-        }
-        before = text;
-      }
-      expect(found).toStrictEqual([]);
-    },
-    SLOW_TEST
-  );
-
-  test("bold is bold from its first letter", () => {
-    expect(draw("It is **bo", { streaming: true })).toMatch(
-      /<strong[^>]*>bo<\/strong>/u
-    );
-  });
-});
-
-/** This process's own time on the processor so far, in milliseconds. */
-const now = () => {
-  const { user, system } = process.cpuUsage();
-  return (user + system) / 1000;
+/** A note's mark is a number up high, leading to its note; the note an item at the foot, each of its paragraphs leading back. */
+const notePartsOf = (
+  node: Tree,
+  inLink: boolean,
+  defined: Map<string, string>
+): [string, number][] => {
+  if (node.type === "footnoteReference" && defined.has(`^${node.identifier}`)) {
+    return [
+      ["<sup", 1],
+      ["<a\\b", inLink ? 0 : 1],
+    ];
+  }
+  if (node.type === "footnoteDefinition") {
+    const paragraphs = node.children.filter((kid) => kid.type === "paragraph");
+    const marks = Number(defined.get(`^${node.identifier}`) ?? 0);
+    // `↩`, `↩²`, `↩³`: a way back per mark, after each paragraph.
+    const each = Math.max(paragraphs.length, 1);
+    return [
+      ["<li", 1],
+      ["<a\\b", each * marks],
+      ["<sup", each * Math.max(marks - 1, 0)],
+    ];
+  }
+  return [];
 };
 
 /**
- * How many times longer `whole` takes than `small`, in this process's own time on the processor,
- * which does not grow while a busy machine runs others. One run of each, as a rule; should the
- * growth not be under `limit`, each is run again, up to twelve times, and the best of each is
- * taken: what a collection of garbage or a compile added to one run goes, and growth that is the
- * code's stays.
+ * The parts one node draws, by the elements' patterns: a paragraph in a list item or a note is its
+ * words, HTML outside a phrase a paragraph of text, a link in a link its words, and a table's row
+ * as many cells as its head at most.
  */
-const growthOf = (small: () => unknown, whole: () => unknown, limit = 24) => {
-  let fast = Number.POSITIVE_INFINITY;
-  let slow = Number.POSITIVE_INFINITY;
-  for (let run = 0; run < 12; run += 1) {
-    const start = now();
-    small();
-    const middle = now();
-    whole();
-    fast = Math.min(fast, middle - start);
-    slow = Math.min(slow, now() - middle);
-    if (slow / Math.max(fast, 1) < limit) {
-      break;
+const partsOf = (
+  node: Tree,
+  place: string,
+  inLink: boolean,
+  defined: Map<string, string>
+): [string, number][] => {
+  const parts = notePartsOf(node, inLink, defined);
+  const tag = tags[node.type];
+  if (tag !== undefined) {
+    parts.push([tag, 1]);
+  }
+  if (node.type === "table") {
+    const width = node.children[0]?.children.length ?? 0;
+    for (const row of node.children) {
+      parts.push(["<t[hd]\\b", Math.min(row.children.length, width)]);
     }
   }
-  return slow / Math.max(fast, 1);
+  if (node.type === "heading") {
+    parts.push([`<h${node.depth}\\b`, 1]);
+  }
+  const block = place === "block" || (place === "item" && node.type === "html");
+  if (block && (node.type === "paragraph" || node.type === "html")) {
+    parts.push(["<p\\b", 1]);
+  }
+  const url =
+    "url" in node
+      ? node.url
+      : defined.get("identifier" in node ? node.identifier : "");
+  const linked = /^(?:link|image)(?:Reference)?$/u.test(node.type);
+  if (linked && !inLink && safeHref(url, { relative: true }) !== null) {
+    parts.push(["<a\\b", 1]);
+  }
+  return parts;
 };
 
-describe("answers no real answer looks like", () => {
-  test("nesting thousands deep is drawn, as words past the depth a real answer has", () => {
-    for (const source of [`${"- ".repeat(3000)}a`, `${">".repeat(20_000)} a`]) {
-      const html = draw(source);
-      expect(textOf(html)).toContain("a");
-      expect(html.match(/<(?:ul|blockquote)\b/gu)?.length).toBeLessThan(40);
+describe("the parse is micromark's, block by block", () => {
+  test("every example reads as the whole parse does, cut into blocks", () => {
+    const differing = specs.filter(({ text }) => {
+      const source = text.replaceAll(/\r\n?/gu, "\n");
+      // Each block is read with the names the whole answer defines (parse.ts, `Names`).
+      const nodes = allNodes(parseMarkdown(source).children);
+      const of = (type: string) =>
+        nodes.flatMap((node) =>
+          node.type === type && "identifier" in node ? [node.identifier] : []
+        );
+      const names = {
+        links: of("definition"),
+        notes: of("footnoteDefinition"),
+      };
+      const { starts } = parse.blockStarts(source);
+      const blocks = starts.flatMap((start, at) =>
+        parse.readBlock(source.slice(start, starts[at + 1]), { names })
+      );
+      return shape(blocks) !== shape(parseMarkdown(source).children);
+    });
+    expect(differing.map(({ name }) => name)).toStrictEqual([]);
+    expect(specs.length).toBeGreaterThan(700);
+  });
+
+  test("every kind of node draws its part, for every example", () => {
+    const differing: string[] = [];
+    for (const { name, text } of specs) {
+      const tree = parseMarkdown(text.replaceAll(/\r\n?/gu, "\n"));
+      const defined = new Map(
+        definitionsIn(tree.children)
+          .toReversed()
+          .map((node) => [node.identifier, node.url])
+      );
+      // Each note's marks outside the notes, each a way back from the note.
+      const outside = tree.children.filter(
+        (node) => node.type !== "footnoteDefinition"
+      );
+      const marks = new Map<string, number>();
+      for (const node of allNodes(outside)) {
+        if (node.type === "footnoteReference") {
+          marks.set(node.identifier, (marks.get(node.identifier) ?? 0) + 1);
+        }
+      }
+      for (const node of allNodes(tree.children)) {
+        if (node.type === "footnoteDefinition" && marks.has(node.identifier)) {
+          defined.set(
+            `^${node.identifier}`,
+            String(marks.get(node.identifier))
+          );
+        }
+      }
+      const want: Record<string, number> = {};
+      const walk = (node: Tree, place: string, inLink: boolean) => {
+        for (const [pattern, times] of partsOf(node, place, inLink, defined)) {
+          want[pattern] = (want[pattern] ?? 0) + times;
+        }
+        const linked = /^(?:link|image)(?:Reference)?$/u.test(node.type);
+        let next = /^(?:paragraph|heading|tableCell)$/u.test(node.type)
+          ? "phrase"
+          : "block";
+        next = /^(?:listItem|footnoteDefinition)$/u.test(node.type)
+          ? "item"
+          : next;
+        for (const child of kids(node)) {
+          walk(child, place === "phrase" ? place : next, inLink || linked);
+        }
+      };
+      // A note no mark refers to is not drawn.
+      for (const node of tree.children) {
+        if (
+          node.type !== "footnoteDefinition" ||
+          defined.has(`^${node.identifier}`)
+        ) {
+          walk(node, "block", false);
+        }
+      }
+      const html = draw(text);
+      for (const [pattern, times] of Object.entries(want)) {
+        if (count(html, pattern) !== times) {
+          differing.push(
+            `${name}: ${pattern} ${count(html, pattern)} of ${times}`
+          );
+        }
+      }
+    }
+    expect(differing).toStrictEqual([]);
+  });
+});
+
+const JS = ["java", "script"].join("");
+const links = [
+  "See [the guide](https://example.com/guide) for more.",
+  "See [the guide](https://example.com/guide?a=1&b=2#part) now.",
+  'Titled [link](https://example.com/t "The title") here.',
+  "Mail [us](mailto:team@example.com) or call [us](tel:+3120123456).",
+  "A [path](/files/report) and a [relative](report.pdf) one.",
+  `A [script](${JS}:alert(1)) link.`,
+  `Cased [script](JaVa\tScRiPt:alert(1)) link.`,
+  "A [data](data:text/html,<b>x</b>) link.",
+  "A [vb](vbscript:msgbox) and a [file](file:///etc/passwd) link.",
+  "Elsewhere [//](//evil.example.com/x) link.",
+  "Angle <https://example.com/angle> link.",
+  "Bare https://example.com/bare/path?q=1 address.",
+  "Bare www.example.com/www address.",
+  "Mail team@example.com address.",
+  "Bare at the end https://example.com/end",
+  "[Reference][guide] link.\n\n[guide]: https://example.com/ref",
+  "[Collapsed][] link.\n\n[collapsed]: https://example.com/collapsed",
+  "[Shortcut] link.\n\n[shortcut]: https://example.com/shortcut 'Title'",
+  "[Undefined][nowhere] link.",
+  "A picture ![chart](https://example.com/chart.png) here.",
+  "A picture ![](https://example.com/empty.png) with no words.",
+  `A picture ![bad](${JS}:alert(1)) here.`,
+  "[Reference picture][pic]\n\n[pic]: https://example.com/pic.png",
+  "A [link with ![a picture](https://example.com/p.png) inside](https://example.com/outer).",
+  "A [link [inside](https://example.com/inner) a link](https://example.com/outer2).",
+  "**Bold [link](https://example.com/bold)** and *em [link](https://example.com/em)*.",
+  "`code [not](https://example.com/code)` and [after](https://example.com/after).",
+  "- [In a list](https://example.com/list)\n- [Second](https://example.com/second)",
+  "> [In a quote](https://example.com/quote)",
+  "| A | B |\n| - | - |\n| [cell](https://example.com/cell) | x |",
+  "1. [Ordered](https://example.com/ordered)\n   [nested](https://example.com/nested)",
+  "[Parens](https://example.com/a_(b)) and more.",
+  "[Angle dest](<https://example.com/a b>) here.",
+  "[Escaped \\] bracket](https://example.com/escaped).",
+  "[Unclosed](https://example.com/unclosed",
+  "[Two](https://example.com/one) [links](https://example.com/two) together.",
+  "Text ~~[struck](https://example.com/struck)~~ link.",
+  "# A [heading link](https://example.com/heading)",
+  "A footnote[^1] link.\n\n[^1]: See [the note](https://example.com/note).",
+  "Marks[^b] in [a link[^a]](https://example.com/l) and[^b].\n\n[^a]: A at https://example.com/bare\n\n[^b]: B.",
+  "Not yet[^later] defined, then[^none].\n\n[^later]: Here.",
+  "Back to back https://example.com/a,https://example.com/b end.",
+  "Trailing dot https://example.com/dot. Next.",
+  "In parens (https://example.com/paren) end.",
+  "Spaced [link] (https://example.com/space) is not a link.",
+  "Image link [![img](https://example.com/i.png)](https://example.com/wrap)",
+  "Emoji [🙂 link](https://example.com/emoji) and 中文 [链接](https://example.com/zh).",
+  "A [link](https://example.com/x\nsplit) over lines.",
+  '<a href="https://example.com/raw">raw HTML</a> stays text.',
+  "Autolink <mailto:a@example.com> and <tel:+31201234>.",
+  "A [link](  https://example.com/padded  ) padded.",
+  "[Def first]\n\n[def first]: https://example.com/first\n[def first]: https://example.com/second",
+  // A definition counts once finished: its address and title can no longer change.
+  "See [a] and ![pic][a].\n\n[a]:\nhttps://example.com/long/path",
+  'See [a] and ![pic][a].\n\n[a]:\nhttps://example.com/titled/path\n"The title"',
+  "See [a] and ![pic][a].\n\n[a]:\n<https://example.com/angle/path>",
+  "> See [a] and ![pic][a].\n>\n> [a]:\n> https://example.com/quoted/path",
+  "- See [a] and ![pic][a].\n\n- [a]:\n  https://example.com/listed/path",
+];
+
+describe("no address still being written, and none unsafe, is ever handed on", () => {
+  test("at every prefix of every case, streamed and cut off", () => {
+    const wrong: string[] = [];
+    for (const text of links) {
+      // Every address the whole answer writes, as written and as a link leads to it.
+      const tree = parseMarkdown(text);
+      const written = new Set(
+        allNodes(tree.children).flatMap((node) =>
+          "url" in node ? [node.url] : []
+        )
+      );
+      const leads = new Set(
+        [...written].map((url) => safeHref(url, { relative: true }))
+      );
+      for (let at = 1; at <= text.length; at += 1) {
+        for (const props of [{ streaming: true }, { truncated: true }]) {
+          const handed: string[] = [];
+          const take: MarkdownLinkRenderer = (link) => {
+            handed.push(link.href);
+          };
+          // A caller's `a` and `img` draw an anchor, as Markdown's own Link does.
+          const components: MarkdownComponents = {
+            a: ({ href, children }) => <a href={href}>{children}</a>,
+            img: ({ src }) => <a href={src}>picture</a>,
+          };
+          const html = [take, undefined].map((renderLink) =>
+            renderToStaticMarkup(
+              <MarkdownLinkProvider renderLink={take}>
+                <Markdown
+                  renderLink={renderLink}
+                  components={renderLink ? undefined : components}
+                  {...props}
+                >
+                  {text.slice(0, at)}
+                </Markdown>
+              </MarkdownLinkProvider>
+            )
+          );
+          const anchors = [
+            ...html.join("").matchAll(/<a [^>]*href="(?<href>[^"]*)"/gu),
+          ];
+          const drawn = anchors.map((found) =>
+            (found.groups?.href ?? "").replaceAll("&amp;", "&")
+          );
+          // A note's mark and its way back lead to an element there is.
+          const ids = new Set(
+            [...html.join("").matchAll(/ id="(?<id>[^"]*)"/gu)].map(
+              (found) => `#${found.groups?.id ?? ""}`
+            )
+          );
+          for (const href of [
+            ...handed.filter((url) => !written.has(url)),
+            ...drawn.filter((url) =>
+              url.startsWith("#") ? !ids.has(url) : !leads.has(url)
+            ),
+          ]) {
+            wrong.push(`${JSON.stringify(text.slice(0, at))} handed ${href}`);
+          }
+        }
+      }
+    }
+    expect(wrong).toStrictEqual([]);
+    expect(links).toHaveLength(57);
+  }, 120_000);
+});
+
+/** The kinds of node a block's tree holds. */
+const types = (nodes: parse.Block[]) =>
+  JSON.stringify(nodes).match(/"type":"\w+"/gu) ?? [];
+
+describe("what an answer may hold besides prose", () => {
+  test("a task is Checkbox's box, read only, said as done or not", () => {
+    const html = draw("- [x] Gather the comments\n- [ ] Share them\n- Plain");
+    expect(count(html, "<li")).toBe(3);
+    expect(count(html, "<input")).toBe(0);
+    expect(textOf(html)).toBe("DoneGather the commentsNot doneShare themPlain");
+  });
+
+  test("notes are numbered by their first mark, listed at the foot, and lead back", () => {
+    const source =
+      "B[^b], A[^a], B again[^b].\n\n[^a]: Note A.\n\n[^b]: Note B.";
+    const html = draw(source);
+    expect(textOf(html)).toBe("B1, A2, B again1.Note B. ↩ ↩2Note A. ↩");
+    expect(html).toContain('aria-label="Back to reference 1-2"');
+    const hrefs = [...html.matchAll(/href="#(?<id>[^"]*)"/gu)].map(
+      (found) => found.groups?.id ?? ""
+    );
+    expect(hrefs).toHaveLength(6);
+    for (const id of hrefs) {
+      expect(count(html, ` id="${id}"`)).toBe(1);
     }
   });
 
-  test("sections nest as deep as quotes and lists do, and deeper is words", () => {
-    const source = `${"<details>\n<summary>s</summary>\n\n".repeat(40)}x\n\n${"</details>\n\n".repeat(40)}`;
-    const html = draw(source);
-    expect(html.match(/data-slot="markdown-section"/gu)).toHaveLength(32);
-    expect(textOf(html)).toContain("&lt;details&gt;");
-    expect(textOf(html)).toContain("x");
+  test("a mark is as written until its note has come, while written too, as Streamdown draws it", () => {
+    const source = "First[^x] and[^y].\n\n[^y]: Why.";
+    expect(textOf(draw(source.slice(0, 18), { streaming: true }))).toBe(
+      "First[^x] and[^y]."
+    );
+    expect(textOf(draw(source, { streaming: true }))).toBe(
+      "First[^x] and1.Why. ↩"
+    );
+    expect(textOf(draw(source))).toBe("First[^x] and1.Why. ↩");
   });
 
-  test("a list ten deep is still a list ten deep", () => {
+  test("a caller's elements draw in Markdown's place, given the element's props and the node", () => {
+    const html = draw(
+      'See [the guide](https://example.com/guide "Guide"), `x`, ![c](https://e.com/c.png).\n\n```ts\nconst a = 1;\n```',
+      {
+        components: {
+          a: ({ href, title, children, node }) => (
+            <i data-href={href} data-title={title} data-node={node.type}>
+              {children}
+            </i>
+          ),
+          img: ({ src, alt }) => <img src={src} alt={alt} />,
+          code: ({ className, children, node }) => (
+            <kbd data-class={className} data-node={node.type}>
+              {children}
+            </kbd>
+          ),
+          p: ({ children }) => <section>{children}</section>,
+        },
+      }
+    );
+    expect(html).toContain(
+      '<section>See <i data-href="https://example.com/guide" data-title="Guide" data-node="link">the guide</i>, <kbd data-node="inlineCode">x</kbd>, <img src="https://e.com/c.png" alt="c"/>.</section>'
+    );
+    expect(html).toContain(
+      '<kbd data-class="language-ts" data-node="code">const a = 1;</kbd>'
+    );
+  });
+
+  test("while written, each word fades in, and each character where words have no spaces", () => {
+    const html = draw("你好 world and more", { streaming: true });
+    expect(count(html, "<span")).toBe(5);
+  });
+
+  test("soft breaks: a single newline is a line break when asked, a space otherwise", () => {
+    expect(count(draw("One\nTwo"), "<br")).toBe(0);
+    expect(count(draw("One\nTwo\nThree", { softBreaks: true }), "<br")).toBe(2);
+  });
+
+  test("a section folds: <details> with a <summary> line, nested; any other HTML stays text", () => {
+    const html = draw(
+      "<details>\n<summary>Outer **one**</summary>\n\nWords.\n\n<details open>\n<summary>Inner</summary>\n\nMore.\n\n</details>\n\n</details>\n\n<div>Other</div>\n\n<details>\n<summary>Never closed</summary>\n\nText."
+    );
+    expect(count(html, 'data-slot="markdown-section"')).toBe(2);
+    expect(html).toMatch(/<strong[^>]*>one<\/strong>/u);
+    expect(textOf(html)).toContain("&lt;div&gt;Other&lt;/div&gt;");
+    expect(textOf(html)).toContain(
+      "&lt;summary&gt;Never closed&lt;/summary&gt;"
+    );
+  });
+
+  test("sections nest 32 deep, and deeper is words", () => {
+    const source = `${"<details>\n<summary>s</summary>\n\n".repeat(40)}x\n\n${"</details>\n\n".repeat(40)}`;
+    const html = draw(source);
+    expect(count(html, 'data-slot="markdown-section"')).toBe(32);
+    expect(textOf(html)).toContain("&lt;details&gt;");
+  });
+});
+
+describe("while it is written, nothing shows that the whole answer will not", () => {
+  test("a list item starting with a bracket under a line is never a heading for a moment", () => {
+    for (const marker of ["-", "*", "+", "1.", "1)"]) {
+      for (const end of ["[", "[ ", "[x", "[ ]", "[x] "]) {
+        const html = draw(`Tasks:\n${marker} ${end}`, { streaming: true });
+        expect(count(html, "<h\\d")).toBe(0);
+      }
+    }
+  });
+
+  test("a mark of emphasis or code at the very end, and a closing fence half typed, wait", () => {
+    for (const mark of ["**", "*", "`", "~~", "__", "_"]) {
+      const html = draw(`The cost is ${mark}`, { streaming: true });
+      expect(textOf(html).trim()).toBe("The cost is");
+    }
+    const code = draw("```js\nconst a = 1;\n``", { streaming: true });
+    expect(code).toContain("const a = 1;");
+    expect(code).not.toContain("``");
+  });
+
+  test("a line that is only the start of a block's mark waits for what decides it", () => {
+    const cases = [
+      ["1. one\n2", "one"],
+      ["Tasks:\n-", "Tasks:"],
+      ["Tasks:\n- [", "Tasks:"],
+      ["Done.\n\n--", "Done."],
+      ["Done.\n\n<", "Done."],
+      ["Done.\n\n</det", "Done."],
+      ["Summary\n=", "Summary"],
+      ["Para\n#", "Para"],
+      ["See [the docs]", "See the docs"],
+    ];
+    const drawn = cases.map(([source = ""]) => {
+      const html = draw(source, { streaming: true });
+      return [source, textOf(html).trim(), count(html, "<h\\d")];
+    });
+    expect(drawn).toStrictEqual(
+      cases.map(([source, words]) => [source, words, 0])
+    );
+  });
+
+  test("no mark of emphasis shows at any prefix, a link being written after it too", () => {
+    const text = answers.find(({ name }) => name === "export")?.text ?? "";
+    const wrong: string[] = [];
+    for (let at = 1; at <= text.length; at += 1) {
+      const html = draw(text.slice(0, at), { streaming: true });
+      const words = textOf(html.replaceAll(/<code[^>]*>[^]*?<\/code>/gu, ""));
+      if (/[*~_]/u.test(words)) {
+        wrong.push(text.slice(Math.max(0, at - 30), at));
+      }
+    }
+    expect(wrong).toStrictEqual([]);
+    expect(text.length).toBeGreaterThan(1000);
+  });
+
+  test("a block read alone knows the answer's names: links and notes defined elsewhere", () => {
+    const names = { links: ["the guide"], notes: ["1"] };
+    const told = parse.readBlock("See [the guide] and a mark[^1].", {
+      names,
+    });
+    expect(types(told)).toContain('"type":"linkReference"');
+    expect(types(told)).toContain('"type":"footnoteReference"');
+    const alone = parse.readBlock("A mark[^2].");
+    expect(types(alone)).not.toContain('"type":"footnoteReference"');
+  });
+
+  test("a link's definition still being written is never a link", () => {
+    const source =
+      'See [the guide][ref].\n\n[ref]: https://example.com/guide "The guide"';
+    for (let at = 1; at < source.length; at += 1) {
+      const handed: string[] = [];
+      const html = draw(source.slice(0, at), {
+        streaming: true,
+        renderLink: (link) => {
+          handed.push(link.href);
+        },
+      });
+      expect([handed, count(html, "<a\\b")]).toStrictEqual([[], 0]);
+    }
+  });
+});
+
+describe("bounds a model's answer cannot pass", () => {
+  test("fenced code's marks are not counted against a paragraph's 1,000", () => {
+    const html = draw(`**Bold** words.\n\`\`\`\n${"*_".repeat(1000)}\n\`\`\``);
+    expect(count(html, "<strong")).toBe(1);
+  });
+
+  test("a link's name may be as long as CommonMark allows", () => {
+    const name = "n".repeat(500);
+    const html = draw(
+      `A [link][${name}].\n\n[${name}]: https://example.com/long`
+    );
+    expect(html).toContain('href="https://example.com/long"');
+  });
+
+  test("lists nest 32 deep, and deeper is drawn 32 deep", () => {
     const source = Array.from(
-      { length: 10 },
+      { length: 400 },
       (_, depth) => `${"  ".repeat(depth)}- level ${depth + 1}`
     ).join("\n");
     const html = draw(source);
-    expect(html.match(/<ul\b/gu)).toHaveLength(10);
-    expect(textOf(html)).toContain("level 10");
+    expect(count(html, "<ul")).toBe(32);
+    expect(textOf(html)).toContain("level 400");
   });
 
-  test("a short comment and a declaration stay words where they are", () => {
-    const html = draw(
-      "Before <!-- a note --> after.\n\n<!DOCTYPE html>\n\nEnd."
-    );
-    expect(textOf(html)).toContain("Before &lt;!-- a note --&gt; after.");
-    expect(textOf(html)).toContain("&lt;!DOCTYPE html&gt;");
+  test("a table draws at most 1,000 rows, and says how many more", () => {
+    const html = draw(`| a |\n| - |\n${"| x |\n".repeat(1500)}`);
+    expect(count(html, "<tr")).toBe(1001);
+    expect(textOf(html)).toContain("500 more rows");
   });
-
-  // Each took seconds before the bounds (brackets of 100 KB took 25). Time as the machine is busy
-  // is not steady, so what is held is the growth: an eighth of the size takes about an eighth of
-  // the time, where the parser's work had grown as its square. The paragraphs are 80 KB against
-  // 10 KB, both past the bound; scripts/markdown-parse.test.ts weighs every kind of paragraph and
-  // of block as it is read, and these the kinds whose drawing or whose repair while written had
-  // work of its own.
-  test.each([
-    ["brackets", (n: number) => `${"[".repeat(n)}a${"](b)".repeat(n)}`, 16_000],
-    ["stars", (n: number) => "*a".repeat(n), 40_000],
-    [
-      "a bracket left open before words",
-      (n: number) => `[${"word ".repeat(n)}`,
-      16_000,
-    ],
-    ["comments left open", (n: number) => "a <!-- ".repeat(n), 11_200],
-    [
-      "sections left open, 1,600 deep",
-      (n: number) => "<details>\n<summary>s</summary>\n\nx\n\n".repeat(n),
-      1600,
-    ],
-    [
-      "sections closed, 1,600 deep",
-      (n: number) =>
-        `${"<details>\n<summary>s</summary>\n\n".repeat(n)}${"</details>\n\n".repeat(n)}`,
-      1600,
-    ],
-    // Both past the budget of lines: the list's first 2,828 items are drawn as one, the rest as lines.
-    ["a list of 24,000 items", (n: number) => "- a\n".repeat(n), 24_000],
-    [
-      "lists of fifty items, a paragraph between",
-      (n: number) => `${"- a\n".repeat(50)}\nBetween.\n\n`.repeat(n),
-      160,
-    ],
-  ])(
-    "%s takes time in step with its length, written and while written",
-    (_, make, size) => {
-      for (const streaming of [false, true]) {
-        const eighth = make(size / 8);
-        const whole = make(size);
-        const growth = growthOf(
-          () => draw(eighth, { streaming }),
-          () => draw(whole, { streaming })
-        );
-        // Eight times the text: in step is 8, the square is 64. 24 is near their midpoint as a
-        // factor (three times the one, a third of the other).
-        expect(growth).toBeLessThan(24);
-      }
-    },
-    SLOW_TEST
-  );
 });
 
-describe("an answer longer than one piece", () => {
-  test(
-    "a list of 2,000 items is one list, and an ordered one counts on from its start",
-    () => {
-      const items = Array.from({ length: 2000 }, (_, at) => `item ${at}`);
-      const bullets = draw(items.map((item) => `- ${item}`).join("\n"));
-      expect(bullets.match(/<ul\b/gu)).toHaveLength(1);
-      expect(bullets.match(/<li\b/gu)).toHaveLength(2000);
-      const numbered = draw(
-        items.map((item, at) => `${at + 5}. ${item}`).join("\n")
-      );
-      expect(numbered.match(/<ol\b[^>]*>/gu)).toStrictEqual([
-        expect.stringContaining('start="5"'),
-      ]);
-      expect(numbered.match(/<li\b/gu)).toHaveLength(2000);
-      expect(textOf(numbered)).toContain("item 1999");
-    },
-    SLOW_TEST
-  );
+// Hostile answers: nesting past any stack, delimiter runs micromark weighs against each other, a
+// huge table, links by the thousand.
+const hostile: Record<string, (size: number) => string> = {
+  "deep nesting": (size) =>
+    `${"> ".repeat(size / 4)}a\n\n${Array.from({ length: size / 200 }, (_, at) => `${"  ".repeat(at % 50)}- a`).join("\n")}`,
+  "delimiter runs": (size) =>
+    `${"a*".repeat(size / 4)}\n${"*_".repeat(size / 4)}`,
+  "a huge table": (size) =>
+    `| a | b | c |\n|---|---|---|\n${"| **x** | [y](https://e.com) | `z` |\n".repeat(size / 39)}`,
+  "many links": (size) => "[a](https://example.com/x) ".repeat(size / 27),
+  "closing brackets": (size) => "a] ".repeat(size / 3),
+  "notes and tasks": (size) =>
+    `${"- [x] a[^1]\n".repeat(size / 24)}\n[^1]: n\n`,
+  "notes' marks and spaces left open": (size) =>
+    `${"a[^".repeat(size / 6)}${" ".repeat(size / 2)}`,
+  "lists nested 400 deep": (size) =>
+    Array.from(
+      { length: size / 400 },
+      (_, at) => `${"  ".repeat(at % 400)}- a`
+    ).join("\n"),
+  "sections left open": (size) =>
+    "<details>\n<summary>s</summary>\n\nx\n\n".repeat(size / 34),
+};
 
-  test(
-    "its marks are read to its end, and a link defined at its end leads there from its start",
-    () => {
-      const paragraphs = Array.from(
-        { length: 2500 },
-        (_, at) =>
-          `Paragraph ${at} of **the report**, with words enough to fill its line.`
-      );
-      const html = draw(
-        [
-          "See [the source][source] first.",
-          ...paragraphs,
-          "And [the last link](https://example.com/last).",
-          "[source]: https://example.com/source",
-        ].join("\n\n")
-      );
-      expect(html.length).toBeGreaterThan(150_000);
-      expect(anchors(html)).toStrictEqual([
-        "https://example.com/source",
-        "https://example.com/last",
-      ]);
-      expect(html.match(/<strong\b/gu)).toHaveLength(2500);
-    },
-    SLOW_TEST
-  );
-});
+// Each block wraps the one before it in 32 more sections: read first at the top, a block
+// is read again 32 deep, and its own sections inside it stop there too.
+const wrap = (inner: string) =>
+  `${"<details>\n<summary>s</summary>\n\n".repeat(32)}${inner}\n\n${"</details>\n\n".repeat(32)}`.trimEnd();
+const deepest = (html: string) => {
+  let open = 0;
+  let most = 0;
+  const stack: boolean[] = [];
+  for (const [tag] of html.matchAll(/<div\b[^>]*>|<\/div>/gu)) {
+    if (tag === "</div>") {
+      open -= Number(stack.pop() === true);
+    } else {
+      const section = tag.includes('data-slot="markdown-section"');
+      stack.push(section);
+      open += Number(section);
+      most = Math.max(most, open);
+    }
+  }
+  return most;
+};
 
-describe("footnotes", () => {
-  test("each reference has its own id, and the note leads back to the first", () => {
-    const html = draw("One[^1] and two[^1].\n\n- three[^1]\n\n[^1]: The note.");
-    const ids = [...html.matchAll(/id="(?<id>[^"]*-ref-[^"]*)"/gu)].map(
-      (match) => match.groups?.id
-    );
-    expect(ids.map((id) => id?.replace(/^.*-ref-/u, ""))).toStrictEqual([
-      "1-1",
-      "1-2",
-      "1-3",
-    ]);
-    expect(html).toContain(`href="#${ids[0] ?? ""}"`);
-  });
+describe("time and size grow in step with the answer", () => {
+  test("sections around sections already read stop at 32 deep, at once and without throwing", () => {
+    const blocks = [wrap("x")];
+    for (let at = 1; at <= 8; at += 1) {
+      blocks.push(wrap(blocks.at(-1) ?? ""));
+    }
+    const source = blocks.join("\n\n");
+    const start = performance.now();
+    const drawn = [draw(source), draw(source, { streaming: true })];
+    expect(performance.now() - start).toBeLessThan(5000);
+    expect(drawn.map(deepest)).toStrictEqual([32, 32]);
+  }, 120_000);
+
+  test("a long answer of sections around sections streams with no read much slower than the rest", async () => {
+    const blocks = [wrap("x")];
+    for (let at = 1; at <= 14; at += 1) {
+      blocks.push(wrap(blocks.at(-1) ?? ""));
+    }
+    const source = blocks.join("\n\n");
+    const times: number[] = [];
+    let most = 0;
+    for (let at = 500; at < source.length + 500; at += 500) {
+      // Each chunk drawn in a task of its own, as a page draws it.
+      // oxlint-disable-next-line no-await-in-loop -- one chunk after another, as they stream
+      await sleep(0);
+      const start = performance.now();
+      const html = draw(source.slice(0, at), { streaming: true });
+      times.push(performance.now() - start);
+      most = Math.max(most, deepest(html));
+    }
+    const sorted = times.toSorted((a, b) => a - b);
+    const median = sorted[Math.floor(sorted.length / 2)] ?? 0;
+    expect(most).toBe(32);
+    // The cache cleared whole, every block read again: reads of seven times the median and more.
+    expect(sorted.at(-1) ?? 0).toBeLessThan(Math.max(median, 1) * 6);
+  }, 600_000);
+
+  test.each(Object.entries(hostile))(
+    "%s: nine times the answer, whole and while written, under 27 times the time and 10 times the nodes",
+    (_, make) => {
+      const cost = (size: number) => {
+        let best = Number.POSITIVE_INFINITY;
+        let nodes = 0;
+        for (let run = 0; run < 5; run += 1) {
+          // A new answer each run, so none is read from what was read before.
+          const source = `${run}${make(size)}`;
+          // Whole, and as the end of an answer still being written.
+          const start = performance.now();
+          const html = draw(source);
+          draw(source, { streaming: true });
+          best = Math.min(best, performance.now() - start);
+          nodes = html.split("<").length;
+        }
+        return { time: Math.max(best, 1), nodes };
+      };
+      const [small, , large] = [4000, 12_000, 36_000].map(cost);
+      expect(large?.time ?? 0).toBeLessThan((small?.time ?? 0) * 27);
+      expect(large?.nodes ?? 0).toBeLessThan((small?.nodes ?? 0) * 10);
+    },
+    120_000
+  );
 });

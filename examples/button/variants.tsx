@@ -38,6 +38,9 @@ export default function ButtonVariants() {
       <Button variant="destructive" onClick={remove}>
         Delete workspace
       </Button>
+      <Button variant="success" onClick={work} successText="Approved">
+        Approve
+      </Button>
       <Button variant="link" onClick={() => toast("The guide would open here")}>
         Read the guide
       </Button>

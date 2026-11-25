@@ -22,7 +22,6 @@ test.use({
 const least = 24;
 
 const known = new Set([
-  "app-shell-01/basic: Projects",
   "badge/link: What is new",
   "container/settings: BUTTON",
   "field/legend: BUTTON",
@@ -32,7 +31,6 @@ const known = new Set([
   "markdown/host-links: Source 1",
   "markdown/host-links: Source 2",
   "markdown/sections-cases: BUTTON",
-  "page-header/band: Notes",
   "tooltip/link: Reports",
 ]);
 
@@ -66,14 +64,25 @@ for (const [component, paths] of byComponent) {
             rect.height > 1
           );
         };
+        // A link in running text, also through wrappers that hold it alone (a note's mark, up high).
         // oxlint-disable-next-line unicorn/consistent-function-scoping -- runs in the page, so it carries its own helpers
-        const inText = (element: Element) =>
-          element.tagName === "A" &&
-          [...(element.parentElement?.childNodes ?? [])].some(
-            (node) =>
-              node.nodeType === Node.TEXT_NODE &&
-              (node.textContent ?? "").trim().length > 0
+        const inText = (element: Element) => {
+          let inner: Element = element;
+          while (
+            inner.parentElement !== null &&
+            inner.parentElement.childNodes.length === 1
+          ) {
+            inner = inner.parentElement;
+          }
+          return (
+            element.tagName === "A" &&
+            [...(inner.parentElement?.childNodes ?? [])].some(
+              (node) =>
+                node.nodeType === Node.TEXT_NODE &&
+                (node.textContent ?? "").trim().length > 0
+            )
           );
+        };
         // What a finger at a point would press: the control, anything inside it, the label it
         // stands in, or (for a slider's thumb) the slider's own track.
         // oxlint-disable-next-line unicorn/consistent-function-scoping -- runs in the page, so it carries its own helpers

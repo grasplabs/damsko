@@ -15,7 +15,6 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   SidebarProvider,
-  SidebarRail,
   SidebarTrigger,
 } from "@grasp-os/ui/components/sidebar";
 import {
@@ -64,10 +63,10 @@ const places = [
   { name: "Messages", icon: MessageSquareIcon },
 ];
 
-// `collapsible="icon"`: it folds to a rail of its icons, from the trigger in the page's bar, the
-// rail along its edge or Cmd+B (Ctrl+B elsewhere), and each place then shows its words in a
-// tooltip. The rows within a place go while it is folded. A place not open to the person is
-// `disabled`: drawn at half strength, and no stop for Tab.
+// `collapsible="icon"`: it folds to a rail of its icons, from the trigger in the page's bar or
+// Cmd+B (Ctrl+B elsewhere), and each place then shows its words in a tooltip. The rows within a
+// place go while it is folded. A place not open to the person is `disabled`: drawn at half
+// strength, and no stop for Tab.
 export default function SidebarIcon() {
   return (
     <div {...stylex.props(layout.frame)}>
@@ -152,7 +151,6 @@ export default function SidebarIcon() {
               </SidebarGroupContent>
             </SidebarGroup>
           </SidebarContent>
-          <SidebarRail />
         </Sidebar>
         <SidebarInset>
           <header {...stylex.props(layout.bar)}>

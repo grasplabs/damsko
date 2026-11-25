@@ -145,3 +145,11 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
 ## Simple Icons
 
 Most of the brand marks the docs' examples show (`examples/brand-icon/logos.ts`, each with its source on the line above it) are drawn from Simple Icons (https://simpleicons.org), whose icon data is released under CC0 1.0 Universal (https://creativecommons.org/publicdomain/zero/1.0/): no notice is required, and this one is a courtesy. The marks themselves are trademarks of their owners, shown to name their products; Damsko ships none of them.
+
+## CommonMark Spec and GitHub Flavored Markdown Spec
+
+The Markdown tests' fixtures `scripts/fixtures/commonmark-spec.json` and `scripts/fixtures/gfm-spec.json` hold examples copied from these, each example's Markdown and the HTML its spec gives, with its number and section. They are tests, not shipped, and stay under their licence, Creative Commons Attribution-ShareAlike 4.0 International (https://creativecommons.org/licenses/by-sa/4.0/):
+
+- the CommonMark Spec 0.31.2, by John MacFarlane (https://spec.commonmark.org/0.31.2/, from its `spec.json`);
+- the GitHub Flavored Markdown Spec 0.29, by GitHub, Inc., based on the CommonMark Spec (https://github.github.com/gfm/), its extension examples, from cmark-gfm's `test/spec.txt` at 7fe8904ee31fa24b772ae565c4908b1394850de6 (https://github.com/github/cmark-gfm);
+- cmark-gfm's extensions test, by Yuki Izumi, from its `test/extensions.txt` at the same commit.

@@ -3,8 +3,8 @@
 import { Markdown } from "@grasp-os/ui/components/markdown";
 import { colors, font, space } from "@grasp-os/ui/lib/tokens.stylex";
 // An answer cut off part way. Stopped here: it is written, then stopped while a citation is half
-// written, and once streaming ends the half-written link goes. From history: the same cut answer
-// drawn later with `truncated`. Neither shows a raw mark.
+// written, and once it is stopped (`truncated`) the half-written link goes. From history: the same
+// cut answer drawn later with `truncated`. Neither shows a raw mark.
 import * as stylex from "@stylexjs/stylex";
 import { useEffect, useState } from "react";
 
@@ -51,7 +51,9 @@ export default function MarkdownCut() {
     <div {...stylex.props(layout.column)}>
       <p {...stylex.props(layout.label)}>Stopped here</p>
       <div data-cut="here" data-state={writing ? "writing" : "stopped"}>
-        <Markdown streaming={writing}>{cutOff.slice(0, shown)}</Markdown>
+        <Markdown streaming={writing} truncated={!writing}>
+          {cutOff.slice(0, shown)}
+        </Markdown>
       </div>
       <p {...stylex.props(layout.label)}>From history</p>
       <div data-cut="history">

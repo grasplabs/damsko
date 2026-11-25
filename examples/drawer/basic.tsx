@@ -52,7 +52,6 @@ export default function DrawerBasic() {
         <DrawerFooter>
           <DrawerClose>Cancel</DrawerClose>
           <Button
-            size="sm"
             onClick={save}
             loadingText="Saving"
             errorText="Could not save"

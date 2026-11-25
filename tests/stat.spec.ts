@@ -88,3 +88,22 @@ test("a group of Stat children reads as the same list", async ({ page }) => {
     )
   ).toBeLessThan(2);
 });
+
+test("while it loads a figure waits on a soft tile, a body line tall", async ({
+  page,
+}) => {
+  await openExample(page, "stat", "loading");
+  const tile = await page
+    .getByRole("listitem", { name: "Revenue" })
+    .evaluate((item) => {
+      const wait = item.querySelector("[data-slot=skeleton]");
+      return wait === null
+        ? null
+        : {
+            height: wait.getBoundingClientRect().height,
+            ground: getComputedStyle(wait).backgroundColor,
+          };
+    });
+  expect(tile?.height).toBe(24);
+  expect(tile?.ground).not.toBe("rgba(0, 0, 0, 0)");
+});

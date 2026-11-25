@@ -34,7 +34,7 @@ With `status="streaming"`, the words come in smoothly between chunks, never in b
 
 ## Stopped
 
-Stopped part way, the answer keeps the words it had written, says Stopped under them, and still offers its actions.
+Stopped part way, the answer keeps the words it had written and still offers its actions, with Stopped at the start of their row; a Message that holds no actions says it under the words. It shows once, however the answer and the actions are wrapped inside the Message.
 
 <Stage path="message/stopped" live label="Stopped" />
 
@@ -170,7 +170,9 @@ const answer: Record<ChatStatus, MessageStatus> = {
     {
       group: "Assistant",
       key: "Answer",
-      value: "Markdown at its default size",
+      value:
+        "Markdown at the message's size, its prose in the body's ink; plain words given straight to MessageContent stand in the page's ink",
+      tokens: ["body-foreground", "foreground"],
     },
     {
       group: "Both",
@@ -200,7 +202,8 @@ const answer: Record<ChatStatus, MessageStatus> = {
     {
       group: "Stopped",
       key: "Words",
-      value: "{text-sm}, the Stop icon, under the answer",
+      value:
+        "{text-sm}, the Stop icon, first on the actions' row, {space-3} before the first button; under the answer when it has no actions",
       tokens: ["muted"],
     },
     {

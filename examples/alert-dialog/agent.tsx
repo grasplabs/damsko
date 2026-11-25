@@ -91,7 +91,6 @@ const Ask = ({
           <AlertDialogCancel>Keep it</AlertDialogCancel>
           <Button
             variant={variant}
-            size="sm"
             onClick={run}
             loadingText={loadingText}
             errorText={errorText}

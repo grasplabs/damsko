@@ -29,7 +29,8 @@
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-is": "catalog:",
-    "recharts": "catalog:"
+    "recharts": "catalog:",
+    "remend": "catalog:"
   },
   "devDependencies": {
     "@astrojs/mdx": "catalog:",
@@ -52,6 +53,7 @@
     "babel-plugin-react-compiler": "catalog:",
     "country-flag-icons": "catalog:",
     "github-slugger": "catalog:",
+    "happy-dom": "catalog:",
     "lightningcss": "catalog:",
     "oxc-transform-react": "catalog:",
     "oxfmt": "catalog:",
