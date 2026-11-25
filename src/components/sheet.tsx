@@ -37,14 +37,13 @@ import {
   DrawerTrigger as TriggerPrimitive,
 } from "@ui-sdk/react/drawer";
 import type { DrawerDismissAttemptDetails } from "@ui-sdk/react/drawer";
-import { mergeProps } from "@ui-sdk/react/primitive";
 import { createContext, use, useLayoutEffect, useState } from "react";
 import type { ComponentProps, ReactNode } from "react";
 
 import { useReturnFocus } from "../hooks/use-return-focus";
 import { useI18n } from "../lib/i18n";
 import { Icon, XIcon } from "../lib/icons";
-import { keepBodyPut, keepCaret, useLayerBody } from "../lib/layer";
+import { keepBodyPut, useLayerBody } from "../lib/layer";
 import { focusRingInset, scrollbarHidden } from "../lib/styles";
 import {
   colors,
@@ -348,7 +347,7 @@ export const SheetContent = ({
       {/* The panel keeps UI SDK's own slot, drawer-content: named otherwise through its render
           element, UI SDK's focus trap no longer holds Tab inside it. */}
       <ContentPrimitive
-        {...mergeProps(rest, { ref: keepCaret })}
+        {...rest}
         {...stylex.props(
           panelMarker,
           dialogStyles.panel,

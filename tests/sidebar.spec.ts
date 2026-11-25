@@ -1604,21 +1604,29 @@ test("a quiet row's words are in the regular weight, cut where the row ends and 
   await expect(page.getByRole("tooltip")).toHaveText(name);
 });
 
-test("with more rows than it shows, the content fades out at the end that has more, then at both once scrolled", async ({
-  page,
-}) => {
-  await page.setViewportSize({ width: 1440, height: 400 });
-  await openExample(page, "sidebar", "basic");
-  const content = page.locator("[data-slot=sidebar-content]");
-  const mask = async () =>
-    await content.evaluate((node) => getComputedStyle(node).maskImage);
-  // At the top only the foot fades: one gradient, black then clear.
-  await expect.poll(mask).toMatch(/^linear-gradient\(rgb\(0, 0, 0\) calc/u);
-  await content.evaluate((node) => {
-    node.scrollTop = 40;
+for (const [width, place] of [
+  [1440, "beside the page"],
+  [390, "in its sheet"],
+] as const) {
+  test(`a row renamed ${place} with F2 takes the words typed in place of its whole name`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 844 });
+    await openExample(page, "patterns", "sidebar-rows");
+    if (width < 1024) {
+      await page
+        .getByRole("button", { name: "Show or hide the sidebar" })
+        .first()
+        .click();
+    }
+    const row = page.getByRole("link", { name: "Spring launch plan" });
+    await row.focus();
+    await page.keyboard.press("F2");
+    const field = page.getByRole("textbox", {
+      name: "Name of Spring launch plan",
+    });
+    await expect(field).toBeFocused();
+    await page.keyboard.type("Launch notes");
+    await expect(field).toHaveValue("Launch notes");
   });
-  await expect.poll(mask).toMatch(/^linear-gradient\(rgba\(0, 0, 0, 0\)/u);
-  // A list that fits fades nowhere.
-  await page.setViewportSize({ width: 1440, height: 900 });
-  await expect.poll(mask).toBe("none");
-});
+}

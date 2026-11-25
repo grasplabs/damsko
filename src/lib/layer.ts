@@ -187,57 +187,19 @@ const sureClose = (element: HTMLElement | null) =>
   element === null ? undefined : watchClose(element);
 
 /**
- * A layer's ref: a filled field that takes the focus as the layer opens keeps its words as they
- * are, the caret at their end, as the original's layers did; UI SDK selects them all, and a key
- * pressed then would replace a name that was meant to be edited. Focus that moves inside the layer
- * (Tab selects a field's words, as the browser does) is left alone. Returns the clean-up.
- */
-export const keepCaret = (element: HTMLElement | null) => {
-  if (element === null) {
-    return keep;
-  }
-  const keepWords = (event: FocusEvent) => {
-    const { target, relatedTarget } = event;
-    if (
-      !(target instanceof HTMLInputElement) ||
-      (relatedTarget instanceof Node && element.contains(relatedTarget))
-    ) {
-      return;
-    }
-    // UI SDK selects the words just after it moves the focus, in the same task.
-    queueMicrotask(() => {
-      const end = target.value.length;
-      if (
-        end > 0 &&
-        target.selectionStart === 0 &&
-        target.selectionEnd === end
-      ) {
-        target.setSelectionRange(end, end);
-      }
-    });
-  };
-  element.addEventListener("focusin", keepWords);
-  return () => {
-    element.removeEventListener("focusin", keepWords);
-  };
-};
-
-/**
  * A dialog panel's ref: it closes for sure once its leave has run, and grows from its trigger, with
  * no rise then (`--dialog-shift: 0px`; a rise would fight the origin). With no trigger it grows from
- * its own centre and keeps the rise. A filled field focused as it opens keeps its caret (keepCaret).
+ * its own centre and keeps the rise.
  */
 export const watchPanel = (element: HTMLElement | null) => {
   const stopClose = sureClose(element);
   const stopOrigin = transformOriginFromTrigger(element);
-  const stopCaret = keepCaret(element);
   if (element?.dataset.fromTrigger !== undefined) {
     element.style.setProperty("--dialog-shift", "0px");
   }
   return () => {
     stopClose?.();
     stopOrigin();
-    stopCaret();
   };
 };
 
