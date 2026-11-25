@@ -70,7 +70,12 @@ const layout = stylex.create({
 });
 
 // A person in a cell: their initials (the name beside it says who), their name and their email.
-const Person = ({ member }: { member: Member }) => (
+// The narrow table's example draws its people with it too.
+export const Person = ({
+  member,
+}: {
+  member: Pick<Member, "name" | "email">;
+}) => (
   <span {...stylex.props(layout.person)}>
     <Avatar name={member.name} size="sm" decorative>
       <AvatarFallback />

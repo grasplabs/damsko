@@ -180,3 +180,26 @@ test("a group's title stands over its card and names the group", async ({
     page.getByRole("region", { name: "Billing emails" })
   ).toBeVisible();
 });
+
+test("in a small card a value that cannot be changed starts where the field above it starts", async ({
+  page,
+}) => {
+  await openExample(page, "card", "compact");
+  const field = await page.getByRole("textbox", { name: "Name" }).boundingBox();
+  const value = await page
+    .getByText("On the sign-in page", { exact: true })
+    .boundingBox();
+  // The field's words stand a field's padding in from its edge; the value from the same edge.
+  expect(Math.abs((value?.x ?? 0) - (field?.x ?? 0))).toBeLessThanOrEqual(1);
+});
+
+test("a description breaks its lines as the browser does, as the original's: no pretty wrap", async ({
+  page,
+}) => {
+  await openExample(page, "card", "basic");
+  const style = await page
+    .locator("[data-slot=card-description]")
+    .first()
+    .evaluate((node) => getComputedStyle(node).textWrapStyle);
+  expect(style).toBe("auto");
+});

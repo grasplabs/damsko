@@ -8,7 +8,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
-  SidebarRail,
   SidebarTrigger,
 } from "@grasp-os/ui/components/sidebar";
 import {
@@ -56,8 +55,8 @@ const places = [
   { name: "Projects", icon: FolderKanbanIcon },
 ];
 
-// Off the canvas, the default: the trigger, the rail or Cmd+B (Ctrl+B elsewhere) slides it out past
-// its side, and the page takes the width. Folded, it is out of reach of Tab; the trigger brings it
+// Off the canvas, the default: the trigger or Cmd+B (Ctrl+B elsewhere) slides it out past its side,
+// and the page takes the width. Folded, it is out of reach of Tab; the trigger brings it
 // back.
 export default function SidebarCollapsible() {
   return (
@@ -85,7 +84,6 @@ export default function SidebarCollapsible() {
               </SidebarGroupContent>
             </SidebarGroup>
           </SidebarContent>
-          <SidebarRail />
         </Sidebar>
         <SidebarInset>
           <header {...stylex.props(layout.bar)}>

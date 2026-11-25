@@ -30,7 +30,7 @@ This is the one effort control for a chat: a Slider's `levels` stays for a level
 
 ## In a prompt input
 
-Among a [Prompt input](/components/prompt-input)'s tools, opening upwards with `side="top"`.
+Among a [Prompt input](/components/prompt-input)'s tools, opening upwards with `side="top"`. In a one-row prompt input short of room, a chip that shows the level (it has a `tooltip`) folds it to its maker's mark, and on a phone's row always; a chip that says the model's name keeps it whole, and the row goes tall instead once something is typed. At rest in a row too narrow for the chip it is away until something is typed. The prompt input decides, from its own room (see One row there).
 
 <Stage path="prompt-input/model" label="In a prompt input" />
 
@@ -62,8 +62,8 @@ Among a [Prompt input](/components/prompt-input)'s tools, opening upwards with `
       group: "Chip",
       key: "Look",
       value:
-        "An extra-small ghost Button, 28px: the logo, the words a size down (text-xs), a quiet chevron",
-      tokens: ["control-xs"],
+        "An extra-small ghost Button, 28px: the logo, the words a size down (text-xs), a quiet chevron. A model's name stands in ink; a level alone (with `tooltip`) is quiet until the pointer is on it",
+      tokens: ["control-xs", "foreground", "muted-foreground"],
     },
     {
       group: "Panel",

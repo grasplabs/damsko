@@ -146,3 +146,22 @@ test("a cut line shows its whole words in a tooltip, a line that fits has none",
   await page.clock.runFor(600);
   await expect(page.getByRole("tooltip")).toHaveCount(0);
 });
+
+test("the sans token loads whole: its fallback face finds Arial or one of its metric twins on the machine", async ({
+  page,
+}) => {
+  await openExample(page, "text", "sizes");
+  const loaded = await page.evaluate(async () => {
+    const family = getComputedStyle(document.body).getPropertyValue(
+      "--damsko-font-sans"
+    );
+    const faces = await document.fonts.load(`16px ${family}`);
+    const fallback = await document.fonts.load('16px "Geist Fallback"');
+    return {
+      faces: faces.length,
+      fallback: fallback.map((face) => face.status),
+    };
+  });
+  expect(loaded.faces).toBeGreaterThan(0);
+  expect(loaded.fallback).toStrictEqual(["loaded"]);
+});

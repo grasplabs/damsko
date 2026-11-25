@@ -81,7 +81,7 @@ A line is said once, when its status changes after it was drawn: when it finishe
       group: "Line",
       key: "Mark",
       value:
-        "In a step, an {icon-sm} seat, {space-3} to the words, level with the first line; in a trigger, beside the title, {space-2} to it; a dot, the alert when failed, or an icon",
+        "In a step, an {icon-sm} seat, {space-3} to the words, level with the first line; in a trigger, beside the title, {space-2} to it; a dot, the working mark (Agent indicator) on the trace's last running step, the alert when failed, or an icon",
       tokens: ["muted-foreground"],
     },
     {
@@ -101,7 +101,8 @@ A line is said once, when its status changes after it was drawn: when it finishe
     {
       group: "Status",
       key: "Running",
-      value: "Title in ink and in the shimmer, mark in ink",
+      value:
+        "Title in ink and in the shimmer; the working mark on the trace's last running line, a dot in ink on an earlier one, so a view never shows two",
       tokens: ["foreground"],
     },
     {

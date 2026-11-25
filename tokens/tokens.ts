@@ -188,6 +188,24 @@ export const groups: TokenGroup[] = [
             value: "oklch(0.173 0.028 169.36)",
             use: "The last stop: the dark at the centre of the glass.",
           },
+          {
+            name: "texture-strength",
+            category: "size",
+            value: "0.3",
+            use: "How strongly the light shows as a faint dither behind the head of the one thing a page is about (a banner, a side panel's cover): a texture you find, not a pattern you see.",
+          },
+          {
+            name: "texture-dot",
+            category: "size",
+            value: "0.75px",
+            use: "One dot of that dither: the light shows through a fine grid of these, the original's.",
+          },
+          {
+            name: "texture-pitch",
+            category: "size",
+            value: "3px",
+            use: "How far apart the dither's dots stand, each way.",
+          },
         ],
       },
       {
@@ -738,7 +756,7 @@ export const groups: TokenGroup[] = [
             name: "radius-lg",
             category: "radius",
             value: "calc({radius} - 4px)",
-            use: "A row: a menu or list item, a tree or sidebar row, a trigger that runs the width. The base less the 4px a container keeps round its rows, capped at half the row's height.",
+            use: "A row: a menu or list item, a tree row, a trigger that runs the width. The base less the 4px a container keeps round its rows, capped at half the row's height.",
           },
           {
             name: "radius-xl",
@@ -1094,11 +1112,24 @@ export const groups: TokenGroup[] = [
             use: "Where the approve light moves under a pointer: a step deeper.",
           },
           {
+            name: "success-light-press",
+            category: "size",
+            value: "0 100%",
+            use: "Where the approve light moves while pressed: its deepest part.",
+          },
+          {
             name: "success-glow",
             category: "colors",
             value: "oklch(0.8005 0.1625 165.25 / 0.5)",
             dark: "oklch(0.85 0.15 150 / 0.36)",
             use: "The mint an approving action casts under itself at rest: its light spilling onto the ground.",
+          },
+          {
+            name: "success-glow-hover",
+            category: "colors",
+            value: "oklch(0.8005 0.1625 165.25 / 0.7)",
+            dark: "oklch(0.85 0.15 150 / 0.52)",
+            use: "success-glow under a pointer: one step stronger.",
           },
           {
             name: "button-sheen",
@@ -1216,6 +1247,20 @@ export const groups: TokenGroup[] = [
             value:
               "{bevel-success-face}, 0 1px 3px -3px {success-glow}, {input-shadow}",
             use: "The bevelled edge of an approving action at rest, with its glow: held inside the field's lift under it, so beside another button it draws no taller (tests/button.spec.ts, its test of one height per size).",
+          },
+          {
+            name: "bevel-success-hover",
+            category: "shadow",
+            value:
+              "{bevel-success-face}, 0 4px 12px -7px {success-glow-hover}, {button-shadow-hover}",
+            use: "bevel-success under a pointer: the drop grows and the glow comes up.",
+          },
+          {
+            name: "bevel-success-press",
+            category: "shadow",
+            value:
+              "{bevel-success-face}, 0 2px 6px -6px {success-glow}, {button-shadow-active}",
+            use: "bevel-success while pressed: the drop and the glow tighten.",
           },
         ],
       },
@@ -1765,6 +1810,12 @@ export const groups: TokenGroup[] = [
             category: "colors",
             value: "oklch(0.965 0.014 150)",
             use: "The words on a tooltip.",
+          },
+          {
+            name: "tooltip-muted-foreground",
+            category: "colors",
+            value: "oklch(0.78 0.025 158)",
+            use: "The quiet words on a tooltip: the keys of its shortcut, at the end of its line.",
           },
           {
             name: "tooltip-delay",
@@ -3279,6 +3330,12 @@ export const groups: TokenGroup[] = [
             use: "The voice's field in a one-row prompt input once words are heard: short, beside the words, so no word stands on the light.",
           },
           {
+            name: "prompt-input-placeholder-min",
+            category: "size",
+            value: "6rem",
+            use: "The least width of a one-row prompt input's placeholder at rest: with less room, its model chip's level folds to the maker's mark, then the chip folds away until something is typed. Only then is the placeholder cut.",
+          },
+          {
             name: "prompt-input-light",
             category: "colors",
             value:
@@ -3522,6 +3579,18 @@ export const groups: TokenGroup[] = [
             category: "size",
             value: "8px",
             use: "A row's padding at its sides.",
+          },
+          {
+            name: "sidebar-row-radius",
+            category: "radius",
+            value: "6px",
+            use: "A row's corner, and a group's label's: a plain round corner, as the original's frame drew its rows. Its own token, not the row corner: the frame's rows are tighter than a list's.",
+          },
+          {
+            name: "sidebar-row-radius-lg",
+            category: "radius",
+            value: "10px",
+            use: "A large row's corner (the person at the sidebar's foot): the page card's corner and the rows' inset less the gutter, so it nests in the sidebar's foot.",
           },
           {
             name: "sidebar-icon-gap",
@@ -4176,12 +4245,6 @@ export const groups: TokenGroup[] = [
             value: "280px",
             use: "The width of a page title's placeholder while the page loads.",
           },
-          {
-            name: "page-header-dither-strength",
-            category: "size",
-            value: "0.3",
-            use: "How strongly the dither shows behind an inspector's head: a texture you find, not a pattern you see.",
-          },
         ],
       },
     ],
@@ -4792,6 +4855,7 @@ export const contrastPairs: ContrastPair[] = [
   { kind: "text", on: "code-block-marked", text: "body-foreground" },
   // A tooltip's words on its fill.
   { kind: "text", on: "tooltip", text: "tooltip-foreground" },
+  { kind: "text", on: "tooltip", text: "tooltip-muted-foreground" },
   // A sidebar's rows on its ground, and the current row's words on its fill.
   ...["foreground", "muted-foreground"].map((text): ContrastPair => ({
     kind: "text",

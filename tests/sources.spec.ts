@@ -114,6 +114,56 @@ test("a source with an address is a link that also tells the page; one without i
   ).toBeVisible();
 });
 
+test("a source shows its number after its title and the passage used under where it lives", async ({
+  page,
+}) => {
+  await openExample(page, "sources", "open");
+  const list = page.getByRole("list", { name: "Sources" });
+  const row = list.getByRole("listitem").first();
+  await expect(row).toContainText("Pricing page, 1,");
+  await expect(
+    row.getByText("Teams start at €12 per seat a month.")
+  ).toBeVisible();
+  // The title at a body size, the passage under it at the quiet size.
+  await expect(row.getByText("Pricing page", { exact: true })).toHaveCSS(
+    "font-size",
+    "14px"
+  );
+});
+
+test("an open list's head counts, orders and folds the list, and focus follows the button pressed", async ({
+  page,
+}) => {
+  await openExample(page, "sources", "open");
+  const list = page.getByRole("list", { name: "Sources" });
+  await expect(page.getByText("Sources · 3")).toBeVisible();
+  // The first source's title stands 45px under the heading's top, as the original's.
+  const [heading, first] = await Promise.all([
+    page.getByText("Sources · 3").boundingBox(),
+    list.getByText("Pricing page", { exact: true }).boundingBox(),
+  ]);
+  expect(
+    Math.abs((first?.y ?? 0) - (heading?.y ?? 0) - 45)
+  ).toBeLessThanOrEqual(1);
+  await page.getByRole("button", { name: "By kind" }).click();
+  await expect(list.getByRole("listitem").first()).toContainText(
+    "Notes from the pricing call"
+  );
+  // Reordered, each source still says its own number, as its citation in the answer does.
+  await expect(
+    list.getByRole("button", {
+      name: /^Notes from the pricing call\s*,\s*2\s*,/u,
+    })
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Fold them away" }).click();
+  await expect(list).toBeHidden();
+  const pile = page.getByRole("button", { name: /^3 sources/u });
+  await expect(pile).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(list).toBeVisible();
+  await expect(page.getByText("Sources · 3")).toBeFocused();
+});
+
 test("a source the person cannot open, or that could not be opened, says so and is not a link", async ({
   page,
 }) => {

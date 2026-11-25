@@ -1,7 +1,21 @@
 import { expect, test } from "@playwright/test";
-import type { Locator } from "@playwright/test";
+import type { Page, Locator } from "@playwright/test";
 
 import { hasFocusRing, openExample } from "./example.ts";
+
+/**
+ * The system's corner as this engine draws it: 20px in the squircle, or its plain-radius stand-in
+ * where the engine draws no squircle (Firefox), read from the token on a probe.
+ */
+const systemCorner = async (page: Page): Promise<string> =>
+  await page.evaluate(() => {
+    const probe = document.createElement("div");
+    probe.style.borderTopLeftRadius = "var(--damsko-radius-xl)";
+    document.body.append(probe);
+    const { borderTopLeftRadius } = getComputedStyle(probe);
+    probe.remove();
+    return borderTopLeftRadius;
+  });
 
 /** Whether a row's press has the keyboard's focus and its ring shows round the row it covers. */
 const ringsItsRow = async (press: Locator): Promise<boolean> =>
@@ -311,6 +325,27 @@ for (const theme of ["light", "dark"] as const) {
   });
 }
 
+test("an icon in its square stands in the middle of its row, on the title and its line", async ({
+  page,
+}) => {
+  await openExample(page, "item", "icon");
+  const title = page.getByText("Shared inbox");
+  const middles = await title.evaluate((node) => {
+    const row = node.closest("[data-slot=item]");
+    const tile = row
+      ?.querySelector("[data-slot=item-media]")
+      ?.getBoundingClientRect();
+    const words = row
+      ?.querySelector("[data-slot=item-content]")
+      ?.getBoundingClientRect();
+    return {
+      tile: (tile?.top ?? 0) + (tile?.height ?? 0) / 2,
+      words: (words?.top ?? 0) + (words?.height ?? 0) / 2,
+    };
+  });
+  expect(Math.abs(middles.tile - middles.words)).toBeLessThanOrEqual(0.5);
+});
+
 test("in a side panel's card an xs row's detail stays whole on one line, and its name gives way", async ({
   page,
 }) => {
@@ -337,4 +372,142 @@ test("in a side panel's card an xs row's detail stays whole on one line, and its
     (element) => element.scrollWidth > element.clientWidth
   );
   expect(givesWay).toBe(true);
+});
+
+test.describe("in a list that stacks", () => {
+  for (const [width, stacked] of [
+    [390, true],
+    [1280, false],
+  ] as const) {
+    test(`at ${width}px an xs row's detail ${stacked ? "stands under its name, which wraps whole" : "stays on the name's line"}`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height: 800 });
+      await openExample(page, "item", "stack");
+      const row = page
+        .getByRole("list", { name: "Files" })
+        .getByRole("listitem")
+        .nth(0);
+      const name = row.getByText(
+        "Notes from the planning day with the whole team",
+        {
+          exact: true,
+        }
+      );
+      const detail = row.getByText("Upload · Only you · 24 Nov 2026", {
+        exact: true,
+      });
+      const [nameBox, detailBox] = await Promise.all([
+        name.boundingBox(),
+        detail.boundingBox(),
+      ]);
+      const cut = await name.evaluate(
+        (element) => element.scrollWidth > element.clientWidth
+      );
+      if (stacked) {
+        expect(detailBox?.y ?? 0).toBeGreaterThanOrEqual(
+          (nameBox?.y ?? 0) + (nameBox?.height ?? 0) - 1
+        );
+        expect(cut).toBe(false);
+      } else {
+        expect(Math.round(detailBox?.y ?? 0)).toBe(Math.round(nameBox?.y ?? 1));
+      }
+    });
+  }
+});
+
+for (const [name, detail] of [
+  ["Amara Okafor", "Admin"],
+  ["Jonas Weber", "Editor"],
+] as const) {
+  test(`in a narrow list that stacks, ${name}'s row, of another size than xs, has its detail under the name`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 800 });
+    await openExample(page, "item", "stack-sizes");
+    const row = page
+      .getByRole("list", { name: "People" })
+      .getByRole("listitem")
+      .filter({ hasText: name });
+    const words = row.getByText(name, { exact: false }).first();
+    const [title, under] = await Promise.all([
+      words.evaluate((element) => {
+        const range = document.createRange();
+        const text = [...element.childNodes].find(
+          (node) =>
+            node.nodeType === Node.TEXT_NODE &&
+            (node.textContent ?? "").trim() !== ""
+        );
+        if (text === undefined) {
+          return null;
+        }
+        range.selectNodeContents(text);
+        const box = range.getBoundingClientRect();
+        return { left: box.left, bottom: box.bottom };
+      }),
+      row.getByText(detail, { exact: true }).boundingBox(),
+    ]);
+    expect(title).not.toBeNull();
+    expect(under?.y ?? 0).toBeGreaterThanOrEqual((title?.bottom ?? 0) - 1);
+    expect(Math.round(under?.x ?? 0)).toBe(Math.round(title?.left ?? 1));
+  });
+}
+
+test("while it loads, a bare icon waits as a block the icon's size, with its corner at half of it", async ({
+  page,
+}) => {
+  await openExample(page, "item", "loading");
+  const media = page
+    .getByRole("list", { name: "Files" })
+    .locator("[data-slot=item-media] [data-slot=skeleton]");
+  const box = await media.evaluate((node) => {
+    const own = node.getBoundingClientRect();
+    const holder = node.parentElement?.getBoundingClientRect();
+    return {
+      width: Math.round(own.width),
+      height: Math.round(own.height),
+      inside: holder !== undefined && own.bottom <= holder.bottom + 0.5,
+    };
+  });
+  expect(box).toStrictEqual({ width: 16, height: 16, inside: true });
+});
+
+test("an outline or muted row takes the system's corner, the card's 20px", async ({
+  page,
+}) => {
+  await openExample(page, "item", "basic");
+  const corner = await systemCorner(page);
+  for (const words of ["Quarterly summary", "Supplier list for the spring"]) {
+    const row = page.locator("[data-slot=item]", { hasText: words });
+    // oxlint-disable-next-line no-await-in-loop -- one row after the other
+    await expect(row).toHaveCSS("border-top-left-radius", corner);
+  }
+});
+
+test("in a side panel's card the hairline is the top of the row under it: a stacked row grows by it, a short row stays 44px", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openExample(page, "item", "stack");
+  const items = page
+    .getByRole("list", { name: "Files" })
+    .locator("[data-slot=item]");
+  const tops = await items.evaluateAll((all) =>
+    all.map((item) => getComputedStyle(item).borderTopWidth)
+  );
+  expect(tops[0]).toBe("0px");
+  expect(tops.slice(1).every((top) => top === "1px")).toBe(true);
+  // A name and its detail on two lines, 52px, and the hairline above: 53px, as the original's row.
+  const second = await items
+    .nth(1)
+    .evaluate((item) => item.getBoundingClientRect().height);
+  expect(second).toBeCloseTo(53, 0);
+  await openExample(page, "side-panel", "basic");
+  const short = await page
+    .getByText("Quarterly plan", { exact: true })
+    .evaluate(
+      (name) =>
+        name.closest("[data-slot=item]")?.getBoundingClientRect().height ?? 0
+    );
+  expect(short).toBeCloseTo(44, 0);
 });

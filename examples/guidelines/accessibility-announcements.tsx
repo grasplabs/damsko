@@ -1,11 +1,7 @@
 "use client";
 
 import { Button } from "@grasp-os/ui/components/button";
-import {
-  Message,
-  MessageContent,
-  MessageResponse,
-} from "@grasp-os/ui/components/message";
+import { Message, MessageContent } from "@grasp-os/ui/components/message";
 import { media, space } from "@grasp-os/ui/lib/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
 import { useRef, useState, useSyncExternalStore } from "react";
@@ -105,7 +101,8 @@ export default function AccessibilityAnnouncements() {
         </Button>
         <Message status={done ? "done" : "streaming"}>
           <MessageContent>
-            <MessageResponse>{words.slice(0, count).join(" ")}</MessageResponse>
+            {/* Plain words, not Markdown: in the page's ink. */}
+            {words.slice(0, count).join(" ")}
           </MessageContent>
         </Message>
       </div>

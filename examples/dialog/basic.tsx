@@ -52,7 +52,6 @@ export default function DialogBasic() {
         <DialogFooter>
           <DialogClose>Cancel</DialogClose>
           <Button
-            size="sm"
             onClick={publish}
             loadingText="Publishing"
             errorText="Could not publish"

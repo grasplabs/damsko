@@ -161,3 +161,12 @@ test("its line is its words alone, with no mark before them", async ({
   // Nothing is drawn before the words: no dot, no mark.
   expect(drawn.start).toBe(Math.round(box?.x ?? 0));
 });
+
+test("a finished step with nothing more to say says how long it took", async ({
+  page,
+}) => {
+  await openExample(page, "chain-of-thought", "live");
+  const steps = page.getByRole("list").getByRole("listitem");
+  await expect(steps.first()).toContainText("Planned the answer");
+  await expect(steps.first()).toContainText("0.9s");
+});

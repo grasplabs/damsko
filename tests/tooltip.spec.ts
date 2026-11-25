@@ -89,3 +89,54 @@ test("it holds nothing to focus", async ({ page }) => {
   await expect(tooltip.getByRole("button")).toHaveCount(0);
   await expect(tooltip.getByRole("link")).toHaveCount(0);
 });
+
+test("a shortcut's keys stand quiet at the end of the tooltip's line, no key cap", async ({
+  page,
+}) => {
+  await openExample(page, "tooltip", "shortcut");
+  await page.getByRole("button", { name: "Save" }).hover();
+  const tooltip = page.getByRole("tooltip");
+  await expect(tooltip).toBeVisible();
+  // The keys, in their own run of text (the platform's: ⌘S or Ctrl+S).
+  const keys = tooltip.getByText(/^\u2066?(?:⌘S|Ctrl\+S)\u2069?$/u);
+  const [key, box] = await Promise.all([
+    keys.boundingBox(),
+    tooltip.boundingBox(),
+  ]);
+  await expect(keys).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  await expect(keys).toHaveCSS("font-weight", "400");
+  // At the end of the line: its end edge a tooltip's padding from the tooltip's own.
+  expect(
+    (box?.x ?? 0) + (box?.width ?? 0) - ((key?.x ?? 0) + (key?.width ?? 0))
+  ).toBeLessThan(16);
+});
+
+test.describe("an info mark on a touch screen", () => {
+  test.use({ hasTouch: true, viewport: { width: 390, height: 844 } });
+
+  test("a tap opens what it says, and another closes it", async ({ page }) => {
+    await openExample(page, "tooltip", "info");
+    const mark = page.getByRole("button", {
+      name: "More about who can read it",
+    });
+    await mark.tap();
+    await expect(page.getByRole("tooltip")).toHaveText(
+      "Everyone in the workspace who can open the project"
+    );
+    await mark.tap();
+    await expect(page.getByRole("tooltip")).toBeHidden();
+  });
+  test("what it says is announced as a tap opens it", async ({ page }) => {
+    await openExample(page, "tooltip", "info");
+    const said = "Everyone in the workspace who can open the project";
+    await expect(
+      page.getByRole("status").filter({ hasText: said })
+    ).toHaveCount(0);
+    await page
+      .getByRole("button", { name: "More about who can read it" })
+      .tap();
+    await expect(
+      page.getByRole("status").filter({ hasText: said })
+    ).toHaveAttribute("aria-live", "polite");
+  });
+});

@@ -171,6 +171,18 @@ test("a very long output draws only the lines that show; opened, the first 2,000
   await expect(page.getByText("3000 more lines")).toBeVisible();
 });
 
+test("a block that never folds draws every line, past the 2,000 an opened one draws", async ({
+  page,
+}) => {
+  await openExample(page, "code-block", "whole");
+  const content = page.locator("[data-slot=code-block-content]");
+  await expect(content.getByText('"id": 600,')).toBeAttached();
+  await expect(content.locator("[data-slot=code-block-line]")).toHaveCount(
+    3004
+  );
+  await expect(page.getByText(/more lines/u)).toHaveCount(0);
+});
+
 test("when writing starts again, the code shown is the new code, never the code from before", async ({
   page,
 }) => {

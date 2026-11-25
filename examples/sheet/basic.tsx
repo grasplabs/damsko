@@ -71,7 +71,6 @@ export default function SheetBasic() {
         <SheetFooter>
           <SheetClose>Close</SheetClose>
           <Button
-            size="sm"
             onClick={archiving}
             loadingText="Archiving"
             errorText="Not archived"

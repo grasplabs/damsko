@@ -94,6 +94,42 @@ for (const theme of ["light", "dark"] as const) {
   });
 }
 
+test("round its words the place draws what will stand there, hidden from a screen reader and clear of the words", async ({
+  page,
+}) => {
+  await openExample(page, "empty", "action");
+  const sentence = page.getByText("Projects appear here once someone");
+  const found = await sentence.evaluate((node) => {
+    const place = node.closest("[data-slot=empty]")?.parentElement;
+    const words = node
+      .closest("[data-slot=empty-header]")
+      ?.getBoundingClientRect();
+    const bands = [
+      ...(place?.querySelectorAll(":scope > [aria-hidden=true]") ?? []),
+    ];
+    // Every piece of a band that is in view: none of them over the words.
+    const pieces = bands.flatMap((band) => {
+      const room = band.getBoundingClientRect();
+      return [...band.children]
+        .map((piece) => piece.getBoundingClientRect())
+        .filter(
+          (box) =>
+            box.height > 0 &&
+            box.top >= room.top - 1 &&
+            box.bottom <= room.bottom + 1
+        );
+    });
+    const over = pieces.filter(
+      (box) =>
+        words !== undefined && box.bottom > words.top && box.top < words.bottom
+    );
+    return { bands: bands.length, pieces: pieces.length, over: over.length };
+  });
+  expect(found.bands).toBe(2);
+  expect(found.pieces).toBeGreaterThanOrEqual(4);
+  expect(found.over).toBe(0);
+});
+
 test("the way on stands under the sentence and works", async ({ page }) => {
   await openExample(page, "empty", "action");
   const sentence = page.getByText("Projects appear here once someone");
@@ -142,4 +178,32 @@ test("a cleared search gives the list back and the focus to the search", async (
   await expect(search).toBeFocused();
   await expect(search).toHaveAttribute("placeholder", "Search projects");
   await expect(page.getByText(/No projects match/u)).toHaveCount(0);
+});
+
+test("every shape of what will stand in the place is drawn whole: no dither left at no size", async ({
+  page,
+}) => {
+  await openExample(page, "empty", "clearing");
+  const found = await page
+    .getByText("None yet.")
+    .first()
+    .evaluate(() => {
+      const fills = [
+        ...document.querySelectorAll(
+          "[data-slot=empty] ~ [aria-hidden=true] *"
+        ),
+        ...document.querySelectorAll(
+          "[aria-hidden=true]:has(~ [data-slot=empty]) *"
+        ),
+      ].filter((part) => getComputedStyle(part).backgroundImage !== "none");
+      return {
+        fills: fills.length,
+        empty: fills.filter((part) => {
+          const box = part.getBoundingClientRect();
+          return box.width === 0 || box.height === 0;
+        }).length,
+      };
+    });
+  expect(found.fills).toBeGreaterThan(20);
+  expect(found.empty).toBe(0);
 });

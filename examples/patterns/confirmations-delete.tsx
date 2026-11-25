@@ -58,7 +58,6 @@ export default function ConfirmationsDelete() {
           <AlertDialogCancel>Keep it</AlertDialogCancel>
           <Button
             variant="destructive"
-            size="sm"
             onClick={remove}
             loadingText="Deleting"
             errorText="Could not delete"
