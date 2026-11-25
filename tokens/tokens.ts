@@ -4740,6 +4740,21 @@ export const contrastPairs: ContrastPair[] = [
     on: "background",
     text,
   })),
+  // A Marker's words in a colour, on every ground (the rest of its colours on paper are measured
+  // above and below: the accents here, the statuses as status pairs, destructive as a field's error).
+  ...["background", "muted", "card"].map((on): ContrastPair => ({
+    kind: "text",
+    on,
+    text: "primary",
+  })),
+  ...["mint-deep", "pine", "lavender", "success", "warning", "info"].flatMap(
+    (text) =>
+      ["muted", "card"].map((on): ContrastPair => ({
+        kind: "text",
+        on,
+        text,
+      }))
+  ),
   ...["background", "card", "muted"].map((on): ContrastPair => ({
     kind: "ui",
     on,
