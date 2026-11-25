@@ -652,35 +652,13 @@ const styles = stylex.create({
 });
 
 const waits = stylex.create({
-  // The mark's square, at the row's size.
-  // Each box clips its skeleton to its own size and corner.
-  media: {
-    display: "flex",
-    flexShrink: 0,
-    width: sizes.controlDefault,
-    height: sizes.controlDefault,
-    overflow: "hidden",
-    borderRadius: `min(${radius.xl}, calc(${sizes.controlDefault} / 2))`,
-    cornerShape: radius.shape,
-  },
-  mediaSm: {
-    width: sizes.controlSm,
-    height: sizes.controlSm,
-    borderRadius: `min(${radius.xl}, calc(${sizes.controlSm} / 2))`,
-  },
-  // The bare icon's box, in line with the title: a block the icon's size, with the one corner
-  // capped at half of it, as the original's.
-  // Its placeholder is its own size (skeletonVars), never a control's height cut at its foot.
-  icon: {
-    [skeletonVars.block]: "100%",
-    display: "flex",
-    flexShrink: 0,
-    width: sizes.iconSm,
-    height: sizes.iconSm,
-    overflow: "hidden",
-    borderRadius: `min(${radius.xl}, calc(${sizes.iconSm} / 2))`,
-    cornerShape: radius.shape,
-  },
+  // The square's place; a placeholder's box, which its Skeleton fills; the square at the row's size.
+  square: { display: "flex", flexShrink: 0 },
+  box: { [skeletonVars.size]: "100%", display: "flex", flexShrink: 0 },
+  media: { width: sizes.controlDefault, height: sizes.controlDefault },
+  mediaSm: { width: sizes.controlSm, height: sizes.controlSm },
+  // The bare icon's box, in line with the title: a block the icon's size.
+  icon: { width: sizes.iconSm, height: sizes.iconSm },
   // The title's and the description's lines, as long as a short name and a short line.
   title: { display: "flex", width: "10rem", maxWidth: "100%" },
   description: { display: "flex", width: "14rem", maxWidth: "100%" },
@@ -741,24 +719,27 @@ export const ItemMedia = ({
   const sized = use(RowSize);
   const small = sized !== "default";
   if (use(RowLoading) && isBlank(children)) {
-    // The bare icon waits in line with the title; the square at the row's size.
-    return variant === "default" ? (
+    // The bare icon waits in line with the title; the square at the row's size. Each placeholder
+    // is its box's own size, so its ground and pixels are whole.
+    return (
       <span
         aria-hidden="true"
         data-slot="item-media"
-        {...stylex.props(styles.media, style)}
+        {...stylex.props(
+          variant === "default" ? styles.media : waits.square,
+          style
+        )}
       >
-        <span {...stylex.props(waits.icon)}>
+        <span
+          {...stylex.props(
+            waits.box,
+            variant === "default"
+              ? waits.icon
+              : [waits.media, small && waits.mediaSm]
+          )}
+        >
           <Skeleton variant="rectangular" />
         </span>
-      </span>
-    ) : (
-      <span
-        aria-hidden="true"
-        data-slot="item-media"
-        {...stylex.props(waits.media, small && waits.mediaSm, style)}
-      >
-        <Skeleton variant="rectangular" />
       </span>
     );
   }

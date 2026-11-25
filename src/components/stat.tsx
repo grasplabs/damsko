@@ -35,7 +35,7 @@ import {
   space,
 } from "../lib/tokens.stylex";
 import type { LayoutStyle } from "../lib/utils";
-import { iconVars } from "../lib/vars.stylex";
+import { iconVars, skeletonVars } from "../lib/vars.stylex";
 import { Skeleton } from "./skeleton";
 
 /** What the change means, in colour: no judgement, good, bad, worth a look, a plain note. */
@@ -193,19 +193,16 @@ const styles = stylex.create({
   info: { color: colors.info },
   // Loading: about four figures of the value at its size (a ch is a figure's width), so a figure
   // waits as wide as a figure, not across the cell, on the soft tile a rectangle stands on.
+  // The value waits on a rectangle's soft tile, 4ch of the value's size wide and a body line tall.
   skeletonValue: {
+    [skeletonVars.size]: "100%",
     display: "flex",
     width: "4ch",
     maxWidth: "100%",
+    height: font.textBaseLine,
     fontSize: font.textLg,
   },
   skeletonChange: { display: "flex", width: "35%" },
-  // The value waits on a rectangle's soft tile, a body line tall: the rectangle gives way to that
-  // height (it shrinks in a column), its pixels a space-1 inside it.
-  skeletonTile: {
-    flexDirection: "column",
-    height: font.textBaseLine,
-  },
 
   // The group: one box with the lift, its cells parted by hairlines: a hairline's gap between the
   // cells shows the box's ground, the line laid over the card's fill, one colour everywhere, so
@@ -361,7 +358,7 @@ const Body = ({
       </div>
       {loading ? (
         <div {...stylex.props(styles.figures)}>
-          <span {...stylex.props(styles.skeletonValue, styles.skeletonTile)}>
+          <span {...stylex.props(styles.skeletonValue)}>
             <Skeleton variant="rectangular" />
           </span>
           {change !== undefined && (
