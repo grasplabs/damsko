@@ -174,7 +174,11 @@ const Thread = () => {
               // One line under the last message read: what follows is new.
               row.id === LAST_READ ? (
                 <MessageScrollerItem key="unread" messageId="unread">
-                  <Marker variant="separator">
+                  <Marker
+                    variant="separator"
+                    color="primary"
+                    decorative={false}
+                  >
                     <MarkerContent>Unread</MarkerContent>
                   </Marker>
                 </MessageScrollerItem>

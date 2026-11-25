@@ -81,7 +81,8 @@ export interface MarkerProps {
   /**
    * A separator only: its rules are only drawn, and a screen reader reads its words as text. Set
    * it to `false` for a line a screen reader should announce as a separator (where the unread
-   * messages start), named by its MarkerContent; it then holds words only, no Button beside them.
+   * messages start), named by its MarkerContent; it then holds words only, no Button beside them,
+   * and is neither a status nor drawn as a link or button (`asChild`).
    * @default true
    */
   decorative?: boolean;
@@ -248,13 +249,18 @@ export const Marker = ({
       ? children
       : undefined;
   const contentId = useId();
-  const separator = variant === "separator" && !decorative;
+  // Only a separator of words: a status stays a status, and a caller's link or button keeps its role.
+  const separator =
+    variant === "separator" &&
+    !decorative &&
+    role === undefined &&
+    element === undefined;
   // A separator's children are not read: its words name it.
-  const named = separator && label === undefined;
+  const nameId = separator && label === undefined ? contentId : undefined;
   const own = {
-    role: role ?? (separator ? "separator" : undefined),
+    role: separator ? "separator" : role,
     "aria-label": label,
-    "aria-labelledby": named ? contentId : undefined,
+    "aria-labelledby": nameId,
     "data-slot": "marker",
     "data-variant": variant,
     ...stylex.props(
@@ -263,14 +269,13 @@ export const Marker = ({
       variant === "border" && styles.border,
       element !== undefined && styles.pressable,
       element !== undefined && focusRingText,
-      color !== "default" && styles.inked,
-      color !== "default" && inks[color],
+      color !== "default" && [styles.inked, inks[color]],
       style
     ),
   };
   return (
     <VariantContext value={variant}>
-      <ContentIdContext value={named ? contentId : undefined}>
+      <ContentIdContext value={nameId}>
         {element === undefined ? (
           <div {...own}>{children}</div>
         ) : (
