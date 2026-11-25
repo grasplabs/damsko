@@ -11,4 +11,9 @@ export const cornerFallbacks: Record<string, string> = {
   radius: "9px",
   "radius-sm": "4px",
   "radius-2xl": "11px",
+  // A part's own corners, at the round size the original drew.
+  "radius-md": "12px",
+  "sidebar-row-radius": "6px",
+  "sidebar-row-radius-lg": "10px",
+  "tree-view-guide-elbow": "12px",
 };

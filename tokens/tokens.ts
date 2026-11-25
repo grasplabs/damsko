@@ -749,8 +749,8 @@ export const groups: TokenGroup[] = [
           {
             name: "radius-md",
             category: "radius",
-            value: "12px",
-            use: "The page's card beside an inset sidebar: a plain round corner, as the app's main surface was drawn.",
+            value: "22px",
+            use: "The page's card beside an inset sidebar, the app's main surface: the squircle that reads like the original's round 12px, which is what a browser with no squircle draws.",
           },
           {
             name: "radius-lg",
@@ -786,7 +786,7 @@ export const groups: TokenGroup[] = [
             name: "radius-shape",
             category: "radius",
             value: "squircle",
-            use: "The shape of every corner on the scale, written as corner-shape after the radius, so the curve meets the edge without a seam. A pill and a circle leave it out.",
+            use: "The shape of every corner, written as corner-shape after the radius, so the curve meets the edge without a seam. A pill and a circle leave it out; a corner taken from the parent takes its shape too (inherit).",
           },
         ],
       },
@@ -3595,14 +3595,14 @@ export const groups: TokenGroup[] = [
           {
             name: "sidebar-row-radius",
             category: "radius",
-            value: "6px",
-            use: "A row's corner, and a group's label's: a plain round corner, as the original's frame drew its rows. Its own token, not the row corner: the frame's rows are tighter than a list's.",
+            value: "11px",
+            use: "A row's corner, and a group's label's: the squircle that reads like the original frame's round 6px, which is what a browser with no squircle draws. Its own token, not the row corner: the frame's rows are tighter than a list's.",
           },
           {
             name: "sidebar-row-radius-lg",
             category: "radius",
-            value: "10px",
-            use: "A large row's corner (the person at the sidebar's foot): the page card's corner and the rows' inset less the gutter, so it nests in the sidebar's foot.",
+            value: "18px",
+            use: "A large row's corner (the person at the sidebar's foot), so it nests in the sidebar's foot: the squircle that reads like the original's round 10px, which is what a browser with no squircle draws.",
           },
           {
             name: "sidebar-icon-gap",
@@ -4109,6 +4109,12 @@ export const groups: TokenGroup[] = [
             category: "space",
             value: "{space-4}",
             use: "How far each level of a tree stands in from the one above it.",
+          },
+          {
+            name: "tree-view-guide-elbow",
+            category: "radius",
+            value: "17px",
+            use: "The corner of a tree guide's elbow, which is also its height: as round as a row's middle and the gap above it allow, so it stays in its row. A browser with no squircle draws a round 12px.",
           },
           {
             name: "tree-view-row-padding",

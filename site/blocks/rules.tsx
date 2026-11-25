@@ -65,6 +65,7 @@ export const ruleStyles = stylex.create({
     transitionDuration: duration.hover,
     transitionTimingFunction: duration.ease,
     borderRadius: radius.xs,
+    cornerShape: radius.shape,
   },
 });
 

@@ -319,6 +319,8 @@ export const radius = stylex.defineConsts({
   // Sidebar: sidebar sizes.
   sidebarRowRadius: "var(--damsko-sidebar-row-radius)",
   sidebarRowRadiusLg: "var(--damsko-sidebar-row-radius-lg)",
+  // Tree: tree.
+  treeViewGuideElbow: "var(--damsko-tree-view-guide-elbow)",
 });
 
 export const shadow = stylex.defineConsts({

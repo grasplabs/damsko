@@ -42,6 +42,7 @@ const still = stylex.create({
     height: "fit-content",
     maxHeight: `calc(100% - 2 * ${size.dialogGutter})`,
     borderRadius: radius.xl,
+    cornerShape: radius.shape,
   },
 });
 

@@ -478,7 +478,6 @@ export const inputStyles = stylex.create({
     borderWidth: { default: 0, [FORCED]: 1 },
     borderStyle: "solid",
     borderColor: "currentColor",
-    cornerShape: radius.shape,
     backgroundColor: colors.inputBg,
     color: colors.foreground,
     fontFamily: font.sans,
@@ -498,16 +497,19 @@ export const inputStyles = stylex.create({
     minHeight: size.controlSm,
     paddingBlock: `calc((${size.controlSm} - ${font.textSmLine}) / 2)`,
     borderRadius: `min(${radius.xl}, calc(${size.controlSm} / 2))`,
+    cornerShape: radius.shape,
   },
   default: {
     minHeight: size.controlDefault,
     paddingBlock: `calc((${size.controlDefault} - ${font.textSmLine}) / 2)`,
     borderRadius: `min(${radius.xl}, calc(${size.controlDefault} / 2))`,
+    cornerShape: radius.shape,
   },
   lg: {
     minHeight: size.controlLg,
     paddingBlock: `calc((${size.controlLg} - ${font.textSmLine}) / 2)`,
     borderRadius: `min(${radius.xl}, calc(${size.controlLg} / 2))`,
+    cornerShape: radius.shape,
   },
   // Can be typed in or opened: the hairline deepens under a pointer.
   enabled: {
@@ -696,6 +698,7 @@ export const listStyles = stylex.create({
     minHeight: { default: size.controlDefault, [COARSE]: size.tapTarget },
     paddingBlock: `calc((${size.controlDefault} - ${font.textSmLine}) / 2)`,
     borderRadius: `min(${radius.lg}, calc(${size.controlDefault} / 2))`,
+    cornerShape: radius.shape,
     color: colors.foreground,
     fontSize: {
       default: font.textSm,

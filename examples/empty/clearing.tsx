@@ -107,7 +107,13 @@ const ghost = stylex.create({
     borderBlockStartStyle: "solid",
     borderBlockStartColor: colors.border,
   },
-  mark: { flexShrink: 0, width: 11, height: 11, borderRadius: radius.xs },
+  mark: {
+    flexShrink: 0,
+    width: 11,
+    height: 11,
+    borderRadius: radius.xs,
+    cornerShape: radius.shape,
+  },
   name: (width: string) => ({ width, height: 10 }),
   chip: {
     flexShrink: 0,

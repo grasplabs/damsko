@@ -196,6 +196,7 @@ const styles = stylex.create({
     position: "relative",
     marginInline: "auto",
     borderRadius: `${radius.xl} ${radius.xl} 0 0`,
+    cornerShape: radius.shape,
     width: { default: `min(${sizes.drawerWidth}, 100%)`, [PHONE]: "100%" },
     height: "fit-content",
     maxHeight: `min(${sizes.drawerHeight}, var(--visual-viewport-height, 100dvh) - ${sizes.dialogGutter})`,

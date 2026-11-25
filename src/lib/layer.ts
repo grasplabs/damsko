@@ -533,7 +533,6 @@ export const layerStyles = stylex.create({
     color: colors.bodyForeground,
     backgroundColor: colors.card,
     boxShadow: shadow.lg,
-    cornerShape: radius.shape,
     fontFamily: font.sans,
     // A panel that opens inside its trigger's parent (it is not portalled) would take that parent's
     // text: an end-aligned table cell would line its words up on the right. It sets its own, and
