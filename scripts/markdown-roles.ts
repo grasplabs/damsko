@@ -3,8 +3,9 @@
 // state, table and its cells' alignment, code and its language, quote, rule, section, notes), and
 // in each its words with their marks (`**strong**`, `*emphasis*`, `~~struck~~`, `` `code` ``,
 // `[words](address)`, `![alt](address)`, `^1` for a note's mark, `↩` for a note's way back, `⏎` for
-// a line break). A code block's and a table's controls are named after it (`[download copy]`, with
-// `off` while they wait); other controls, icons and words hidden from sight are left out. Read from the HTML of
+// a line break, `⟦tex⟧` for a formula in a sentence, `math tex` for one on lines of its own). A
+// code block's and a table's controls are named after it (`[download copy]`, with `off` while they
+// wait); other controls, icons and words hidden from sight are left out. Read from the HTML of
 // Streamdown (scripts/markdown-parity.ts) and of Markdown (scripts/markdown-parity.test.tsx).
 import { Window } from "happy-dom";
 import type { Element, Node } from "happy-dom";
@@ -73,6 +74,16 @@ const taskOf = (item: Element) => {
   return said?.textContent === "Done" ? "[x]" : "[ ]";
 };
 
+// A formula: KaTeX's (its TeX in its annotation, or as its error's words) or Markdown's (its TeX).
+const FORMULA = ".katex, .katex-error, [data-slot='markdown-math']";
+const DISPLAYED =
+  ".katex-display, [data-slot='markdown-math'][data-display], div > .katex-error";
+const texOf = (node: Element) =>
+  words(
+    node.querySelector("annotation")?.textContent ??
+      (attribute(node, "data-tex") || node.textContent)
+  ).trim();
+
 const MARKS: Record<string, string> = {
   STRONG: "**",
   B: "**",
@@ -93,6 +104,9 @@ const inline = (node: Node): string => {
   }
   if (node.matches(SKIPPED)) {
     return "";
+  }
+  if (node.matches(FORMULA)) {
+    return `⟦${texOf(node)}⟧`;
   }
   const kids = () => [...node.childNodes].map(inline).join("");
   const mark = node.matches("[data-streamdown='strong']")
@@ -118,6 +132,7 @@ type Out = string[];
 const isBlock = (node: Element, parent: Element) =>
   !node.matches(SKIPPED) &&
   (BLOCKS.test(node.tagName) ||
+    node.matches(DISPLAYED) ||
     // A paragraph Markdown draws as a span among an item's blocks.
     (node.tagName === "SPAN" &&
       parent.tagName === "DIV" &&
@@ -140,7 +155,7 @@ const children = (
   for (const kid of element.childNodes) {
     if (isElement(kid) && isBlock(kid, element)) {
       flush();
-      if (kid.tagName === "SPAN") {
+      if (kid.tagName === "SPAN" && !kid.matches(DISPLAYED)) {
         run = inline(kid);
         flush();
       } else {
@@ -224,7 +239,9 @@ const blockOf = (
 ) => {
   const indent = "  ".repeat(depth);
   const tag = element.tagName;
-  if (
+  if (element.matches(DISPLAYED)) {
+    out.push(`${indent}math ${texOf(element)}`);
+  } else if (
     element.matches(
       "[data-streamdown='code-block'], [data-slot='code-block'], pre"
     )

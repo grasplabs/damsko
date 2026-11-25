@@ -233,6 +233,14 @@ const styles = stylex.create({
     color: colors.foreground,
   },
   xsCode: { fontSize: `calc(${size.messageText} * 0.92)` },
+  // A formula in a sentence, and one on lines of its own, wider than the column scrolling sideways.
+  math: { direction: "ltr", unicodeBidi: "isolate" },
+  mathBlock: {
+    display: "block",
+    direction: "ltr",
+    overflowX: "auto",
+    overflowY: "hidden",
+  },
   list: {
     display: "flex",
     flexDirection: "column",
@@ -967,7 +975,65 @@ const Words = ({
   fading(at, value.length);
   return parts;
 };
-const framed = new Set(["code", "table", "thematicBreak"]);
+const framed = new Set(["code", "math", "table", "thematicBreak"]);
+
+/** Draws `tex` into `box` with KaTeX, loaded the first time; false once the formula has gone. */
+const drawFormula = async (
+  box: HTMLElement,
+  { tex, display }: { tex: string; display: boolean },
+  live: () => boolean
+) => {
+  const { default: katex } = await import("katex");
+  if (!live()) {
+    return false;
+  }
+  katex.render(tex, box, {
+    displayMode: display,
+    output: "mathml",
+    throwOnError: false,
+    errorColor: colors.mutedForeground,
+    trust: false,
+    strict: "ignore",
+  });
+  return true;
+};
+/**
+ * A formula, in TeX: drawn by KaTeX as MathML, which the browser lays out itself, once KaTeX has
+ * loaded (only a page with maths loads it), and its TeX as code until then and without script.
+ * KaTeX builds the nodes itself, never HTML from text; with `trust` off, no command in a formula
+ * can lead anywhere or add a class or a style, and one it cannot read is its TeX, muted.
+ */
+const Formula = ({ tex, display }: { tex: string; display: boolean }) => {
+  const box = useRef<HTMLSpanElement>(null);
+  const [drawn, setDrawn] = useState(false);
+  useEffect(() => {
+    let live = true;
+    const at = box.current;
+    const draw = async () => {
+      if (
+        at !== null &&
+        (await drawFormula(at, { tex, display }, () => live))
+      ) {
+        setDrawn(true);
+      }
+    };
+    void draw();
+    return () => {
+      live = false;
+    };
+  }, [tex, display]);
+  return (
+    <span
+      data-slot="markdown-math"
+      data-tex={tex}
+      data-display={display || undefined}
+      {...stylex.props(display ? styles.mathBlock : styles.math)}
+    >
+      <span ref={box} hidden={!drawn} />
+      {!drawn && <code {...stylex.props(styles.inlineCode)}>{tex}</code>}
+    </span>
+  );
+};
 /** A block in the answer's column: a framed one fades in whole while written; a section is its own. */
 const Placed = ({
   node,
@@ -1067,6 +1133,8 @@ const draw: { [T in Node["type"]]?: Draw<T> } = {
       styles.inlineCode,
       shared.size === "xs" && styles.xsCode,
     ]),
+  inlineMath: (node) => <Formula tex={node.value} display={false} />,
+  math: (node) => <Formula tex={node.value} display />,
   break: () => <br />,
   link: anchor,
   linkReference: anchor,

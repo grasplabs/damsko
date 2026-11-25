@@ -4,12 +4,13 @@
 // holds Markdown to it, without Streamdown. Streamdown is no dependency of this repository: install
 // the version below in a folder of its own and point STREAMDOWN_DIR at it, then run this.
 //
-//   mkdir /tmp/sd && cd /tmp/sd && npm init -y && npm install streamdown@2.8.1 react@19.3.1 react-dom@19.3.1
+//   mkdir /tmp/sd && cd /tmp/sd && npm init -y && npm install streamdown@2.8.1 react@19.3.1 react-dom@19.3.1 @streamdown/math@1.0.4
 //   STREAMDOWN_DIR=/tmp/sd node scripts/markdown-parity.ts
 //
 // While streaming, Streamdown is drawn as a chat draws it (`mode="streaming"`, `isAnimating`, its
 // remend repair), with its link prompt off so a link shows its address; whole, as a finished
-// document (`mode="static"`), so the specs' examples read as CommonMark has them.
+// document (`mode="static"`), so the specs' examples read as CommonMark has them. Its maths plugin
+// draws formulas, as Markdown does.
 import { writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
@@ -57,6 +58,12 @@ const main = async () => {
   const { Streamdown } = (await import(
     `${dir}/node_modules/streamdown/dist/index.js`
   )) as { Streamdown: React.FC<Record<string, unknown>> };
+  // SAFETY: as above; the plugin is what Streamdown's `plugins.math` takes.
+  // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- outside this repository's types
+  const { math } = (await import(
+    `${dir}/node_modules/@streamdown/math/dist/index.js`
+  )) as { math: unknown };
+  const plugins = { math };
   const draw = (text: string, streaming: boolean) =>
     rolesOf(
       server.renderToString(
@@ -68,8 +75,9 @@ const main = async () => {
                 isAnimating: true,
                 animated: true,
                 linkSafety: { enabled: false },
+                plugins,
               }
-            : { mode: "static", linkSafety: { enabled: false } },
+            : { mode: "static", linkSafety: { enabled: false }, plugins },
           text
         )
       ),

@@ -221,7 +221,7 @@ describe("drawn as Streamdown draws it", () => {
       "a quote in an item": 4,
       "a section waits": 2,
       "a table's head waits": 9,
-      [HELD]: 363,
+      [HELD]: 365,
       "addresses by safeHref": 51,
       "addresses still being written are words": 20,
       "no empty cells added": 18,

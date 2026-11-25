@@ -2,23 +2,29 @@
 // GitHub's additions) while it is the same, and the end still being written made whole by remend.
 import { fromMarkdown } from "mdast-util-from-markdown";
 import { gfmFromMarkdown } from "mdast-util-gfm";
+import { mathFromMarkdown } from "mdast-util-math";
 import { gfm } from "micromark-extension-gfm";
+import { math } from "micromark-extension-math";
 import remend from "remend";
 
 /** A Markdown syntax tree (mdast). */
 export type MarkdownRoot = ReturnType<typeof fromMarkdown>;
 export type RootContent = MarkdownRoot["children"][number];
 
-// Strike-through is two tildes, as a model writes it (`20~25°C` is a tilde). micromark weighs each
+// Strike-through is two tildes, as a model writes it (`20~25°C` is a tilde); maths is between two
+// dollars, as Streamdown reads it (`$5 and $6` are prices), in a sentence or as lines of its own. micromark weighs each
 // emphasis or link mark of a paragraph against those before it, so many unmatched ones cost their
 // number squared (`a*` repeated: 1.7 s for 40 KB): a block with a paragraph of more than 1,000 (its
 // fenced code aside) is read without them, as words, and without `![^1]`, a note's mark after a `!`,
 // which looks back for its picture.
 const OFF =
   "attention strikethrough labelStartLink labelStartImage labelEnd gfmPotentialFootnoteCall";
-const GFM = [gfm({ singleTilde: false })];
+const GFM = [
+  gfm({ singleTilde: false }),
+  math({ singleDollarTextMath: false }),
+];
 const PLAIN = [...GFM, { disable: { null: OFF.split(" ") } }];
-const FROM = [gfmFromMarkdown()];
+const FROM = [gfmFromMarkdown(), mathFromMarkdown()];
 /** The names an answer defines, as the tree has them. */
 export interface Names {
   links: readonly string[];
@@ -59,9 +65,18 @@ const told = ({ links, notes }: Names) => {
   // Before a link's or a picture's first mark (`[`, `!`).
   return { text: { 33: construct, 91: construct } };
 };
-const FENCE = /^ {0,3}(?<fence>`{3,}|~{3,})(?<info>.*)$/u;
+// A fence: of code, or (`$$`) of maths, whose words after it hold no dollar (`$$x$$` is maths in a
+// sentence).
+const FENCE = /^ {0,3}(?<fence>`{3,}|~{3,}|\${2,})(?<info>.*)$/u;
+const fenceOf = (line: string) => {
+  const found = FENCE.exec(line)?.groups;
+  return found?.fence?.startsWith("$") === true &&
+    found.info?.includes("$") === true
+    ? undefined
+    : found;
+};
 const closes = (line: string, open: string) => {
-  const { fence = "", info = "x" } = FENCE.exec(line)?.groups ?? {};
+  const { fence = "", info = "x" } = fenceOf(line) ?? {};
   return (
     fence.startsWith(open.slice(0, 1)) &&
     fence.length >= open.length &&
@@ -71,7 +86,7 @@ const closes = (line: string, open: string) => {
 /** The fence open after `line`, `fence` the one open before it (`` when none). */
 const fenceAfter = (fence: string, line: string) => {
   if (fence === "") {
-    return FENCE.exec(line)?.groups?.fence ?? "";
+    return fenceOf(line)?.fence ?? "";
   }
   return closes(line, fence) ? "" : fence;
 };
@@ -151,7 +166,7 @@ const sectionEnd =
 
 /** What ends the block `line` opens, if it does not end on that line. */
 const endOf = (line: string): End | null => {
-  const fence = FENCE.exec(line)?.groups?.fence;
+  const fence = fenceOf(line)?.fence;
   if (fence !== undefined) {
     return until((next) => closes(next, fence));
   }
@@ -228,8 +243,13 @@ export const inOpenFence = (text: string) => {
  */
 export const openCode = (block: string) => {
   const [first = "", ...lines] = block.split("\n");
-  const { fence, info = "" } = FENCE.exec(first)?.groups ?? {};
-  if (fence === undefined || lines.some((line) => closes(line, fence))) {
+  const { fence, info = "" } = fenceOf(first) ?? {};
+  // Maths still being written is read, made whole by remend.
+  if (
+    fence === undefined ||
+    fence.startsWith("$") ||
+    lines.some((line) => closes(line, fence))
+  ) {
     return null;
   }
   const last = lines.at(-1)?.trim() ?? "";
@@ -242,11 +262,10 @@ export const openCode = (block: string) => {
 const REPAIR = {
   singleTilde: false,
   comparisonOperators: false,
-  katex: false,
 } as const;
 /**
  * The block still being written made whole (remend: bold from its first letter, a half link one to
- * nowhere, a half picture's address nowhere), with none of its rewrites that would draw a whole
+ * nowhere, a half picture's address nowhere, maths closed), with none of its rewrites that would draw a whole
  * answer otherwise. remend closes no emphasis opened before the half link it ends in, so that is
  * closed after it, as remend closes it for the words before.
  */

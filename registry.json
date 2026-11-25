@@ -2060,9 +2060,12 @@
       "description": "An agent's answer in Markdown, shown as formatted text, even while it is still arriving.",
       "dependencies": [
         "@stylexjs/stylex",
+        "katex",
         "mdast-util-from-markdown",
         "mdast-util-gfm",
+        "mdast-util-math",
         "micromark-extension-gfm",
+        "micromark-extension-math",
         "remend"
       ],
       "registryDependencies": [

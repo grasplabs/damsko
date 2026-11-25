@@ -231,6 +231,36 @@ test("untrusted text: a script stays text, a data link is words, a picture never
   await expect(page.getByRole("img")).toHaveCount(0);
   await expect(page.getByText("a tracking pixel")).toBeVisible();
   expect(requests).toStrictEqual([]);
+  // KaTeX draws the formula, with no link in it.
+  const formula = page.locator("[data-slot=markdown-math]");
+  await expect(formula.locator(".katex, .katex-error")).toHaveCount(1);
+  await expect(formula.locator("a, [href]")).toHaveCount(0);
+});
+
+test("maths: a formula in a sentence and on lines of its own, drawn as MathML by KaTeX, loaded only for maths, a dollar alone a dollar", async ({
+  page,
+}) => {
+  // A page without maths loads none of KaTeX.
+  const loaded: string[] = [];
+  page.on("request", (request) => {
+    if (/katex/iu.test(request.url())) {
+      loaded.push(request.url());
+    }
+  });
+  await openExample(page, "markdown", "answer");
+  await expect(page.getByRole("table")).toBeVisible();
+  expect(loaded).toStrictEqual([]);
+  await openExample(page, "markdown", "math");
+  const formulas = page.locator("[data-slot=markdown-math]");
+  await expect(formulas).toHaveCount(5);
+  await expect(formulas.locator("math")).toHaveCount(5);
+  await expect(page.locator("math[display=block]")).toHaveCount(1);
+  await expect(page.locator("math[display=block] annotation")).toHaveText(
+    "x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}"
+  );
+  await expect(
+    page.getByText("A price such as $5 stays a price.")
+  ).toBeVisible();
 });
 
 test("tasks are said as done or not, and a rule separates", async ({
