@@ -83,11 +83,11 @@ export interface Runs {
  * The most runs the lines a block draws may have and be coloured: drawn lines Prism reads as more
  * (a block opened on minified code, generated data, thousands of lines) are plain, all of them. A
  * folded block draws few lines, so it is coloured; opened, it is weighed again. Every run is a node
- * the page draws, all in one frame when the block opens: 10,000, some 2,000 lines of ordinary code,
- * hold that one frame about 30 ms longer than the same lines as text (Chromium 54 ms, Firefox 62
- * against 32, WebKit 88 against 59).
+ * the page draws, all in one frame when the block opens: 5,000, some 1,000 to 1,300 lines of
+ * ordinary code, is what that frame holds in Chromium, Firefox and WebKit, on CI's two-core runners
+ * too, no more than 100 ms past the same lines as text. 10,000 held it 146 ms past them there.
  */
-export const MOST_RUNS = 10_000;
+export const MOST_RUNS = 5000;
 
 /** A run of code and what Prism says it is, outermost first. */
 export interface Segment {
