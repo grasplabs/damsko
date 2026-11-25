@@ -284,10 +284,7 @@ const styles = stylex.create({
     // (a detail on its own line) is one hairline taller, and a short row stays 44px.
     borderBlockStartWidth: {
       default: null,
-      [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: {
-        default: null,
-        ":is([data-slot=item-separator] + *)": sizes.hairline,
-      },
+      [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: itemVars.lineAbove,
     },
     borderBlockStartStyle: "solid",
     borderBlockStartColor: "transparent",
@@ -618,7 +615,15 @@ const styles = stylex.create({
       },
     },
   },
-  row: { display: "grid", minWidth: 0 },
+  // A list's row: after a hairline, it tells its Item so (itemVars.lineAbove).
+  row: {
+    [itemVars.lineAbove]: {
+      default: "0px",
+      ":is([data-slot=item-separator] + *)": sizes.hairline,
+    },
+    display: "grid",
+    minWidth: 0,
+  },
   // In a side panel's card the hairline is the top of the row after it, and takes no height.
   separator: {
     display: "grid",

@@ -385,3 +385,31 @@ test("an outline or muted row takes the system's corner, the card's 20px", async
     await expect(row).toHaveCSS("border-top-left-radius", "20px");
   }
 });
+
+test("in a side panel's card the hairline is the top of the row under it: a stacked row grows by it, a short row stays 44px", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openExample(page, "item", "stack");
+  const items = page
+    .getByRole("list", { name: "Files" })
+    .locator("[data-slot=item]");
+  const tops = await items.evaluateAll((all) =>
+    all.map((item) => getComputedStyle(item).borderTopWidth)
+  );
+  expect(tops[0]).toBe("0px");
+  expect(tops.slice(1).every((top) => top === "1px")).toBe(true);
+  // A name and its detail on two lines, 52px, and the hairline above: 53px, as the original's row.
+  const second = await items
+    .nth(1)
+    .evaluate((item) => item.getBoundingClientRect().height);
+  expect(second).toBeCloseTo(53, 0);
+  await openExample(page, "side-panel", "basic");
+  const short = await page
+    .getByText("Quarterly plan", { exact: true })
+    .evaluate(
+      (name) =>
+        name.closest("[data-slot=item]")?.getBoundingClientRect().height ?? 0
+    );
+  expect(short).toBeCloseTo(44, 0);
+});
