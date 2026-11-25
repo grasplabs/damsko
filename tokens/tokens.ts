@@ -2473,7 +2473,7 @@ export const groups: TokenGroup[] = [
           {
             name: "skeleton-wave-speed",
             category: "size",
-            value: "520",
+            value: "900",
             use: "How fast the wave's light travels, in pixels a second: slow enough to read as light, not a flash.",
           },
           {

@@ -662,7 +662,7 @@
   /* The width of the band of light that crosses a wave placeholder. */
   --damsko-skeleton-band: 420px;
   /* How fast the wave's light travels, in pixels a second: slow enough to read as light, not a flash. */
-  --damsko-skeleton-wave-speed: 520;
+  --damsko-skeleton-wave-speed: 900;
   /* The share of a wave's pass the light rests before the next one. */
   --damsko-skeleton-wave-rest: 0.2;
   /* How far the wave is from upright: a placeholder lower on the page is reached this much later. */
