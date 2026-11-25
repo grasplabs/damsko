@@ -3,6 +3,8 @@
 // list popup Select shares, and the letters that matched are drawn in the text colour. An item can
 // carry `media` (an avatar, a logo) and a `description` line under its words, as a person does; the
 // chosen item's media stands at the field's start, and the field's own `media` while there is none.
+// With `multiple` it takes several values, each a chip in the field (its media, its words, a button
+// that takes it away), with no chevron.
 //
 //   <Field>
 //     <FieldLabel>Country</FieldLabel>
@@ -11,6 +13,7 @@
 //   <Combobox items={[{ type: "group", label: "Europe", items }]}>
 //     <ComboboxEmpty>No city has that name</ComboboxEmpty>
 //   </Combobox>
+//   <Combobox multiple items={people} placeholder="Add people" />
 //   <Combobox
 //     media={<Icon icon={UsersIcon} />}
 //     items={[{ value: "amara", label: "Amara Okafor", description: "Operations", media: <Avatar … /> }]}
