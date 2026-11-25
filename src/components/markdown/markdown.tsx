@@ -1260,6 +1260,7 @@ const useBlocks = (
 ) => {
   const source = children.replaceAll(/\r\n?/gu, "\n");
   const starts = useStarts(source);
+  parse.nextPass();
   const open = streaming || truncated;
   const last = open ? (starts.at(-1) ?? 0) : source.length;
   let end = source.slice(last);

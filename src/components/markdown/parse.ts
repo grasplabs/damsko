@@ -374,9 +374,16 @@ const lessRows = (block: string) => {
   };
 };
 
-// Blocks read once, while the same, up to 2 MB of their source in all.
-const cache = new Map<string, Block[]>();
+// Blocks read once, while the same, up to 2 MB of their source in all: past that, the ones used
+// longest ago go first, but never one used in this pass (since the answer being drawn began its
+// reads, `nextPass`), so an answer that needs more keeps what it reads now.
+const cache = new Map<string, { nodes: Block[]; pass: number }>();
 let cached = 0;
+let pass = 0;
+/** Starts a pass: an answer is about to read its blocks. */
+export const nextPass = () => {
+  pass += 1;
+};
 
 /** A block's nodes, read once while it is the same; the block still being written is not kept. */
 export const readBlock = (block: string, reading: Reading = {}): Block[] => {
@@ -385,7 +392,10 @@ export const readBlock = (block: string, reading: Reading = {}): Block[] => {
   const key = `${depth} ${JSON.stringify(names)}${block}`;
   const known = open ? undefined : cache.get(key);
   if (known !== undefined) {
-    return known;
+    // Used again: the newest.
+    cache.delete(key);
+    cache.set(key, { nodes: known.nodes, pass });
+    return known.nodes;
   }
   const { text, more } = lessRows(open ? repair(block) : block);
   const nodes =
@@ -395,12 +405,15 @@ export const readBlock = (block: string, reading: Reading = {}): Block[] => {
     Object.assign(table, { more });
   }
   if (!open) {
+    cache.set(key, { nodes, pass });
     cached += key.length;
-    if (cached > 2_000_000) {
-      cache.clear();
-      cached = key.length;
+    for (const [old, entry] of cache) {
+      if (cached <= 2_000_000 || entry.pass === pass) {
+        break;
+      }
+      cache.delete(old);
+      cached -= old.length;
     }
-    cache.set(key, nodes);
   }
   return nodes;
 };
