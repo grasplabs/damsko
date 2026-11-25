@@ -1,9 +1,9 @@
 // CodeBlock's highlighting (src/components/code-block-prism.ts): Prism reads a block's code whole,
 // in the worker, and the page turns its runs into lines. The colours are Prism's for the whole
 // text, on this repository's own files; a grammar is looked up only among its own names; while
-// code is written the lines the last read ended keep their colours and the rest is plain; a line
-// that is the same from one read to the next is one object; and the page's part grows with the
-// code, not faster.
+// code is written the lines the last read ended keep their colours and the rest is plain; the lines
+// a block draws are coloured only up to MOST_RUNS runs; a line that is the same from one read to
+// the next is one object; and the page's part grows with the code, not faster.
 //
 //   pnpm exec vp test scripts/code-block-prism.test.ts
 import { readFileSync } from "node:fs";
@@ -14,6 +14,7 @@ import { describe, expect, test } from "vitest";
 import {
   colouredLines,
   colouredOf,
+  MOST_RUNS,
   isPrism,
   languages,
   linesOf,
@@ -207,6 +208,35 @@ describe(colouredLines, () => {
     expect(lines[0]).not.toBeTypeOf("string");
     expect(lines[0]?.length).toBeGreaterThan(1);
     expect(lines.slice(1)).toStrictEqual(["const b = 2;", "const c = 3;"]);
+  });
+
+  test("while code is written, a line no newline has ended is plain, even read as it is now", () => {
+    const code = "const a = 1;\nconst b";
+    const read = readWhole(code, "typescript");
+    const lines = colouredLines(code, read, ALL, true);
+    expect(lines[0]).not.toBeTypeOf("string");
+    expect(lines[1]).toBe("const b");
+    // Done, it is coloured whole.
+    expect(
+      colouredLines(code, read, ALL).every((line) => typeof line !== "string")
+    ).toBeTruthy();
+  });
+
+  test("lines past MOST_RUNS runs are plain, all of them, and fewer lines drawn are coloured", () => {
+    const code = Array.from(
+      { length: 3000 },
+      (_, n) => `const a${n} = ${n};`
+    ).join("\n");
+    const read = readWhole(code, "typescript");
+    expect(read.past).toBeTruthy();
+    const made = read.lines.reduce((sum, line) => sum + line.length, 0);
+    expect(made).toBeLessThanOrEqual(MOST_RUNS);
+    // Folded, its first lines are coloured; opened, every line drawn is plain.
+    const folded = colouredLines(code, read, 12);
+    expect(folded.every((line) => typeof line !== "string")).toBeTruthy();
+    const open = colouredLines(code, read, ALL);
+    expect(open).toHaveLength(3000);
+    expect(open.every((line) => typeof line === "string")).toBeTruthy();
   });
 
   test("runs read for other code colour nothing", () => {
