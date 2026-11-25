@@ -19,7 +19,7 @@ A title that names it, a sentence under it, and the action that finishes it. The
 
 ## Only words
 
-As it opens, focus moves to the first control a Tab would reach in it (a group's chosen item, never a hidden one), else to the panel itself, as UI SDK chooses; Escape or a press outside closes it. A popover that only explains can keep focus on its trigger with `initialFocus="none"`.
+A popover that only explains holds no control, so focus stays on its trigger as it opens: no ring frames the panel, and Escape or a press outside closes it. With a control in it, the first takes focus. `initialFocus` changes either.
 
 <Stage path="popover/explains" live label="Only words" />
 
@@ -141,7 +141,7 @@ An icon-only trigger can say what its popover is for with a Tooltip round it. Th
       group: "Input",
       key: "Opening",
       value:
-        "Its trigger, by pointer, Enter or Space. Focus moves to the first control a Tab would reach, or to the panel when it holds none; a tap focuses the panel, so no keyboard appears.",
+        "Its trigger, by pointer, Enter or Space. Focus moves to the first control, or to the panel when it holds none; a tap focuses the panel, so no keyboard appears.",
     },
     {
       group: "Input",

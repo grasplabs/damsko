@@ -9,8 +9,8 @@ import {
 } from "@grasp-os/ui/components/popover";
 import { Icon, InfoIcon } from "@grasp-os/ui/lib/icons";
 
-// A popover that only explains: it holds no control, so `initialFocus="none"` keeps focus on its
-// trigger as it opens (no ring frames the panel), and Escape or a press outside closes it.
+// A popover that only explains: it holds no control, so focus stays on its trigger as it opens
+// (no ring frames the panel), and Escape or a press outside closes it.
 export default function PopoverExplains() {
   return (
     <Popover>
@@ -20,7 +20,7 @@ export default function PopoverExplains() {
           Roles
         </Button>
       </PopoverTrigger>
-      <PopoverContent initialFocus="none">
+      <PopoverContent>
         <PopoverHeader>
           <PopoverTitle>Roles</PopoverTitle>
           <PopoverDescription>

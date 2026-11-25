@@ -90,7 +90,7 @@ test("a failed action says so and keeps it open", async ({ page }) => {
   await expect(popover).toBeVisible();
 });
 
-test("one that only explains keeps focus on its trigger with initialFocus none", async ({
+test("one that holds no control leaves focus on its trigger", async ({
   page,
 }) => {
   await openExample(page, "popover", "explains");

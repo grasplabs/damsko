@@ -33,7 +33,7 @@ import type {
   PopoverDismissReason,
 } from "@ui-sdk/react/popover";
 import { renderElement } from "@ui-sdk/react/primitive";
-import { createContext, use, useState } from "react";
+import { createContext, use, useRef, useState } from "react";
 import type { ComponentProps, ReactNode } from "react";
 
 import { watchBody } from "../lib/layer";
@@ -408,18 +408,34 @@ export interface PopoverContentProps extends Omit<
    */
   align?: ContentPrimitiveProps["align"];
   /**
-   * Where focus goes when it opens. By default UI SDK's choice: the first control a Tab would reach
-   * in it (a group's chosen item, never a hidden one), else the panel itself. `"none"` leaves focus
-   * on the trigger, for a popover that only explains.
+   * Where focus goes when it opens. By default the first field or control in it; when it holds
+   * none (words only), focus stays on the trigger, so no ring frames the panel and Escape still
+   * closes it. `"content"` focuses the panel itself; `"none"` always leaves focus on the trigger.
    */
   initialFocus?: ContentPrimitiveProps["initialFocus"];
   /** Layout only. */
   style?: LayoutStyle;
 }
 
+// What can take focus by Tab inside the panel: its first one, if any.
+const TABBABLE =
+  "button:not([disabled]), [href], input:not([disabled]):not([type=hidden]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex='-1']), [contenteditable='true']";
+const firstTabbable = (body: HTMLElement): HTMLElement | null => {
+  // The body itself, when it scrolls, is a stop of its own (a region the keys can scroll).
+  if (body.tabIndex >= 0) {
+    return body;
+  }
+  return (
+    [...body.querySelectorAll<HTMLElement>(TABBABLE)].find(
+      (element) => element.getClientRects().length > 0
+    ) ?? null
+  );
+};
+
 /** The panel, beside its trigger. Under 640px it takes the window's width less the gutter. */
 export const PopoverContent = ({
   children,
+  initialFocus,
   style,
   ...rest
 }: PopoverContentProps) => {
@@ -428,15 +444,29 @@ export const PopoverContent = ({
   // so the keys can scroll it (WCAG 2.1.1), as a Dialog's body does.
   const [scrolls, setScrolls] = useState(false);
   const [title, setTitle] = useState<string>();
-  const box = (element: HTMLDivElement | null) =>
-    element === null
+  const body = useRef<HTMLDivElement | null>(null);
+  const box = (element: HTMLDivElement | null) => {
+    body.current = element;
+    return element === null
       ? undefined
       : watchBody(element, "dialog", setTitle, setScrolls);
+  };
+  // The first control in it, else the trigger, which holds focus as it opens. Where a tap left
+  // focus on nothing (the page), the panel takes it, as UI SDK's own default does.
+  const firstOrTrigger = () => {
+    const first = body.current === null ? null : firstTabbable(body.current);
+    if (first !== null) {
+      return first;
+    }
+    const held = document.activeElement;
+    return held instanceof HTMLElement && held !== document.body ? held : null;
+  };
   return (
     <ContentPrimitive
       anchor={anchor}
       {...rest}
       data-slot="popover-content"
+      initialFocus={initialFocus ?? firstOrTrigger}
       sideOffset={popup.popoverGap}
       collisionPadding={popup.gutter}
       {...stylex.props(popoverMarker, styles.panel, style)}
