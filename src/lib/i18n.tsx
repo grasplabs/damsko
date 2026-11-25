@@ -575,6 +575,8 @@ export interface I18nCatalog {
     csv: string;
     /** What a ticked task says to a screen reader. */
     done: string;
+    /** A drawn diagram's name, its code its description. */
+    diagram: string;
     /** The name of a diagram's download button, whose menu holds the formats. */
     downloadDiagram: string;
     /** The name of a table's download button, whose menu holds the formats. */
@@ -1344,6 +1346,7 @@ const english: I18nCatalog = {
     copyTable: "Copy table",
     csv: "CSV",
     done: "Done",
+    diagram: "Mermaid diagram",
     downloadDiagram: "Download diagram",
     downloadTable: "Download table",
     footnote: (number: number) => `Footnote ${number}`,

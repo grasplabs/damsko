@@ -1,7 +1,7 @@
 // A finished `mermaid` fence in Markdown, drawn as its diagram, as Streamdown draws one: Mermaid,
-// loaded only when a diagram is drawn, at its strict security level; the code in CodeBlock until it
-// has drawn, and for good when it cannot. Download (SVG, PNG or the code as MMD), Copy and full
-// screen beside it, and zoom and a drag to move it in its view.
+// loaded only when a diagram is drawn, at its strict security level, once it is near the screen;
+// the code in CodeBlock until it has drawn, and for good when it cannot. Download (SVG, PNG or the
+// code as MMD), Copy and full screen beside it, and zoom, a drag and the arrow keys to move it.
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
@@ -16,8 +16,9 @@ import {
   ZoomInIcon,
   ZoomOutIcon,
 } from "../../lib/icons";
+import { focusRing, visuallyHidden } from "../../lib/styles";
 import { colors, radius, space } from "../../lib/tokens.stylex";
-import { saveFile } from "../../lib/utils";
+import { nothing, saveFile } from "../../lib/utils";
 import { Button } from "../button";
 import * as Code from "../code-block";
 import {
@@ -40,13 +41,17 @@ const styles = stylex.create({
     overflow: "hidden",
     minHeight: 160,
     padding: space["4"],
+    // Mermaid's default theme draws dark lines: the diagram stands on the light surface in either
+    // mode.
+    colorScheme: "light",
     backgroundColor: colors.background,
     borderRadius: radius.md,
     cornerShape: radius.shape,
     cursor: "grab",
-    touchAction: "none",
+    // A finger scrolls the answer up and down past a diagram; across, it moves the diagram.
+    touchAction: "pan-y",
   },
-  big: { height: "100%", minHeight: "60vh" },
+  big: { height: "100%", minHeight: "60vh", touchAction: "none" },
   drawing: {
     display: "flex",
     justifyContent: "center",
@@ -64,52 +69,130 @@ const styles = stylex.create({
   },
 });
 
-// Zoom as Streamdown's: from half to three times, a tenth a step.
+// Zoom as Streamdown's: from half to three times, a tenth a step. The arrow keys move it 40px.
 const LEAST = 0.5;
 const MOST = 3;
 const STEP = 0.1;
+const NUDGE = 40;
 
 /**
- * Mermaid's drawing as nodes, parsed inert (a template never runs what it holds), less any script
- * or handler left in it: Mermaid's strict level already removes them.
+ * Settings a diagram's own `%%{init}%%` may not change: Mermaid's own (its security level, its
+ * limits), and every one that would put HTML, a style or a font from elsewhere in the drawing.
  */
-const nodesOf = (svg: string) => {
-  const template = document.createElement("template");
-  template.innerHTML = svg;
-  for (const element of template.content.querySelectorAll("*")) {
-    if (element.localName === "script") {
+const SECURE = [
+  "secure",
+  "securityLevel",
+  "startOnLoad",
+  "maxTextSize",
+  "suppressErrorRendering",
+  "maxEdges",
+  "htmlLabels",
+  "flowchart",
+  "themeCSS",
+  "fontFamily",
+  "altFontFamily",
+  "themeVariables",
+];
+// A node drawn as a picture (`A@{ img: "…" }`) loads it while Mermaid draws: such a fence is code.
+const PICTURE = /@\{[^}]*\bimg\s*:/u;
+
+// What a drawing may hold: SVG's own shapes, text and styles, nothing that leads or loads.
+const TAGS = new Set([
+  "svg",
+  "g",
+  "path",
+  "rect",
+  "circle",
+  "ellipse",
+  "line",
+  "polyline",
+  "polygon",
+  "text",
+  "tspan",
+  "textPath",
+  "defs",
+  "marker",
+  "style",
+  "title",
+  "desc",
+  "clipPath",
+  "linearGradient",
+  "radialGradient",
+  "stop",
+  "pattern",
+  "mask",
+  "symbol",
+  "use",
+]);
+const ELSEWHERE = /url\(\s*['"]?(?!#)|@import/iu;
+
+/**
+ * Mermaid's drawing, read as SVG (never as HTML), held to TAGS: a link is its words, and no
+ * handler, address or `url()` to anywhere but the drawing itself stays. Null when it is no SVG.
+ */
+const safeSvg = (svg: string) => {
+  // Mermaid writes a link's `xlink:href` without declaring its namespace, which SVG's own reading
+  // refuses: declared here, so the link can be read, and taken out.
+  const declared = svg.includes("xmlns:xlink=")
+    ? svg
+    : svg.replace(
+        /^<svg\b/u,
+        '<svg xmlns:xlink="http://www.w3.org/1999/xlink"'
+      );
+  const read = new DOMParser().parseFromString(declared, "image/svg+xml");
+  const root = read.documentElement;
+  if (root.localName !== "svg" || read.querySelector("parsererror") !== null) {
+    return null;
+  }
+  for (const link of [...root.querySelectorAll("a")].toReversed()) {
+    link.replaceWith(...link.childNodes);
+  }
+  for (const element of root.querySelectorAll("*")) {
+    const elsewhere =
+      element.localName === "style" &&
+      ELSEWHERE.test(element.textContent ?? "");
+    if (!TAGS.has(element.localName) || elsewhere) {
       element.remove();
     }
-    for (const { name } of element.attributes) {
-      if (/^on/iu.test(name)) {
+  }
+  for (const element of [root, ...root.querySelectorAll("*")]) {
+    for (const { name, value } of element.attributes) {
+      const leads = /href$/iu.test(name) && !value.startsWith("#");
+      if (/^on/iu.test(name) || leads || ELSEWHERE.test(value)) {
         element.removeAttribute(name);
       }
     }
   }
-  return template.content;
+  return new XMLSerializer().serializeToString(root);
 };
 
-/** Draws `code` with Mermaid, loaded the first time: its SVG, or null when it cannot. */
+/** Draws `code` with Mermaid, loaded the first time: its SVG, held to TAGS, or null when it cannot. */
 const drawDiagram = async (code: string, id: string) => {
-  const { default: mermaid } = await import("mermaid");
-  mermaid.initialize({
-    startOnLoad: false,
-    securityLevel: "strict",
-    suppressErrorRendering: true,
-    theme: "default",
-    // Labels as SVG text, not HTML in the drawing: nothing of HTML in it at all, and a PNG can be
-    // drawn from it (a canvas will not export a drawing that holds HTML).
-    htmlLabels: false,
-  });
+  if (PICTURE.test(code)) {
+    return null;
+  }
   try {
+    const { default: mermaid } = await import("mermaid");
+    mermaid.initialize({
+      startOnLoad: false,
+      securityLevel: "strict",
+      secure: SECURE,
+      suppressErrorRendering: true,
+      theme: "default",
+      // Labels as SVG text, not HTML in the drawing.
+      htmlLabels: false,
+      // Bounds on what one diagram may cost, all on the page: Mermaid's own are 50,000 and 500.
+      maxTextSize: 20_000,
+      maxEdges: 200,
+    });
     const { svg } = await mermaid.render(id, code);
-    return svg;
+    return safeSvg(svg);
   } catch {
     return null;
   }
 };
 
-/** The drawing as a PNG, twice its size: drawn onto a canvas from its SVG. */
+/** The drawing as a PNG, at twice its size (less for a huge one): drawn onto a canvas. */
 const pngOf = async (svg: string) => {
   const box =
     /viewBox="(?<box>[^"]*)"/u
@@ -118,34 +201,60 @@ const pngOf = async (svg: string) => {
       .map(Number) ?? [];
   const width = box[2] ?? 0;
   const height = box[3] ?? 0;
+  if (!(width > 0 && height > 0)) {
+    throw new Error("The drawing has no size");
+  }
+  // A data: address, which a policy that allows pictures from data: allows (a blob: one, not).
   const image = new Image();
-  image.src = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
+  image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
   await image.decode();
+  const scale = Math.min(2, 8192 / Math.max(width, height));
   const canvas = document.createElement("canvas");
-  canvas.width = width * 2;
-  canvas.height = height * 2;
+  canvas.width = Math.round(width * scale);
+  canvas.height = Math.round(height * scale);
   const context = canvas.getContext("2d");
-  context?.scale(2, 2);
+  context?.scale(scale, scale);
   context?.drawImage(image, 0, 0, width, height);
-  URL.revokeObjectURL(image.src);
   // oxlint-disable-next-line promise/avoid-new -- a canvas gives its blob by a callback
-  return await new Promise<Blob | null>((resolve) => {
+  const png = await new Promise<Blob | null>((resolve) => {
     canvas.toBlob(resolve, "image/png");
   });
+  if (png === null) {
+    throw new Error("The drawing could not be drawn as a PNG");
+  }
+  return png;
 };
 
-/** The drawing, zoomed by its buttons and moved by a drag. */
-const View = ({ svg, big = false }: { svg: string; big?: boolean }) => {
+/** The drawing, zoomed by its buttons, moved by a drag and by the arrow keys. */
+const View = ({
+  svg,
+  code,
+  big = false,
+}: {
+  svg: string;
+  code: string;
+  big?: boolean;
+}) => {
   const words = useI18n().markdown;
+  const source = useId();
   const box = useRef<HTMLDivElement>(null);
   const [zoom, setZoom] = useState(1);
   const [at, setAt] = useState({ x: 0, y: 0 });
   const [drag, setDrag] = useState<{ x: number; y: number } | null>(null);
   useEffect(() => {
-    box.current?.replaceChildren(nodesOf(svg));
+    const drawing = new DOMParser().parseFromString(svg, "image/svg+xml");
+    box.current?.replaceChildren(
+      document.importNode(drawing.documentElement, true)
+    );
   }, [svg]);
   const zoomBy = (step: number) => {
     setZoom((now) => Math.min(MOST, Math.max(LEAST, now + step)));
+  };
+  const arrows: Record<string, { x: number; y: number }> = {
+    ArrowLeft: { x: NUDGE, y: 0 },
+    ArrowRight: { x: -NUDGE, y: 0 },
+    ArrowUp: { x: 0, y: NUDGE },
+    ArrowDown: { x: 0, y: -NUDGE },
   };
   return (
     <div
@@ -168,11 +277,32 @@ const View = ({ svg, big = false }: { svg: string; big?: boolean }) => {
         setDrag(null);
       }}
     >
+      {/* Named as a diagram, its code its description; the arrow keys move it. */}
+      {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- the arrow keys move the drawing, as Streamdown's pan area moves */}
       <div
         ref={box}
+        role="application"
+        // oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- it takes focus for the arrow keys
+        tabIndex={0}
+        aria-label={words.diagram}
+        aria-describedby={source}
         data-slot="markdown-diagram-drawing"
-        {...stylex.props(styles.drawing, styles.moved(at.x, at.y, zoom))}
+        onKeyDown={(event) => {
+          const by = arrows[event.key];
+          if (by !== undefined) {
+            event.preventDefault();
+            setAt((now) => ({ x: now.x + by.x, y: now.y + by.y }));
+          }
+        }}
+        {...stylex.props(
+          styles.drawing,
+          focusRing,
+          styles.moved(at.x, at.y, zoom)
+        )}
       />
+      <span id={source} {...stylex.props(visuallyHidden)}>
+        {code}
+      </span>
       <div
         {...stylex.props(styles.zoom)}
         onPointerDown={(event) => {
@@ -218,9 +348,9 @@ const View = ({ svg, big = false }: { svg: string; big?: boolean }) => {
 };
 
 /**
- * A finished `mermaid` fence: its diagram once Mermaid has drawn it, the code until then and for
- * good when Mermaid cannot read it; Download, Copy and full screen, out of use while the answer is
- * written.
+ * A finished `mermaid` fence: its diagram once Mermaid has drawn it (once it is near the screen),
+ * the code until then and for good when Mermaid cannot read it; Download, Copy and full screen,
+ * out of use while the answer is written.
  */
 export const Diagram = ({
   code,
@@ -231,7 +361,30 @@ export const Diagram = ({
 }) => {
   const words = useI18n().markdown;
   const id = `mermaid-${useId().replaceAll(/[^\w-]/gu, "")}`;
+  const frame = useRef<HTMLDivElement>(null);
+  const [near, setNear] = useState(false);
   const [svg, setSvg] = useState<string | null>(null);
+  // Drawn once it comes within 300px of the screen, as Streamdown draws one.
+  useEffect(() => {
+    const at = frame.current;
+    if (at === null || typeof IntersectionObserver === "undefined") {
+      setNear(true);
+      return nothing;
+    }
+    const watch = new IntersectionObserver(
+      (seen) => {
+        if (seen.some((each) => each.isIntersecting)) {
+          setNear(true);
+          watch.disconnect();
+        }
+      },
+      { rootMargin: "300px" }
+    );
+    watch.observe(at);
+    return () => {
+      watch.disconnect();
+    };
+  }, []);
   useEffect(() => {
     let live = true;
     const draw = async () => {
@@ -240,13 +393,15 @@ export const Diagram = ({
         setSvg(drawn);
       }
     };
-    void draw();
+    if (near) {
+      void draw();
+    }
     return () => {
       live = false;
     };
-  }, [code, id]);
+  }, [code, id, near]);
   return (
-    <div data-slot="markdown-diagram">
+    <div ref={frame} data-slot="markdown-diagram">
       <Code.CodeBlock language="mermaid">
         <Code.CodeBlockHeader>
           <Code.CodeBlockTitle />
@@ -274,10 +429,7 @@ export const Diagram = ({
                 {svg !== null && (
                   <DropdownMenuItem
                     onSelect={async () => {
-                      const png = await pngOf(svg);
-                      if (png !== null) {
-                        saveFile(png, "diagram.png", "image/png");
-                      }
+                      saveFile(await pngOf(svg), "diagram.png", "image/png");
                     }}
                   >
                     {words.png}
@@ -309,7 +461,7 @@ export const Diagram = ({
                   <DialogHeader>
                     <DialogTitle>{words.mermaid}</DialogTitle>
                   </DialogHeader>
-                  <View svg={svg} big />
+                  <View svg={svg} code={code} big />
                 </DialogContent>
               </Dialog>
             )}
@@ -318,7 +470,7 @@ export const Diagram = ({
         {svg === null ? (
           <Code.CodeBlockContent lineNumbers>{code}</Code.CodeBlockContent>
         ) : (
-          <View svg={svg} />
+          <View svg={svg} code={code} />
         )}
       </Code.CodeBlock>
     </div>

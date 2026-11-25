@@ -248,15 +248,17 @@ test("untrusted text: a script stays text, a data link is words, a picture never
 test("diagrams: drawn by Mermaid once loaded, only for a diagram; Download as SVG, PNG or MMD, full screen and zoom; one Mermaid cannot read stays code", async ({
   page,
 }) => {
-  const loaded: string[] = [];
-  page.on("request", (request) => {
-    if (/mermaid/iu.test(request.url())) {
-      loaded.push(request.url());
+  // Mermaid by what it holds, whatever its files are named: dagre, the layout it draws with.
+  const scripts: string[] = [];
+  page.on("response", async (response) => {
+    if (response.request().resourceType() === "script") {
+      scripts.push(await response.text());
     }
   });
+  const mermaidLoaded = () => scripts.some((text) => text.includes("dagre"));
   await openExample(page, "markdown", "answer");
   await expect(page.getByRole("table")).toBeVisible();
-  expect(loaded).toStrictEqual([]);
+  expect(mermaidLoaded()).toBe(false);
   await openExample(page, "markdown", "diagram");
   const diagrams = page.locator("[data-slot=markdown-diagram]");
   const drawn = diagrams.nth(0);
@@ -289,10 +291,56 @@ test("diagrams: drawn by Mermaid once loaded, only for a diagram; Download as SV
         await drawing.evaluate((node) => getComputedStyle(node).transform)
     )
     .not.toBe(before);
+  expect(mermaidLoaded()).toBe(true);
+  // Named as a diagram, its code its description, moved by the arrow keys.
+  const named = drawn.getByRole("application", { name: "Mermaid diagram" });
+  await named.focus();
+  const placed = await drawing.evaluate(
+    (node) => getComputedStyle(node).transform
+  );
+  await page.keyboard.press("ArrowLeft");
+  await expect
+    .poll(
+      async () =>
+        await drawing.evaluate((node) => getComputedStyle(node).transform)
+    )
+    .not.toBe(placed);
   await drawn.getByRole("button", { name: "View full screen" }).click();
   await expect(
     page.getByRole("dialog").locator("svg[aria-roledescription]")
   ).toHaveCount(1);
+});
+
+test("diagrams: no setting or node of a diagram puts HTML in it, loads anything, or leads out of it; a picture node is code", async ({
+  page,
+}) => {
+  const elsewhere: string[] = [];
+  page.on("request", (request) => {
+    if (request.url().includes("example.com")) {
+      elsewhere.push(request.url());
+    }
+  });
+  await openExample(page, "markdown", "diagram-hostile");
+  // Each is drawn once it comes near the screen.
+  for (const diagram of await page
+    .locator("[data-slot=markdown-diagram]")
+    .all()) {
+    // oxlint-disable-next-line no-await-in-loop -- one after the other, down the answer
+    await diagram.scrollIntoViewIfNeeded();
+  }
+  const drawings = page.locator("[data-slot=markdown-diagram-drawing] svg");
+  await expect(drawings).toHaveCount(5);
+  await expect(
+    drawings.locator(
+      "foreignObject, a, image, img, [href^='http'], [*|href^='http']"
+    )
+  ).toHaveCount(0);
+  await expect(
+    page.locator("[data-slot=markdown-diagram]").last().getByText("shape.png")
+  ).toBeVisible();
+  // Long enough for a load to have started.
+  await page.waitForTimeout(1000);
+  expect(elsewhere).toStrictEqual([]);
 });
 
 test("maths: a formula past 4,000 characters stays its TeX, and a huge rule stays inside the column", async ({
