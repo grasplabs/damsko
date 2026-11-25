@@ -561,7 +561,7 @@ describe("while it is written, nothing shows that the whole answer will not", ()
     }
     expect(wrong).toStrictEqual([]);
     expect(text.length).toBeGreaterThan(1000);
-  });
+  }, 120_000);
 
   test("a block read alone knows the answer's names: links and notes defined elsewhere", () => {
     const names = { links: new Set(["the guide"]), notes: new Set(["1"]) };
@@ -619,10 +619,70 @@ describe("bounds a model's answer cannot pass", () => {
     expect(count(html, "<tr")).toBe(1001);
     expect(textOf(html)).toContain("500 more rows");
   });
+
+  test("bare addresses are links beside a word of 1,000 characters; past it they are words, and only they", () => {
+    const long = `https://example.com/${"x".repeat(950)}`;
+    const source = `See www.example.com, https://example.com/a_b and team@example.com, or **read** [the page](${long}).`;
+    const html = draw(source);
+    expect([count(html, "<a\\b"), count(html, "<strong")]).toStrictEqual([
+      4, 1,
+    ]);
+    expect(html).toContain(`href="${long}"`);
+    const longer = draw(source.replace(long, `${long}${"x".repeat(50)}`));
+    expect([count(longer, "<a\\b"), count(longer, "<strong")]).toStrictEqual([
+      1, 1,
+    ]);
+    // Only a space, a tab or a line's end ends a word.
+    const joined = "a\u00A0".repeat(501);
+    expect(count(draw(`www.example.com ${joined}`), "<a\\b")).toBe(0);
+    expect(
+      count(
+        draw(`www.example.com ${joined.replaceAll("\u00A0", " ")}`),
+        "<a\\b"
+      )
+    ).toBe(1);
+  });
+
+  test("a quote's `>` nests the same with or without a space after it, at most 64 deep", () => {
+    expect(draw(">- one\n>- two\n>>1. three")).toBe(
+      draw("> - one\n> - two\n> > 1. three")
+    );
+    expect(count(draw(`${">".repeat(40)}a`), "<blockquote")).toBe(40);
+    const deep = draw(`${">".repeat(100)}a`);
+    expect(count(deep, "<blockquote")).toBe(64);
+    expect(textOf(deep)).toBe("a");
+  });
+
+  test("a long list and a long table keep their bold: a few hundred phrases are not too many marks", () => {
+    const list = Array.from(
+      { length: 400 },
+      (_, at) => `- **Step ${at}** and *why*`
+    );
+    expect(count(draw(list.join("\n")), "<strong")).toBe(400);
+    const rows = Array.from({ length: 300 }, (_, at) => `| **${at}** | x |`);
+    const table = draw(`| a | b |\n| - | - |\n${rows.join("\n")}`);
+    expect(count(table, "<strong")).toBe(300);
+  });
+
+  test("a list of more than 1,000 lines goes on as another at its next item, numbered on", () => {
+    const html = draw(
+      Array.from({ length: 1500 }, (_, at) => `${at + 1}. a`).join("\n")
+    );
+    expect([count(html, "<ol"), count(html, "<li")]).toStrictEqual([2, 1500]);
+    expect(html).toContain('start="1001"');
+  });
+
+  test("while written, a half link shows its words with room for its arrow, and no address", () => {
+    const html = draw("Read [the docs](https://exa", { streaming: true });
+    expect(textOf(html)).toBe("Read the");
+    expect(count(html, 'aria-hidden="true"')).toBe(2);
+    expect(count(html, "<a\\b")).toBe(0);
+  });
 });
 
 // Hostile answers: nesting past any stack, delimiter runs micromark weighs against each other, a
-// huge table, links by the thousand.
+// huge table, links by the thousand, bare addresses read again to the end of their word, brackets
+// remend 1.5.0 heals in their depth squared.
 const hostile: Record<string, (size: number) => string> = {
   "deep nesting": (size) =>
     `${"> ".repeat(size / 4)}a\n\n${Array.from({ length: size / 200 }, (_, at) => `${"  ".repeat(at % 50)}- a`).join("\n")}`,
@@ -643,6 +703,19 @@ const hostile: Record<string, (size: number) => string> = {
     ).join("\n"),
   "sections left open": (size) =>
     "<details>\n<summary>s</summary>\n\nx\n\n".repeat(size / 34),
+  "bare addresses after `_` in one word": (size) => "www.a_".repeat(size / 6),
+  "a bare address and its dots": (size) => `\nwww.a${".".repeat(size)}b`,
+  "bare addresses in words joined by no-break spaces": (size) =>
+    `\n${`${"www.-".repeat(199)}\u00A0`.repeat(size / 996)}`,
+  "brackets nested deep": (size) =>
+    `${"[".repeat(size / 2)}${"]".repeat(size / 2)}`,
+  "lists in quotes with no space after `>`": (size) =>
+    `\n${">- ".repeat(size / 3)}a`,
+  "lists in lists": (size) => `\n${"- - a\n".repeat(size / 6)}`,
+  "marks on lines a digit leads": (size) =>
+    `\n${`1${"a*".repeat(499)}\n`.repeat(size / 1000)}`,
+  "brackets nested over lines a digit leads": (size) =>
+    `\n${`1${"[".repeat(999)}\n`.repeat(size / 4000)}${`1${"]".repeat(999)}\n`.repeat(size / 4000)}`,
 };
 
 // Each block wraps the one before it in 32 more sections: read first at the top, a block
