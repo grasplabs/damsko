@@ -5,6 +5,8 @@
 //
 //   pnpm exec vp test scripts/markdown-stream.test.tsx
 import { setTimeout as sleep } from "node:timers/promises";
+import { getHeapStatistics, setFlagsFromString } from "node:v8";
+import { runInNewContext } from "node:vm";
 
 import { act } from "react";
 import type { ReactNode } from "react";
@@ -276,4 +278,28 @@ describe("nothing runs on once it is gone", () => {
     expect(vi.getTimerCount()).toBe(0);
     vi.useRealTimers();
   });
+
+  test("an answer whose reads hold many times their bound of 32 MB, once gone, leaves at most twice that held", () => {
+    setFlagsFromString("--expose-gc");
+    // With the flag set, a new context's `gc` is V8's collector.
+    const collect: unknown = runInNewContext("gc");
+    const held = () => {
+      if (typeof collect === "function") {
+        Reflect.apply(collect, undefined, []);
+      }
+      return getHeapStatistics().used_heap_size;
+    };
+    // 2,000 notes of 100 words each, never marked, so never drawn: about 200 MB of reads.
+    const text = Array.from(
+      { length: 2000 },
+      (_, at) => `[^${at}]: ${"*n* ".repeat(50)}`
+    ).join("\n\n");
+    const before = held();
+    const { root, render } = live();
+    render(<Markdown>{text}</Markdown>);
+    act(() => {
+      root.unmount();
+    });
+    expect(held() - before).toBeLessThan(64_000_000);
+  }, 120_000);
 });

@@ -1167,6 +1167,12 @@ const lessWaiting = (end: string) => {
   if (parse.inOpenFence(end)) {
     return end;
   }
+  // A tag's or an autolink's start waits for a space or its `>`; then it shows as it is written.
+  const tag = end.lastIndexOf("<", to - 1);
+  to =
+    tag !== -1 && /^<\/?(?:[a-z][^\s<>]*)?$/iu.test(end.slice(tag, to))
+      ? tag
+      : to;
   while (to > 0 && "*_~`[!< \t".includes(end.charAt(to - 1))) {
     to -= 1;
   }
@@ -1260,6 +1266,8 @@ const useBlocks = (
 ) => {
   const source = children.replaceAll(/\r\n?/gu, "\n");
   const starts = useStarts(source);
+  // Gone, what this answer kept of its reads past the cache's bound goes with it.
+  useEffect(() => parse.release, []);
   parse.nextPass();
   const open = streaming || truncated;
   const last = open ? (starts.at(-1) ?? 0) : source.length;
@@ -1281,13 +1289,13 @@ const useBlocks = (
     node.type === "definition" ? [node] : []
   );
   const names = {
-    links: links.map((node) => node.identifier),
-    notes: [
+    links: new Set(links.map((node) => node.identifier)),
+    notes: new Set([
       ...defined.flatMap((node) =>
         node.type === "footnoteDefinition" ? [node.identifier] : []
       ),
       ...notesIn(end),
-    ],
+    ]),
   };
   const blocks = texts.map(({ start, to, text }) => ({
     start,
