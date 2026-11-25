@@ -15,7 +15,9 @@
 // icon and the words stay; with no icon the mark stands over the words, which keep their place
 // unseen (and their name for a screen reader), so the button never changes width. Words for a
 // state (`loadingText`, `successText`, `errorText`) are said, and shown in the words' place, every
-// one stacked in the same cell so the widest sets the width. Failed, it draws the quiet fill with
+// one stacked in the same cell so the widest sets the width; there, success with no words of its
+// own is the tick before the button's words, so the button keeps the tick's room at rest (its
+// width never changes as the tick comes). Failed, it draws the quiet fill with
 // destructive words and edge, whatever its variant. A page that runs the work elsewhere (a form's
 // submit) gives `status` instead.
 //
@@ -31,7 +33,7 @@
 import * as stylex from "@stylexjs/stylex";
 import { Button as ButtonPrimitive } from "@ui-sdk/react/button";
 import { mergeProps } from "@ui-sdk/react/primitive";
-import { isValidElement } from "react";
+import { Fragment, isValidElement } from "react";
 import type { ComponentProps, ReactElement, ReactNode } from "react";
 
 import { useAction } from "../hooks/use-action";
@@ -1067,7 +1069,21 @@ const Status = ({
   truncate: boolean;
   children: ReactNode;
 }) => {
-  const label = status === "idle" ? undefined : labels[status];
+  const stacked = Object.values(labels).some((each) => each !== undefined);
+  // Laid out with its states side by side, success with no words of its own shows the tick before
+  // the button's own words (its icon left out), as the original's done state: the button keeps the
+  // tick's room at rest. What a screen reader hears is unchanged (hooks/use-action says it).
+  const shown: Partial<Record<Exclude<ActionStatus, "idle">, ReactNode>> =
+    stacked && labels.success === undefined
+      ? {
+          ...labels,
+          success: listOf(given)
+            .filter((part) => !(isValidElement(part) && part.type === Icon))
+            // A part has no id of its own; its place among the words is its key.
+            .map((part, index) => <Fragment key={index}>{part}</Fragment>),
+        }
+      : labels;
+  const label = status === "idle" ? undefined : shown[status];
   // While it works with no words of its own, the spinner stands where the icon stood.
   const inPlace =
     status === "loading" && label === undefined ? spinning(given) : undefined;
@@ -1080,7 +1096,6 @@ const Status = ({
         <Mark status={status} />
       </span>
     );
-  const stacked = Object.values(labels).some((each) => each !== undefined);
   if (!stacked) {
     return (
       <>
@@ -1111,7 +1126,7 @@ const Status = ({
           {children}
         </span>
         {(["loading", "success", "error"] as const).map((each) =>
-          labels[each] === undefined ? null : (
+          shown[each] === undefined ? null : (
             <span
               key={each}
               aria-hidden={status === each ? undefined : true}
@@ -1125,7 +1140,7 @@ const Status = ({
               ) : (
                 <span {...stylex.props(statusStyles.place)} />
               )}
-              {labels[each]}
+              {shown[each]}
             </span>
           )
         )}

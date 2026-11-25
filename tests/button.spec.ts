@@ -516,6 +516,38 @@ test("with words for its states, the widest of them sets the width at rest", asy
   expect(inner).toBeCloseTo(widest, 0);
 });
 
+test("with words for working and failing only, it keeps the tick's room at rest and shows the tick before its words once it worked", async ({
+  page,
+}) => {
+  await openExample(page, "button", "action");
+  const button = page.getByRole("button", { name: "Replace the key" });
+  // The words' own width, and the content's: the tick (an icon's box) and the gap stand beside them.
+  const measure = async () =>
+    await button.evaluate((node) => {
+      const content = node.querySelector("[data-slot=button-content]");
+      const range = document.createRange();
+      const text = [...node.querySelectorAll("span")].find(
+        (span) =>
+          span.childElementCount === 0 && span.textContent === "Replace the key"
+      );
+      range.selectNodeContents(text ?? node);
+      return {
+        content: content?.getBoundingClientRect().width ?? -1,
+        words: range.getBoundingClientRect().width,
+      };
+    });
+  const rest = await measure();
+  expect(rest.content - rest.words).toBeCloseTo(24, 0);
+  const before = await widthOf(page, "Replace the key");
+  await button.click();
+  await expect(button).toHaveAttribute("data-status", "success");
+  await expect(button.locator("svg").filter({ visible: true })).toHaveCount(1);
+  await expect(
+    button.getByText("Replace the key").filter({ visible: true })
+  ).toHaveCount(1);
+  expect(await widthOf(page, "Replace the key")).toBe(before);
+});
+
 test("a second press while its work runs does nothing", async ({ page }) => {
   await openExample(page, "button", "agent");
   const save = page.getByRole("button", { name: "Save changes" });
