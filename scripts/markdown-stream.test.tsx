@@ -137,6 +137,85 @@ describe("a stream that ends draws what the whole answer draws, and no raw mark 
   );
 });
 
+/**
+ * The words shown, block by block, marks left out (`[`, `]`, `^`, `*`, `_`, `~`, backticks, a
+ * note's mark as written or as a number, a reference's name as written), and what is no word of the answer: CodeBlock's header and
+ * footer (its language, "Writing"), and Link's "(opens in a new tab)".
+ */
+const wordsOf = (box: Element) => {
+  const walker = document.createTreeWalker(box, NodeFilter.SHOW_TEXT);
+  let words = "";
+  let last: Element | null = null;
+  for (let text = walker.nextNode(); text; text = walker.nextNode()) {
+    const inside = text.parentElement;
+    const chrome =
+      inside?.closest("[data-slot=code-block]") !== null &&
+      inside?.closest("pre, code") === null;
+    const block =
+      inside?.closest("p, li, td, th, h1, h2, h3, h4, h5, h6, pre, summary") ??
+      null;
+    if (!chrome && !inside?.closest("sup")) {
+      words += `${block === last ? "" : " "}${text.textContent ?? ""}`;
+      last = block;
+    }
+  }
+  return words
+    .replaceAll(
+      / ?\(opens in a new tab\)|\[\^[^\]\s]*\]|\]\[[^\]]*\]|[[\]^*_~`]/gu,
+      ""
+    )
+    .split(/\s+/u)
+    .filter((word) => word !== "");
+};
+/** The first of `before`'s words that `after` lacks, in order (a word may have grown). */
+const lost = (before: string[], after: string[]) => {
+  let at = 0;
+  return before.find((word) => {
+    while (at < after.length && !(after[at] ?? "").startsWith(word)) {
+      at += 1;
+    }
+    at += 1;
+    return at > after.length;
+  });
+};
+
+// A link's words before its `](`, and a reference's before its name is whole.
+const brackets = [
+  {
+    name: "brackets",
+    text: "Start [link wordy](https://example.com/w) now.\n\nRead [the guide][g] and more.\n\n[g]: https://example.com/g\n\nThen more.",
+  },
+];
+
+describe("while written, words once shown stay shown", () => {
+  test.each([1, 7])(
+    "every sample answer, in chunks of %i characters: each chunk shows the words of the one before, in order",
+    (chunk) => {
+      vi.useFakeTimers({ toFake: ["performance"] });
+      const wrong: string[] = [];
+      for (const { name, text } of [...answers, ...brackets]) {
+        const { box, root, render } = live();
+        let before: string[] = [];
+        for (let at = chunk; at < text.length; at += chunk) {
+          render(<Markdown streaming>{text.slice(0, at)}</Markdown>);
+          const now = wordsOf(box);
+          const word = lost(before, now);
+          if (word !== undefined) {
+            wrong.push(`${name} @${at}: ${word} | …${text.slice(at - 30, at)}`);
+          }
+          before = now;
+        }
+        act(() => {
+          root.unmount();
+        });
+      }
+      vi.useRealTimers();
+      expect(wrong).toStrictEqual([]);
+    },
+    600_000
+  );
+});
+
 describe("a block that takes long to read is read again as often as a fifth of the time allows", () => {
   test(
     "a small one at every chunk; a big one once four times its last read has passed, chunk or not",

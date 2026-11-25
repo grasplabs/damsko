@@ -118,10 +118,11 @@ const deliberate: [string, (streamdown: string, ours: string) => boolean][] = [
     (streamdown, ours) =>
       streamdown.replaceAll("~~", "~") === ours.replaceAll("~~", "~"),
   ],
-  // While written, a raw mark of emphasis or code at the very end waits for what follows it.
+  // While written, a raw mark of emphasis or code, a `!` or a `<` at the very end waits for what
+  // follows it.
   [
     "raw marks wait",
-    (streamdown) => /(?:\*\*|__|~~|[*_`])(?: ↩)?$/u.test(streamdown.trim()),
+    (streamdown) => /(?:\*\*|__|~~|[*_`!<])(?: ↩)?$/u.test(streamdown.trim()),
   ],
   // While written, a line's start that the next characters decide waits for them: a heading's
   // `#`, a quote's `>`, a list's number or bullet, a task's box, an underline; so does a
@@ -212,7 +213,7 @@ describe("drawn as Streamdown draws it", () => {
       "one tilde is a tilde": 3,
       "pictures never loaded": 17,
       "raw HTML shown as text": 80,
-      "raw marks wait": 6,
+      "raw marks wait": 8,
     });
     expect(entries.length).toBeGreaterThan(1000);
   }, 600_000);

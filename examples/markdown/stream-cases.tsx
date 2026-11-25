@@ -6,8 +6,8 @@ import { useEffect, useState } from "react";
 
 // A fixture for tests/markdown.spec.ts, not on the page: an answer streamed a few characters at a
 // time, over and over, so the check can watch every frame: words already shown never fade again as
-// their link becomes whole or a note or a reference after them resolves, a line is never a heading
-// for a moment, and no raw mark shows.
+// their link becomes whole or a note or a reference after them resolves, a link's words once shown
+// never go, a line is never a heading for a moment, and no raw mark shows.
 const answer = `Read [the full guide](https://example.com/guide) now, or www.example.com/docs today.
 
 Tasks:
@@ -24,7 +24,9 @@ Claim one[^1] and gradually more words after it.
 
 [^1]: The note.
 
-Read [the guide][g] and eventually more words.
+Start: [link wordy here](https://example.com/w) now.
+
+Read [the handbook][g] and eventually more words.
 
 [g]: https://example.com/g
 

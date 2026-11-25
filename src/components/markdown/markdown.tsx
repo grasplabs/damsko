@@ -762,8 +762,8 @@ const WORDS =
   /[\p{sc=Han}\p{sc=Hiragana}\p{sc=Katakana}\p{sc=Hangul}\u3000-\u303F\uFF00-\uFFEF]\s*|[^\s\p{sc=Han}\p{sc=Hiragana}\p{sc=Katakana}\p{sc=Hangul}\u3000-\u303F\uFF00-\uFFEF]+\s*|\s+/gu;
 /**
  * Words that may fade in: each its own fade while written, but not in a link (its words move into
- * the link when it is whole, and would fade again there). Past many words in the block still being
- * written, the words read since its last read fade as one, and the rest stand.
+ * the link when it is whole, and would fade again there), nor once shown. Past many words in the
+ * block still being written, the words read since its last read fade as one, and the rest stand.
  */
 const Words = ({
   value,
@@ -776,33 +776,63 @@ const Words = ({
 }) => {
   const shown = use(Shown) - from;
   const many = use(Many);
-  // Where its words start to fade: what had been shown when it was first drawn, and past many words
-  // where the last read ended.
-  const [kept, setKept] = useState({ shown, many });
-  if (many && (!kept.many || shown > kept.shown)) {
-    setKept({ shown, many });
+  // Drawn plain, never to fade: the parts of it shown before they were first drawn here (`plain`,
+  // ranges); past many words, all but what came since the last read (`shown`).
+  const [kept, setKept] = useState({
+    length: value.length,
+    plain: [0, Math.max(shown, 0)],
+    shown,
+    many,
+  });
+  let next = kept;
+  if (value.length > kept.length) {
+    const end = Math.min(Math.max(shown, kept.length), value.length);
+    const plain =
+      end > kept.length ? [...kept.plain, kept.length, end] : kept.plain;
+    next = { ...next, length: value.length, plain };
   }
-  const cut = Math.min(Math.max(kept.shown, 0), value.length);
-  if (!shared.streaming || shared.inLink === true || cut === value.length) {
+  if (many && (!kept.many || shown > kept.shown)) {
+    next = { ...next, shown, many };
+  }
+  if (next !== kept) {
+    setKept(next);
+  }
+  if (!shared.streaming || shared.inLink === true) {
     return value;
   }
-  const rest = value.slice(cut);
-  return (
-    <>
-      {value.slice(0, cut)}
-      {kept.many ? (
+  if (kept.many) {
+    const cut = Math.min(Math.max(kept.shown, 0), value.length);
+    return cut === value.length ? (
+      value
+    ) : (
+      <>
+        {value.slice(0, cut)}
         <span key={kept.shown} {...stylex.props(fadeIn, styles.word)}>
-          {rest}
+          {value.slice(cut)}
         </span>
-      ) : (
-        rest.match(WORDS)?.map((word, at) => (
-          <span key={at} {...stylex.props(fadeIn, styles.word)}>
-            {word}
-          </span>
-        ))
-      )}
-    </>
-  );
+      </>
+    );
+  }
+  // Each word not shown before its own fade, keyed by where it is, so it keeps it as more comes.
+  const parts: ReactNode[] = [];
+  const fading = (start: number, end: number) => {
+    for (const word of value.slice(start, end).matchAll(WORDS)) {
+      parts.push(
+        <span key={start + word.index} {...stylex.props(fadeIn, styles.word)}>
+          {word[0]}
+        </span>
+      );
+    }
+  };
+  let at = 0;
+  for (let range = 0; range < kept.plain.length; range += 2) {
+    const [start = 0, end = 0] = kept.plain.slice(range, range + 2);
+    fading(at, start);
+    parts.push(value.slice(Math.max(start, at), Math.max(end, at)));
+    at = Math.max(at, end);
+  }
+  fading(at, value.length);
+  return parts;
 };
 const framed = new Set(["code", "table", "thematicBreak"]);
 /** A block in the answer's column: a framed one fades in whole while written; a section is its own. */
@@ -1122,13 +1152,13 @@ const useSaid = (
 // While written, a table's head waits for its row of dashes. A last
 // line that is only the start of a block's mark waits for the characters that decide it: a list's
 // number or bullet, a task's box, a heading's, rule's or underline's marks, a note's start, a link's
-// definition (never drawn), the start of a section's `<details>` or `</details>`. So do a bracket
-// still to be a link, and a mark of emphasis or code, at the very end.
+// definition (never drawn) or a bracket that may start one, the start of a section's `<details>` or
+// `</details>`. So do a mark of emphasis or code, a `!` or a `<`, at the very end.
 const PIPE = /^ {0,3}\|/u;
 const DASHES = /^ {0,3}\|?[ \t]*:?-+:?[ \t]*(?:\||$)/mu;
 const CONTAINERS = /^(?:[ \t>]|[-*+](?=[ \t])|\d{1,9}[.)](?=[ \t]))*/u;
 const UNDECIDED =
-  /^(?:[-*+]|\d{1,9}[.)]?|(?:[-*+=_][ \t]*)+|#{1,6}|\[[ xX]?\]?|\[\^[^\]\s]*\]?:?|\[(?!\^)(?:[^\]\\]|\\.){1,999}\]:.*|<\/?(?:d(?:e(?:t(?:a(?:i(?:ls?)?)?)?)?)?)?)?[ \t]*$/u;
+  /^(?:[-*+]|\d{1,9}[.)]?|(?:[-*+=_][ \t]*)+|#{1,6}|\[[ xX]?\]?|\[\^[^\]\s]*\]?:?|\[(?!\^)(?:[^\]\\]|\\.){0,999}(?:\]:.*|\]?)|<\/?(?:d(?:e(?:t(?:a(?:i(?:ls?)?)?)?)?)?)?)?[ \t]*$/u;
 /** `end` less what waits; each pattern is anchored or found from the end, so none scans back. */
 const lessWaiting = (end: string) => {
   const note = end.lastIndexOf("[^");
@@ -1137,13 +1167,20 @@ const lessWaiting = (end: string) => {
   if (parse.inOpenFence(end)) {
     return end;
   }
-  // Twice at most: a bracket's pair, then the marks before it (`**[words]`).
-  for (let round = 0; round < 2; round += 1) {
-    while (to > 0 && "*_~`[ \t".includes(end.charAt(to - 1))) {
-      to -= end.slice(to - 2, to) === "![" ? 2 : 1;
-    }
-    const bracket = end.lastIndexOf("[", to - 1);
-    to = /^\[[^\]]*\]$/u.test(end.slice(bracket, to)) ? bracket : to;
+  while (to > 0 && "*_~`[!< \t".includes(end.charAt(to - 1))) {
+    to -= 1;
+  }
+  // A bracket's words, once shown, stay words until it is decided: `[words]`, `[words][name` and
+  // `[words][name]` are drawn as `[words`, a link still being written; a note's `[^name]` waits.
+  const bracket = end.lastIndexOf("[", to - 1);
+  const pair = end.slice(bracket, to);
+  const first = end.lastIndexOf("[", bracket - 2);
+  if (!/^\[[^\]]*\]?$/u.test(pair)) {
+    // Not a bracket at the end.
+  } else if (/^\[[^\]]*\]$/u.test(end.slice(first, bracket))) {
+    to = bracket - 1;
+  } else if (pair.endsWith("]")) {
+    to = pair.startsWith("[^") ? bracket : to - 1;
   }
   const line = end.lastIndexOf("\n", to - 1) + 1;
   const last = end.slice(line, to);

@@ -542,9 +542,18 @@ test("a fence with codeMaxLines={false} never folds, yet draws only its first 2,
  * draw: a link's words, once shown in full, fading again; a heading; a raw mark at the end of the
  * words; a closing fence still being typed as a line of code.
  */
+// The words the frame-by-frame check follows in markdown/stream-cases.
+const PHRASES = [
+  "full",
+  "www.example",
+  "gradually",
+  "eventually",
+  "wordy",
+  "handbook",
+];
 const watchCases = async (page: Page, ms: number) =>
   await page.evaluate(
-    async (time) =>
+    async ({ time, phrases }) =>
       // oxlint-disable-next-line promise/avoid-new -- frames until the time is up, which have no promise of their own
       await new Promise<string[]>((resolve) => {
         const root = document.querySelector("[data-slot=markdown]");
@@ -565,12 +574,7 @@ const watchCases = async (page: Page, ms: number) =>
         };
         /** One text: words fading again once shown, or a fence still being typed as code. */
         const look = (text: Node, inCode: boolean) => {
-          for (const phrase of [
-            "full",
-            "www.example",
-            "gradually",
-            "eventually",
-          ]) {
+          for (const phrase of phrases) {
             if (text.textContent?.includes(phrase) === true) {
               if (opacityOf(text) > 0.99) {
                 shown.add(phrase);
@@ -600,6 +604,11 @@ const watchCases = async (page: Page, ms: number) =>
             words += inCode ? " " : (text.textContent ?? "");
             look(text, inCode);
           }
+          for (const phrase of shown) {
+            if (root?.textContent?.includes(phrase) !== true) {
+              wrong.add(`${phrase} went`);
+            }
+          }
           const heading = root?.querySelector("h1, h2, h3, h4, h5, h6");
           if (heading) {
             wrong.add(`a heading: ${heading.textContent}`);
@@ -615,10 +624,13 @@ const watchCases = async (page: Page, ms: number) =>
         };
         requestAnimationFrame(frame);
       }),
-    await page.evaluate((wait) => performance.now() + wait, ms)
+    {
+      time: await page.evaluate((wait) => performance.now() + wait, ms),
+      phrases: PHRASES,
+    }
   );
 
-test("while it is written, words never fade again as a link, a note or a reference resolves, no line is a heading for a moment, and no raw mark shows", async ({
+test("while it is written, words never fade again or go as a link, a note or a reference resolves, no line is a heading for a moment, and no raw mark shows", async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });

@@ -487,7 +487,7 @@ describe("while it is written, nothing shows that the whole answer will not", ()
       ["Done.\n\n</det", "Done."],
       ["Summary\n=", "Summary"],
       ["Para\n#", "Para"],
-      ["See [the docs]", "See"],
+      ["See [the docs]", "See the docs"],
     ];
     const drawn = cases.map(([source = ""]) => {
       const html = draw(source, { streaming: true });
@@ -594,7 +594,40 @@ const hostile: Record<string, (size: number) => string> = {
     "<details>\n<summary>s</summary>\n\nx\n\n".repeat(size / 34),
 };
 
+// Each block wraps the one before it in 32 more sections: read first at the top, a block
+// is read again 32 deep, and its own sections inside it stop there too.
+const wrap = (inner: string) =>
+  `${"<details>\n<summary>s</summary>\n\n".repeat(32)}${inner}\n\n${"</details>\n\n".repeat(32)}`.trimEnd();
+const deepest = (html: string) => {
+  let open = 0;
+  let most = 0;
+  const stack: boolean[] = [];
+  for (const [tag] of html.matchAll(/<div\b[^>]*>|<\/div>/gu)) {
+    if (tag === "</div>") {
+      open -= Number(stack.pop() === true);
+    } else {
+      const section = tag.includes('data-slot="markdown-section"');
+      stack.push(section);
+      open += Number(section);
+      most = Math.max(most, open);
+    }
+  }
+  return most;
+};
+
 describe("time and size grow in step with the answer", () => {
+  test("sections around sections already read stop at 32 deep, at once and without throwing", () => {
+    const blocks = [wrap("x")];
+    for (let at = 1; at <= 8; at += 1) {
+      blocks.push(wrap(blocks.at(-1) ?? ""));
+    }
+    const source = blocks.join("\n\n");
+    const start = performance.now();
+    const drawn = [draw(source), draw(source, { streaming: true })];
+    expect(performance.now() - start).toBeLessThan(5000);
+    expect(drawn.map(deepest)).toStrictEqual([32, 32]);
+  }, 120_000);
+
   test.each(Object.entries(hostile))(
     "%s: nine times the answer, whole and while written, under 27 times the time and 10 times the nodes",
     (_, make) => {

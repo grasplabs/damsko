@@ -263,11 +263,19 @@ const repair = (block: string) => {
   if (end === -1 || whole.indexOf(")", end) !== whole.length - 1) {
     return whole;
   }
-  const before = whole.slice(0, whole.lastIndexOf("[", end)).replace(/!$/u, "");
+  // The half link's own `[`: the one its `]` closes, brackets inside its words aside.
+  let label = end;
+  for (let depth = 0; label > 0 && depth >= 0;) {
+    label -= 1;
+    depth += Number(whole[label] === "]") - Number(whole[label] === "[");
+  }
+  const before = whole.slice(0, label).replace(/!$/u, "");
   const closed = remend(`${before}x`, REPAIR);
-  return closed.startsWith(`${before}x`)
-    ? whole + closed.slice(before.length + 1)
-    : whole;
+  // Only its emphasis: a bracket still open before it is words, never a second half link.
+  const marks = closed
+    .slice(before.length + 1)
+    .replace(/\]\(streamdown:incomplete-\w+\)/u, "");
+  return closed.startsWith(`${before}x`) ? whole + marks : whole;
 };
 
 /**
@@ -372,8 +380,9 @@ let cached = 0;
 
 /** A block's nodes, read once while it is the same; the block still being written is not kept. */
 export const readBlock = (block: string, reading: Reading = {}): Block[] => {
-  const { open = false, names = NO_NAMES } = reading;
-  const key = `${JSON.stringify(names)}${block}`;
+  const { open = false, names = NO_NAMES, depth = 0 } = reading;
+  // A section read inside others stops at 32 deep, so how deep it is read is part of the key.
+  const key = `${depth} ${JSON.stringify(names)}${block}`;
   const known = open ? undefined : cache.get(key);
   if (known !== undefined) {
     return known;
