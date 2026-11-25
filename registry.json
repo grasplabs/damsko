@@ -2075,6 +2075,7 @@
         "@damsko/collapsible",
         "@damsko/dialog",
         "@damsko/dropdown-menu",
+        "@damsko/hooks",
         "@damsko/lib",
         "@damsko/link",
         "@damsko/separator",
