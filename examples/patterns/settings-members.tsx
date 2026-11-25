@@ -158,37 +158,34 @@ export default function SettingsMembers() {
           </div>
         }
       >
-        <ItemGroup aria-label="Members">
-          {members.map((member, index) => (
-            <Fragment key={member.email}>
-              {index > 0 && <ItemSeparator />}
-              <Item size="xs">
-                <ItemMedia>
-                  <Avatar name={member.name} size="xs" decorative>
-                    <AvatarFallback />
-                  </Avatar>
-                </ItemMedia>
-                <ItemContent>
-                  <ItemTitle>
-                    {member.name}
-                    {member.you && <ItemDetail>You</ItemDetail>}
-                  </ItemTitle>
-                  <ItemDescription>{member.email}</ItemDescription>
-                </ItemContent>
-                <ItemActions>
-                  <Select items={roles} defaultValue={member.role}>
-                    <SelectTrigger
-                      size="sm"
-                      aria-label={`${member.name}'s role`}
-                      style={layout.role}
-                    >
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent />
-                  </Select>
-                </ItemActions>
-              </Item>
-            </Fragment>
+        <ItemGroup separated aria-label="Members">
+          {members.map((member) => (
+            <Item key={member.email} size="xs">
+              <ItemMedia>
+                <Avatar name={member.name} size="xs" decorative>
+                  <AvatarFallback />
+                </Avatar>
+              </ItemMedia>
+              <ItemContent>
+                <ItemTitle>
+                  {member.name}
+                  {member.you && <ItemDetail>You</ItemDetail>}
+                </ItemTitle>
+                <ItemDescription>{member.email}</ItemDescription>
+              </ItemContent>
+              <ItemActions>
+                <Select items={roles} defaultValue={member.role}>
+                  <SelectTrigger
+                    size="sm"
+                    aria-label={`${member.name}'s role`}
+                    style={layout.role}
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent />
+                </Select>
+              </ItemActions>
+            </Item>
           ))}
         </ItemGroup>
       </MembersGroup>
@@ -197,7 +194,7 @@ export default function SettingsMembers() {
         title="Invitations"
         description="Waiting for an answer."
       >
-        <ItemGroup aria-label="Invitations">
+        <ItemGroup separated aria-label="Invitations">
           <Item size="xs">
             <ItemContent>
               <ItemTitle>lena@northwind.example</ItemTitle>
@@ -207,7 +204,6 @@ export default function SettingsMembers() {
               <Badge size="sm">Invited</Badge>
             </ItemActions>
           </Item>
-          <ItemSeparator />
           <Item size="xs">
             <ItemContent>
               <ItemTitle>omar@northwind.example</ItemTitle>

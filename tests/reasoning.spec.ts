@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
-import { fixedTime, hasFocusRing, openExample } from "./example.ts";
+import { fixedTime, hasFocusRing, liveRegion, openExample } from "./example.ts";
 
 test("its line opens and closes the thoughts, and says so with aria-expanded", async ({
   page,
@@ -84,7 +84,7 @@ test("it opens while it thinks, then settles into how long it took and closes", 
   await pass(page, 100);
   const thinking = page.getByRole("button", { name: "Thinking" });
   await expect(thinking).toHaveAttribute("aria-expanded", "true");
-  await expect(page.getByRole("status")).toHaveText("Thinking");
+  await expect(liveRegion(page)).toHaveText("Thinking");
 
   await pass(page, 3200);
   const done = page.getByRole("button", { name: settled });
@@ -92,7 +92,7 @@ test("it opens while it thinks, then settles into how long it took and closes", 
   await pass(page, 1000);
   await expect(done).toHaveAttribute("aria-expanded", "false");
   // The thoughts themselves are never read out: only that thinking started.
-  await expect(page.getByRole("status")).toHaveText("Thinking");
+  await expect(liveRegion(page)).toHaveText("Thinking");
 });
 
 test("the person's own choice wins over opening and closing by itself", async ({

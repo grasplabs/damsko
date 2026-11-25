@@ -1,7 +1,12 @@
 import { expect, test } from "@playwright/test";
 import type { Locator, Page } from "@playwright/test";
 
-import { drawnParts, listenToLiveRegions, openExample } from "./example.ts";
+import {
+  drawnParts,
+  listenToLiveRegions,
+  liveRegion,
+  openExample,
+} from "./example.ts";
 import type { DrawnPart } from "./example.ts";
 
 /** A step's name and its status, as a screen reader hears them: "Details, done". */
@@ -53,7 +58,7 @@ test("Tab reaches the done steps only, with a ring, and Enter goes back to one",
   await expect(steps.nth(0)).toHaveText(said("Details", "current step"));
   await expect(steps.nth(1)).toHaveText(said("Members", "not started"));
   // The move is said once, through the page's live region.
-  await expect(page.getByRole("status")).toHaveText("Step 1 of 4: Details");
+  await expect(liveRegion(page)).toHaveText("Step 1 of 4: Details");
 });
 
 test("where it stands is said when it moves, once for each move, and never at rest", async ({
