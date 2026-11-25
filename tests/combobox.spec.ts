@@ -3,6 +3,20 @@ import type { Page } from "@playwright/test";
 
 import { openExample } from "./example.ts";
 
+/**
+ * The system's corner as this engine draws it: 20px in the squircle, or its plain-radius stand-in
+ * where the engine draws no squircle (Firefox), read from the token on a probe.
+ */
+const systemCorner = async (page: Page): Promise<string> =>
+  await page.evaluate(() => {
+    const probe = document.createElement("div");
+    probe.style.borderTopLeftRadius = "var(--damsko-radius-xl)";
+    document.body.append(probe);
+    const { borderTopLeftRadius } = getComputedStyle(probe);
+    probe.remove();
+    return borderTopLeftRadius;
+  });
+
 /** The options of the list that is open: UI SDK may keep one hidden while closed. */
 const options = (page: Page) =>
   page.getByRole("listbox").filter({ visible: true }).getByRole("option");
@@ -329,7 +343,7 @@ test.describe("with several values", () => {
       };
     });
     expect(look).toStrictEqual({
-      radius: "20px",
+      radius: await systemCorner(page),
       padding: "4px",
       chip: 28,
       chipRadius: "999px",

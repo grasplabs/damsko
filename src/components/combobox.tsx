@@ -52,6 +52,7 @@ import type {
   ComboboxTriggerState,
   ComboboxValueChangeReason,
   ComboboxValueState,
+  ListAnnouncement,
   ListData,
   ListItem,
 } from "@ui-sdk/react/combobox";
@@ -59,6 +60,7 @@ import { isValidElement, useEffect, useId, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
 import { useI18n } from "../lib/i18n";
+import type { I18nCatalog } from "../lib/i18n";
 import { CheckIcon, ChevronDownIcon, Icon, XIcon } from "../lib/icons";
 import { pressedJustNow, transformOriginFrom } from "../lib/layer";
 import {
@@ -126,13 +128,6 @@ interface ComboboxBase {
    * item ("Holland").
    */
   items: ComboboxItems;
-  /**
-   * What stands at the field's start while nothing is chosen, or the chosen item has no `media`: a
-   * quiet icon. A chosen item's own `media` always stands there, with or without this, and steps
-   * aside while the words typed are a search. Give it when the items have media, so the words keep
-   * their place as a choice is made and cleared.
-   */
-  media?: ReactNode;
   /** A ComboboxEmpty, for the words the list says when nothing matches. Without one, the catalogue's. */
   children?: ReactNode;
   /** What it says while it is empty: a verb and the thing ("Search countries"). */
@@ -168,12 +163,6 @@ interface ComboboxBase {
   form?: string;
   /** The `id` of the input, for a Label outside a Field (`htmlFor`). */
   id?: string;
-  /**
-   * The name of the button at the field's end that opens the list, for a screen reader, a voice
-   * command and an agent, when the catalogue's ("Show the choices") does not say what the list
-   * holds ("Show the apps and workflows").
-   */
-  triggerLabel?: string;
   /** Layout only: margins, alignment and width. Colours, heights and corners belong to the combobox. */
   style?: LayoutStyle;
 }
@@ -190,6 +179,19 @@ interface ComboboxSingle extends ComboboxBase {
    * @default false
    */
   multiple?: false;
+  /**
+   * What stands at the field's start while nothing is chosen, or the chosen item has no `media`: a
+   * quiet icon. One value only. A chosen item's own `media` always stands there, with or without this, and steps
+   * aside while the words typed are a search. Give it when the items have media, so the words keep
+   * their place as a choice is made and cleared.
+   */
+  media?: ReactNode;
+  /**
+   * The name of the button at the field's end that opens the list, for a screen reader, a voice
+   * command and an agent, when the catalogue's ("Show the choices") does not say what the list
+   * holds ("Show the apps and workflows"). One value only: with several there is no such button.
+   */
+  triggerLabel?: string;
   /**
    * The value chosen at first, `null` for nothing; several, a list. A form reset returns here.
    * Leave it out to start with nothing.
@@ -902,15 +904,26 @@ const Chips = ({
   });
 };
 
+/** What the list says as it changes, in the catalogue's words: how many match, or what was taken away. */
+const announcementOf =
+  (words: I18nCatalog["combobox"]) =>
+  (change: ListAnnouncement): string => {
+    if (change.type === "removed") {
+      return words.removed(change.label);
+    }
+    if (change.loading) {
+      return words.loading;
+    }
+    return change.count === 0 ? words.empty : words.results(change.count);
+  };
+
 /** Type to find one value in a list, or several with `multiple`. */
 export const Combobox = ({
   items,
-  media: resting,
   children,
   size: scale = "default",
   placeholder,
   style,
-  triggerLabel,
   "aria-label": ariaLabel,
   "aria-invalid": ariaInvalid,
   id,
@@ -999,6 +1012,7 @@ export const Combobox = ({
       <ComboboxPrimitive<string, true>
         items={searchedItems(items)}
         autoHighlight="always"
+        announcement={announcementOf(words.combobox)}
         {...rest}
         multiple={multiple}
         itemToLabel={(value: string) => byValue.get(value)?.label ?? value}
@@ -1048,11 +1062,18 @@ export const Combobox = ({
     );
   }
 
-  const { multiple: _one, onValueChange, ...rest } = options;
+  const {
+    multiple: _one,
+    onValueChange,
+    media: resting,
+    triggerLabel,
+    ...rest
+  } = options;
   return (
     <ComboboxPrimitive
       items={searchedItems(items)}
       autoHighlight="always"
+      announcement={announcementOf(words.combobox)}
       {...rest}
       onValueChange={(
         next: string | null,
