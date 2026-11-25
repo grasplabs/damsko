@@ -357,19 +357,37 @@ const never = new Promise<never>(() => {
 export const NotYetShown = (): ReactNode => use(never);
 
 // Words that start like a formula (=, +, -, @, a tab or a return) run as one when a spreadsheet
-// opens the file: a leading apostrophe keeps them text. Figures are numbers and are left alone.
+// opens the file: a leading apostrophe keeps them text. Figures, numbers or written as one ("-12",
+// "+3.5%", "1,200"), are left alone.
 const formula = /^[=+\-@\t\r]/u;
+const figure = /^[+-]?\d[\d,]*(?:\.\d+)?%?$/u;
+
+/** `value` as a spreadsheet's cell: words that start like a formula kept text by an apostrophe. */
+const sheetCell = (value: string | number) =>
+  typeof value === "string" && formula.test(value) && !figure.test(value)
+    ? `'${value}`
+    : String(value);
+
 const csvCell = (value: string | number) => {
-  const text =
-    typeof value === "string" && formula.test(value)
-      ? `'${value}`
-      : String(value);
+  const text = sheetCell(value);
   return /[",\r\n]/u.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
 };
 
 /** Rows as CSV, each line ended as a spreadsheet expects. */
 export const csvOf = (rows: readonly (readonly (string | number)[])[]) =>
   rows.map((line) => line.map(csvCell).join(",")).join("\r\n");
+
+/** Rows as TSV, cells kept text as in CSV: a tab or a line break in a cell written as `\t` or `\n`. */
+export const tsvOf = (rows: readonly (readonly string[])[]) =>
+  rows
+    .map((cells) =>
+      cells
+        .map((cell) =>
+          sheetCell(cell).replaceAll("\t", "\\t").replaceAll(/\r?\n/gu, "\\n")
+        )
+        .join("\t")
+    )
+    .join("\n");
 
 /** Saves `text` as a file of that name and type, which the browser downloads. */
 export const saveFile = (text: string, name: string, type: string) => {
