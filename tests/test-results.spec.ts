@@ -1,6 +1,12 @@
 import { expect, test } from "@playwright/test";
 
-import { drawnEdges, hasFocusRing, openExample, panelOf } from "./example.ts";
+import {
+  drawnEdges,
+  hasFocusRing,
+  openExample,
+  panelOf,
+  startsOf,
+} from "./example.ts";
 
 test("a failed run says its counts and Failed in words, and is open on its tests", async ({
   page,
@@ -72,7 +78,7 @@ test("the keyboard reaches the run with a ring; Enter opens it on a bar named by
   await expect(page.getByText("1.52s")).toBeVisible();
 });
 
-test("what opens under the line starts on the line's own start edge, its mark's", async ({
+test("what opens under the line, holding a row that opens, starts a row's padding in from the line's mark", async ({
   page,
 }) => {
   await openExample(page, "test-results", "basic");
@@ -84,5 +90,32 @@ test("what opens under the line starts on the line's own start edge, its mark's"
   await expect(panel).toBeVisible();
   const header = await drawnEdges(line);
   const body = await drawnEdges(panel);
-  expect(Math.abs(body.start - header.start)).toBeLessThanOrEqual(1);
+  // The tests stand in with the failed one, whose fill starts under the run's mark.
+  expect(Math.abs(body.start - header.start - 8)).toBeLessThanOrEqual(1);
 });
+
+for (const dir of ["ltr", "rtl"]) {
+  test(`each level of rows stands in by a row's padding: a suite under the run's mark, a test under the suite's, ${dir}`, async ({
+    page,
+  }) => {
+    await openExample(page, "test-results", "suites");
+    await page.evaluate((direction) => {
+      document.documentElement.dir = direction;
+    }, dir);
+    const run = await startsOf(
+      page.getByRole("button", { name: /^Ran 8 tests/u })
+    );
+    const suite = await startsOf(
+      page.getByRole("button", { name: /^user-api\.test\.ts/u })
+    );
+    const failed = await startsOf(
+      page.getByRole("button", { name: /^updates a user profile/u })
+    );
+    const room = run.mark - run.box;
+    expect(room).toBeCloseTo(8, 0);
+    expect(suite.box).toBeCloseTo(run.mark, 0);
+    expect(suite.mark - suite.box).toBeCloseTo(room, 0);
+    expect(failed.box).toBeCloseTo(suite.mark, 0);
+    expect(failed.mark - failed.box).toBeCloseTo(room, 0);
+  });
+}

@@ -30,7 +30,9 @@
 // is the trigger's words, the original's activity line: its mark beside its title, a space-2 apart,
 // at the text's own weight and line, muted until the pointer is on it or it is open, as tall as a
 // small control. The trigger's words stand on the column's edge, where the panel's lines and
-// surfaces start; its fill under the pointer reaches past them by its own padding. In a card that
+// surfaces start; its fill under the pointer reaches past them by its own padding. Rows inside a
+// row's panel stand in by that padding, with the steps beside them: a row's fill starts on the
+// parent's column edge, under the parent's mark, and each level deeper steps in again. In a card that
 // carries traceCardMarker (Tool's) the trigger runs the card's width and takes no fill: its words
 // turn to ink, as a step that opens did in the original. A TraceIcon with nothing in it is the
 // status mark: a dot, the working mark (Agent indicator) on the trace's last running line, the
@@ -211,6 +213,18 @@ const styles = stylex.create({
     fontSize: font.textSm,
     lineHeight: font.textSmLine,
     color: colors.mutedForeground,
+  },
+  // A trace inside a row's panel that holds rows: in by a trigger's padding, steps and rows alike,
+  // so a row's fill starts on the parent's column edge and never past it, and the dots still meet
+  // every mark. In a card (Tool's) the row is the card's, and stands on its edge.
+  traceNested: {
+    paddingInlineStart: {
+      default: 0,
+      ":has(> [data-slot=trace-collapsible])": {
+        default: size.collapsiblePadding,
+        [stylex.when.ancestor(":is(*)", traceCardMarker)]: 0,
+      },
+    },
   },
   // A line: its mark in its seat, its words and whatever stands beside them, wrapping where there
   // is no room; a long title wraps beside its mark rather than under it.
@@ -425,15 +439,23 @@ const spokenText = (element: Element): string => {
 
 // Whether a line here is a step (straight inside a Trace) or a trigger's words.
 const StepContext = createContext(false);
+// Whether a part is inside a row's panel.
+const NestedContext = createContext(false);
 // The status of the line a part is in.
 const StatusContext = createContext<TraceLineStatus | undefined>(undefined);
 
 /** A list of lines: the steps an assistant takes. */
-export const Trace = ({ children, style }: TraceProps) => (
-  <div data-slot="trace" {...stylex.props(styles.trace, style)}>
-    <StepContext value>{children}</StepContext>
-  </div>
-);
+export const Trace = ({ children, style }: TraceProps) => {
+  const nested = use(NestedContext);
+  return (
+    <div
+      data-slot="trace"
+      {...stylex.props(styles.trace, nested && styles.traceNested, style)}
+    >
+      <StepContext value>{children}</StepContext>
+    </div>
+  );
+};
 
 /** One line: its mark, its title and a quiet description. Wrap it in a trigger or a link to make it do something. */
 export const TraceLine = ({ children, status, style }: TraceLineProps) => {
@@ -652,7 +674,7 @@ export const TraceCollapsibleContent = ({
       data-slot="trace-collapsible-content-inner"
       {...stylex.props(disclosureStyles.body)}
     >
-      {children}
+      <NestedContext value>{children}</NestedContext>
     </div>
   </CollapsiblePanel>
 );

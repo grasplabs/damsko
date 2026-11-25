@@ -428,6 +428,31 @@ export const paintedBox = async (
 };
 
 /**
+ * How far from the page's start edge (its left, or its right in a right-to-left page) a row that
+ * opens, its first mark and the panel it opens start.
+ */
+export const startsOf = async (
+  row: Locator
+): Promise<{ box: number; mark: number; panel: number }> =>
+  await row.evaluate((node) => {
+    const rtl = getComputedStyle(node).direction === "rtl";
+    const start = (element: Element | null | undefined): number => {
+      const rect = element?.getBoundingClientRect();
+      if (rect === undefined) {
+        return Number.NaN;
+      }
+      return rtl ? window.innerWidth - rect.right : rect.left;
+    };
+    return {
+      box: start(node),
+      mark: start(node.querySelector("svg")),
+      panel: start(
+        document.querySelector(`[id="${node.getAttribute("aria-controls")}"]`)
+      ),
+    };
+  });
+
+/**
  * Where what an element draws starts and ends across the page: its words, its marks and any box
  * inside it with a fill, an edge or a shadow, not the element's own box (a trigger's fill under the
  * pointer, a tap target, words hidden for a screen reader).
