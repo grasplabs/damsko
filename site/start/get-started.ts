@@ -241,8 +241,24 @@ const componentsJson = (address: string) =>
 const registryAddress = `${siteAddress}/r/{name}.json`;
 
 /** The first page of every app here: one button. */
-const firstApp =
-  'import { Button } from "@grasp-os/ui/components/button";\n\nexport default function App() {\n  return <Button variant="default">Save changes</Button>;\n}';
+/**
+ * The first page: a button, with an icon the house set does not hold, from Hugeicons (the package
+ * lib/icons draws from) through Damsko's Icon.
+ */
+const firstApp = [
+  'import { Button } from "@grasp-os/ui/components/button";',
+  'import { Icon } from "@grasp-os/ui/lib/icons";',
+  'import { FloppyDiskIcon } from "@hugeicons/core-free-icons";',
+  "",
+  "export default function App() {",
+  "  return (",
+  '    <Button variant="default">',
+  "      <Icon icon={FloppyDiskIcon} />",
+  "      Save changes",
+  "    </Button>",
+  "  );",
+  "}",
+].join("\n");
 
 /** The first page beside Tailwind: the button placed by an element of the page's own. */
 const placedApp =
@@ -382,6 +398,17 @@ export const sections: Section[] = [
         ],
       },
       {
+        slug: "a-document-the-framework-draws",
+        name: "When the framework draws the document",
+        note: "Skip this in an app with an index.html, as this one has. In development StyleX's plugin adds its stylesheet and its runtime to the page through index.html; a framework that renders the document itself (TanStack Start, React Router's framework mode) has none, so there every component has its classes and no rules until the two are in the document's head, in development only. A build needs neither: the CSS is in the app's stylesheet.",
+        blocks: [
+          {
+            code: '<link rel="stylesheet" href="/virtual:stylex.css" />\n<script type="module" src="/@id/virtual:stylex:runtime"></script>',
+            lang: "html",
+          },
+        ],
+      },
+      {
         slug: "typescript",
         name: "Tell TypeScript",
         note: "The alias, twice: the shadcn CLI reads it from tsconfig.json (without it there it stops at \"Could not resolve the following aliases\"), TypeScript's build from tsconfig.app.json. In tsconfig.node.json, bundler resolution in place of nodenext, or vite.config.ts cannot read StyleX's types.",
@@ -474,7 +501,7 @@ export const sections: Section[] = [
       {
         slug: "use-it",
         name: "Use it",
-        note: "Every file lands at the path it has in Damsko: src/components/button.tsx, the parts it builds on in src/lib/ and src/hooks/. Import it by the path a product's packages/ui exports, as the whole of src/App.tsx, then build it, or pnpm dev to look at it.",
+        note: "Every file lands at the path it has in Damsko: src/components/button.tsx, the parts it builds on in src/lib/ and src/hooks/. Import it by the path a product's packages/ui exports, as the whole of src/App.tsx, then build it, or pnpm dev to look at it. lib/icons holds the icons Damsko's parts draw; any other Hugeicons drawing comes from @hugeicons/core-free-icons, which the CLI added with lib, and draws through the same Icon, at its holder's size and stroke. Only the drawings imported reach the bundle.",
         blocks: [
           {
             code: firstApp,
@@ -582,10 +609,10 @@ export const sections: Section[] = [
       {
         slug: "the-app-depends-on-it",
         name: "The app depends on it",
-        note: "The package, then the template's packages, StyleX's plugin and lightningcss at the catalog's versions; this installs the workspace too.",
+        note: "The package, and Hugeicons at the catalog's version for the icons the app draws itself (the package's own components bring theirs), then the template's packages, StyleX's plugin and lightningcss at the catalog's versions; this installs the workspace too.",
         blocks: [
           {
-            code: `cd apps/web\npnpm add "@grasp-os/ui@workspace:*"\n${addAtCatalog}`,
+            code: `cd apps/web\npnpm add "@grasp-os/ui@workspace:*" @hugeicons/core-free-icons@catalog:\n${addAtCatalog}`,
             lang: "bash",
             does: { kind: "run", in: "." },
           },
@@ -693,7 +720,7 @@ export const sections: Section[] = [
       {
         slug: "place-it-with-a-class",
         name: "Place it with a class",
-        note: "A Damsko component takes no class: its style prop takes a StyleX style (stylex.create's), so className on one is a type error. On a page still on Tailwind, an element of the page's own around the component places it and sizes it: the row below puts the button at its end, and a Skeleton, a line as wide as what holds it, takes its width from a div with w-40 round it. A page that moves to StyleX adds @stylexjs/stylex to its app and passes its own styles to style instead. The whole of apps/web/src/App.tsx, then build it.",
+        note: "A Damsko component takes no class: its style prop takes a StyleX style (stylex.create's), so className on one is a type error. On a page still on Tailwind, an element of the page's own around the component places it and sizes it: the row below puts the button at its end, and a Skeleton, a line as wide as what holds it, takes its width from a div with w-40 round it. A page that moves to StyleX adds @stylexjs/stylex to its app and passes its own styles to style instead; a lint rule that reads every style attribute as an inline style object (shadcn's no-inline-styles) refuses that StyleX style, so a product that keeps the rule turns it off for the folders on Damsko. The whole of apps/web/src/App.tsx, then build it.",
         blocks: [
           {
             code: placedApp,

@@ -215,6 +215,14 @@ const excused = new Map<string, string>([
   ["sheet/removes: Delete Supplier list", outer],
   ["snippet/colours: Copy --damsko-foreground", outer],
   ["snippet/colours: Copy --damsko-mint", outer],
+  ["sortable-list/controls: Move Its AI", outer],
+  ["sortable-list/controls: Move Its people", outer],
+  ["sortable-list/controls: Move Review", outer],
+  ["sortable-list/controls: Move Welcome", outer],
+  ["sortable-list/disabled: Move Evening", outer],
+  ["sortable-list/fields: Move Doing", outer],
+  ["sortable-list/fields: Move Done", outer],
+  ["sortable-list/fields: Move To do", outer],
   ["sources/open: By kind", outer],
   ["sources/open: By relevance", outer],
   ["sources/open: Fold them away", outer],
@@ -339,10 +347,10 @@ const inThePage = (): string[] => {
       )
     );
   };
-  // The unseen target a control draws: inside it, or beside it in a field's box.
+  // The unseen target a control draws: inside it, or beside it in a field's box (a native select's too).
   const isTarget = (control: Element, hit: Element) =>
     control.contains(hit) ||
-    (control.matches(fields) &&
+    (control.matches(`${fields}, select`) &&
       hit.parentElement === control.parentElement &&
       hit.getAttribute("aria-hidden") === "true" &&
       hit.childNodes.length === 0);
@@ -665,6 +673,12 @@ const inThePage = (): string[] => {
   return out;
 };
 
+// A listed control is excused its reach only: it never covers another, nor takes its presses.
+const isExcused = (each: string) =>
+  [": short of the tap target, ", ": its target reaches "].some(
+    (at) => each.includes(at) && excused.has(each.slice(0, each.indexOf(at)))
+  );
+
 for (const [component, paths] of byComponent) {
   test(`${component}: every control takes a finger, and only its own presses`, async ({
     page,
@@ -681,12 +695,6 @@ for (const [component, paths] of byComponent) {
       const issues = await page.evaluate(inThePage);
       found.push(...new Set(issues.map((issue) => `${path}: ${issue}`)));
     }
-    // A listed control is excused its reach only: it never covers another, nor takes its presses.
-    const isExcused = (each: string) =>
-      [": short of the tap target, ", ": its target reaches "].some(
-        (at) =>
-          each.includes(at) && excused.has(each.slice(0, each.indexOf(at)))
-      );
     expect(found.filter((each) => !isExcused(each))).toStrictEqual([]);
   });
 }

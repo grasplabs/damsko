@@ -4,6 +4,7 @@ import type { Locator, Page } from "@playwright/test";
 import {
   fixedTime,
   listenToLiveRegions,
+  liveRegion,
   openExample,
   openExampleAsleep,
   pickerFrom,
@@ -200,7 +201,7 @@ test("@ opens the menu at the caret, and a pick goes in as one token that Backsp
   await expect(text).toContainText("Ask Amara Okafor");
   // Said as it goes in, with its kind.
   await expect(
-    page.getByRole("status").filter({ hasText: "Amara Okafor" }).first()
+    liveRegion(page).filter({ hasText: "Amara Okafor" }).first()
   ).toContainText("mention");
   await page.keyboard.press("Backspace");
   await page.keyboard.press("Backspace");
@@ -771,7 +772,7 @@ test("a failure the status says shows in the band, and is said once", async ({
   ).toBeVisible();
   // Said once to a screen reader, in the page's live region.
   await expect(
-    page.getByRole("status").filter({ hasText: "Could not send" })
+    liveRegion(page).filter({ hasText: "Could not send" })
   ).toHaveCount(1);
 });
 
@@ -892,7 +893,7 @@ test("an accent colours the working light", async ({ page }) => {
 
 test("success is said once each time it comes", async ({ page }) => {
   await openExample(page, "prompt-input", "success");
-  const said = page.getByRole("status").filter({ hasText: "Done" });
+  const said = liveRegion(page).filter({ hasText: "Done" });
   await expect(said).toHaveCount(1);
   await expect(page.getByRole("button", { name: "Send" })).toBeEnabled();
 });
@@ -1300,6 +1301,73 @@ test("a spoken conversation stands in the card: its turns are said, and Close gi
   await expect(voice).toHaveCount(0);
   await expect(page.getByRole("textbox", { name: "Answer" })).toBeFocused();
 });
+
+test("in one row a spoken conversation is the row, its words on the line before the field, the latest in view", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 640 });
+  await openExample(page, "prompt-input", "voice-compact", {
+    time: fixedTime,
+  });
+  const voice = page.getByRole("group", { name: "Voice conversation" });
+  const card = page.getByRole("group").first();
+  await expect(voice).toBeVisible();
+  expect(await heightOf(card)).toBe(56);
+  // The other voice's words come, and the card stays one row.
+  await page.clock.runFor(6100);
+  const words = voice.locator("[data-slot=prompt-input-voice-words]");
+  await expect(words).toContainText("What slows the team down most?");
+  expect(await heightOf(card)).toBe(56);
+  // On the row's one line, between the other voice's mark and Mute; past their room, the newest
+  // stand at its end and the first are cut at its start.
+  const line = await words.boundingBox();
+  const room = await words.locator("..").boundingBox();
+  const mute = await voice.getByRole("button", { name: "Mute" }).boundingBox();
+  expect(line?.height).toBeLessThanOrEqual(24);
+  expect((room?.x ?? 0) + (room?.width ?? 0)).toBeLessThanOrEqual(mute?.x ?? 0);
+  expect(line?.x ?? 0).toBeLessThan(room?.x ?? 0);
+  expect(
+    Math.abs(
+      (line?.x ?? 0) + (line?.width ?? 0) - (room?.x ?? 0) - (room?.width ?? 0)
+    )
+  ).toBeLessThanOrEqual(1);
+});
+
+for (const width of [1440, 390]) {
+  test(`in one row at ${width}px a note stands in the field's place, beside the words, and the row stays one row`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 640 });
+    await openExample(page, "prompt-input", "voice-compact", {
+      time: fixedTime,
+    });
+    const voice = page.getByRole("group", { name: "Voice conversation" });
+    const card = page.getByRole("group").first();
+    // The person's turn, two words in: a stretch was not made out.
+    await page.clock.runFor(9100);
+    const note = voice.getByText("A part couldn't be made out.");
+    await expect(note).toBeVisible();
+    expect(await heightOf(card)).toBe(56);
+    const words = voice.locator("[data-slot=prompt-input-voice-words]");
+    await expect(words).toContainText("Waiting on");
+    // On the row's line: after the words, before Mute, never over either.
+    const said = await words.locator("..").boundingBox();
+    const shown = await note.boundingBox();
+    const mute = await voice
+      .getByRole("button", { name: "Mute" })
+      .boundingBox();
+    expect(shown?.width ?? 0).toBeGreaterThan(0);
+    expect(shown?.x ?? 0).toBeGreaterThanOrEqual(
+      (said?.x ?? 0) + (said?.width ?? 0)
+    );
+    expect((shown?.x ?? 0) + (shown?.width ?? 0)).toBeLessThanOrEqual(
+      mute?.x ?? 0
+    );
+    // Gone with the next word.
+    await page.clock.runFor(1000);
+    await expect(note).toBeHidden();
+  });
+}
 
 test("a spoken conversation takes the focus as it starts from the keyboard, and Escape ends it", async ({
   page,

@@ -148,16 +148,6 @@ const FADE_END = `linear-gradient(to right, currentColor calc(100% - ${space[5]}
 const FADE_END_RTL = `linear-gradient(to left, currentColor calc(100% - ${space[5]}), transparent), linear-gradient(transparent, transparent)`;
 
 const styles = stylex.create({
-  // The box holds the input and its touch target. It is as wide as the column it stands in.
-  box: {
-    position: "relative",
-    display: "flex",
-    alignItems: "stretch",
-    boxSizing: "border-box",
-    width: "100%",
-    minWidth: 0,
-    maxWidth: "100%",
-  },
   // An icon at the start: it stands over the input, in muted, and lets presses through to it.
   icon: {
     [iconVars.size]: sizes.iconSm,
@@ -175,31 +165,12 @@ const styles = stylex.create({
   iconStart: {
     paddingInlineStart: `calc(${space[3]} + ${sizes.iconSm} + ${space[2]})`,
   },
+  // Over inputStyles.control, which sets it above its touch target (so a press on the words puts
+  // the caret where it lands), its fill, edge and words.
   input: {
-    // Above its touch target, so a press on the words puts the caret where it lands.
-    position: "relative",
     flexGrow: 1,
-    boxSizing: "border-box",
-    width: "100%",
-    minWidth: 0,
-    margin: 0,
-    appearance: "none",
-    // No border: the edge is a hairline drawn inside, which adds no size. In forced colours the
-    // shadow is dropped, so a real one appears there.
-    borderWidth: { default: 0, [FORCED]: 1 },
-    borderStyle: "solid",
-    borderColor: "currentColor",
-    cornerShape: radius.shape,
-    backgroundColor: colors.inputBg,
-    color: colors.foreground,
     caretColor: colors.foreground,
-    fontFamily: font.sans,
-    // 16px on a phone or a touch screen, or Safari zooms the page in when the field takes focus.
-    fontSize: { default: font.textSm, [TYPING]: sizes.inputTextTouch },
-    lineHeight: font.textSmLine,
-    fontWeight: font.weightNormal,
     letterSpacing: "normal",
-    textAlign: "start",
     // A placeholder too long for the field ends in an ellipsis, never mid-word: Chromium reads the
     // input's own text-overflow for its placeholder, so it is set while the placeholder shows. A
     // typed value fades instead (below).
@@ -230,9 +201,6 @@ const styles = stylex.create({
     backgroundClip: { default: null, [CLIP_TEXT]: "text, padding-box" },
     // One tile: words past the content box (in the end padding) take no paint, so stay unseen.
     backgroundRepeat: { default: null, [CLIP_TEXT]: "no-repeat" },
-    transitionProperty: "box-shadow, background-color",
-    transitionDuration: duration.hover,
-    transitionTimingFunction: duration.ease,
     // One look for clearing a field in the library: InputGroupClear. A search field shows no cross
     // of the browser's; Escape still empties it where the browser does that. display: none, not
     // appearance: none: WebKit draws its own cross with appearance none too.
@@ -314,7 +282,7 @@ const TextInput = ({
   return (
     <BoxPrimitive
       render={<div data-slot={slot} />}
-      {...stylex.props(styles.box, style)}
+      {...stylex.props(inputStyles.box, style)}
     >
       <span aria-hidden="true" {...stylex.props(tapTarget)} />
       {icon && (
@@ -333,6 +301,7 @@ const TextInput = ({
             {...props}
             data-slot="input"
             {...stylex.props(
+              inputStyles.control,
               styles.input,
               !long && styles.fits,
               sizeStyles[size],
@@ -473,7 +442,7 @@ export const PasswordInput = ({
     <PasswordInputPrimitive
       {...options}
       autoComplete={autoComplete}
-      {...stylex.props(styles.box, style)}
+      {...stylex.props(inputStyles.box, style)}
     >
       <span aria-hidden="true" {...stylex.props(tapTarget)} />
       <PasswordInputControl
@@ -483,6 +452,7 @@ export const PasswordInput = ({
           <input
             {...props}
             {...stylex.props(
+              inputStyles.control,
               styles.input,
               sizeStyles[size],
               roomStyles[size],

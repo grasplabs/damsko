@@ -14,7 +14,7 @@ export interface IconSource {
 
 /**
  * `/** What it means. Drawing01Icon: a note. *\/ export const NameIcon: IconData = Drawing01Icon;`,
- * the drawing perhaps wrapped (`pointing(Drawing01Icon)`, after a pure mark).
+ * the drawing perhaps wrapped (`directional(Drawing01Icon)`, after a pure mark).
  */
 const pattern =
   /\/\*\*((?:(?!\*\/)[\s\S])*?)\*\/\s*export const (\w+): IconData =\s*(?:\/\* @__PURE__ \*\/\s*)?(?:\w+\()?(\w+)\)?;/gu;

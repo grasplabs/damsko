@@ -449,9 +449,50 @@ export const edgeFade = edgeFadeStyles.edges;
 /**
  * The box a text field draws, the same for Input, Textarea and Select's closed control: its height,
  * padding and corner at each size and its states; the 44px target a finger needs is `tapTarget`.
- * Each field keeps its own base and its read-only look, which differ.
+ * Input, Select's closed control and Native select also share the box round the control and the
+ * control's base; each keeps its own padding, words and read-only look, which differ.
  */
 export const inputStyles = stylex.create({
+  // The box round a one-line field: as wide as the column it stands in, holding the control and
+  // its touch target.
+  box: {
+    position: "relative",
+    display: "flex",
+    alignItems: "stretch",
+    boxSizing: "border-box",
+    width: "100%",
+    minWidth: 0,
+    maxWidth: "100%",
+  },
+  // The control's base: the fill and ink, the words at a field's size (16px on a phone or a touch
+  // screen, or Safari zooms the page in when the field takes focus), and no border: the edge is a
+  // hairline drawn inside (enabled, below), which adds no size, and a real one in forced colours,
+  // where the shadow is dropped.
+  control: {
+    position: "relative",
+    boxSizing: "border-box",
+    width: "100%",
+    minWidth: 0,
+    margin: 0,
+    appearance: "none",
+    borderWidth: { default: 0, [FORCED]: 1 },
+    borderStyle: "solid",
+    borderColor: "currentColor",
+    cornerShape: radius.shape,
+    backgroundColor: colors.inputBg,
+    color: colors.foreground,
+    fontFamily: font.sans,
+    fontSize: {
+      default: font.textSm,
+      [media.maxSmOrCoarse]: size.inputTextTouch,
+    },
+    lineHeight: font.textSmLine,
+    fontWeight: font.weightNormal,
+    textAlign: "start",
+    transitionProperty: "box-shadow, background-color",
+    transitionDuration: duration.hover,
+    transitionTimingFunction: duration.ease,
+  },
   // The height, the same as Button's, the words centred on it, the one corner capped at half.
   sm: {
     minHeight: size.controlSm,
@@ -746,12 +787,6 @@ export const listStyles = stylex.create({
 // An item's corner nests inside the panel's, capped at half a control's height.
 const ITEM_CORNER = `min(${radius.lg}, calc(${size.controlDefault} / 2))`;
 
-// A panel one of whose own rows has an icon. A row stands in the panel, in a group or in a group in
-// a group; a submenu is a menu inside the panel, and the chain stops at it, so its rows' icons are
-// its own and never the parent's.
-const OWN = ":not([role=menu])";
-const OWN_ICON = `:has(> ${OWN} > [data-menu-icon], > ${OWN} > ${OWN} > [data-menu-icon], > ${OWN} > ${OWN} > ${OWN} > [data-menu-icon], > ${OWN} > ${OWN} > ${OWN} > ${OWN} > [data-menu-icon])`;
-
 /**
  * A menu: the panel and its items, for dropdown menu, context menu and menubar. A 4px padded panel
  * at high lift, items 36px tall with 8px round their icon and words, labels, and separators that run
@@ -763,10 +798,11 @@ export const menuStyles = stylex.create({
   panel: {
     [iconVars.size]: size.iconSm,
     [iconVars.stroke]: size.iconStroke,
-    // Its rows' words leave room for an icon only when one of its own rows has one.
+    // Its rows' words leave room for an icon only when one of its own rows has one: UI SDK marks
+    // the menu an icon's row stands in, at any depth of groups, and a submenu is a menu of its own.
     [menuVars.lead]: {
       default: "0px",
-      [OWN_ICON]: `calc(${size.iconSm} + ${space[2]})`,
+      ":is([data-has-icons])": `calc(${size.iconSm} + ${space[2]})`,
     },
     boxSizing: "border-box",
     minWidth: `min(${size.menuWidth}, 100vw - 2 * ${space.popupGutter})`,

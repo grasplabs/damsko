@@ -46,43 +46,40 @@ const members = [
 export default function ItemMembers() {
   return (
     <div {...stylex.props(layout.box)}>
-      <ItemGroup aria-label="Members">
-        {members.map((member, index) => (
-          <Fragment key={member.email}>
-            {index > 0 && <ItemSeparator />}
-            <Item size="sm">
-              <ItemMedia align="center">
-                <Avatar name={member.name} size="xs" decorative>
-                  <AvatarFallback />
-                </Avatar>
-              </ItemMedia>
-              <ItemContent>
-                <ItemTitle>{member.name}</ItemTitle>
-                <ItemDescription>{member.email}</ItemDescription>
-              </ItemContent>
-              <ItemActions>
-                <>
-                  <Select items={roles} defaultValue={member.role}>
-                    <SelectTrigger
-                      size="sm"
-                      aria-label={`${member.name}'s role`}
-                      style={layout.role}
-                    >
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent />
-                  </Select>
-                  <Button
-                    size="icon-sm"
-                    variant="ghost"
-                    aria-label={`More for ${member.name}`}
+      <ItemGroup separated aria-label="Members">
+        {members.map((member) => (
+          <Item key={member.email} size="sm">
+            <ItemMedia align="center">
+              <Avatar name={member.name} size="xs" decorative>
+                <AvatarFallback />
+              </Avatar>
+            </ItemMedia>
+            <ItemContent>
+              <ItemTitle>{member.name}</ItemTitle>
+              <ItemDescription>{member.email}</ItemDescription>
+            </ItemContent>
+            <ItemActions>
+              <>
+                <Select items={roles} defaultValue={member.role}>
+                  <SelectTrigger
+                    size="sm"
+                    aria-label={`${member.name}'s role`}
+                    style={layout.role}
                   >
-                    <Icon icon={EllipsisIcon} />
-                  </Button>
-                </>
-              </ItemActions>
-            </Item>
-          </Fragment>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent />
+                </Select>
+                <Button
+                  size="icon-sm"
+                  variant="ghost"
+                  aria-label={`More for ${member.name}`}
+                >
+                  <Icon icon={EllipsisIcon} />
+                </Button>
+              </>
+            </ItemActions>
+          </Item>
         ))}
       </ItemGroup>
     </div>

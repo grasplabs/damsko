@@ -45,10 +45,14 @@ import type { ComponentProps, ReactNode } from "react";
 import { useReturnFocus } from "../hooks/use-return-focus";
 import { useI18n } from "../lib/i18n";
 import { Icon, XIcon } from "../lib/icons";
-import { layerStyles, useLayerBody, watchPanel } from "../lib/layer";
+import {
+  layerStyles,
+  shadeProps,
+  useLayerBody,
+  watchPanel,
+} from "../lib/layer";
 import { focusRingInset, scrollbarHidden } from "../lib/styles";
 import {
-  colors,
   duration,
   font,
   media,
@@ -164,11 +168,8 @@ const leaving = ":is([data-ending-style])";
 const arriving = "@starting-style";
 
 const look = stylex.create({
-  // The shade over the page. It follows the panel in and out.
+  // The shade over the page (lib/layer's shade). It follows the panel in and out.
   overlay: {
-    position: "fixed",
-    inset: 0,
-    backgroundColor: colors.dialogScrim,
     opacity: { default: 1, [arriving]: 0, [leaving]: 0 },
     transitionProperty: "opacity",
     transitionDuration: {
@@ -341,10 +342,7 @@ export const DialogContent = ({
   const { close } = useI18n().dialog;
   return (
     <>
-      <BackdropPrimitive
-        render={<div data-slot="dialog-overlay" />}
-        {...stylex.props(styles.overlay)}
-      />
+      <BackdropPrimitive {...shadeProps("dialog-overlay", styles.overlay)} />
       <ContentPrimitive
         {...mergeProps(rest, { ref: watchPanel })}
         {...stylex.props(

@@ -881,7 +881,11 @@ export const Switch = (allProps: SwitchProps) => {
       return;
     }
     setSaving("error");
-    announce(failure);
+    // In a Field its FieldError says the words, through the same live region (UI SDK's field):
+    // said here only where no Field shows them.
+    if (field === null) {
+      announce(failure);
+    }
   };
 
   const handleCheckedChange: NonNullable<
