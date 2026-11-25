@@ -5,7 +5,6 @@
 // markdown-stream.test.tsx.
 //
 //   pnpm exec vp test scripts/markdown.test.tsx
-import { setTimeout as sleep } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
 
 import { renderToStaticMarkup } from "react-dom/server";
@@ -658,29 +657,24 @@ describe("time and size grow in step with the answer", () => {
     expect(drawn.map(deepest)).toStrictEqual([32, 32]);
   }, 120_000);
 
-  test("a long answer of sections around sections streams with no read much slower than the rest", async () => {
+  test("the block cache keeps what an answer reads, however far past its 2 MB: a block is read once while it is the same", () => {
+    // Fifteen blocks, each wrapping the one before in 32 more sections: read at every depth, more
+    // than the cache's 2 MB.
     const blocks = [wrap("x")];
     for (let at = 1; at <= 14; at += 1) {
       blocks.push(wrap(blocks.at(-1) ?? ""));
     }
-    const source = blocks.join("\n\n");
-    const times: number[] = [];
-    let most = 0;
-    for (let at = 500; at < source.length + 500; at += 500) {
-      // Each chunk drawn in a task of its own, as a page draws it.
-      // oxlint-disable-next-line no-await-in-loop -- one chunk after another, as they stream
-      await sleep(0);
-      const start = performance.now();
-      const html = draw(source.slice(0, at), { streaming: true });
-      times.push(performance.now() - start);
-      most = Math.max(most, deepest(html));
+    const readAll = () => blocks.map((text) => parse.readBlock(text));
+    parse.nextPass();
+    const first = readAll();
+    const same = () => readAll().every((nodes, at) => nodes === first[at]);
+    // In the same pass (one render), and in each pass after it, as an answer streams on.
+    expect(same()).toBeTruthy();
+    for (let pass = 0; pass < 3; pass += 1) {
+      parse.nextPass();
+      expect(same()).toBeTruthy();
     }
-    const sorted = times.toSorted((a, b) => a - b);
-    const median = sorted[Math.floor(sorted.length / 2)] ?? 0;
-    expect(most).toBe(32);
-    // The cache cleared whole, every block read again: reads of seven times the median and more.
-    expect(sorted.at(-1) ?? 0).toBeLessThan(Math.max(median, 1) * 6);
-  }, 600_000);
+  });
 
   test.each(Object.entries(hostile))(
     "%s: nine times the answer, whole and while written, under 27 times the time and 10 times the nodes",
