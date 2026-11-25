@@ -2070,6 +2070,7 @@
         "@damsko/code-block",
         "@damsko/collapsible",
         "@damsko/dropdown-menu",
+        "@damsko/hooks",
         "@damsko/lib",
         "@damsko/link",
         "@damsko/separator",
