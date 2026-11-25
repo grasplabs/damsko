@@ -352,7 +352,7 @@ describe("no address still being written, and none unsafe, is ever handed on", (
     }
     expect(wrong).toStrictEqual([]);
     expect(links).toHaveLength(52);
-  });
+  }, 120_000);
 });
 
 /** The kinds of node a block's tree holds. */

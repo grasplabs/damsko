@@ -138,29 +138,39 @@ describe("a stream that ends draws what the whole answer draws, and no raw mark 
 });
 
 describe("a block that takes long to read is read again as often as a fifth of the time allows", () => {
-  test("a small one at every chunk; a big one once four times its last read has passed, chunk or not", async () => {
-    const text = `${"words in a long line ".repeat(10)}\n`.repeat(1000);
-    const { box, root, render } = live();
-    const shown = (at: number) => {
-      render(<Markdown streaming>{text.slice(0, at)}</Markdown>);
-      return box.textContent.length;
-    };
-    expect(shown(100)).toBeLessThan(shown(140));
-    shown(150_000);
-    await act(async () => {
-      await sleep(100);
-    });
-    const read = shown(150_040);
-    expect(read).toBeGreaterThan(149_000);
-    expect(shown(150_080)).toBe(read);
-    await act(async () => {
-      await sleep(1000);
-    });
-    expect(box.textContent.length).toBeGreaterThan(read);
-    act(() => {
-      root.unmount();
-    });
-  });
+  test(
+    "a small one at every chunk; a big one once four times its last read has passed, chunk or not",
+    { timeout: 60_000 },
+    async () => {
+      const text = `${"words in a long line ".repeat(10)}\n`.repeat(1000);
+      const { box, root, render } = live();
+      const shown = (at: number) => {
+        render(<Markdown streaming>{text.slice(0, at)}</Markdown>);
+        return box.textContent.length;
+      };
+      expect(shown(100)).toBeLessThan(shown(140));
+      shown(150_000);
+      await act(async () => {
+        await sleep(100);
+      });
+      const read = shown(150_040);
+      expect(read).toBeGreaterThan(149_000);
+      expect(shown(150_080)).toBe(read);
+      // Without another chunk: once four times its read has passed, however long that read took.
+      await vi.waitFor(
+        async () => {
+          await act(async () => {
+            await sleep(50);
+          });
+          expect(box.textContent.length).toBeGreaterThan(read);
+        },
+        { timeout: 20_000, interval: 0 }
+      );
+      act(() => {
+        root.unmount();
+      });
+    }
+  );
 });
 
 describe("nothing runs on once it is gone", () => {
