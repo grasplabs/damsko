@@ -231,10 +231,25 @@ test("untrusted text: a script stays text, a data link is words, a picture never
   await expect(page.getByRole("img")).toHaveCount(0);
   await expect(page.getByText("a tracking pixel")).toBeVisible();
   expect(requests).toStrictEqual([]);
-  // KaTeX draws the formula, with no link in it.
+  // KaTeX draws the formula with `\href` refused: the command as its words, muted, and no link.
   const formula = page.locator("[data-slot=markdown-math]");
-  await expect(formula.locator(".katex, .katex-error")).toHaveCount(1);
+  await expect(formula.locator(".katex mtext")).toHaveText("\\href");
   await expect(formula.locator("a, [href]")).toHaveCount(0);
+});
+
+test("maths: a formula past 4,000 characters stays its TeX, and a huge rule stays inside the column", async ({
+  page,
+}) => {
+  await openExample(page, "markdown", "math-limits");
+  const formulas = page.locator("[data-slot=markdown-math]");
+  await expect(formulas.locator("math")).toHaveCount(2);
+  await expect(formulas.first().locator("math")).toHaveCount(0);
+  await expect(formulas.first().locator("code")).toHaveCount(1);
+  const width = await page.evaluate(() => ({
+    page: document.documentElement.scrollWidth,
+    window: window.innerWidth,
+  }));
+  expect(width.page).toBeLessThanOrEqual(width.window);
 });
 
 test("maths: a formula in a sentence and on lines of its own, drawn as MathML by KaTeX, loaded only for maths, a dollar alone a dollar", async ({

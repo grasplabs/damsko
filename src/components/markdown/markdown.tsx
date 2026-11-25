@@ -234,7 +234,14 @@ const styles = stylex.create({
   },
   xsCode: { fontSize: `calc(${size.messageText} * 0.92)` },
   // A formula in a sentence, and one on lines of its own, wider than the column scrolling sideways.
-  math: { direction: "ltr", unicodeBidi: "isolate" },
+  math: {
+    display: "inline-block",
+    maxWidth: "100%",
+    overflow: "hidden",
+    verticalAlign: "middle",
+    direction: "ltr",
+    unicodeBidi: "isolate",
+  },
   mathBlock: {
     display: "block",
     direction: "ltr",
@@ -985,20 +992,31 @@ const drawFormula = async (
   { tex, display }: { tex: string; display: boolean },
   live: () => boolean
 ) => {
-  const { default: katex } = await import("katex");
-  if (!live()) {
+  try {
+    const { default: katex } = await import("katex");
+    if (!live()) {
+      return false;
+    }
+    katex.render(tex, box, {
+      displayMode: display,
+      output: "mathml",
+      throwOnError: false,
+      errorColor: colors.mutedForeground,
+      trust: false,
+      strict: "ignore",
+      // No rule, space or box past 10em, and no macro expanded more than 1,000 times.
+      maxSize: 10,
+      maxExpand: 1000,
+    });
+    return true;
+  } catch {
+    // KaTeX did not load: the formula stays its TeX.
     return false;
   }
-  katex.render(tex, box, {
-    displayMode: display,
-    output: "mathml",
-    throwOnError: false,
-    errorColor: colors.mutedForeground,
-    trust: false,
-    strict: "ignore",
-  });
-  return true;
 };
+// A formula longer than this stays its TeX: the browser lays out MathML on the page, and 100 KB of
+// it takes seconds.
+const MOST_TEX = 4000;
 /**
  * A formula, in TeX: drawn by KaTeX as MathML, which the browser lays out itself, once KaTeX has
  * loaded (only a page with maths loads it), and its TeX as code until then and without script.
@@ -1014,6 +1032,7 @@ const Formula = ({ tex, display }: { tex: string; display: boolean }) => {
     const draw = async () => {
       if (
         at !== null &&
+        tex.length <= MOST_TEX &&
         (await drawFormula(at, { tex, display }, () => live))
       ) {
         setDrawn(true);
