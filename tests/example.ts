@@ -258,6 +258,10 @@ export interface DrawnPart {
   bottom: number;
   /** It touches the edge of what was looked at: it goes on past it. */
   cut: boolean;
+  /** How many of its box's four corner pixels it draws: none for a shape with rounded corners. */
+  corners: number;
+  /** Its colour a device pixel in from the middle of its left edge, as `r,g,b`. */
+  edgeColour: string;
 }
 
 /**
@@ -338,7 +342,22 @@ export const drawnParts = async (
             }
           }
           const scale = width / across;
+          const at = (x: number, y: number): number => y * width + x;
+          const corners = [
+            at(part.left, part.top),
+            at(part.right - 1, part.top),
+            at(part.left, part.bottom - 1),
+            at(part.right - 1, part.bottom - 1),
+          ].filter((pixel) => drawn(pixel)).length;
+          const middle = at(
+            part.left + 1,
+            Math.floor((part.top + part.bottom) / 2)
+          );
           parts.push({
+            corners,
+            edgeColour: [0, 1, 2]
+              .map((index) => channel(middle, index))
+              .join(","),
             left: part.left / scale,
             top: part.top / scale,
             right: part.right / scale,
@@ -357,17 +376,27 @@ export const drawnParts = async (
   );
 };
 
-// A pixel or less is no shortfall: the browser sets every edge on a whole device pixel.
-const short = (by: number): number => (Math.abs(by) <= 1 ? 0 : by);
+// A pixel or less is no shortfall, as the browser sets every edge on a whole device pixel; nor is
+// paint past the box (an edge drawn outside it).
+const short = (by: number): number => (by <= 1 ? 0 : by);
 
 /**
- * How far what an element paints round itself (its fill under the pointer, its ring) falls short of
- * its own box on each side, read from the pixels round it: the largest part drawn there. 0 on every
- * side when it shows whole; more where something cuts it.
+ * What an element paints round itself (its fill under the pointer, its ring), read from the pixels
+ * round it, the largest part drawn there: how far it falls short of the element's own box on each
+ * side (0 on every side when it shows whole, more where something cuts it), how many of its four
+ * corner pixels it draws (none when its corners are rounded) and its colour just inside its left
+ * edge.
  */
-export const paintedShortfall = async (
+export const paintedBox = async (
   element: Locator
-): Promise<{ left: number; top: number; right: number; bottom: number }> => {
+): Promise<{
+  left: number;
+  top: number;
+  right: number;
+  bottom: number;
+  squareCorners: number;
+  colour: string;
+}> => {
   await settled(element.page());
   const box = await element.boundingBox();
   if (box === null) {
@@ -393,6 +422,8 @@ export const paintedShortfall = async (
     top: short(painted.top - room),
     right: short(room + box.width - painted.right),
     bottom: short(room + box.height - painted.bottom),
+    squareCorners: painted.corners,
+    colour: painted.edgeColour,
   };
 };
 

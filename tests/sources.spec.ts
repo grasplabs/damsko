@@ -1,10 +1,11 @@
 import { expect, test } from "@playwright/test";
+import type { Locator } from "@playwright/test";
 
 import {
   drawnEdges,
   hasFocusRing,
   openExample,
-  paintedShortfall,
+  paintedBox,
   panelOf,
   tab,
 } from "./example.ts";
@@ -67,6 +68,24 @@ test("the keyboard reaches the trigger with a ring; Enter opens and Space closes
   await expect(trigger).toBeFocused();
 });
 
+// What a hovered or lit row draws, whole: no side cut, no square corner.
+const whole = { left: 0, top: 0, right: 0, bottom: 0, squareCorners: 0 };
+
+/** How far a source row's mark stands in from the row's start edge: the row's own room. */
+const markInset = async (row: Locator): Promise<number> =>
+  await row.evaluate((node) => {
+    const box = node.getBoundingClientRect();
+    const mark = node
+      .querySelector("svg")
+      ?.parentElement?.getBoundingClientRect();
+    if (mark === undefined) {
+      return Number.NaN;
+    }
+    return getComputedStyle(node).direction === "rtl"
+      ? box.right - mark.right
+      : mark.left - box.left;
+  });
+
 for (const dir of ["ltr", "rtl"]) {
   test(`folded, the pile's first mark lines up with the words above it, ${dir}`, async ({
     page,
@@ -112,20 +131,40 @@ for (const dir of ["ltr", "rtl"]) {
     }
     const row = page.getByRole("link", { name: /^Churn by region, Q3/u });
     await expect(row).toBeVisible();
-    const whole = { left: 0, top: 0, right: 0, bottom: 0 };
+    expect(await markInset(row)).toBe(8);
     // Under the pointer the fill fades in, and out again when it leaves: each is read once it stands.
     await row.hover();
-    await expect
-      .poll(async () => await paintedShortfall(row))
-      .toStrictEqual(whole);
+    await expect.poll(async () => await paintedBox(row)).toMatchObject(whole);
     await page.mouse.move(0, 0);
     await trigger.focus();
     await page.keyboard.press(tab(browserName));
     await expect(row).toBeFocused();
     expect(await hasFocusRing(row)).toBe(true);
+    await expect.poll(async () => await paintedBox(row)).toMatchObject(whole);
+  });
+
+  test(`a citation, and the row it lights, show their fill whole, as the row under the pointer does, ${dir}`, async ({
+    page,
+  }) => {
+    await openExample(page, "patterns", "citations");
+    await page.evaluate((direction) => {
+      document.documentElement.dir = direction;
+    }, dir);
+    await page.getByRole("button", { name: /^2 sources/u }).click();
+    const row = page.getByRole("link", { name: /^1\. Churn by region, Q3/u });
+    await expect(row).toBeVisible();
+    expect(await markInset(row)).toBe(8);
+    const citation = page.getByRole("link", { name: /^Source 1:/u }).first();
+    await citation.hover();
     await expect
-      .poll(async () => await paintedShortfall(row))
-      .toStrictEqual(whole);
+      .poll(async () => await paintedBox(citation))
+      .toMatchObject(whole);
+    // Lit from the citation: the row's own shape, its mark its room in from the fill's edge.
+    await expect.poll(async () => await paintedBox(row)).toMatchObject(whole);
+    const lit = await paintedBox(row);
+    // Under the pointer: the one fill, the same as the light, never the two over each other.
+    await row.hover();
+    await expect.poll(async () => await paintedBox(row)).toStrictEqual(lit);
   });
 }
 

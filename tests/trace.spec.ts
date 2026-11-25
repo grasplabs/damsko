@@ -6,7 +6,7 @@ import {
   hasFocusRing,
   listenToLiveRegions,
   openExample,
-  paintedShortfall,
+  paintedBox,
   tab,
 } from "./example.ts";
 
@@ -79,20 +79,16 @@ for (const dir of ["ltr", "rtl"]) {
       document.documentElement.dir = direction;
     }, dir);
     const file = page.getByRole("button", { name: /^Edited app\/login/u });
-    const whole = { left: 0, top: 0, right: 0, bottom: 0 };
+    const whole = { left: 0, top: 0, right: 0, bottom: 0, squareCorners: 0 };
     // Under the pointer the fill fades in, and out again when it leaves: each is read once it stands.
     await file.hover();
-    await expect
-      .poll(async () => await paintedShortfall(file))
-      .toStrictEqual(whole);
+    await expect.poll(async () => await paintedBox(file)).toMatchObject(whole);
     await page.mouse.move(0, 0);
     await page.keyboard.press(tab(browserName));
     await page.keyboard.press(tab(browserName));
     await expect(file).toBeFocused();
     expect(await hasFocusRing(file)).toBe(true);
-    await expect
-      .poll(async () => await paintedShortfall(file))
-      .toStrictEqual(whole);
+    await expect.poll(async () => await paintedBox(file)).toMatchObject(whole);
   });
 }
 
