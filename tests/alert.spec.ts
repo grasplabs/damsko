@@ -87,3 +87,33 @@ test("a subtle alert keeps its variant's role", async ({ page }) => {
     page.getByRole("alert").filter({ hasText: "The time zone did not save." })
   ).toBeVisible();
 });
+
+test("without an action the words run to the alert's end: no empty column beside them", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await openExample(page, "alert", "variants");
+  const columns = await page
+    .getByText("How the score is worked out")
+    .evaluate((title) => {
+      const content = title.parentElement;
+      return content === null
+        ? ""
+        : getComputedStyle(content).gridTemplateColumns.split(" ").length;
+    });
+  expect(columns).toBe(1);
+});
+
+test("a banner has 12px of room all round and the system's corner; across a shell's card it is a band, square", async ({
+  page,
+}) => {
+  await openExample(page, "alert", "banner");
+  const banner = page.locator("[data-slot=alert]").first();
+  await expect(banner).toHaveCSS("padding-inline-start", "12px");
+  await expect(banner).toHaveCSS("padding-block-start", "12px");
+  await expect(banner).toHaveCSS("border-top-left-radius", "20px");
+  await openExample(page, "app-shell-01", "banner");
+  const band = page.locator("[data-slot=app-shell-banner] [data-slot=alert]");
+  await expect(band).toHaveCSS("border-top-left-radius", "0px");
+  await expect(band).toHaveCSS("padding-inline-start", "12px");
+});
