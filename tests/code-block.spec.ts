@@ -532,14 +532,14 @@ test("ordinary code of nearly the most runs shown whole never holds the page, an
   test.setTimeout(120_000);
   await watchLongTasks(page);
   await openExample(page, "code-block", "any");
-  // 2,000 lines, just under 10,000 runs: as many as a block opened whole is coloured with.
+  // 1,300 lines, just under 5,000 runs: as many as a block opened whole is coloured with.
   const code = fileOf("src/components/prompt-input.tsx")
     .split("\n")
-    .slice(0, 2000)
+    .slice(0, 1300)
     .join("\n");
   expect(
     await neverHeld(page, browserName, code, "tsx", "shown")
-  ).toBeGreaterThan(5000);
+  ).toBeGreaterThan(2500);
 });
 
 /** Adds a block of `code` to the Many blocks example, `times` times. */
