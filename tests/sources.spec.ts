@@ -1,6 +1,14 @@
 import { expect, test } from "@playwright/test";
+import type { Locator } from "@playwright/test";
 
-import { drawnEdges, hasFocusRing, openExample, panelOf } from "./example.ts";
+import {
+  drawnEdges,
+  hasFocusRing,
+  openExample,
+  paintedBox,
+  panelOf,
+  tab,
+} from "./example.ts";
 
 test("folded, the pile says only its count; pressing it shows each source as a link by its title", async ({
   page,
@@ -60,6 +68,24 @@ test("the keyboard reaches the trigger with a ring; Enter opens and Space closes
   await expect(trigger).toBeFocused();
 });
 
+// What a hovered or lit row draws, whole: no side cut, no square corner.
+const whole = { left: 0, top: 0, right: 0, bottom: 0, squareCorners: 0 };
+
+/** How far a source row's mark stands in from the row's start edge: the row's own room. */
+const markInset = async (row: Locator): Promise<number> =>
+  await row.evaluate((node) => {
+    const box = node.getBoundingClientRect();
+    const mark = node
+      .querySelector("svg")
+      ?.parentElement?.getBoundingClientRect();
+    if (mark === undefined) {
+      return Number.NaN;
+    }
+    return getComputedStyle(node).direction === "rtl"
+      ? box.right - mark.right
+      : mark.left - box.left;
+  });
+
 for (const dir of ["ltr", "rtl"]) {
   test(`folded, the pile's first mark lines up with the words above it, ${dir}`, async ({
     page,
@@ -90,6 +116,56 @@ for (const dir of ["ltr", "rtl"]) {
       expect(Math.abs(mark.right - words.right)).toBeLessThanOrEqual(1);
     }
   });
+
+  test(`an open list's row shows its fill under the pointer and its ring whole, past its mark by its padding, ${dir}`, async ({
+    page,
+    browserName,
+  }) => {
+    await openExample(page, "sources", "basic");
+    await page.evaluate((direction) => {
+      document.documentElement.dir = direction;
+    }, dir);
+    const trigger = page.getByRole("button", { name: /^5 sources/u });
+    if ((await trigger.getAttribute("aria-expanded")) === "false") {
+      await trigger.click();
+    }
+    const row = page.getByRole("link", { name: /^Churn by region, Q3/u });
+    await expect(row).toBeVisible();
+    expect(await markInset(row)).toBe(8);
+    // Under the pointer the fill fades in, and out again when it leaves: each is read once it stands.
+    await row.hover();
+    await expect.poll(async () => await paintedBox(row)).toMatchObject(whole);
+    await page.mouse.move(0, 0);
+    await trigger.focus();
+    await page.keyboard.press(tab(browserName));
+    await expect(row).toBeFocused();
+    expect(await hasFocusRing(row)).toBe(true);
+    await expect.poll(async () => await paintedBox(row)).toMatchObject(whole);
+  });
+
+  test(`a citation, and the row it lights, show their fill whole, as the row under the pointer does, ${dir}`, async ({
+    page,
+  }) => {
+    await openExample(page, "patterns", "citations");
+    await page.evaluate((direction) => {
+      document.documentElement.dir = direction;
+    }, dir);
+    await page.getByRole("button", { name: /^2 sources/u }).click();
+    const row = page.getByRole("link", { name: /^1\. Churn by region, Q3/u });
+    await expect(row).toBeVisible();
+    expect(await markInset(row)).toBe(8);
+    const citation = page.getByRole("link", { name: /^Source 1:/u }).first();
+    await citation.hover();
+    await expect
+      .poll(async () => await paintedBox(citation))
+      .toMatchObject(whole);
+    // Lit from the citation: the row's own shape, its mark its room in from the fill's edge.
+    await expect.poll(async () => await paintedBox(row)).toMatchObject(whole);
+    const lit = await paintedBox(row);
+    // Under the pointer: the one fill, the same as the light, never the two over each other.
+    await row.hover();
+    await expect.poll(async () => await paintedBox(row)).toStrictEqual(lit);
+  });
 }
 
 test("a source with an address is a link that also tells the page; one without is a button", async ({
@@ -100,9 +176,9 @@ test("a source with an address is a link that also tells the page; one without i
 
   const link = page.getByRole("link", { name: /^Pricing page\b/u });
   await expect(link).toHaveAttribute("href", "#pricing");
-  const tab = page.context().waitForEvent("page");
+  const newTab = page.context().waitForEvent("page");
   await link.click();
-  const opened = await tab;
+  const opened = await newTab;
   await opened.close();
   await expect(page.getByText("Opened 1: Pricing page")).toBeVisible();
 

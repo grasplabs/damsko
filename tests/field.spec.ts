@@ -69,6 +69,16 @@ test("a setting's name labels its control and its help describes it, with no spr
   ).toHaveAttribute("readonly", "");
 });
 
+test("a setting's help wraps as it falls, as the original's setting row did", async ({
+  page,
+}) => {
+  await openExample(page, "field", "responsive");
+  await expect(page.getByText(/^For schedules/u)).toHaveCSS(
+    "text-wrap-style",
+    "auto"
+  );
+});
+
 test("every setting's control stands on one end edge, one column wide", async ({
   page,
 }) => {
