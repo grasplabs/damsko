@@ -1,6 +1,13 @@
 import { expect, test } from "@playwright/test";
 
-import { drawnEdges, hasFocusRing, openExample, panelOf } from "./example.ts";
+import {
+  drawnEdges,
+  hasFocusRing,
+  openExample,
+  paintedShortfall,
+  panelOf,
+  tab,
+} from "./example.ts";
 
 test("folded, the pile says only its count; pressing it shows each source as a link by its title", async ({
   page,
@@ -90,6 +97,36 @@ for (const dir of ["ltr", "rtl"]) {
       expect(Math.abs(mark.right - words.right)).toBeLessThanOrEqual(1);
     }
   });
+
+  test(`an open list's row shows its fill under the pointer and its ring whole, past its mark by its padding, ${dir}`, async ({
+    page,
+    browserName,
+  }) => {
+    await openExample(page, "sources", "basic");
+    await page.evaluate((direction) => {
+      document.documentElement.dir = direction;
+    }, dir);
+    const trigger = page.getByRole("button", { name: /^5 sources/u });
+    if ((await trigger.getAttribute("aria-expanded")) === "false") {
+      await trigger.click();
+    }
+    const row = page.getByRole("link", { name: /^Churn by region, Q3/u });
+    await expect(row).toBeVisible();
+    const whole = { left: 0, top: 0, right: 0, bottom: 0 };
+    // Under the pointer the fill fades in, and out again when it leaves: each is read once it stands.
+    await row.hover();
+    await expect
+      .poll(async () => await paintedShortfall(row))
+      .toStrictEqual(whole);
+    await page.mouse.move(0, 0);
+    await trigger.focus();
+    await page.keyboard.press(tab(browserName));
+    await expect(row).toBeFocused();
+    expect(await hasFocusRing(row)).toBe(true);
+    await expect
+      .poll(async () => await paintedShortfall(row))
+      .toStrictEqual(whole);
+  });
 }
 
 test("a source with an address is a link that also tells the page; one without is a button", async ({
@@ -100,9 +137,9 @@ test("a source with an address is a link that also tells the page; one without i
 
   const link = page.getByRole("link", { name: /^Pricing page\b/u });
   await expect(link).toHaveAttribute("href", "#pricing");
-  const tab = page.context().waitForEvent("page");
+  const newTab = page.context().waitForEvent("page");
   await link.click();
-  const opened = await tab;
+  const opened = await newTab;
   await opened.close();
   await expect(page.getByText("Opened 1: Pricing page")).toBeVisible();
 

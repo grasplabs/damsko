@@ -6,6 +6,8 @@ import {
   hasFocusRing,
   listenToLiveRegions,
   openExample,
+  paintedShortfall,
+  tab,
 } from "./example.ts";
 
 test("each step says its status in words, not only by its mark", async ({
@@ -66,6 +68,33 @@ test("rows open inside rows: a commit opens on its files, and a file on its diff
   await file.click();
   await expect(file).toHaveAttribute("aria-expanded", "true");
 });
+
+for (const dir of ["ltr", "rtl"]) {
+  test(`a row inside a row shows its fill under the pointer and its ring whole, past its mark by its padding, ${dir}`, async ({
+    page,
+    browserName,
+  }) => {
+    await openExample(page, "trace", "commit");
+    await page.evaluate((direction) => {
+      document.documentElement.dir = direction;
+    }, dir);
+    const file = page.getByRole("button", { name: /^Edited app\/login/u });
+    const whole = { left: 0, top: 0, right: 0, bottom: 0 };
+    // Under the pointer the fill fades in, and out again when it leaves: each is read once it stands.
+    await file.hover();
+    await expect
+      .poll(async () => await paintedShortfall(file))
+      .toStrictEqual(whole);
+    await page.mouse.move(0, 0);
+    await page.keyboard.press(tab(browserName));
+    await page.keyboard.press(tab(browserName));
+    await expect(file).toBeFocused();
+    expect(await hasFocusRing(file)).toBe(true);
+    await expect
+      .poll(async () => await paintedShortfall(file))
+      .toStrictEqual(whole);
+  });
+}
 
 test("a step that finishes is said once; one that starts is not", async ({
   page,

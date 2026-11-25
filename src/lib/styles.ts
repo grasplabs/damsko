@@ -1262,13 +1262,16 @@ export const disclosureStyles = stylex.create({
     // A base stylesheet that hides [hidden] with !important (the docs' own) still wins over this.
     // Without script nothing opens a panel, so every panel shows open.
     // It clips, never a box that scrolls, so a touch target at its edge adds no room to scroll.
+    // Only top and bottom, where it opens: a row inside reaches past the column by its padding, as
+    // the trigger does, and its fill and ring show whole at any depth, while it opens too.
     // Shown, it lays its content out on its own, as a box that hid its overflow did.
     display: {
       default: null,
       ":not([hidden])": "flow-root",
       [media.noScript]: "block",
     },
-    overflow: "clip",
+    overflowX: "visible",
+    overflowY: "clip",
     // The height UI SDK measures and writes, as a Collapsible's panel or an Accordion's.
     height: {
       default: "var(--collapsible-panel-height, var(--accordion-panel-height))",

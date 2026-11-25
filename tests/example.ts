@@ -357,6 +357,45 @@ export const drawnParts = async (
   );
 };
 
+// A pixel or less is no shortfall: the browser sets every edge on a whole device pixel.
+const short = (by: number): number => (Math.abs(by) <= 1 ? 0 : by);
+
+/**
+ * How far what an element paints round itself (its fill under the pointer, its ring) falls short of
+ * its own box on each side, read from the pixels round it: the largest part drawn there. 0 on every
+ * side when it shows whole; more where something cuts it.
+ */
+export const paintedShortfall = async (
+  element: Locator
+): Promise<{ left: number; top: number; right: number; bottom: number }> => {
+  await settled(element.page());
+  const box = await element.boundingBox();
+  if (box === null) {
+    throw new Error("The element is not drawn.");
+  }
+  const room = 12;
+  const parts = await drawnParts(element.page(), {
+    x: box.x - room,
+    y: box.y - room,
+    width: box.width + room * 2,
+    height: box.height + room * 2,
+  });
+  const [painted] = parts.toSorted(
+    (a, b) =>
+      (b.right - b.left) * (b.bottom - b.top) -
+      (a.right - a.left) * (a.bottom - a.top)
+  );
+  if (painted === undefined) {
+    throw new Error("Nothing is painted round the element.");
+  }
+  return {
+    left: short(painted.left - room),
+    top: short(painted.top - room),
+    right: short(room + box.width - painted.right),
+    bottom: short(room + box.height - painted.bottom),
+  };
+};
+
 /**
  * Where what an element draws starts and ends across the page: its words, its marks and any box
  * inside it with a fill, an edge or a shadow, not the element's own box (a trigger's fill under the
