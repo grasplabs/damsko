@@ -202,7 +202,7 @@ test("tasks are said as done or not, and a rule separates", async ({
   await expect(page.getByRole("separator")).toHaveCount(1);
 });
 
-test("a task's box is round at the corner, its tick the icon's own size", async ({
+test("a task's box takes the system's small corner in the squircle, its tick the icon's own size", async ({
   page,
 }) => {
   await openExample(page, "markdown", "tasks");
@@ -215,13 +215,10 @@ test("a task's box is round at the corner, its tick the icon's own size", async 
     }
     const look = getComputedStyle(face);
     return {
-      // Where the browser draws corner shapes, the plain round one (computed as superellipse(1)),
-      // not the system's squircle.
-      round:
-        !CSS.supports("corner-shape", "round") ||
-        ["round", "superellipse(1)"].includes(
-          look.getPropertyValue("corner-shape")
-        ),
+      // Where the browser draws corner shapes, the system's squircle (computed as superellipse(2)).
+      squircle:
+        !CSS.supports("corner-shape", "squircle") ||
+        look.getPropertyValue("corner-top-left-shape") === "superellipse(2)",
       // The system's small corner, 6px, or 4px where no corner-shape is drawn (tokens.css).
       radius:
         look.borderTopLeftRadius ===
@@ -229,7 +226,7 @@ test("a task's box is round at the corner, its tick the icon's own size", async 
       tick: mark.getBoundingClientRect().width,
     };
   });
-  expect(box).toEqual({ round: true, radius: true, tick: 16 });
+  expect(box).toEqual({ squircle: true, radius: true, tick: 16 });
 });
 
 test("footnotes: a mark leads to its note at the foot, and the note leads back", async ({

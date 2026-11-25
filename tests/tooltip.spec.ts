@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { openExample } from "./example.ts";
+import { liveRegion, openExample } from "./example.ts";
 
 test("resting the pointer on its trigger shows it", async ({ page }) => {
   await openExample(page, "tooltip", "basic");
@@ -129,14 +129,13 @@ test.describe("an info mark on a touch screen", () => {
   test("what it says is announced as a tap opens it", async ({ page }) => {
     await openExample(page, "tooltip", "info");
     const said = "Everyone in the workspace who can open the project";
-    await expect(
-      page.getByRole("status").filter({ hasText: said })
-    ).toHaveCount(0);
+    await expect(liveRegion(page).filter({ hasText: said })).toHaveCount(0);
     await page
       .getByRole("button", { name: "More about who can read it" })
       .tap();
-    await expect(
-      page.getByRole("status").filter({ hasText: said })
-    ).toHaveAttribute("aria-live", "polite");
+    await expect(liveRegion(page).filter({ hasText: said })).toHaveAttribute(
+      "aria-live",
+      "polite"
+    );
   });
 });

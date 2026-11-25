@@ -139,15 +139,42 @@ for (const theme of ["light", "dark"] as const) {
   });
 }
 
-for (const [example, shape, at] of [
-  ["shapes", "a line", 0],
-  ["shapes", "a rectangle", 1],
-  ["shapes", "a circle", 2],
-  ["text", "a line of a title, 60% wide", 0],
-  ["text", "a line 75% wide", 3],
-  ["layout", "a chart", 3],
+/** How many of a picture's pixels make one CSS pixel. */
+const ratio = async (page: Page) =>
+  await page.evaluate(() => window.devicePixelRatio);
+
+/** The lengths of the gaps between runs of lit columns or rows. */
+const gaps = (lit: boolean[]) => [
+  ...new Set(
+    lit
+      .map((on) => (on ? "1" : " "))
+      .join("")
+      .trim()
+      .split(/1+/u)
+      .filter((gap) => gap !== "")
+      .map((gap) => gap.length)
+  ),
+];
+
+/** How many runs of lit columns or rows: how many pixels along a side. */
+const count = (lit: boolean[]) =>
+  lit
+    .map((on) => (on ? "1" : " "))
+    .join("")
+    .split(" ")
+    .filter((run) => run !== "").length;
+
+// Each placeholder, and how far inside its field its pixels' room stands: a line's is its letters'
+// height; a picture's a space inside its ground, a circle's two.
+for (const [example, shape, at, inset] of [
+  ["shapes", "a line", 0, 0],
+  ["shapes", "a rectangle", 1, 4],
+  ["shapes", "a circle", 2, 8],
+  ["text", "a line of a title, 60% wide", 0, 0],
+  ["text", "a line 75% wide", 3, 0],
+  ["layout", "a chart", 3, 4],
 ] as const) {
-  test(`the field stands in the middle of its box, in pixels 2px a side (${shape})`, async ({
+  test(`the field holds as many 2px pixels as fit, one in every 4px, in the middle of its box (${shape})`, async ({
     page,
   }) => {
     await openExample(page, "skeleton", example);
@@ -157,20 +184,67 @@ for (const [example, shape, at] of [
       .locator("xpath=following::span[@aria-hidden='true']")
       .nth(at)
       .locator("xpath=*[1]");
-    const drawn = await field(page, await box.screenshot());
-    // Every pixel is as wide and as tall as the dot it is drawn for.
-    expect(sides(drawn.columns)).toEqual([2]);
-    expect(sides(drawn.rows)).toEqual([2]);
-    // The field as a whole is as far from the start as from the end, and from the top as from
-    // the foot: its tiles fill the box, the room left over shared out between them.
-    expect(Math.abs(drawn.left - drawn.right)).toBeLessThanOrEqual(0.5);
-    // A box that starts on part of a pixel (a line whose padding is half a pixel) is pictured a
-    // pixel taller than it is.
     const place = await box.boundingBox();
-    const whole = Number.isInteger(place?.y) && Number.isInteger(place?.height);
-    expect(Math.abs(drawn.top - drawn.bottom)).toBeLessThanOrEqual(
-      whole ? 0.5 : 1
+    const drawn = await field(page, await box.screenshot());
+    const dense = await ratio(page);
+    // Every pixel is 2px a side, and every gap between two is 2px: no run broken off.
+    expect(sides(drawn.columns)).toEqual([2 * dense]);
+    expect(sides(drawn.rows)).toEqual([2 * dense]);
+    expect(gaps(drawn.columns)).toEqual([2 * dense]);
+    expect(gaps(drawn.rows)).toEqual([2 * dense]);
+    // As many as whole 4px tiles fit (a large line's 17px holds four rows).
+    expect(count(drawn.columns)).toBe(
+      Math.floor(((place?.width ?? 0) - 2 * inset) / 4)
     );
+    expect(count(drawn.rows)).toBe(
+      Math.floor(((place?.height ?? 0) - 2 * inset) / 4)
+    );
+    // The room left over stands at the edges, as much at one as at the other, give or take a
+    // pixel (and the pixel a box on part of a pixel is pictured with).
+    const whole = Number.isInteger(place?.y) && Number.isInteger(place?.height);
+    expect(Math.abs(drawn.left - drawn.right)).toBeLessThanOrEqual(dense);
+    expect(Math.abs(drawn.top - drawn.bottom)).toBeLessThanOrEqual(
+      whole ? dense : dense + 1
+    );
+  });
+}
+
+for (const dense of [1, 2]) {
+  test.describe(`at ${dense}x`, () => {
+    test.use({ deviceScaleFactor: dense });
+
+    test("a line's pixels are sharp and unbroken at every width from 200px to 300px", async ({
+      page,
+    }) => {
+      await openExample(page, "skeleton", "text");
+      const region = page.getByRole("status").locator("xpath=..");
+      // The paragraph's first line, the region's whole width; its field is its letters' height.
+      const line = region
+        .locator("xpath=span[@aria-hidden='true']")
+        .nth(1)
+        .locator("xpath=*[1]");
+      for (let width = 200; width <= 300; width += 1) {
+        // oxlint-disable-next-line no-await-in-loop -- one width after the other
+        await region.evaluate((node, to) => {
+          if (node instanceof HTMLElement) {
+            node.style.width = `${to}px`;
+          }
+        }, width);
+        // oxlint-disable-next-line no-await-in-loop -- one width after the other
+        const drawn = await field(page, await line.screenshot());
+        expect({
+          width,
+          soft: drawn.soft,
+          pixels: count(drawn.columns),
+          gaps: gaps(drawn.columns),
+        }).toStrictEqual({
+          width,
+          soft: 0,
+          pixels: Math.floor(width / 4),
+          gaps: [2 * dense],
+        });
+      }
+    });
   });
 }
 

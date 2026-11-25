@@ -60,7 +60,7 @@ export default function ItemLinkActions() {
   );
   return (
     <div {...stylex.props(layout.box)}>
-      <ItemGroup aria-label="Reports">
+      <ItemGroup separated aria-label="Reports">
         <Item href="#q3-report">
           <ItemContent>
             <ItemTitle>Q3 report</ItemTitle>
@@ -79,7 +79,6 @@ export default function ItemLinkActions() {
             </Button>
           </ItemActions>
         </Item>
-        <ItemSeparator />
         <Item
           onClick={() => {
             setSaid("Opened Supplier list");
@@ -101,7 +100,6 @@ export default function ItemLinkActions() {
             </Button>
           </ItemActions>
         </Item>
-        <ItemSeparator />
         <Item asChild>
           <RouterLink to="budget">
             <ItemContent>
@@ -121,7 +119,6 @@ export default function ItemLinkActions() {
             </ItemActions>
           </RouterLink>
         </Item>
-        <ItemSeparator />
         <Item href="#archive">{archive}</Item>
       </ItemGroup>
       <p {...stylex.props(layout.said)}>{said}</p>

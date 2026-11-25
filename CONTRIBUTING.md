@@ -43,6 +43,7 @@ The product installs a component's source and builds it with its own toolchain, 
 - **Every visible word is a prop**, with an English default the product replaces (`scripts/check-words.ts`).
 - **A label is children.** A visible label is children or a label part, a control with no visible text takes `aria-label`, words a component shows or says itself and lets a caller replace end in `Text`, and a hidden name for a part a caller cannot reach ends in `Label`; a control never takes a `label` or `…Label` prop outside `scripts/labels-allowed.json` (`scripts/check-labels.ts`).
 - **Tokens only.** Every colour, space, corner, edge, shadow, time and curve is a token. A colour that is not in the brand book is not in Damsko.
+- **One corner shape.** Every rounded radius has `cornerShape: radius.shape` beside it, the squircle; a pill or a circle (`radius.full`, `radius.circle`) stays round, and a corner taken from the parent takes its shape too (`cornerShape: "inherit"`) (`scripts/check-corners.ts`).
 - **Motion.** Every answer of the interface is over within 300 ms; with reduced motion, movement goes and the change of state stays. Anything a trigger opens grows from that trigger, never from its own centre.
 - **Scrolling.** Scrollers hide their bar and keep the wheel inside them while they can scroll.
 - **One height per size.** Controls of the same size line up, whatever they hold.

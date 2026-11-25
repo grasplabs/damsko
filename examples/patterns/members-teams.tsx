@@ -159,71 +159,68 @@ export default function MembersTeams({
         </div>
         <Card size="sm">
           <CardContent flush>
-            <ItemGroup aria-label="Teams">
-              {list.map((team, index) => (
-                <Fragment key={team.id}>
-                  {index > 0 && <ItemSeparator />}
-                  <Item size="xs">
-                    <ItemContent>
-                      <ItemTitle>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setOpen(team);
-                          }}
-                          {...stylex.props(layout.open, focusRing)}
-                        >
-                          {team.name}
-                        </button>
-                      </ItemTitle>
-                      <ItemDescription>
-                        {counted(team.members.length)}
-                      </ItemDescription>
-                    </ItemContent>
-                    <ItemActions>
-                      <span {...stylex.props(layout.ends)}>
-                        {team.members.length > 0 ? (
-                          <AvatarGroup
-                            items={peopleOf(team)}
-                            aria-label={`${team.name}: ${peopleOf(team)
-                              .map((person) => person.name)
-                              .join(", ")}`}
-                          />
-                        ) : null}
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon-xs"
-                              aria-label={`Actions for ${team.name}`}
-                            >
-                              <Icon icon={EllipsisIcon} />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              icon={PencilIcon}
-                              onSelect={() => {
-                                setOpen(team);
-                              }}
-                            >
-                              Rename
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              icon={TrashIcon}
-                              onSelect={() => {
-                                remove(team);
-                              }}
-                            >
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </span>
-                    </ItemActions>
-                  </Item>
-                </Fragment>
+            <ItemGroup separated aria-label="Teams">
+              {list.map((team) => (
+                <Item key={team.id} size="xs">
+                  <ItemContent>
+                    <ItemTitle>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setOpen(team);
+                        }}
+                        {...stylex.props(layout.open, focusRing)}
+                      >
+                        {team.name}
+                      </button>
+                    </ItemTitle>
+                    <ItemDescription>
+                      {counted(team.members.length)}
+                    </ItemDescription>
+                  </ItemContent>
+                  <ItemActions>
+                    <span {...stylex.props(layout.ends)}>
+                      {team.members.length > 0 ? (
+                        <AvatarGroup
+                          items={peopleOf(team)}
+                          aria-label={`${team.name}: ${peopleOf(team)
+                            .map((person) => person.name)
+                            .join(", ")}`}
+                        />
+                      ) : null}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon-xs"
+                            aria-label={`Actions for ${team.name}`}
+                          >
+                            <Icon icon={EllipsisIcon} />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            icon={PencilIcon}
+                            onSelect={() => {
+                              setOpen(team);
+                            }}
+                          >
+                            Rename
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            icon={TrashIcon}
+                            onSelect={() => {
+                              remove(team);
+                            }}
+                          >
+                            Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </span>
+                  </ItemActions>
+                </Item>
               ))}
             </ItemGroup>
           </CardContent>

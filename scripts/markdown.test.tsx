@@ -418,8 +418,8 @@ describe("what an answer may hold besides prose", () => {
   });
 
   test("a mark is as written until its note has come, while written too, as Streamdown draws it", () => {
-    const source = "First[^x] and[^y].\n\n[^y]: Why.";
-    expect(textOf(draw(source.slice(0, 18), { streaming: true }))).toBe(
+    const source = "First[^x] and[^y].\n\n[^y]: Why.\n";
+    expect(textOf(draw(source.slice(0, 19), { streaming: true }))).toBe(
       "First[^x] and[^y]."
     );
     expect(textOf(draw(source, { streaming: true }))).toBe(
@@ -456,9 +456,15 @@ describe("what an answer may hold besides prose", () => {
     );
   });
 
-  test("while written, each word fades in, and each character where words have no spaces", () => {
+  test("while written, each whole word fades in, and each character where words have no spaces; the word at the end waits", () => {
     const html = draw("你好 world and more", { streaming: true });
-    expect(count(html, "<span")).toBe(5);
+    expect(count(html, "<span")).toBe(4);
+    expect(textOf(html)).toBe("你好 world and");
+    expect(
+      count(draw("你好 world and more ", { streaming: true }), "<span")
+    ).toBe(5);
+    // Each character where words have no spaces is a word of its own, so none waits.
+    expect(textOf(draw("world 你好", { streaming: true }))).toBe("world 你好");
   });
 
   test("soft breaks: a single newline is a line break when asked, a space otherwise", () => {
@@ -516,7 +522,7 @@ describe("while it is written, nothing shows that the whole answer will not", ()
       ["Done.\n\n</det", "Done."],
       ["Summary\n=", "Summary"],
       ["Para\n#", "Para"],
-      ["See [the docs]", "See the docs"],
+      ["See [the docs] ", "See the docs"],
     ];
     const drawn = cases.map(([source = ""]) => {
       const html = draw(source, { streaming: true });

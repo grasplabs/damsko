@@ -1,6 +1,11 @@
 import { expect, test } from "@playwright/test";
 
-import { drawnEdges, hasFocusRing, openExample } from "./example.ts";
+import {
+  drawnEdges,
+  hasFocusRing,
+  liveRegion,
+  openExample,
+} from "./example.ts";
 
 test("its line opens and closes the steps, and says so with aria-expanded", async ({
   page,
@@ -90,7 +95,7 @@ test("steps that finish together are said together", async ({ page }) => {
       { id: "read", label: "Read brief.md", status: "error" },
     ]);
   });
-  await expect(page.getByRole("status")).toHaveText(
+  await expect(liveRegion(page)).toHaveText(
     "Searched the web. Read brief.md, Failed"
   );
 });
@@ -116,7 +121,7 @@ test("a step that first appears finished is silent; one that finishes after it i
       { id: "chart", label: "Made a chart", status: "complete" },
     ]);
   });
-  await expect(page.getByRole("status")).toHaveText("Searched the web");
+  await expect(liveRegion(page)).toHaveText("Searched the web");
 });
 
 test("a search step shows what it found under its line", async ({ page }) => {

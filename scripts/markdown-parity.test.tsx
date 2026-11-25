@@ -178,6 +178,7 @@ const differenceOf = (streamdown: string, ours: string) => {
   return [lacking(a, b), lacking(b, a)] as const;
 };
 
+const HELD = "a word still being written waits";
 describe("drawn as Streamdown draws it", () => {
   test("every sampled prefix of the sample answers and every spec example, by role", () => {
     const kinds: Record<string, number> = {};
@@ -185,13 +186,23 @@ describe("drawn as Streamdown draws it", () => {
       const spec = specs.has(name);
       const text = (spec ? specs.get(name) : answers.get(name)) ?? "";
       const streaming = !spec && at < text.length;
-      const ours = rolesOf(
-        renderToStaticMarkup(
-          <Markdown streaming={streaming}>{text.slice(0, at)}</Markdown>
-        ),
-        alignOf
-      );
-      if (ours !== roles) {
+      const draw = (source: string) =>
+        rolesOf(
+          renderToStaticMarkup(
+            <Markdown streaming={streaming}>{source}</Markdown>
+          ),
+          alignOf
+        );
+      const shown = draw(text.slice(0, at));
+      // While written, the word at the very end waits for what follows it (a space, or a character
+      // of a script without spaces), so it comes whole and fades in once, where Streamdown draws it
+      // as it grows; a run longer than 32 characters comes 32 at a time, past 256 as it comes. A space after it finishes
+      // it, and what is drawn then is held to Streamdown as the rest.
+      const ours =
+        streaming && shown !== roles ? draw(`${text.slice(0, at)} `) : shown;
+      if (shown !== ours && ours === roles) {
+        kinds[HELD] = (kinds[HELD] ?? 0) + 1;
+      } else if (ours !== roles) {
         const [streamdown, mine] = differenceOf(roles, ours);
         const kind =
           deliberate.find(([, is]) => is(streamdown, mine))?.[0] ??
@@ -210,6 +221,7 @@ describe("drawn as Streamdown draws it", () => {
       "a quote in an item": 4,
       "a section waits": 2,
       "a table's head waits": 9,
+      [HELD]: 363,
       "addresses by safeHref": 51,
       "addresses still being written are words": 20,
       "no empty cells added": 18,

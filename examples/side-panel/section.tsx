@@ -56,31 +56,28 @@ export default function SidePanelSectionExample() {
           </Button>
         }
       >
-        <ItemGroup>
-          {triggers.map((trigger, index) => (
-            <Fragment key={trigger.name}>
-              {index > 0 && <ItemSeparator />}
-              <Item size="xs">
-                <ItemMedia>
-                  <Icon icon={trigger.icon} />
-                </ItemMedia>
-                <ItemContent>
-                  <ItemTitle>
-                    {trigger.name}
-                    <ItemDetail>{trigger.kind}</ItemDetail>
-                  </ItemTitle>
-                </ItemContent>
-                <ItemActions>
-                  <Button
-                    variant="ghost"
-                    size="icon-xs"
-                    aria-label={`Remove ${trigger.name}`}
-                  >
-                    <Icon icon={TrashIcon} />
-                  </Button>
-                </ItemActions>
-              </Item>
-            </Fragment>
+        <ItemGroup separated>
+          {triggers.map((trigger) => (
+            <Item key={trigger.name} size="xs">
+              <ItemMedia>
+                <Icon icon={trigger.icon} />
+              </ItemMedia>
+              <ItemContent>
+                <ItemTitle>
+                  {trigger.name}
+                  <ItemDetail>{trigger.kind}</ItemDetail>
+                </ItemTitle>
+              </ItemContent>
+              <ItemActions>
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  aria-label={`Remove ${trigger.name}`}
+                >
+                  <Icon icon={TrashIcon} />
+                </Button>
+              </ItemActions>
+            </Item>
           ))}
         </ItemGroup>
       </SidePanelSection>

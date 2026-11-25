@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 import type { Locator, Page } from "@playwright/test";
 
-import { fixedTime, openExample } from "./example.ts";
+import { fixedTime, listenToLiveRegions, openExample } from "./example.ts";
 
 // Only Chromium has the clipboard's permissions: a context asked for them elsewhere does not open.
 test.use({
@@ -46,13 +46,15 @@ test("the block is a region named by its language, or by its title", async ({
 test("copy puts the code on the clipboard exactly and says so once", async ({
   page,
 }) => {
+  const said = await listenToLiveRegions(page);
   await openExample(page, "code-block", "basic");
   await page.getByRole("button", { name: COPY }).click();
   // Exactly the code: no line numbers, nothing added.
   await expect.poll(async () => await clipboard(page)).toBe(basicCode);
-  await expect(
-    page.getByRole("status").filter({ hasText: /^Copied$/u })
-  ).toHaveCount(1);
+  await expect.poll(said).toContain("Copied");
+  // A second time would come a message's hold (400ms) after the first.
+  await page.waitForTimeout(600);
+  expect(await said()).toStrictEqual(["Copied"]);
 });
 
 test("the keyboard copies too", async ({ page }) => {

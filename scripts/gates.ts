@@ -3,8 +3,8 @@
  * registry agrees with the source, every component compiles under the
  * React Compiler, as the product builds it, and every component is
  * its target API, has a spec, an example and a page under its own name, and
- * knows nothing of the product, every file compiles
- * against ES2023's library, the diff engine gives jsdiff's answers, and no
+ * knows nothing of the product, every rounded corner is the squircle, every
+ * file compiles against ES2023's library, the diff engine gives jsdiff's answers, and no
  * pattern in Markdown can backtrack without bound. Each runs
  * in its own process; all run, then any failure fails the whole.
  *
@@ -25,6 +25,7 @@ const gates: readonly (readonly string[])[] = [
   ["scripts/check-target-api.ts"],
   ["scripts/check-coverage.ts"],
   ["scripts/check-product-knowledge.ts"],
+  ["scripts/check-corners.ts"],
   ["scripts/check-es2023.ts"],
   ["scripts/check-diff-engine.ts"],
 ];

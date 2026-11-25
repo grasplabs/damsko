@@ -34,8 +34,13 @@ const sound = () => {
 };
 
 // A spoken conversation stands in the card while it runs; the turns pass by themselves. Close,
-// or Escape, gives the text back, and the microphone button starts it again.
-export default function PromptInputVoiceExample() {
+// or Escape, gives the text back, and the microphone button starts it again. `compact` is the
+// one-row card's (voice-compact).
+export default function PromptInputVoiceExample({
+  compact = false,
+}: {
+  compact?: boolean;
+}) {
   const [talking, setTalking] = useState(true);
   const [muted, setMuted] = useState(false);
   const [step, setStep] = useState(0);
@@ -64,7 +69,11 @@ export default function PromptInputVoiceExample() {
   const said = Math.min(left, turn.words.length);
   const listening = turn.status === "listening";
   return (
-    <PromptInput aria-label="Answer" onSubmit={() => undefined}>
+    <PromptInput
+      aria-label="Answer"
+      compact={compact}
+      onSubmit={() => undefined}
+    >
       {talking ? (
         <PromptInputVoice
           status={turn.status}

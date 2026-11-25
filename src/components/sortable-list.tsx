@@ -37,6 +37,7 @@ import type { ReactNode } from "react";
 
 import { useI18n } from "../lib/i18n";
 import { GripVerticalIcon, Icon } from "../lib/icons";
+import { tapTarget } from "../lib/styles";
 import {
   colors,
   duration,
@@ -410,7 +411,6 @@ const sortableList = definePrimitive({
 
 // ---- The look --------------------------------------------------------------------------------------
 
-const COARSE = media.pointerCoarse;
 const FORCED = media.forcedColors;
 const HOVER = media.hover;
 const REDUCED = media.reducedMotion;
@@ -420,6 +420,8 @@ const styles = stylex.create({
     display: "flex",
     flexDirection: "column",
     gap: space[1],
+    // Each handle's touch target reaches the middle of the gap to the next row's (tapTarget).
+    "--tap-room-block": `calc(${space[1]} / 2)`,
     minWidth: 0,
     margin: 0,
     padding: 0,
@@ -437,6 +439,8 @@ const styles = stylex.create({
     display: "flex",
     alignItems: "center",
     gap: space[2],
+    // The handle's touch target reaches the middle of the gap to what stands beside it.
+    "--tap-room-inline": `calc(${space[2]} / 2)`,
     minWidth: 0,
     borderRadius: radius.lg,
     cornerShape: radius.shape,
@@ -476,20 +480,6 @@ const styles = stylex.create({
     cursor: { default: "grab", ":active": "grabbing" },
     touchAction: "none",
     userSelect: "none",
-    // On a touch screen the handle places nothing, so its target (below) is placed by the item.
-    position: { default: null, [COARSE]: "static" },
-  },
-  // What a press lands on. With a mouse, the handle's own box. On a touch screen, the tap target's
-  // width (the tapTarget token) centred on the handle, and exactly as tall as the item's row: never
-  // past the row's edges, so a press anywhere in a row's handle column moves that row and no other.
-  // Its sides are left where the handle's content would put it (the static position, centred in
-  // the handle by its justifyContent); its top and bottom are the item's, which the handle no
-  // longer places (grip, above).
-  target: {
-    position: "absolute",
-    insetBlock: 0,
-    insetInline: { default: 0, [COARSE]: "auto" },
-    width: { default: null, [COARSE]: size.tapTarget },
   },
   // Up: the press's fill stays while it is moved, and the press does not shrink it as it is
   // dragged.
@@ -620,7 +610,7 @@ export const SortableListHandle = ({
         ),
       children: (
         <>
-          <span aria-hidden="true" {...stylex.props(styles.target)} />
+          <span aria-hidden="true" {...stylex.props(tapTarget)} />
           <Icon icon={GripVerticalIcon} />
         </>
       ),

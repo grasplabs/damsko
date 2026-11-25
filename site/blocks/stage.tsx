@@ -179,6 +179,7 @@ const styles = stylex.create({
       bottom: 0,
       height: 2,
       borderRadius: radius.xs,
+      cornerShape: radius.shape,
       backgroundColor: {
         default: "transparent",
         ":is([aria-selected=true])": {
@@ -201,6 +202,7 @@ const styles = stylex.create({
     width: 0,
     height: 2,
     borderRadius: radius.xs,
+    cornerShape: radius.shape,
     backgroundColor: colors.mint,
     opacity: {
       default: 0,
