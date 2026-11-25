@@ -71,9 +71,7 @@ test("its action works with it open, then closes it", async ({ page }) => {
   const publish = popover.getByRole("button", { name: "Publish", exact: true });
   await publish.click();
   // Working, inside the open popover: the work runs with it open.
-  await expect(
-    popover.getByRole("button", { name: "Publishing" })
-  ).toHaveAttribute("aria-busy", "true");
+  await expect(publish).toHaveAttribute("aria-busy", "true");
   await expect(popover).toBeVisible();
   // Done, it closes.
   await expect(popover).toBeHidden();

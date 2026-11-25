@@ -40,9 +40,13 @@ To go somewhere, `asChild` draws the link itself, `<a href>`, so it opens in a n
 
 ## A press that takes time
 
-It is automatic: when `onClick` returns a Promise, the Button is busy until it settles, takes no second press and shows a spinner, in its icon's place or over its words when it has none, then a tick or the alert for a moment, and the words stay in their place so the width never changes. Failed, it draws the quiet fill with destructive words and edge, whatever its variant. `loadingText`, `successText` and `errorText` are said and shown in place of the words, all stacked so the widest sets the width (an icon-only button says them only); given any of them, success with no `successText` shows the tick before the button's own words, so the button keeps the tick's room at rest. When the page runs the work itself, as a form's submit, it gives `status` instead.
+It is automatic: when `onClick` returns a Promise, the Button is busy until it settles, takes no second press and shows a spinner, in its icon's place or over its words when it has none, then a tick or the alert for a moment, and the words stay in their place so the width never changes. Failed, it draws the quiet fill with destructive words and edge, whatever its variant. Words for its states say it runs work and lay it out with them, so nothing shifts as it works: `loadingText` is said, never shown (the spinner shows it works and the words stay); `successText` and `errorText` are said and shown in place of the words beside their mark, all stacked so the widest sets the width; a failure with no `errorText` shows the catalogue's "Could not finish"; and success with no `successText` shows the tick before the button's own words, so the button keeps the tick's room at rest (an icon-only button says them all, and shows none). When the page runs the work itself, as a form's submit, it gives `status` instead.
 
 <Stage path="button/action" live label="A press that takes time" />
+
+Give a button that runs work its words for its states, even only `loadingText`, so it keeps their room before the first press: at rest it is as wide as it is while it works and once it is done.
+
+<Stage path="button/working" label="At rest and while it works" />
 
 ## The same button on every row
 

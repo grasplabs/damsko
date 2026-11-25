@@ -6,7 +6,7 @@
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
-import { createElement, useState } from "react";
+import { createElement, useRef, useState } from "react";
 
 import {
   colors,
@@ -415,6 +415,72 @@ export const useLayerBody = (
     role: scrolls ? ("region" as const) : undefined,
     "aria-labelledby": scrolls ? title : undefined,
   };
+};
+
+// ---- Where focus goes as a layer opens ------------------------------------------------------------
+
+// What Tab can reach inside a layer.
+const TABBABLE =
+  "button:not([disabled]), [href], input:not([disabled]):not([type=hidden]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex='-1']), [contenteditable='true']";
+
+/** The first control in `root` that Tab reaches and the eye sees, if any. */
+export const firstTabbable = (root: ParentNode): HTMLElement | null =>
+  [...root.querySelectorAll<HTMLElement>(TABBABLE)].find(
+    (element) => element.getClientRects().length > 0
+  ) ?? null;
+
+/** Where a layer's focus goes as it opens, as UI SDK's `initialFocus` takes it: a selector too. */
+export type OpeningFocus =
+  | string
+  | HTMLElement
+  | (() => HTMLElement | null | undefined);
+
+/** A field's words left as they are, the caret at their end, if they were all selected. */
+const caretAtEnd = (field: HTMLInputElement) => {
+  const end = field.value.length;
+  if (end > 0 && field.selectionStart === 0 && field.selectionEnd === end) {
+    field.setSelectionRange(end, end);
+  }
+};
+
+/**
+ * A layer's first focus (Dialog, Sheet, Drawer, Popover): where `given` says, else an autofocused
+ * control, else the first one, as UI SDK's own `auto`. A filled field that takes it keeps its words
+ * as they are, the caret at their end, as the original's layers did: UI SDK selects them all as it
+ * moves the focus there, and a key pressed then would replace a name that was meant to be edited.
+ * UI SDK selects in the very task in which it asks here, so the caret is put back just after, before
+ * anything else runs: a field a caller selects itself, later, or focus that arrives from another
+ * layer, is left as it is. `"content"`, `"none"` and a selector pass through. `ref` is the panel's.
+ */
+export const useOpeningFocus = (given: OpeningFocus | undefined) => {
+  const panel = useRef<HTMLElement | null>(null);
+  const ref = (element: HTMLElement | null) => {
+    panel.current = element;
+  };
+  if (typeof given === "string" && given !== "auto") {
+    return { ref, initialFocus: given };
+  }
+  const initialFocus = () => {
+    let target: HTMLElement | null | undefined = null;
+    if (typeof given === "function") {
+      target = given();
+    } else if (given instanceof HTMLElement) {
+      target = given;
+    } else if (panel.current !== null) {
+      target =
+        panel.current.querySelector<HTMLElement>(
+          "[autofocus], [data-autofocus]"
+        ) ?? firstTabbable(panel.current);
+    }
+    if (target instanceof HTMLInputElement) {
+      const field = target;
+      queueMicrotask(() => {
+        caretAtEnd(field);
+      });
+    }
+    return target;
+  };
+  return { ref, initialFocus };
 };
 
 // ---- The look of a panel ------------------------------------------------------------------------

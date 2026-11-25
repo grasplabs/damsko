@@ -49,6 +49,7 @@ import {
   layerStyles,
   shadeProps,
   useLayerBody,
+  useOpeningFocus,
   watchPanel,
 } from "../lib/layer";
 import {
@@ -347,15 +348,18 @@ export const DialogContent = ({
   children,
   size = "default",
   showCloseButton = true,
+  initialFocus,
   style,
   ...rest
 }: DialogContentProps) => {
   const { close } = useI18n().dialog;
+  const opening = useOpeningFocus(initialFocus);
   return (
     <>
       <BackdropPrimitive {...shadeProps("dialog-overlay", styles.overlay)} />
       <ContentPrimitive
-        {...mergeProps(rest, { ref: watchPanel })}
+        {...mergeProps(rest, { ref: watchPanel }, { ref: opening.ref })}
+        initialFocus={opening.initialFocus}
         {...stylex.props(
           panelMarker,
           styles.panel,

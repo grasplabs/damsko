@@ -36,7 +36,7 @@ import { renderElement } from "@ui-sdk/react/primitive";
 import { createContext, use, useRef, useState } from "react";
 import type { ComponentProps, ReactNode } from "react";
 
-import { watchBody } from "../lib/layer";
+import { firstTabbable, useOpeningFocus, watchBody } from "../lib/layer";
 import { scrollbarHidden } from "../lib/styles";
 import {
   colors,
@@ -417,21 +417,6 @@ export interface PopoverContentProps extends Omit<
   style?: LayoutStyle;
 }
 
-// What can take focus by Tab inside the panel: its first one, if any.
-const TABBABLE =
-  "button:not([disabled]), [href], input:not([disabled]):not([type=hidden]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex='-1']), [contenteditable='true']";
-const firstTabbable = (body: HTMLElement): HTMLElement | null => {
-  // The body itself, when it scrolls, is a stop of its own (a region the keys can scroll).
-  if (body.tabIndex >= 0) {
-    return body;
-  }
-  return (
-    [...body.querySelectorAll<HTMLElement>(TABBABLE)].find(
-      (element) => element.getClientRects().length > 0
-    ) ?? null
-  );
-};
-
 /** The panel, beside its trigger. Under 640px it takes the window's width less the gutter. */
 export const PopoverContent = ({
   children,
@@ -451,22 +436,27 @@ export const PopoverContent = ({
       ? undefined
       : watchBody(element, "dialog", setTitle, setScrolls);
   };
-  // The first control in it, else the trigger, which holds focus as it opens. Where a tap left
-  // focus on nothing (the page), the panel takes it, as UI SDK's own default does.
+  // The first control in it (the body itself while it scrolls, a stop of its own), else the
+  // trigger, which holds focus as it opens. Where a tap left focus on nothing (the page), the panel
+  // takes it, as UI SDK's own default does.
   const firstOrTrigger = () => {
-    const first = body.current === null ? null : firstTabbable(body.current);
+    const first =
+      body.current === null || body.current.tabIndex >= 0
+        ? body.current
+        : firstTabbable(body.current);
     if (first !== null) {
       return first;
     }
     const held = document.activeElement;
     return held instanceof HTMLElement && held !== document.body ? held : null;
   };
+  const opening = useOpeningFocus(initialFocus ?? firstOrTrigger);
   return (
     <ContentPrimitive
       anchor={anchor}
       {...rest}
       data-slot="popover-content"
-      initialFocus={initialFocus ?? firstOrTrigger}
+      initialFocus={opening.initialFocus}
       sideOffset={popup.popoverGap}
       collisionPadding={popup.gutter}
       {...stylex.props(popoverMarker, styles.panel, style)}

@@ -426,7 +426,11 @@ const styles = stylex.create({
     height: sizes.controlSm,
     borderRadius: `min(${radius.xl}, calc(${sizes.controlSm} / 2))`,
   },
+  // The title and the description may shrink below their words, so a line meant to end in an
+  // ellipsis (one with `white-space: nowrap` inside) is cut at the content's edge, before the
+  // row's actions or chevron, rather than running under them.
   title: {
+    minWidth: 0,
     fontSize: font.textSm,
     lineHeight: font.textSmLine,
     fontWeight: font.weightMedium,
@@ -448,10 +452,6 @@ const styles = stylex.create({
     gap: {
       default: null,
       [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: space["2"],
-    },
-    minWidth: {
-      default: null,
-      [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: 0,
     },
     fontSize: {
       default: font.textSm,
@@ -514,6 +514,7 @@ const styles = stylex.create({
     },
   },
   description: {
+    minWidth: 0,
     fontSize: font.textSm,
     lineHeight: font.textSmLine,
     color: colors.mutedForeground,
@@ -562,8 +563,14 @@ const styles = stylex.create({
     marginInlineEnd: `calc(${sizes.iconSm} * -9 / 24)`,
     color: colors.mutedForeground,
   },
-  // The title's press: plain words whose target stretches over the row.
+  // The title's press: plain words whose target stretches over the row. A block the title's
+  // width, so it gives way to the row's end as the title does (a button would keep its words'
+  // width, and run under the chevron).
   press: {
+    display: "block",
+    boxSizing: "border-box",
+    width: "100%",
+    minWidth: 0,
     margin: 0,
     padding: 0,
     borderWidth: 0,
@@ -591,7 +598,7 @@ const styles = stylex.create({
   // In a side panel's card the press is the title's flex row, so its name gives way as the title's.
   pressXs: {
     display: {
-      default: null,
+      default: "block",
       [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: "flex",
       [STACK]: "block",
     },
@@ -606,10 +613,6 @@ const styles = stylex.create({
     gap: {
       default: null,
       [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: space["2"],
-    },
-    minWidth: {
-      default: null,
-      [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: 0,
     },
   },
   // A list that stacks: its rows lay out by its own width.

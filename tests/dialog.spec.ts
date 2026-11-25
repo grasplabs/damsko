@@ -134,9 +134,7 @@ test("while its action works it stays open, and it closes once the work is done"
   const dialog = page.getByRole("dialog", { name: "Publish the report" });
   const publish = dialog.getByRole("button", { name: "Publish", exact: true });
   await publish.click();
-  await expect(
-    dialog.getByRole("button", { name: "Publishing" })
-  ).toHaveAttribute("aria-busy", "true");
+  await expect(publish).toHaveAttribute("aria-busy", "true");
   await page.keyboard.press("Escape");
   await page.mouse.click(5, 5);
   await expect(dialog).toBeVisible();
@@ -216,6 +214,35 @@ test("a required field left empty keeps it open, says why and takes focus", asyn
   await expect(name).toBeFocused();
   await expect(dialog).toBeVisible();
 });
+
+for (const how of ["keyboard", "pointer"] as const) {
+  test(`opened by the ${how}, a filled first field takes the caret at the end of its words, which stay as they are`, async ({
+    page,
+  }) => {
+    await openExample(page, "dialog", "form-test");
+    const trigger = page.getByRole("button", { name: "Rename project" });
+    if (how === "keyboard") {
+      await trigger.focus();
+      await page.keyboard.press("Enter");
+    } else {
+      await trigger.click();
+    }
+    const dialog = page.getByRole("dialog", { name: "Rename project" });
+    const name = dialog.getByRole("textbox", { name: "Project name" });
+    await expect(name).toBeFocused();
+    await expect
+      .poll(
+        async () =>
+          await name.evaluate((field: HTMLInputElement) => [
+            field.selectionStart,
+            field.selectionEnd,
+          ])
+      )
+      .toStrictEqual([16, 16]);
+    await page.keyboard.type(" notes");
+    await expect(name).toHaveValue("Quarterly review notes");
+  });
+}
 
 test("full, it opens wider than a dialog for a short task", async ({
   page,

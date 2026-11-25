@@ -38,6 +38,7 @@ import type {
   DrawerDismissAttemptDetails,
   SnapPoint,
 } from "@ui-sdk/react/drawer";
+import { mergeProps } from "@ui-sdk/react/primitive";
 import { createContext, use } from "react";
 import type { ComponentProps, ReactNode } from "react";
 
@@ -48,6 +49,7 @@ import {
   layerStyles,
   shadeProps,
   useLayerBody,
+  useOpeningFocus,
 } from "../lib/layer";
 import {
   focusRing,
@@ -332,16 +334,19 @@ export interface DrawerContentProps extends Omit<
  */
 export const DrawerContent = ({
   children,
+  initialFocus,
   style,
   ...rest
 }: DrawerContentProps) => {
   const { handle } = useI18n().drawer;
+  const opening = useOpeningFocus(initialFocus);
   const snaps = use(SnapsContext);
   return (
     <>
       <BackdropPrimitive {...shadeProps("drawer-overlay")} />
       <ContentPrimitive
-        {...rest}
+        {...mergeProps(rest, { ref: opening.ref })}
+        initialFocus={opening.initialFocus}
         {...stylex.props(
           drawerMarker,
           layerStyles.panel,
