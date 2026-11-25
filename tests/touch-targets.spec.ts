@@ -107,6 +107,14 @@ for (const [component, paths] of byComponent) {
           if (labels.some((label) => label?.contains(hit) === true)) {
             return true;
           }
+          // A native select's target is drawn beside the <select>, in the box round it.
+          if (
+            control
+              .closest('[data-slot="native-select-wrapper"]')
+              ?.contains(hit) === true
+          ) {
+            return true;
+          }
           const slider = control.closest('[data-slot="slider"]');
           return (
             slider !== null &&

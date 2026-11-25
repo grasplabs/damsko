@@ -397,6 +397,17 @@
   "scroll-area": {
     "src/components/scroll-area.tsx": ["ScrollArea", "ScrollAreaProps"]
   },
+  "native-select": {
+    "src/components/native-select.tsx": [
+      "NativeSelect",
+      "NativeSelectOption",
+      "NativeSelectOptGroup",
+      "NativeSelectSize",
+      "NativeSelectProps",
+      "NativeSelectOptionProps",
+      "NativeSelectOptGroupProps"
+    ]
+  },
   "select": {
     "src/components/select.tsx": [
       "Select",
@@ -438,6 +449,17 @@
       "SkeletonProps",
       "SkeletonVariant",
       "SkeletonSize"
+    ]
+  },
+  "sortable-list": {
+    "src/components/sortable-list.tsx": [
+      "SortableList",
+      "SortableListItem",
+      "SortableListHandle",
+      "SortableListChangeReason",
+      "SortableListProps",
+      "SortableListItemProps",
+      "SortableListHandleProps"
     ]
   },
   "spinner": {

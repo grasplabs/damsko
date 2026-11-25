@@ -186,6 +186,7 @@
         "@damsko/message",
         "@damsko/message-scroller",
         "@damsko/model-selector",
+        "@damsko/native-select",
         "@damsko/navigation-menu",
         "@damsko/number-field",
         "@damsko/page-header",
@@ -209,6 +210,7 @@
         "@damsko/skeleton",
         "@damsko/slider",
         "@damsko/snippet",
+        "@damsko/sortable-list",
         "@damsko/sources",
         "@damsko/spinner",
         "@damsko/stack-trace",
@@ -2238,6 +2240,32 @@
       ]
     },
     {
+      "name": "native-select",
+      "type": "registry:ui",
+      "title": "Native select",
+      "description": "The browser's own select in the field's box, for a form that posts as it is and a long list on a phone.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/native-select",
+      "meta": {
+        "version": "0.1.0",
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
+      },
+      "files": [
+        {
+          "path": "src/components/native-select.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/native-select.tsx"
+        }
+      ]
+    },
+    {
       "name": "navigation-menu",
       "type": "registry:ui",
       "title": "Navigation menu",
@@ -2915,6 +2943,33 @@
           "path": "src/components/snippet.tsx",
           "type": "registry:file",
           "target": "~/src/components/snippet.tsx"
+        }
+      ]
+    },
+    {
+      "name": "sortable-list",
+      "type": "registry:ui",
+      "title": "Sortable list",
+      "description": "A list a person puts in order by hand, dragging each item by its handle or moving it from the keyboard.",
+      "dependencies": [
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
+      ],
+      "registryDependencies": [
+        "@damsko/button",
+        "@damsko/lib"
+      ],
+      "docs": "https://damsko.joingrasp.com/components/sortable-list",
+      "meta": {
+        "version": "0.1.0",
+        "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
+      },
+      "files": [
+        {
+          "path": "src/components/sortable-list.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/sortable-list.tsx"
         }
       ]
     },

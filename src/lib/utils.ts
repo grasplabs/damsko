@@ -299,7 +299,12 @@ export const isDevelopment = process.env.NODE_ENV !== "production";
  */
 export const warnUnnamed = (
   part: string,
-  control: HTMLInputElement | HTMLButtonElement | HTMLTextAreaElement | null
+  control:
+    | HTMLInputElement
+    | HTMLButtonElement
+    | HTMLTextAreaElement
+    | HTMLSelectElement
+    | null
 ) => {
   if (!(isDevelopment && control)) {
     return;
@@ -361,8 +366,11 @@ export const assignRef = <T>(ref: Ref<T> | undefined, node: T | null) => {
 export type Politeness = "polite" | "assertive";
 
 const regions = new Map<Politeness, HTMLElement>();
-/** What waits to be said, in order: assertive messages first, then polite ones. */
-const waiting: { message: string; politeness: Politeness }[] = [];
+/**
+ * What waits to be said, in order: assertive messages first, then polite ones. A message with a
+ * `key` stands for the latest news of one thing (where an item being moved is now).
+ */
+const waiting: { message: string; politeness: Politeness; key?: string }[] = [];
 let speaking = false;
 // How long a message stays alone in its region before the next replaces it: long enough for a
 // screen reader to have taken it, so one said straight after another never cuts it off.
@@ -404,22 +412,37 @@ const sayNext = () => {
  * page (`data-slot="live-region"`), made on first use. A part never puts a live region beside
  * itself, so nothing is added next to a button in a row. Messages said in quick succession wait
  * their turn, each said whole: polite ones in order, an assertive one ahead of the polite ones
- * still waiting. Does nothing on the server.
+ * still waiting. A message with a `key` takes the place of the one with that key still waiting,
+ * so news that is out of date by the time its turn comes is never said: a move, not every step
+ * of it. Does nothing on the server.
  *
  *   announce(saved);
+ *   announce(`${name}, position ${at} of ${total}.`, "assertive", "move");
  */
 export const announce = (
   message: string,
-  politeness: Politeness = "polite"
+  politeness: Politeness = "polite",
+  key?: string
 ) => {
   if (typeof document === "undefined") {
     return;
+  }
+  // The out-of-date news goes, and this takes its turn as a new message: after anything said
+  // since (a drop, the next pick up), never before it.
+  const stale =
+    key === undefined ? -1 : waiting.findIndex((each) => each.key === key);
+  if (stale !== -1) {
+    waiting.splice(stale, 1);
   }
   const at =
     politeness === "assertive"
       ? waiting.findIndex((each) => each.politeness === "polite")
       : -1;
-  waiting.splice(at === -1 ? waiting.length : at, 0, { message, politeness });
+  waiting.splice(at === -1 ? waiting.length : at, 0, {
+    message,
+    politeness,
+    key,
+  });
   if (!speaking) {
     sayNext();
   }

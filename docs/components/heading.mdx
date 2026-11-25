@@ -21,6 +21,12 @@ The level keeps the outline whole; each has a size by default, and `size` change
 
 <Stage path="heading/outline" label="Level and size" />
 
+## A place for focus
+
+When the control that had focus goes away, focus goes to the heading of its section, so the next Tab goes on from there. `tabIndex={-1}` makes the heading take focus from code and never from Tab; its `ref` is what code focuses.
+
+<Stage path="heading/focus" live label="A place for focus" />
+
 <Part title="Using it" />
 
 ## When to use it

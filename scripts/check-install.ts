@@ -60,6 +60,7 @@ import {
   readFileSync,
   readdirSync,
   rmSync,
+  statSync,
   writeFileSync,
 } from "node:fs";
 import { availableParallelism, tmpdir } from "node:os";
@@ -942,12 +943,13 @@ const inBrowser = async (
 /**
  * The app the page's blocks built, as the page left it: one button, drawn by its own styles, and
  * with `code`, a line of code coloured in its worker; `placed`, in a row of the page's own whose
- * Tailwind classes put it at the row's end.
+ * Tailwind classes put it at the row's end; `icon`, with the Hugeicons drawing the page's first app
+ * imports drawn in it.
  */
 const checkPage = async (
   label: string,
   app: string,
-  { placed = false, code = false } = {}
+  { placed = false, code = false, icon = false } = {}
 ) => {
   const dist = nodePath.join(app, "dist");
   const built = filesUnder(dist);
@@ -972,9 +974,36 @@ const checkPage = async (
     built.filter((file) => file.endsWith(".woff2")).length === 6,
     "the build did not find the six font files"
   );
+  // The page's own icon is a Hugeicons drawing the house set does not hold, imported by the app:
+  // the bundle keeps that drawing, never the package's thousands (tens of megabytes).
+  const scripts = built
+    .filter((file) => file.endsWith(".js"))
+    .reduce(
+      (bytes, file) => bytes + statSync(nodePath.join(dist, file)).size,
+      0
+    );
+  expectBuilt(
+    scripts < 1_000_000,
+    `the app's scripts are ${String(scripts)} bytes: the bundle kept more of Hugeicons than the drawings it imports`
+  );
   await inBrowser(label, dist, async (page, url, expect, fonts) => {
     await open(page, url, "button");
     const seen = await drawn(page);
+    if (icon) {
+      // The icon the app imported from Hugeicons, drawn by Damsko's Icon at the button's size.
+      const drawing = await page
+        .getByRole("button", { name: "Save changes" })
+        .locator("svg")
+        .evaluate((svg) => ({
+          parts: svg.querySelectorAll("path").length,
+          width: svg.getBoundingClientRect().width,
+          hidden: svg.getAttribute("aria-hidden"),
+        }));
+      expect(
+        drawing.parts > 0 && drawing.width >= 12 && drawing.hidden === "true",
+        `the Hugeicons drawing the app imported is not drawn through Icon in its button (${JSON.stringify(drawing)})`
+      );
+    }
     expect(
       !["rgba(0, 0, 0, 0)", "transparent"].includes(seen.button.fill),
       `the default button has no fill (${seen.button.fill})`
@@ -1338,7 +1367,7 @@ const thePage = async () => {
   if (await follow("install", plain)) {
     const app = nodePath.join(plain, "app");
     const label = "the app with the components in its own src/";
-    await checkPage(label, app, { code: true });
+    await checkPage(label, app, { code: true, icon: true });
     if (await follow("light-and-dark", app)) {
       await checkApp(label, app);
     }
@@ -1348,7 +1377,7 @@ const thePage = async () => {
   if (await follow("in-a-workspace-package", product)) {
     const app = nodePath.join(product, "apps/web");
     const label = "the app that imports the workspace package";
-    await checkPage(label, app, { code: true });
+    await checkPage(label, app, { code: true, icon: true });
     if (await follow("light-and-dark", app)) {
       await checkApp(label, app);
     }

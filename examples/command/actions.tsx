@@ -25,6 +25,8 @@ import { useState } from "react";
 const more: CommandItemAction[] = [
   { value: "copy", label: "Copy link", icon: LinkIcon },
   { value: "share", label: "Share", icon: ShareIcon },
+  // An action may have no icon: its words still start on the others'.
+  { value: "rename", label: "Rename" },
   {
     value: "archive",
     label: "Archive",
@@ -64,6 +66,7 @@ const names: Record<string, string> = {
 const done: Record<string, string> = {
   copy: "Copied the link to",
   share: "Would share",
+  rename: "Would rename",
   archive: "Would archive",
 };
 
