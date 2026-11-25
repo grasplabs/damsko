@@ -7,14 +7,14 @@
 // dialog, menu or popover is open; while a video or sound plays or something records; with reduced
 // motion (the calmer choice: nothing at all, not a still); in an automated browser
 // (`navigator.webdriver`, so the browser specs never meet it) unless the address asks with
-// `?idle=`; or with `?noidle`. Only what protects the reader's work or access holds it back, never
-// the battery or save-data. `?idle=<seconds>` only shortens the wait.
+// `?idle=<seconds>`, which only an automated browser may use to shorten the wait; or with `?noidle`.
+// Only what protects the reader's work or access holds it back, never the battery or save-data.
+// Where it cannot draw (no WebGL, no picture, WebGL lost) it is not tried again on this page.
 //
-// Any input ends it at once. The input that ends it does nothing else: it is caught here, so a
-// press is not a click on what lies under the screen, a key does not act, a wheel does not scroll.
-// Focus and scroll are never touched, so the page is as it was.
-import { durations } from "@grasp-os/ui/lib/tokens.values";
-
+// Any input ends it at once. Once it can be seen (./idle-screen.ts, seen), the input that ends it
+// does nothing else: it is caught here, so a press is not a click on what lies under the screen, a
+// key does not act, a wheel does not scroll; nor does the rest of that press or key, up to its
+// release. Before that, the input goes on to the page. Focus and scroll are never touched.
 import type { IdleScreen } from "./idle-screen";
 import { idleSeconds } from "./idle-time";
 
@@ -36,17 +36,28 @@ const ending = [
   "wheel",
   "touchstart",
 ] as const;
-/** The rest of the press that ended it (a tap's touchstart follows its pointerdown). */
+/** What the rest of the press or key that ended it may bring, and the next press or key, which ends that. */
 const rests = [
+  "pointerdown",
+  "keydown",
+  "keyup",
   "touchstart",
   "pointerup",
+  "pointercancel",
   "mouseup",
   "mousedown",
   "click",
-  "keyup",
   "touchend",
   "contextmenu",
 ] as const;
+/** The last a press or key may bring: what is caught after it is the reader's next. */
+const releases = new Set([
+  "keyup",
+  "click",
+  "touchend",
+  "contextmenu",
+  "pointercancel",
+]);
 
 /** A field that holds what is being typed. */
 const FIELD =
@@ -58,7 +69,10 @@ const OPEN =
 let timer = 0;
 let screen: IdleScreen | null = null;
 let starting = false;
-let caughtUntil = 0;
+/** The screen cannot draw here: it is not tried again on this page. */
+let broken = false;
+/** The press or key that ended the screen, until its release: the rest of it goes nowhere. */
+let swallowing: "press" | "key" | null = null;
 let lastX = -1;
 let lastY = -1;
 let moved: Event | null = null;
@@ -68,7 +82,10 @@ const asked = (): { off: boolean; seconds: number } => {
   const seconds = Number(query.get("idle"));
   return {
     off: query.has("noidle"),
-    seconds: seconds > 0 ? Math.min(seconds, idleSeconds) : 0,
+    seconds:
+      navigator.webdriver && seconds > 0
+        ? Math.min(Math.max(seconds, 1), idleSeconds)
+        : 0,
   };
 };
 
@@ -112,30 +129,59 @@ const busy = (): boolean => {
 const schedule = (): void => {
   clearTimeout(timer);
   const { off, seconds } = asked();
-  if (off || (navigator.webdriver && seconds === 0)) {
+  if (broken || off || (navigator.webdriver && seconds === 0)) {
     return;
   }
   timer = window.setTimeout(begin, (seconds || idleSeconds) * 1000);
 };
 
-/** The rest of the press that ended it (its release and click) goes nowhere. */
-const rest = (event: Event): void => {
-  if (performance.now() > caughtUntil) {
-    return;
-  }
-  // A touchstart is passive at the window, so it is only stopped.
+/** Stops an input from doing anything on the page. A touchstart is passive at the window, so it is only stopped. */
+const nothing = (event: Event): void => {
   if (event.cancelable && event.type !== "touchstart") {
     event.preventDefault();
   }
   event.stopImmediatePropagation();
 };
 
-const close = (now = false): void => {
+/** The rest of the press or key that ended it goes nowhere, up to its release; the next one goes on. */
+const rest = (event: Event): void => {
+  if (swallowing === null) {
+    return;
+  }
+  const key = event instanceof KeyboardEvent ? event : null;
+  if (
+    event.type === "pointerdown" ||
+    (key !== null && key.type === "keydown" && !key.repeat)
+  ) {
+    swallowing = null;
+    return;
+  }
+  if ((key !== null) !== (swallowing === "key")) {
+    return;
+  }
+  nothing(event);
+  if (releases.has(event.type)) {
+    swallowing = null;
+  }
+};
+
+/** The screen is no longer the watcher's. */
+const letGo = (): IdleScreen | null => {
   for (const type of ending) {
     removeEventListener(type, wake, { capture: true });
   }
-  screen?.end(now);
+  const was = screen;
   screen = null;
+  return was;
+};
+const close = (now = false): void => {
+  letGo()?.end(now);
+};
+/** The screen could not draw: it has taken itself away, and is not tried again here. */
+const gone = (): void => {
+  broken = true;
+  clearTimeout(timer);
+  letGo();
 };
 
 /**
@@ -149,12 +195,11 @@ const wake = (event: Event): void => {
     if (event !== moved) {
       return;
     }
-  } else {
-    if (event.cancelable) {
-      event.preventDefault();
+  } else if (screen?.seen() === true) {
+    nothing(event);
+    if (event.type !== "wheel") {
+      swallowing = event.type === "keydown" ? "key" : "press";
     }
-    event.stopImmediatePropagation();
-    caughtUntil = performance.now() + durations.releaseSwallow;
   }
   close();
   schedule();
@@ -175,11 +220,16 @@ const begin = async (): Promise<void> => {
   starting = true;
   const { idleScreen } = await import("./idle-screen");
   // Input while it was on its way: it is not wanted now.
-  if (!starting) {
+  const wanted = starting;
+  starting = false;
+  if (!wanted || screen !== null) {
     return;
   }
-  starting = false;
-  screen = idleScreen();
+  screen = idleScreen(gone);
+  if (screen === null) {
+    gone();
+    return;
+  }
   for (const type of ending) {
     addEventListener(type, wake, { capture: true, passive: false });
   }
@@ -215,6 +265,11 @@ document.addEventListener("visibilitychange", () => {
     schedule();
   }
 });
+// Reduced motion turned on, or the page printed: the screen goes at once.
+matchMedia("(prefers-reduced-motion: reduce)").addEventListener("change", () =>
+  close(true)
+);
+addEventListener("beforeprint", () => close(true));
 // A page swapped by the router: the screen goes with the old page, the wait starts again.
 document.addEventListener("astro:before-swap", () => {
   close(true);

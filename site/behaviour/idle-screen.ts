@@ -39,7 +39,7 @@ interface Scene {
 }
 
 /**
- * The scenes in the order shown, the Van Gogh first, each from a work in the public domain. Always
+ * The scenes in the order shown, the Van Gogh first, credited in THIRD_PARTY_NOTICES.md. Always
  * the full picture: a phone's tall window keeps a third of its width.
  */
 const scenes: readonly Scene[] = [
@@ -263,27 +263,35 @@ const picture = async (src: string): Promise<HTMLImageElement | undefined> =>
     image.src = src;
   });
 
+/**
+ * How far the dither must have come in before the screen counts as seen: by then it stands all
+ * round the window's edges. Until then the screen lets every input through to the page.
+ */
+const seenAt = 0.3;
+
 export interface IdleScreen {
   /** Takes the screen away: at once with `now`, else after a fade of a moment. */
   end: (now?: boolean) => void;
+  /** Whether enough of it is drawn to be seen; only then does it catch the input that ends it. */
+  seen: () => boolean;
 }
 
-const nothing: IdleScreen = { end: () => undefined };
-
 /**
- * Puts the idle screen over the window. Nothing is drawn until the first picture has come; where
- * WebGL or the picture fails, nothing shows at all.
+ * Puts the idle screen over the window. Nothing is drawn until the first picture has come. Null
+ * where WebGL won't run; where the picture fails or WebGL is lost later, it takes itself away and
+ * calls `gone`.
  */
-export const idleScreen = (): IdleScreen => {
+export const idleScreen = (gone: () => void): IdleScreen | null => {
   const overlay = document.createElement("div");
   overlay.dataset.idleScreen = "";
   overlay.setAttribute("aria-hidden", "true");
-  // Its own element with its own styles: over everything, catching the first input, so that input
-  // is not a click on what lies under it. No layout or style of the page changes.
+  // Its own element with its own styles: over everything, and once seen catching the first input,
+  // so that input is not a click on what lies under it. No layout or style of the page changes.
   Object.assign(overlay.style, {
     position: "fixed",
     inset: "0",
     zIndex: "2147483647",
+    pointerEvents: "none",
     cursor: "none",
     contain: "strict",
     userSelect: "none",
@@ -324,13 +332,14 @@ export const idleScreen = (): IdleScreen => {
   });
   const program = gl === null ? null : programOf(gl, FRAGMENT);
   if (gl === null || program === null) {
-    return nothing;
+    return null;
   }
   const at = (name: string): WebGLUniformLocation | null =>
     gl.getUniformLocation(program, name);
 
   let frame = 0;
   let ended = false;
+  let seen = false;
   // The screen's own clock: it stands still while the tab is hidden, so nothing jumps on return.
   let clock = 0;
   let last = 0;
@@ -419,6 +428,10 @@ export const idleScreen = (): IdleScreen => {
     if (phase === "arrive") {
       const reach = Math.min(1, elapsed / timing.arrive);
       gl.uniform1f(at("u_reach"), ease(reach));
+      if (!seen && ease(reach) >= seenAt) {
+        seen = true;
+        overlay.style.pointerEvents = "auto";
+      }
       if (reach >= 1) {
         phase = "rest";
         phaseAt = clock;
@@ -484,8 +497,15 @@ export const idleScreen = (): IdleScreen => {
     cancelAnimationFrame(frame);
     removeEventListener("resize", resized);
     document.removeEventListener("visibilitychange", run);
+    canvas.removeEventListener("webglcontextlost", fail);
     gl.getExtension("WEBGL_lose_context")?.loseContext();
     overlay.remove();
+  };
+  /** It cannot go on: gone at once, and the watcher told. */
+  const fail = (): void => {
+    ended = true;
+    remove();
+    gone();
   };
   const end = (now = false): void => {
     if (ended) {
@@ -508,6 +528,7 @@ export const idleScreen = (): IdleScreen => {
   };
 
   document.body.append(overlay);
+  canvas.addEventListener("webglcontextlost", fail);
   fit();
   addEventListener("resize", resized);
   document.addEventListener("visibilitychange", run);
@@ -537,7 +558,7 @@ export const idleScreen = (): IdleScreen => {
         return;
       }
       if (image === undefined) {
-        end(true);
+        fail();
         return;
       }
       place(0, image, first, "now");
@@ -545,5 +566,5 @@ export const idleScreen = (): IdleScreen => {
       run();
     });
   }
-  return { end };
+  return { end, seen: () => seen && !ended };
 };

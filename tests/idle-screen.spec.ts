@@ -1,7 +1,9 @@
 // The docs' idle screen (site/behaviour/idle.ts and idle-screen.ts): after the wait with nothing
-// done it covers the window, hidden from assistive tech; a key or a press ends it and does nothing
-// else, focus and scroll as they were; it never begins with reduced motion, while the tab is hidden,
-// or in an automated browser that does not ask for it with `?idle=`. On the page's own clock.
+// done it covers the window, hidden from assistive tech; once it can be seen, a key or a press ends
+// it and does nothing else, up to its release, focus and scroll as they were; before that, input
+// goes on. It never begins with reduced motion, while the tab is hidden, or in an automated browser
+// that does not ask with `?idle=`; where it cannot draw it leaves nothing and is not tried again.
+// On the page's own clock.
 import { durations } from "@grasp-os/ui/lib/tokens.values";
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
@@ -44,6 +46,12 @@ const record = async (page: Page): Promise<() => Promise<string[]>> => {
   };
 };
 
+/** The screen drawn far enough in to be seen: from then on it catches the input that ends it. */
+const untilSeen = async (page: Page) => {
+  await expect(page.locator("[data-idle-phase]")).toBeAttached();
+  await page.clock.runFor(3000);
+};
+
 test.describe("with motion", () => {
   test.use({ reducedMotion: "no-preference" });
 
@@ -80,7 +88,7 @@ test.describe("with motion", () => {
     const scrolled = await page.evaluate(() => scrollY);
     await page.clock.runFor(wait);
     const line = page.getByText("Move to return");
-    await expect(line).toBeAttached();
+    await untilSeen(page);
     const reached = await record(page);
     await page.keyboard.press("Enter");
     await page.clock.runFor(durations.swap);
@@ -107,7 +115,7 @@ test.describe("with motion", () => {
     await page.mouse.move((box?.x ?? 0) + 4, (box?.y ?? 0) + 4);
     await page.clock.runFor(wait);
     const line = page.getByText("Move to return");
-    await expect(line).toBeAttached();
+    await untilSeen(page);
     const reached = await record(page);
     await page.mouse.down();
     await page.mouse.up();
@@ -115,6 +123,140 @@ test.describe("with motion", () => {
     await expect(line).not.toBeAttached();
     expect(await reached()).toEqual([]);
     expect(page.url()).toBe(at);
+    // A second press a moment later is the reader's own, and goes on.
+    await page.clock.runFor(300);
+    await page.mouse.down();
+    await page.mouse.up();
+    expect(await reached()).toContain("click");
+  });
+
+  test("before it can be seen, a press goes on to the page and ends it", async ({
+    page,
+  }) => {
+    await open(page);
+    const box = await page
+      .getByRole("main")
+      .getByRole("link")
+      .first()
+      .boundingBox();
+    await page.mouse.move((box?.x ?? 0) + 4, (box?.y ?? 0) + 4);
+    await page.clock.runFor(wait);
+    const line = page.getByText("Move to return");
+    await expect(line).toBeAttached();
+    const reached = await record(page);
+    await page.mouse.down();
+    await page.mouse.up();
+    expect(await reached()).toContain("click");
+    await page.clock.runFor(durations.swap);
+    await expect(line).not.toBeAttached();
+  });
+
+  test("a held key's repeats go nowhere until it is let go; the next key goes on", async ({
+    page,
+  }) => {
+    await open(page);
+    const scrolled = await page.evaluate(() => scrollY);
+    await page.clock.runFor(wait);
+    await untilSeen(page);
+    const reached = await record(page);
+    await page.keyboard.down("ArrowDown");
+    await page.keyboard.down("ArrowDown");
+    await page.keyboard.down("ArrowDown");
+    await page.keyboard.up("ArrowDown");
+    await page.clock.runFor(durations.swap);
+    await expect(page.getByText("Move to return")).not.toBeAttached();
+    expect(await reached()).toEqual([]);
+    expect(await page.evaluate(() => scrollY)).toBe(scrolled);
+    await page.keyboard.press("ArrowDown");
+    expect(await reached()).toEqual(["keydown", "keyup"]);
+  });
+
+  test("without WebGL it never shows, catches nothing and is not tried again", async ({
+    page,
+  }) => {
+    await page.addInitScript(() => {
+      const { prototype } = HTMLCanvasElement;
+      const ask: unknown = Reflect.get(prototype, "getContext");
+      if (typeof ask !== "function") {
+        return;
+      }
+      Reflect.set(
+        prototype,
+        "getContext",
+        new Proxy(ask, {
+          apply: (target, canvas, args: unknown[]) => {
+            if (args[0] !== "webgl") {
+              const context: unknown = Reflect.apply(target, canvas, args);
+              return context;
+            }
+            const { dataset } = document.documentElement;
+            dataset.webglAsked = `${Number(dataset.webglAsked ?? 0) + 1}`;
+            return null;
+          },
+        })
+      );
+    });
+    await open(page);
+    await page.clock.runFor(wait);
+    await expect(page.locator("html[data-webgl-asked='1']")).toBeAttached();
+    await expect(page.getByText("Move to return")).not.toBeAttached();
+    const reached = await record(page);
+    await page.keyboard.press("PageDown");
+    expect(await reached()).toEqual(["keydown", "keyup"]);
+    await page.clock.runFor(wait * 3);
+    await expect(page.locator("html[data-webgl-asked='1']")).toBeAttached();
+  });
+
+  test("a picture that will not come leaves nothing behind and is not tried again", async ({
+    page,
+  }) => {
+    const asked: string[] = [];
+    await page.route("**/scenes/**", async (route) => {
+      asked.push(route.request().url());
+      await route.abort();
+    });
+    await open(page);
+    await page.clock.runFor(wait);
+    await expect.poll(() => asked.length).toBe(1);
+    await expect(page.getByText("Move to return")).not.toBeAttached();
+    const reached = await record(page);
+    await page.keyboard.press("PageDown");
+    expect(await reached()).toEqual(["keydown", "keyup"]);
+    await page.clock.runFor(wait * 3);
+    expect(asked).toHaveLength(1);
+  });
+
+  test("the address cannot make it come sooner than a second, nor twice at once", async ({
+    page,
+  }) => {
+    await open(page, "?idle=0.001");
+    const line = page.getByText("Move to return");
+    await page.clock.runFor(900);
+    await expect(line).not.toBeAttached();
+    await page.clock.runFor(100);
+    await expect(line).toHaveCount(1);
+    for (const x of [100, 200, 300]) {
+      // oxlint-disable-next-line no-await-in-loop -- one after the other
+      await page.mouse.move(x, x);
+      // oxlint-disable-next-line no-await-in-loop -- one after the other
+      await page.clock.runFor(1000);
+      // oxlint-disable-next-line no-await-in-loop -- one after the other
+      await expect(line).toHaveCount(1);
+    }
+  });
+
+  test("outside an automated browser the address cannot shorten the wait", async ({
+    page,
+  }) => {
+    await page.addInitScript(() => {
+      Object.defineProperty(navigator, "webdriver", { get: () => false });
+    });
+    await open(page, "?idle=1");
+    const line = page.getByText("Move to return");
+    await page.clock.runFor(wait - 1000);
+    await expect(line).not.toBeAttached();
+    await page.clock.runFor(1000);
+    await expect(line).toBeAttached();
   });
 
   test("a move ends it", async ({ page }) => {
@@ -139,7 +281,7 @@ test.describe("with motion", () => {
       const at = page.url();
       await page.clock.runFor(wait);
       const line = page.getByText("Touch to return");
-      await expect(line).toBeAttached();
+      await untilSeen(page);
       const reached = await record(page);
       await page.touchscreen.tap(195, 300);
       await page.clock.runFor(durations.swap);
