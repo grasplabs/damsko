@@ -6,6 +6,10 @@ import {
   hasFocusRing,
   listenToLiveRegions,
   openExample,
+  markStart,
+  paintedBox,
+  settled,
+  tab,
 } from "./example.ts";
 
 test("each step says its status in words, not only by its mark", async ({
@@ -66,6 +70,69 @@ test("rows open inside rows: a commit opens on its files, and a file on its diff
   await file.click();
   await expect(file).toHaveAttribute("aria-expanded", "true");
 });
+
+for (const dir of ["ltr", "rtl"]) {
+  test(`a row inside a row stands on the parent's mark, turns to ink under the pointer with no fill, and shows its ring whole, ${dir}`, async ({
+    page,
+    browserName,
+  }) => {
+    await openExample(page, "trace", "commit");
+    await page.evaluate((direction) => {
+      document.documentElement.dir = direction;
+    }, dir);
+    const commit = page.getByRole("button", { name: /^Committed a1b2c3/u });
+    const file = page.getByRole("button", { name: /^Edited app\/login/u });
+    expect(await markStart(file)).toBeCloseTo(await markStart(commit), 0);
+    const title = file.getByText("Edited app/login/page.tsx");
+    const inks = async () =>
+      await file.evaluate((node) => {
+        const chevron = node.lastElementChild;
+        return [
+          getComputedStyle(node).color,
+          chevron === null ? "" : getComputedStyle(chevron).color,
+        ];
+      });
+    await expect(title).toBeVisible();
+    const resting = await inks();
+    await file.hover();
+    // Its words and its chevron turn to ink, each in its own colour now.
+    await expect
+      .poll(async () => {
+        const [words, chevron] = await inks();
+        return [words !== resting[0], chevron !== resting[1]];
+      })
+      .toStrictEqual([true, true]);
+    // Nothing is painted across its edge, from the ground outside into the room before its mark:
+    // no fill.
+    const box = await file.boundingBox();
+    if (box === null) {
+      throw new Error("The row is not drawn.");
+    }
+    await settled(page);
+    expect(
+      await drawnParts(page, {
+        x: dir === "ltr" ? box.x - 6 : box.x + box.width - 6,
+        y: box.y + box.height / 4,
+        width: 12,
+        height: box.height / 2,
+      })
+    ).toStrictEqual([]);
+    await page.mouse.move(0, 0);
+    await commit.focus();
+    await page.keyboard.press(tab(browserName));
+    await expect(file).toBeFocused();
+    expect(await hasFocusRing(file)).toBe(true);
+    await expect
+      .poll(async () => await paintedBox(file))
+      .toMatchObject({
+        left: 0,
+        top: 0,
+        right: 0,
+        bottom: 0,
+        squareCorners: 0,
+      });
+  });
+}
 
 test("a step that finishes is said once; one that starts is not", async ({
   page,

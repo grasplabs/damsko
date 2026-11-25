@@ -134,9 +134,7 @@ test("while its action works it stays open, and it closes once the work is done"
   const dialog = page.getByRole("dialog", { name: "Publish the report" });
   const publish = dialog.getByRole("button", { name: "Publish", exact: true });
   await publish.click();
-  await expect(
-    dialog.getByRole("button", { name: "Publishing" })
-  ).toHaveAttribute("aria-busy", "true");
+  await expect(publish).toHaveAttribute("aria-busy", "true");
   await page.keyboard.press("Escape");
   await page.mouse.click(5, 5);
   await expect(dialog).toBeVisible();
