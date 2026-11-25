@@ -12,35 +12,60 @@ type PrismModule = typeof PrismTypes;
 type PrismToken = PrismTypes.Token;
 
 /**
- * The languages a block can name, by the names people write: the name shown over the code, and
- * Prism's grammar for it. The worker loads every one of these grammars.
+ * The languages a block can name, by the names people write: the name shown over the code, Prism's
+ * grammar for it, and the extension its file is saved with. The worker loads every one of these
+ * grammars.
  */
-export const languages: Record<string, { name: string; grammar: string }> = {
-  ts: { name: "TypeScript", grammar: "typescript" },
-  typescript: { name: "TypeScript", grammar: "typescript" },
-  tsx: { name: "TSX", grammar: "tsx" },
-  jsx: { name: "JSX", grammar: "jsx" },
-  js: { name: "JavaScript", grammar: "javascript" },
-  javascript: { name: "JavaScript", grammar: "javascript" },
-  html: { name: "HTML", grammar: "markup" },
-  markup: { name: "HTML", grammar: "markup" },
-  xml: { name: "XML", grammar: "markup" },
-  svg: { name: "SVG", grammar: "markup" },
-  css: { name: "CSS", grammar: "css" },
-  json: { name: "JSON", grammar: "json" },
-  bash: { name: "Bash", grammar: "bash" },
-  sh: { name: "Shell", grammar: "bash" },
-  shell: { name: "Shell", grammar: "bash" },
-  python: { name: "Python", grammar: "python" },
-  py: { name: "Python", grammar: "python" },
-  markdown: { name: "Markdown", grammar: "markdown" },
-  md: { name: "Markdown", grammar: "markdown" },
-  yaml: { name: "YAML", grammar: "yaml" },
-  yml: { name: "YAML", grammar: "yaml" },
-  sql: { name: "SQL", grammar: "sql" },
-  diff: { name: "Diff", grammar: "diff" },
-  go: { name: "Go", grammar: "go" },
-  rust: { name: "Rust", grammar: "rust" },
+export const languages: Record<
+  string,
+  { name: string; grammar: string; extension: string }
+> = {
+  ts: { name: "TypeScript", grammar: "typescript", extension: "ts" },
+  typescript: { name: "TypeScript", grammar: "typescript", extension: "ts" },
+  tsx: { name: "TSX", grammar: "tsx", extension: "tsx" },
+  jsx: { name: "JSX", grammar: "jsx", extension: "jsx" },
+  js: { name: "JavaScript", grammar: "javascript", extension: "js" },
+  javascript: { name: "JavaScript", grammar: "javascript", extension: "js" },
+  html: { name: "HTML", grammar: "markup", extension: "html" },
+  markup: { name: "HTML", grammar: "markup", extension: "html" },
+  xml: { name: "XML", grammar: "markup", extension: "xml" },
+  svg: { name: "SVG", grammar: "markup", extension: "svg" },
+  css: { name: "CSS", grammar: "css", extension: "css" },
+  json: { name: "JSON", grammar: "json", extension: "json" },
+  bash: { name: "Bash", grammar: "bash", extension: "sh" },
+  sh: { name: "Shell", grammar: "bash", extension: "sh" },
+  shell: { name: "Shell", grammar: "bash", extension: "sh" },
+  python: { name: "Python", grammar: "python", extension: "py" },
+  py: { name: "Python", grammar: "python", extension: "py" },
+  markdown: { name: "Markdown", grammar: "markdown", extension: "md" },
+  md: { name: "Markdown", grammar: "markdown", extension: "md" },
+  yaml: { name: "YAML", grammar: "yaml", extension: "yaml" },
+  yml: { name: "YAML", grammar: "yaml", extension: "yml" },
+  sql: { name: "SQL", grammar: "sql", extension: "sql" },
+  diff: { name: "Diff", grammar: "diff", extension: "diff" },
+  go: { name: "Go", grammar: "go", extension: "go" },
+  rust: { name: "Rust", grammar: "rust", extension: "rs" },
+  rs: { name: "Rust", grammar: "rust", extension: "rs" },
+  java: { name: "Java", grammar: "java", extension: "java" },
+  c: { name: "C", grammar: "c", extension: "c" },
+  cpp: { name: "C++", grammar: "cpp", extension: "cpp" },
+  "c++": { name: "C++", grammar: "cpp", extension: "cpp" },
+  csharp: { name: "C#", grammar: "csharp", extension: "cs" },
+  cs: { name: "C#", grammar: "csharp", extension: "cs" },
+  "c#": { name: "C#", grammar: "csharp", extension: "cs" },
+  php: { name: "PHP", grammar: "php", extension: "php" },
+  ruby: { name: "Ruby", grammar: "ruby", extension: "rb" },
+  rb: { name: "Ruby", grammar: "ruby", extension: "rb" },
+  kotlin: { name: "Kotlin", grammar: "kotlin", extension: "kt" },
+  kt: { name: "Kotlin", grammar: "kotlin", extension: "kt" },
+  swift: { name: "Swift", grammar: "swift", extension: "swift" },
+  toml: { name: "TOML", grammar: "toml", extension: "toml" },
+  docker: { name: "Dockerfile", grammar: "docker", extension: "dockerfile" },
+  dockerfile: {
+    name: "Dockerfile",
+    grammar: "docker",
+    extension: "dockerfile",
+  },
 };
 
 /**

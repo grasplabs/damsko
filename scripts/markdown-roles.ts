@@ -3,7 +3,8 @@
 // state, table and its cells' alignment, code and its language, quote, rule, section, notes), and
 // in each its words with their marks (`**strong**`, `*emphasis*`, `~~struck~~`, `` `code` ``,
 // `[words](address)`, `![alt](address)`, `^1` for a note's mark, `↩` for a note's way back, `⏎` for
-// a line break). Controls, icons and words hidden from sight are left out. Read from the HTML of
+// a line break). A code block's controls are named after it (`[download copy]`, with `off` while
+// they wait); other controls, icons and words hidden from sight are left out. Read from the HTML of
 // Streamdown (scripts/markdown-parity.ts) and of Markdown (scripts/markdown-parity.test.tsx).
 import { Window } from "happy-dom";
 import type { Element, Node } from "happy-dom";
@@ -22,7 +23,22 @@ const attribute = (element: Element, name: string) =>
 const isElement = (node: Node | null | undefined): node is Element =>
   node instanceof window.Element;
 
-/** A code block's language and words, from Streamdown's or Markdown's own. */
+/** A block's controls by what they do, from their names: `[download copy]`, `off` while out of use. */
+const controlsOf = (block: Element) => {
+  const buttons = [...block.querySelectorAll("button")].flatMap((button) => {
+    const name = /^(?<does>copy|download)/iu.exec(
+      attribute(button, "aria-label") || attribute(button, "title")
+    )?.groups?.does;
+    return name === undefined
+      ? []
+      : [{ name, off: button.hasAttribute("disabled") }];
+  });
+  const names = buttons.map(({ name }) => name.toLowerCase()).join(" ");
+  const off = buttons.some((button) => button.off) ? " off" : "";
+  return names === "" ? "" : ` [${names}]${off}`;
+};
+
+/** A code block's language, words and controls, from Streamdown's or Markdown's own. */
 const codeOf = (block: Element) => {
   const code = block.querySelector("code");
   const lang =
@@ -36,7 +52,7 @@ const codeOf = (block: Element) => {
     lines.length > 0
       ? lines.map((line) => line.textContent).join("\n")
       : (code?.textContent ?? "");
-  return `${`code ${lang === "text" ? "" : lang}`.trim()} ${words(text).trim()}`;
+  return `${`code ${lang === "text" ? "" : lang}`.trim()} ${words(text).trim()}${controlsOf(block)}`;
 };
 
 /** A task's state from its box: Streamdown's checkbox, or Markdown's box and its said words. */

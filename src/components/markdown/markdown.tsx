@@ -1017,8 +1017,16 @@ const draw: { [T in Node["type"]]?: Draw<T> } = {
       >
         <Code.CodeBlockHeader>
           <Code.CodeBlockTitle />
+          {/* Saved and copied once the answer is written, as a chat's are. */}
           <Code.CodeBlockActions>
-            <Code.CodeBlockCopyButton value={node.value} />
+            <Code.CodeBlockDownloadButton
+              value={node.value}
+              disabled={shared.streaming}
+            />
+            <Code.CodeBlockCopyButton
+              value={node.value}
+              disabled={shared.streaming}
+            />
           </Code.CodeBlockActions>
         </Code.CodeBlockHeader>
         {/* `false` never folds, yet still draws at most 2,000 lines: a model's code has no bound. */}

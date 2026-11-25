@@ -31,7 +31,7 @@ A title in `CodeBlockTitle`, such as a file name, heads it beside the language a
 
 ## More beside Copy
 
-More in `CodeBlockActions` before the copy button, in the order given: Download here, a ghost icon Button the copy button's size (`icon-sm`). On a phone they stay in the header and the title gives way.
+More in `CodeBlockActions` before the copy button, in the order given: here `CodeBlockDownloadButton`, which saves the code as a file (`file.ts` by the language's extension, or the `filename` given); any other is a ghost icon Button the copy button's size (`icon-sm`). Both wait while the code is written. On a phone they stay in the header and the title gives way.
 
 <Stage path="code-block/actions" label="More beside Copy" />
 
@@ -249,7 +249,7 @@ The copy button under a pointer and with keyboard focus are forced from its own 
       group: "Highlighting",
       key: "Languages",
       value:
-        "TSX, TypeScript, JavaScript, JSON, Bash, Python, CSS, HTML, Markdown, YAML, SQL, Diff, Go, Rust; others as text.",
+        "TSX, TypeScript, JavaScript, JSON, Bash, Python, CSS, HTML, Markdown, YAML, SQL, Diff, Go, Rust, Java, C, C++, C#, PHP, Ruby, Kotlin, Swift, TOML, Dockerfile; others as text.",
     },
     {
       group: "Copy",
@@ -360,6 +360,14 @@ The copy button under a pointer and with keyboard focus are forced from its own 
   source="src/components/code-block.tsx"
   type="CodeBlockCopyButtonProps"
   label="CodeBlockCopyButton"
+/>
+
+### CodeBlockDownloadButton
+
+<Props
+  source="src/components/code-block.tsx"
+  type="CodeBlockDownloadButtonProps"
+  label="CodeBlockDownloadButton"
 />
 
 ### CodeBlockContent

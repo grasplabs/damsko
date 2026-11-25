@@ -37,6 +37,17 @@ for (const file of [
   "diff",
   "go",
   "rust",
+  "java",
+  "c",
+  "cpp",
+  "csharp",
+  "markup-templating",
+  "php",
+  "ruby",
+  "kotlin",
+  "swift",
+  "toml",
+  "docker",
 ]) {
   // oxlint-disable-next-line no-await-in-loop -- each grammar reads those before it
   await import(`prismjs/components/prism-${file}.js`);

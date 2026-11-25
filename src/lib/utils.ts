@@ -343,6 +343,19 @@ const never = new Promise<never>(() => {
  */
 export const NotYetShown = (): ReactNode => use(never);
 
+/** Saves `text` as a file of that name and type, which the browser downloads. */
+export const saveFile = (text: string, name: string, type: string) => {
+  const href = URL.createObjectURL(new Blob([text], { type }));
+  const link = document.createElement("a");
+  link.href = href;
+  link.download = name;
+  link.click();
+  // Freed once the download has started: some browsers drop a download whose address is gone.
+  setTimeout(() => {
+    URL.revokeObjectURL(href);
+  }, 0);
+};
+
 /** What an effect or a subscription that started nothing gives back to undo it. */
 export const nothing = () => {
   // Nothing was started, so nothing stops.

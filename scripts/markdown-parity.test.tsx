@@ -122,7 +122,10 @@ const deliberate: [string, (streamdown: string, ours: string) => boolean][] = [
   // follows it.
   [
     "raw marks wait",
-    (streamdown) => /(?:\*\*|__|~~|[*_`!<])(?: ↩)?$/u.test(streamdown.trim()),
+    (streamdown) =>
+      /(?:\*\*|__|~~|[*_`!<])(?: ↩)?(?: \[[a-z ]+\](?: off)?)?$/u.test(
+        streamdown.trim()
+      ),
   ],
   // While written, a line's start that the next characters decide waits for them: a heading's
   // `#`, a quote's `>`, a list's number or bullet, a task's box, an underline; so does a

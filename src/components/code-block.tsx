@@ -1,7 +1,7 @@
 // CodeBlock: code in an answer or a page, in StyleX on our
 // CopyButton. Highlighted with Prism, which reads the code whole in a worker, off the page
 // (code-block-prism.ts), its title and the language's name in a header over it, a copy button that
-// copies the code exactly, line numbers and wrapping as options, highlighted, added and removed
+// copies the code exactly and a download button that saves it as a file, line numbers and wrapping as options, highlighted, added and removed
 // lines, and long code folded under Show more. While it is still being written, the header says
 // so, quietly, and the code grows in place, read again at most once a frame.
 //
@@ -9,6 +9,7 @@
 //     <CodeBlockHeader>
 //       <CodeBlockTitle>src/report.ts</CodeBlockTitle>
 //       <CodeBlockActions>
+//         <CodeBlockDownloadButton value={source} />
 //         <CodeBlockCopyButton value={source} />
 //       </CodeBlockActions>
 //     </CodeBlockHeader>
@@ -36,6 +37,7 @@ import type { ReactNode, RefObject } from "react";
 
 import { markScrollEdges, useScrollEdges } from "../hooks/use-scroll-edges";
 import { useI18n } from "../lib/i18n";
+import { DownloadIcon, Icon } from "../lib/icons";
 import {
   codeStyles,
   focusCarrier,
@@ -51,7 +53,7 @@ import {
   size,
   space,
 } from "../lib/tokens.stylex";
-import { listOf, nothing, ownValue } from "../lib/utils";
+import { listOf, nothing, ownValue, saveFile } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { iconVars, ringInsetMarker } from "../lib/vars.stylex";
 import { Button } from "./button";
@@ -60,6 +62,7 @@ import type { Coloured, Line, Runs } from "./code-block-prism";
 import { codeBlockVars } from "./code-block.stylex";
 import { CopyButton } from "./copy-button";
 import { Spinner } from "./spinner";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip";
 
 /** Every prop a CodeBlock takes. */
 export interface CodeBlockProps {
@@ -131,6 +134,22 @@ export interface CodeBlockActionsProps {
 export interface CodeBlockCopyButtonProps {
   /** The code it copies, exactly. */
   value: string;
+  /**
+   * Out of use. It is, too, while the block is `streaming`.
+   * @default false
+   */
+  disabled?: boolean;
+}
+
+/** Every prop a CodeBlockDownloadButton takes. */
+export interface CodeBlockDownloadButtonProps {
+  /** The code it saves, exactly. */
+  value: string;
+  /**
+   * The file's name.
+   * @default "file" and the language's extension (`file.ts`), `file.txt` for one it does not know
+   */
+  filename?: string;
   /**
    * Out of use. It is, too, while the block is `streaming`.
    * @default false
@@ -1149,6 +1168,36 @@ export const CodeBlockCopyButton = ({
 }: CodeBlockCopyButtonProps) => {
   const { streaming } = useBlock("CodeBlockCopyButton");
   return <CopyButton value={value} disabled={disabled || streaming} />;
+};
+
+/** Saves the code as a file, in the block's language. It waits while the code is written. */
+export const CodeBlockDownloadButton = ({
+  value,
+  filename,
+  disabled = false,
+}: CodeBlockDownloadButtonProps) => {
+  const words = useI18n().codeBlock;
+  const { language, streaming } = useBlock("CodeBlockDownloadButton");
+  const extension =
+    ownValue(languages, language.toLowerCase())?.extension ?? "txt";
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          aria-label={words.download}
+          disabled={disabled || streaming}
+          onClick={() => {
+            saveFile(value, filename ?? `file.${extension}`, "text/plain");
+          }}
+        >
+          <Icon icon={DownloadIcon} />
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>{words.download}</TooltipContent>
+    </Tooltip>
+  );
 };
 
 /** Whether a line has no code in it: nothing given, no text, or no runs. */

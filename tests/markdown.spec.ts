@@ -1,3 +1,5 @@
+import { readFile } from "node:fs/promises";
+
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
@@ -65,6 +67,34 @@ test("an answer: its heading, list, table, code with copy, quote and a link that
   );
   await expect(link).toHaveAttribute("target", "_blank");
   await expect(link).toHaveAttribute("rel", "noopener noreferrer");
+});
+
+test("fenced code: coloured in its language, named over it, and Download saves it as a file of that language", async ({
+  page,
+}) => {
+  await openExample(page, "markdown", "code");
+  const block = page.getByRole("region", { name: "TypeScript" });
+  await expect(
+    block.getByText("export async function withRetry")
+  ).toBeVisible();
+  // Coloured once the worker has read it: a keyword is a span of its own.
+  await expect(block.locator("span", { hasText: /^export$/u })).toHaveCount(1);
+  const [file] = await Promise.all([
+    page.waitForEvent("download"),
+    block.getByRole("button", { name: "Download" }).click(),
+  ]);
+  expect(file.suggestedFilename()).toBe("file.ts");
+  const saved = await file.path();
+  expect(await readFile(saved, "utf-8")).toContain(
+    "export async function withRetry(call: () => Promise<Response>, tries = 3) {"
+  );
+  const shell = page.getByRole("region", { name: "Bash" });
+  const [script] = await Promise.all([
+    page.waitForEvent("download"),
+    shell.getByRole("button", { name: "Download" }).click(),
+  ]);
+  expect(script.suggestedFilename()).toBe("file.sh");
+  await expect(shell.getByRole("button", { name: "Copy" })).toBeEnabled();
 });
 
 test("a table is a table, named by the heading above it, its columns headed", async ({
@@ -243,6 +273,9 @@ test("caught part way: an open fence is code being written, a half link its word
   await expect(fence.getByText("def closed(requests):")).toBeVisible();
   await expect(fence.getByText("Writing")).toBeVisible();
   await expect(fence.getByText("```")).toHaveCount(0);
+  // Saved and copied once the answer is written, as a chat's are.
+  await expect(fence.getByRole("button", { name: "Download" })).toBeDisabled();
+  await expect(fence.getByRole("button", { name: "Copy" })).toBeDisabled();
   const link = page.getByRole("region", {
     name: "A link still being written",
   });

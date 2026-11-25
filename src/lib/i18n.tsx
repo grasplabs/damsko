@@ -217,6 +217,8 @@ export interface I18nCatalog {
   codeBlock: {
     /** Show less's words. */
     collapse: string;
+    /** The download button's name: it saves the code as a file. */
+    download: string;
     /** Show more's words. */
     expand: string;
     /** Under the last line drawn of a very long block: how many lines are not drawn. */
@@ -1001,6 +1003,7 @@ const english: I18nCatalog = {
   },
   codeBlock: {
     collapse: "Show less",
+    download: "Download",
     expand: "Show more",
     moreLines: (count: number) =>
       count === 1 ? "1 more line" : `${count} more lines`,

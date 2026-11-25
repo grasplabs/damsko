@@ -766,7 +766,8 @@
         "@damsko/copy-button",
         "@damsko/hooks",
         "@damsko/lib",
-        "@damsko/spinner"
+        "@damsko/spinner",
+        "@damsko/tooltip"
       ],
       "docs": "https://damsko.joingrasp.com/components/code-block",
       "meta": {

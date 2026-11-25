@@ -24,6 +24,8 @@ import {
   rowSortingFeature,
 } from "@tanstack/react-table";
 
+import { saveFile } from "../../lib/utils";
+
 /** One feature a table takes beyond its own: the TanStack features it registers, by name. */
 export interface DataTableFeature {
   /** Its name, unique among features ("resizing"). */
@@ -314,15 +316,9 @@ export const toCsv = (
 
 /** Saves the text as a CSV file of that name, which the browser downloads. */
 export const saveCsv = (text: string, name: string) => {
-  const href = URL.createObjectURL(
-    new Blob([text], { type: "text/csv;charset=utf-8" })
+  saveFile(
+    text,
+    name.endsWith(".csv") ? name : `${name}.csv`,
+    "text/csv;charset=utf-8"
   );
-  const link = document.createElement("a");
-  link.href = href;
-  link.download = name.endsWith(".csv") ? name : `${name}.csv`;
-  link.click();
-  // Freed once the download has started: some browsers drop a download whose address is gone.
-  setTimeout(() => {
-    URL.revokeObjectURL(href);
-  }, 0);
 };
