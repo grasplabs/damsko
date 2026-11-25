@@ -11,6 +11,7 @@ import type { Page } from "@playwright/test";
 import { idleSeconds } from "../site/behaviour/idle-time.ts";
 
 const wait = idleSeconds * 1000;
+const start = Date.UTC(2026, 0, 1);
 /**
  * A move, or the scroll a focus brings, reaches the page with its next frame, which comes only as
  * the clock runs: the wait after it starts that much later.
@@ -19,7 +20,9 @@ const frameLate = 500;
 
 /** The docs page, asking for the screen after the whole wait (an automated browser must ask). */
 const open = async (page: Page, query = `?idle=${idleSeconds}`) => {
-  await page.clock.install();
+  // Paused, so only the spec moves the page's clock: a slow load or engine takes none of the wait.
+  await page.clock.install({ time: start });
+  await page.clock.pauseAt(start + 1000);
   await page.goto(new URL(`/docs${query}`, process.env.BASE_URL).href);
 };
 
@@ -53,7 +56,10 @@ const record = async (page: Page): Promise<() => Promise<string[]>> => {
 
 /** The screen drawn far enough in to be seen: from then on it catches the input that ends it. */
 const untilSeen = async (page: Page) => {
-  await expect(page.locator("[data-idle-phase]")).toBeAttached();
+  // Its first picture comes over the network, on the real clock.
+  await expect(page.locator("[data-idle-phase]")).toBeAttached({
+    timeout: 15_000,
+  });
   await page.clock.runFor(3000);
 };
 
@@ -87,13 +93,17 @@ test.describe("with motion", () => {
     page,
   }) => {
     await open(page);
+    await page.clock.runFor(wait);
+    const line = page.getByText("Move to return");
+    await expect(line).toBeAttached();
+    // Focused under the screen (a focus does not end it), so the wait owes nothing to when the
+    // engine delivers the focus and the scroll it may bring.
     const link = page.getByRole("main").getByRole("link").first();
     await link.focus();
     const at = page.url();
     const scrolled = await page.evaluate(() => scrollY);
-    await page.clock.runFor(wait + frameLate);
-    const line = page.getByText("Move to return");
     await untilSeen(page);
+    await expect(line).toBeAttached();
     const reached = await record(page);
     await page.keyboard.press("Enter");
     await page.clock.runFor(durations.swap);
