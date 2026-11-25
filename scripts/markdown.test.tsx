@@ -594,7 +594,8 @@ describe("while it is written, nothing shows that the whole answer will not", ()
     }
     expect(wrong).toStrictEqual([]);
     expect(text.length).toBeGreaterThan(1000);
-  });
+    // Each of its 1,400 prefixes drawn whole: a few seconds on a CI runner.
+  }, 120_000);
 
   test("a block read alone knows the answer's names: links and notes defined elsewhere", () => {
     const names = { links: new Set(["the guide"]), notes: new Set(["1"]) };
