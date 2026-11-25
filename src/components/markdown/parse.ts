@@ -407,27 +407,39 @@ const sectionOf = (
 };
 
 const DASH_ROW = /^ {0,3}\|?[ \t]*:?-+:?[ \t]*(?:\||$)/u;
+// What ends a table's rows, as micromark reads them: a blank line, or a line that starts a heading,
+// a quote, a list item, a break, indented code, a fence or HTML that may hold blank lines.
+const ROWS_END =
+  /^(?:[ \t]*$| {0,3}\t| {4}| {0,3}(?:#{1,6}(?:[ \t]|$)|>|(?:[-*+]|\d{1,9}[.)])(?:[ \t]|$)|(?<mark>[-*_])(?:[ \t]*\k<mark>){2,}[ \t]*$))/u;
+const endsRows = (line: string) => {
+  // A backtick fence's info has no backtick: ``` `a` ``` is code in a row.
+  const { fence = "", info = "" } = FENCE.exec(line)?.groups ?? {};
+  const fenced = fence !== "" && !(fence.startsWith("`") && info.includes("`"));
+  return ROWS_END.test(line) || fenced || HTML.test(line) || OPENS.test(line);
+};
 /**
  * A table from a model has no bound: past its first 1,000 rows, only how many more there are is
- * read (`more` on the table).
+ * read (`more` on the table); what follows the table is read as written.
  */
 const lessRows = (block: string) => {
   const head = block.indexOf("\n");
   const second = block.indexOf("\n", head + 1);
   const dashes = block.slice(head + 1, second === -1 ? undefined : second);
-  let cut = head;
-  for (let row = 0; row <= 1000 && cut !== -1; row += 1) {
-    cut = block.indexOf("\n", cut + 1);
-  }
   const table =
     head !== -1 && block.slice(0, head).includes("|") && DASH_ROW.test(dashes);
-  if (!table || cut === -1) {
+  if (!table) {
     return { text: block, more: 0 };
   }
-  const rest = block.slice(cut + 1).split("\n");
+  const lines = block.split("\n");
+  const end = lines.findIndex((line, at) => at > 1 && endsRows(line));
+  const rows = (end === -1 ? lines.length : end) - 2;
+  if (rows <= 1000) {
+    return { text: block, more: 0 };
+  }
+  const after = end === -1 ? [] : lines.slice(end);
   return {
-    text: block.slice(0, cut),
-    more: rest.filter((line) => line.trim() !== "").length,
+    text: [...lines.slice(0, 1002), ...after].join("\n"),
+    more: rows - 1000,
   };
 };
 

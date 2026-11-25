@@ -587,6 +587,27 @@ describe("bounds a model's answer cannot pass", () => {
     expect(textOf(html)).toContain("500 more rows");
   });
 
+  test("what ends a long table is drawn after it, and only its rows count as more", () => {
+    const rows = `| a |\n| - |\n${"| x |\n".repeat(1200)}`;
+    for (const [end, tag, words] of [
+      ["", "<table", ""],
+      ["# Conclusion\ntext", "<h1", "Conclusiontext"],
+      ["> quoted", "<blockquote", "quoted"],
+      ["- item", "<li", "item"],
+      ["```\ncode\n```", "<code", "code"],
+      ["---\ntext", 'role="separator"', "text"],
+    ] as const) {
+      const html = draw(`${rows}${end}`);
+      expect(count(html, "<tr")).toBe(1001);
+      expect(textOf(html)).toContain("200 more rows");
+      expect(textOf(html).endsWith(words)).toBeTruthy();
+      expect(html).toContain(tag);
+    }
+    // A short table's end, then more lines than a table draws rows: all of them drawn.
+    const quote = draw(`| a |\n| - |\n| x |\n${"> quoted\n".repeat(1200)}`);
+    expect(count(textOf(quote), "quoted")).toBe(1200);
+  });
+
   test("bare addresses are links beside a word of 1,000 characters; past it they are words, and only they", () => {
     const long = `https://example.com/${"x".repeat(950)}`;
     const source = `See www.example.com, https://example.com/a_b and team@example.com, or **read** [the page](${long}).`;
