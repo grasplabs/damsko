@@ -172,6 +172,7 @@ const styles = stylex.create({
   },
   item: {
     borderRadius: `calc(${radius.xl} - ${space.toggleTrackPadding})`,
+    cornerShape: radius.shape,
   },
   // An icon alone: square.
   square: { paddingInline: 0 },

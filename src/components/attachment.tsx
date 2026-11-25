@@ -276,12 +276,15 @@ const styles = stylex.create({
   // The corner is the system's, or half the card's height when that is less.
   cardDefault: {
     borderRadius: `min(${radius.xl}, calc((${sizes.attachmentThumb} + 2 * ${space["1"]}) / 2))`,
+    cornerShape: radius.shape,
   },
   cardSm: {
     borderRadius: `min(${radius.xl}, calc((${sizes.controlSm} + 2 * ${space["1"]}) / 2))`,
+    cornerShape: radius.shape,
   },
   cardXs: {
     borderRadius: `min(${radius.xl}, calc((${sizes.controlXs} + 2 * ${space["1"]}) / 2))`,
+    cornerShape: radius.shape,
   },
   vertical: {
     flexDirection: "column",
@@ -290,6 +293,7 @@ const styles = stylex.create({
     paddingInlineEnd: space["1"],
     paddingBottom: space["2"],
     borderRadius: radius.xl,
+    cornerShape: radius.shape,
   },
   idle: {
     boxShadow: "none",

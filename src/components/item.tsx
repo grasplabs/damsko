@@ -401,6 +401,7 @@ const styles = stylex.create({
     width: sizes.controlSm,
     height: sizes.controlSm,
     borderRadius: `min(${radius.xl}, calc(${sizes.controlSm} / 2))`,
+    cornerShape: radius.shape,
   },
   title: {
     fontSize: font.textSm,
@@ -667,6 +668,7 @@ const waits = stylex.create({
     width: sizes.controlSm,
     height: sizes.controlSm,
     borderRadius: `min(${radius.xl}, calc(${sizes.controlSm} / 2))`,
+    cornerShape: radius.shape,
   },
   // The bare icon's box, in line with the title: a block the icon's size, with the one corner
   // capped at half of it, as the original's.

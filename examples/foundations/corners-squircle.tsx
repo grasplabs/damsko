@@ -40,6 +40,7 @@ const styles = stylex.create({
     position: "absolute",
     inset: 0,
     borderRadius: BIG,
+    cornerShape: radius.shape,
   },
   fill: {
     backgroundColor: `color-mix(in oklab, ${colors.mint} 30%, ${colors.card})`,
@@ -60,7 +61,6 @@ const styles = stylex.create({
     borderWidth: `calc(${size.hairline} * 2)`,
     borderStyle: "solid",
     borderColor: colors.mintDeep,
-    cornerShape: radius.shape,
   },
   // Inside the tile, a real card's words, so the magnified corner reads as a part.
   words: {

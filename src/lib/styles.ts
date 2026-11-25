@@ -457,16 +457,19 @@ export const inputStyles = stylex.create({
     minHeight: size.controlSm,
     paddingBlock: `calc((${size.controlSm} - ${font.textSmLine}) / 2)`,
     borderRadius: `min(${radius.xl}, calc(${size.controlSm} / 2))`,
+    cornerShape: radius.shape,
   },
   default: {
     minHeight: size.controlDefault,
     paddingBlock: `calc((${size.controlDefault} - ${font.textSmLine}) / 2)`,
     borderRadius: `min(${radius.xl}, calc(${size.controlDefault} / 2))`,
+    cornerShape: radius.shape,
   },
   lg: {
     minHeight: size.controlLg,
     paddingBlock: `calc((${size.controlLg} - ${font.textSmLine}) / 2)`,
     borderRadius: `min(${radius.xl}, calc(${size.controlLg} / 2))`,
+    cornerShape: radius.shape,
   },
   // A finger needs 44px: an invisible area inside the control reaches past its edges.
   target: {
@@ -674,6 +677,7 @@ export const listStyles = stylex.create({
     minHeight: { default: size.controlDefault, [COARSE]: size.tapTarget },
     paddingBlock: `calc((${size.controlDefault} - ${font.textSmLine}) / 2)`,
     borderRadius: `min(${radius.lg}, calc(${size.controlDefault} / 2))`,
+    cornerShape: radius.shape,
     color: colors.foreground,
     fontSize: {
       default: font.textSm,

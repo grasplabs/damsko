@@ -1407,7 +1407,25 @@ test("levels: on a phone the sheet shows the level, and Back and focus stay insi
   await expect(sheet).toBeVisible();
 });
 
-test("a floating sidebar nests round its rows in the squircle; the page card beside an inset one keeps its plain corner", async ({
+// A box's top-start corner: its radius and its shape, `none` where the engine draws no corner
+// shape (Firefox, older Safari) and so cannot say which one is written.
+const cornerOf = async (locator: Locator): Promise<string> =>
+  await locator.evaluate((element) => {
+    const style = getComputedStyle(element);
+    const shape = style.getPropertyValue("corner-top-left-shape");
+    const named = new Map([
+      ["", "none"],
+      ["superellipse(1)", "round"],
+      ["superellipse(2)", "squircle"],
+    ]);
+    return `${style.borderTopLeftRadius} ${named.get(shape) ?? shape}`;
+  });
+
+// A corner of this radius in the system's squircle, wherever the engine draws one.
+const squircle = (radius: string): RegExp =>
+  new RegExp(`^${radius} (?:squircle|none)$`, "u");
+
+test("a floating sidebar nests round its rows in the squircle; the page card beside an inset one takes its 12px corner in the squircle", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
@@ -1435,40 +1453,24 @@ test("a floating sidebar nests round its rows in the squircle; the page card bes
   expect(floating?.[1]).not.toBe("superellipse(1)");
 
   await openExample(page, "sidebar", "inset");
-  // The app's main surface holds no sidebar rows: the original's plain 12px corner.
-  const inset = await page.getByRole("main").evaluate((element) => {
-    const look = getComputedStyle(element);
-    return [
-      look.borderTopLeftRadius,
-      look.getPropertyValue("corner-top-left-shape"),
-    ];
-  });
-  expect(inset[0]).toBe("12px");
-  expect(["round", "superellipse(1)"]).toContain(inset[1]);
+  // The app's main surface holds no sidebar rows: the original's 12px corner.
+  expect(await cornerOf(page.getByRole("main"))).toMatch(squircle("12px"));
 });
 
-// A box's top-start corner: its radius, and round where the browser draws a squircle as round.
-const cornerOf = async (locator: Locator): Promise<string> =>
-  await locator.evaluate((element) => {
-    const style = getComputedStyle(element);
-    const shape = style.getPropertyValue("corner-top-left-shape");
-    return `${style.borderTopLeftRadius} ${shape === "superellipse(1)" || shape === "" ? "round" : shape}`;
-  });
-
-test("a row and a group's label take the original's plain 6px corner, the large row 10px", async ({
+test("a row and a group's label take the original's 6px corner, the large row 10px, each in the squircle", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await openExample(page, "sidebar", "basic");
   const sidebar = sidebarOf(page);
   const row = sidebar.getByRole("link", { name: "Chat" });
-  expect(await cornerOf(row)).toBe("6px round");
+  expect(await cornerOf(row)).toMatch(squircle("6px"));
   const person = sidebar.locator(
     "[data-slot=sidebar-menu-button][data-size=lg]"
   );
-  expect(await cornerOf(person.first())).toBe("10px round");
+  expect(await cornerOf(person.first())).toMatch(squircle("10px"));
   const label = sidebar.locator("[data-slot=sidebar-group-label]").first();
-  expect(await cornerOf(label)).toBe("6px round");
+  expect(await cornerOf(label)).toMatch(squircle("6px"));
 });
 
 test("a row's action takes the original's corner, a small icon button's: 14px, half its height, not the row's", async ({
@@ -1477,13 +1479,13 @@ test("a row's action takes the original's corner, a small icon button's: 14px, h
   await page.setViewportSize({ width: 1440, height: 900 });
   await openExample(page, "sidebar", "actions");
   const more = page.getByRole("button", { name: "More for Supplier invoices" });
-  expect(await cornerOf(more)).toMatch(/^14px (?:superellipse\(2\)|round)$/u);
+  expect(await cornerOf(more)).toMatch(squircle("14px"));
 });
 
 test.describe("on a narrow window", () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
-  test("its sheet takes the page card's plain 12px corner", async ({
+  test("its sheet takes the page card's 12px corner, in the squircle", async ({
     page,
   }) => {
     await openExample(page, "sidebar", "basic");
@@ -1492,7 +1494,7 @@ test.describe("on a narrow window", () => {
       "[data-slot=drawer-content]:has(> [data-slot=sidebar])"
     );
     await expect(sheet).toBeVisible();
-    expect(await cornerOf(sheet)).toBe("12px round");
+    expect(await cornerOf(sheet)).toMatch(squircle("12px"));
   });
 
   test("its head stands as high in the window as beside the page: the sheet's inset taken from its room above", async ({

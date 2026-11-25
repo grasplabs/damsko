@@ -435,6 +435,7 @@ const styles = stylex.create({
     borderBlockStartColor: "transparent",
     borderInlineEndColor: "transparent",
     borderEndStartRadius: GUIDE_ELBOW,
+    cornerShape: radius.shape,
     pointerEvents: "none",
   },
   // Where the stem carries on, the elbow leaves the stem's column to it: one layer of line there.

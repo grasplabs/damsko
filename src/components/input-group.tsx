@@ -139,14 +139,17 @@ const groupStyles = stylex.create({
   sm: {
     minHeight: sizes.controlSm,
     borderRadius: `min(${radius.xl}, calc(${sizes.controlSm} / 2))`,
+    cornerShape: radius.shape,
   },
   default: {
     minHeight: sizes.controlDefault,
     borderRadius: `min(${radius.xl}, calc(${sizes.controlDefault} / 2))`,
+    cornerShape: radius.shape,
   },
   lg: {
     minHeight: sizes.controlLg,
     borderRadius: `min(${radius.xl}, calc(${sizes.controlLg} / 2))`,
+    cornerShape: radius.shape,
   },
   // A finger needs 44px: on a touch screen an unseen area makes up the difference, as Input's. A
   // press on it reaches the input through UI SDK's group.

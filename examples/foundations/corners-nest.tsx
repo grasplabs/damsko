@@ -80,8 +80,11 @@ const styles = stylex.create({
     transitionTimingFunction: duration.ease,
   },
   // The panel's corner less the room between them: the two curves share a centre.
-  nested: { borderRadius: `calc(${radius.xl} - ${space["3"]})` },
-  same: { borderRadius: radius.xl },
+  nested: {
+    borderRadius: `calc(${radius.xl} - ${space["3"]})`,
+    cornerShape: radius.shape,
+  },
+  same: { borderRadius: radius.xl, cornerShape: radius.shape },
   file: { display: "grid", minWidth: 0 },
   name: {
     margin: 0,

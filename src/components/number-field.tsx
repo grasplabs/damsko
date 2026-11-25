@@ -167,16 +167,19 @@ const styles = stylex.create({
     "--number-corner": `min(${radius.xl}, calc(${sizes.controlSm} / 2))`,
     minHeight: sizes.controlSm,
     borderRadius: "var(--number-corner)",
+    cornerShape: radius.shape,
   },
   default: {
     "--number-corner": `min(${radius.xl}, calc(${sizes.controlDefault} / 2))`,
     minHeight: sizes.controlDefault,
     borderRadius: "var(--number-corner)",
+    cornerShape: radius.shape,
   },
   lg: {
     "--number-corner": `min(${radius.xl}, calc(${sizes.controlLg} / 2))`,
     minHeight: sizes.controlLg,
     borderRadius: "var(--number-corner)",
+    cornerShape: radius.shape,
   },
   input: {
     flexGrow: 1,

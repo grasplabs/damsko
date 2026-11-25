@@ -17,7 +17,13 @@ import {
   SidebarTrigger,
 } from "@grasp-os/ui/components/sidebar";
 import { FolderIcon, Icon } from "@grasp-os/ui/lib/icons";
-import { colors, font, size, space } from "@grasp-os/ui/lib/tokens.stylex";
+import {
+  colors,
+  font,
+  radius,
+  size,
+  space,
+} from "@grasp-os/ui/lib/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
 
 const layout = stylex.create({
@@ -27,6 +33,7 @@ const layout = stylex.create({
     height: 360,
     overflow: "hidden",
     borderRadius: space["3"],
+    cornerShape: radius.shape,
     boxShadow: `0 0 0 ${size.hairline} ${colors.border}`,
   },
   provider: { minHeight: 0, height: "100%" },

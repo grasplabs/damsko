@@ -185,6 +185,7 @@ const look = stylex.create({
       default: radius.xl,
       [PHONE]: `${radius.xl} ${radius.xl} 0 0`,
     },
+    cornerShape: radius.shape,
   },
 
   // Over the page: in the middle of the window, clear of its edges by the gutter. On a phone, a

@@ -364,6 +364,7 @@ const styles = stylex.create({
     width: size.controlSm,
     height: size.controlSm,
     borderRadius: `min(${radius.xl}, calc(${size.controlSm} / 3))`,
+    cornerShape: radius.shape,
   },
   tilePile: {
     [iconVars.size]: size.sourcesMarkInline,

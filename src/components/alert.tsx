@@ -169,6 +169,7 @@ const styles = stylex.create({
     paddingBlock: space["3"],
     paddingInline: space["3"],
     borderRadius: alertVars.bannerCorner,
+    cornerShape: radius.shape,
     boxShadow: size.borderStrong,
   },
   default: { backgroundColor: colors.alertBgDefault },

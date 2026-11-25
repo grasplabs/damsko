@@ -750,7 +750,7 @@ export const groups: TokenGroup[] = [
             name: "radius-md",
             category: "radius",
             value: "12px",
-            use: "The page's card beside an inset sidebar: a plain round corner, as the app's main surface was drawn.",
+            use: "The page's card beside an inset sidebar, the app's main surface, at the size the original drew it.",
           },
           {
             name: "radius-lg",
@@ -786,7 +786,7 @@ export const groups: TokenGroup[] = [
             name: "radius-shape",
             category: "radius",
             value: "squircle",
-            use: "The shape of every corner on the scale, written as corner-shape after the radius, so the curve meets the edge without a seam. A pill and a circle leave it out.",
+            use: "The shape of every corner, written as corner-shape after the radius, so the curve meets the edge without a seam. A pill and a circle leave it out; a corner taken from the parent takes its shape too (inherit).",
           },
         ],
       },
@@ -3578,7 +3578,7 @@ export const groups: TokenGroup[] = [
             name: "sidebar-row-radius",
             category: "radius",
             value: "6px",
-            use: "A row's corner, and a group's label's: a plain round corner, as the original's frame drew its rows. Its own token, not the row corner: the frame's rows are tighter than a list's.",
+            use: "A row's corner, and a group's label's, as the original's frame sized its rows. Its own token, not the row corner: the frame's rows are tighter than a list's.",
           },
           {
             name: "sidebar-row-radius-lg",

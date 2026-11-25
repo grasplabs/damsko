@@ -340,6 +340,7 @@ const styles = stylex.create({
         [media.lg]: radius.md,
       },
     },
+    cornerShape: radius.shape,
     // The line is a layer over what the card holds, so no bar's ground inside covers it.
     "::after": {
       content: {
@@ -430,6 +431,7 @@ const styles = stylex.create({
     paddingInline: size.sidebarRowInline,
     borderWidth: 0,
     borderRadius: radius.sidebarRowRadius,
+    cornerShape: radius.shape,
     backgroundColor: "transparent",
     // Drawn as a button or a link (`asChild`), it answers the pointer as a row's words do.
     color: {
@@ -580,6 +582,7 @@ const styles = stylex.create({
     borderStyle: "solid",
     borderColor: "transparent",
     borderRadius: radius.sidebarRowRadius,
+    cornerShape: radius.shape,
     overflow: "hidden",
     color: {
       default: colors.sidebarSecondaryForeground,
@@ -640,6 +643,7 @@ const styles = stylex.create({
   // A large row (a person, a workspace), in the words read first; it folds to its picture alone.
   lg: {
     borderRadius: radius.sidebarRowRadiusLg,
+    cornerShape: radius.shape,
     color: colors.sidebarForeground,
     height: {
       default: size.sidebarMenuButtonHeightLg,

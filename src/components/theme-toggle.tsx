@@ -183,11 +183,13 @@ const styles = stylex.create({
     width: size.controlXs,
     height: size.controlXs,
     borderRadius: `min(${radius.xl}, calc(${size.controlXs} / 2))`,
+    cornerShape: radius.shape,
   },
   iconDefault: {
     width: size.controlSm,
     height: size.controlSm,
     borderRadius: `min(${radius.xl}, calc(${size.controlSm} / 2))`,
+    cornerShape: radius.shape,
   },
   // A finger's 44px, unseen, on a touch screen, from the button's own size.
   target: {

@@ -32,7 +32,13 @@ import {
   LogOutIcon,
   SettingsIcon,
 } from "@grasp-os/ui/lib/icons";
-import { colors, font, size, space } from "@grasp-os/ui/lib/tokens.stylex";
+import {
+  colors,
+  font,
+  radius,
+  size,
+  space,
+} from "@grasp-os/ui/lib/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
 import { useState } from "react";
 
@@ -43,6 +49,7 @@ const layout = stylex.create({
     height: 520,
     overflow: "hidden",
     borderRadius: space["3"],
+    cornerShape: radius.shape,
     boxShadow: `0 0 0 ${size.hairline} ${colors.border}`,
   },
   provider: { minHeight: 0, height: "100%" },

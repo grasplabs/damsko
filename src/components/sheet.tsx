@@ -214,16 +214,13 @@ const styles = stylex.create({
     height: `calc(100% - 2 * ${INSET})`,
     marginBlock: INSET,
     marginInline: INSET,
-    // Holding a sidebar (on a narrow window), the page card's plain round corner, as the original's
-    // frame drew its menu.
+    // Holding a sidebar (on a narrow window), the page card's corner, as the original's frame drew
+    // its menu.
     borderRadius: {
       default: radius.xl,
       ":has(> [data-slot=sidebar])": radius.md,
     },
-    cornerShape: {
-      default: radius.shape,
-      ":has(> [data-slot=sidebar])": "round",
-    },
+    cornerShape: radius.shape,
     // It slides in from its side and back out to it (UI SDK marks the first and last frame), in
     // the library's open time; with reduced motion it is there and gone at once.
     translate: {
