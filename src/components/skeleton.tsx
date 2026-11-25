@@ -237,14 +237,22 @@ const breathe = stylex.keyframes({
 
 // ---- The field's pixels ----
 //
-// A pixel is a 2px square, one in every 4px tile. As many whole tiles as fit stand along each side,
-// and the room left over is shared out between them (`space`), as the original's dots were: no
-// half pixels cut at a line's foot, and no breaks along a long line. The field is the pixels' colour
-// with the tiles as its mask (columns crossed with rows), so the light inside it shows on the same
-// pixels.
+// A pixel is a 2px square, one in every 4px tile, every one on whole pixels. The pixels stand in a
+// box of as many whole tiles as fit, the room left over even at its edges in whole pixels, so a
+// line runs unbroken from end to end and no half pixel is cut at its foot. The box is the pixels'
+// colour with the tiles as its mask (columns crossed with rows), so the light inside it shows on
+// the same pixels. A picture's or an avatar's box stands a space inside its ground, clear of the
+// corner.
 const PIXELS =
   "linear-gradient(90deg, transparent 1px, #000 1px 3px, transparent 3px), linear-gradient(transparent 1px, #000 1px 3px, transparent 3px)";
 const REST = `color-mix(in oklab, ${colors.foreground} 20%, transparent)`;
+
+// The pixels' box, `inset` inside the field: whole tiles across and down, in the middle. Each
+// `100%` is the field's width for left and width, its height for top and height.
+const room = (inset: string) => `(100% - 2 * ${inset})`;
+const tiles = (inset: string) => `round(down, ${room(inset)}, 4px)`;
+const edge = (inset: string) =>
+  `calc(${inset} + round(down, (${room(inset)} - ${tiles(inset)}) / 2, 1px))`;
 
 const styles = stylex.create({
   skeleton: {
@@ -312,46 +320,45 @@ const styles = stylex.create({
   field: {
     position: "relative",
     display: "block",
-    boxSizing: "border-box",
     height: "100%",
-    overflow: "hidden",
-    // Square: a line's pixels are its shape, and a rounded corner would cut them at its ends.
-    borderRadius: 0,
-    // The pixels at rest, in a quiet foreground.
-    backgroundColor: { default: REST, [media.forcedColors]: "transparent" },
-    maskImage: { default: PIXELS, [media.forcedColors]: "none" },
-    maskSize: "4px 4px",
-    maskRepeat: "space",
-    maskComposite: "intersect",
     outlineWidth: { default: 0, [media.forcedColors]: 1 },
     outlineStyle: "solid",
     outlineColor: "GrayText",
     outlineOffset: -1,
   },
   // A picture or an avatar stands on the soft ground; text does not. The ground is the outer
-  // shape's, with its corner; the pixels stand space-1 inside it, where no corner reaches them.
+  // shape's, with its corner.
   groundOuter: {
     backgroundColor: colors.muted,
   },
-  ground: {
-    padding: space["1"],
-    maskOrigin: "content-box",
-    maskClip: "content-box",
-  },
-  litInset: { inset: space["1"] },
-  // A circle's pixels keep to the square inside it, clear of its curve: from a space-1 inset the
-  // square grid's corner pixels stood on the rim.
-  groundCircle: { padding: space["2"] },
-  litCircle: { inset: space["2"] },
-  // Where the light can show: the field's own pixels, which mask it.
-  lit: {
+  // The pixels at rest, in a quiet foreground; square, as a line's pixels are its shape.
+  pixels: {
     position: "absolute",
-    inset: 0,
-    display: {
-      default: "block",
-      [media.forcedColors]: "none",
-      [media.reducedMotion]: "none",
-    },
+    overflow: "hidden",
+    backgroundColor: { default: REST, [media.forcedColors]: "transparent" },
+    maskImage: { default: PIXELS, [media.forcedColors]: "none" },
+    maskSize: "4px 4px",
+    maskComposite: "intersect",
+  },
+  // Where they stand: a line's across its letters' height; a picture's space-1 inside its ground,
+  // where no corner reaches them; a circle's in the square inside it, clear of its curve.
+  inText: {
+    left: edge("0px"),
+    top: edge("0px"),
+    width: tiles("0px"),
+    height: tiles("0px"),
+  },
+  inGround: {
+    left: edge(space["1"]),
+    top: edge(space["1"]),
+    width: tiles(space["1"]),
+    height: tiles(space["1"]),
+  },
+  inCircle: {
+    left: edge(space["2"]),
+    top: edge(space["2"]),
+    width: tiles(space["2"]),
+    height: tiles(space["2"]),
   },
   // The light: a soft band of mint into pine, slanted, moved by lightUp.
   band: {
@@ -363,8 +370,19 @@ const styles = stylex.create({
     backgroundImage: `linear-gradient(105deg, transparent 0%, color-mix(in oklab, ${colors.mint} 70%, transparent) 30%, ${colors.mint} 48%, color-mix(in oklab, ${colors.pine} 80%, transparent) 66%, transparent 100%)`,
     transform: `translateX(calc(-1 * ${size.skeletonBand}))`,
     willChange: "transform",
+    display: {
+      default: "block",
+      [media.forcedColors]: "none",
+      [media.reducedMotion]: "none",
+    },
   },
 });
+
+const placements = {
+  text: styles.inText,
+  rectangular: styles.inGround,
+  circular: styles.inCircle,
+};
 
 const shapes = {
   text: styles.text,
@@ -374,41 +392,24 @@ const shapes = {
 const lines = { sm: styles.sm, default: styles.default, lg: styles.lg };
 
 /**
- * The pixel field inside a Skeleton, and the light that crosses it. A line's pixels are its shape; a
- * rectangle's or a circle's stand inside its ground.
+ * The pixel field inside a Skeleton, and the light that crosses its pixels. A line's pixels are its
+ * shape; a rectangle's or a circle's stand inside its ground.
  */
 const Field = ({
   variant,
-  field,
+  pixels,
   band,
 }: {
   variant: SkeletonVariant;
-  field: RefObject<HTMLSpanElement | null>;
+  pixels: RefObject<HTMLSpanElement | null>;
   band: RefObject<HTMLSpanElement | null>;
-}) => {
-  const grounded = variant !== "text";
-  const round = variant === "circular";
-  return (
-    <span
-      ref={field}
-      {...stylex.props(
-        styles.field,
-        grounded && styles.ground,
-        round && styles.groundCircle
-      )}
-    >
-      <span
-        {...stylex.props(
-          styles.lit,
-          grounded && styles.litInset,
-          round && styles.litCircle
-        )}
-      >
-        <span ref={band} {...stylex.props(styles.band)} />
-      </span>
+}) => (
+  <span {...stylex.props(styles.field)}>
+    <span ref={pixels} {...stylex.props(styles.pixels, placements[variant])}>
+      <span ref={band} {...stylex.props(styles.band)} />
     </span>
-  );
-};
+  </span>
+);
 
 export const Skeleton = ({
   variant = "text",
@@ -459,7 +460,7 @@ export const Skeleton = ({
         style
       )}
     >
-      <Field variant={variant} field={field} band={band} />
+      <Field variant={variant} pixels={field} band={band} />
     </span>
   );
 };

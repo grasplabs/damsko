@@ -652,8 +652,7 @@ const styles = stylex.create({
 });
 
 const waits = stylex.create({
-  // The square's place; a placeholder's box, which its Skeleton fills; the square at the row's size.
-  square: { display: "flex", flexShrink: 0 },
+  // A placeholder's box, which its Skeleton fills; the square at the row's size.
   box: { [skeletonVars.size]: "100%", display: "flex", flexShrink: 0 },
   media: { width: sizes.controlDefault, height: sizes.controlDefault },
   mediaSm: { width: sizes.controlSm, height: sizes.controlSm },
@@ -721,25 +720,23 @@ export const ItemMedia = ({
   if (use(RowLoading) && isBlank(children)) {
     // The bare icon waits in line with the title; the square at the row's size. Each placeholder
     // is its box's own size, so its ground and pixels are whole.
-    return (
+    return variant === "default" ? (
       <span
         aria-hidden="true"
         data-slot="item-media"
-        {...stylex.props(
-          variant === "default" ? styles.media : waits.square,
-          style
-        )}
+        {...stylex.props(styles.media, style)}
       >
-        <span
-          {...stylex.props(
-            waits.box,
-            variant === "default"
-              ? waits.icon
-              : [waits.media, small && waits.mediaSm]
-          )}
-        >
+        <span {...stylex.props(waits.box, waits.icon)}>
           <Skeleton variant="rectangular" />
         </span>
+      </span>
+    ) : (
+      <span
+        aria-hidden="true"
+        data-slot="item-media"
+        {...stylex.props(waits.box, waits.media, small && waits.mediaSm, style)}
+      >
+        <Skeleton variant="rectangular" />
       </span>
     );
   }

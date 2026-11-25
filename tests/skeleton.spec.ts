@@ -51,10 +51,9 @@ for (const [example, status] of [
 }
 
 /**
- * What a picture of a placeholder at rest holds, its PNG read back in the page: the columns and rows
- * its pixels stand in (any colour a third of the way or more from the commonest one, the ground, to
- * the furthest, so a pixel on part of a pixel still counts), and how far they are from each of the
- * picture's four edges.
+ * What a picture of a placeholder at rest holds, its PNG read back in the page: its pixels, the
+ * colour furthest from the commonest one (the ground), the columns and rows they stand in and how
+ * far they are from each of the picture's four edges; and how many colours lie between the two.
  */
 const field = async (page: Page, png: Buffer) =>
   await page.evaluate(async (base64) => {
@@ -85,8 +84,14 @@ const field = async (page: Page, png: Buffer) =>
         (Math.floor(colour / 256) % 256) - (Math.floor(ground / 256) % 256)
       ) +
       Math.abs((colour % 256) - (ground % 256));
+    // A pixel is as far from the ground as any colour in the picture, give or take the grain a
+    // browser draws a see-through colour with; a colour part of the way there is a soft edge.
     const most = Math.max(...[...counts.keys()].map(far));
-    const lit = (index: number) => far(at(index)) >= most / 3;
+    const grain = 6;
+    const lit = (index: number) => far(at(index)) >= most - grain;
+    const soft = [...counts.keys()].filter(
+      (colour) => far(colour) > grain && far(colour) < most - grain
+    ).length;
     const columns = Array.from({ length: width }, (_, x) =>
       Array.from({ length: height }, (__, y) => lit(y * width + x)).includes(
         true
@@ -103,120 +108,145 @@ const field = async (page: Page, png: Buffer) =>
       left: columns.indexOf(true),
       right: width - 1 - columns.lastIndexOf(true),
       rows,
+      soft,
       top: rows.indexOf(true),
     };
   }, png.toString("base64"));
+
+/** How long the runs of lit columns or rows are: how wide or tall the pixels are. */
+const sides = (lit: boolean[]) => [
+  ...new Set(
+    lit
+      .map((on) => (on ? "1" : " "))
+      .join("")
+      .split(" ")
+      .filter((run) => run !== "")
+      .map((run) => run.length)
+  ),
+];
+
+for (const theme of ["light", "dark"] as const) {
+  test(`the field's texture is square pixels, each sharp on the ground (${theme})`, async ({
+    page,
+  }) => {
+    await openExample(page, "skeleton", "text", { theme });
+    // At rest, lines of text are the ground and their pixels only: a square on whole pixels has
+    // no soft edge, so the picture holds no colour between the two. A round dot shades into the
+    // ground.
+    const lines = page.getByRole("status").locator("xpath=..");
+    const drawn = await field(page, await lines.screenshot());
+    expect(drawn.soft).toBe(0);
+  });
+}
 
 /** How many of a picture's pixels make one CSS pixel. */
 const ratio = async (page: Page) =>
   await page.evaluate(() => window.devicePixelRatio);
 
-/**
- * The pixels along a side, and the widest gap between two of them, in the picture's pixels. A run
- * under one and a half CSS pixels is a sliver, not a pixel: on a dense screen WebKit draws a sliver
- * of one more tile at the far end, of the original's dots as of these.
- */
-const runs = (lit: boolean[], dense: number) => {
-  const line = lit.map((on) => (on ? "1" : " ")).join("");
-  const gaps = line
-    .trim()
-    .split(/1+/u)
-    .filter((gap) => gap !== "")
-    .map((gap) => gap.length);
-  return {
-    count: line.split(" ").filter((run) => run.length >= 1.5 * dense).length,
-    widestGap: Math.max(0, ...gaps),
-  };
-};
-
-/**
- * How many pixels fit along a side: one for every whole 4px tile, and in WebKit one more where the
- * room left over holds a whole pixel (it ends 3px into its tile), as it draws the original's dots.
- */
-const fits = (side: number) => [
-  ...new Set([Math.floor(side / 4), Math.floor((side + 1) / 4)]),
+/** The lengths of the gaps between runs of lit columns or rows. */
+const gaps = (lit: boolean[]) => [
+  ...new Set(
+    lit
+      .map((on) => (on ? "1" : " "))
+      .join("")
+      .trim()
+      .split(/1+/u)
+      .filter((gap) => gap !== "")
+      .map((gap) => gap.length)
+  ),
 ];
 
-for (const theme of ["light", "dark"] as const) {
-  for (const [example, shape, at] of [
-    ["shapes", "a line", 0],
-    ["shapes", "a rectangle", 1],
-    ["shapes", "a circle", 2],
-    ["text", "a line of a title, 60% wide", 0],
-    ["text", "a line 75% wide", 3],
-    ["layout", "a chart", 3],
-  ] as const) {
-    test(`the field holds as many whole pixels as fit, unbroken, in the middle of its box (${shape}, ${theme})`, async ({
-      page,
-    }) => {
-      await openExample(page, "skeleton", example, { theme });
-      // The field: the box inside the placeholder that its pixels are laid out in.
-      const box = page
-        .getByRole("status")
-        .locator("xpath=following::span[@aria-hidden='true']")
-        .nth(at)
-        .locator("xpath=*[1]");
-      // The room its pixels stand in: its content box.
-      const room = await box.evaluate((node) => {
-        const style = getComputedStyle(node);
-        const rect = node.getBoundingClientRect();
-        // Its padding, in pixels.
-        const [top, right, bottom, left] = [
-          style.paddingTop,
-          style.paddingRight,
-          style.paddingBottom,
-          style.paddingLeft,
-        ].map((value) => Number(value.replace("px", "")));
-        return {
-          width: rect.width - (left ?? 0) - (right ?? 0),
-          height: rect.height - (top ?? 0) - (bottom ?? 0),
-        };
-      });
-      const drawn = await field(page, await box.screenshot());
-      const dense = await ratio(page);
-      const columns = runs(drawn.columns, dense);
-      const rows = runs(drawn.rows, dense);
-      // One pixel in every 4px, as many as fit, with the room left over shared out between them
-      // all: no run of pixels broken off from the next (a large line's 17px holds four rows).
-      expect(fits(room.width)).toContain(columns.count);
-      expect(fits(room.height)).toContain(rows.count);
-      // Where a browser draws the shared room in whole pixels (WebKit), one gap may be a pixel
-      // wider than the rest: never a tile's.
-      expect(columns.widestGap).toBeLessThanOrEqual(4 * dense);
-      expect(rows.widestGap).toBeLessThanOrEqual(4 * dense);
-      // As far from the start as from the end, and from the top as from the foot, give or take
-      // the pixel a box on part of a pixel is pictured with.
-      expect(Math.abs(drawn.left - drawn.right)).toBeLessThanOrEqual(dense);
-      expect(Math.abs(drawn.top - drawn.bottom)).toBeLessThanOrEqual(dense);
-    });
-  }
+/** How many runs of lit columns or rows: how many pixels along a side. */
+const count = (lit: boolean[]) =>
+  lit
+    .map((on) => (on ? "1" : " "))
+    .join("")
+    .split(" ")
+    .filter((run) => run !== "").length;
+
+// Each placeholder, and how far inside its field its pixels' room stands: a line's is its letters'
+// height; a picture's a space inside its ground, a circle's two.
+for (const [example, shape, at, inset] of [
+  ["shapes", "a line", 0, 0],
+  ["shapes", "a rectangle", 1, 4],
+  ["shapes", "a circle", 2, 8],
+  ["text", "a line of a title, 60% wide", 0, 0],
+  ["text", "a line 75% wide", 3, 0],
+  ["layout", "a chart", 3, 4],
+] as const) {
+  test(`the field holds as many 2px pixels as fit, one in every 4px, in the middle of its box (${shape})`, async ({
+    page,
+  }) => {
+    await openExample(page, "skeleton", example);
+    // The field: the box inside the placeholder that its pixels are laid out in.
+    const box = page
+      .getByRole("status")
+      .locator("xpath=following::span[@aria-hidden='true']")
+      .nth(at)
+      .locator("xpath=*[1]");
+    const place = await box.boundingBox();
+    const drawn = await field(page, await box.screenshot());
+    const dense = await ratio(page);
+    // Every pixel is 2px a side, and every gap between two is 2px: no run broken off.
+    expect(sides(drawn.columns)).toEqual([2 * dense]);
+    expect(sides(drawn.rows)).toEqual([2 * dense]);
+    expect(gaps(drawn.columns)).toEqual([2 * dense]);
+    expect(gaps(drawn.rows)).toEqual([2 * dense]);
+    // As many as whole 4px tiles fit (a large line's 17px holds four rows).
+    expect(count(drawn.columns)).toBe(
+      Math.floor(((place?.width ?? 0) - 2 * inset) / 4)
+    );
+    expect(count(drawn.rows)).toBe(
+      Math.floor(((place?.height ?? 0) - 2 * inset) / 4)
+    );
+    // The room left over stands at the edges, as much at one as at the other, give or take a
+    // pixel (and the pixel a box on part of a pixel is pictured with).
+    const whole = Number.isInteger(place?.y) && Number.isInteger(place?.height);
+    expect(Math.abs(drawn.left - drawn.right)).toBeLessThanOrEqual(dense);
+    expect(Math.abs(drawn.top - drawn.bottom)).toBeLessThanOrEqual(
+      whole ? dense : dense + 1
+    );
+  });
 }
 
-test("a line holds one pixel in every 4px at every width, none dropped and no run broken off", async ({
-  page,
-}) => {
-  await openExample(page, "skeleton", "text");
-  const region = page.getByRole("status").locator("xpath=..");
-  // The paragraph's first line, the region's whole width; its field is its letters' height.
-  const line = region
-    .locator("xpath=span[@aria-hidden='true']")
-    .nth(1)
-    .locator("xpath=*[1]");
-  const dense = await ratio(page);
-  for (let width = 220; width <= 260; width += 1) {
-    // oxlint-disable-next-line no-await-in-loop -- one width after the other
-    await region.evaluate((node, to) => {
-      if (node instanceof HTMLElement) {
-        node.style.width = `${to}px`;
+for (const dense of [1, 2]) {
+  test.describe(`at ${dense}x`, () => {
+    test.use({ deviceScaleFactor: dense });
+
+    test("a line's pixels are sharp and unbroken at every width from 200px to 300px", async ({
+      page,
+    }) => {
+      await openExample(page, "skeleton", "text");
+      const region = page.getByRole("status").locator("xpath=..");
+      // The paragraph's first line, the region's whole width; its field is its letters' height.
+      const line = region
+        .locator("xpath=span[@aria-hidden='true']")
+        .nth(1)
+        .locator("xpath=*[1]");
+      for (let width = 200; width <= 300; width += 1) {
+        // oxlint-disable-next-line no-await-in-loop -- one width after the other
+        await region.evaluate((node, to) => {
+          if (node instanceof HTMLElement) {
+            node.style.width = `${to}px`;
+          }
+        }, width);
+        // oxlint-disable-next-line no-await-in-loop -- one width after the other
+        const drawn = await field(page, await line.screenshot());
+        expect({
+          width,
+          soft: drawn.soft,
+          pixels: count(drawn.columns),
+          gaps: gaps(drawn.columns),
+        }).toStrictEqual({
+          width,
+          soft: 0,
+          pixels: Math.floor(width / 4),
+          gaps: [2 * dense],
+        });
       }
-    }, width);
-    // oxlint-disable-next-line no-await-in-loop -- one width after the other
-    const drawn = await field(page, await line.screenshot());
-    const columns = runs(drawn.columns, dense);
-    expect(fits(width), `at ${width}px`).toContain(columns.count);
-    expect(columns.widestGap).toBeLessThanOrEqual(4 * dense);
-  }
-});
+    });
+  });
+}
 
 test("with reduced motion nothing moves, and the wave starts once motion is allowed", async ({
   page,

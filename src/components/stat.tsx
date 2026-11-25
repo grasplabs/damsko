@@ -191,9 +191,8 @@ const styles = stylex.create({
   destructive: { color: colors.destructive },
   warning: { color: colors.warning },
   info: { color: colors.info },
-  // Loading: about four figures of the value at its size (a ch is a figure's width), so a figure
-  // waits as wide as a figure, not across the cell, on the soft tile a rectangle stands on.
-  // The value waits on a rectangle's soft tile, 4ch of the value's size wide and a body line tall.
+  // Loading: the value waits on a rectangle's soft tile, about four figures of the value at its
+  // size wide (a ch is a figure's width), not across the cell, and a body line tall.
   skeletonValue: {
     [skeletonVars.size]: "100%",
     display: "flex",
