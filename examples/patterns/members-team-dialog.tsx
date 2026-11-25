@@ -316,7 +316,6 @@ export function TeamDialog({
         <DialogFooter>
           <DialogClose>Cancel</DialogClose>
           <Button
-            size="sm"
             variant="default"
             onClick={save}
             loadingText="Saving"

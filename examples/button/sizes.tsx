@@ -41,7 +41,13 @@ export default function ButtonSizes() {
       >
         Filter
       </Button>
-      <Button size="sm" variant="outline" onClick={work} successText="Exported">
+      <Button
+        size="sm"
+        variant="outline"
+        onClick={work}
+        successText="Exported"
+        errorText="Not exported"
+      >
         Export
       </Button>
       <Button variant="outline" onClick={work} successText="Invited">

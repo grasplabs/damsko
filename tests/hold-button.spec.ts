@@ -187,6 +187,17 @@ test("a form's submit button sends it only once held or confirmed", async ({
   expect(await log(page, "submitted")).toBe(2);
 });
 
+test("a default button's confirmation says yes with the success button", async ({
+  page,
+}) => {
+  await open(page);
+  await press(page, TAP, "Hold to send report");
+  const yes = confirmation(page, "Send report?").getByRole("button", {
+    name: "Send report",
+  });
+  await expect(yes).toHaveAttribute("data-variant", "success");
+});
+
 test("its box keeps its size while held", async ({ page }) => {
   await open(page);
   const button = page.getByRole("button", { name: NAME });

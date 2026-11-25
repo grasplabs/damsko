@@ -14,9 +14,11 @@
 //
 // The sidebar: the mark (the link home) and the fold in its head; then the Start run as plain rows,
 // and the two parts (Docs, Components), each under a rule, its name the link to its overview, its
-// runs groups that fold from their label, which carries a count. The run holding this page is open;
-// what a person opens or folds is kept across pages (site/chrome/nav-folds.ts). The start page
-// (`bleed`) keeps the header and folds the sidebar away.
+// runs groups that fold from their label, which carries a count: each a SidebarCollapsible, kept by
+// its id under the provider's storageKey and drawn before the shell wakes by the sidebar's own head
+// script, as a product keeps its groups. The run holding this page is open (site/layouts/Docs.astro
+// writes it open before that script runs). The start page (`bleed`) keeps the header and folds the
+// sidebar away.
 "use client";
 
 import {
@@ -29,12 +31,12 @@ import {
 } from "@grasp-os/ui/components/breadcrumb";
 import { Button } from "@grasp-os/ui/components/button";
 import {
-  Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@grasp-os/ui/components/collapsible";
 import {
   Sidebar,
+  SidebarCollapsible,
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
@@ -72,7 +74,6 @@ import type { ReactNode } from "react";
 
 import { chooseTheme, currentChoice, watchChoice } from "../behaviour/theme";
 import { navOpenKey } from "../system/name";
-import { useFolds } from "./nav-folds";
 
 // The docs rail's TableOfContents (site/chrome/Toc.astro) hydrates from this island's own module,
 // so the rail on every docs page costs no request of its own: no entry chunk for it, and its code
@@ -247,6 +248,16 @@ const styles = stylex.create({
     textOverflow: "ellipsis",
   },
   count: { flexShrink: 0, fontVariantNumeric: "tabular-nums" },
+  barTrigger: {
+    display: {
+      default: "contents",
+      [media.lg]: {
+        default: "contents",
+        ':is([data-slot="sidebar-wrapper"]:has(> [data-slot="sidebar"][data-state="expanded"]) *)':
+          "none",
+      },
+    },
+  },
   // A run's pages stand a step in from its label, and a row's gap under it: Collapsible's panel
   // keeps a step of room above and below what it holds, which a list of rows takes back, and the
   // group's own gap goes with the panel, so a folded run is its label alone.
@@ -263,15 +274,6 @@ const styles = stylex.create({
 const useThemeChoice = (): ThemeMode =>
   useSyncExternalStore(watchChoice, currentChoice, () => "system");
 
-/** The header's trigger shows only where the sidebar's own does not: folded, or on a phone. */
-const BarTrigger = () => {
-  const { state, isMobile } = useSidebar();
-  if (!isMobile && state === "expanded") {
-    return null;
-  }
-  return <SidebarTrigger />;
-};
-
 /** The sidebar's trigger in its head, on a wide window (in the phone's sheet it would close it). */
 const HeadTrigger = () => {
   const { isMobile } = useSidebar();
@@ -282,13 +284,13 @@ interface RunProps {
   group: DocsShellGroup;
   route: string;
   link: (path: string) => string;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  /** Open when nothing is kept for it: the run holding this page. */
+  defaultOpen: boolean;
 }
 
 /** A run that folds: a group whose label, with its count, is the trigger, its pages under it. */
-const Run = ({ group, route, link, open, onOpenChange }: RunProps) => (
-  <Collapsible open={open} onOpenChange={onOpenChange}>
+const Run = ({ group, route, link, defaultOpen }: RunProps) => (
+  <SidebarCollapsible name={group.id} defaultOpen={defaultOpen}>
     <SidebarGroup>
       <CollapsibleTrigger asChild>
         <SidebarGroupLabel asChild>
@@ -311,7 +313,7 @@ const Run = ({ group, route, link, open, onOpenChange }: RunProps) => (
         </SidebarGroupContent>
       </CollapsibleContent>
     </SidebarGroup>
-  </Collapsible>
+  </SidebarCollapsible>
 );
 
 const Page = ({
@@ -345,10 +347,9 @@ export default function DocsShell({
   const here = groups.find((group) =>
     group.pages.some((page) => page.route === route)
   )?.id;
-  const [folds, setFold] = useFolds();
   const mode = useThemeChoice();
-  // Awake, the runs a reader kept open have opened: the sidebar's script brings this page's link
-  // back into sight (site/system/head-scripts.ts, sidebarScroll), a frame on, once they stand.
+  // Awake, the sidebar's script brings this page's link back into sight once more
+  // (site/system/head-scripts.ts, sidebarScroll), a frame on, once the runs stand.
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
       document.dispatchEvent(new Event("site:nav-woke"));
@@ -446,14 +447,7 @@ export default function DocsShell({
                       group={group}
                       route={route}
                       link={link}
-                      open={
-                        folds[group.id] === undefined
-                          ? group.id === here
-                          : !folds[group.id]
-                      }
-                      onOpenChange={(open) => {
-                        setFold(group.id, !open);
-                      }}
+                      defaultOpen={group.id === here}
                     />
                   )
                 )}
@@ -465,7 +459,12 @@ export default function DocsShell({
       <SidebarInset>
         <div {...stylex.props(styles.frame)}>
           <header {...stylex.props(styles.header)}>
-            <BarTrigger />
+            {/* The header's trigger shows only where the sidebar's own does not: folded, or on a
+                phone. Its style reads the sidebar's state, which the head script sets before the
+                first paint, so a page loaded folded draws it in its first frame. */}
+            <span {...stylex.props(styles.barTrigger)}>
+              <SidebarTrigger />
+            </span>
             {!bleed && (
               <div {...stylex.props(styles.where)}>
                 <Breadcrumb>

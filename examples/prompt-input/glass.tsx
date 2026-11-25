@@ -61,9 +61,6 @@ const styles = stylex.create({
     insetInline: 0,
     bottom: 0,
   },
-  // The model, dictation and Submit stand together at the row's end, a step apart.
-  end: { gridArea: "end", marginInlineStart: "auto" },
-  apart: { marginInlineStart: space["1"] },
   // On a phone there is no room for the model in the row.
   chip: { display: { default: null, [media.maxSm]: "none" } },
   level: {},
@@ -105,7 +102,7 @@ export default function PromptInputGlass() {
                 </PromptInputActionMenuContent>
               </PromptInputActionMenu>
             </PromptInputTools>
-            <PromptInputTools style={styles.end}>
+            <PromptInputTools align="end">
               <ModelSelector
                 value={model}
                 onValueChange={(next) => {
@@ -144,8 +141,8 @@ export default function PromptInputGlass() {
                   <ModelSelectorEffort levels={levels} />
                 </ModelSelectorContent>
               </ModelSelector>
-              <PromptInputSpeechButton style={styles.apart} />
-              <PromptInputSubmit style={styles.apart} />
+              <PromptInputSpeechButton />
+              <PromptInputSubmit />
             </PromptInputTools>
           </PromptInputFooter>
         </PromptInput>

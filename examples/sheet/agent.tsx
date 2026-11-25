@@ -77,12 +77,7 @@ const Task = ({
         </SheetHeader>
         <SheetFooter>
           <SheetClose>{cancel}</SheetClose>
-          <Button
-            size="sm"
-            onClick={run}
-            loadingText={loadingText}
-            errorText={errorText}
-          >
+          <Button onClick={run} loadingText={loadingText} errorText={errorText}>
             {action}
           </Button>
         </SheetFooter>

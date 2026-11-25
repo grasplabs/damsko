@@ -19,7 +19,7 @@ The parts: a SidebarProvider holds whether it is open and the row it stands in, 
 
 ## Off the canvas
 
-The default, `collapsible="offcanvas"`: folded, it slides out past its side, the page takes the width and nothing in it is a tab stop. A SidebarRail along its edge folds and opens it too. `keyboardShortcut` changes the keys, `false` turns them off.
+The default, `collapsible="offcanvas"`: folded, it slides out past its side, the page takes the width and nothing in it is a tab stop. `keyboardShortcut` changes the keys, `false` turns them off.
 
 <Stage path="sidebar/collapsible" label="Off the canvas" />
 
@@ -77,13 +77,13 @@ SidebarMenuSkeleton draws quiet bars in the rows' own boxes, the same shapes eve
 
 ## Kept as the person left it
 
-`storageKey` keeps the open state in localStorage, and each SidebarCollapsible's fold beside it, under `storageKey:name`. `sidebarStateScript(storageKey)` in the page's head draws both before the page wakes, a group's label saying whether it is open, so nothing moves; focus that stood in a group keeps its place as the page wakes. Or keep it yourself with `open` and `onOpenChange`, from a cookie read on the server.
+`storageKey` keeps the open state in localStorage, and each SidebarCollapsible's fold beside it, under `storageKey:name`. `sidebarStateScript(storageKey)` in the page's head draws both before the page wakes, a group's label saying whether it is open, so nothing moves; focus that stood in a group keeps its place as the page wakes. Or keep it yourself with `open` and `onOpenChange`, from a cookie read on the server, and the phone's sheet with `openMobile` and `onOpenMobileChange`, from a store that outlives the frame.
 
 <Stage path="sidebar/persisted" label="Kept as the person left it" />
 
 ## From the page
 
-`useSidebar()` reads and sets the open state from anywhere inside the provider: a page's own control folds it with `setOpen`, which takes a value or an updater, as React's `setState`.
+`useSidebar()` reads and sets the open state from anywhere inside the provider: a page's own control folds it with `setOpen`, which takes a value or an updater, as React's `setState`. Here the page keeps the state itself (`open`, `openMobile`), and its state is the only one: the trigger and the keys change it there.
 
 <Stage path="sidebar/from-the-page" label="From the page" />
 
@@ -138,6 +138,13 @@ Use a level for a different area with its own navigation; the pages within one p
       value:
         "32px; 28px when sm, 46px when lg, a round 28px when icon; 44px on a touch screen",
       note: "{sidebar-menu-button-height}, {control-xs}, {sidebar-menu-button-height-lg}, {sidebar-icon-button}, {tap-target}",
+    },
+    {
+      group: "Size",
+      key: "Corner",
+      value:
+        "A row and a group's label: 6px, round; the lg row: 10px. On a narrow window its sheet: 12px, round, as the page card",
+      note: "{sidebar-row-radius}, {sidebar-row-radius-lg}, {radius-md}",
     },
     {
       group: "Size",
@@ -198,7 +205,7 @@ Use a level for a different area with its own navigation; the pages within one p
       group: "Folding",
       key: "Ways",
       value:
-        "The trigger, the rail, or Cmd+B (Ctrl+B elsewhere) from anywhere on the page, not in rich text; where a page holds several, the one holding focus answers, else the first.",
+        "The trigger, or Cmd+B (Ctrl+B elsewhere) from anywhere on the page, not in rich text; where a page holds several, the one holding focus answers, else the first.",
     },
     {
       group: "Folding",
@@ -210,13 +217,13 @@ Use a level for a different area with its own navigation; the pages within one p
       group: "Folding",
       key: "Focus",
       value:
-        "Folded off the canvas while focus is inside, focus goes to the trigger.",
+        "Folded off the canvas while focus is inside, focus goes to the trigger still in reach; opened from a trigger that then goes (one in the page's bar shown only while the sidebar is away), to the sidebar's own trigger, else its current row.",
     },
     {
       group: "Phone",
       key: "Under 1024px",
       value:
-        "A Sheet from its side: Tab stays inside, Escape or the shade closes it, and focus goes back to the trigger.",
+        "A Sheet from its side: Tab stays inside, Escape, the shade or Cmd+B (Ctrl+B) closes it, and focus goes back to the trigger.",
     },
     {
       group: "Levels",
@@ -292,14 +299,6 @@ Use a level for a different area with its own navigation; the pages within one p
   source="src/components/sidebar.tsx"
   type="SidebarTriggerProps"
   label="SidebarTrigger"
-/>
-
-### SidebarRail
-
-<Props
-  source="src/components/sidebar.tsx"
-  type="SidebarRailProps"
-  label="SidebarRail"
 />
 
 ### SidebarInset

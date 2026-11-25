@@ -314,6 +314,26 @@ test("the host draws links: out asks first, a path goes through its router, a ci
   await expect(dialog).toBeHidden();
 });
 
+test("your own elements: a link names its site, fenced code is the product's CodeBlock, a script link never reaches them", async ({
+  page,
+}) => {
+  await openExample(page, "markdown", "components");
+  await expect(
+    page.getByRole("link", {
+      name: /^the reporting service \(reports\.example\.com\)/u,
+    })
+  ).toHaveAttribute("href", "https://reports.example.com/docs");
+  const code = page.getByRole("region", { name: /report\.ts/u });
+  await expect(code).toContainText(
+    'export const totals = await report.daily({ team: "support" });'
+  );
+  await expect(page.getByText("daily_totals")).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: /link the model was tricked into/u })
+  ).toHaveCount(0);
+  await expect(page.getByText("link the model was tricked into")).toBeVisible();
+});
+
 test("a task's box is round at the corner, its tick the icon's own size", async ({
   page,
 }) => {
@@ -404,4 +424,15 @@ test("a section written open stands open from the first paint, without opening",
     "data-seen-heights",
     /^[1-9]\d*$/u
   );
+});
+
+test("a fence with codeMaxLines={false} never folds, yet draws only its first 2,000 lines and says how many more", async ({
+  page,
+}) => {
+  await openExample(page, "markdown", "long-code");
+  // Line 1,999 is the thousandth entry, line 2,001 the next.
+  await expect(page.getByText("entry 1000", { exact: true })).toBeAttached();
+  await expect(page.getByText("entry 1001", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("999 more lines")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Show more" })).toHaveCount(0);
 });

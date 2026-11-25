@@ -9,7 +9,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
-  SidebarRail,
   SidebarTrigger,
   useSidebar,
 } from "@grasp-os/ui/components/sidebar";
@@ -22,6 +21,7 @@ import {
 } from "@grasp-os/ui/lib/icons";
 import { colors, font, size, space } from "@grasp-os/ui/lib/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
+import { useState } from "react";
 
 const layout = stylex.create({
   frame: {
@@ -75,12 +75,23 @@ const FocusMode = () => {
   );
 };
 
-// The page's own control folds and opens it through `useSidebar`: `setOpen` takes a value or, as
-// React's setState, an updater, which builds on the state the calls before it left.
+// The page keeps the sidebar's state: whether it is open (`open`, `onOpenChange`, as from a cookie
+// read on the server) and, on a phone, whether its sheet is (`openMobile`, `onOpenMobileChange`);
+// choosing a place closes the sheet. The page's own control folds and opens it through
+// `useSidebar`: `setOpen` takes a value or, as React's setState, an updater, which builds on the
+// state the calls before it left.
 export default function SidebarFromThePage() {
+  const [open, setOpen] = useState(true);
+  const [menu, setMenu] = useState(false);
   return (
     <div {...stylex.props(layout.frame)}>
-      <SidebarProvider style={layout.provider}>
+      <SidebarProvider
+        style={layout.provider}
+        open={open}
+        onOpenChange={setOpen}
+        openMobile={menu}
+        onOpenMobileChange={setMenu}
+      >
         <Sidebar>
           <SidebarContent>
             <SidebarGroup>
@@ -92,7 +103,12 @@ export default function SidebarFromThePage() {
                         asChild
                         isActive={place.name === "Dashboard"}
                       >
-                        <a href={`#${place.name.toLowerCase()}`}>
+                        <a
+                          href={`#${place.name.toLowerCase()}`}
+                          onClick={() => {
+                            setMenu(false);
+                          }}
+                        >
                           <Icon icon={place.icon} />
                           {place.name}
                         </a>
@@ -103,7 +119,6 @@ export default function SidebarFromThePage() {
               </SidebarGroupContent>
             </SidebarGroup>
           </SidebarContent>
-          <SidebarRail />
         </Sidebar>
         <SidebarInset>
           <header {...stylex.props(layout.bar)}>

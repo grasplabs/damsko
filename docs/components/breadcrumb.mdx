@@ -35,6 +35,12 @@ Under 640px only the parent stays, as a back link; `variant="back"` keeps that f
 
 <Stage path="breadcrumb/phone" label="On a phone" />
 
+## Another separator
+
+A `BreadcrumbSeparator` draws its children in place of the chevron: `<BreadcrumbSeparator>/</BreadcrumbSeparator>` between every two steps for a path of slashes, as the app shell's bar draws it. The path's three inks and the room each side of a separator are `breadcrumbVars` (`breadcrumb.stylex.ts`), which a frame sets on itself: the app shell's bar sets the sidebar's inks and `separatorInset`, so its slash stands as far from each step as the words do from a chevron's box. In the app shell the shell writes every separator; its `breadcrumb` is the steps alone.
+
+<Stage path="breadcrumb/separator" label="Another separator" />
+
 <Part title="Using it" />
 
 ## A path with no links

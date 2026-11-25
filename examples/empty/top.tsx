@@ -2,7 +2,6 @@
 
 import { Button } from "@grasp-os/ui/components/button";
 import {
-  Empty,
   EmptyHeader,
   EmptyTitle,
   EmptyDescription,
@@ -13,12 +12,14 @@ import { colors, radius, size, space } from "@grasp-os/ui/lib/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
 import { useState } from "react";
 
+import { Place } from "./clearing";
 import FirstProject from "./first-project";
 
 const layout = stylex.create({
   place: {
     width: "100%",
     maxWidth: 520,
+    height: 344,
     borderRadius: radius.xl,
     cornerShape: radius.shape,
     backgroundColor: colors.card,
@@ -53,7 +54,7 @@ export default function EmptyTop() {
   }
   return (
     <div {...stylex.props(layout.place)}>
-      <Empty align="start">
+      <Place shape="rows" align="start">
         <EmptyHeader>
           <EmptyTitle>No reports yet</EmptyTitle>
           <EmptyDescription>
@@ -72,7 +73,7 @@ export default function EmptyTop() {
             New report
           </Button>
         </EmptyContent>
-      </Empty>
+      </Place>
     </div>
   );
 }

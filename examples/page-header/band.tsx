@@ -4,7 +4,6 @@ import { AppShell } from "@grasp-os/ui/blocks/app-shell-01/app-shell-01";
 import {
   BreadcrumbItem,
   BreadcrumbLink,
-  BreadcrumbSeparator,
 } from "@grasp-os/ui/components/breadcrumb";
 import { Button } from "@grasp-os/ui/components/button";
 import { KeyValueList } from "@grasp-os/ui/components/key-value";
@@ -115,7 +114,9 @@ export default function PageHeaderBand() {
             <BreadcrumbItem>
               <BreadcrumbLink href="#notes">Notes</BreadcrumbLink>
             </BreadcrumbItem>
-            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink href="#notes/reports">Reports</BreadcrumbLink>
+            </BreadcrumbItem>
           </>
         }
         title="Finance"

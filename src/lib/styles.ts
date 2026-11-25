@@ -1303,6 +1303,46 @@ const tileStyles = stylex.create({
 /** A tile's edge: the system's strong edge, and in forced colours, where shadows drop, a hairline. */
 export const tileEdge = tileStyles.edge;
 
+// ---- Texture ------------------------------------------------------------------------------------
+
+const textureStyles = stylex.create({
+  texture: {
+    position: "absolute",
+    inset: 0,
+    pointerEvents: "none",
+    opacity: size.textureStrength,
+    backgroundImage: {
+      default: `radial-gradient(120% 90% at 0% 0%, ${colors.mint}, transparent 70%)`,
+      ":dir(rtl)": `radial-gradient(120% 90% at 100% 0%, ${colors.mint}, transparent 70%)`,
+    },
+    // The dither: the light through a fine grid of dots, as the original's texture.
+    maskImage: `radial-gradient(circle, #000 ${size.textureDot}, transparent calc(${size.textureDot} + ${size.hairline}))`,
+    maskSize: `${size.texturePitch} ${size.texturePitch}`,
+    maskRepeat: "repeat",
+    display: { default: "block", [FORCED]: "none" },
+  },
+  // In a colour of the object's own (an app's brand, given as data): from the top, down, the same
+  // in either direction. In dark, the colour's own hue and strength at a lightness that shows on a
+  // dark ground.
+  tinted: (tint: string) => ({
+    backgroundImage: `linear-gradient(to bottom, light-dark(${tint}, oklch(from ${tint} 0.72 c h)), transparent 85%)`,
+  }),
+});
+
+/**
+ * The faint dither of light behind the head of the one thing a page is about: mint light from the
+ * top corner at the start (the right, right to left), seen through a fine grid of dots. It fills
+ * its positioned box. Decoration: hidden from a screen reader, takes no pointer, never moves, not
+ * drawn in forced colours. Page header's banner draws it; a page puts it in a SidePanel's `cover`.
+ *
+ *   <span aria-hidden="true" {...stylex.props(texture)} />
+ *   <span aria-hidden="true" {...stylex.props(texture, textureTint(app.colour))} />
+ */
+export const { texture } = textureStyles;
+
+/** The texture in a colour of the object's own (an app's brand), at the same faint strength. */
+export const textureTint = textureStyles.tinted;
+
 // ---- A choice in a Field's row ------------------------------------------------------------------
 //
 // Checkbox's box and RadioGroupItem's circle look and answer alike, so the two stand in one column;

@@ -77,7 +77,6 @@ export default function SheetWide() {
         <SheetFooter>
           <SheetClose>Cancel</SheetClose>
           <Button
-            size="sm"
             onClick={saving}
             loadingText="Saving"
             errorText="Could not save"

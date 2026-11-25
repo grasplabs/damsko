@@ -27,8 +27,8 @@ export default defineConfig({
   },
   // A spec that cannot run in an engine is left out of that engine's project
   // here, with the reason, never skipped inside the spec: the first visit is
-  // read through Chromium's protocol, Firefox has no phone mode, and
-  // WebKit's wheel is not a person's.
+  // read through Chromium's protocol, Firefox has no phone mode, and WebKit's
+  // wheel is not a person's.
   projects: [
     { name: "chromium", use: { ...devices["Desktop Chrome"] } },
     {
@@ -39,7 +39,7 @@ export default defineConfig({
     {
       name: "webkit",
       use: { ...devices["Desktop Safari"] },
-      testIgnore: ["first-visit.spec.ts"],
+      testIgnore: "first-visit.spec.ts",
       grepInvert: /: a wheel reaches the end$/u,
     },
   ],

@@ -23,6 +23,8 @@ import * as stylex from "@stylexjs/stylex";
 import { useRef, useState } from "react";
 import { flushSync } from "react-dom";
 
+import { citeStyles } from "../sources/cited";
+
 const layout = stylex.create({
   answer: { display: "grid", gap: space["4"], width: "100%", maxWidth: 640 },
   words: {
@@ -31,48 +33,6 @@ const layout = stylex.create({
     fontSize: font.textBase,
     lineHeight: font.textBaseLine,
     color: colors.bodyForeground,
-  },
-  // A citation, as the original design drew it: a link to its row, a small box on the soft fill
-  // with the system's edge, its number in the quiet ink.
-  cited: {
-    position: "relative",
-    paddingBlock: 1,
-    paddingInline: space["1"],
-    borderRadius: radius.sm,
-    cornerShape: radius.shape,
-    fontSize: font.textXs,
-    lineHeight: font.textXsLine,
-    fontWeight: font.weightMedium,
-    fontVariantNumeric: "tabular-nums",
-    whiteSpace: "nowrap",
-    textDecorationLine: "none",
-    color: {
-      default: colors.mutedForeground,
-      ":hover": { default: null, [media.hover]: colors.foreground },
-    },
-    backgroundColor: {
-      default: colors.muted,
-      ":hover": { default: null, [media.hover]: colors.accentHighlight },
-    },
-    boxShadow: size.borderStrong,
-    // Its edge is a shadow, which forced colours drop: a real one there.
-    borderWidth: { default: 0, [media.forcedColors]: 1 },
-    borderStyle: "solid",
-    borderColor: "currentColor",
-    transitionProperty: "background-color, color",
-    transitionDuration: duration.hover,
-    transitionTimingFunction: duration.ease,
-  },
-  // Lit with its row: the highlight fill and the ink, while the pointer or focus is on either end.
-  citedLit: {
-    color: {
-      default: colors.foreground,
-      [media.forcedColors]: "HighlightText",
-    },
-    backgroundColor: {
-      default: colors.accentHighlight,
-      [media.forcedColors]: "Highlight",
-    },
   },
   row: {
     borderRadius: radius.lg,
@@ -154,8 +114,9 @@ export default function Citations() {
           goTo(id);
         }}
         {...stylex.props(
-          layout.cited,
-          lit === id && layout.citedLit,
+          citeStyles.number,
+          citeStyles.link,
+          lit === id && citeStyles.lit,
           focusRing
         )}
       >

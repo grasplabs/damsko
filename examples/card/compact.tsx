@@ -23,7 +23,8 @@ const layout = stylex.create({
 });
 
 // `size="sm"`, a settings page's cards: the head at text-sm with 12px above and below, so a card
-// with a sentence and one without leave the same room above their first row.
+// with a sentence and one without leave the same room above their first row. A value that cannot
+// be changed takes the control's column whole, so it starts where the field above starts.
 export default function CardCompact() {
   return (
     <div {...stylex.props(layout.stack)}>
@@ -68,7 +69,9 @@ export default function CardCompact() {
                     Only accounts of your tenant.
                   </FieldDescription>
                 </FieldContent>
-                <Text size="sm">On the sign-in page</Text>
+                <Text size="sm" style={layout.control}>
+                  On the sign-in page
+                </Text>
               </Field>
             </FieldGroup>
           </CardContent>

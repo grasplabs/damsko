@@ -35,6 +35,22 @@ test("the breadcrumb says where the page is, the page itself last", async ({
   await expect(page.getByRole("button", { name: "Share" })).toBeVisible();
 });
 
+test("the bar draws its path as a slash between steps, the page in medium weight, a rule at its foot", async ({
+  page,
+}) => {
+  await openExample(page, "app-shell-01", "basic");
+  const crumbs = page.getByRole("navigation", { name: "Breadcrumb" });
+  await expect(crumbs.getByText("/", { exact: true })).toBeVisible();
+  const name = crumbs.getByRole("button", { name: "Spring launch" });
+  await expect(name).toHaveCSS("font-weight", "500");
+  // The rule: a hairline across the foot of the bar the path stands in.
+  const rule = await crumbs.evaluate((node) => {
+    const bar = node.closest("header");
+    return bar === null ? "" : getComputedStyle(bar, "::after").height;
+  });
+  expect(rule).toBe("1px");
+});
+
 test("the sidebar is a named landmark beside the main page, which holds the header", async ({
   page,
 }) => {
@@ -60,7 +76,7 @@ test("the trigger and Cmd+B or Ctrl+B fold the sidebar away and bring it back", 
   const trigger = page.getByRole("main").getByRole("button", { name: TOGGLE });
   const row = page
     .getByRole("complementary", { name: "Sidebar" })
-    .getByRole("link", { name: "Inbox" });
+    .getByRole("link", { name: "Chat" });
   await expect(trigger).toHaveAttribute("aria-expanded", "true");
   await trigger.click();
   await expect(trigger).toHaveAttribute("aria-expanded", "false");
@@ -254,4 +270,82 @@ test("on a phone a link into another level closes the sheet, which opens on that
   ).toBeVisible();
   await expect(sheet.getByRole("link", { name: "Back" })).toBeVisible();
   await expect(sheet.getByRole("link", { name: "Projects" })).toHaveCount(0);
+});
+
+test("on a phone the page fills the window in the card's own ground", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await openExample(page, "app-shell-01", "basic");
+  // What stands under the page's words, the card's ground, against the card's colour.
+  const [ground, card] = await page
+    .getByRole("heading", { name: "Spring launch" })
+    .evaluate((title) => {
+      let box: Element | null = title;
+      while (
+        box !== null &&
+        getComputedStyle(box).backgroundColor === "rgba(0, 0, 0, 0)"
+      ) {
+        box = box.parentElement;
+      }
+      const probe = document.createElement("span");
+      probe.style.color = "var(--damsko-sidebar-card)";
+      title.append(probe);
+      const pair = [
+        box === null ? "" : getComputedStyle(box).backgroundColor,
+        getComputedStyle(probe).color,
+      ];
+      probe.remove();
+      return pair;
+    });
+  expect(ground).toBe(card);
+});
+
+test("the shell writes every slash in its path, each as far from the step before it as from the one after", async ({
+  page,
+}) => {
+  await openExample(page, "page-header", "band");
+  const crumbs = page.getByRole("navigation", { name: "Breadcrumb" });
+  const path = await crumbs.evaluate((nav) => {
+    const parts = [
+      ...nav.querySelectorAll(
+        "[data-slot=breadcrumb-item], [data-slot=breadcrumb-separator]"
+      ),
+    ];
+    // Each part's ink: a step's words, a separator's slash, without the boxes round them.
+    const inks = parts.map((part) => {
+      const walk = document.createTreeWalker(part, NodeFilter.SHOW_TEXT);
+      const texts: Text[] = [];
+      while (walk.nextNode() !== null) {
+        if (
+          walk.currentNode instanceof Text &&
+          walk.currentNode.data.trim() !== ""
+        ) {
+          texts.push(walk.currentNode);
+        }
+      }
+      const words = document.createRange();
+      const first = texts.at(0);
+      const last = texts.at(-1);
+      if (first !== undefined && last !== undefined) {
+        words.setStart(first, 0);
+        words.setEnd(last, last.length);
+      }
+      return words.getBoundingClientRect();
+    });
+    return {
+      kinds: parts.map((part) =>
+        part.matches("[data-slot=breadcrumb-separator]")
+          ? (part.textContent ?? "")
+          : "step"
+      ),
+      gaps: inks
+        .slice(1)
+        .map((box, at) => Math.round(box.left - (inks[at]?.right ?? 0))),
+    };
+  });
+  // Notes / Reports / Finance: one slash between every two steps, none doubled.
+  expect(path.kinds).toEqual(["step", "/", "step", "/", "step"]);
+  // Every step and slash the same room apart, the slash the shell writes before the page too.
+  expect(new Set(path.gaps).size).toBe(1);
 });

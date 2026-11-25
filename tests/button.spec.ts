@@ -15,6 +15,7 @@ for (const theme of ["light", "dark"] as const) {
         "Duplicate",
         "Edit",
         "Delete workspace",
+        "Approve",
         "Read the guide",
       ].map(async (name) => {
         await expect(page.getByRole("button", { name })).toBeVisible();
@@ -37,6 +38,7 @@ for (const theme of ["light", "dark"] as const) {
       "Duplicate",
       "Edit",
       "Delete workspace",
+      "Approve",
       "Read the guide",
     ]) {
       const button = page.getByRole("button", { name });
@@ -404,6 +406,23 @@ test("a destructive button asks in its own words", async ({ page }) => {
   );
 });
 
+test("a success press by an agent, the yes that approves, waits for the person's yes", async ({
+  page,
+}) => {
+  await openExample(page, "button", "agent");
+  expect(await confirmOf(page, "Approve the request")).toBe(
+    'Presses "Approve the request"'
+  );
+  await answer(page, false);
+  const refused = await press(page, "Approve the request");
+  expect(refused.ok).toBe(false);
+  expect(await ran(page)).not.toContain("approved");
+  await answer(page, true);
+  const allowed = await press(page, "Approve the request");
+  expect(allowed.ok).toBe(true);
+  expect(await ran(page)).toContain("approved");
+});
+
 test("a press whose work fails says so on the button, and nothing is thrown to the page", async ({
   page,
 }) => {
@@ -497,6 +516,37 @@ test("with words for its states, the widest of them sets the width at rest", asy
   expect(inner).toBeCloseTo(widest, 0);
 });
 
+test("with words for working and failing only, it keeps the tick's room at rest and shows the tick before its words once it worked", async ({
+  page,
+}) => {
+  await openExample(page, "button", "action");
+  const button = page.getByRole("button", { name: "Replace the key" });
+  // The words' own width, and the content's: the tick (an icon's box) and the gap stand beside them.
+  const measure = async () =>
+    await button.evaluate((node) => {
+      const content = node.querySelector("[data-slot=button-content]");
+      const range = document.createRange();
+      const text = [...node.querySelectorAll("span")].find(
+        (span) =>
+          span.childElementCount === 0 && span.textContent === "Replace the key"
+      );
+      range.selectNodeContents(text ?? node);
+      return {
+        content: content?.getBoundingClientRect().width ?? -1,
+        words: range.getBoundingClientRect().width,
+      };
+    });
+  const rest = await measure();
+  expect(rest.content - rest.words).toBeCloseTo(24, 0);
+  const before = await widthOf(page, "Replace the key");
+  await button.click();
+  await expect(button).toHaveAttribute("data-status", "success");
+  await expect(button.locator("svg").filter({ visible: true })).toHaveCount(1);
+  // The words are drawn once, in every state: the tick stands beside them.
+  await expect(button.getByText("Replace the key")).toHaveCount(1);
+  expect(await widthOf(page, "Replace the key")).toBe(before);
+});
+
 test("a second press while its work runs does nothing", async ({ page }) => {
   await openExample(page, "button", "agent");
   const save = page.getByRole("button", { name: "Save changes" });
@@ -562,3 +612,59 @@ test("with truncate, words too long for the room stay on one line and are cut, a
       .evaluate((words) => words.scrollWidth > words.clientWidth)
   ).toBe(false);
 });
+
+test("a button keeps the room its longest words need, failure's too: Export is as wide as Not exported", async ({
+  page,
+}) => {
+  await openExample(page, "button", "sizes");
+  const [inner, failure] = await page
+    .getByRole("button", { name: "Export" })
+    .evaluate((button) => {
+      const content = button.querySelector("[data-slot=button-content]");
+      const words = [...(content?.children ?? [])].find(
+        (layer) => layer.textContent === "Not exported"
+      );
+      return [
+        content?.getBoundingClientRect().width ?? -1,
+        words?.getBoundingClientRect().width ?? 0,
+      ];
+    });
+  // At rest Export already holds the room Not exported needs (134px in the original's fonts).
+  expect(failure).toBeGreaterThan(0);
+  expect(inner).toBeCloseTo(failure, 0);
+});
+
+for (const theme of ["light", "dark"] as const) {
+  test(`success is the original's approve: the success fill under its light, which leans deeper under a pointer, ${theme}`, async ({
+    page,
+  }) => {
+    await openExample(page, "button", "variants", { theme });
+    const approve = page.getByRole("button", { name: "Approve" });
+    const read = async () =>
+      await approve.evaluate((element) => {
+        const probe = document.createElement("span");
+        probe.style.color = "var(--damsko-success-fill)";
+        element.append(probe);
+        const fill = getComputedStyle(probe).color;
+        probe.remove();
+        const style = getComputedStyle(element);
+        return {
+          fill,
+          ground: style.backgroundColor,
+          light: style.backgroundImage,
+          at: style.backgroundPosition,
+        };
+      });
+    const rest = await read();
+    expect(rest.ground).toBe(rest.fill);
+    expect(rest.light).toContain("linear-gradient");
+    expect(rest.at).toBe("0px 0px");
+    await approve.hover();
+    await expect
+      .poll(async () => {
+        const now = await read();
+        return now.at;
+      })
+      .toBe("0px 50%");
+  });
+}

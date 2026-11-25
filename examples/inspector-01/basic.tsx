@@ -1,6 +1,7 @@
 "use client";
 
 import { Inspector } from "@grasp-os/ui/blocks/inspector-01/inspector-01";
+import { Avatar, AvatarFallback } from "@grasp-os/ui/components/avatar";
 import { Button } from "@grasp-os/ui/components/button";
 import {
   ClockIcon,
@@ -16,12 +17,14 @@ import {
   UserSparklesIcon,
 } from "@grasp-os/ui/lib/icons";
 import type { IconData } from "@grasp-os/ui/lib/icons";
-import { size } from "@grasp-os/ui/lib/tokens.stylex";
+import { size, space } from "@grasp-os/ui/lib/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
 import { useState } from "react";
 
 const layout = stylex.create({
   panel: { width: "100%", maxWidth: size.sidePanelWidth, height: 640 },
+  // Who made it: their face before their name.
+  person: { display: "inline-flex", alignItems: "center", gap: space["2"] },
 });
 
 interface Tool {
@@ -64,7 +67,16 @@ export default function InspectorBasic() {
       icon={UserSparklesIcon}
       title="Monday briefing"
       description="Reads last week's records and writes a one-page summary for the team."
-      meta={["By Amara Okafor", running ? "Running now" : "Updated 18h ago"]}
+      meta={[
+        <span key="by" {...stylex.props(layout.person)}>
+          By{" "}
+          <Avatar name="Amara Okafor" size="xs" decorative>
+            <AvatarFallback />
+          </Avatar>{" "}
+          Amara Okafor
+        </span>,
+        running ? "Running now" : "Updated 18h ago",
+      ]}
       actions={
         <Button
           size="sm"

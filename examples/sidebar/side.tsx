@@ -8,7 +8,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
-  SidebarRail,
   SidebarTrigger,
 } from "@grasp-os/ui/components/sidebar";
 import {
@@ -90,7 +89,6 @@ export default function SidebarSide() {
               </SidebarGroupContent>
             </SidebarGroup>
           </SidebarContent>
-          <SidebarRail />
         </Sidebar>
       </SidebarProvider>
     </div>
