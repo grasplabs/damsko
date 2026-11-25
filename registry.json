@@ -2064,6 +2064,7 @@
         "mdast-util-from-markdown",
         "mdast-util-gfm",
         "mdast-util-math",
+        "mermaid",
         "micromark-extension-gfm",
         "micromark-extension-math",
         "remend"
@@ -2072,6 +2073,7 @@
         "@damsko/button",
         "@damsko/code-block",
         "@damsko/collapsible",
+        "@damsko/dialog",
         "@damsko/dropdown-menu",
         "@damsko/lib",
         "@damsko/link",
@@ -2084,6 +2086,11 @@
         "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
+        {
+          "path": "src/components/markdown/diagram.tsx",
+          "type": "registry:file",
+          "target": "~/src/components/markdown/diagram.tsx"
+        },
         {
           "path": "src/components/markdown/index.ts",
           "type": "registry:file",

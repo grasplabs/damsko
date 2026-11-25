@@ -1384,6 +1384,7 @@
       "MarkdownLinkRenderer",
       "MarkdownRoot"
     ],
+    "src/components/markdown/diagram.tsx": null,
     "src/components/markdown/markdown.tsx": null,
     "src/components/markdown/parse.ts": null
   },

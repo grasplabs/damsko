@@ -235,6 +235,64 @@ test("untrusted text: a script stays text, a data link is words, a picture never
   const formula = page.locator("[data-slot=markdown-math]");
   await expect(formula.locator(".katex, .katex-error")).toHaveCount(1);
   await expect(formula.locator("a, [href]")).toHaveCount(0);
+  // Mermaid draws the diagram at its strict level: no handler, no script, no link out of a node.
+  const diagram = page.locator("[data-slot=markdown-diagram-drawing] svg");
+  await expect(diagram).toHaveCount(1);
+  await expect(
+    diagram.locator(
+      "[onerror], script, a[href^='javascript'], [*|href^='javascript']"
+    )
+  ).toHaveCount(0);
+});
+
+test("diagrams: drawn by Mermaid once loaded, only for a diagram; Download as SVG, PNG or MMD, full screen and zoom; one Mermaid cannot read stays code", async ({
+  page,
+}) => {
+  const loaded: string[] = [];
+  page.on("request", (request) => {
+    if (/mermaid/iu.test(request.url())) {
+      loaded.push(request.url());
+    }
+  });
+  await openExample(page, "markdown", "answer");
+  await expect(page.getByRole("table")).toBeVisible();
+  expect(loaded).toStrictEqual([]);
+  await openExample(page, "markdown", "diagram");
+  const diagrams = page.locator("[data-slot=markdown-diagram]");
+  const drawn = diagrams.nth(0);
+  const unread = diagrams.nth(1);
+  await expect(
+    drawn.locator("[data-slot=markdown-diagram-drawing] svg")
+  ).toHaveCount(1);
+  await expect(drawn.getByText("Orders").first()).toBeVisible();
+  await expect(unread.locator("svg[aria-roledescription]")).toHaveCount(0);
+  await expect(unread.getByText("A --> -->")).toBeVisible();
+  const save = async (format: string) => {
+    await drawn.getByRole("button", { name: "Download diagram" }).click();
+    const [file] = await Promise.all([
+      page.waitForEvent("download"),
+      page.getByRole("menuitem", { name: format }).click(),
+    ]);
+    return file.suggestedFilename();
+  };
+  expect(await save("SVG")).toBe("diagram.svg");
+  expect(await save("PNG")).toBe("diagram.png");
+  expect(await save("MMD")).toBe("diagram.mmd");
+  const drawing = drawn.locator("[data-slot=markdown-diagram-drawing]");
+  const before = await drawing.evaluate(
+    (node) => getComputedStyle(node).transform
+  );
+  await drawn.getByRole("button", { name: "Zoom in" }).click();
+  await expect
+    .poll(
+      async () =>
+        await drawing.evaluate((node) => getComputedStyle(node).transform)
+    )
+    .not.toBe(before);
+  await drawn.getByRole("button", { name: "View full screen" }).click();
+  await expect(
+    page.getByRole("dialog").locator("svg[aria-roledescription]")
+  ).toHaveCount(1);
 });
 
 test("maths: a formula in a sentence and on lines of its own, drawn as MathML by KaTeX, loaded only for maths, a dollar alone a dollar", async ({

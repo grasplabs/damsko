@@ -39,6 +39,12 @@ A formula between two dollars, as Streamdown reads one: `$$x^2$$` in a sentence,
 
 <Stage path="markdown/math" label="Maths" />
 
+## Diagrams
+
+A fence in `mermaid` is its diagram once the fence is closed, drawn by Mermaid at its strict security level (no script, no handler, no link out of a node), and loaded only when a diagram is drawn: a page without one loads none of it. While the fence is written, and until Mermaid has drawn it, it is its code; a diagram Mermaid cannot read stays its code. Beside it, as Streamdown has them: Download (the drawing as SVG or PNG, or its code as `diagram.mmd`), Copy and full screen, all waiting while the answer is written; under it, zoom in, zoom out and back, and a drag moves it.
+
+<Stage path="markdown/diagram" label="Diagrams" />
+
 ## Cut off
 
 Once `streaming` turns false, the answer is drawn as written, the same as when the page is opened again. An answer stopped part way ends tidily with `truncated`: its end is made whole as while it streams, so no raw mark and no half link shows. Set it when the stream is stopped, and for a cut answer drawn later, from history.

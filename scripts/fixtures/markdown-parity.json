@@ -3167,6 +3167,21 @@
       "roles": "p The quadratic formula gives the roots:\nmath x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}\np For ⟦a = 1⟧, ⟦b = -3⟧ and ⟦c = 2⟧ the roots are ⟦x = 1⟧ and ⟦x = 2⟧.\np A sum over every term:\nmath \\sum_{i=1}^{n} i = \\frac{n(n+1)}{2}\np Prices such as $5 and $10 stay as written, and so does $$ escaped."
     },
     {
+      "name": "diagram",
+      "at": 89,
+      "roles": "p The request goes through three services:"
+    },
+    {
+      "name": "diagram",
+      "at": 178,
+      "roles": "p The request goes through three services:\np Each step retries once. A diagram Mermaid"
+    },
+    {
+      "name": "diagram",
+      "at": 242,
+      "roles": "p The request goes through three services:\np Each step retries once. A diagram Mermaid cannot read stays code:"
+    },
+    {
       "name": "commonmark 1",
       "at": 14,
       "roles": "code foo baz bim [download copy]"

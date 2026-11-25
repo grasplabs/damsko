@@ -2007,6 +2007,26 @@
         "",
         "Prices such as $5 and $10 stay as written, and so does \\$$ escaped."
       ]
+    },
+    {
+      "name": "diagram",
+      "lines": [
+        "The request goes through three services:",
+        "",
+        "```mermaid",
+        "flowchart LR",
+        "  Browser --> Gateway",
+        "  Gateway --> Orders",
+        "  Orders --> Database",
+        "```",
+        "",
+        "Each step retries once. A diagram Mermaid cannot read stays code:",
+        "",
+        "```mermaid",
+        "flowchart LR",
+        "  A --> -->",
+        "```"
+      ]
     }
   ]
 }
