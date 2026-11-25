@@ -66,6 +66,8 @@ const styles = stylex.create({
     insetBlockEnd: space["2"],
     display: "flex",
     gap: space["1"],
+    // Each control's touch target reaches the middle of the gap to the next (tapTarget).
+    "--tap-room-inline": `calc(${space["1"]} / 2)`,
   },
 });
 
@@ -363,7 +365,12 @@ export const Diagram = ({
   const id = `mermaid-${useId().replaceAll(/[^\w-]/gu, "")}`;
   const frame = useRef<HTMLDivElement>(null);
   const [near, setNear] = useState(false);
-  const [svg, setSvg] = useState<string | null>(null);
+  // The last drawing, and the code it is of: its SVG, or null for code Mermaid could not draw.
+  const [drawn, setDrawn] = useState<{
+    code: string;
+    svg: string | null;
+  } | null>(null);
+  const svg = drawn?.svg ?? null;
   // Drawn once it comes within 300px of the screen, as Streamdown draws one.
   useEffect(() => {
     const at = frame.current;
@@ -388,9 +395,9 @@ export const Diagram = ({
   useEffect(() => {
     let live = true;
     const draw = async () => {
-      const drawn = await drawDiagram(code, id);
+      const made = await drawDiagram(code, id);
       if (live) {
-        setSvg(drawn);
+        setDrawn({ code, svg: made });
       }
     };
     if (near) {
@@ -401,7 +408,12 @@ export const Diagram = ({
     };
   }, [code, id, near]);
   return (
-    <div ref={frame} data-slot="markdown-diagram">
+    // Busy while Mermaid loads and draws it, once it is near the screen.
+    <div
+      ref={frame}
+      data-slot="markdown-diagram"
+      aria-busy={near && drawn?.code !== code}
+    >
       <Code.CodeBlock language="mermaid">
         <Code.CodeBlockHeader>
           <Code.CodeBlockTitle />

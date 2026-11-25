@@ -171,10 +171,15 @@ const excused = new Map<string, string>([
   ["input-group/search: Clear search", onAnother],
   ["inspector-01/facts: northwind.example", noTarget],
   ["link/states: Quarterly report", noTarget],
+  // Its row's room (half the actions' gap) holds past its end, where the header gives 6px: the
+  // drawing under the header holds the zoom controls, so the row reads as followed by a control.
+  ["markdown/diagram: View full screen", outer],
+  ["markdown/diagram-hostile: View full screen", outer],
   ["markdown/host-links: Source 1", noTarget],
   ["markdown/host-links: Source 2", noTarget],
   ["markdown/host-links: on their site", noTarget],
   ["markdown/sections-cases: BUTTON", noTarget],
+  ["markdown/safe: View full screen", outer],
   ["markdown/sections: BUTTON", noTarget],
   ["message-scroller/jump: Turn that into a test.", outer],
   ["page-header/actions-kinds: More actions", outer],
@@ -694,6 +699,13 @@ for (const [component, paths] of byComponent) {
       await openExample(page, component, name);
       // oxlint-disable-next-line no-await-in-loop -- one example after the other
       await settled(page);
+      // A diagram's controls are measured once Mermaid has drawn it.
+      // oxlint-disable-next-line no-await-in-loop -- one example after the other
+      await expect(
+        page.locator("[data-slot=markdown-diagram][aria-busy=true]")
+      ).toHaveCount(0, {
+        timeout: 30_000,
+      });
       // oxlint-disable-next-line no-await-in-loop -- one example after the other
       const issues = await page.evaluate(inThePage);
       found.push(...new Set(issues.map((issue) => `${path}: ${issue}`)));
