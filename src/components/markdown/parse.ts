@@ -395,58 +395,25 @@ const lessRows = (block: string) => {
   };
 };
 
-// Blocks read once, while the same and while each name their read asked about is defined or not as
-// it was, up to about 32 MB in all (`weigh`). Past that, as a pass starts (an answer about to read
-// its blocks, `nextPass`), the ones used longest ago go first, but never one the pass before used:
-// an answer that needs more keeps what it reads while it is drawn, and lets it go once it is gone
-// (`release`).
 interface Entry {
   nodes: Block[];
   asked: readonly Asked[];
-  pass: number;
-  weight: number;
-}
-const cache = new Map<string, Entry>();
-const BOUND = 32_000_000;
-let cached = 0;
-let pass = 0;
-interface Tree {
-  type: string;
-  children?: readonly Tree[];
 }
 /**
- * About what a block's entry holds, in bytes, as V8 measures it: the entry, its key, the names it
- * asked about, and its nodes, each with its position.
+ * One Markdown's readings of its blocks, each kept while the block is the same and each name its
+ * read asked about is defined or not as it was: those its last render read (`kept`), and those
+ * the render under way has read (`read`). `settle` keeps only the latter, so a Markdown holds the
+ * readings of the text it draws, and lets them go with it.
  */
-const weigh = (key: string, asked: readonly Asked[], nodes: Block[]) => {
-  let weight = 256 + key.length * 2 + asked.length * 64;
-  const left: Tree[] = [...nodes];
-  for (let node = left.pop(); node !== undefined; node = left.pop()) {
-    weight += 512;
-    for (const child of node.children ?? []) {
-      left.push(child);
-    }
-  }
-  return weight;
-};
-/** Lets go of the blocks used longest ago, down to the bound, but none used since pass `kept`. */
-const evict = (kept: number) => {
-  for (const [key, entry] of cache) {
-    if (cached <= BOUND || entry.pass >= kept) {
-      break;
-    }
-    cache.delete(key);
-    cached -= entry.weight;
-  }
-};
-/** Starts a pass: an answer is about to read its blocks. */
-export const nextPass = () => {
-  evict(pass);
-  pass += 1;
-};
-/** An answer is gone: what it kept past the bound goes. */
-export const release = () => {
-  evict(Number.POSITIVE_INFINITY);
+export interface Reads {
+  kept: Map<string, Entry>;
+  read: Map<string, Entry>;
+}
+export const newReads = (): Reads => ({ kept: new Map(), read: new Map() });
+/** A render is drawn: what it did not read goes. */
+export const settle = (reads: Reads) => {
+  reads.kept = reads.read;
+  reads.read = new Map();
 };
 
 /** A section's reads ask what its blocks' reads asked. */
@@ -455,52 +422,58 @@ const tell = (into: Asked[], asked: readonly Asked[]) => {
     into.push(one);
   }
 };
-const readInto = (block: string, reading: Reading, into: Asked[]): Block[] => {
+const readInto = (
+  block: string,
+  reading: Reading,
+  reads: Reads | undefined,
+  into: Asked[]
+): Block[] => {
   const { open = false, names = NO_NAMES, depth = 0 } = reading;
   // A section read inside others stops at 32 deep, so how deep it is read is part of the key.
   const key = `${depth} ${block}`;
-  const known = open ? undefined : cache.get(key);
+  const known = open
+    ? undefined
+    : (reads?.read.get(key) ?? reads?.kept.get(key));
   if (
     known !== undefined &&
     known.asked.every(([kind, name, was]) => names[kind].has(name) === was)
   ) {
-    // Used again: the newest.
-    cache.delete(key);
-    cache.set(key, { ...known, pass });
+    reads?.read.set(key, known);
     tell(into, known.asked);
     return known.nodes;
   }
   const asked: Asked[] = [];
   const { text, more } = lessRows(open ? repair(block) : block);
   const nodes =
-    sectionOf(text, reading, (child, inner) => readInto(child, inner, asked)) ??
-    read(text, names, asked).children;
+    sectionOf(text, reading, (child, inner) =>
+      readInto(child, inner, reads, asked)
+    ) ?? read(text, names, asked).children;
   const [table] = nodes;
   if (more > 0 && table?.type === "table") {
     Object.assign(table, { more });
   }
   tell(into, asked);
   if (!open) {
-    cache.delete(key);
-    cached -= known?.weight ?? 0;
-    const weight = weigh(key, asked, nodes);
-    cache.set(key, { nodes, asked, pass, weight });
-    cached += weight;
+    reads?.read.set(key, { nodes, asked });
   }
   return nodes;
 };
 /**
- * A block's nodes, read once while it is the same and the names it asked about are as they were;
- * the block still being written is not kept.
+ * A block's nodes, read once into `reads` while it is the same and the names it asked about are as
+ * they were; the block still being written is not kept.
  */
-export const readBlock = (block: string, reading: Reading = {}): Block[] =>
-  readInto(block, reading, []);
+export const readBlock = (
+  block: string,
+  reading: Reading = {},
+  reads?: Reads
+): Block[] => readInto(block, reading, reads, []);
 /**
  * A block's nodes for the definitions it holds, which no name changes: as last read, whatever names
  * that read was told, so finding the answer's names reads no block again.
  */
-export const readDefinitions = (block: string) =>
-  cache.get(`0 ${block}`)?.nodes ?? readBlock(block);
+export const readDefinitions = (block: string, reads: Reads) =>
+  (reads.read.get(`0 ${block}`) ?? reads.kept.get(`0 ${block}`))?.nodes ??
+  readBlock(block, {}, reads);
 
 /**
  * An address as CommonMark writes it into a page: a character outside an address's own set is

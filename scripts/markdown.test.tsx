@@ -666,7 +666,7 @@ describe("time and size grow in step with the answer", () => {
     const sorted = times.toSorted((a, b) => a - b);
     const median = sorted[Math.floor(sorted.length / 2)] ?? 0;
     expect(most).toBe(32);
-    // The cache cleared whole, every block read again: reads of seven times the median and more.
+    // Each chunk drawn anew is read whole (on the server nothing is kept): none much slower.
     expect(sorted.at(-1) ?? 0).toBeLessThan(Math.max(median, 1) * 6);
   }, 600_000);
 
@@ -703,11 +703,6 @@ describe("time and size grow in step with the answer", () => {
       2000,
       (at: number) => `[x][l${at}]\n\n[l${at}]: https://x.example/${at}`,
     ],
-    // About 420 KB, its reads past the cache's bound.
-    "2,000 notes of 100 words": [
-      2000,
-      (at: number) => `t[^${at}]\n\n[^${at}]: ${"*n* ".repeat(50)}`,
-    ],
   } as const;
 
   test.each(Object.entries(named))(
@@ -718,7 +713,7 @@ describe("time and size grow in step with the answer", () => {
           "\n\n"
         );
       const words = (at: number) => make(at).replaceAll(/[[\]^:]/gu, "w");
-      // Whole, then streamed in 20 chunks, a new answer each time so none is read from before.
+      // Whole, then streamed in 20 chunks, each drawn anew (on the server nothing is kept).
       const cost = (block: (at: number) => string) => {
         const start = performance.now();
         const whole = draw(answer(block, "a"));
@@ -745,29 +740,4 @@ describe("time and size grow in step with the answer", () => {
     },
     600_000
   );
-
-  test("past the cache's bound, a chunk reads again none of the blocks it had read", () => {
-    const text = Array.from(
-      { length: 2000 },
-      (_, at) => `t[^${at}]\n\n[^${at}]: ${"*n* ".repeat(50)}`
-    ).join("\n\n");
-    // Each emphasis node drawn: a block read again draws new ones.
-    const drawn = (source: string) => {
-      const nodes = new Set<unknown>();
-      const components: MarkdownComponents = {
-        em: ({ node, ...props }) => {
-          nodes.add(node);
-          return <em {...props} />;
-        },
-      };
-      draw(source, { streaming: true, components });
-      return nodes;
-    };
-    const before = drawn(text.slice(0, -2000));
-    const after = drawn(text);
-    const fresh = [...after].filter((node) => !before.has(node));
-    // The ten or so blocks the chunk adds, and the one still being written: 50 each.
-    expect(fresh.length).toBeLessThan(1000);
-    expect(after.size).toBeGreaterThan(99_000);
-  }, 120_000);
 });
