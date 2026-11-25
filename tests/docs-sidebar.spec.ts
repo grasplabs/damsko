@@ -141,8 +141,13 @@ const reloadHeld = async (page: Page, whileHeld: () => Promise<void>) => {
     await route.continue();
   });
   await page.reload({ waitUntil: "commit" });
-  // Read past the sidebar: the page after it is in.
+  // Read past the sidebar, and its styles in: WebKit draws nothing, so shows no row, until then.
   await expect(page.locator('[data-slot="sidebar-inset"]')).toBeAttached();
+  await page.waitForFunction(() =>
+    [
+      ...document.querySelectorAll<HTMLLinkElement>('link[rel="stylesheet"]'),
+    ].every((link) => link.sheet !== null)
+  );
   await whileHeld();
   held.resolve(null);
   await shellAwake(page);
