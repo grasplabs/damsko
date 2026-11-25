@@ -895,6 +895,8 @@
   --damsko-prompt-input-mention-width: 18rem;
   /* The least width of a one-row prompt input's text: with less room beside the tools, the text takes the row and the tools go under it. The text never gives. */
   --damsko-prompt-input-field-min: 8rem;
+  /* The voice's field in a one-row prompt input once words are heard: short, beside the words, so no word stands on the light. */
+  --damsko-prompt-input-voice-band: 96px;
   /* The least width of a one-row prompt input's placeholder at rest: with less room, its model chip's level folds to the maker's mark, then the chip folds away until something is typed. Only then is the placeholder cut. */
   --damsko-prompt-input-placeholder-min: 6rem;
   /* The working light over a prompt input's top edge: lime, sea and mint in beams with gaps between, ending as it starts so it loops without a seam. */

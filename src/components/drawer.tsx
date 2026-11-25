@@ -43,7 +43,12 @@ import type { ComponentProps, ReactNode } from "react";
 
 import { useReturnFocus } from "../hooks/use-return-focus";
 import { useI18n } from "../lib/i18n";
-import { keepBodyPut, layerStyles, useLayerBody } from "../lib/layer";
+import {
+  keepBodyPut,
+  layerStyles,
+  shadeProps,
+  useLayerBody,
+} from "../lib/layer";
 import {
   focusRing,
   focusRingInset,
@@ -181,13 +186,6 @@ const FADE = space["6"];
 const lowerRest = ":is([data-snap-point]):not([data-expanded])";
 
 const styles = stylex.create({
-  // The shade over the page. UI SDK sets its opacity as the panel moves.
-  overlay: {
-    position: "fixed",
-    inset: 0,
-    backgroundColor: colors.dialogScrim,
-  },
-
   // The panel (layerStyles' panel): the one corner on its top. As wide as the window up to
   // drawer-width, in the middle; as tall as its content up to drawer-height.
   panel: {
@@ -337,10 +335,7 @@ export const DrawerContent = ({
   const snaps = use(SnapsContext);
   return (
     <>
-      <BackdropPrimitive
-        render={<div data-slot="drawer-overlay" />}
-        {...stylex.props(styles.overlay)}
-      />
+      <BackdropPrimitive {...shadeProps("drawer-overlay")} />
       <ContentPrimitive
         {...rest}
         {...stylex.props(

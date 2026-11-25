@@ -16,21 +16,19 @@ const layout = stylex.create({
 export default function ItemLinks() {
   return (
     <div {...stylex.props(layout.box)}>
-      <ItemGroup aria-label="Settings">
+      <ItemGroup separated aria-label="Settings">
         <Item href="#profile">
           <ItemContent>
             <ItemTitle>Profile</ItemTitle>
             <ItemDescription>Name, photo and time zone</ItemDescription>
           </ItemContent>
         </Item>
-        <ItemSeparator />
         <Item href="#notifications">
           <ItemContent>
             <ItemTitle>Notifications</ItemTitle>
             <ItemDescription>What reaches you, and where</ItemDescription>
           </ItemContent>
         </Item>
-        <ItemSeparator />
         <Item href="#billing">
           <ItemContent>
             <ItemTitle>Billing</ItemTitle>

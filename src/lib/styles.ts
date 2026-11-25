@@ -448,10 +448,51 @@ export const edgeFade = edgeFadeStyles.edges;
 
 /**
  * The box a text field draws, the same for Input, Textarea and Select's closed control: its height,
- * padding and corner at each size, the 44px target a finger needs, and its states. Each field keeps
- * its own base and its read-only look, which differ.
+ * padding and corner at each size, the 44px target a finger needs, and its states. Input, Select's
+ * closed control and Native select also share the box round the control and the control's base;
+ * each keeps its own padding, words and read-only look, which differ.
  */
 export const inputStyles = stylex.create({
+  // The box round a one-line field: as wide as the column it stands in, holding the control and
+  // its touch target.
+  box: {
+    position: "relative",
+    display: "flex",
+    alignItems: "stretch",
+    boxSizing: "border-box",
+    width: "100%",
+    minWidth: 0,
+    maxWidth: "100%",
+  },
+  // The control's base: the fill and ink, the words at a field's size (16px on a phone or a touch
+  // screen, or Safari zooms the page in when the field takes focus), and no border: the edge is a
+  // hairline drawn inside (enabled, below), which adds no size, and a real one in forced colours,
+  // where the shadow is dropped.
+  control: {
+    position: "relative",
+    boxSizing: "border-box",
+    width: "100%",
+    minWidth: 0,
+    margin: 0,
+    appearance: "none",
+    borderWidth: { default: 0, [FORCED]: 1 },
+    borderStyle: "solid",
+    borderColor: "currentColor",
+    cornerShape: radius.shape,
+    backgroundColor: colors.inputBg,
+    color: colors.foreground,
+    fontFamily: font.sans,
+    fontSize: {
+      default: font.textSm,
+      [media.maxSmOrCoarse]: size.inputTextTouch,
+    },
+    lineHeight: font.textSmLine,
+    fontWeight: font.weightNormal,
+    textAlign: "start",
+    transitionProperty: "box-shadow, background-color",
+    transitionDuration: duration.hover,
+    transitionTimingFunction: duration.ease,
+  },
   // The height, the same as Button's, the words centred on it, the one corner capped at half.
   sm: {
     minHeight: size.controlSm,

@@ -83,6 +83,7 @@ export const kinds: Kind[] = [
       "switch",
       "radio-group",
       "select",
+      "native-select",
       "combobox",
       "slider",
       "calendar",
@@ -139,7 +140,14 @@ export const kinds: Kind[] = [
   {
     id: "tables-and-lists",
     label: "Tables and lists",
-    members: ["table", "data-table", "data-grid", "item", "key-value"],
+    members: [
+      "table",
+      "data-table",
+      "data-grid",
+      "item",
+      "key-value",
+      "sortable-list",
+    ],
   },
   {
     id: "surfaces",

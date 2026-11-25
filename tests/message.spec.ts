@@ -83,6 +83,7 @@ test("given no name, the user's and the assistant's messages are told apart by n
 test("Copy copies the answer's Markdown source and says Copied", async ({
   page,
 }) => {
+  const said = await listenToLiveRegions(page);
   await openExample(page, "message", "chat-text");
   await page
     .getByRole("article", { name: "Assistant" })
@@ -93,9 +94,10 @@ test("Copy copies the answer's Markdown source and says Copied", async ({
     .poll(async () => await clipboard(page))
     .toContain("**Only Tailspin Logistics raised its prices**");
   expect(await clipboard(page)).toContain("| Supplier | Change | From |");
-  await expect(
-    page.getByRole("status").filter({ hasText: /^Copied$/u })
-  ).toHaveCount(1);
+  await expect.poll(said).toContain("Copied");
+  // A second time would come a message's hold (400ms) after the first.
+  await page.waitForTimeout(600);
+  expect(await said()).toStrictEqual(["Copied"]);
 });
 
 test("the answer reads at the message's words, 14px on a 22px line, its table too", async ({

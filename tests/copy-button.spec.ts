@@ -1,7 +1,12 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
-import { fixedTime, listenToLiveRegions, openExample } from "./example.ts";
+import {
+  fixedTime,
+  listenToLiveRegions,
+  liveRegion,
+  openExample,
+} from "./example.ts";
 
 test.use({ permissions: ["clipboard-read", "clipboard-write"] });
 
@@ -9,15 +14,17 @@ const clipboard = async (page: Page) =>
   await page.evaluate(async () => await navigator.clipboard.readText());
 
 test("a press copies the value and says so once", async ({ page }) => {
+  const said = await listenToLiveRegions(page);
   await openExample(page, "copy-button", "basic");
   await page.getByRole("button", { name: "Copy code" }).click();
   await expect
     .poll(async () => await clipboard(page))
     .toContain('import { Badge } from "@grasp-os/ui/components/badge";');
   // The page's one live region says it.
-  await expect(
-    page.getByRole("status").filter({ hasText: /^Copied$/u })
-  ).toHaveCount(1);
+  await expect.poll(said).toContain("Copied");
+  // A second time would come a message's hold (400ms) after the first.
+  await page.waitForTimeout(600);
+  expect(await said()).toStrictEqual(["Copied"]);
 });
 
 test("a copy is over at once, so only its result is said, never that it is working", async ({
@@ -102,7 +109,7 @@ test("a copy that fails says so and is not reported as copied", async ({
   });
   await page.getByRole("button", { name: "Copy the note" }).click();
   await expect(
-    page.getByRole("status").filter({ hasText: /^Not copied$/u })
+    liveRegion(page).filter({ hasText: /^Not copied$/u })
   ).toHaveCount(1);
   await expect(page.getByText("Nothing copied yet")).toBeVisible();
 });

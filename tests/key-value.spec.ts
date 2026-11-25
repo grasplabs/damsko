@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import type { Locator, Page } from "@playwright/test";
 
-import { hasFocusRing, openExample } from "./example.ts";
+import { hasFocusRing, listenToLiveRegions, openExample } from "./example.ts";
 
 const clipboard = async (page: Page) =>
   await page.evaluate(async () => await navigator.clipboard.readText());
@@ -35,6 +35,7 @@ test.describe("copying", () => {
   test("Tab reaches each copy button; Enter copies the value and says Copied", async ({
     page,
   }) => {
+    const said = await listenToLiveRegions(page);
     await openExample(page, "key-value", "divided");
     const copies = page.getByRole("button", { name: /^Copy/u });
     await expect(copies).toHaveCount(2);
@@ -47,9 +48,10 @@ test.describe("copying", () => {
     await expect
       .poll(async () => await clipboard(page))
       .toBe("usr_01J9X4F81C2QK7M3");
-    await expect(
-      page.getByRole("status").filter({ hasText: /^Copied$/u })
-    ).toHaveCount(1);
+    await expect.poll(said).toContain("Copied");
+    // A second time would come a message's hold (400ms) after the first.
+    await page.waitForTimeout(600);
+    expect(await said()).toStrictEqual(["Copied"]);
   });
 
   test("a copy button stands in its value's row, at the end", async ({
