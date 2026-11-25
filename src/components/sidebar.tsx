@@ -86,7 +86,6 @@ import type {
   ReactNode,
 } from "react";
 
-import { useScrollEdges } from "../hooks/use-scroll-edges";
 import { useI18n } from "../lib/i18n";
 import { Icon, PanelLeftIcon } from "../lib/icons";
 import { focusRingInset, scrollbarHidden } from "../lib/styles";
@@ -153,6 +152,17 @@ const rowMenuOpen = () =>
     ':has(> [data-slot="sidebar-menu-action"][aria-expanded="true"])',
     sidebarMenuItemMarker
   );
+// The content's ends while it scrolls (contentFade): where more rows lie beyond, that end fades.
+const SCROLLS = "@supports (animation-timeline: scroll())";
+const FADE_TOP = `transparent ${space["1"]}, black ${space["10"]}`;
+const FADE_FOOT = `black calc(100% - ${space["10"]}), transparent calc(100% - ${space["1"]})`;
+const contentEdges = stylex.keyframes({
+  "0%": { maskImage: `linear-gradient(to bottom, ${FADE_FOOT})` },
+  "1%, 99%": {
+    maskImage: `linear-gradient(to bottom, ${FADE_TOP}, ${FADE_FOOT})`,
+  },
+  "100%": { maskImage: `linear-gradient(to bottom, ${FADE_TOP}, black)` },
+});
 // In the sheet on a narrow window.
 const inSheet = () => stylex.when.ancestor("[data-mobile]", sidebarMarker);
 const onRail = () =>
@@ -382,23 +392,19 @@ const styles = stylex.create({
     gap: space["2"],
     padding: space["2"],
   },
-  // The end with more rows beyond it fades out over a space-10, clear a space-1 from the edge.
+  // The end with more rows beyond it fades out over a space-10, clear a space-1 from the edge, by
+  // its own scroll (no script, so it is there from the first paint): the foot at the top, both in
+  // between, the top at the end. A list that fits has no scroll timeline, so no fade.
   contentFade: {
-    maskImage: {
+    // In forced colours there is no fade: it would dissolve the rows' edges.
+    animationName: {
       default: null,
-      ":is([data-under-end]:not([data-under-start]))": {
-        default: `linear-gradient(to bottom, black calc(100% - ${space["10"]}), transparent calc(100% - ${space["1"]}))`,
-        [FORCED]: "none",
-      },
-      ":is([data-under-start]:not([data-under-end]))": {
-        default: `linear-gradient(to bottom, transparent ${space["1"]}, black ${space["10"]})`,
-        [FORCED]: "none",
-      },
-      ":is([data-under-start][data-under-end])": {
-        default: `linear-gradient(to bottom, transparent ${space["1"]}, black ${space["10"]}, black calc(100% - ${space["10"]}), transparent calc(100% - ${space["1"]}))`,
-        [FORCED]: "none",
-      },
+      [SCROLLS]: { default: contentEdges, [FORCED]: "none" },
     },
+    animationDuration: { default: null, [SCROLLS]: "auto" },
+    animationTimingFunction: { default: null, [SCROLLS]: "linear" },
+    animationFillMode: { default: null, [SCROLLS]: "both" },
+    animationTimeline: { default: null, [SCROLLS]: "scroll(self)" },
   },
   // The one part that scrolls, its bar hidden; folded to its icons, nothing scrolls sideways.
   content: {
@@ -1499,12 +1505,9 @@ export const SidebarContent = ({
   ...rest
 }: SidebarContentProps) => {
   const { main } = useI18n().sidebar;
-  // With more rows above or below than it shows, that end fades out, so a row is never seen cut
-  // at the head's or the foot's edge (the original's list).
-  const edges = useScrollEdges({ axis: "block" });
   return (
     <nav
-      {...mergeProps(rest, { ref: edges })}
+      {...rest}
       aria-label={named ?? main}
       data-slot="sidebar-content"
       data-sidebar="content"

@@ -1610,14 +1610,15 @@ test("with more rows than it shows, the content fades out at the end that has mo
   await page.setViewportSize({ width: 1440, height: 400 });
   await openExample(page, "sidebar", "basic");
   const content = page.locator("[data-slot=sidebar-content]");
-  await expect(content).toHaveAttribute("data-under-end", "");
-  await expect(content).not.toHaveAttribute("data-under-start");
-  expect(
-    await content.evaluate((node) => getComputedStyle(node).maskImage)
-  ).toMatch(/^linear-gradient/u);
+  const mask = async () =>
+    await content.evaluate((node) => getComputedStyle(node).maskImage);
+  // At the top only the foot fades: one gradient, black then clear.
+  await expect.poll(mask).toMatch(/^linear-gradient\(rgb\(0, 0, 0\) calc/u);
   await content.evaluate((node) => {
     node.scrollTop = 40;
   });
-  await expect(content).toHaveAttribute("data-under-start", "");
-  await expect(content).toHaveAttribute("data-under-end", "");
+  await expect.poll(mask).toMatch(/^linear-gradient\(rgba\(0, 0, 0, 0\)/u);
+  // A list that fits fades nowhere.
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await expect.poll(mask).toBe("none");
 });

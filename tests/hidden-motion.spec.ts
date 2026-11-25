@@ -17,10 +17,14 @@ for (const motion of ["reduce", "no-preference"] as const) {
         const unseen = await page.evaluate(() =>
           document.getAnimations().flatMap((animation) => {
             const { effect } = animation;
+            // A scroll-driven animation (an edge's fade) moves only as its box scrolls: it costs no
+            // frame while nothing scrolls, seen or not.
             if (
               animation.playState !== "running" ||
               !(effect instanceof KeyframeEffect) ||
-              !(effect.target instanceof Element)
+              !(effect.target instanceof Element) ||
+              (typeof ScrollTimeline !== "undefined" &&
+                animation.timeline instanceof ScrollTimeline)
             ) {
               return [];
             }

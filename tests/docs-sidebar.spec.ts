@@ -259,8 +259,14 @@ const shellAwake = async (page: Page) => {
     const shell = document
       .querySelector('[data-slot="sidebar-wrapper"]')
       ?.closest("astro-island");
-    const moving = document.getAnimations().some(({ effect }) => {
-      if (!(effect instanceof KeyframeEffect)) {
+    // A scroll-driven animation (the content's fade at its ends) follows the scroll, not time: it
+    // never ends, and is no motion.
+    const moving = document.getAnimations().some(({ effect, timeline }) => {
+      if (
+        !(effect instanceof KeyframeEffect) ||
+        (typeof ScrollTimeline !== "undefined" &&
+          timeline instanceof ScrollTimeline)
+      ) {
         return false;
       }
       return (
