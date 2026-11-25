@@ -27,21 +27,23 @@ export default defineConfig({
   },
   // A spec that cannot run in an engine is left out of that engine's project
   // here, with the reason, never skipped inside the spec: the first visit is
-  // read through Chromium's protocol, Firefox has no phone mode, WebKit's
-  // wheel is not a person's, and a real finger is Chromium's touch input.
+  // read and a page pinch-zoomed through Chromium's protocol, Firefox has no
+  // phone mode, WebKit's wheel is not a person's, and a real finger is
+  // Chromium's touch input.
   projects: [
     { name: "chromium", use: { ...devices["Desktop Chrome"] } },
     {
       name: "firefox",
       use: { ...devices["Desktop Firefox"] },
       testIgnore: ["first-visit.spec.ts", "touch-targets.spec.ts"],
-      grepInvert: /, by a finger$/u,
+      grepInvert: /under a pinch zoom|, by a finger$/u,
     },
     {
       name: "webkit",
       use: { ...devices["Desktop Safari"] },
       testIgnore: "first-visit.spec.ts",
-      grepInvert: /: a wheel reaches the end$|, by a finger$/u,
+      grepInvert:
+        /: a wheel reaches the end$|under a pinch zoom|, by a finger$/u,
     },
   ],
 });

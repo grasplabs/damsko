@@ -1,8 +1,9 @@
 // What every menu's rows share, as they are drawn: dropdown menu, context menu, menubar, the command
 // palette's action menu and the mention menu. Each icon, tick, dot and submenu chevron stands at its
 // row's middle; keys sit on the words' baseline and add no height; in each menu the words start on
-// one edge; a submenu's rows keep the parent's padding and decide their own icon room. Generated for
-// each look: two widths, both reading directions and 1x to 3x screens.
+// one edge, rows in groups too; a submenu's rows keep the parent's padding and decide their own icon
+// room. Generated for each look: a desktop and a touch phone, both reading directions and 1x to 3x
+// screens.
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
@@ -162,8 +163,8 @@ const others: {
   component: string;
   example: string;
   open: (page: Page, dir: "ltr" | "rtl") => Promise<void>;
-  /** Whether its rows are a menu's 36px rows (the mention menu's carry a second line). */
-  rows36: boolean;
+  /** Whether its rows are a menu's one-line rows (the mention menu's carry a second line). */
+  oneLine: boolean;
 }[] = [
   {
     label: "the menubar's Edit menu",
@@ -173,7 +174,7 @@ const others: {
       await page.getByRole("menuitem", { name: "Edit", exact: true }).click();
       await expect(page.getByRole("menu")).toBeVisible();
     },
-    rows36: true,
+    oneLine: true,
   },
   {
     label: "the menubar's View menu",
@@ -183,7 +184,17 @@ const others: {
       await page.getByRole("menuitem", { name: "View", exact: true }).click();
       await expect(page.getByRole("menu")).toBeVisible();
     },
-    rows36: true,
+    oneLine: true,
+  },
+  {
+    label: "a menu whose rows stand in groups",
+    component: "dropdown-menu",
+    example: "groups",
+    open: async (page) => {
+      await page.getByRole("button", { name: "Account" }).click();
+      await expect(page.getByRole("menu")).toBeVisible();
+    },
+    oneLine: true,
   },
   {
     label: "the command palette's action menu",
@@ -198,7 +209,7 @@ const others: {
       await page.keyboard.press(dir === "rtl" ? "ArrowLeft" : "ArrowRight");
       await expect(page.getByRole("menu")).toBeVisible();
     },
-    rows36: true,
+    oneLine: true,
   },
   {
     label: "the mention menu",
@@ -209,12 +220,15 @@ const others: {
       await page.keyboard.type("@");
       await expect(page.getByRole("option").first()).toBeVisible();
     },
-    rows36: false,
+    oneLine: false,
   },
 ];
 
-/** Each icon, tick, dot and chevron at the row's middle; keys on the words' baseline. */
-const expectCentred = (rows: DrawnRow[], rows36: boolean) => {
+/**
+ * Each icon, tick, dot and chevron at the row's middle; keys on the words' baseline; every one-line
+ * row as tall as `height` (36px, 44px on a touch screen), or any height when `height` is null.
+ */
+const expectCentred = (rows: DrawnRow[], height: number | null) => {
   expect(rows.length).toBeGreaterThan(1);
   for (const row of rows) {
     for (const mark of row.marks) {
@@ -227,9 +241,9 @@ const expectCentred = (rows: DrawnRow[], rows36: boolean) => {
         0.5
       );
     }
-    if (rows36) {
+    if (height !== null) {
       // One height for every one-line row: keys and a chevron add none.
-      expect(Math.abs(row.height - 36), row.name).toBeLessThanOrEqual(0.5);
+      expect(Math.abs(row.height - height), row.name).toBeLessThanOrEqual(0.5);
     }
   }
 };
@@ -247,19 +261,26 @@ const expectOneEdge = (rows: DrawnRow[], icons: boolean) => {
   }
 };
 
+// A desktop, and a touch phone, whose rows are 44px tall.
 const looks = [1, 2, 3].flatMap((scale) =>
-  [1440, 390].flatMap((width) =>
-    (["ltr", "rtl"] as const).map((dir) => ({ scale, width, dir }))
+  [
+    { width: 1440, touch: false },
+    { width: 390, touch: true },
+  ].flatMap(({ width, touch }) =>
+    (["ltr", "rtl"] as const).map((dir) => ({ scale, width, touch, dir }))
   )
 );
 
-for (const { scale, width, dir } of looks) {
-  const look = `${width}px, ${dir}, ${scale}x`;
+for (const { scale, width, touch, dir } of looks) {
+  const look = `${width}px${touch ? " touch" : ""}, ${dir}, ${scale}x`;
+  const rowHeight = touch ? 44 : 36;
 
   test.describe(look, () => {
     test.use({
       deviceScaleFactor: scale,
       viewport: { width, height: 900 },
+      hasTouch: touch,
+      isMobile: touch,
     });
 
     const open = async (page: Page, component: string, example: string) => {
@@ -275,13 +296,13 @@ for (const { scale, width, dir } of looks) {
       }) => {
         await open(page, menu.component, menu.example);
         await menu.open(page);
-        await page.getByRole("menuitem", { name: menu.trigger }).hover();
+        await page.getByRole("menuitem", { name: menu.trigger }).click();
         await expect(
           page.getByRole("menuitem", { name: menu.first })
         ).toBeVisible();
         const [parent = [], child = []] = await drawnMenus(page);
-        expectCentred(parent, true);
-        expectCentred(child, true);
+        expectCentred(parent, rowHeight);
+        expectCentred(child, rowHeight);
 
         const trigger = parent.find((row) => row.name === menu.trigger);
         const chevron = trigger?.marks.at(-1)?.x ?? Number.NaN;
@@ -327,7 +348,7 @@ for (const { scale, width, dir } of looks) {
         // The menu opened last: the command palette's results stand behind its action menu.
         const menus = await drawnMenus(page);
         const rows = menus.at(-1) ?? [];
-        expectCentred(rows, menu.rows36);
+        expectCentred(rows, menu.oneLine ? rowHeight : null);
         expectOneEdge(
           rows,
           rows.some((row) => row.marks.length > 0)
