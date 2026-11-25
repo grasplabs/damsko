@@ -55,13 +55,13 @@ export interface Runs {
 }
 
 /**
- * The most runs code may have and be coloured: code Prism reads as more (minified code, generated
- * data, a file of a thousand lines and more) stays plain, all of it. Every run is a node the page
- * draws, all in one frame when the block opens; 5,000 is what Chromium, Firefox and WebKit draw in
- * that frame with room to spare, at any density: about 900 lines of ordinary code, at 5 or 6 runs
- * a line, or a screen of minified code.
+ * The most runs the lines a block draws may have and be coloured: drawn lines Prism reads as more
+ * (a block opened on minified code, generated data, thousands of lines) are plain, all of them. A
+ * folded block draws few lines, so it is coloured; opened, it is weighed again. Every run is a node
+ * the page draws, all in one frame when the block opens: 10,000 is some 1,500 lines of ordinary
+ * code, which Chromium, Firefox and WebKit draw holding the page no longer than the same as text.
  */
-export const MOST_RUNS = 5000;
+export const MOST_RUNS = 10_000;
 
 /** A run of code and what Prism says it is, outermost first. */
 export interface Segment {
@@ -176,9 +176,18 @@ const split = (code: string): string[] => {
 export const plainLines = (code: string, most: number): string[] =>
   split(firstLines(code, most)).slice(0, most);
 
-/** The first `most` lines of `code`, coloured by `runs`, Prism's runs for it. */
-export const linesOf = (code: string, runs: Runs, most: number): Line[] => {
+/**
+ * The first `most` lines of `code`, coloured by `runs`, Prism's runs for it; made only until more
+ * than `mostRuns` runs are, the last line then cut short.
+ */
+export const linesOf = (
+  code: string,
+  runs: Runs,
+  most: number,
+  mostRuns = Infinity
+): Line[] => {
   const lines: Line[] = [[]];
+  let made = 0;
   const add = (text: string, types: string[]) => {
     for (const [index, part] of text.split("\n").entries()) {
       if (index > 0) {
@@ -186,6 +195,7 @@ export const linesOf = (code: string, runs: Runs, most: number): Line[] => {
       }
       if (part) {
         lines.at(-1)?.push({ text: part, types });
+        made += 1;
       }
     }
   };
@@ -193,7 +203,7 @@ export const linesOf = (code: string, runs: Runs, most: number): Line[] => {
   const types = names.map((name) => (name ? name.split(" ") : []));
   let start = 0;
   for (const [index, end] of ends.entries()) {
-    if (lines.length > most) {
+    if (lines.length > most || made > mostRuns) {
       break;
     }
     add(code.slice(start, end), types[kinds[index] ?? 0] ?? []);
@@ -230,7 +240,8 @@ export const keepSame = (before: Line[], lines: Line[]): Line[] =>
 
 /**
  * What a read gave the page: the code read; its first lines, coloured; how many of them a newline
- * ends, and where the line after those starts; and whether they are all of the code.
+ * ends, and where the line after those starts; whether they are all of the code; and whether the
+ * lines after them are past MOST_RUNS, so a block that draws one of those is plain.
  */
 export interface Coloured {
   code: string;
@@ -238,16 +249,23 @@ export interface Coloured {
   ended: number;
   after: number;
   whole: boolean;
+  past: boolean;
 }
 
-/** `code`'s first `most` lines coloured by `runs`, each line the same as in `before` kept from it. */
+/**
+ * `code`'s first `most` lines coloured by `runs`, as many as hold MOST_RUNS runs, each line the
+ * same as in `before` kept from it.
+ */
 export const colouredOf = (
   code: string,
   runs: Runs,
   most: number,
   before: Line[] = []
 ): Coloured => {
-  const lines = keepSame(before, linesOf(code, runs, most));
+  const made = linesOf(code, runs, most, MOST_RUNS);
+  const past = made.reduce((sum, line) => sum + line.length, 0) > MOST_RUNS;
+  // The line the runs ran past MOST_RUNS in is not whole: only those before it are kept.
+  const lines = keepSame(before, past ? made.slice(0, -1) : made);
   let ended = 0;
   let after = 0;
   for (
@@ -263,7 +281,8 @@ export const colouredOf = (
     lines,
     ended,
     after,
-    whole: ended < lines.length || after === code.length,
+    whole: !past && (ended < lines.length || after === code.length),
+    past,
   };
 };
 
@@ -275,12 +294,20 @@ export const colouredOf = (
 export const colouredLines = (
   code: string,
   read: Coloured | null,
-  most: number
+  most: number,
+  streaming = false
 ): (Line | string)[] => {
-  if (read === null || !code.startsWith(read.code)) {
+  // Past MOST_RUNS, the lines drawn (an open block's, not a folded one's) are plain, all of them.
+  if (
+    read === null ||
+    !code.startsWith(read.code) ||
+    (read.past && most > read.lines.length)
+  ) {
     return plainLines(code, most);
   }
-  if (read.whole && read.code.length === code.length) {
+  // While written, a line no newline has ended yet is plain: it is never coloured for one read and
+  // plain for the next.
+  if (!streaming && read.whole && read.code.length === code.length) {
     return read.lines.slice(0, most);
   }
   const kept = read.lines.slice(0, Math.min(read.ended, most));
