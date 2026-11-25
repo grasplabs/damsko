@@ -6,6 +6,9 @@ import {
   hasFocusRing,
   listenToLiveRegions,
   openExample,
+  paintedBox,
+  startsOf,
+  tab,
 } from "./example.ts";
 
 test("each step says its status in words, not only by its mark", async ({
@@ -66,6 +69,41 @@ test("rows open inside rows: a commit opens on its files, and a file on its diff
   await file.click();
   await expect(file).toHaveAttribute("aria-expanded", "true");
 });
+
+for (const dir of ["ltr", "rtl"]) {
+  test(`a row inside a row stands in by its padding: its fill from the parent's mark, whole under the pointer and with its ring, ${dir}`, async ({
+    page,
+    browserName,
+  }) => {
+    await openExample(page, "trace", "commit");
+    await page.evaluate((direction) => {
+      document.documentElement.dir = direction;
+    }, dir);
+    const commit = page.getByRole("button", { name: /^Committed a1b2c3/u });
+    const file = page.getByRole("button", { name: /^Edited app\/login/u });
+    await file.click();
+    const parent = await startsOf(commit);
+    const nested = await startsOf(file);
+    // The parent's fill reaches past its words by its padding; its panel starts on its words.
+    const room = parent.mark - parent.box;
+    expect(room).toBeCloseTo(8, 0);
+    expect(parent.panel).toBeCloseTo(parent.mark, 0);
+    // The nested row's fill starts under the parent's mark; its mark, and its panel, a step in.
+    expect(nested.box).toBeCloseTo(parent.mark, 0);
+    expect(nested.mark - nested.box).toBeCloseTo(room, 0);
+    expect(nested.panel).toBeCloseTo(nested.mark, 0);
+    const whole = { left: 0, top: 0, right: 0, bottom: 0, squareCorners: 0 };
+    // Under the pointer the fill fades in, and out again when it leaves: each is read once it stands.
+    await file.hover();
+    await expect.poll(async () => await paintedBox(file)).toMatchObject(whole);
+    await page.mouse.move(0, 0);
+    await commit.focus();
+    await page.keyboard.press(tab(browserName));
+    await expect(file).toBeFocused();
+    expect(await hasFocusRing(file)).toBe(true);
+    await expect.poll(async () => await paintedBox(file)).toMatchObject(whole);
+  });
+}
 
 test("a step that finishes is said once; one that starts is not", async ({
   page,

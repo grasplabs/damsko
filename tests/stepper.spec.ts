@@ -256,7 +256,9 @@ test("in a form, Next submits it: Enter in the field goes on", async ({
   await expect(page.getByLabel("Your team")).toBeVisible();
 });
 
-const middle = (part: Omit<DrawnPart, "cut">) => ({
+const middle = (
+  part: Pick<DrawnPart, "left" | "top" | "right" | "bottom">
+) => ({
   x: (part.left + part.right) / 2,
   y: (part.top + part.bottom) / 2,
 });

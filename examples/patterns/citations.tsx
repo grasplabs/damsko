@@ -34,16 +34,28 @@ const layout = stylex.create({
     lineHeight: font.textBaseLine,
     color: colors.bodyForeground,
   },
+  // The box round a row, as large as the row's own fill: out past the column by the row's room,
+  // with its corner, so the light and the fill under the pointer are one shape.
   row: {
-    borderRadius: radius.lg,
+    marginInline: `calc(-1 * ${space["2"]})`,
+    paddingInline: space["2"],
+    borderRadius: `min(${radius.xl}, ${space["3"]})`,
     cornerShape: radius.shape,
     transitionProperty: "background-color",
     transitionDuration: duration.hover,
     transitionTimingFunction: duration.ease,
   },
+  // Under the pointer the row draws its own fill: the light steps aside, never doubling it.
   rowLit: {
     backgroundColor: {
       default: colors.accentHighlight,
+      ":hover": {
+        default: null,
+        [media.hover]: {
+          default: "transparent",
+          [media.forcedColors]: "Highlight",
+        },
+      },
       [media.forcedColors]: "Highlight",
     },
   },
