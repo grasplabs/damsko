@@ -220,7 +220,7 @@ test.describe("on a touch screen", () => {
   });
 });
 
-test("on the segmented track the first and last tab stand as far from its sides as from its top", async ({
+test("on the segmented track the first and last tab stand 8px from its sides and 4px from its top, as the original's", async ({
   page,
 }) => {
   await openExample(page, "tabs", "segmented");
@@ -232,9 +232,9 @@ test("on the segmented track the first and last tab stand as far from its sides 
   if (track === null || first === null || last === null) {
     throw new Error("The track or its tabs are not drawn.");
   }
-  const above = first.y - track.y;
-  expect(first.x - track.x).toBeCloseTo(above, 0);
-  expect(track.x + track.width - (last.x + last.width)).toBeCloseTo(above, 0);
+  expect(first.y - track.y).toBeCloseTo(4, 0);
+  expect(first.x - track.x).toBeCloseTo(8, 0);
+  expect(track.x + track.width - (last.x + last.width)).toBeCloseTo(8, 0);
 });
 
 test("given its box's width, a track shares it equally between its tabs, each icon 10px before its words", async ({
@@ -250,10 +250,8 @@ test("given its box's width, a track shares it equally between its tabs, each ic
   ]);
   expect(Math.round(listBox?.width ?? 0)).toBe(240);
   expect(Math.round(first?.width ?? 0)).toBe(Math.round(second?.width ?? 1));
-  // The track's room at its sides and between its tabs is all that is left.
-  expect(
-    Math.round((first?.width ?? 0) + (second?.width ?? 0))
-  ).toBeGreaterThan(220);
+  // The track's room at its sides (8px each) and between its tabs (4px) is all that is left.
+  expect(Math.round((first?.width ?? 0) + (second?.width ?? 0))).toBe(220);
   const gap = await tabs.nth(0).evaluate((tab) => {
     const icon = tab.querySelector("svg")?.getBoundingClientRect();
     const range = document.createRange();

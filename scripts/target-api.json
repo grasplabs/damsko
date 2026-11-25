@@ -534,7 +534,8 @@
       "AlertActionProps",
       "AlertVariant",
       "AlertAppearance"
-    ]
+    ],
+    "src/components/alert.stylex.ts": null
   },
   "attachment": {
     "src/components/attachment.tsx": [

@@ -50,7 +50,8 @@ const layout = stylex.create({
 
 // A row's words longer than the row end in an ellipsis: before the row's end, before a count
 // beside it, and before a mark the row holds, which keeps its size. Rest the pointer on a cut row,
-// or reach it by Tab, and its tooltip shows the words whole; a row that fits shows none.
+// or reach it by Tab, and its tooltip shows the words whole; a row that fits shows none. Recent
+// rows are things in a list of them (`variant="quiet"`): their words in the regular weight.
 export default function SidebarLongNames() {
   return (
     <div {...stylex.props(layout.frame)}>
@@ -101,6 +102,25 @@ export default function SidebarLongNames() {
                         <Icon icon={FolderIcon} />
                         Hiring
                       </a>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+            <SidebarGroup>
+              <SidebarGroupLabel>Recent</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild variant="quiet">
+                      <a href="#chat-terms">
+                        Which suppliers changed their payment terms this spring
+                      </a>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <SidebarMenuButton asChild variant="quiet">
+                      <a href="#chat-week">Plan for next week</a>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 </SidebarMenu>

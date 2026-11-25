@@ -1494,4 +1494,139 @@ test.describe("on a narrow window", () => {
     await expect(sheet).toBeVisible();
     expect(await cornerOf(sheet)).toBe("12px round");
   });
+
+  test("its head stands as high in the window as beside the page: the sheet's inset taken from its room above", async ({
+    page,
+  }) => {
+    await openExample(page, "sidebar", "basic");
+    await triggerOf(page).click();
+    const sheet = page.locator(
+      "[data-slot=drawer-content]:has(> [data-slot=sidebar])"
+    );
+    await expect(sheet).toBeVisible();
+    const [panel, search] = await Promise.all([
+      boxOf(sheet),
+      boxOf(sheet.getByRole("button", { name: "Search" })),
+    ]);
+    expect(search.y - panel.y).toBeCloseTo(10, 0);
+  });
+
+  test("the trigger in the page's bar stands in the page's ink; in the sidebar's head, in the sidebar's", async ({
+    page,
+  }) => {
+    await openExample(page, "sidebar", "basic");
+    const [bar, ink] = await Promise.all([
+      triggerOf(page).evaluate((node) => getComputedStyle(node).color),
+      page.evaluate(() => {
+        const probe = document.createElement("span");
+        probe.style.color = "var(--damsko-foreground)";
+        document.body.append(probe);
+        const { color } = getComputedStyle(probe);
+        probe.remove();
+        return color;
+      }),
+    ]);
+    expect(bar).toBe(ink);
+  });
 });
+
+/** A colour token as the page draws it, read from a probe. */
+const ink = async (page: Page, name: string) =>
+  await page.evaluate((token) => {
+    const probe = document.createElement("span");
+    probe.style.color = `var(${token})`;
+    document.body.append(probe);
+    const { color } = getComputedStyle(probe);
+    probe.remove();
+    return color;
+  }, name);
+
+test.describe("a row with an action, as the original's row and its dots", () => {
+  test.use({ viewport: { width: 1440, height: 900 } });
+
+  test("the action stands 4px from the row's end, in the ink while the row is pointed at", async ({
+    page,
+  }) => {
+    await openExample(page, "sidebar", "actions");
+    const more = page.getByRole("button", {
+      name: "More for Supplier invoices",
+    });
+    const row = page.getByRole("link", { name: "Supplier invoices" });
+    const [rowBox, moreBox] = await Promise.all([boxOf(row), boxOf(more)]);
+    expect(rowBox.x + rowBox.width - (moreBox.x + moreBox.width)).toBeCloseTo(
+      4,
+      0
+    );
+    await page.mouse.move(rowBox.x + 20, rowBox.y + rowBox.height / 2);
+    await expect(more).toHaveCSS(
+      "color",
+      await ink(page, "--damsko-foreground")
+    );
+    await expect(more).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  });
+
+  test("the row keeps its fill and ink while the pointer is on its action and while the action's menu is open", async ({
+    page,
+  }) => {
+    await openExample(page, "sidebar", "actions");
+    const more = page.getByRole("button", {
+      name: "More for Supplier invoices",
+    });
+    const row = page.getByRole("link", { name: "Supplier invoices" });
+    const words = await ink(page, "--damsko-sidebar-foreground");
+    await more.hover();
+    await expect(row).toHaveCSS("color", words);
+    const hovered = await row.evaluate(
+      (node) => getComputedStyle(node).backgroundColor
+    );
+    expect(hovered).not.toBe("rgba(0, 0, 0, 0)");
+    await more.click();
+    await expect(page.getByRole("menuitem", { name: "Rename" })).toBeVisible();
+    await page.mouse.move(1400, 880);
+    await expect(row).toHaveCSS("background-color", hovered);
+    await expect(row).toHaveCSS("color", words);
+  });
+});
+
+test("a quiet row's words are in the regular weight, cut where the row ends and shown whole in its tooltip", async ({
+  page,
+}) => {
+  await openExample(page, "sidebar", "long-names");
+  const sidebar = sidebarOf(page);
+  const name = "Which suppliers changed their payment terms this spring";
+  const row = sidebar.getByRole("link", { name });
+  await expect(row).toHaveCSS("font-weight", "400");
+  await expect(
+    sidebar.getByRole("link", { name: /Every supplier contract/u })
+  ).toHaveCSS("font-weight", "500");
+  await expect(row.getByText(name)).toHaveCSS("text-overflow", "ellipsis");
+  await row.hover();
+  await expect(page.getByRole("tooltip")).toHaveText(name);
+});
+
+for (const [width, place] of [
+  [1440, "beside the page"],
+  [390, "in its sheet"],
+] as const) {
+  test(`a row renamed ${place} with F2 takes the words typed in place of its whole name`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 844 });
+    await openExample(page, "patterns", "sidebar-rows");
+    if (width < 1024) {
+      await page
+        .getByRole("button", { name: "Show or hide the sidebar" })
+        .first()
+        .click();
+    }
+    const row = page.getByRole("link", { name: "Spring launch plan" });
+    await row.focus();
+    await page.keyboard.press("F2");
+    const field = page.getByRole("textbox", {
+      name: "Name of Spring launch plan",
+    });
+    await expect(field).toBeFocused();
+    await page.keyboard.type("Launch notes");
+    await expect(field).toHaveValue("Launch notes");
+  });
+}
