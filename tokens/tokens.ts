@@ -194,6 +194,18 @@ export const groups: TokenGroup[] = [
             value: "0.3",
             use: "How strongly the light shows as a faint dither behind the head of the one thing a page is about (a banner, a side panel's cover): a texture you find, not a pattern you see.",
           },
+          {
+            name: "texture-dot",
+            category: "size",
+            value: "0.75px",
+            use: "One dot of that dither: the light shows through a fine grid of these, the original's.",
+          },
+          {
+            name: "texture-pitch",
+            category: "size",
+            value: "3px",
+            use: "How far apart the dither's dots stand, each way.",
+          },
         ],
       },
       {

@@ -252,3 +252,21 @@ test("in a list with no actions a row's detail ends at the card's inset; where r
   // Every source has its action; the detail stands before it.
   expect(await endOf("Document")).toBeGreaterThan(12);
 });
+
+test("a cover's dither is the original's: the light through a grid of fine round dots, 3px apart", async ({
+  page,
+}) => {
+  await openExample(page, "side-panel", "cover");
+  const mask = await page
+    .getByRole("complementary", { name: "Report details" })
+    .evaluate((panel) => {
+      const cover = panel.querySelector("[data-slot=side-panel-cover] > *");
+      if (cover === null) {
+        return { image: "", size: "" };
+      }
+      const style = getComputedStyle(cover);
+      return { image: style.maskImage, size: style.maskSize };
+    });
+  expect(mask.image).toMatch(/^radial-gradient\(circle/u);
+  expect(mask.size).toBe("3px 3px");
+});
