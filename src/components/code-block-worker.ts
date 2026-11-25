@@ -31,11 +31,11 @@ import "prismjs/components/prism-kotlin.js";
 import "prismjs/components/prism-swift.js";
 import "prismjs/components/prism-toml.js";
 import "prismjs/components/prism-docker.js";
-import { MOST_RUNS, isPrism, runsOf } from "./code-block-prism";
+import { isPrism, runsOf } from "./code-block-prism";
 
 const Prism: unknown = Reflect.get(globalThis, "Prism");
 
-/** The runs for what the page asked, `{ code, grammar }`: none past MOST_RUNS, for code that stays plain. */
+/** The runs for what the page asked, `{ code, grammar }`; none when Prism fails on it. */
 const read = (asked: unknown) => {
   if (
     !isPrism(Prism) ||
@@ -47,11 +47,13 @@ const read = (asked: unknown) => {
     return null;
   }
   const { code, grammar } = asked;
-  const runs =
-    typeof code === "string" && typeof grammar === "string"
+  try {
+    return typeof code === "string" && typeof grammar === "string"
       ? runsOf(Prism, code, grammar)
       : null;
-  return runs !== null && runs.ends.length <= MOST_RUNS ? runs : null;
+  } catch {
+    return null;
+  }
 };
 
 const { port1, port2 } = new MessageChannel();

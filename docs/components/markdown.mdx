@@ -25,7 +25,7 @@ Headings, lists, a table (Table, scrolling sideways in its own box), code in a s
 
 ## Tables
 
-A table has Copy and Download over it, as Streamdown's tables have: Copy takes its cells' words as Markdown, CSV or TSV, Download saves them as `table.csv` or `table.md`. A cell that starts like a formula is kept as words in CSV, as DataTable's export keeps it. Both wait while the answer is written, and a caller's own `table` draws neither.
+A table has Copy and Download over it, as Streamdown's tables have: Copy takes its cells' words as Markdown, CSV or TSV, Download saves them as `table.csv` or `table.md`. A cell that starts like a formula (`=`, `+`, `-`, `@`) is kept as words in CSV and TSV, as DataTable's export keeps it, by an apostrophe before it; a figure such as `-12` or `+3.5%` is left as it is. Both wait while the answer is written, and a caller's own `table` draws neither.
 
 ## Code
 

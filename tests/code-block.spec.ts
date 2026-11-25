@@ -525,6 +525,23 @@ test("a long file written out never holds the page, and done, it is coloured", a
   ).toBeGreaterThan(1000);
 });
 
+test("ordinary code of nearly the most runs shown whole never holds the page, and is coloured", async ({
+  page,
+  browserName,
+}) => {
+  test.setTimeout(120_000);
+  await watchLongTasks(page);
+  await openExample(page, "code-block", "any");
+  // 2,000 lines, just under 10,000 runs: as many as a block opened whole is coloured with.
+  const code = fileOf("src/components/prompt-input.tsx")
+    .split("\n")
+    .slice(0, 2000)
+    .join("\n");
+  expect(
+    await neverHeld(page, browserName, code, "tsx", "shown")
+  ).toBeGreaterThan(5000);
+});
+
 /** Adds a block of `code` to the Many blocks example, `times` times. */
 const addBlocks = async (page: Page, code: string, times = 1) => {
   await page.getByLabel("Code").fill(code);

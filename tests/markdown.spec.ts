@@ -139,6 +139,9 @@ test.describe("a table's controls", () => {
         text: await readFile(await file.path(), "utf-8"),
       };
     };
+    // Each names itself in a tooltip, as CodeBlock's buttons do.
+    await page.getByRole("button", { name: "Copy table" }).hover();
+    await expect(page.getByRole("tooltip")).toHaveText("Copy table");
     expect(await save("CSV")).toStrictEqual({
       name: "table.csv",
       text: "\uFEFFSection,Comments,Open\r\nHighlights,5,0\r\nRisks,4,2\r\nNext steps,3,0",
