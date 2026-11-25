@@ -164,7 +164,7 @@ test.describe("on a touch screen", () => {
     expect(
       await input.evaluate((element) => getComputedStyle(element).fontSize)
     ).toBe("16px");
-    await page.getByRole("button", { name: "Show the choices" }).tap();
+    await page.getByRole("button", { name: "Show the time zones" }).tap();
     await expect(options(page).first()).toBeVisible();
     const heights = await options(page).evaluateAll((all) =>
       all.map((option) => Math.round(option.getBoundingClientRect().height))
@@ -290,4 +290,108 @@ test("without media of its own, the field shows the chosen item's, and words onl
   await field.blur();
   await expect(avatar).toHaveCount(0);
   await expect(field).toHaveCSS("padding-inline-start", empty);
+});
+
+test("the chevron's button takes its own name when given one, and the catalogue's otherwise", async ({
+  page,
+}) => {
+  await openExample(page, "combobox", "groups");
+  await expect(
+    page.getByRole("button", { name: "Show the time zones" })
+  ).toBeVisible();
+  await openExample(page, "combobox", "field");
+  await expect(
+    page.getByRole("button", { name: "Show the choices" })
+  ).toBeVisible();
+});
+
+test.describe("with several values", () => {
+  test("each is a chip with its face and its words, in a 36px field with the system's corner and no chevron, the typing 28px, as the original's picker", async ({
+    page,
+  }) => {
+    await openExample(page, "combobox", "multiple");
+    const field = page.getByRole("combobox", { name: "Invite" });
+    const box = page.locator("[data-slot=combobox-chips]");
+    await expect(box.getByRole("button")).toHaveCount(2);
+    await expect(
+      box.getByRole("button", { name: "Show the choices" })
+    ).toHaveCount(0);
+    const look = await box.evaluate((node) => {
+      const chip = node.querySelector("[data-slot=combobox-chip]");
+      const face = chip?.querySelector("[data-slot=avatar]");
+      const style = getComputedStyle(node);
+      return {
+        radius: style.borderTopLeftRadius,
+        padding: style.paddingInlineStart,
+        chip: chip?.getBoundingClientRect().height,
+        chipRadius: chip ? getComputedStyle(chip).borderTopLeftRadius : "",
+        face: face?.getBoundingClientRect().width,
+      };
+    });
+    expect(look).toStrictEqual({
+      radius: "20px",
+      padding: "4px",
+      chip: 28,
+      chipRadius: "999px",
+      face: 16,
+    });
+    const typing = await field.boundingBox();
+    expect(typing?.height).toBe(28);
+    // With nothing chosen, the field is one line, 36px, and says what to do.
+    await box.getByRole("button", { name: "Remove Amara Okafor" }).click();
+    await box.getByRole("button", { name: "Remove Design team" }).click();
+    await expect(field).toHaveAttribute("placeholder", "Add people or teams");
+    const empty = await box.boundingBox();
+    expect(empty?.height).toBe(36);
+  });
+
+  test("choosing from the list adds a chip and keeps the list open, and Backspace in the empty field takes the last away", async ({
+    page,
+  }) => {
+    await openExample(page, "combobox", "multiple");
+    const field = page.getByRole("combobox", { name: "Invite" });
+    const box = page.locator("[data-slot=combobox-chips]");
+    await field.click();
+    await field.fill("Lena");
+    await options(page).filter({ hasText: "Lena Ruiz" }).click();
+    await expect(box.getByRole("group", { name: "Lena Ruiz" })).toBeVisible();
+    await expect(field).toHaveValue("");
+    await expect(field).not.toHaveAttribute("placeholder");
+    await field.press("Backspace");
+    await field.press("Backspace");
+    await expect(box.getByRole("group", { name: "Lena Ruiz" })).toHaveCount(0);
+    await expect(
+      box.getByRole("group", { name: "Amara Okafor" })
+    ).toBeVisible();
+  });
+
+  test("the list hangs under the whole field, as wide as it", async ({
+    page,
+  }) => {
+    await openExample(page, "combobox", "multiple");
+    const field = page.getByRole("combobox", { name: "Invite" });
+    await field.click();
+    await field.press("ArrowDown");
+    const list = page.getByRole("listbox").filter({ visible: true });
+    await expect(list).toBeVisible();
+    const [boxRect, listRect] = await Promise.all([
+      page.locator("[data-slot=combobox-chips]").boundingBox(),
+      page.locator("[data-slot=combobox-content]").boundingBox(),
+    ]);
+    expect(Math.round(listRect?.width ?? 0)).toBeGreaterThanOrEqual(
+      Math.round(boxRect?.width ?? 1)
+    );
+    expect(Math.round(listRect?.x ?? 0)).toBe(Math.round(boxRect?.x ?? 1));
+  });
+
+  test("in a form each value is sent under its name", async ({ page }) => {
+    await openExample(page, "combobox", "multiple");
+    const values = await page.locator("form").evaluate((form) => {
+      if (!(form instanceof HTMLFormElement)) {
+        return [];
+      }
+      return new FormData(form).getAll("people");
+    });
+    expect(values).toStrictEqual(["amara", "design-team"]);
+  });
 });
