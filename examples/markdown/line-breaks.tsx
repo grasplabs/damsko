@@ -1,14 +1,12 @@
 import { Markdown } from "@grasp-os/ui/components/markdown";
-import type { MarkdownSoftBreaks } from "@grasp-os/ui/components/markdown";
 import { colors, font, space } from "@grasp-os/ui/lib/tokens.stylex";
-// One answer, as a model writes it, drawn three ways: short labelled lines and steps, each on its
+// One answer, as a model writes it, drawn two ways: short labelled lines and steps, each on its
 // own line with a single newline between them, and a paragraph the model wrapped by hand.
-//   space  CommonMark: every single newline is a space, so the short lines run together
-//   line   every single newline is a line break, so the wrapped paragraph breaks mid-sentence too
-//   auto   a break only in a paragraph of short lines; the wrapped paragraph runs on
+//   off  CommonMark: every single newline is a space, so the short lines run together
+//   on   every single newline is a line break, so the wrapped paragraph breaks mid-sentence too
 import * as stylex from "@stylexjs/stylex";
 
-export const answer = `Here is the plan for the Q3 offsite.
+const answer = `Here is the plan for the Q3 offsite.
 
 When: 14 and 15 August
 Where: Lisbon, the Alfama office
@@ -36,21 +34,16 @@ const layout = stylex.create({
   },
 });
 
-const ways: { value: MarkdownSoftBreaks; label: string }[] = [
-  { value: "space", label: "space (the default, CommonMark)" },
-  { value: "line", label: "line" },
-  { value: "auto", label: "auto" },
+const ways = [
+  { value: false, label: "softBreaks off (the default, CommonMark)" },
+  { value: true, label: "softBreaks" },
 ];
 
 export default function MarkdownLineBreaks() {
   return (
     <div {...stylex.props(layout.column)}>
       {ways.map((way) => (
-        <section
-          key={way.value}
-          data-breaks={way.value}
-          {...stylex.props(layout.part)}
-        >
+        <section key={way.label} {...stylex.props(layout.part)}>
           <p {...stylex.props(layout.label)}>{way.label}</p>
           <Markdown softBreaks={way.value}>{answer}</Markdown>
         </section>

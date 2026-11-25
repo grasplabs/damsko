@@ -320,14 +320,25 @@ const inThePage = (): string[] => {
       )
     );
   };
+  // A link in running text, also through wrappers that hold it alone (a note's mark, up high).
   // oxlint-disable-next-line unicorn/consistent-function-scoping -- runs in the page, so it carries its own helpers
-  const inText = (element: Element) =>
-    element.tagName === "A" &&
-    [...(element.parentElement?.childNodes ?? [])].some(
-      (node) =>
-        node.nodeType === Node.TEXT_NODE &&
-        (node.textContent ?? "").trim().length > 0
+  const inText = (element: Element) => {
+    let inner: Element = element;
+    while (
+      inner.parentElement !== null &&
+      inner.parentElement.childNodes.length === 1
+    ) {
+      inner = inner.parentElement;
+    }
+    return (
+      element.tagName === "A" &&
+      [...(inner.parentElement?.childNodes ?? [])].some(
+        (node) =>
+          node.nodeType === Node.TEXT_NODE &&
+          (node.textContent ?? "").trim().length > 0
+      )
     );
+  };
   // The unseen target a control draws: inside it, or beside it in a field's box.
   const isTarget = (control: Element, hit: Element) =>
     control.contains(hit) ||
