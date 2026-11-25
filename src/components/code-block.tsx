@@ -559,12 +559,13 @@ interface Reader {
 }
 
 let reader: Promise<Reader | null> | undefined;
-// Set when the worker could not start: then every block stays plain, and it is not tried again.
+// Set when the browser refuses the worker: then every block stays plain, and it is not tried again.
 let refused = false;
 
 /**
  * Starts the worker. Where it cannot start (no workers, a page whose policy refuses them, a file
- * that does not load, or not within WAIT_TIME) every block stays plain.
+ * that does not load) every block stays plain; one not started within WAIT_TIME leaves the blocks
+ * waiting for it plain, and the next read starts another.
  */
 const startReader = async () =>
   // oxlint-disable-next-line promise/avoid-new -- a worker says it is ready, or failed, by an event
@@ -604,6 +605,7 @@ const startReader = async () =>
         "error",
         () => {
           clearTimeout(late);
+          refused = true;
           resolve(null);
         },
         { once: true }
@@ -652,7 +654,10 @@ const readOnce = async (
   const mine = reader;
   const ready = await mine;
   if (ready === null) {
-    refused = true;
+    // Refused, it is not tried again; late to start, the next read starts another.
+    if (reader === mine) {
+      reader = undefined;
+    }
     return null;
   }
   // oxlint-disable-next-line promise/avoid-new -- the worker answers by an event, or not in time
@@ -892,7 +897,8 @@ const useLinesOf = (
   return colouredLines(
     code,
     last?.language === language ? (last.coloured ?? null) : null,
-    most
+    most,
+    streaming
   );
 };
 

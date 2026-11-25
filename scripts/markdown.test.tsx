@@ -390,6 +390,10 @@ describe("what an answer may hold besides prose", () => {
     expect(draw("```ts startLine=10\na\nb\n```")).toContain(
       "code-block-line 9"
     );
+    // A number past 7 digits is not read: it starts from 1.
+    expect(draw("```ts startLine=99999999999\na\n```")).toContain(
+      "code-block-line 0"
+    );
     // A numbered line's gutter is drawn in the number's look; without numbers it is bare.
     expect(gutterOf(draw("```ts noLineNumbers\na\n```"))).toBeLessThan(
       gutterOf(draw("```ts\na\n```"))
