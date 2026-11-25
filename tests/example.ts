@@ -222,6 +222,10 @@ export const ringCut = async (focused: Locator): Promise<number> =>
     );
   });
 
+/** The key that moves focus on: WebKit on a Mac moves Tab only between fields unless Option is held. */
+export const tab = (browserName: string): string =>
+  browserName === "webkit" ? "Alt+Tab" : "Tab";
+
 /** Waits until the page's fonts have loaded and it has drawn twice, so what is measured stands still. */
 export const settled = async (page: Page): Promise<void> => {
   await page.evaluate(async () => {

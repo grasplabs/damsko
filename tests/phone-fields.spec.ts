@@ -1,8 +1,9 @@
 // Typed text on a phone, across the library: under 16px, Safari zooms the page in when a field
 // takes focus. In every component example at 390 wide, with a fine pointer (the width alone
 // decides), every part that takes typed text (an input that takes words, a textarea, an editable
-// region) draws it at 16px or more; and so does one that a press opens (a command's or a picker's
-// search), looked at once the first control that opens a popup is opened by the keyboard.
+// region) and every native select (Safari zooms to one too) draws it at 16px or more; and so does
+// one that a press opens (a command's or a picker's search), looked at once the first control that
+// opens a popup is opened by the keyboard.
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
@@ -15,7 +16,7 @@ const small = async (page: Page) =>
   await page.evaluate(() =>
     [
       ...document.querySelectorAll(
-        'input:not([type]), input[type="text"], input[type="search"], input[type="email"], input[type="password"], input[type="url"], input[type="tel"], input[type="number"], textarea, [contenteditable="true"], [contenteditable=""]'
+        'input:not([type]), input[type="text"], input[type="search"], input[type="email"], input[type="password"], input[type="url"], input[type="tel"], input[type="number"], textarea, select, [contenteditable="true"], [contenteditable=""]'
       ),
     ].flatMap((field) => {
       const box = field.getBoundingClientRect();

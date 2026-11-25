@@ -1,10 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { openExample } from "./example.ts";
-
-// WebKit on a Mac moves Tab only between fields unless Option is held.
-const tab = (browserName: string) =>
-  browserName === "webkit" ? "Alt+Tab" : "Tab";
+import { openExample, tab } from "./example.ts";
 
 test("it is a navigation named by its title, a link per section", async ({
   page,
