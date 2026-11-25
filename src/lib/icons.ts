@@ -106,7 +106,7 @@ import {
   PencilEdit02Icon,
   PlayIcon as HugePlayIcon,
   Redo02Icon,
-  RefreshIcon,
+  Refresh01Icon,
   RepeatIcon as HugeRepeatIcon,
   Rocket01Icon,
   ScaleIcon as HugeScaleIcon,
@@ -528,8 +528,8 @@ export const PlusIcon: IconData = Add01Icon;
 export const RedoIcon: IconData =
   /* @__PURE__ */
   pointing(Redo02Icon);
-/** Try again, or write the answer again. RefreshIcon. */
-export const RefreshCwIcon: IconData = RefreshIcon;
+/** Try again, or write the answer again. Refresh01Icon. */
+export const RefreshCwIcon: IconData = Refresh01Icon;
 /** Two arrows chasing each other round: something that repeats. RepeatIcon. */
 export const RepeatIcon: IconData = HugeRepeatIcon;
 /** Launch: a first run, a release, a plan put to work. Rocket01Icon. */
