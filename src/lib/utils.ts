@@ -349,6 +349,21 @@ const never = new Promise<never>(() => {
  */
 export const NotYetShown = (): ReactNode => use(never);
 
+// Words that start like a formula (=, +, -, @, a tab or a return) run as one when a spreadsheet
+// opens the file: a leading apostrophe keeps them text. Figures are numbers and are left alone.
+const formula = /^[=+\-@\t\r]/u;
+const csvCell = (value: string | number) => {
+  const text =
+    typeof value === "string" && formula.test(value)
+      ? `'${value}`
+      : String(value);
+  return /[",\r\n]/u.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+};
+
+/** Rows as CSV, each line ended as a spreadsheet expects. */
+export const csvOf = (rows: readonly (readonly (string | number)[])[]) =>
+  rows.map((line) => line.map(csvCell).join(",")).join("\r\n");
+
 /** Saves `text` as a file of that name and type, which the browser downloads. */
 export const saveFile = (text: string, name: string, type: string) => {
   const href = URL.createObjectURL(new Blob([text], { type }));

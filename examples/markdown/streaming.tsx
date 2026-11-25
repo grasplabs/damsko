@@ -24,7 +24,7 @@ const layout = stylex.create({
     display: "grid",
     width: "100%",
     maxWidth: 560,
-    minHeight: 420,
+    minHeight: 460,
     alignContent: "start",
   },
 });

@@ -23,6 +23,10 @@ Headings, lists, a table (Table, scrolling sideways in its own box), code in a s
 
 <Stage path="markdown/half-written" label="Caught part way" />
 
+## Tables
+
+A table has Copy and Download over it, as Streamdown's tables have: Copy takes its cells' words as Markdown, CSV or TSV, Download saves them as `table.csv` or `table.md`. A cell that starts like a formula is kept as words in CSV, as DataTable's export keeps it. Both wait while the answer is written, and a caller's own `table` draws neither.
+
 ## Code
 
 Fenced code is a CodeBlock in the fence's language: coloured by Prism, which reads it in a worker while the page draws it plain, the language's name over it, its lines numbered (from N with `startLine=N` after the language, not at all with `noLineNumbers`, as Streamdown reads them), and Download (as `file.ts`, by the language's extension, else `file.txt`) and Copy beside it. While the answer is written both wait, as a chat's do, and the code grows in place: the lines Prism last read keep their colours and those written since are plain until its next reading, at most every 200 ms, so no chunk colours the whole block again.

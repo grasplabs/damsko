@@ -395,6 +395,17 @@ describe("what an answer may hold besides prose", () => {
     );
   });
 
+  test("a table: Copy and Download, which wait while the answer is written", () => {
+    const table = "| a | b |\n| - | - |\n| 1 | 2 |";
+    expect(buttonsOf(draw(table))).toStrictEqual([
+      "Copy table",
+      "Download table",
+    ]);
+    expect(
+      buttonsOf(draw(`${table}\n\nMore`, { streaming: true }))
+    ).toStrictEqual(["Copy table (waits)", "Download table (waits)"]);
+  });
+
   test("a task is Checkbox's box, read only, said as done or not", () => {
     const html = draw("- [x] Gather the comments\n- [ ] Share them\n- Plain");
     expect(count(html, "<li")).toBe(3);

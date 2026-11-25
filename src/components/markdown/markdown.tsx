@@ -25,7 +25,13 @@ import type {
 } from "react";
 
 import { useI18n } from "../../lib/i18n";
-import { CheckIcon, ChevronRightIcon, Icon } from "../../lib/icons";
+import {
+  CheckIcon,
+  ChevronRightIcon,
+  CopyIcon,
+  DownloadIcon,
+  Icon,
+} from "../../lib/icons";
 import {
   choiceBoxStyles,
   fadeIn,
@@ -41,15 +47,22 @@ import {
   size,
   space,
 } from "../../lib/tokens.stylex";
-import { announce, safeHref } from "../../lib/utils";
+import { announce, csvOf, safeHref, saveFile } from "../../lib/utils";
 import type { LayoutStyle } from "../../lib/utils";
 import { iconVars, motionVars } from "../../lib/vars.stylex";
+import { Button } from "../button";
 import * as Code from "../code-block";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "../collapsible";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../dropdown-menu";
 import { Link } from "../link";
 import { Separator } from "../separator";
 import * as Tables from "../table";
@@ -279,6 +292,12 @@ const styles = stylex.create({
     lineHeight: font.textSmLine,
     color: colors.mutedForeground,
     listStyleType: "decimal",
+  },
+  tableActions: {
+    display: "flex",
+    justifyContent: "flex-end",
+    gap: space["1"],
+    marginBlockEnd: `calc(-1 * ${space["2"]})`,
   },
   more: {
     margin: 0,
@@ -677,6 +696,100 @@ type Draw<T extends Node["type"]> = (
 // A table is named by the heading above it; a row draws its own cells, as many as the head's. One
 // from a model has no bound: at most 1,000 rows are drawn, and a line says how many more.
 const MOST_ROWS = 1000;
+/** A table's cells as Markdown: a pipe or a backslash in a cell kept as written. */
+const markdownOf = (rows: readonly (readonly string[])[]) =>
+  rows
+    .flatMap((cells, at) => {
+      const line = `| ${cells.map((cell) => cell.replaceAll(/[\\|]/gu, "\\$&")).join(" | ")} |`;
+      return at === 0
+        ? [line, `| ${cells.map(() => "---").join(" | ")} |`]
+        : [line];
+    })
+    .join("\n");
+/** A table's cells as TSV: a tab or a line break in a cell written as `\t` or `\n`. */
+const tsvOf = (rows: readonly (readonly string[])[]) =>
+  rows
+    .map((cells) =>
+      cells
+        .map((cell) =>
+          cell.replaceAll("\t", "\\t").replaceAll(/\r?\n/gu, "\\n")
+        )
+        .join("\t")
+    )
+    .join("\n");
+
+/**
+ * A table's Copy (as Markdown, CSV or TSV) and Download (as CSV or Markdown), as a chat's tables
+ * have them: out of use while the answer is written.
+ */
+const TableActions = ({
+  rows,
+  disabled,
+}: {
+  rows: readonly (readonly string[])[];
+  disabled: boolean;
+}) => {
+  const words = useI18n().markdown;
+  const { copied } = useI18n().copyButton;
+  const copy = (text: string) => async () => {
+    await navigator.clipboard.writeText(text);
+    announce(copied);
+  };
+  return (
+    <div {...stylex.props(styles.tableActions)}>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild disabled={disabled}>
+          <Button variant="ghost" size="icon-sm" aria-label={words.copyTable}>
+            <Icon icon={CopyIcon} />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onSelect={copy(markdownOf(rows))}>
+            {words.markdown}
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={copy(csvOf(rows))}>
+            {words.csv}
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={copy(tsvOf(rows))}>
+            {words.tsv}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild disabled={disabled}>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label={words.downloadTable}
+          >
+            <Icon icon={DownloadIcon} />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem
+            onSelect={() => {
+              saveFile(
+                `\uFEFF${csvOf(rows)}`,
+                "table.csv",
+                "text/csv;charset=utf-8"
+              );
+            }}
+          >
+            {words.csv}
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onSelect={() => {
+              saveFile(markdownOf(rows), "table.md", "text/markdown");
+            }}
+          >
+            {words.markdown}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+};
+
 const TableBlock = ({ node, shared, kids, name }: Part<Of<"table">>) => {
   const words = useI18n().markdown;
   const [head, ...rows] = node.children;
@@ -719,8 +832,15 @@ const TableBlock = ({ node, shared, kids, name }: Part<Of<"table">>) => {
   const more =
     Math.max(rows.length - MOST_ROWS, 0) +
     ("more" in node ? Number(node.more) : 0);
+  // What Copy and Download take: the cells drawn, as their words.
+  const cells = [head, ...rows.slice(0, MOST_ROWS)].flatMap((each) =>
+    each === undefined
+      ? []
+      : [each.children.slice(0, align.length).map((cell) => textOf(cell))]
+  );
   const own = (
     <>
+      <TableActions rows={cells} disabled={shared.streaming} />
       <Tables.Table aria-label={label} streaming={shared.greedy}>
         {children}
       </Tables.Table>

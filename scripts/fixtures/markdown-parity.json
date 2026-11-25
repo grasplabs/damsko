@@ -34,32 +34,32 @@
     {
       "name": "export",
       "at": 749,
-      "roles": "#2 How the nightly export works\np The export runs every night at **02:00 UTC** and writes one file per team. See [the export spec](https://example.com/docs/export_v2) for its fields, and [Comma-separated values](https://en.wikipedia.org/wiki/Comma-separated_values_(format)) for the format itself. It follows **[RFC 4180](https://www.rfc-editor.org/rfc/rfc4180)**, as most tools do, and writes `snake_case` headers such as `team_id` and `opened_at`.\np A few things are *not* exported: drafts, ~~archived teams~~ (they moved to cold storage in March), and anything marked *private*.\ntable\n  | Team | r:Open | r:Closed | Note |\n  | Sales | r:12 | r:340 | **busiest** in Q3 |\n  | Support | r:48 | r:1,204 | see [t](streamdown:incomplete-link) |"
+      "roles": "#2 How the nightly export works\np The export runs every night at **02:00 UTC** and writes one file per team. See [the export spec](https://example.com/docs/export_v2) for its fields, and [Comma-separated values](https://en.wikipedia.org/wiki/Comma-separated_values_(format)) for the format itself. It follows **[RFC 4180](https://www.rfc-editor.org/rfc/rfc4180)**, as most tools do, and writes `snake_case` headers such as `team_id` and `opened_at`.\np A few things are *not* exported: drafts, ~~archived teams~~ (they moved to cold storage in March), and anything marked *private*.\ntable [copy download] off\n  | Team | r:Open | r:Closed | Note |\n  | Sales | r:12 | r:340 | **busiest** in Q3 |\n  | Support | r:48 | r:1,204 | see [t](streamdown:incomplete-link) |"
     },
     {
       "name": "export",
       "at": 856,
-      "roles": "#2 How the nightly export works\np The export runs every night at **02:00 UTC** and writes one file per team. See [the export spec](https://example.com/docs/export_v2) for its fields, and [Comma-separated values](https://en.wikipedia.org/wiki/Comma-separated_values_(format)) for the format itself. It follows **[RFC 4180](https://www.rfc-editor.org/rfc/rfc4180)**, as most tools do, and writes `snake_case` headers such as `team_id` and `opened_at`.\np A few things are *not* exported: drafts, ~~archived teams~~ (they moved to cold storage in March), and anything marked *private*.\ntable\n  | Team | r:Open | r:Closed | Note |\n  | Sales | r:12 | r:340 | **busiest** in Q3 |\n  | Support | r:48 | r:1,204 | see [the queue](https://example.com/queue) |\n  | Platform | r:3 | r:87 | `infra_*` jobs only |\np To run it by hand:\ncode  [download copy] off"
+      "roles": "#2 How the nightly export works\np The export runs every night at **02:00 UTC** and writes one file per team. See [the export spec](https://example.com/docs/export_v2) for its fields, and [Comma-separated values](https://en.wikipedia.org/wiki/Comma-separated_values_(format)) for the format itself. It follows **[RFC 4180](https://www.rfc-editor.org/rfc/rfc4180)**, as most tools do, and writes `snake_case` headers such as `team_id` and `opened_at`.\np A few things are *not* exported: drafts, ~~archived teams~~ (they moved to cold storage in March), and anything marked *private*.\ntable [copy download] off\n  | Team | r:Open | r:Closed | Note |\n  | Sales | r:12 | r:340 | **busiest** in Q3 |\n  | Support | r:48 | r:1,204 | see [the queue](https://example.com/queue) |\n  | Platform | r:3 | r:87 | `infra_*` jobs only |\np To run it by hand:\ncode  [download copy] off"
     },
     {
       "name": "export",
       "at": 963,
-      "roles": "#2 How the nightly export works\np The export runs every night at **02:00 UTC** and writes one file per team. See [the export spec](https://example.com/docs/export_v2) for its fields, and [Comma-separated values](https://en.wikipedia.org/wiki/Comma-separated_values_(format)) for the format itself. It follows **[RFC 4180](https://www.rfc-editor.org/rfc/rfc4180)**, as most tools do, and writes `snake_case` headers such as `team_id` and `opened_at`.\np A few things are *not* exported: drafts, ~~archived teams~~ (they moved to cold storage in March), and anything marked *private*.\ntable\n  | Team | r:Open | r:Closed | Note |\n  | Sales | r:12 | r:340 | **busiest** in Q3 |\n  | Support | r:48 | r:1,204 | see [the queue](https://example.com/queue) |\n  | Platform | r:3 | r:87 | `infra_*` jobs only |\np To run it by hand:\ncode bash export TEAM_ID=core_data ./bin/export --team \"$TEAM_ID\" --since 2026-01-01 > out.csv [download copy] off\np Then check t"
+      "roles": "#2 How the nightly export works\np The export runs every night at **02:00 UTC** and writes one file per team. See [the export spec](https://example.com/docs/export_v2) for its fields, and [Comma-separated values](https://en.wikipedia.org/wiki/Comma-separated_values_(format)) for the format itself. It follows **[RFC 4180](https://www.rfc-editor.org/rfc/rfc4180)**, as most tools do, and writes `snake_case` headers such as `team_id` and `opened_at`.\np A few things are *not* exported: drafts, ~~archived teams~~ (they moved to cold storage in March), and anything marked *private*.\ntable [copy download] off\n  | Team | r:Open | r:Closed | Note |\n  | Sales | r:12 | r:340 | **busiest** in Q3 |\n  | Support | r:48 | r:1,204 | see [the queue](https://example.com/queue) |\n  | Platform | r:3 | r:87 | `infra_*` jobs only |\np To run it by hand:\ncode bash export TEAM_ID=core_data ./bin/export --team \"$TEAM_ID\" --since 2026-01-01 > out.csv [download copy] off\np Then check t"
     },
     {
       "name": "export",
       "at": 1070,
-      "roles": "#2 How the nightly export works\np The export runs every night at **02:00 UTC** and writes one file per team. See [the export spec](https://example.com/docs/export_v2) for its fields, and [Comma-separated values](https://en.wikipedia.org/wiki/Comma-separated_values_(format)) for the format itself. It follows **[RFC 4180](https://www.rfc-editor.org/rfc/rfc4180)**, as most tools do, and writes `snake_case` headers such as `team_id` and `opened_at`.\np A few things are *not* exported: drafts, ~~archived teams~~ (they moved to cold storage in March), and anything marked *private*.\ntable\n  | Team | r:Open | r:Closed | Note |\n  | Sales | r:12 | r:340 | **busiest** in Q3 |\n  | Support | r:48 | r:1,204 | see [the queue](https://example.com/queue) |\n  | Platform | r:3 | r:87 | `infra_*` jobs only |\np To run it by hand:\ncode bash export TEAM_ID=core_data ./bin/export --team \"$TEAM_ID\" --since 2026-01-01 > out.csv [download copy] off\np Then check the row count with `wc -l out.csv`; it should match the dashboard[^1]. If it does not, the job's log is at h"
+      "roles": "#2 How the nightly export works\np The export runs every night at **02:00 UTC** and writes one file per team. See [the export spec](https://example.com/docs/export_v2) for its fields, and [Comma-separated values](https://en.wikipedia.org/wiki/Comma-separated_values_(format)) for the format itself. It follows **[RFC 4180](https://www.rfc-editor.org/rfc/rfc4180)**, as most tools do, and writes `snake_case` headers such as `team_id` and `opened_at`.\np A few things are *not* exported: drafts, ~~archived teams~~ (they moved to cold storage in March), and anything marked *private*.\ntable [copy download] off\n  | Team | r:Open | r:Closed | Note |\n  | Sales | r:12 | r:340 | **busiest** in Q3 |\n  | Support | r:48 | r:1,204 | see [the queue](https://example.com/queue) |\n  | Platform | r:3 | r:87 | `infra_*` jobs only |\np To run it by hand:\ncode bash export TEAM_ID=core_data ./bin/export --team \"$TEAM_ID\" --since 2026-01-01 > out.csv [download copy] off\np Then check the row count with `wc -l out.csv`; it should match the dashboard[^1]. If it does not, the job's log is at h"
     },
     {
       "name": "export",
       "at": 1177,
-      "roles": "#2 How the nightly export works\np The export runs every night at **02:00 UTC** and writes one file per team. See [the export spec](https://example.com/docs/export_v2) for its fields, and [Comma-separated values](https://en.wikipedia.org/wiki/Comma-separated_values_(format)) for the format itself. It follows **[RFC 4180](https://www.rfc-editor.org/rfc/rfc4180)**, as most tools do, and writes `snake_case` headers such as `team_id` and `opened_at`.\np A few things are *not* exported: drafts, ~~archived teams~~ (they moved to cold storage in March), and anything marked *private*.\ntable\n  | Team | r:Open | r:Closed | Note |\n  | Sales | r:12 | r:340 | **busiest** in Q3 |\n  | Support | r:48 | r:1,204 | see [the queue](https://example.com/queue) |\n  | Platform | r:3 | r:87 | `infra_*` jobs only |\np To run it by hand:\ncode bash export TEAM_ID=core_data ./bin/export --team \"$TEAM_ID\" --since 2026-01-01 > out.csv [download copy] off\np Then check the row count with `wc -l out.csv`; it should match the dashboard^1. If it does not, the job's log is at [https://logs.example.com/export](https://logs.example.com/export) and the on-call rota is in [the wiki][rota].\nnotes\n  li\n    p The dashboard counts clo ↩"
+      "roles": "#2 How the nightly export works\np The export runs every night at **02:00 UTC** and writes one file per team. See [the export spec](https://example.com/docs/export_v2) for its fields, and [Comma-separated values](https://en.wikipedia.org/wiki/Comma-separated_values_(format)) for the format itself. It follows **[RFC 4180](https://www.rfc-editor.org/rfc/rfc4180)**, as most tools do, and writes `snake_case` headers such as `team_id` and `opened_at`.\np A few things are *not* exported: drafts, ~~archived teams~~ (they moved to cold storage in March), and anything marked *private*.\ntable [copy download] off\n  | Team | r:Open | r:Closed | Note |\n  | Sales | r:12 | r:340 | **busiest** in Q3 |\n  | Support | r:48 | r:1,204 | see [the queue](https://example.com/queue) |\n  | Platform | r:3 | r:87 | `infra_*` jobs only |\np To run it by hand:\ncode bash export TEAM_ID=core_data ./bin/export --team \"$TEAM_ID\" --since 2026-01-01 > out.csv [download copy] off\np Then check the row count with `wc -l out.csv`; it should match the dashboard^1. If it does not, the job's log is at [https://logs.example.com/export](https://logs.example.com/export) and the on-call rota is in [the wiki][rota].\nnotes\n  li\n    p The dashboard counts clo ↩"
     },
     {
       "name": "export",
       "at": 1282,
-      "roles": "#2 How the nightly export works\np The export runs every night at **02:00 UTC** and writes one file per team. See [the export spec](https://example.com/docs/export_v2) for its fields, and [Comma-separated values](https://en.wikipedia.org/wiki/Comma-separated_values_(format)) for the format itself. It follows **[RFC 4180](https://www.rfc-editor.org/rfc/rfc4180)**, as most tools do, and writes `snake_case` headers such as `team_id` and `opened_at`.\np A few things are *not* exported: drafts, ~~archived teams~~ (they moved to cold storage in March), and anything marked *private*.\ntable\n  | Team | r:Open | r:Closed | Note |\n  | Sales | r:12 | r:340 | **busiest** in Q3 |\n  | Support | r:48 | r:1,204 | see [the queue](https://example.com/queue) |\n  | Platform | r:3 | r:87 | `infra_*` jobs only |\np To run it by hand:\ncode bash export TEAM_ID=core_data ./bin/export --team \"$TEAM_ID\" --since 2026-01-01 > out.csv [download copy]\np Then check the row count with `wc -l out.csv`; it should match the dashboard^1. If it does not, the job's log is at [https://logs.example.com/export](https://logs.example.com/export) and the on-call rota is in [the wiki](https://wiki.example.com/rota).\nnotes\n  li\n    p The dashboard counts closed tickets only, so subtract the open ones first. ↩"
+      "roles": "#2 How the nightly export works\np The export runs every night at **02:00 UTC** and writes one file per team. See [the export spec](https://example.com/docs/export_v2) for its fields, and [Comma-separated values](https://en.wikipedia.org/wiki/Comma-separated_values_(format)) for the format itself. It follows **[RFC 4180](https://www.rfc-editor.org/rfc/rfc4180)**, as most tools do, and writes `snake_case` headers such as `team_id` and `opened_at`.\np A few things are *not* exported: drafts, ~~archived teams~~ (they moved to cold storage in March), and anything marked *private*.\ntable [copy download]\n  | Team | r:Open | r:Closed | Note |\n  | Sales | r:12 | r:340 | **busiest** in Q3 |\n  | Support | r:48 | r:1,204 | see [the queue](https://example.com/queue) |\n  | Platform | r:3 | r:87 | `infra_*` jobs only |\np To run it by hand:\ncode bash export TEAM_ID=core_data ./bin/export --team \"$TEAM_ID\" --since 2026-01-01 > out.csv [download copy]\np Then check the row count with `wc -l out.csv`; it should match the dashboard^1. If it does not, the job's log is at [https://logs.example.com/export](https://logs.example.com/export) and the on-call rota is in [the wiki](https://wiki.example.com/rota).\nnotes\n  li\n    p The dashboard counts closed tickets only, so subtract the open ones first. ↩"
     },
     {
       "name": "onboarding",
@@ -249,27 +249,27 @@
     {
       "name": "cjk",
       "at": 178,
-      "roles": "#2 季度总结\np 本季度的收入增长了 **12%**，主要来自*企业客户*。详细数据见[财务报告](https://example.com/report)。\ntable\n  | 地区 | r:收入（万元） | r:增长 |\n  | 华东 | r:1,240 | r:**+15%** |\n  | 华南 | r:860 | r:+8% |\n  | 海外 | r:430 | r: |"
+      "roles": "#2 季度总结\np 本季度的收入增长了 **12%**，主要来自*企业客户*。详细数据见[财务报告](https://example.com/report)。\ntable [copy download] off\n  | 地区 | r:收入（万元） | r:增长 |\n  | 华东 | r:1,240 | r:**+15%** |\n  | 华南 | r:860 | r:+8% |\n  | 海外 | r:430 | r: |"
     },
     {
       "name": "cjk",
       "at": 267,
-      "roles": "#2 季度总结\np 本季度的收入增长了 **12%**，主要来自*企业客户*。详细数据见[财务报告](https://example.com/report)。\ntable\n  | 地区 | r:收入（万元） | r:增长 |\n  | 华东 | r:1,240 | r:**+15%** |\n  | 华南 | r:860 | r:+8% |\n  | 海外 | r:430 | r:~~-2%~~ +3% |\np 下一步：\nol\n  li\n    p 扩大华南的销售团队。\n  li\n    p 在海外市场推出`v2`版本。\n  li\n    p 温度控制在20~25°C之间，湿度40~60%。\n#2 日"
+      "roles": "#2 季度总结\np 本季度的收入增长了 **12%**，主要来自*企业客户*。详细数据见[财务报告](https://example.com/report)。\ntable [copy download] off\n  | 地区 | r:收入（万元） | r:增长 |\n  | 华东 | r:1,240 | r:**+15%** |\n  | 华南 | r:860 | r:+8% |\n  | 海外 | r:430 | r:~~-2%~~ +3% |\np 下一步：\nol\n  li\n    p 扩大华南的销售团队。\n  li\n    p 在海外市场推出`v2`版本。\n  li\n    p 温度控制在20~25°C之间，湿度40~60%。\n#2 日"
     },
     {
       "name": "cjk",
       "at": 356,
-      "roles": "#2 季度总结\np 本季度的收入增长了 **12%**，主要来自*企业客户*。详细数据见[财务报告](https://example.com/report)。\ntable\n  | 地区 | r:收入（万元） | r:增长 |\n  | 华东 | r:1,240 | r:**+15%** |\n  | 华南 | r:860 | r:+8% |\n  | 海外 | r:430 | r:~~-2%~~ +3% |\np 下一步：\nol\n  li\n    p 扩大华南的销售团队。\n  li\n    p 在海外市场推出`v2`版本。\n  li\n    p 温度控制在20~25°C之间，湿度40~60%。\n#2 日本語のまとめ\np 今四半期は**新規顧客**が増えました。詳しくは[こちら](https://example.com/ja)をご覧ください。\nul\n  li\n    p 重要なポイント：*サポートの改善*"
+      "roles": "#2 季度总结\np 本季度的收入增长了 **12%**，主要来自*企业客户*。详细数据见[财务报告](https://example.com/report)。\ntable [copy download] off\n  | 地区 | r:收入（万元） | r:增长 |\n  | 华东 | r:1,240 | r:**+15%** |\n  | 华南 | r:860 | r:+8% |\n  | 海外 | r:430 | r:~~-2%~~ +3% |\np 下一步：\nol\n  li\n    p 扩大华南的销售团队。\n  li\n    p 在海外市场推出`v2`版本。\n  li\n    p 温度控制在20~25°C之间，湿度40~60%。\n#2 日本語のまとめ\np 今四半期は**新規顧客**が増えました。詳しくは[こちら](https://example.com/ja)をご覧ください。\nul\n  li\n    p 重要なポイント：*サポートの改善*"
     },
     {
       "name": "cjk",
       "at": 445,
-      "roles": "#2 季度总结\np 本季度的收入增长了 **12%**，主要来自*企业客户*。详细数据见[财务报告](https://example.com/report)。\ntable\n  | 地区 | r:收入（万元） | r:增长 |\n  | 华东 | r:1,240 | r:**+15%** |\n  | 华南 | r:860 | r:+8% |\n  | 海外 | r:430 | r:~~-2%~~ +3% |\np 下一步：\nol\n  li\n    p 扩大华南的销售团队。\n  li\n    p 在海外市场推出`v2`版本。\n  li\n    p 温度控制在20~25°C之间，湿度40~60%。\n#2 日本語のまとめ\np 今四半期は**新規顧客**が増えました。詳しくは[こちら](https://example.com/ja)をご覧ください。\nul\n  li\n    p 重要なポイント：*サポートの改善*\n  li\n    p 次のステップ：`deploy --region jp`を実行する\n  li\n    p 注意：**本番環境**では慎重に\nquote\n  p 「品質が第一」というのが今期のテーマでした。\np 以上です。ご"
+      "roles": "#2 季度总结\np 本季度的收入增长了 **12%**，主要来自*企业客户*。详细数据见[财务报告](https://example.com/report)。\ntable [copy download] off\n  | 地区 | r:收入（万元） | r:增长 |\n  | 华东 | r:1,240 | r:**+15%** |\n  | 华南 | r:860 | r:+8% |\n  | 海外 | r:430 | r:~~-2%~~ +3% |\np 下一步：\nol\n  li\n    p 扩大华南的销售团队。\n  li\n    p 在海外市场推出`v2`版本。\n  li\n    p 温度控制在20~25°C之间，湿度40~60%。\n#2 日本語のまとめ\np 今四半期は**新規顧客**が増えました。詳しくは[こちら](https://example.com/ja)をご覧ください。\nul\n  li\n    p 重要なポイント：*サポートの改善*\n  li\n    p 次のステップ：`deploy --region jp`を実行する\n  li\n    p 注意：**本番環境**では慎重に\nquote\n  p 「品質が第一」というのが今期のテーマでした。\np 以上です。ご"
     },
     {
       "name": "cjk",
       "at": 461,
-      "roles": "#2 季度总结\np 本季度的收入增长了 **12%**，主要来自*企业客户*。详细数据见[财务报告](https://example.com/report)。\ntable\n  | 地区 | r:收入（万元） | r:增长 |\n  | 华东 | r:1,240 | r:**+15%** |\n  | 华南 | r:860 | r:+8% |\n  | 海外 | r:430 | r:~~-2%~~ +3% |\np 下一步：\nol\n  li\n    p 扩大华南的销售团队。\n  li\n    p 在海外市场推出`v2`版本。\n  li\n    p 温度控制在20~~25°C之间，湿度40~~60%。\n#2 日本語のまとめ\np 今四半期は**新規顧客**が増えました。詳しくは[こちら](https://example.com/ja)をご覧ください。\nul\n  li\n    p 重要なポイント：*サポートの改善*\n  li\n    p 次のステップ：`deploy --region jp`を実行する\n  li\n    p 注意：**本番環境**では慎重に\nquote\n  p 「品質が第一」というのが今期のテーマでした。\np 以上です。ご質問があればお知らせください。"
+      "roles": "#2 季度总结\np 本季度的收入增长了 **12%**，主要来自*企业客户*。详细数据见[财务报告](https://example.com/report)。\ntable [copy download]\n  | 地区 | r:收入（万元） | r:增长 |\n  | 华东 | r:1,240 | r:**+15%** |\n  | 华南 | r:860 | r:+8% |\n  | 海外 | r:430 | r:~~-2%~~ +3% |\np 下一步：\nol\n  li\n    p 扩大华南的销售团队。\n  li\n    p 在海外市场推出`v2`版本。\n  li\n    p 温度控制在20~~25°C之间，湿度40~~60%。\n#2 日本語のまとめ\np 今四半期は**新規顧客**が増えました。詳しくは[こちら](https://example.com/ja)をご覧ください。\nul\n  li\n    p 重要なポイント：*サポートの改善*\n  li\n    p 次のステップ：`deploy --region jp`を実行する\n  li\n    p 注意：**本番環境**では慎重に\nquote\n  p 「品質が第一」というのが今期のテーマでした。\np 以上です。ご質問があればお知らせください。"
     },
     {
       "name": "rtl",
@@ -299,12 +299,12 @@
     {
       "name": "rtl",
       "at": 534,
-      "roles": "#2 ملخص الاجتماع\np ناقش الفريق **ثلاث نقاط** رئيسية اليوم. التفاصيل الكاملة في [محضر الاجتماع](https://example.com/minutes).\nol\n  li\n    p إطلاق الإصدار `2.4` يوم الخميس.\n  li\n    p تحسين *سرعة الصفحة* بنسبة 30%.\n  li\n    p مراجعة [سياسة الخصوصية](https://example.com/privacy) قبل نهاية الشهر.\nul\n  li [x]\n    p إرسال الدعوات\n  li [ ]\n    p حجز القاعة\n#2 סיכום בעברית\np הצוות סיכם על **מועד השחרור** ועל *בדיקות נוספות*. ראו את [המסמך המלא](https://example.com/he).\ntable\n  | משימה | אחראי | סטטוס |\n  | בדיקות | דנה | **בתהליך** |\n  | תיעוד | יוסי | הושלם |\ncode json { \"r [download copy] off"
+      "roles": "#2 ملخص الاجتماع\np ناقش الفريق **ثلاث نقاط** رئيسية اليوم. التفاصيل الكاملة في [محضر الاجتماع](https://example.com/minutes).\nol\n  li\n    p إطلاق الإصدار `2.4` يوم الخميس.\n  li\n    p تحسين *سرعة الصفحة* بنسبة 30%.\n  li\n    p مراجعة [سياسة الخصوصية](https://example.com/privacy) قبل نهاية الشهر.\nul\n  li [x]\n    p إرسال الدعوات\n  li [ ]\n    p حجز القاعة\n#2 סיכום בעברית\np הצוות סיכם על **מועד השחרור** ועל *בדיקות נוספות*. ראו את [המסמך המלא](https://example.com/he).\ntable [copy download] off\n  | משימה | אחראי | סטטוס |\n  | בדיקות | דנה | **בתהליך** |\n  | תיעוד | יוסי | הושלם |\ncode json { \"r [download copy] off"
     },
     {
       "name": "rtl",
       "at": 587,
-      "roles": "#2 ملخص الاجتماع\np ناقش الفريق **ثلاث نقاط** رئيسية اليوم. التفاصيل الكاملة في [محضر الاجتماع](https://example.com/minutes).\nol\n  li\n    p إطلاق الإصدار `2.4` يوم الخميس.\n  li\n    p تحسين *سرعة الصفحة* بنسبة 30%.\n  li\n    p مراجعة [سياسة الخصوصية](https://example.com/privacy) قبل نهاية الشهر.\nul\n  li [x]\n    p إرسال الدعوات\n  li [ ]\n    p حجز القاعة\n#2 סיכום בעברית\np הצוות סיכם על **מועד השחרור** ועל *בדיקות נוספות*. ראו את [המסמך המלא](https://example.com/he).\ntable\n  | משימה | אחראי | סטטוס |\n  | בדיקות | דנה | **בתהליך** |\n  | תיעוד | יוסי | הושלם |\ncode json { \"release\": \"2.4\", \"locale\": \"he-IL\" } [download copy]\np תודה לכולם!"
+      "roles": "#2 ملخص الاجتماع\np ناقش الفريق **ثلاث نقاط** رئيسية اليوم. التفاصيل الكاملة في [محضر الاجتماع](https://example.com/minutes).\nol\n  li\n    p إطلاق الإصدار `2.4` يوم الخميس.\n  li\n    p تحسين *سرعة الصفحة* بنسبة 30%.\n  li\n    p مراجعة [سياسة الخصوصية](https://example.com/privacy) قبل نهاية الشهر.\nul\n  li [x]\n    p إرسال الدعوات\n  li [ ]\n    p حجز القاعة\n#2 סיכום בעברית\np הצוות סיכם על **מועד השחרור** ועל *בדיקות נוספות*. ראו את [המסמך המלא](https://example.com/he).\ntable [copy download]\n  | משימה | אחראי | סטטוס |\n  | בדיקות | דנה | **בתהליך** |\n  | תיעוד | יוסי | הושלם |\ncode json { \"release\": \"2.4\", \"locale\": \"he-IL\" } [download copy]\np תודה לכולם!"
     },
     {
       "name": "emoji",
@@ -324,32 +324,32 @@
     {
       "name": "emoji",
       "at": 356,
-      "roles": "#1 🚀 Launch plan\np We're **almost there** 🎉. Here's what's left before Friday:\nul\n  li\n    p ✅ Landing page copy (thanks, design team 🙌)\n  li\n    p ✅ Pricing table\n  li\n    p ⏳ Load test — target is **10k rps** 🔥\n  li\n    p ❌ Status page (blocked on DNS 😬)\n#2 📊 Metrics so far\ntable\n  | Metric | r:Value | c:Trend |\n  | Sign-ups | r:1,284 | c:📈 |\n  | Churn | r:2.1% | c:📉 |\n  | NPS | r:61 | c:➡️ |"
+      "roles": "#1 🚀 Launch plan\np We're **almost there** 🎉. Here's what's left before Friday:\nul\n  li\n    p ✅ Landing page copy (thanks, design team 🙌)\n  li\n    p ✅ Pricing table\n  li\n    p ⏳ Load test — target is **10k rps** 🔥\n  li\n    p ❌ Status page (blocked on DNS 😬)\n#2 📊 Metrics so far\ntable [copy download] off\n  | Metric | r:Value | c:Trend |\n  | Sign-ups | r:1,284 | c:📈 |\n  | Churn | r:2.1% | c:📉 |\n  | NPS | r:61 | c:➡️ |"
     },
     {
       "name": "emoji",
       "at": 445,
-      "roles": "#1 🚀 Launch plan\np We're **almost there** 🎉. Here's what's left before Friday:\nul\n  li\n    p ✅ Landing page copy (thanks, design team 🙌)\n  li\n    p ✅ Pricing table\n  li\n    p ⏳ Load test — target is **10k rps** 🔥\n  li\n    p ❌ Status page (blocked on DNS 😬)\n#2 📊 Metrics so far\ntable\n  | Metric | r:Value | c:Trend |\n  | Sign-ups | r:1,284 | c:📈 |\n  | Churn | r:2.1% | c:📉 |\n  | NPS | r:61 | c:➡️ |\nquote\n  p 💡 *Remember:* a launch is a beginning, not an end. 🌱\n#2 👩‍💻 For engineers\np Run"
+      "roles": "#1 🚀 Launch plan\np We're **almost there** 🎉. Here's what's left before Friday:\nul\n  li\n    p ✅ Landing page copy (thanks, design team 🙌)\n  li\n    p ✅ Pricing table\n  li\n    p ⏳ Load test — target is **10k rps** 🔥\n  li\n    p ❌ Status page (blocked on DNS 😬)\n#2 📊 Metrics so far\ntable [copy download] off\n  | Metric | r:Value | c:Trend |\n  | Sign-ups | r:1,284 | c:📈 |\n  | Churn | r:2.1% | c:📉 |\n  | NPS | r:61 | c:➡️ |\nquote\n  p 💡 *Remember:* a launch is a beginning, not an end. 🌱\n#2 👩‍💻 For engineers\np Run"
     },
     {
       "name": "emoji",
       "at": 534,
-      "roles": "#1 🚀 Launch plan\np We're **almost there** 🎉. Here's what's left before Friday:\nul\n  li\n    p ✅ Landing page copy (thanks, design team 🙌)\n  li\n    p ✅ Pricing table\n  li\n    p ⏳ Load test — target is **10k rps** 🔥\n  li\n    p ❌ Status page (blocked on DNS 😬)\n#2 📊 Metrics so far\ntable\n  | Metric | r:Value | c:Trend |\n  | Sign-ups | r:1,284 | c:📈 |\n  | Churn | r:2.1% | c:📉 |\n  | NPS | r:61 | c:➡️ |\nquote\n  p 💡 *Remember:* a launch is a beginning, not an end. 🌱\n#2 👩‍💻 For engineers\np Run `npm run launch -- --dry-run` first 🧪, then the real thing. If anything breaks, ping 🧑"
+      "roles": "#1 🚀 Launch plan\np We're **almost there** 🎉. Here's what's left before Friday:\nul\n  li\n    p ✅ Landing page copy (thanks, design team 🙌)\n  li\n    p ✅ Pricing table\n  li\n    p ⏳ Load test — target is **10k rps** 🔥\n  li\n    p ❌ Status page (blocked on DNS 😬)\n#2 📊 Metrics so far\ntable [copy download] off\n  | Metric | r:Value | c:Trend |\n  | Sign-ups | r:1,284 | c:📈 |\n  | Churn | r:2.1% | c:📉 |\n  | NPS | r:61 | c:➡️ |\nquote\n  p 💡 *Remember:* a launch is a beginning, not an end. 🌱\n#2 👩‍💻 For engineers\np Run `npm run launch -- --dry-run` first 🧪, then the real thing. If anything breaks, ping 🧑"
     },
     {
       "name": "emoji",
       "at": 623,
-      "roles": "#1 🚀 Launch plan\np We're **almost there** 🎉. Here's what's left before Friday:\nul\n  li\n    p ✅ Landing page copy (thanks, design team 🙌)\n  li\n    p ✅ Pricing table\n  li\n    p ⏳ Load test — target is **10k rps** 🔥\n  li\n    p ❌ Status page (blocked on DNS 😬)\n#2 📊 Metrics so far\ntable\n  | Metric | r:Value | c:Trend |\n  | Sign-ups | r:1,284 | c:📈 |\n  | Churn | r:2.1% | c:📉 |\n  | NPS | r:61 | c:➡️ |\nquote\n  p 💡 *Remember:* a launch is a beginning, not an end. 🌱\n#2 👩‍💻 For engineers\np Run `npm run launch -- --dry-run` first 🧪, then the real thing. If anything breaks, ping 🧑‍🚒 [the on-call](https://example.com/oncall) right away.\np Family emoji like 👨‍👩‍👧‍👦"
+      "roles": "#1 🚀 Launch plan\np We're **almost there** 🎉. Here's what's left before Friday:\nul\n  li\n    p ✅ Landing page copy (thanks, design team 🙌)\n  li\n    p ✅ Pricing table\n  li\n    p ⏳ Load test — target is **10k rps** 🔥\n  li\n    p ❌ Status page (blocked on DNS 😬)\n#2 📊 Metrics so far\ntable [copy download] off\n  | Metric | r:Value | c:Trend |\n  | Sign-ups | r:1,284 | c:📈 |\n  | Churn | r:2.1% | c:📉 |\n  | NPS | r:61 | c:➡️ |\nquote\n  p 💡 *Remember:* a launch is a beginning, not an end. 🌱\n#2 👩‍💻 For engineers\np Run `npm run launch -- --dry-run` first 🧪, then the real thing. If anything breaks, ping 🧑‍🚒 [the on-call](https://example.com/oncall) right away.\np Family emoji like 👨‍👩‍👧‍👦"
     },
     {
       "name": "emoji",
       "at": 712,
-      "roles": "#1 🚀 Launch plan\np We're **almost there** 🎉. Here's what's left before Friday:\nul\n  li\n    p ✅ Landing page copy (thanks, design team 🙌)\n  li\n    p ✅ Pricing table\n  li\n    p ⏳ Load test — target is **10k rps** 🔥\n  li\n    p ❌ Status page (blocked on DNS 😬)\n#2 📊 Metrics so far\ntable\n  | Metric | r:Value | c:Trend |\n  | Sign-ups | r:1,284 | c:📈 |\n  | Churn | r:2.1% | c:📉 |\n  | NPS | r:61 | c:➡️ |\nquote\n  p 💡 *Remember:* a launch is a beginning, not an end. 🌱\n#2 👩‍💻 For engineers\np Run `npm run launch -- --dry-run` first 🧪, then the real thing. If anything breaks, ping 🧑‍🚒 [the on-call](https://example.com/oncall) right away.\np Family emoji like 👨‍👩‍👧‍👦 and flags like 🇳🇱 🇯🇵 are single characters to a reader, even though they are many cod"
+      "roles": "#1 🚀 Launch plan\np We're **almost there** 🎉. Here's what's left before Friday:\nul\n  li\n    p ✅ Landing page copy (thanks, design team 🙌)\n  li\n    p ✅ Pricing table\n  li\n    p ⏳ Load test — target is **10k rps** 🔥\n  li\n    p ❌ Status page (blocked on DNS 😬)\n#2 📊 Metrics so far\ntable [copy download] off\n  | Metric | r:Value | c:Trend |\n  | Sign-ups | r:1,284 | c:📈 |\n  | Churn | r:2.1% | c:📉 |\n  | NPS | r:61 | c:➡️ |\nquote\n  p 💡 *Remember:* a launch is a beginning, not an end. 🌱\n#2 👩‍💻 For engineers\np Run `npm run launch -- --dry-run` first 🧪, then the real thing. If anything breaks, ping 🧑‍🚒 [the on-call](https://example.com/oncall) right away.\np Family emoji like 👨‍👩‍👧‍👦 and flags like 🇳🇱 🇯🇵 are single characters to a reader, even though they are many cod"
     },
     {
       "name": "emoji",
       "at": 774,
-      "roles": "#1 🚀 Launch plan\np We're **almost there** 🎉. Here's what's left before Friday:\nul\n  li\n    p ✅ Landing page copy (thanks, design team 🙌)\n  li\n    p ✅ Pricing table\n  li\n    p ⏳ Load test — target is **10k rps** 🔥\n  li\n    p ❌ Status page (blocked on DNS 😬)\n#2 📊 Metrics so far\ntable\n  | Metric | r:Value | c:Trend |\n  | Sign-ups | r:1,284 | c:📈 |\n  | Churn | r:2.1% | c:📉 |\n  | NPS | r:61 | c:➡️ |\nquote\n  p 💡 *Remember:* a launch is a beginning, not an end. 🌱\n#2 👩‍💻 For engineers\np Run `npm run launch -- --dry-run` first 🧪, then the real thing. If anything breaks, ping 🧑‍🚒 [the on-call](https://example.com/oncall) right away.\np Family emoji like 👨‍👩‍👧‍👦 and flags like 🇳🇱 🇯🇵 are single characters to a reader, even though they are many code units. Skin tones too: 👍🏽.\np See you on the other side! 🥳"
+      "roles": "#1 🚀 Launch plan\np We're **almost there** 🎉. Here's what's left before Friday:\nul\n  li\n    p ✅ Landing page copy (thanks, design team 🙌)\n  li\n    p ✅ Pricing table\n  li\n    p ⏳ Load test — target is **10k rps** 🔥\n  li\n    p ❌ Status page (blocked on DNS 😬)\n#2 📊 Metrics so far\ntable [copy download]\n  | Metric | r:Value | c:Trend |\n  | Sign-ups | r:1,284 | c:📈 |\n  | Churn | r:2.1% | c:📉 |\n  | NPS | r:61 | c:➡️ |\nquote\n  p 💡 *Remember:* a launch is a beginning, not an end. 🌱\n#2 👩‍💻 For engineers\np Run `npm run launch -- --dry-run` first 🧪, then the real thing. If anything breaks, ping 🧑‍🚒 [the on-call](https://example.com/oncall) right away.\np Family emoji like 👨‍👩‍👧‍👦 and flags like 🇳🇱 🇯🇵 are single characters to a reader, even though they are many code units. Skin tones too: 👍🏽.\np See you on the other side! 🥳"
     },
     {
       "name": "policy",
@@ -414,57 +414,57 @@
     {
       "name": "incident",
       "at": 178,
-      "roles": "#2 Incident 2026-11-03: checkout errors\np **Impact:** about 4% of checkouts failed for 37 minutes. No data was lost.\n#3 Timeline (UTC)\ntable\n  | Time | Event |\n  | 14:02 |  |"
+      "roles": "#2 Incident 2026-11-03: checkout errors\np **Impact:** about 4% of checkouts failed for 37 minutes. No data was lost.\n#3 Timeline (UTC)\ntable [copy download] off\n  | Time | Event |\n  | 14:02 |  |"
     },
     {
       "name": "incident",
       "at": 267,
-      "roles": "#2 Incident 2026-11-03: checkout errors\np **Impact:** about 4% of checkouts failed for 37 minutes. No data was lost.\n#3 Timeline (UTC)\ntable\n  | Time | Event |\n  | 14:02 | Deploy `web@8f3a2c1` starts |\n  | 14:09 | Error rate passes 2% ⚠️ |\n  | 14:15 | On-call paged |"
+      "roles": "#2 Incident 2026-11-03: checkout errors\np **Impact:** about 4% of checkouts failed for 37 minutes. No data was lost.\n#3 Timeline (UTC)\ntable [copy download] off\n  | Time | Event |\n  | 14:02 | Deploy `web@8f3a2c1` starts |\n  | 14:09 | Error rate passes 2% ⚠️ |\n  | 14:15 | On-call paged |"
     },
     {
       "name": "incident",
       "at": 356,
-      "roles": "#2 Incident 2026-11-03: checkout errors\np **Impact:** about 4% of checkouts failed for 37 minutes. No data was lost.\n#3 Timeline (UTC)\ntable\n  | Time | Event |\n  | 14:02 | Deploy `web@8f3a2c1` starts |\n  | 14:09 | Error rate passes 2% ⚠️ |\n  | 14:15 | On-call paged; rollback begins |\n  | 14:39 | Error rate back to normal |\n#3 Root cause\np A config key w"
+      "roles": "#2 Incident 2026-11-03: checkout errors\np **Impact:** about 4% of checkouts failed for 37 minutes. No data was lost.\n#3 Timeline (UTC)\ntable [copy download] off\n  | Time | Event |\n  | 14:02 | Deploy `web@8f3a2c1` starts |\n  | 14:09 | Error rate passes 2% ⚠️ |\n  | 14:15 | On-call paged; rollback begins |\n  | 14:39 | Error rate back to normal |\n#3 Root cause\np A config key w"
     },
     {
       "name": "incident",
       "at": 445,
-      "roles": "#2 Incident 2026-11-03: checkout errors\np **Impact:** about 4% of checkouts failed for 37 minutes. No data was lost.\n#3 Timeline (UTC)\ntable\n  | Time | Event |\n  | 14:02 | Deploy `web@8f3a2c1` starts |\n  | 14:09 | Error rate passes 2% ⚠️ |\n  | 14:15 | On-call paged; rollback begins |\n  | 14:39 | Error rate back to normal |\n#3 Root cause\np A config key was renamed from `payment_timeout_ms` to `paymentTimeoutMs`, but one service still read th"
+      "roles": "#2 Incident 2026-11-03: checkout errors\np **Impact:** about 4% of checkouts failed for 37 minutes. No data was lost.\n#3 Timeline (UTC)\ntable [copy download] off\n  | Time | Event |\n  | 14:02 | Deploy `web@8f3a2c1` starts |\n  | 14:09 | Error rate passes 2% ⚠️ |\n  | 14:15 | On-call paged; rollback begins |\n  | 14:39 | Error rate back to normal |\n#3 Root cause\np A config key was renamed from `payment_timeout_ms` to `paymentTimeoutMs`, but one service still read th"
     },
     {
       "name": "incident",
       "at": 534,
-      "roles": "#2 Incident 2026-11-03: checkout errors\np **Impact:** about 4% of checkouts failed for 37 minutes. No data was lost.\n#3 Timeline (UTC)\ntable\n  | Time | Event |\n  | 14:02 | Deploy `web@8f3a2c1` starts |\n  | 14:09 | Error rate passes 2% ⚠️ |\n  | 14:15 | On-call paged; rollback begins |\n  | 14:39 | Error rate back to normal |\n#3 Root cause\np A config key was renamed from `payment_timeout_ms` to `paymentTimeoutMs`, but one service still read the old name and fell back to a **0 ms** timeout:\ncode go timeout := cfg.Int(\"payment_timeou [download copy] off"
+      "roles": "#2 Incident 2026-11-03: checkout errors\np **Impact:** about 4% of checkouts failed for 37 minutes. No data was lost.\n#3 Timeline (UTC)\ntable [copy download] off\n  | Time | Event |\n  | 14:02 | Deploy `web@8f3a2c1` starts |\n  | 14:09 | Error rate passes 2% ⚠️ |\n  | 14:15 | On-call paged; rollback begins |\n  | 14:39 | Error rate back to normal |\n#3 Root cause\np A config key was renamed from `payment_timeout_ms` to `paymentTimeoutMs`, but one service still read the old name and fell back to a **0 ms** timeout:\ncode go timeout := cfg.Int(\"payment_timeou [download copy] off"
     },
     {
       "name": "incident",
       "at": 623,
-      "roles": "#2 Incident 2026-11-03: checkout errors\np **Impact:** about 4% of checkouts failed for 37 minutes. No data was lost.\n#3 Timeline (UTC)\ntable\n  | Time | Event |\n  | 14:02 | Deploy `web@8f3a2c1` starts |\n  | 14:09 | Error rate passes 2% ⚠️ |\n  | 14:15 | On-call paged; rollback begins |\n  | 14:39 | Error rate back to normal |\n#3 Root cause\np A config key was renamed from `payment_timeout_ms` to `paymentTimeoutMs`, but one service still read the old name and fell back to a **0 ms** timeout:\ncode go timeout := cfg.Int(\"payment_timeout_ms\", 0) // should never default to 0 client := payments.New(payments.WithTimeout(time.D [download copy] off"
+      "roles": "#2 Incident 2026-11-03: checkout errors\np **Impact:** about 4% of checkouts failed for 37 minutes. No data was lost.\n#3 Timeline (UTC)\ntable [copy download] off\n  | Time | Event |\n  | 14:02 | Deploy `web@8f3a2c1` starts |\n  | 14:09 | Error rate passes 2% ⚠️ |\n  | 14:15 | On-call paged; rollback begins |\n  | 14:39 | Error rate back to normal |\n#3 Root cause\np A config key was renamed from `payment_timeout_ms` to `paymentTimeoutMs`, but one service still read the old name and fell back to a **0 ms** timeout:\ncode go timeout := cfg.Int(\"payment_timeout_ms\", 0) // should never default to 0 client := payments.New(payments.WithTimeout(time.D [download copy] off"
     },
     {
       "name": "incident",
       "at": 712,
-      "roles": "#2 Incident 2026-11-03: checkout errors\np **Impact:** about 4% of checkouts failed for 37 minutes. No data was lost.\n#3 Timeline (UTC)\ntable\n  | Time | Event |\n  | 14:02 | Deploy `web@8f3a2c1` starts |\n  | 14:09 | Error rate passes 2% ⚠️ |\n  | 14:15 | On-call paged; rollback begins |\n  | 14:39 | Error rate back to normal |\n#3 Root cause\np A config key was renamed from `payment_timeout_ms` to `paymentTimeoutMs`, but one service still read the old name and fell back to a **0 ms** timeout:\ncode go timeout := cfg.Int(\"payment_timeout_ms\", 0) // should never default to 0 client := payments.New(payments.WithTimeout(time.Duration(timeout) * time.Millisecond)) [download copy] off\n#3 What we'll change\nul\n  li [ ]\n    p Fail the deploy w"
+      "roles": "#2 Incident 2026-11-03: checkout errors\np **Impact:** about 4% of checkouts failed for 37 minutes. No data was lost.\n#3 Timeline (UTC)\ntable [copy download] off\n  | Time | Event |\n  | 14:02 | Deploy `web@8f3a2c1` starts |\n  | 14:09 | Error rate passes 2% ⚠️ |\n  | 14:15 | On-call paged; rollback begins |\n  | 14:39 | Error rate back to normal |\n#3 Root cause\np A config key was renamed from `payment_timeout_ms` to `paymentTimeoutMs`, but one service still read the old name and fell back to a **0 ms** timeout:\ncode go timeout := cfg.Int(\"payment_timeout_ms\", 0) // should never default to 0 client := payments.New(payments.WithTimeout(time.Duration(timeout) * time.Millisecond)) [download copy] off\n#3 What we'll change\nul\n  li [ ]\n    p Fail the deploy w"
     },
     {
       "name": "incident",
       "at": 801,
-      "roles": "#2 Incident 2026-11-03: checkout errors\np **Impact:** about 4% of checkouts failed for 37 minutes. No data was lost.\n#3 Timeline (UTC)\ntable\n  | Time | Event |\n  | 14:02 | Deploy `web@8f3a2c1` starts |\n  | 14:09 | Error rate passes 2% ⚠️ |\n  | 14:15 | On-call paged; rollback begins |\n  | 14:39 | Error rate back to normal |\n#3 Root cause\np A config key was renamed from `payment_timeout_ms` to `paymentTimeoutMs`, but one service still read the old name and fell back to a **0 ms** timeout:\ncode go timeout := cfg.Int(\"payment_timeout_ms\", 0) // should never default to 0 client := payments.New(payments.WithTimeout(time.Duration(timeout) * time.Millisecond)) [download copy] off\n#3 What we'll change\nul\n  li [ ]\n    p Fail the deploy when a config key is unknown (owner: *platform*).\n  li [ ]\n    p Add a canary stage that watches th"
+      "roles": "#2 Incident 2026-11-03: checkout errors\np **Impact:** about 4% of checkouts failed for 37 minutes. No data was lost.\n#3 Timeline (UTC)\ntable [copy download] off\n  | Time | Event |\n  | 14:02 | Deploy `web@8f3a2c1` starts |\n  | 14:09 | Error rate passes 2% ⚠️ |\n  | 14:15 | On-call paged; rollback begins |\n  | 14:39 | Error rate back to normal |\n#3 Root cause\np A config key was renamed from `payment_timeout_ms` to `paymentTimeoutMs`, but one service still read the old name and fell back to a **0 ms** timeout:\ncode go timeout := cfg.Int(\"payment_timeout_ms\", 0) // should never default to 0 client := payments.New(payments.WithTimeout(time.Duration(timeout) * time.Millisecond)) [download copy] off\n#3 What we'll change\nul\n  li [ ]\n    p Fail the deploy when a config key is unknown (owner: *platform*).\n  li [ ]\n    p Add a canary stage that watches th"
     },
     {
       "name": "incident",
       "at": 890,
-      "roles": "#2 Incident 2026-11-03: checkout errors\np **Impact:** about 4% of checkouts failed for 37 minutes. No data was lost.\n#3 Timeline (UTC)\ntable\n  | Time | Event |\n  | 14:02 | Deploy `web@8f3a2c1` starts |\n  | 14:09 | Error rate passes 2% ⚠️ |\n  | 14:15 | On-call paged; rollback begins |\n  | 14:39 | Error rate back to normal |\n#3 Root cause\np A config key was renamed from `payment_timeout_ms` to `paymentTimeoutMs`, but one service still read the old name and fell back to a **0 ms** timeout:\ncode go timeout := cfg.Int(\"payment_timeout_ms\", 0) // should never default to 0 client := payments.New(payments.WithTimeout(time.Duration(timeout) * time.Millisecond)) [download copy] off\n#3 What we'll change\nul\n  li [ ]\n    p Fail the deploy when a config key is unknown (owner: *platform*).\n  li [ ]\n    p Add a canary stage that watches the checkout error rate.\n  li [x]\n    p Default every timeout to a sane value, never 0.\np See [the po](streamdown:incomplete-link)"
+      "roles": "#2 Incident 2026-11-03: checkout errors\np **Impact:** about 4% of checkouts failed for 37 minutes. No data was lost.\n#3 Timeline (UTC)\ntable [copy download] off\n  | Time | Event |\n  | 14:02 | Deploy `web@8f3a2c1` starts |\n  | 14:09 | Error rate passes 2% ⚠️ |\n  | 14:15 | On-call paged; rollback begins |\n  | 14:39 | Error rate back to normal |\n#3 Root cause\np A config key was renamed from `payment_timeout_ms` to `paymentTimeoutMs`, but one service still read the old name and fell back to a **0 ms** timeout:\ncode go timeout := cfg.Int(\"payment_timeout_ms\", 0) // should never default to 0 client := payments.New(payments.WithTimeout(time.Duration(timeout) * time.Millisecond)) [download copy] off\n#3 What we'll change\nul\n  li [ ]\n    p Fail the deploy when a config key is unknown (owner: *platform*).\n  li [ ]\n    p Add a canary stage that watches the checkout error rate.\n  li [x]\n    p Default every timeout to a sane value, never 0.\np See [the po](streamdown:incomplete-link)"
     },
     {
       "name": "incident",
       "at": 979,
-      "roles": "#2 Incident 2026-11-03: checkout errors\np **Impact:** about 4% of checkouts failed for 37 minutes. No data was lost.\n#3 Timeline (UTC)\ntable\n  | Time | Event |\n  | 14:02 | Deploy `web@8f3a2c1` starts |\n  | 14:09 | Error rate passes 2% ⚠️ |\n  | 14:15 | On-call paged; rollback begins |\n  | 14:39 | Error rate back to normal |\n#3 Root cause\np A config key was renamed from `payment_timeout_ms` to `paymentTimeoutMs`, but one service still read the old name and fell back to a **0 ms** timeout:\ncode go timeout := cfg.Int(\"payment_timeout_ms\", 0) // should never default to 0 client := payments.New(payments.WithTimeout(time.Duration(timeout) * time.Millisecond)) [download copy] off\n#3 What we'll change\nul\n  li [ ]\n    p Fail the deploy when a config key is unknown (owner: *platform*).\n  li [ ]\n    p Add a canary stage that watches the checkout error rate.\n  li [x]\n    p Default every timeout to a sane value, never 0.\np See [the postmortem doc](https://example.com/pm/2026-11-03) and [the dashboard](streamdown:incomplete-link)"
+      "roles": "#2 Incident 2026-11-03: checkout errors\np **Impact:** about 4% of checkouts failed for 37 minutes. No data was lost.\n#3 Timeline (UTC)\ntable [copy download] off\n  | Time | Event |\n  | 14:02 | Deploy `web@8f3a2c1` starts |\n  | 14:09 | Error rate passes 2% ⚠️ |\n  | 14:15 | On-call paged; rollback begins |\n  | 14:39 | Error rate back to normal |\n#3 Root cause\np A config key was renamed from `payment_timeout_ms` to `paymentTimeoutMs`, but one service still read the old name and fell back to a **0 ms** timeout:\ncode go timeout := cfg.Int(\"payment_timeout_ms\", 0) // should never default to 0 client := payments.New(payments.WithTimeout(time.Duration(timeout) * time.Millisecond)) [download copy] off\n#3 What we'll change\nul\n  li [ ]\n    p Fail the deploy when a config key is unknown (owner: *platform*).\n  li [ ]\n    p Add a canary stage that watches the checkout error rate.\n  li [x]\n    p Default every timeout to a sane value, never 0.\np See [the postmortem doc](https://example.com/pm/2026-11-03) and [the dashboard](streamdown:incomplete-link)"
     },
     {
       "name": "incident",
       "at": 1020,
-      "roles": "#2 Incident 2026-11-03: checkout errors\np **Impact:** about 4% of checkouts failed for 37 minutes. No data was lost.\n#3 Timeline (UTC)\ntable\n  | Time | Event |\n  | 14:02 | Deploy `web@8f3a2c1` starts |\n  | 14:09 | Error rate passes 2% ⚠️ |\n  | 14:15 | On-call paged; rollback begins |\n  | 14:39 | Error rate back to normal |\n#3 Root cause\np A config key was renamed from `payment_timeout_ms` to `paymentTimeoutMs`, but one service still read the old name and fell back to a **0 ms** timeout:\ncode go timeout := cfg.Int(\"payment_timeout_ms\", 0) // should never default to 0 client := payments.New(payments.WithTimeout(time.Duration(timeout) * time.Millisecond)) [download copy]\n#3 What we'll change\nul\n  li [ ]\n    p Fail the deploy when a config key is unknown (owner: *platform*).\n  li [ ]\n    p Add a canary stage that watches the checkout error rate.\n  li [x]\n    p Default every timeout to a sane value, never 0.\np See [the postmortem doc](https://example.com/pm/2026-11-03) and [the dashboard](https://grafana.example.com/d/checkout?from=now-24h&to=now)."
+      "roles": "#2 Incident 2026-11-03: checkout errors\np **Impact:** about 4% of checkouts failed for 37 minutes. No data was lost.\n#3 Timeline (UTC)\ntable [copy download]\n  | Time | Event |\n  | 14:02 | Deploy `web@8f3a2c1` starts |\n  | 14:09 | Error rate passes 2% ⚠️ |\n  | 14:15 | On-call paged; rollback begins |\n  | 14:39 | Error rate back to normal |\n#3 Root cause\np A config key was renamed from `payment_timeout_ms` to `paymentTimeoutMs`, but one service still read the old name and fell back to a **0 ms** timeout:\ncode go timeout := cfg.Int(\"payment_timeout_ms\", 0) // should never default to 0 client := payments.New(payments.WithTimeout(time.Duration(timeout) * time.Millisecond)) [download copy]\n#3 What we'll change\nul\n  li [ ]\n    p Fail the deploy when a config key is unknown (owner: *platform*).\n  li [ ]\n    p Add a canary stage that watches the checkout error rate.\n  li [x]\n    p Default every timeout to a sane value, never 0.\np See [the postmortem doc](https://example.com/pm/2026-11-03) and [the dashboard](https://grafana.example.com/d/checkout?from=now-24h&to=now)."
     },
     {
       "name": "mixed",
@@ -589,27 +589,27 @@
     {
       "name": "a2",
       "at": 178,
-      "roles": "p Sure! Here's a quick comparison of the three plans:\ntable\n  | Plan | r:Price / month | r:Seats | c:Storage | Support |\n  | Starter | r:€9 | r:3 | c:10 GB | Email |"
+      "roles": "p Sure! Here's a quick comparison of the three plans:\ntable [copy download] off\n  | Plan | r:Price / month | r:Seats | c:Storage | Support |\n  | Starter | r:€9 | r:3 | c:10 GB | Email |"
     },
     {
       "name": "a2",
       "at": 267,
-      "roles": "p Sure! Here's a quick comparison of the three plans:\ntable\n  | Plan | r:Price / month | r:Seats | c:Storage | Support |\n  | Starter | r:€9 | r:3 | c:10 GB | Email |\n  | Team | r:€29 | r:10 | c:100 GB | Email and chat |\n  | Business | r:€79 | r:50 | c:1 TB | **24/7 pho** |"
+      "roles": "p Sure! Here's a quick comparison of the three plans:\ntable [copy download] off\n  | Plan | r:Price / month | r:Seats | c:Storage | Support |\n  | Starter | r:€9 | r:3 | c:10 GB | Email |\n  | Team | r:€29 | r:10 | c:100 GB | Email and chat |\n  | Business | r:€79 | r:50 | c:1 TB | **24/7 pho** |"
     },
     {
       "name": "a2",
       "at": 356,
-      "roles": "p Sure! Here's a quick comparison of the three plans:\ntable\n  | Plan | r:Price / month | r:Seats | c:Storage | Support |\n  | Starter | r:€9 | r:3 | c:10 GB | Email |\n  | Team | r:€29 | r:10 | c:100 GB | Email and chat |\n  | Business | r:€79 | r:50 | c:1 TB | **24/7 phone** |\np For a team of six, **Team** is the obvious choice: Starter caps you at three seat"
+      "roles": "p Sure! Here's a quick comparison of the three plans:\ntable [copy download] off\n  | Plan | r:Price / month | r:Seats | c:Storage | Support |\n  | Starter | r:€9 | r:3 | c:10 GB | Email |\n  | Team | r:€29 | r:10 | c:100 GB | Email and chat |\n  | Business | r:€79 | r:50 | c:1 TB | **24/7 phone** |\np For a team of six, **Team** is the obvious choice: Starter caps you at three seat"
     },
     {
       "name": "a2",
       "at": 445,
-      "roles": "p Sure! Here's a quick comparison of the three plans:\ntable\n  | Plan | r:Price / month | r:Seats | c:Storage | Support |\n  | Starter | r:€9 | r:3 | c:10 GB | Email |\n  | Team | r:€29 | r:10 | c:100 GB | Email and chat |\n  | Business | r:€79 | r:50 | c:1 TB | **24/7 phone** |\np For a team of six, **Team** is the obvious choice: Starter caps you at three seats, and Business only pays off once you need more than 100 GB or phone support.\np One cavea"
+      "roles": "p Sure! Here's a quick comparison of the three plans:\ntable [copy download] off\n  | Plan | r:Price / month | r:Seats | c:Storage | Support |\n  | Starter | r:€9 | r:3 | c:10 GB | Email |\n  | Team | r:€29 | r:10 | c:100 GB | Email and chat |\n  | Business | r:€79 | r:50 | c:1 TB | **24/7 phone** |\np For a team of six, **Team** is the obvious choice: Starter caps you at three seats, and Business only pays off once you need more than 100 GB or phone support.\np One cavea"
     },
     {
       "name": "a2",
       "at": 521,
-      "roles": "p Sure! Here's a quick comparison of the three plans:\ntable\n  | Plan | r:Price / month | r:Seats | c:Storage | Support |\n  | Starter | r:€9 | r:3 | c:10 GB | Email |\n  | Team | r:€29 | r:10 | c:100 GB | Email and chat |\n  | Business | r:€79 | r:50 | c:1 TB | **24/7 phone** |\np For a team of six, **Team** is the obvious choice: Starter caps you at three seats, and Business only pays off once you need more than 100 GB or phone support.\np One caveat: prices exclude VAT, and annual billing saves about *two months* per year."
+      "roles": "p Sure! Here's a quick comparison of the three plans:\ntable [copy download]\n  | Plan | r:Price / month | r:Seats | c:Storage | Support |\n  | Starter | r:€9 | r:3 | c:10 GB | Email |\n  | Team | r:€29 | r:10 | c:100 GB | Email and chat |\n  | Business | r:€79 | r:50 | c:1 TB | **24/7 phone** |\np For a team of six, **Team** is the obvious choice: Starter caps you at three seats, and Business only pays off once you need more than 100 GB or phone support.\np One caveat: prices exclude VAT, and annual billing saves about *two months* per year."
     },
     {
       "name": "a3",
@@ -809,32 +809,32 @@
     {
       "name": "a7",
       "at": 267,
-      "roles": "p To undo the last commit but keep your changes, run:\ncode bash git reset --soft HEAD~1 [download copy] off\np Your files stay as they are and the changes go back to the staging area. A few related commands:\ntable\n  | What you want | Command |\n  | Undo the commit, keep changes stage |  |"
+      "roles": "p To undo the last commit but keep your changes, run:\ncode bash git reset --soft HEAD~1 [download copy] off\np Your files stay as they are and the changes go back to the staging area. A few related commands:\ntable [copy download] off\n  | What you want | Command |\n  | Undo the commit, keep changes stage |  |"
     },
     {
       "name": "a7",
       "at": 356,
-      "roles": "p To undo the last commit but keep your changes, run:\ncode bash git reset --soft HEAD~1 [download copy] off\np Your files stay as they are and the changes go back to the staging area. A few related commands:\ntable\n  | What you want | Command |\n  | Undo the commit, keep changes staged | `git reset --soft HEAD~1` |\n  | Undo the commit, keep changes unstaged | `git reset HEA` |"
+      "roles": "p To undo the last commit but keep your changes, run:\ncode bash git reset --soft HEAD~1 [download copy] off\np Your files stay as they are and the changes go back to the staging area. A few related commands:\ntable [copy download] off\n  | What you want | Command |\n  | Undo the commit, keep changes staged | `git reset --soft HEAD~1` |\n  | Undo the commit, keep changes unstaged | `git reset HEA` |"
     },
     {
       "name": "a7",
       "at": 445,
-      "roles": "p To undo the last commit but keep your changes, run:\ncode bash git reset --soft HEAD~1 [download copy] off\np Your files stay as they are and the changes go back to the staging area. A few related commands:\ntable\n  | What you want | Command |\n  | Undo the commit, keep changes staged | `git reset --soft HEAD~1` |\n  | Undo the commit, keep changes unstaged | `git reset HEAD~1` |\n  | Undo the commit and **discard** the changes | `git reset --hard HEAD~1` |\n  | Undo |  |"
+      "roles": "p To undo the last commit but keep your changes, run:\ncode bash git reset --soft HEAD~1 [download copy] off\np Your files stay as they are and the changes go back to the staging area. A few related commands:\ntable [copy download] off\n  | What you want | Command |\n  | Undo the commit, keep changes staged | `git reset --soft HEAD~1` |\n  | Undo the commit, keep changes unstaged | `git reset HEAD~1` |\n  | Undo the commit and **discard** the changes | `git reset --hard HEAD~1` |\n  | Undo |  |"
     },
     {
       "name": "a7",
       "at": 534,
-      "roles": "p To undo the last commit but keep your changes, run:\ncode bash git reset --soft HEAD~1 [download copy] off\np Your files stay as they are and the changes go back to the staging area. A few related commands:\ntable\n  | What you want | Command |\n  | Undo the commit, keep changes staged | `git reset --soft HEAD~1` |\n  | Undo the commit, keep changes unstaged | `git reset HEAD~1` |\n  | Undo the commit and **discard** the changes | `git reset --hard HEAD~1` |\n  | Undo a commit that is already pushed | `git revert <sha>` |\np ⚠️ Don't use `reset --hard` on c"
+      "roles": "p To undo the last commit but keep your changes, run:\ncode bash git reset --soft HEAD~1 [download copy] off\np Your files stay as they are and the changes go back to the staging area. A few related commands:\ntable [copy download] off\n  | What you want | Command |\n  | Undo the commit, keep changes staged | `git reset --soft HEAD~1` |\n  | Undo the commit, keep changes unstaged | `git reset HEAD~1` |\n  | Undo the commit and **discard** the changes | `git reset --hard HEAD~1` |\n  | Undo a commit that is already pushed | `git revert <sha>` |\np ⚠️ Don't use `reset --hard` on c"
     },
     {
       "name": "a7",
       "at": 623,
-      "roles": "p To undo the last commit but keep your changes, run:\ncode bash git reset --soft HEAD~1 [download copy] off\np Your files stay as they are and the changes go back to the staging area. A few related commands:\ntable\n  | What you want | Command |\n  | Undo the commit, keep changes staged | `git reset --soft HEAD~1` |\n  | Undo the commit, keep changes unstaged | `git reset HEAD~1` |\n  | Undo the commit and **discard** the changes | `git reset --hard HEAD~1` |\n  | Undo a commit that is already pushed | `git revert <sha>` |\np ⚠️ Don't use `reset --hard` on commits you have already pushed to a shared branch; use `git revert` instead so nobody els"
+      "roles": "p To undo the last commit but keep your changes, run:\ncode bash git reset --soft HEAD~1 [download copy] off\np Your files stay as they are and the changes go back to the staging area. A few related commands:\ntable [copy download] off\n  | What you want | Command |\n  | Undo the commit, keep changes staged | `git reset --soft HEAD~1` |\n  | Undo the commit, keep changes unstaged | `git reset HEAD~1` |\n  | Undo the commit and **discard** the changes | `git reset --hard HEAD~1` |\n  | Undo a commit that is already pushed | `git revert <sha>` |\np ⚠️ Don't use `reset --hard` on commits you have already pushed to a shared branch; use `git revert` instead so nobody els"
     },
     {
       "name": "a7",
       "at": 648,
-      "roles": "p To undo the last commit but keep your changes, run:\ncode bash git reset --soft HEAD~1 [download copy]\np Your files stay as they are and the changes go back to the staging area. A few related commands:\ntable\n  | What you want | Command |\n  | Undo the commit, keep changes staged | `git reset --soft HEAD~1` |\n  | Undo the commit, keep changes unstaged | `git reset HEAD~1` |\n  | Undo the commit and **discard** the changes | `git reset --hard HEAD~1` |\n  | Undo a commit that is already pushed | `git revert <sha>` |\np ⚠️ Don't use `reset --hard` on commits you have already pushed to a shared branch; use `git revert` instead so nobody else's history is rewritten."
+      "roles": "p To undo the last commit but keep your changes, run:\ncode bash git reset --soft HEAD~1 [download copy]\np Your files stay as they are and the changes go back to the staging area. A few related commands:\ntable [copy download]\n  | What you want | Command |\n  | Undo the commit, keep changes staged | `git reset --soft HEAD~1` |\n  | Undo the commit, keep changes unstaged | `git reset HEAD~1` |\n  | Undo the commit and **discard** the changes | `git reset --hard HEAD~1` |\n  | Undo a commit that is already pushed | `git revert <sha>` |\np ⚠️ Don't use `reset --hard` on commits you have already pushed to a shared branch; use `git revert` instead so nobody else's history is rewritten."
     },
     {
       "name": "a8",
@@ -1349,32 +1349,32 @@
     {
       "name": "b5",
       "at": 445,
-      "roles": "p Both work, but they solve different problems.\np **REST** is simpler to cache and debug. Each resource has a URL, HTTP verbs map to actions, and you get caching from CDNs and browsers for free.\np **GraphQL** shines when clients need different shapes of the same data. A mobile app can ask for three fields while the dashboard asks for thirty, from one endpoint.\ntable\n  |  | REST | GraphQL |\n  | Caching | HTTP caching works out of the bo |  |"
+      "roles": "p Both work, but they solve different problems.\np **REST** is simpler to cache and debug. Each resource has a URL, HTTP verbs map to actions, and you get caching from CDNs and browsers for free.\np **GraphQL** shines when clients need different shapes of the same data. A mobile app can ask for three fields while the dashboard asks for thirty, from one endpoint.\ntable [copy download] off\n  |  | REST | GraphQL |\n  | Caching | HTTP caching works out of the bo |  |"
     },
     {
       "name": "b5",
       "at": 534,
-      "roles": "p Both work, but they solve different problems.\np **REST** is simpler to cache and debug. Each resource has a URL, HTTP verbs map to actions, and you get caching from CDNs and browsers for free.\np **GraphQL** shines when clients need different shapes of the same data. A mobile app can ask for three fields while the dashboard asks for thirty, from one endpoint.\ntable\n  |  | REST | GraphQL |\n  | Caching | HTTP caching works out of the box | Needs client-side caching (Apollo, urql) |\n  | Over-fetching | Common | Rare |\n  | Toolin |  |  |"
+      "roles": "p Both work, but they solve different problems.\np **REST** is simpler to cache and debug. Each resource has a URL, HTTP verbs map to actions, and you get caching from CDNs and browsers for free.\np **GraphQL** shines when clients need different shapes of the same data. A mobile app can ask for three fields while the dashboard asks for thirty, from one endpoint.\ntable [copy download] off\n  |  | REST | GraphQL |\n  | Caching | HTTP caching works out of the box | Needs client-side caching (Apollo, urql) |\n  | Over-fetching | Common | Rare |\n  | Toolin |  |  |"
     },
     {
       "name": "b5",
       "at": 623,
-      "roles": "p Both work, but they solve different problems.\np **REST** is simpler to cache and debug. Each resource has a URL, HTTP verbs map to actions, and you get caching from CDNs and browsers for free.\np **GraphQL** shines when clients need different shapes of the same data. A mobile app can ask for three fields while the dashboard asks for thirty, from one endpoint.\ntable\n  |  | REST | GraphQL |\n  | Caching | HTTP caching works out of the box | Needs client-side caching (Apollo, urql) |\n  | Over-fetching | Common | Rare |\n  | Tooling | curl, any HTTP client | Needs a GraphQL client for comfort |\n  | Errors | HTTP status c |  |"
+      "roles": "p Both work, but they solve different problems.\np **REST** is simpler to cache and debug. Each resource has a URL, HTTP verbs map to actions, and you get caching from CDNs and browsers for free.\np **GraphQL** shines when clients need different shapes of the same data. A mobile app can ask for three fields while the dashboard asks for thirty, from one endpoint.\ntable [copy download] off\n  |  | REST | GraphQL |\n  | Caching | HTTP caching works out of the box | Needs client-side caching (Apollo, urql) |\n  | Over-fetching | Common | Rare |\n  | Tooling | curl, any HTTP client | Needs a GraphQL client for comfort |\n  | Errors | HTTP status c |  |"
     },
     {
       "name": "b5",
       "at": 712,
-      "roles": "p Both work, but they solve different problems.\np **REST** is simpler to cache and debug. Each resource has a URL, HTTP verbs map to actions, and you get caching from CDNs and browsers for free.\np **GraphQL** shines when clients need different shapes of the same data. A mobile app can ask for three fields while the dashboard asks for thirty, from one endpoint.\ntable\n  |  | REST | GraphQL |\n  | Caching | HTTP caching works out of the box | Needs client-side caching (Apollo, urql) |\n  | Over-fetching | Common | Rare |\n  | Tooling | curl, any HTTP client | Needs a GraphQL client for comfort |\n  | Errors | HTTP status codes | Always `200`, errors in the body |\n  | Learning curve | Low | Medium |\np For a small"
+      "roles": "p Both work, but they solve different problems.\np **REST** is simpler to cache and debug. Each resource has a URL, HTTP verbs map to actions, and you get caching from CDNs and browsers for free.\np **GraphQL** shines when clients need different shapes of the same data. A mobile app can ask for three fields while the dashboard asks for thirty, from one endpoint.\ntable [copy download] off\n  |  | REST | GraphQL |\n  | Caching | HTTP caching works out of the box | Needs client-side caching (Apollo, urql) |\n  | Over-fetching | Common | Rare |\n  | Tooling | curl, any HTTP client | Needs a GraphQL client for comfort |\n  | Errors | HTTP status codes | Always `200`, errors in the body |\n  | Learning curve | Low | Medium |\np For a small"
     },
     {
       "name": "b5",
       "at": 801,
-      "roles": "p Both work, but they solve different problems.\np **REST** is simpler to cache and debug. Each resource has a URL, HTTP verbs map to actions, and you get caching from CDNs and browsers for free.\np **GraphQL** shines when clients need different shapes of the same data. A mobile app can ask for three fields while the dashboard asks for thirty, from one endpoint.\ntable\n  |  | REST | GraphQL |\n  | Caching | HTTP caching works out of the box | Needs client-side caching (Apollo, urql) |\n  | Over-fetching | Common | Rare |\n  | Tooling | curl, any HTTP client | Needs a GraphQL client for comfort |\n  | Errors | HTTP status codes | Always `200`, errors in the body |\n  | Learning curve | Low | Medium |\np For a small team with one web client, I'd start with REST. Consider GraphQL once you have several cli"
+      "roles": "p Both work, but they solve different problems.\np **REST** is simpler to cache and debug. Each resource has a URL, HTTP verbs map to actions, and you get caching from CDNs and browsers for free.\np **GraphQL** shines when clients need different shapes of the same data. A mobile app can ask for three fields while the dashboard asks for thirty, from one endpoint.\ntable [copy download] off\n  |  | REST | GraphQL |\n  | Caching | HTTP caching works out of the box | Needs client-side caching (Apollo, urql) |\n  | Over-fetching | Common | Rare |\n  | Tooling | curl, any HTTP client | Needs a GraphQL client for comfort |\n  | Errors | HTTP status codes | Always `200`, errors in the body |\n  | Learning curve | Low | Medium |\np For a small team with one web client, I'd start with REST. Consider GraphQL once you have several cli"
     },
     {
       "name": "b5",
       "at": 835,
-      "roles": "p Both work, but they solve different problems.\np **REST** is simpler to cache and debug. Each resource has a URL, HTTP verbs map to actions, and you get caching from CDNs and browsers for free.\np **GraphQL** shines when clients need different shapes of the same data. A mobile app can ask for three fields while the dashboard asks for thirty, from one endpoint.\ntable\n  |  | REST | GraphQL |\n  | Caching | HTTP caching works out of the box | Needs client-side caching (Apollo, urql) |\n  | Over-fetching | Common | Rare |\n  | Tooling | curl, any HTTP client | Needs a GraphQL client for comfort |\n  | Errors | HTTP status codes | Always `200`, errors in the body |\n  | Learning curve | Low | Medium |\np For a small team with one web client, I'd start with REST. Consider GraphQL once you have several clients with clearly different needs."
+      "roles": "p Both work, but they solve different problems.\np **REST** is simpler to cache and debug. Each resource has a URL, HTTP verbs map to actions, and you get caching from CDNs and browsers for free.\np **GraphQL** shines when clients need different shapes of the same data. A mobile app can ask for three fields while the dashboard asks for thirty, from one endpoint.\ntable [copy download]\n  |  | REST | GraphQL |\n  | Caching | HTTP caching works out of the box | Needs client-side caching (Apollo, urql) |\n  | Over-fetching | Common | Rare |\n  | Tooling | curl, any HTTP client | Needs a GraphQL client for comfort |\n  | Errors | HTTP status codes | Always `200`, errors in the body |\n  | Learning curve | Low | Medium |\np For a small team with one web client, I'd start with REST. Consider GraphQL once you have several clients with clearly different needs."
     },
     {
       "name": "b6",
@@ -1519,12 +1519,12 @@
     {
       "name": "b9",
       "at": 623,
-      "roles": "p Great question! The \"**rule of 72**\" estimates how long it takes for an investment to double:\np years ≈ 72 / interest rate (in %)\np So at 6% a year, money doubles in about 72 / 6 = 12 years. At 9%, about 8 years.\np It works because ln(2) ≈ 0.693, and for small rates ln(1 + r) ≈ r, so the exact doubling time t = ln 2 / ln(1 + r) ≈ 0.693 / r. Using 72 instead of 69.3 makes the mental division easier (72 is divisible by 2, 3, 4, 6, 8, 9 and 12) and happens to be more accurate for rates around 8%.\ntable\n  | r:Rate | r:Rule of 72 | r:Exact |\n  | r:2% | r:36.0 | r:35.0 |\n  | r:6% | r:12.0 | r:11.9 |\n  | r:10% | r:7.2 | r:7.3 |\n  | r:20% | r:3.6 | r: |"
+      "roles": "p Great question! The \"**rule of 72**\" estimates how long it takes for an investment to double:\np years ≈ 72 / interest rate (in %)\np So at 6% a year, money doubles in about 72 / 6 = 12 years. At 9%, about 8 years.\np It works because ln(2) ≈ 0.693, and for small rates ln(1 + r) ≈ r, so the exact doubling time t = ln 2 / ln(1 + r) ≈ 0.693 / r. Using 72 instead of 69.3 makes the mental division easier (72 is divisible by 2, 3, 4, 6, 8, 9 and 12) and happens to be more accurate for rates around 8%.\ntable [copy download] off\n  | r:Rate | r:Rule of 72 | r:Exact |\n  | r:2% | r:36.0 | r:35.0 |\n  | r:6% | r:12.0 | r:11.9 |\n  | r:10% | r:7.2 | r:7.3 |\n  | r:20% | r:3.6 | r: |"
     },
     {
       "name": "b9",
       "at": 631,
-      "roles": "p Great question! The \"**rule of 72**\" estimates how long it takes for an investment to double:\np years ≈ 72 / interest rate (in %)\np So at 6% a year, money doubles in about 72 / 6 = 12 years. At 9%, about 8 years.\np It works because ln(2) ≈ 0.693, and for small rates ln(1 + r) ≈ r, so the exact doubling time t = ln 2 / ln(1 + r) ≈ 0.693 / r. Using 72 instead of 69.3 makes the mental division easier (72 is divisible by 2, 3, 4, 6, 8, 9 and 12) and happens to be more accurate for rates around 8%.\ntable\n  | r:Rate | r:Rule of 72 | r:Exact |\n  | r:2% | r:36.0 | r:35.0 |\n  | r:6% | r:12.0 | r:11.9 |\n  | r:10% | r:7.2 | r:7.3 |\n  | r:20% | r:3.6 | r:3.8 |"
+      "roles": "p Great question! The \"**rule of 72**\" estimates how long it takes for an investment to double:\np years ≈ 72 / interest rate (in %)\np So at 6% a year, money doubles in about 72 / 6 = 12 years. At 9%, about 8 years.\np It works because ln(2) ≈ 0.693, and for small rates ln(1 + r) ≈ r, so the exact doubling time t = ln 2 / ln(1 + r) ≈ 0.693 / r. Using 72 instead of 69.3 makes the mental division easier (72 is divisible by 2, 3, 4, 6, 8, 9 and 12) and happens to be more accurate for rates around 8%.\ntable [copy download]\n  | r:Rate | r:Rule of 72 | r:Exact |\n  | r:2% | r:36.0 | r:35.0 |\n  | r:6% | r:12.0 | r:11.9 |\n  | r:10% | r:7.2 | r:7.3 |\n  | r:20% | r:3.6 | r:3.8 |"
     },
     {
       "name": "b10",
@@ -1954,37 +1954,37 @@
     {
       "name": "c6",
       "at": 178,
-      "roles": "p Here are the key differences between the two contracts:\ntable\n  | Clause | Contract A | Contract B |\n  | Term | 12 months | 24 months, auto-renews |\n  | Notice period |  |  |"
+      "roles": "p Here are the key differences between the two contracts:\ntable [copy download] off\n  | Clause | Contract A | Contract B |\n  | Term | 12 months | 24 months, auto-renews |\n  | Notice period |  |  |"
     },
     {
       "name": "c6",
       "at": 267,
-      "roles": "p Here are the key differences between the two contracts:\ntable\n  | Clause | Contract A | Contract B |\n  | Term | 12 months | 24 months, auto-renews |\n  | Notice period | 1 month | 3 months |\n  | Price increase | Max 3% per year | *Not capped* |\n  | Liability | Ca |  |"
+      "roles": "p Here are the key differences between the two contracts:\ntable [copy download] off\n  | Clause | Contract A | Contract B |\n  | Term | 12 months | 24 months, auto-renews |\n  | Notice period | 1 month | 3 months |\n  | Price increase | Max 3% per year | *Not capped* |\n  | Liability | Ca |  |"
     },
     {
       "name": "c6",
       "at": 356,
-      "roles": "p Here are the key differences between the two contracts:\ntable\n  | Clause | Contract A | Contract B |\n  | Term | 12 months | 24 months, auto-renews |\n  | Notice period | 1 month | 3 months |\n  | Price increase | Max 3% per year | *Not capped* |\n  | Liability | Capped at fees paid | Capped at €10,000 |\n  | Data location | EU only | EU or US |\np **Things**"
+      "roles": "p Here are the key differences between the two contracts:\ntable [copy download] off\n  | Clause | Contract A | Contract B |\n  | Term | 12 months | 24 months, auto-renews |\n  | Notice period | 1 month | 3 months |\n  | Price increase | Max 3% per year | *Not capped* |\n  | Liability | Capped at fees paid | Capped at €10,000 |\n  | Data location | EU only | EU or US |\np **Things**"
     },
     {
       "name": "c6",
       "at": 445,
-      "roles": "p Here are the key differences between the two contracts:\ntable\n  | Clause | Contract A | Contract B |\n  | Term | 12 months | 24 months, auto-renews |\n  | Notice period | 1 month | 3 months |\n  | Price increase | Max 3% per year | *Not capped* |\n  | Liability | Capped at fees paid | Capped at €10,000 |\n  | Data location | EU only | EU or US |\np **Things to watch in Contract B:**\nol\n  li\n    p The auto-renewal with three months' notice means you effecti"
+      "roles": "p Here are the key differences between the two contracts:\ntable [copy download] off\n  | Clause | Contract A | Contract B |\n  | Term | 12 months | 24 months, auto-renews |\n  | Notice period | 1 month | 3 months |\n  | Price increase | Max 3% per year | *Not capped* |\n  | Liability | Capped at fees paid | Capped at €10,000 |\n  | Data location | EU only | EU or US |\np **Things to watch in Contract B:**\nol\n  li\n    p The auto-renewal with three months' notice means you effecti"
     },
     {
       "name": "c6",
       "at": 534,
-      "roles": "p Here are the key differences between the two contracts:\ntable\n  | Clause | Contract A | Contract B |\n  | Term | 12 months | 24 months, auto-renews |\n  | Notice period | 1 month | 3 months |\n  | Price increase | Max 3% per year | *Not capped* |\n  | Liability | Capped at fees paid | Capped at €10,000 |\n  | Data location | EU only | EU or US |\np **Things to watch in Contract B:**\nol\n  li\n    p The auto-renewal with three months' notice means you effectively commit to 27 months unless you diarise the date.\n  li\n    p The uncapped price increase is u"
+      "roles": "p Here are the key differences between the two contracts:\ntable [copy download] off\n  | Clause | Contract A | Contract B |\n  | Term | 12 months | 24 months, auto-renews |\n  | Notice period | 1 month | 3 months |\n  | Price increase | Max 3% per year | *Not capped* |\n  | Liability | Capped at fees paid | Capped at €10,000 |\n  | Data location | EU only | EU or US |\np **Things to watch in Contract B:**\nol\n  li\n    p The auto-renewal with three months' notice means you effectively commit to 27 months unless you diarise the date.\n  li\n    p The uncapped price increase is u"
     },
     {
       "name": "c6",
       "at": 623,
-      "roles": "p Here are the key differences between the two contracts:\ntable\n  | Clause | Contract A | Contract B |\n  | Term | 12 months | 24 months, auto-renews |\n  | Notice period | 1 month | 3 months |\n  | Price increase | Max 3% per year | *Not capped* |\n  | Liability | Capped at fees paid | Capped at €10,000 |\n  | Data location | EU only | EU or US |\np **Things to watch in Contract B:**\nol\n  li\n    p The auto-renewal with three months' notice means you effectively commit to 27 months unless you diarise the date.\n  li\n    p The uncapped price increase is unusual; ask for a cap.\n  li\n    p US data storage may need a transfer assessment under GDPR.\np Con"
+      "roles": "p Here are the key differences between the two contracts:\ntable [copy download] off\n  | Clause | Contract A | Contract B |\n  | Term | 12 months | 24 months, auto-renews |\n  | Notice period | 1 month | 3 months |\n  | Price increase | Max 3% per year | *Not capped* |\n  | Liability | Capped at fees paid | Capped at €10,000 |\n  | Data location | EU only | EU or US |\np **Things to watch in Contract B:**\nol\n  li\n    p The auto-renewal with three months' notice means you effectively commit to 27 months unless you diarise the date.\n  li\n    p The uncapped price increase is unusual; ask for a cap.\n  li\n    p US data storage may need a transfer assessment under GDPR.\np Con"
     },
     {
       "name": "c6",
       "at": 691,
-      "roles": "p Here are the key differences between the two contracts:\ntable\n  | Clause | Contract A | Contract B |\n  | Term | 12 months | 24 months, auto-renews |\n  | Notice period | 1 month | 3 months |\n  | Price increase | Max 3% per year | *Not capped* |\n  | Liability | Capped at fees paid | Capped at €10,000 |\n  | Data location | EU only | EU or US |\np **Things to watch in Contract B:**\nol\n  li\n    p The auto-renewal with three months' notice means you effectively commit to 27 months unless you diarise the date.\n  li\n    p The uncapped price increase is unusual; ask for a cap.\n  li\n    p US data storage may need a transfer assessment under GDPR.\np Contract A is the safer choice unless B's price is substantially lower."
+      "roles": "p Here are the key differences between the two contracts:\ntable [copy download]\n  | Clause | Contract A | Contract B |\n  | Term | 12 months | 24 months, auto-renews |\n  | Notice period | 1 month | 3 months |\n  | Price increase | Max 3% per year | *Not capped* |\n  | Liability | Capped at fees paid | Capped at €10,000 |\n  | Data location | EU only | EU or US |\np **Things to watch in Contract B:**\nol\n  li\n    p The auto-renewal with three months' notice means you effectively commit to 27 months unless you diarise the date.\n  li\n    p The uncapped price increase is unusual; ask for a cap.\n  li\n    p US data storage may need a transfer assessment under GDPR.\np Contract A is the safer choice unless B's price is substantially lower."
     },
     {
       "name": "c7",
@@ -2319,32 +2319,32 @@
     {
       "name": "c17",
       "at": 267,
-      "roles": "p Here's a comparison of the cloud regions closest to Amsterdam, with typical round-trip latency from a Dutch fibre connection:\ntable\n  | Provider | Region | Location | r:Latency |\n  | AWS | `eu-west-1` | Dublin | r:~22 ms |\n  | AWS | `eu-central-1` | Frank | r: |"
+      "roles": "p Here's a comparison of the cloud regions closest to Amsterdam, with typical round-trip latency from a Dutch fibre connection:\ntable [copy download] off\n  | Provider | Region | Location | r:Latency |\n  | AWS | `eu-west-1` | Dublin | r:~22 ms |\n  | AWS | `eu-central-1` | Frank | r: |"
     },
     {
       "name": "c17",
       "at": 356,
-      "roles": "p Here's a comparison of the cloud regions closest to Amsterdam, with typical round-trip latency from a Dutch fibre connection:\ntable\n  | Provider | Region | Location | r:Latency |\n  | AWS | `eu-west-1` | Dublin | r:~22 ms |\n  | AWS | `eu-central-1` | Frankfurt | r:~9 ms |\n  | Google Cloud | `europe-west4` | Eemshaven | r:~5 ms |\n  | Azure | West Europ |  | r: |"
+      "roles": "p Here's a comparison of the cloud regions closest to Amsterdam, with typical round-trip latency from a Dutch fibre connection:\ntable [copy download] off\n  | Provider | Region | Location | r:Latency |\n  | AWS | `eu-west-1` | Dublin | r:~22 ms |\n  | AWS | `eu-central-1` | Frankfurt | r:~9 ms |\n  | Google Cloud | `europe-west4` | Eemshaven | r:~5 ms |\n  | Azure | West Europ |  | r: |"
     },
     {
       "name": "c17",
       "at": 445,
-      "roles": "p Here's a comparison of the cloud regions closest to Amsterdam, with typical round-trip latency from a Dutch fibre connection:\ntable\n  | Provider | Region | Location | r:Latency |\n  | AWS | `eu-west-1` | Dublin | r:~22 ms |\n  | AWS | `eu-central-1` | Frankfurt | r:~9 ms |\n  | Google Cloud | `europe-west4` | Eemshaven | r:~5 ms |\n  | Azure | West Europe | Amsterdam | r:~3 ms |\n  | Hetzner | `fsn1` | Falkenstein | r:~14 ms |\np For a user base most"
+      "roles": "p Here's a comparison of the cloud regions closest to Amsterdam, with typical round-trip latency from a Dutch fibre connection:\ntable [copy download] off\n  | Provider | Region | Location | r:Latency |\n  | AWS | `eu-west-1` | Dublin | r:~22 ms |\n  | AWS | `eu-central-1` | Frankfurt | r:~9 ms |\n  | Google Cloud | `europe-west4` | Eemshaven | r:~5 ms |\n  | Azure | West Europe | Amsterdam | r:~3 ms |\n  | Hetzner | `fsn1` | Falkenstein | r:~14 ms |\np For a user base most"
     },
     {
       "name": "c17",
       "at": 534,
-      "roles": "p Here's a comparison of the cloud regions closest to Amsterdam, with typical round-trip latency from a Dutch fibre connection:\ntable\n  | Provider | Region | Location | r:Latency |\n  | AWS | `eu-west-1` | Dublin | r:~22 ms |\n  | AWS | `eu-central-1` | Frankfurt | r:~9 ms |\n  | Google Cloud | `europe-west4` | Eemshaven | r:~5 ms |\n  | Azure | West Europe | Amsterdam | r:~3 ms |\n  | Hetzner | `fsn1` | Falkenstein | r:~14 ms |\np For a user base mostly in the Netherlands and Belgium, any of the top four are fine; latency differences unde"
+      "roles": "p Here's a comparison of the cloud regions closest to Amsterdam, with typical round-trip latency from a Dutch fibre connection:\ntable [copy download] off\n  | Provider | Region | Location | r:Latency |\n  | AWS | `eu-west-1` | Dublin | r:~22 ms |\n  | AWS | `eu-central-1` | Frankfurt | r:~9 ms |\n  | Google Cloud | `europe-west4` | Eemshaven | r:~5 ms |\n  | Azure | West Europe | Amsterdam | r:~3 ms |\n  | Hetzner | `fsn1` | Falkenstein | r:~14 ms |\np For a user base mostly in the Netherlands and Belgium, any of the top four are fine; latency differences unde"
     },
     {
       "name": "c17",
       "at": 623,
-      "roles": "p Here's a comparison of the cloud regions closest to Amsterdam, with typical round-trip latency from a Dutch fibre connection:\ntable\n  | Provider | Region | Location | r:Latency |\n  | AWS | `eu-west-1` | Dublin | r:~22 ms |\n  | AWS | `eu-central-1` | Frankfurt | r:~9 ms |\n  | Google Cloud | `europe-west4` | Eemshaven | r:~5 ms |\n  | Azure | West Europe | Amsterdam | r:~3 ms |\n  | Hetzner | `fsn1` | Falkenstein | r:~14 ms |\np For a user base mostly in the Netherlands and Belgium, any of the top four are fine; latency differences under 20 ms are rarely noticeable for web apps. Choose on price, managed services and where y"
+      "roles": "p Here's a comparison of the cloud regions closest to Amsterdam, with typical round-trip latency from a Dutch fibre connection:\ntable [copy download] off\n  | Provider | Region | Location | r:Latency |\n  | AWS | `eu-west-1` | Dublin | r:~22 ms |\n  | AWS | `eu-central-1` | Frankfurt | r:~9 ms |\n  | Google Cloud | `europe-west4` | Eemshaven | r:~5 ms |\n  | Azure | West Europe | Amsterdam | r:~3 ms |\n  | Hetzner | `fsn1` | Falkenstein | r:~14 ms |\np For a user base mostly in the Netherlands and Belgium, any of the top four are fine; latency differences under 20 ms are rarely noticeable for web apps. Choose on price, managed services and where y"
     },
     {
       "name": "c17",
       "at": 706,
-      "roles": "p Here's a comparison of the cloud regions closest to Amsterdam, with typical round-trip latency from a Dutch fibre connection:\ntable\n  | Provider | Region | Location | r:Latency |\n  | AWS | `eu-west-1` | Dublin | r:~22 ms |\n  | AWS | `eu-central-1` | Frankfurt | r:~9 ms |\n  | Google Cloud | `europe-west4` | Eemshaven | r:~5 ms |\n  | Azure | West Europe | Amsterdam | r:~3 ms |\n  | Hetzner | `fsn1` | Falkenstein | r:~14 ms |\np For a user base mostly in the Netherlands and Belgium, any of the top four are fine; latency differences under 20 ms are rarely noticeable for web apps. Choose on price, managed services and where your other systems already run.\np *Latency figures are rough and vary with your ISP.*"
+      "roles": "p Here's a comparison of the cloud regions closest to Amsterdam, with typical round-trip latency from a Dutch fibre connection:\ntable [copy download]\n  | Provider | Region | Location | r:Latency |\n  | AWS | `eu-west-1` | Dublin | r:~22 ms |\n  | AWS | `eu-central-1` | Frankfurt | r:~9 ms |\n  | Google Cloud | `europe-west4` | Eemshaven | r:~5 ms |\n  | Azure | West Europe | Amsterdam | r:~3 ms |\n  | Hetzner | `fsn1` | Falkenstein | r:~14 ms |\np For a user base mostly in the Netherlands and Belgium, any of the top four are fine; latency differences under 20 ms are rarely noticeable for web apps. Choose on price, managed services and where your other systems already run.\np *Latency figures are rough and vary with your ISP.*"
     },
     {
       "name": "c18",
@@ -2844,27 +2844,27 @@
     {
       "name": "notes",
       "at": 178,
-      "roles": "#2 Results[^method]\np Revenue grew by a tenth[^growth], and churn fell[^churn]. See [the report[^growth]](https://example.com/report).\ntable\n  | Region | Change[^growth] |"
+      "roles": "#2 Results[^method]\np Revenue grew by a tenth[^growth], and churn fell[^churn]. See [the report[^growth]](https://example.com/report).\ntable [copy download] off\n  | Region | Change[^growth] |"
     },
     {
       "name": "notes",
       "at": 267,
-      "roles": "#2 Results[^method]\np Revenue grew by a tenth[^growth], and churn fell^1. See [the report[^growth]](https://example.com/report).\ntable\n  | Region | Change[^growth] |\n  | North | +12% |\np One mark refers to a note that never comes[^missing].\nnotes\n  li\n    p Churn ↩"
+      "roles": "#2 Results[^method]\np Revenue grew by a tenth[^growth], and churn fell^1. See [the report[^growth]](https://example.com/report).\ntable [copy download] off\n  | Region | Change[^growth] |\n  | North | +12% |\np One mark refers to a note that never comes[^missing].\nnotes\n  li\n    p Churn ↩"
     },
     {
       "name": "notes",
       "at": 356,
-      "roles": "#2 Results[^method]\np Revenue grew by a tenth^1, and churn fell^2. See [the report](https://example.com/report)[1](#user-content-fn-growth).\ntable\n  | Region | Change^1 |\n  | North | +12% |\np One mark refers to a note that never comes[^missing].\nnotes\n  li\n    p Year on year, in euros. A second paragraph, ↩ ↩ ↩\n  li\n    p Churn counts cancelled seats only. ↩"
+      "roles": "#2 Results[^method]\np Revenue grew by a tenth^1, and churn fell^2. See [the report](https://example.com/report)[1](#user-content-fn-growth).\ntable [copy download] off\n  | Region | Change^1 |\n  | North | +12% |\np One mark refers to a note that never comes[^missing].\nnotes\n  li\n    p Year on year, in euros. A second paragraph, ↩ ↩ ↩\n  li\n    p Churn counts cancelled seats only. ↩"
     },
     {
       "name": "notes",
       "at": 445,
-      "roles": "#2 Results^1\np Revenue grew by a tenth^2, and churn fell^3. See [the report](https://example.com/report)[2](#user-content-fn-growth).\ntable\n  | Region | Change^2 |\n  | North | +12% |\np One mark refers to a note that never comes[^missing].\nnotes\n  li\n    p Read from the **ledger**, not th ↩\n  li\n    p Year on year, in euros. A second paragraph, indented, with [https://example.com/fx](https://example.com/fx) rates. ↩ ↩ ↩\n  li\n    p Churn counts cancelled seats only. ↩"
+      "roles": "#2 Results^1\np Revenue grew by a tenth^2, and churn fell^3. See [the report](https://example.com/report)[2](#user-content-fn-growth).\ntable [copy download] off\n  | Region | Change^2 |\n  | North | +12% |\np One mark refers to a note that never comes[^missing].\nnotes\n  li\n    p Read from the **ledger**, not th ↩\n  li\n    p Year on year, in euros. A second paragraph, indented, with [https://example.com/fx](https://example.com/fx) rates. ↩ ↩ ↩\n  li\n    p Churn counts cancelled seats only. ↩"
     },
     {
       "name": "notes",
       "at": 457,
-      "roles": "#2 Results^1\np Revenue grew by a tenth^2, and churn fell^3. See [the report](https://example.com/report)[2](#user-content-fn-growth).\ntable\n  | Region | Change^2 |\n  | North | +12% |\np One mark refers to a note that never comes[^missing].\nnotes\n  li\n    p Read from the **ledger**, not the dashboard. ↩\n  li\n    p Year on year, in euros. A second paragraph, indented, with [https://example.com/fx](https://example.com/fx) rates. ↩ ↩ ↩\n  li\n    p Churn counts cancelled seats only. ↩"
+      "roles": "#2 Results^1\np Revenue grew by a tenth^2, and churn fell^3. See [the report](https://example.com/report)[2](#user-content-fn-growth).\ntable [copy download]\n  | Region | Change^2 |\n  | North | +12% |\np One mark refers to a note that never comes[^missing].\nnotes\n  li\n    p Read from the **ledger**, not the dashboard. ↩\n  li\n    p Year on year, in euros. A second paragraph, indented, with [https://example.com/fx](https://example.com/fx) rates. ↩ ↩ ↩\n  li\n    p Churn counts cancelled seats only. ↩"
     },
     {
       "name": "sections",
@@ -2874,22 +2874,22 @@
     {
       "name": "sections",
       "at": 178,
-      "roles": "p Here is the policy.\ndetails Limits by **country**\n  table\n    | Country | r:Meals |\n    | NL | r:€40 |\n    | DE | r:€35 |\n  details Exceptions"
+      "roles": "p Here is the policy.\ndetails Limits by **country**\n  table [copy download] off\n    | Country | r:Meals |\n    | NL | r:€40 |\n    | DE | r:€35 |\n  details Exceptions"
     },
     {
       "name": "sections",
       "at": 267,
-      "roles": "p Here is the policy.\ndetails Limits by **country**\n  table\n    | Country | r:Meals |\n    | NL | r:€40 |\n    | DE | r:€35 |\n  details Exceptions\n    ul\n      li\n        p Conferences\n      li\n        p Client dinners, see [the rules](https://example.com/rules)"
+      "roles": "p Here is the policy.\ndetails Limits by **country**\n  table [copy download] off\n    | Country | r:Meals |\n    | NL | r:€40 |\n    | DE | r:€35 |\n  details Exceptions\n    ul\n      li\n        p Conferences\n      li\n        p Client dinners, see [the rules](https://example.com/rules)"
     },
     {
       "name": "sections",
       "at": 356,
-      "roles": "p Here is the policy.\ndetails Limits by **country**\n  table\n    | Country | r:Meals |\n    | NL | r:€40 |\n    | DE | r:€35 |\n  details Exceptions\n    ul\n      li\n        p Conferences\n      li\n        p Client dinners, see [the rules](https://example.com/rules)\ndetails The script\n  code python print(\"limits\") [download copy] off"
+      "roles": "p Here is the policy.\ndetails Limits by **country**\n  table [copy download] off\n    | Country | r:Meals |\n    | NL | r:€40 |\n    | DE | r:€35 |\n  details Exceptions\n    ul\n      li\n        p Conferences\n      li\n        p Client dinners, see [the rules](https://example.com/rules)\ndetails The script\n  code python print(\"limits\") [download copy] off"
     },
     {
       "name": "sections",
       "at": 418,
-      "roles": "p Here is the policy.\ndetails Limits by **country**\n  table\n    | Country | r:Meals |\n    | NL | r:€40 |\n    | DE | r:€35 |\n  details Exceptions\n    ul\n      li\n        p Conferences\n      li\n        p Client dinners, see [the rules](https://example.com/rules)\ndetails The script\n  code python print(\"limits\") [download copy]\np This is not a section.\np After the sections."
+      "roles": "p Here is the policy.\ndetails Limits by **country**\n  table [copy download]\n    | Country | r:Meals |\n    | NL | r:€40 |\n    | DE | r:€35 |\n  details Exceptions\n    ul\n      li\n        p Conferences\n      li\n        p Client dinners, see [the rules](https://example.com/rules)\ndetails The script\n  code python print(\"limits\") [download copy]\np This is not a section.\np After the sections."
     },
     {
       "name": "m1",
@@ -2904,17 +2904,17 @@
     {
       "name": "m1",
       "at": 267,
-      "roles": "#1 Release 4.2\n#2 What changed\nul\n  li\n    p **Search** is faster:\n    ul\n      li\n        p indexes build in the background\n      li\n        p results stream as they arrive\n  li\n    p See **[the migration guide](https://example.com/docs/migrate)** before upgrading.\ntable\n  | Area | r:Before | c:After |\n  | Inde | r: | c: |"
+      "roles": "#1 Release 4.2\n#2 What changed\nul\n  li\n    p **Search** is faster:\n    ul\n      li\n        p indexes build in the background\n      li\n        p results stream as they arrive\n  li\n    p See **[the migration guide](https://example.com/docs/migrate)** before upgrading.\ntable [copy download] off\n  | Area | r:Before | c:After |\n  | Inde | r: | c: |"
     },
     {
       "name": "m1",
       "at": 356,
-      "roles": "#1 Release 4.2\n#2 What changed\nul\n  li\n    p **Search** is faster:\n    ul\n      li\n        p indexes build in the background\n      li\n        p results stream as they arrive\n  li\n    p See **[the migration guide](https://example.com/docs/migrate)** before upgrading.\ntable\n  | Area | r:Before | c:After |\n  | Index build | r:42 s | c:9 s |\n  | First result | r:1.8 s | c:0.3 s |\ncode bash npm install @acme/search [download copy] off"
+      "roles": "#1 Release 4.2\n#2 What changed\nul\n  li\n    p **Search** is faster:\n    ul\n      li\n        p indexes build in the background\n      li\n        p results stream as they arrive\n  li\n    p See **[the migration guide](https://example.com/docs/migrate)** before upgrading.\ntable [copy download] off\n  | Area | r:Before | c:After |\n  | Index build | r:42 s | c:9 s |\n  | First result | r:1.8 s | c:0.3 s |\ncode bash npm install @acme/search [download copy] off"
     },
     {
       "name": "m1",
       "at": 411,
-      "roles": "#1 Release 4.2\n#2 What changed\nul\n  li\n    p **Search** is faster:\n    ul\n      li\n        p indexes build in the background\n      li\n        p results stream as they arrive\n  li\n    p See **[the migration guide](https://example.com/docs/migrate)** before upgrading.\ntable\n  | Area | r:Before | c:After |\n  | Index build | r:42 s | c:9 s |\n  | First result | r:1.8 s | c:0.3 s |\ncode bash npm install @acme/search@4.2.0 [download copy]\nquote\n  p Upgrading from 3.x? Read the guide first."
+      "roles": "#1 Release 4.2\n#2 What changed\nul\n  li\n    p **Search** is faster:\n    ul\n      li\n        p indexes build in the background\n      li\n        p results stream as they arrive\n  li\n    p See **[the migration guide](https://example.com/docs/migrate)** before upgrading.\ntable [copy download]\n  | Area | r:Before | c:After |\n  | Index build | r:42 s | c:9 s |\n  | First result | r:1.8 s | c:0.3 s |\ncode bash npm install @acme/search@4.2.0 [download copy]\nquote\n  p Upgrading from 3.x? Read the guide first."
     },
     {
       "name": "m2",
@@ -3074,17 +3074,17 @@
     {
       "name": "m12",
       "at": 89,
-      "roles": "table\n  | Endpoint | c:Method | Docs | Notes |\n  | `/users` | c:GET | [docs](streamdown:incomplete-link) |  |"
+      "roles": "table [copy download] off\n  | Endpoint | c:Method | Docs | Notes |\n  | `/users` | c:GET | [docs](streamdown:incomplete-link) |  |"
     },
     {
       "name": "m12",
       "at": 178,
-      "roles": "table\n  | Endpoint | c:Method | Docs | Notes |\n  | `/users` | c:GET | [docs](https://example.com/api/users) | paginated |\n  | `/users/:id` | c:PATCH | [docs](streamdown:incomplete-link) |  |"
+      "roles": "table [copy download] off\n  | Endpoint | c:Method | Docs | Notes |\n  | `/users` | c:GET | [docs](https://example.com/api/users) | paginated |\n  | `/users/:id` | c:PATCH | [docs](streamdown:incomplete-link) |  |"
     },
     {
       "name": "m12",
       "at": 250,
-      "roles": "table\n  | Endpoint | c:Method | Docs | Notes |\n  | `/users` | c:GET | [docs](https://example.com/api/users) | paginated |\n  | `/users/:id` | c:PATCH | [docs](https://example.com/api/user) | **admin only** |\n  | `/health` | c:GET | — | no auth |"
+      "roles": "table [copy download]\n  | Endpoint | c:Method | Docs | Notes |\n  | `/users` | c:GET | [docs](https://example.com/api/users) | paginated |\n  | `/users/:id` | c:PATCH | [docs](https://example.com/api/user) | **admin only** |\n  | `/health` | c:GET | — | no auth |"
     },
     {
       "name": "m13",
@@ -3134,7 +3134,7 @@
     {
       "name": "m18",
       "at": 65,
-      "roles": "table\n  | Region | r:Revenue |\n  | North | r:1.2M |\n  | South | r:0. |"
+      "roles": "table [copy download]\n  | Region | r:Revenue |\n  | North | r:1.2M |\n  | South | r:0. |"
     },
     {
       "name": "m19",
@@ -3884,12 +3884,12 @@
     {
       "name": "commonmark 148",
       "at": 69,
-      "roles": "table\n  | **Hello**, *world*. |"
+      "roles": "table [copy download]\n  | **Hello**, *world*. |"
     },
     {
       "name": "commonmark 149",
       "at": 72,
-      "roles": "table\n  | hi |\np okay."
+      "roles": "table [copy download]\n  | hi |\np okay."
     },
     {
       "name": "commonmark 150",
@@ -3944,7 +3944,7 @@
     {
       "name": "commonmark 160",
       "at": 39,
-      "roles": "table\n  | foo |"
+      "roles": "table [copy download]\n  | foo |"
     },
     {
       "name": "commonmark 161",
@@ -4094,12 +4094,12 @@
     {
       "name": "commonmark 190",
       "at": 46,
-      "roles": "table\n  | Hi |"
+      "roles": "table [copy download]\n  | Hi |"
     },
     {
       "name": "commonmark 191",
       "at": 64,
-      "roles": "code <td> Hi </td> [download copy]\ntable\n  |  |"
+      "roles": "code <td> Hi </td> [download copy]\ntable [copy download]\n  |  |"
     },
     {
       "name": "commonmark 192",
@@ -6409,27 +6409,27 @@
     {
       "name": "gfm 198",
       "at": 42,
-      "roles": "table\n  | foo | bar |\n  | baz | bim |"
+      "roles": "table [copy download]\n  | foo | bar |\n  | baz | bim |"
     },
     {
       "name": "gfm 199",
       "at": 46,
-      "roles": "table\n  | c:abc | r:defghi |\n  | c:bar | r:baz |"
+      "roles": "table [copy download]\n  | c:abc | r:defghi |\n  | c:bar | r:baz |"
     },
     {
       "name": "gfm 200",
       "at": 52,
-      "roles": "table\n  | f|oo |\n  | b `|` az |\n  | b **|** im |"
+      "roles": "table [copy download]\n  | f|oo |\n  | b `|` az |\n  | b **|** im |"
     },
     {
       "name": "gfm 201",
       "at": 48,
-      "roles": "table\n  | abc | def |\n  | bar | baz |\nquote\n  p bar"
+      "roles": "table [copy download]\n  | abc | def |\n  | bar | baz |\nquote\n  p bar"
     },
     {
       "name": "gfm 202",
       "at": 51,
-      "roles": "table\n  | abc | def |\n  | bar | baz |\n  | bar |  |\np bar"
+      "roles": "table [copy download]\n  | abc | def |\n  | bar | baz |\n  | bar |  |\np bar"
     },
     {
       "name": "gfm 203",
@@ -6439,12 +6439,12 @@
     {
       "name": "gfm 204",
       "at": 56,
-      "roles": "table\n  | abc | def |\n  | bar |  |\n  | bar | baz |"
+      "roles": "table [copy download]\n  | abc | def |\n  | bar |  |\n  | bar | baz |"
     },
     {
       "name": "gfm 205",
       "at": 28,
-      "roles": "table\n  | abc | def |"
+      "roles": "table [copy download]\n  | abc | def |"
     },
     {
       "name": "gfm 279",
@@ -6529,32 +6529,32 @@
     {
       "name": "gfm 1",
       "at": 56,
-      "roles": "table\n  | abc | def |\n  | ghi | jkl |\n  | mno | pqr |"
+      "roles": "table [copy download]\n  | abc | def |\n  | ghi | jkl |\n  | mno | pqr |"
     },
     {
       "name": "gfm 2",
       "at": 132,
-      "roles": "p Hello!\ntable\n  | *abc* | セン |\n  | 1. Block elements inside cells don't work. |  |\n  | But ***inline elements do***. | x |\np Hi!"
+      "roles": "p Hello!\ntable [copy download]\n  | *abc* | セン |\n  | 1. Block elements inside cells don't work. |  |\n  | But ***inline elements do***. | x |\np Hi!"
     },
     {
       "name": "gfm 3",
       "at": 276,
-      "roles": "p | Not enough table | to be considered table |\np | Not enough table | to be considered table | | Not enough table | to be considered table |\ntable\n  | Just enough table | to be considered table |\np | ---- | --- |\ntable\n  | x |\ntable\n  | xyz |"
+      "roles": "p | Not enough table | to be considered table |\np | Not enough table | to be considered table | | Not enough table | to be considered table |\ntable [copy download]\n  | Just enough table | to be considered table |\np | ---- | --- |\ntable [copy download]\n  | x |\ntable [copy download]\n  | xyz |"
     },
     {
       "name": "gfm 4",
       "at": 30,
-      "roles": "table\n  | abc | def |\n  | xyz | ghi |"
+      "roles": "table [copy download]\n  | abc | def |\n  | xyz | ghi |"
     },
     {
       "name": "gfm 5",
       "at": 122,
-      "roles": "p Hello!\ntable\n  | *abc* | セン |\n  | this row has a space at the end |  |\n  | But ***inline elements do***. | x |\np Hi!"
+      "roles": "p Hello!\ntable [copy download]\n  | *abc* | セン |\n  | this row has a space at the end |  |\n  | But ***inline elements do***. | x |\np Hi!"
     },
     {
       "name": "gfm 6",
       "at": 84,
-      "roles": "table\n  | aaa | bbb | c:ccc | ddd | r:eee |\n  | fff | ggg | c:hhh | iii | r:jjj |"
+      "roles": "table [copy download]\n  | aaa | bbb | c:ccc | ddd | r:eee |\n  | fff | ggg | c:hhh | iii | r:jjj |"
     },
     {
       "name": "gfm 7",
@@ -6564,47 +6564,47 @@
     {
       "name": "gfm 8",
       "at": 66,
-      "roles": "table\n  | a | b | c |\n  | x |  |  |\n  | a | b |  |\n  | 1 | 2 | 3 |"
+      "roles": "table [copy download]\n  | a | b | c |\n  | x |  |  |\n  | a | b |  |\n  | 1 | 2 | 3 |"
     },
     {
       "name": "gfm 9",
       "at": 156,
-      "roles": "table\n  | a | b |\n  | Escaped pipes are |okay|. | Like | this. |\n  | Within `|code| is okay` too. |  |\n  | ***`c|`*** | complex |  |\n  | don't **_reparse_** |  |"
+      "roles": "table [copy download]\n  | a | b |\n  | Escaped pipes are |okay|. | Like | this. |\n  | Within `|code| is okay` too. |  |\n  | ***`c|`*** | complex |  |\n  | don't **_reparse_** |  |"
     },
     {
       "name": "gfm 10",
       "at": 12,
-      "roles": "table\n  | a |"
+      "roles": "table [copy download]\n  | a |"
     },
     {
       "name": "gfm 11",
       "at": 147,
-      "roles": "table\n  | a | b |\n  | \\ | `\\\\` |\n  | \\\\ | `\\\\\\\\` |\n  | _ | `\\_` |\n  | | | `|` |\n  | \\a | `\\a` |\np \\ `\\\\`\np \\\\ `\\\\\\\\`\np _ `\\_`\np | `\\|`\np \\a `\\a`"
+      "roles": "table [copy download]\n  | a | b |\n  | \\ | `\\\\` |\n  | \\\\ | `\\\\\\\\` |\n  | _ | `\\_` |\n  | | | `|` |\n  | \\a | `\\a` |\np \\ `\\\\`\np \\\\ `\\\\\\\\`\np _ `\\_`\np | `\\|`\np \\a `\\a`"
     },
     {
       "name": "gfm 12",
       "at": 58,
-      "roles": "table\n  | a |\n  | **hello** |\n  | ok⏎sure |"
+      "roles": "table [copy download]\n  | a |\n  | **hello** |\n  | ok⏎sure |"
     },
     {
       "name": "gfm 13",
       "at": 219,
-      "roles": "p Here's a link to [Freedom Planet 2](http://www.freedomplanet2.com/).\ntable\n  | Here's a link to [Freedom Planet 2](http://www.freedomplanet2.com/) in a table header. |\n  | Here's a link to [Freedom Planet 2](http://www.freedomplanet2.com/) in a table row. |"
+      "roles": "p Here's a link to [Freedom Planet 2](http://www.freedomplanet2.com/).\ntable [copy download]\n  | Here's a link to [Freedom Planet 2](http://www.freedomplanet2.com/) in a table header. |\n  | Here's a link to [Freedom Planet 2](http://www.freedomplanet2.com/) in a table row. |"
     },
     {
       "name": "gfm 14",
       "at": 45,
-      "roles": "table\n  | a | b | c |\n  | d |  | e |"
+      "roles": "table [copy download]\n  | a | b | c |\n  | d |  | e |"
     },
     {
       "name": "gfm 15",
       "at": 36,
-      "roles": "table\n  | a | b |\n  | ***(a)*** |  |"
+      "roles": "table [copy download]\n  | a | b |\n  | ***(a)*** |  |"
     },
     {
       "name": "gfm 16",
       "at": 37,
-      "roles": "p 123 456\ntable\n  | a | b |\n  | d | e |"
+      "roles": "p 123 456\ntable [copy download]\n  | a | b |\n  | d | e |"
     },
     {
       "name": "gfm 17",
@@ -6659,7 +6659,7 @@
     {
       "name": "gfm 27",
       "at": 83,
-      "roles": "table\n  | a | b |\n  | [https://github.com](https://github.com/) [www.github.com](http://www.github.com/) | [http://pokemon.com](http://pokemon.com/) |"
+      "roles": "table [copy download]\n  | a | b |\n  | [https://github.com](https://github.com/) [www.github.com](http://www.github.com/) | [http://pokemon.com](http://pokemon.com/) |"
     },
     {
       "name": "gfm 28",

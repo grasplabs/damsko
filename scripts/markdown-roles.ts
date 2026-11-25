@@ -3,8 +3,8 @@
 // state, table and its cells' alignment, code and its language, quote, rule, section, notes), and
 // in each its words with their marks (`**strong**`, `*emphasis*`, `~~struck~~`, `` `code` ``,
 // `[words](address)`, `![alt](address)`, `^1` for a note's mark, `↩` for a note's way back, `⏎` for
-// a line break). A code block's controls are named after it (`[download copy]`, with `off` while
-// they wait); other controls, icons and words hidden from sight are left out. Read from the HTML of
+// a line break). A code block's and a table's controls are named after it (`[download copy]`, with
+// `off` while they wait); other controls, icons and words hidden from sight are left out. Read from the HTML of
 // Streamdown (scripts/markdown-parity.ts) and of Markdown (scripts/markdown-parity.test.tsx).
 import { Window } from "happy-dom";
 import type { Element, Node } from "happy-dom";
@@ -177,7 +177,13 @@ const tableOf = (
   out: Out,
   alignOf: AlignOf
 ) => {
-  out.push(`${"  ".repeat(depth)}table`);
+  // Its controls stand beside it: in Streamdown's wrapper, in the block Markdown draws it in.
+  const holder = element.closest(
+    "[data-streamdown='table-wrapper'], [data-slot='markdown'] > div"
+  );
+  out.push(
+    `${"  ".repeat(depth)}table${holder === null ? "" : controlsOf(holder)}`
+  );
   for (const row of element.querySelectorAll("tr")) {
     const cells = [...row.querySelectorAll(":scope > th, :scope > td")].map(
       (cell) => {

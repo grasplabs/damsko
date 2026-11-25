@@ -569,16 +569,24 @@ export interface I18nCatalog {
   markdown: {
     /** The link from a footnote back to where it is used, from its number and which mark it is. */
     back: (number: number, mark: number) => string;
+    /** The name of a table's copy button, whose menu holds the formats. */
+    copyTable: string;
+    /** The format names in a table's copy and download menus. */
+    csv: string;
     /** What a ticked task says to a screen reader. */
     done: string;
+    /** The name of a table's download button, whose menu holds the formats. */
+    downloadTable: string;
     /** A footnote's mark, said to a screen reader, from its number. */
     footnote: (number: number) => string;
+    markdown: string;
     /** Under a table drawn only in part, how many rows are not drawn. */
     moreRows: (count: number) => string;
     /** What a task not yet ticked says. */
     notDone: string;
     /** A table's name when no heading stands above it (`tableLabel`). */
     table: string;
+    tsv: string;
   };
   /** The menus' items: a context menu's and a menubar's. */
   menu: {
@@ -1321,12 +1329,17 @@ const english: I18nCatalog = {
       mark > 1
         ? `Back to reference ${number}-${mark}`
         : `Back to reference ${number}`,
+    copyTable: "Copy table",
+    csv: "CSV",
     done: "Done",
+    downloadTable: "Download table",
     footnote: (number: number) => `Footnote ${number}`,
+    markdown: "Markdown",
     moreRows: (count: number) =>
       count === 1 ? "1 more row" : `${count} more rows`,
     notDone: "Not done",
     table: "Table",
+    tsv: "TSV",
   },
   menu: {
     error: "Failed",
