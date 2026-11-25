@@ -410,3 +410,12 @@ test("Skip is a ghost button and the steps are small", async ({ page }) => {
   const box = await skip.boundingBox();
   expect(box?.height).toBe(32);
 });
+
+test("the question wraps as it falls, as the original's question did", async ({
+  page,
+}) => {
+  await openExample(page, "questionnaire", "single");
+  await expect(
+    page.getByText("Which report should I start with?", { exact: true })
+  ).toHaveCSS("text-wrap-style", "auto");
+});

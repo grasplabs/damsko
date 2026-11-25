@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 
 import { hasFocusRing, listenToLiveRegions, openExample } from "./example.ts";
 
@@ -478,9 +478,12 @@ test("a press whose work fails shows and says it failed once, at one width, and 
     });
   });
   const before = await widthOf(page, "Send invite");
-  await page.getByRole("button", { name: "Send invite" }).click();
-  await expect(page.getByRole("button", { name: "Sending" })).toBeVisible();
-  expect(await widthOf(page, "Sending")).toBe(before);
+  const invite = page.getByRole("button", { name: "Send invite" });
+  await invite.click();
+  // While it works it keeps its name; its working words are said, not shown.
+  await expect(invite).toHaveAttribute("aria-busy", "true");
+  await expect(invite.getByText("Sending")).toHaveCount(0);
+  expect(await widthOf(page, "Send invite")).toBe(before);
   const failed = page.getByRole("button", { name: "Not sent" });
   await expect(failed).toBeVisible();
   expect(await widthOf(page, "Not sent")).toBe(before);
@@ -547,6 +550,75 @@ test("with words for working and failing only, it keeps the tick's room at rest 
   expect(await widthOf(page, "Replace the key")).toBe(before);
 });
 
+/** The working example's two buttons' widths, in one of its groups. */
+const widthsIn = async (group: Locator) =>
+  await Promise.all(
+    ["Delete for good", "Connect"].map(async (name) => {
+      const box = await group.getByRole("button", { name }).boundingBox();
+      return box?.width;
+    })
+  );
+
+test("a button that runs work is as wide at rest as while it works, its working words said, not shown, as the original's", async ({
+  page,
+}) => {
+  await openExample(page, "button", "working");
+  const rest = page.getByRole("group", { name: "At rest" });
+  const working = page.getByRole("group", { name: "Working" });
+  await expect(
+    working.getByRole("button", { name: "Connect" })
+  ).toHaveAttribute("aria-busy", "true");
+  expect(await widthsIn(working)).toStrictEqual(await widthsIn(rest));
+  await expect(page.getByText("Deleting")).toHaveCount(0);
+  await expect(page.getByText("Connecting")).toHaveCount(0);
+  // Connect's failure says "Connect" again: its room at rest is its words and the mark's 24px, the
+  // original's 103px with these fonts.
+  const connect = await rest
+    .getByRole("button", { name: "Connect" })
+    .evaluate((node) => {
+      const content = node.querySelector("[data-slot=button-content]");
+      const words = [...node.querySelectorAll("span")].find(
+        (span) => span.childElementCount === 0 && span.textContent === "Connect"
+      );
+      const range = document.createRange();
+      range.selectNodeContents(words ?? node);
+      return (
+        (content?.getBoundingClientRect().width ?? -1) -
+        range.getBoundingClientRect().width
+      );
+    });
+  expect(connect).toBeCloseTo(24, 0);
+  // With only `loadingText`, Delete for good keeps the tick's room beside its words, and no more.
+  const deleting = await rest
+    .getByRole("button", { name: "Delete for good" })
+    .evaluate((node) => {
+      const content = node.querySelector("[data-slot=button-content]");
+      const words = [...node.querySelectorAll("span")].find(
+        (span) =>
+          span.childElementCount === 0 && span.textContent === "Delete for good"
+      );
+      const range = document.createRange();
+      range.selectNodeContents(words ?? node);
+      return (
+        (content?.getBoundingClientRect().width ?? -1) -
+        range.getBoundingClientRect().width
+      );
+    });
+  expect(deleting).toBeCloseTo(24, 0);
+});
+
+test("on a filled button the working spinner is drawn heavier, its last bars kept seen, as the original's", async ({
+  page,
+}) => {
+  await openExample(page, "button", "working");
+  const spinner = page
+    .getByRole("group", { name: "Working" })
+    .getByRole("button", { name: "Connect" })
+    .locator("svg");
+  // 2.25 in the icon's 24-unit grid (1.5px at 16px), over the icon's 1.5.
+  await expect(spinner).toHaveCSS("stroke-width", "2.25px");
+});
+
 test("a second press while its work runs does nothing", async ({ page }) => {
   await openExample(page, "button", "agent");
   const save = page.getByRole("button", { name: "Save changes" });
@@ -574,10 +646,8 @@ test("a page that runs the work itself gives the status, and the button shows it
   const save = page.getByRole("button", { name: "Save changes" });
   const before = await widthOf(page, "Save changes");
   await save.click();
-  await expect(page.getByRole("button", { name: "Saving" })).toHaveAttribute(
-    "aria-busy",
-    "true"
-  );
+  await expect(save).toHaveAttribute("aria-busy", "true");
+  expect(await widthOf(page, "Save changes")).toBe(before);
   await expect(page.getByRole("button", { name: "Saved" })).toBeVisible();
   expect(await widthOf(page, "Saved")).toBe(before);
 });

@@ -10,10 +10,10 @@ const sendInvite = async () => {
 };
 
 // A press whose work returns a Promise: the button shows a spinner while it works, then a tick or
-// the alert for a moment, and keeps its width throughout. The second gives words for each state,
-// said and shown, every one in the same place so the widest sets its width. The third gives words
-// for working and failing only: once it worked it shows the tick before its own words, so it keeps
-// the tick's room at rest.
+// the alert for a moment, and keeps its width throughout. The second gives words for each state:
+// its working words are said, the others said and shown, every one in the same place so the widest
+// sets its width. The third gives words for working and failing only: once it worked it shows the
+// tick before its own words, so it keeps the tick's room at rest.
 export default function ButtonAction() {
   return (
     <>

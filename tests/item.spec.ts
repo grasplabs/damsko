@@ -107,6 +107,36 @@ test("a row that is one button is named by its title and described by its descri
   await expect(page.getByText("Chosen: OpenAI")).toBeVisible();
 });
 
+test("a pressable row's long title and description give way, cut with an ellipsis at the row's edge, as the original's", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 720, height: 600 });
+  await openExample(page, "item", "choice");
+  const row = page.getByRole("button", { name: "OpenAI-compatible endpoint" });
+  await expect(row).toHaveAccessibleDescription("Wherever your endpoint runs");
+  const cut = await row.evaluate((press) => {
+    const item = press.closest<HTMLElement>("[data-slot=item]");
+    const content = item?.querySelector("[data-slot=item-content]");
+    const end = content?.getBoundingClientRect().right ?? 0;
+    return ["OpenAI-compatible endpoint", "Wherever your endpoint runs"].map(
+      (words) => {
+        const span = [...(item?.querySelectorAll("span") ?? [])].find(
+          (each) => each.childElementCount === 0 && each.textContent === words
+        );
+        return {
+          cut: (span?.scrollWidth ?? 0) > (span?.clientWidth ?? 0),
+          inside:
+            (span?.getBoundingClientRect().right ?? Infinity) <= end + 0.5,
+        };
+      }
+    );
+  });
+  expect(cut).toStrictEqual([
+    { cut: true, inside: true },
+    { cut: true, inside: true },
+  ]);
+});
+
 // One rule for a row out of use, whatever its press: a button, a link, a router's link.
 for (const [at, [role, name, reason]] of (
   [

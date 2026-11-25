@@ -2525,6 +2525,18 @@ export const groups: TokenGroup[] = [
             use: "How faint a spinner's last bar is: its bars fade from full to this round the turn. At 0.3 the last bars sank into a dark ground and the spinner read weaker than its words.",
           },
           {
+            name: "spinner-fade-on-fill",
+            category: "size",
+            value: "0.62",
+            use: "How faint a spinner's last bar is on a filled control (a working default, success or destructive button): high enough that the whole ring reads turning on the fill.",
+          },
+          {
+            name: "spinner-stroke-on-fill",
+            category: "size",
+            value: "2.25",
+            use: "A spinner's stroke on a filled control, in the icon's 24-unit grid: 1.5px at 16px. At the icon's 1px the ring stood thin and grey alone in a wide filled button, which read as empty.",
+          },
+          {
             name: "spinner-ease",
             category: "duration",
             value: "{skeleton-ease}",
