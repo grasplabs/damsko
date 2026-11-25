@@ -172,6 +172,7 @@ const styles = stylex.create({
   track: {
     height: space["1"],
     borderRadius: space["1"],
+    cornerShape: radius.shape,
     backgroundColor: colors.border,
     overflow: "hidden",
   },

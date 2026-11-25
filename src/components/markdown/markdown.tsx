@@ -236,8 +236,8 @@ const styles = stylex.create({
     alignItems: "flex-start",
     gap: space["2"],
   },
-  // Round at the corner, not the system's squircle, and its tick at the icon's own size: a task in
-  // an answer is a mark that it is done, softer than a Checkbox someone presses. On the first line.
+  // Its tick at the icon's own size: a task in an answer is a mark that it is done, softer than a
+  // Checkbox someone presses. On the first line.
   box: {
     [iconVars.size]: size.iconSm,
     [iconVars.stroke]: size.iconStroke,
@@ -248,7 +248,7 @@ const styles = stylex.create({
     marginBlock: `calc((1lh - ${size.checkboxBox}) / 2)`,
     marginInlineStart: space["1"],
     borderRadius: radius.sm,
-    cornerShape: "round",
+    cornerShape: radius.shape,
     color: colors.primaryForeground,
   },
   quote: {

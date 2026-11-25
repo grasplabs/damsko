@@ -47,7 +47,13 @@ import {
   RefreshCwIcon,
   TrashIcon,
 } from "@grasp-os/ui/lib/icons";
-import { colors, font, size, space } from "@grasp-os/ui/lib/tokens.stylex";
+import {
+  colors,
+  font,
+  radius,
+  size,
+  space,
+} from "@grasp-os/ui/lib/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
@@ -58,7 +64,8 @@ const layout = stylex.create({
     maxWidth: 960,
     height: 600,
     overflow: "hidden",
-    borderRadius: space["3"],
+    borderRadius: radius.md,
+    cornerShape: radius.shape,
     boxShadow: `0 0 0 ${size.hairline} ${colors.border}`,
   },
   shell: { height: "100%", minHeight: 0 },

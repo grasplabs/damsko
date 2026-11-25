@@ -170,7 +170,6 @@ const styles = stylex.create({
     borderWidth: { default: 0, [FORCED]: 1 },
     borderStyle: "solid",
     borderColor: "transparent",
-    cornerShape: radius.shape,
     color: colors.foreground,
     backgroundColor: {
       default: "transparent",
@@ -188,11 +187,13 @@ const styles = stylex.create({
     width: size.controlXs,
     height: size.controlXs,
     borderRadius: `min(${radius.xl}, calc(${size.controlXs} / 2))`,
+    cornerShape: radius.shape,
   },
   iconDefault: {
     width: size.controlSm,
     height: size.controlSm,
     borderRadius: `min(${radius.xl}, calc(${size.controlSm} / 2))`,
+    cornerShape: radius.shape,
   },
   // The shown icon is sharp; the others blurred, a little small, and gone.
   swap: {

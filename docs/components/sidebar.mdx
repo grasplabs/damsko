@@ -71,7 +71,7 @@ The footer holds what the product composes there: the theme control, then the pe
 
 ## Before the rows arrive
 
-SidebarMenuSkeleton draws quiet bars in the rows' own boxes, the same shapes every time. They are hidden from a screen reader: the menu says it is busy.
+SidebarMenuSkeleton draws Skeleton's placeholders in the rows' own boxes, an icon's square and a line of words, the same shapes every time. They are hidden from a screen reader: the menu says it is busy.
 
 <Stage path="sidebar/states" label="Before the rows arrive" />
 
@@ -143,7 +143,7 @@ Use a level for a different area with its own navigation; the pages within one p
       group: "Size",
       key: "Corner",
       value:
-        "A row and a group's label: 6px, round; the lg row: 10px. On a narrow window its sheet: 12px, round, as the page card",
+        "A row and a group's label: 11px; the lg row: 18px. On a narrow window its sheet: 22px, as the page card. Each in the squircle; where no squircle is drawn, the original's round 6px, 10px and 12px",
       note: "{sidebar-row-radius}, {sidebar-row-radius-lg}, {radius-md}",
     },
     {

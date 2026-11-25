@@ -16,10 +16,13 @@ const columns = [
     id: "owner",
     header: "Owner",
     value: (report: { owner: string }) => report.owner,
+    // While loading, the owner waits in a person's shape: a picture and two lines.
+    skeleton: "person" as const,
   },
 ];
 
-// The table with nothing in it yet, still loading, and when the rows did not load.
+// The table with nothing in it yet, still loading (the owner in a person's shape), and when the rows
+// did not load.
 export default function DataTableOutcomes() {
   return (
     <div {...stylex.props(layout.stack)}>
