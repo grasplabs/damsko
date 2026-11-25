@@ -11,14 +11,17 @@ export type RootContent = MarkdownRoot["children"][number];
 
 // Strike-through is two tildes, as a model writes it (`20~25°C` is a tilde). micromark weighs each
 // emphasis or link mark of a paragraph against those before it, so many unmatched ones cost their
-// number squared (`a*` repeated: 1.7 s for 40 KB): a block with a paragraph of more than 1,000 (its
-// fenced code aside) is read without them, as words, and without `![^1]`, a note's mark after a `!`,
-// which looks back for its picture.
+// number squared (`a*` repeated: 1.7 s for 40 KB); and micromark, then the tree's own pass for bare
+// addresses, read a bare address again from each start to the end of its word (`www.a_` repeated:
+// 4 s for 24 KB; `www.a` and 20,000 dots: 2 s). A block with a paragraph of more than 1,000 marks,
+// or a word of more than 1,000 characters (its fenced code aside), is read without them, as words,
+// and without `![^1]`, a note's mark after a `!`, which looks back for its picture.
 const OFF =
-  "attention strikethrough labelStartLink labelStartImage labelEnd gfmPotentialFootnoteCall";
+  "attention strikethrough labelStartLink labelStartImage labelEnd gfmPotentialFootnoteCall wwwAutolink protocolAutolink emailAutolink";
 const GFM = [gfm({ singleTilde: false })];
 const PLAIN = [...GFM, { disable: { null: OFF.split(" ") } }];
-const FROM = [gfmFromMarkdown()];
+const FROM = gfmFromMarkdown();
+const PLAIN_FROM = FROM.map((extension) => ({ ...extension, transforms: [] }));
 /** The names an answer defines, as the tree has them. */
 export interface Names {
   links: ReadonlySet<string>;
@@ -91,11 +94,13 @@ const fenceAfter = (fence: string, line: string) => {
   return closes(line, fence) ? "" : fence;
 };
 // A line led by more than 64 characters of indent and container marks: a list or a quote nested
-// past 32 deep, which micromark weighs as its depth squared (400 deep: 5 s for 80 KB).
-const DEEP = /^(?:[ \t]|(?:[-*+>]|\d{1,9}[.)])(?=[ \t])){65,}/u;
+// past 32 deep, which micromark weighs as its depth squared (400 deep: 5 s for 80 KB). A quote's
+// `>` needs no space after it (`>- ` repeated).
+const DEEP = /^(?:[ \t>]|(?:[-*+]|\d{1,9}[.)])(?=[ \t])){65,}/u;
 /**
  * The source as it is read, fenced code left as it is: a line nested past 32 deep keeps its last 64
- * characters of lead, so it is drawn 32 deep; and whether a paragraph has more than 1,000 marks.
+ * characters of lead, so it is drawn at most 64 deep; and whether a paragraph has more than 1,000
+ * marks or a word more than 1,000 characters.
  */
 const bounded = (source: string) => {
   let fence = "";
@@ -108,7 +113,9 @@ const bounded = (source: string) => {
     // A fence, a list item, a row, a heading or a blank line starts a part of its own.
     const starts = fence !== "" || /^[ \t>]*(?:[-*+|#\d]|$)/u.test(line);
     marks = (starts ? 0 : marks) + line.replaceAll(/[^*_~[\]]/gu, "").length;
-    many ||= was === "" && marks > 1000;
+    many ||=
+      was === "" &&
+      (marks > 1000 || line.split(/\s/u).some((word) => word.length > 1000));
     out.push(
       at === 0 ? "" : "\n",
       was === "" ? line.replace(DEEP, (lead) => lead.slice(-64)) : line
@@ -124,7 +131,8 @@ const read = (
   const { text, many } = bounded(source);
   try {
     const extensions = [...(many ? PLAIN : GFM), told(names, asked)];
-    return fromMarkdown(text, { extensions, mdastExtensions: FROM });
+    const mdastExtensions = many ? PLAIN_FROM : FROM;
+    return fromMarkdown(text, { extensions, mdastExtensions });
   } catch {
     // Nesting deep enough to exhaust the stack (thousands of `>` on a line): its words.
     const words = { type: "text" as const, value: source };
@@ -272,6 +280,11 @@ const REPAIR = {
  * closed after it, as remend closes it for the words before.
  */
 const repair = (block: string) => {
+  // remend 1.5.0 heals brackets nested n deep in n² (16,000 deep: 1.2 s); 1.5.1 heals them in
+  // linear time. Until then a block with more than 1,000 `[` is drawn as written.
+  if (block.split("[").length > 1001) {
+    return block;
+  }
   // An address whose parentheses balance (`…_(format)`) is still open: remend would take its first
   // `)` for the link's end, so it is cut back to its `](`, a half link.
   const at = block.lastIndexOf("](");

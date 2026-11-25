@@ -586,6 +586,37 @@ describe("bounds a model's answer cannot pass", () => {
     expect(count(html, "<tr")).toBe(1001);
     expect(textOf(html)).toContain("500 more rows");
   });
+
+  test("bare addresses are links beside a word of 1,000 characters, and a longer word makes its block words", () => {
+    const long = `https://example.com/${"x".repeat(950)}`;
+    const source = `See www.example.com, https://example.com/a_b and team@example.com, or **read** [the page](${long}).`;
+    const html = draw(source);
+    expect([count(html, "<a\\b"), count(html, "<strong")]).toStrictEqual([
+      4, 1,
+    ]);
+    expect(html).toContain(`href="${long}"`);
+    const longer = draw(source.replace(long, `${long}${"x".repeat(50)}`));
+    expect([count(longer, "<a\\b"), count(longer, "<strong")]).toStrictEqual([
+      0, 0,
+    ]);
+  });
+
+  test("a quote's `>` nests the same with or without a space after it, at most 64 deep", () => {
+    expect(draw(">- one\n>- two\n>>1. three")).toBe(
+      draw("> - one\n> - two\n> > 1. three")
+    );
+    expect(count(draw(`${">".repeat(40)}a`), "<blockquote")).toBe(40);
+    const deep = draw(`${">".repeat(100)}a`);
+    expect(count(deep, "<blockquote")).toBe(64);
+    expect(textOf(deep)).toBe("a");
+  });
+
+  test("while written, a half link shows its words with room for its arrow, and no address", () => {
+    const html = draw("Read [the docs](https://exa", { streaming: true });
+    expect(textOf(html)).toBe("Read the");
+    expect(count(html, 'aria-hidden="true"')).toBe(2);
+    expect(count(html, "<a\\b")).toBe(0);
+  });
 });
 
 // Hostile answers: nesting past any stack, delimiter runs micromark weighs against each other, a
@@ -669,6 +700,28 @@ describe("time and size grow in step with the answer", () => {
     // Each chunk drawn anew is read whole (on the server nothing is kept): none much slower.
     expect(sorted.at(-1) ?? 0).toBeLessThan(Math.max(median, 1) * 6);
   }, 600_000);
+
+  // Each took seconds before its bound: a bare address read again from each start to its word's end,
+  // brackets remend 1.5.0 heals in their depth squared, quotes and lists with no space after `>`.
+  const slow = {
+    "bare addresses after `_` in one word (24 KB)": "www.a_".repeat(4000),
+    "the same under 1,000 marks (56 KB)": `${"www.a_".repeat(999)}${"a".repeat(50_000)}`,
+    "a bare address and 20,000 dots": `www.a${".".repeat(20_000)}b`,
+    "brackets nested 16,000 deep": `${"[".repeat(16_000)}${"]".repeat(16_000)}`,
+    "lists in quotes with no space after `>` (30 KB)": `${">- ".repeat(10_000)}a`,
+  };
+
+  test.each(Object.entries(slow))(
+    "%s: drawn whole, and while written, each in under 200 ms",
+    (_, source) => {
+      for (const streaming of [false, true]) {
+        const start = performance.now();
+        draw(source, { streaming });
+        expect(performance.now() - start).toBeLessThan(200);
+      }
+    },
+    120_000
+  );
 
   test.each(Object.entries(hostile))(
     "%s: nine times the answer, whole and while written, under 27 times the time and 10 times the nodes",
