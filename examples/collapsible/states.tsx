@@ -16,7 +16,7 @@ export default function CollapsibleState({
   open = false,
   disabled = false,
 }: {
-  variant?: "default" | "outline";
+  variant?: "default" | "outline" | "plain";
   open?: boolean;
   disabled?: boolean;
 }) {
