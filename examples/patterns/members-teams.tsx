@@ -160,7 +160,7 @@ export default function MembersTeams({
         <Card size="sm">
           <CardContent flush>
             <ItemGroup separated aria-label="Teams">
-              {list.map((team, index) => (
+              {list.map((team) => (
                 <Item key={team.id} size="xs">
                   <ItemContent>
                     <ItemTitle>

@@ -42,7 +42,7 @@ export default function ItemRouter() {
   return (
     <div {...stylex.props(layout.list)}>
       <ItemGroup separated aria-label="Chats">
-        {chats.map((chat, index) => (
+        {chats.map((chat) => (
           <Item key={chat.id} size="sm" asChild active={chat.id === open}>
             <RouterLink to={chat.id}>
               <ItemContent>

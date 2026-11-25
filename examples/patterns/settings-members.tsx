@@ -159,7 +159,7 @@ export default function SettingsMembers() {
         }
       >
         <ItemGroup separated aria-label="Members">
-          {members.map((member, index) => (
+          {members.map((member) => (
             <Item key={member.email} size="xs">
               <ItemMedia>
                 <Avatar name={member.name} size="xs" decorative>

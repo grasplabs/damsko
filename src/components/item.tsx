@@ -141,7 +141,8 @@ export interface ItemGroupProps {
   children: ReactNode;
   /**
    * The page's hairline between every two rows, for plain rows in a long list; outlined or muted
-   * rows stand apart by the gap instead.
+   * rows stand apart by the gap instead. The list keeps 4px at its top and foot whatever its count,
+   * a list of one row too (none in a side panel's card).
    * @default false
    */
   separated?: boolean;
@@ -643,6 +644,19 @@ const styles = stylex.create({
         default: space["1"],
         [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: 0,
       },
+    },
+  },
+  // A list given `separated` keeps a hairline list's rhythm whatever its count, so a list of one
+  // row has the same 4px at its top and foot as a longer one, as the original's.
+  separated: {
+    rowGap: {
+      default: space["1"],
+      [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: 0,
+    },
+    columnGap: "normal",
+    paddingBlock: {
+      default: space["1"],
+      [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: 0,
     },
   },
   // A list's row: after a hairline, it tells its Item so (itemVars.lineAbove).
@@ -1196,7 +1210,12 @@ export const ItemGroup = ({
       aria-label={label}
       aria-labelledby={labelledBy}
       data-slot="item-group"
-      {...stylex.props(styles.group, stack && styles.stack, style)}
+      {...stylex.props(
+        styles.group,
+        separated && styles.separated,
+        stack && styles.stack,
+        style
+      )}
     >
       {separated ? separate(children) : children}
     </ul>

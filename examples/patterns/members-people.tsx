@@ -387,7 +387,7 @@ export default function MembersPeople({
             ) : null}
             {loading || found.length === 0 ? null : (
               <ItemGroup separated aria-label="Members">
-                {onPage.map((person, index) => (
+                {onPage.map((person) => (
                   <Item key={person.email} size="xs">
                     <Who person={person} />
                     <ItemActions>
@@ -452,7 +452,7 @@ export default function MembersPeople({
               <>
                 <p {...stylex.props(layout.removedLabel)}>Removed</p>
                 <ItemGroup separated aria-label="Removed">
-                  {removed.map((person, index) => (
+                  {removed.map((person) => (
                     <Item key={person.email} size="xs">
                       <Who person={person} quiet />
                       <ItemActions>

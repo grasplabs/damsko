@@ -119,7 +119,7 @@ export default function SidePanelBasic() {
             }
           >
             <ItemGroup separated>
-              {sources.map((source, index) => (
+              {sources.map((source) => (
                 <Item key={source.name} size="xs">
                   <ItemMedia>
                     <Icon icon={source.icon} />

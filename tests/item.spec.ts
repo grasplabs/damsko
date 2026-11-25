@@ -48,6 +48,28 @@ for (const theme of ["light", "dark"] as const) {
   });
 }
 
+test("a separated list keeps 4px at its top and foot with one row", async ({
+  page,
+}) => {
+  await openExample(page, "item", "links");
+  const list = page.getByRole("list", { name: "Settings" });
+  const room = async () =>
+    await list.evaluate((node) => {
+      const { paddingTop, paddingBottom } = getComputedStyle(node);
+      return [paddingTop, paddingBottom];
+    });
+  expect(await room()).toEqual(["4px", "4px"]);
+  // The same list down to its first row: no hairline left in it, and the same room.
+  await list.evaluate((node) => {
+    for (const child of [...node.children].slice(1)) {
+      child.remove();
+    }
+  });
+  await expect(list.locator("[data-slot=item-separator]")).toHaveCount(0);
+  await expect(list.getByRole("listitem")).toHaveCount(1);
+  expect(await room()).toEqual(["4px", "4px"]);
+});
+
 test("a row with href is one link", async ({ page }) => {
   await openExample(page, "item", "links");
   await page.keyboard.press("Tab");

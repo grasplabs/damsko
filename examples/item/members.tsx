@@ -47,7 +47,7 @@ export default function ItemMembers() {
   return (
     <div {...stylex.props(layout.box)}>
       <ItemGroup separated aria-label="Members">
-        {members.map((member, index) => (
+        {members.map((member) => (
           <Item key={member.email} size="sm">
             <ItemMedia align="center">
               <Avatar name={member.name} size="xs" decorative>

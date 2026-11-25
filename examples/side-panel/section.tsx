@@ -57,7 +57,7 @@ export default function SidePanelSectionExample() {
         }
       >
         <ItemGroup separated>
-          {triggers.map((trigger, index) => (
+          {triggers.map((trigger) => (
             <Item key={trigger.name} size="xs">
               <ItemMedia>
                 <Icon icon={trigger.icon} />
