@@ -119,7 +119,6 @@ const styles = stylex.create({
     boxSizing: "border-box",
     verticalAlign: "middle",
     backgroundColor: colors.card,
-    cornerShape: radius.shape,
     color: colors.foreground,
   },
   bare: {
@@ -193,7 +192,6 @@ const styles = stylex.create({
     boxSizing: "border-box",
     paddingInline: space["1"],
     backgroundColor: colors.muted,
-    cornerShape: radius.shape,
     fontFamily: font.sans,
     fontWeight: font.weightMedium,
     fontVariantNumeric: "tabular-nums",

@@ -289,7 +289,6 @@ const styles = stylex.create({
     borderWidth: { default: 0, [FORCED]: 1 },
     borderStyle: "solid",
     borderColor: "currentColor",
-    cornerShape: radius.shape,
     backgroundColor: colors.inputBg,
     boxShadow: {
       default: `inset 0 0 0 1px ${colors.input}, ${shadow.inputShadow}`,

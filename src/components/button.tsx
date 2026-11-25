@@ -237,7 +237,6 @@ const styles = stylex.create({
     borderWidth: { default: 0, [FORCED]: 1 },
     borderStyle: "solid",
     borderColor: { default: "currentColor", [FORCED]: "ButtonText" },
-    cornerShape: radius.shape,
     fontFamily: font.sans,
     fontSize: font.textSm,
     lineHeight: font.textSmLine,

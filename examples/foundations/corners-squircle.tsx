@@ -50,7 +50,6 @@ const styles = stylex.create({
     transitionTimingFunction: duration.ease,
   },
   round: { cornerShape: "round" },
-  squircle: { cornerShape: radius.shape },
   dashed: {
     borderWidth: size.hairline,
     borderStyle: "dashed",
@@ -132,7 +131,11 @@ export default function CornersSquircle() {
       <div {...stylex.props(styles.tile)}>
         <div
           aria-hidden="true"
-          {...stylex.props(styles.shape, styles.fill, styles[shape])}
+          {...stylex.props(
+            styles.shape,
+            styles.fill,
+            shape === "round" && styles.round
+          )}
         />
         <div
           aria-hidden="true"

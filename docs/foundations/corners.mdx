@@ -43,7 +43,7 @@ One scale, named by size as shadcn names it. `radius` is the base, 20px; `radius
 | --- | --- | --- |
 | `radius-xs` | 2px | A thing too thin for `radius-sm`: an 8px swatch, a highlight's edge. |
 | `radius-sm` | 6px | A mark under 24px tall: a key, inline code, the box of a checkbox, a square tile at 24px. |
-| `radius-md` | 12px | The page's card beside an inset sidebar: the app's main surface. It holds no sidebar rows, so it does not nest round them. |
+| `radius-md` | 22px | The page's card beside an inset sidebar: the app's main surface. It holds no sidebar rows, so it does not nest round them. |
 | `radius-lg` | the base less 4px, so 16px | A row: a menu or list item, an Item, a tree row, a trigger that runs the width, in a card too. A container keeps 4px round its rows, so a row's corner is the container's less that room. |
 | `radius-xl` | the base, 20px | Controls and containers: buttons, fields, cards, menus, panels, a square tile. |
 | `radius-2xl` | the base plus 4px, so 24px | A surface that nests rows 8px in: a floating sidebar, a row's 16px plus the 8px it keeps round its rows. |
@@ -53,7 +53,9 @@ Every step is capped at half the height of what takes it, so a small control bec
 
 `radius-circle` is 50%, for an avatar or a dot. It stands beside `radius-full` because a percentage follows its box and a length does not: half of each side, so it grows with the box and a dot can turn into a square on the way to an error.
 
-The sidebar's rows keep their own size, as the original's frame drew them: `sidebar-row-radius`, 6px, for a row and a group's label, and `sidebar-row-radius-lg`, 10px, for the large row at its foot, so it nests in the foot's corner. They are squircles like every other corner.
+The sidebar's rows keep their own corners, as the original's frame drew them: `sidebar-row-radius`, 11px, for a row and a group's label, and `sidebar-row-radius-lg`, 18px, for the large row at its foot, so it nests in the foot's corner.
+
+A squircle needs about 1.84 times a round corner's radius to read as soft, so every squircle corner is sized for the squircle, and a browser that draws no squircle takes the round radius that reads like it (`tokens/corner-fallbacks.ts`). For the scale the base becomes 9px, `radius-sm` 4px and `radius-2xl` 11px. The page card's 22px, the sidebar rows' 11px and 18px, and a tree guide's elbow (17px) become the original's round 12px, 6px, 10px and 12px.
 
 The Prompt input's card keeps its own token, `prompt-input-radius`: 24px, a button's corner at its size (16px) plus the footer's 8px. It is not `radius-2xl` because the bands above and under the card tuck behind it by the same length, and because it stays 24px in a browser that draws no squircle, where the scale's corners are smaller.
 

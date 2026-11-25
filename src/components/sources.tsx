@@ -353,7 +353,6 @@ const styles = stylex.create({
     flexShrink: 0,
     boxSizing: "border-box",
     overflow: "hidden",
-    cornerShape: radius.shape,
     color: colors.bodyForeground,
     backgroundColor: colors.card,
   },

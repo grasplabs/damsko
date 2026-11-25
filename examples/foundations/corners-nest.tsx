@@ -72,7 +72,6 @@ const styles = stylex.create({
     minWidth: 0,
     paddingInline: space["4"],
     paddingBlock: space["6"],
-    cornerShape: radius.shape,
     backgroundColor: colors.muted,
     boxShadow: `${size.borderStrong}, 0 0 0 ${space["3"]} ${WASH}`,
     transitionProperty: "border-radius",

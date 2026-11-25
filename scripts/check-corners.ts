@@ -1,18 +1,17 @@
-// Every corner is the system's squircle: a rounded radius has its `cornerShape` (`corner-shape` in
-// CSS) beside it, in the same style object or rule, so no corner falls back to a plain round one.
-// The exceptions, and only these:
+// Every corner is the system's squircle: a rounded radius has `cornerShape: radius.shape`
+// (`corner-shape: var(--damsko-radius-shape)` in CSS) beside it, in the same style object or rule,
+// so no corner falls back to a plain round one. The exceptions, and only these:
 //   - no corner: `0`, `null`;
 //   - a corner taken from the parent, `"inherit"`, which takes the parent's shape with it
 //     (`cornerShape: "inherit"`), so an inner corner follows the outer one exactly;
 //   - a pill or a circle: `radius.full` or `radius.circle` (`--damsko-radius-full`, `-circle`):
-//     round by its radius alone, which a squircle would deform. It never takes the squircle, and
-//     it may say `cornerShape: "round"` to make that plain where a style it joins carries one;
-//   - a pill by design whose radius is half its height rather than `radius.full`, so that more
-//     lines round its corners and not its ends (a badge): named in PILLS below, `cornerShape:
-//     "round"` beside it.
-// A radius written per condition counts as rounded when any of its values is; there `"inherit"`
+//     round by its radius alone, which a squircle would deform. It takes no shape, or `"round"`;
+//   - round by design, named in ROUND below with why: `cornerShape: "round"`.
+// A shape is one of those three values, never another or one per condition, and never stands
+// without a radius beside it (one on a style a radius joins says nothing a pair does not). A
+// radius written per condition counts as rounded when any of its values is; there `"inherit"`
 // counts as no corner (a part in a group takes the group's corner and keeps its own shape).
-// Reads files only.
+// Per-corner shapes (`cornerTopLeftShape`) count as shapes. Reads files only.
 //
 //   node scripts/check-corners.ts
 import { readdirSync, readFileSync, statSync } from "node:fs";
@@ -79,12 +78,31 @@ const RADIUS =
 const CSS_RADIUS =
   /(?:^|[;{\s])(?<name>border(?:-(?:top|bottom)-(?:left|right)|-(?:start|end)-(?:start|end))?-radius)\s*:\s*(?<value>[^;}]+)/gu;
 
-// Pills by design, as `<file>#<style>`: round, with a radius of their own that radius.full is not.
-const PILLS = new Set([
+// Round by design, as `<file>#<style>`, each with why.
+const ROUND = new Set([
+  // A badge is a pill, its radius half its height so that more lines round its corners, not its
+  // ends: radius.full would not.
   "src/components/badge.tsx#default",
   "src/components/badge.tsx#sm",
+  // The round corner the Corners page compares the squircle with.
+  "examples/foundations/corners-squircle.tsx#round",
+  "examples/foundations/corners-squircle.tsx#dashed",
+  // A pill's and a circle's token drawn as a sample, round as the parts that use them are.
+  "site/blocks/foundation.tsx#round",
 ]);
-const pillsSeen = new Set<string>();
+const roundSeen = new Set<string>();
+
+type Shape = "squircle" | "inherit" | "round" | "other";
+const SHAPES: Record<string, Shape> = {
+  "radius.shape": "squircle",
+  "var(--damsko-radius-shape)": "squircle",
+  '"inherit"': "inherit",
+  inherit: "inherit",
+  '"round"': "round",
+  round: "round",
+};
+const shapeOf = (text: string): Shape =>
+  Object.hasOwn(SHAPES, text) ? (SHAPES[text] ?? "other") : "other";
 
 const failures: string[] = [];
 let corners = 0;
@@ -93,64 +111,71 @@ const fail = (at: string, problem: string) => {
   failures.push(`${at}: ${problem}`);
 };
 
-/** One radius against the shape beside it (`shape`: its source text) and its style's name. */
-const checkRadius = (
+/** One style object or rule: its radii, the shapes beside them, and its name (`file#style`). */
+const checkBox = (
   at: string,
-  name: string,
-  corner: Corner,
-  shape: string | undefined,
+  radii: readonly { name: string; corner: Corner }[],
+  shapes: readonly Shape[],
   style: string
 ) => {
-  if (corner === "rounded" && shape === undefined) {
-    fail(at, `${name} is rounded with no cornerShape beside it`);
+  corners += radii.length;
+  const listed = ROUND.has(style);
+  if (listed) {
+    roundSeen.add(style);
   }
-  if (PILLS.has(style)) {
-    pillsSeen.add(style);
-    if (shape !== '"round"') {
-      fail(at, `${name} is a pill by design: its cornerShape is "round"`);
+  if (shapes.includes("other")) {
+    fail(at, "a corner shape other than radius.shape, inherit or round");
+  }
+  if (radii.length === 0 && shapes.length > 0 && !listed) {
+    fail(at, "a corner shape with no radius beside it");
+  }
+  if (listed && !shapes.includes("round")) {
+    fail(at, `${style} is round by design: its shape is round`);
+  }
+  for (const { name, corner } of radii) {
+    if (corner === "rounded" && shapes.length === 0) {
+      fail(at, `${name} is rounded with no corner shape beside it`);
     }
-  } else if (corner === "rounded" && shape === '"round"') {
-    fail(at, `${name} is rounded but its cornerShape is round`);
-  }
-  if (corner === "inherit" && shape !== '"inherit"') {
-    fail(at, `${name} inherits its corner but not its cornerShape`);
-  }
-  if (corner === "pill" && shape === "radius.shape") {
-    fail(at, `${name} is a pill or a circle, which a squircle deforms`);
+    if (corner === "rounded" && shapes.includes("round") && !listed) {
+      fail(at, `${name} is rounded but its shape is round`);
+    }
+    if (corner === "inherit" && !shapes.includes("inherit")) {
+      fail(at, `${name} inherits its corner but not its shape`);
+    }
+    if (corner === "pill" && shapes.some((shape) => shape !== "round")) {
+      fail(at, `${name} is a pill or a circle: round, or no shape`);
+    }
   }
 };
 
+const SHAPE =
+  /^corner(?:(?:Top|Bottom)(?:Left|Right)|(?:Start|End){2})?Shape$/u;
+
 const checkScript = (file: string, text: string) => {
   const source = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true);
-  const lineOf = (node: ts.Node) =>
-    source.getLineAndCharacterOfPosition(node.getStart()).line + 1;
   const visit = (node: ts.Node) => {
     if (ts.isObjectLiteralExpression(node)) {
-      const shape = node.properties.find((p) => nameOf(p) === "cornerShape");
-      const shapeText =
-        shape !== undefined && ts.isPropertyAssignment(shape)
-          ? shape.initializer.getText()
-          : undefined;
+      const radii: { name: string; corner: Corner }[] = [];
+      const shapes: Shape[] = [];
       for (const property of node.properties) {
         const name = nameOf(property);
-        if (
-          name === undefined ||
-          !RADIUS.test(name) ||
-          !ts.isPropertyAssignment(property)
-        ) {
+        if (name === undefined || !ts.isPropertyAssignment(property)) {
           continue;
         }
-        corners += 1;
-        const style = ts.isPropertyAssignment(node.parent)
-          ? `${file}#${nameOf(node.parent) ?? ""}`
-          : "";
-        checkRadius(
-          `${file}:${lineOf(property)}`,
-          name,
-          cornerOf(property.initializer),
-          shapeText,
-          style
-        );
+        if (RADIUS.test(name)) {
+          radii.push({ name, corner: cornerOf(property.initializer) });
+        } else if (SHAPE.test(name)) {
+          shapes.push(shapeOf(property.initializer.getText()));
+        }
+      }
+      if (radii.length > 0 || shapes.length > 0) {
+        const { parent } = node;
+        const owner =
+          ts.isPropertyAssignment(parent) || ts.isVariableDeclaration(parent)
+            ? parent.name.getText()
+            : "";
+        const { line } = source.getLineAndCharacterOfPosition(node.getStart());
+        checkBox(`${file}:${line + 1}`, radii, shapes, `${file}#${owner}`);
       }
     }
     ts.forEachChild(node, visit);
@@ -158,27 +183,28 @@ const checkScript = (file: string, text: string) => {
   visit(source);
 };
 
+const CSS_SHAPE =
+  /(?<![\w(-])corner(?:-(?:top|bottom)-(?:left|right)|-(?:start|end)-(?:start|end))?-shape\s*:\s*(?<value>[^;}]+)/gu;
+
 const checkSheet = (file: string, text: string) => {
-  // Each innermost rule's declarations: what sits between one brace and the next.
+  // Comments blanked, their lines kept; then each innermost rule's declarations: what sits
+  // between one brace and the next.
+  const code = text.replaceAll(/\/\*[\s\S]*?\*\//gu, (comment) =>
+    comment.replaceAll(/[^\n]/gu, " ")
+  );
   let line = 1;
-  for (const block of text.split(/[{}]/u)) {
-    for (const match of block.matchAll(CSS_RADIUS)) {
-      corners += 1;
-      const { name = "", value = "" } = match.groups ?? {};
-      const corner = kindOf(value.trim(), CSS_NONE, CSS_PILL);
-      const shape = /corner-shape\s*:\s*(?<shape>[^;]+)/u
-        .exec(block)
-        ?.groups?.shape?.trim();
-      const at = `${file}:${line + block.slice(0, match.index).split("\n").length - 1}`;
-      if (corner === "rounded" && shape === undefined) {
-        fail(at, `${name} is rounded with no corner-shape beside it`);
-      }
-      if (corner === "inherit" && shape !== "inherit") {
-        fail(at, `${name} inherits its corner but not its corner-shape`);
-      }
-      if (corner === "pill" && shape === "var(--damsko-radius-shape)") {
-        fail(at, `${name} is a pill or a circle, which a squircle deforms`);
-      }
+  for (const block of code.split(/[{}]/u)) {
+    const radii = [...block.matchAll(CSS_RADIUS)].map((match) => ({
+      name: match.groups?.name ?? "",
+      corner: kindOf((match.groups?.value ?? "").trim(), CSS_NONE, CSS_PILL),
+    }));
+    const shapes = [...block.matchAll(CSS_SHAPE)].map((match) =>
+      shapeOf((match.groups?.value ?? "").trim())
+    );
+    const lead = block.length - block.trimStart().length;
+    const at = `${file}:${line + block.slice(0, lead).split("\n").length - 1}`;
+    if (radii.length > 0 || shapes.length > 0) {
+      checkBox(at, radii, shapes, "");
     }
     line += block.split("\n").length - 1;
   }
@@ -196,9 +222,9 @@ for (const folder of folders) {
   }
 }
 
-for (const pill of PILLS) {
-  if (!pillsSeen.has(pill)) {
-    fail(pill, "listed as a pill by design but sets no radius there");
+for (const style of ROUND) {
+  if (!roundSeen.has(style)) {
+    fail(style, "listed as round by design but not found");
   }
 }
 

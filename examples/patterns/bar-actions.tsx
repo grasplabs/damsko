@@ -52,7 +52,7 @@ const styles = stylex.create({
   shell: {
     height: 160,
     overflow: "hidden",
-    borderRadius: space["3"],
+    borderRadius: radius.md,
     cornerShape: radius.shape,
     boxShadow: `0 0 0 ${size.hairline} ${colors.border}`,
   },

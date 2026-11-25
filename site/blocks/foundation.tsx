@@ -343,16 +343,17 @@ function Sample({ kind, entry }: { kind: SampleKind; entry: TokenEntry }) {
       const shape = entry.name === "radius-shape";
       const whole =
         entry.name === "radius-full" || entry.name === "radius-circle";
-      const style: CSSProperties = {
-        borderRadius: shape ? "var(--damsko-radius-xl)" : v(entry),
-        // A pill and a circle are round by their radius alone, as the parts that use them are: the
-        // squircle laid over them drew a rounded rectangle and a rounded square.
-        cornerShape: shape
-          ? v(entry)
-          : whole
-            ? "round"
-            : "var(--damsko-radius-shape)",
+      // A pill and a circle are round by their radius alone, as the parts that use them are: the
+      // squircle laid over them drew a rounded rectangle and a rounded square.
+      const round: CSSProperties = {
+        borderRadius: v(entry),
+        cornerShape: "round",
       };
+      const squircle: CSSProperties = {
+        borderRadius: shape ? "var(--damsko-radius-xl)" : v(entry),
+        cornerShape: radius.shape,
+      };
+      const style = whole ? round : squircle;
       return (
         <span
           style={style}

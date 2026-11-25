@@ -478,7 +478,6 @@ export const inputStyles = stylex.create({
     borderWidth: { default: 0, [FORCED]: 1 },
     borderStyle: "solid",
     borderColor: "currentColor",
-    cornerShape: radius.shape,
     backgroundColor: colors.inputBg,
     color: colors.foreground,
     fontFamily: font.sans,

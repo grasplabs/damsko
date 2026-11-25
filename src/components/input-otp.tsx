@@ -188,7 +188,6 @@ const styles = stylex.create({
       },
     },
     borderColor: "currentColor",
-    cornerShape: radius.shape,
     backgroundColor: colors.inputBg,
     boxShadow: {
       default: edge,

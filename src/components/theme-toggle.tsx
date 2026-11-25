@@ -165,7 +165,6 @@ const styles = stylex.create({
     borderWidth: { default: 0, [FORCED]: 1 },
     borderStyle: "solid",
     borderColor: "transparent",
-    cornerShape: radius.shape,
     color: colors.foreground,
     backgroundColor: {
       default: "transparent",

@@ -64,7 +64,7 @@ const layout = stylex.create({
     maxWidth: 960,
     height: 600,
     overflow: "hidden",
-    borderRadius: space["3"],
+    borderRadius: radius.md,
     cornerShape: radius.shape,
     boxShadow: `0 0 0 ${size.hairline} ${colors.border}`,
   },

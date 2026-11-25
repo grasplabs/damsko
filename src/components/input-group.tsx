@@ -93,7 +93,6 @@ const groupStyles = stylex.create({
       },
     },
     borderColor: "currentColor",
-    cornerShape: radius.shape,
     backgroundColor: {
       default: colors.inputBg,
       ":has(:is(input, textarea):read-only:not(:disabled))": colors.inputBgRead,

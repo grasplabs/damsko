@@ -269,7 +269,6 @@ const styles = stylex.create({
     padding: space["1"],
     paddingInlineEnd: space["2"],
     overflow: "hidden",
-    cornerShape: radius.shape,
     backgroundColor: colors.muted,
     fontFamily: font.sans,
   },
