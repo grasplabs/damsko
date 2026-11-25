@@ -1,0 +1,210 @@
+---
+title: Sortable list
+description: A list a person puts in order by hand, dragging each item by its handle or moving it from the keyboard.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/sortable-list"
+/>
+
+## Basic usage
+
+SortableList holds the order; each SortableListItem is one item, and its SortableListHandle moves it. Two of Grasp's apps put a list in order this way: the admin, a company's onboarding steps; the web app, a field's options. Drag a handle, or focus one and press Space, the arrows, then Space. Keep the order in state: the new one comes back through `onValueChange` once the item is put down.
+
+<Stage path="sortable-list/basic" live label="Basic usage" />
+
+## Items with controls
+
+Only the handle moves the item, so an item holds its own controls and they keep their keys and presses. `textValue` gives the item's name when its words say more, so a screen reader hears "Picked up Its AI, position 2 of 4".
+
+<Stage path="sortable-list/controls" live label="Items with controls" />
+
+## Items that are fields
+
+A space typed in a field is a space; only a handle picks an item up.
+
+<Stage path="sortable-list/fields" live label="Items that are fields" />
+
+## Items that cannot be picked up
+
+A `disabled` item cannot be picked up. It does not hold its place: the others move past it, and it moves aside for them. A `disabled` list moves nothing; say why near it.
+
+<Stage
+  path="sortable-list/disabled"
+  live
+  label="Items that cannot be picked up"
+/>
+
+## In a box that scrolls
+
+Held near the top or bottom edge of the box the list stands in, or of the window, a drag scrolls it until the list's own end is in view; the item stays under the pointer and within the list.
+
+<Stage path="sortable-list/scrolling" live label="In a box that scrolls" />
+
+## Right to left
+
+The handle stands at the line's start. Up and Down move an item in every language.
+
+<Stage path="sortable-list/rtl" label="Right to left" />
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="sortable-list"
+  always={[
+    "An order the person sets and the product keeps: steps, a playlist, a choice's options, columns.",
+    "A handle on every item, named with the item: Move Welcome.",
+    "The order in state, updated from `onValueChange`.",
+  ]}
+  never={[
+    "An order the data decides, like by date or name: sort a Table or Data table by its column instead.",
+    "Moving items between lists, or nesting them: that is a board or a tree.",
+    "A list with no handle, dragged by the whole row: its controls would lose their presses.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    { key: "Gap", value: "{space-1} between items" },
+    {
+      key: "Item",
+      value: "The handle, then its content, {space-2} apart",
+    },
+    {
+      key: "Handle",
+      value: "{control-sm} square, a grip at {icon-sm}",
+      note: "a ghost button's hover and press",
+      tokens: ["muted", "accent", "accent-active"],
+    },
+    {
+      key: "Touch target",
+      value: "{tap-target} wide, as tall as the item",
+      note: "round the handle, on a touch screen: never past its row",
+    },
+    {
+      key: "Picked up",
+      value: "Lifted on the raised ground, {radius-lg}",
+      tokens: ["popover", "popup-shadow"],
+    },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    {
+      key: "Lift",
+      value: "Ground and shadow, {duration-hover}",
+      note: "reduced: at once",
+      tokens: ["ease"],
+    },
+    {
+      key: "Drag",
+      value:
+        "The item follows the pointer up and down; the others make room at once",
+      note: "never sideways",
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Keyboard",
+      key: "Pick up",
+      value: "Space or Enter on a handle.",
+    },
+    {
+      group: "Keyboard",
+      key: "Move",
+      value: "Up and Down a place, Home and End to either end.",
+    },
+    {
+      group: "Keyboard",
+      key: "Put down",
+      value: "Space or Enter; focus stays on the handle.",
+    },
+    {
+      group: "Keyboard",
+      key: "Put back",
+      value: "Escape, or Tab, which then moves on.",
+    },
+    {
+      group: "Pointer",
+      key: "Drag",
+      value:
+        "Press a handle and move a few pixels; a press that does not move is no drag. Escape puts it back.",
+    },
+    {
+      group: "Pointer",
+      key: "Press",
+      value:
+        "A press that does not drag picks the item up and a second puts it down, as Space does; so does a screen reader's activation. A press on another handle puts the first back.",
+    },
+    {
+      group: "Pointer",
+      key: "Near an edge",
+      value:
+        "A drag near the top or bottom of what scrolls (the page, or a box the list stands in) scrolls it, faster the closer to the edge, up to a steady pace, and stops once the list's end is in view; the item stays under the pointer, within the list. Putting it down, Escape or losing the pointer stops it at once.",
+    },
+    {
+      group: "Touch",
+      key: "Drag",
+      value:
+        "A finger on a handle drags; anywhere else on the item it scrolls the page.",
+    },
+    {
+      group: "Order",
+      key: "Change",
+      value:
+        "Once, when the item is put down, with why: `drag`, `move-key` or `imperative`.",
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    { key: "List", value: "`list` named by its `aria-label`" },
+    {
+      key: "Handle",
+      value:
+        "`button` named by its `aria-label`, described by the instructions",
+      note: "`aria-pressed` while its item is up",
+    },
+    {
+      key: "Said",
+      value:
+        "Each pick up, put down and put back, with the item's place; of quick steps, only where the item is now",
+      note: "from the I18nProvider (`sortableList`)",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/sortable-list.tsx"
+  type="SortableListProps"
+  label="SortableList"
+/>
+
+<Props
+  source="src/components/sortable-list.tsx"
+  type="SortableListItemProps"
+  label="SortableListItem"
+/>
+
+<Props
+  source="src/components/sortable-list.tsx"
+  type="SortableListHandleProps"
+  label="SortableListHandle"
+/>
+
+</Reference>

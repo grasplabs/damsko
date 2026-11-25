@@ -38,6 +38,8 @@ for (const theme of ["light", "dark"] as const) {
     await openExample(page, "item", "links", { theme });
     const list = page.getByRole("list", { name: "Settings" });
     await expect(list.getByRole("listitem")).toHaveCount(3);
+    // `separated`: the hairline between every two rows.
+    await expect(list.locator("[data-slot=item-separator]")).toHaveCount(2);
     await expect(list.getByRole("link")).toHaveText([
       /^Profile/u,
       /^Notifications/u,
@@ -45,6 +47,28 @@ for (const theme of ["light", "dark"] as const) {
     ]);
   });
 }
+
+test("a separated list keeps 4px at its top and foot with one row", async ({
+  page,
+}) => {
+  await openExample(page, "item", "links");
+  const list = page.getByRole("list", { name: "Settings" });
+  const room = async () =>
+    await list.evaluate((node) => {
+      const { paddingTop, paddingBottom } = getComputedStyle(node);
+      return [paddingTop, paddingBottom];
+    });
+  expect(await room()).toEqual(["4px", "4px"]);
+  // The same list down to its first row: no hairline left in it, and the same room.
+  await list.evaluate((node) => {
+    for (const child of [...node.children].slice(1)) {
+      child.remove();
+    }
+  });
+  await expect(list.locator("[data-slot=item-separator]")).toHaveCount(0);
+  await expect(list.getByRole("listitem")).toHaveCount(1);
+  expect(await room()).toEqual(["4px", "4px"]);
+});
 
 test("a row with href is one link", async ({ page }) => {
   await openExample(page, "item", "links");
@@ -81,6 +105,87 @@ test("a row that is one button is named by its title and described by its descri
   await expect(page.getByText("Chosen: Anthropic")).toBeVisible();
   await page.getByRole("button", { name: "OpenAI", exact: true }).click();
   await expect(page.getByText("Chosen: OpenAI")).toBeVisible();
+});
+
+// One rule for a row out of use, whatever its press: a button, a link, a router's link.
+for (const [at, [role, name, reason]] of (
+  [
+    ["button", "Add a field", "A form holds 20 fields at most"],
+    ["link", "Billing", "Only an owner can open billing"],
+    ["link", "Members", "Members are managed by your company"],
+  ] as const
+).entries()) {
+  test(`a ${role} row out of use (${name}) is read and reached by Tab, and nothing presses it`, async ({
+    page,
+    context,
+    browserName,
+  }) => {
+    await openExample(page, "item", "disabled");
+    const row = page.getByRole(role, { name });
+    await expect(row).toHaveAttribute("aria-disabled", "true");
+    await expect(row).toHaveAccessibleDescription(reason);
+    // A link, a router's too, has no address to open in a new tab.
+    await expect(row).not.toHaveAttribute("href");
+    // Reached by Tab, in its place (WebKit on a Mac moves Tab only between fields unless Option is
+    // held).
+    for (let stop = 0; stop <= at; stop += 1) {
+      // oxlint-disable-next-line no-await-in-loop -- one Tab after another
+      await page.keyboard.press(browserName === "webkit" ? "Alt+Tab" : "Tab");
+    }
+    await expect(row).toBeFocused();
+    // No light under the pointer.
+    const ground = async () =>
+      await row.evaluate((element) => {
+        const box = element.closest("[data-slot=item]");
+        return box === null ? "" : getComputedStyle(box).backgroundColor;
+      });
+    const still = await ground();
+    const box = await row.boundingBox();
+    const x = (box?.x ?? 0) + (box?.width ?? 0) / 2;
+    const y = (box?.y ?? 0) + (box?.height ?? 0) / 2;
+    await page.mouse.move(x, y);
+    expect(await ground()).toBe(still);
+    // A click, a middle click, Enter and Space: nothing opens, here or in a new tab.
+    const tabs = context.pages().length;
+    const address = page.url();
+    await page.mouse.click(x, y);
+    await page.mouse.click(x, y, { button: "middle" });
+    await row.focus();
+    await page.keyboard.press("Enter");
+    await page.keyboard.press("Space");
+    await page.waitForTimeout(300);
+    await expect(page.getByText("Nothing opened")).toBeVisible();
+    expect(page.url()).toBe(address);
+    expect(context.pages()).toHaveLength(tabs);
+  });
+}
+
+test("a router's link row out of use keeps the attributes given it, never its address", async ({
+  page,
+}) => {
+  await openExample(page, "item", "disabled");
+  const row = page.getByRole("link", { name: "Members" });
+  await expect(row).toHaveAttribute("id", "members");
+  await expect(row).toHaveAttribute("data-analytics", "members");
+  await expect(row).not.toHaveAttribute("href");
+  await expect(row).not.toHaveAttribute("to");
+});
+
+test("links with showChevron off draw no chevron; a link row draws one", async ({
+  page,
+}) => {
+  await openExample(page, "item", "sections");
+  const sections = page.getByRole("navigation", { name: "Settings" });
+  await expect(sections.getByRole("link")).toHaveCount(3);
+  await expect(sections.locator("svg")).toHaveCount(0);
+  await expect(sections.getByRole("link", { name: "Profile" })).toHaveAttribute(
+    "aria-current",
+    "page"
+  );
+  await openExample(page, "item", "links");
+  await expect(
+    page.getByRole("list", { name: "Settings" }).locator("svg")
+  ).toHaveCount(3);
 });
 
 test("a router's link drawn as the row says which one is open", async ({

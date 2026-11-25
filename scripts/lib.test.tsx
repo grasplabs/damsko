@@ -1,5 +1,6 @@
 // The foundation's logic (src/lib, src/hooks), through its own interface. What needs a browser (the
-// live region, focus given back, the focus watcher) is left to the components' specs.
+// live region, focus given back, the focus watcher) is left to the components' specs; here only
+// that the announcer outlives its page quietly.
 //   pnpm test scripts/lib.test.tsx
 import { createRef, isValidElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -10,10 +11,12 @@ import { useCopy } from "../src/hooks/use-copy";
 import { I18nProvider, useI18n, useLocale } from "../src/lib/i18n";
 import { durations } from "../src/lib/tokens.values";
 import {
+  announce,
   assignRef,
   citedSource,
   isBlank,
   isInvalid,
+  nothing,
   ownValue,
   safeHref,
   safeMediaSrc,
@@ -411,5 +414,71 @@ describe(useCopy, () => {
       ok: true,
     });
     expect(written).toStrictEqual(["npm i damsko"]);
+  });
+});
+
+/** An element as far as UI SDK's live regions use it. */
+const fakeElement = () => {
+  const attributes = new Map<string, string>();
+  return {
+    textContent: "",
+    isConnected: false,
+    style: { cssText: "" },
+    mark: () => attributes.get("data-ui-sdk-announcer"),
+    setAttribute: (name: string, value: string) => {
+      attributes.set(name, value);
+    },
+    removeAttribute: (name: string) => {
+      attributes.delete(name);
+    },
+  };
+};
+type FakeElement = ReturnType<typeof fakeElement>;
+
+/** A page as far as the announcer uses it: a body that takes elements, found by their mark. */
+const fakePage = () => {
+  const children: FakeElement[] = [];
+  return {
+    readyState: "complete",
+    createElement: fakeElement,
+    body: {
+      append: (child: FakeElement) => {
+        child.isConnected = true;
+        children.push(child);
+      },
+    },
+    querySelector: (selector: string) =>
+      children.find(
+        (child) =>
+          `[data-ui-sdk-announcer="${child.mark() ?? ""}"]` === selector
+      ) ?? null,
+  };
+};
+
+describe(announce, () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.useRealTimers();
+  });
+
+  test("a message still waiting when the page goes (a test's environment torn down) does nothing", () => {
+    vi.useFakeTimers();
+    vi.stubGlobal("document", fakePage());
+    vi.stubGlobal(
+      "MutationObserver",
+      class {
+        observe = nothing;
+      }
+    );
+    vi.stubGlobal("requestAnimationFrame", (run: () => void) =>
+      setTimeout(run, 16)
+    );
+    announce("Saved");
+    announce("Copied");
+    // The page goes, the first message's frame and the second's turn still to come.
+    Reflect.deleteProperty(globalThis, "document");
+    Reflect.deleteProperty(globalThis, "requestAnimationFrame");
+    expect(() => vi.advanceTimersByTime(2000)).not.toThrow();
+    expect(vi.getTimerCount()).toBe(0);
   });
 });

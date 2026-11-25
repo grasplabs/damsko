@@ -4,13 +4,11 @@ import {
   ItemDetail,
   ItemGroup,
   ItemMedia,
-  ItemSeparator,
   ItemTitle,
 } from "@grasp-os/ui/components/item";
 import { SidePanelSection } from "@grasp-os/ui/components/side-panel";
 import { FileIcon, Icon } from "@grasp-os/ui/lib/icons";
 import * as stylex from "@stylexjs/stylex";
-import { Fragment } from "react";
 
 const layout = stylex.create({
   section: { width: "100%", maxWidth: 560 },
@@ -35,22 +33,19 @@ const files = [
 export default function ItemStack() {
   return (
     <SidePanelSection title="Files" style={layout.section}>
-      <ItemGroup aria-label="Files" stack>
-        {files.map((file, index) => (
-          <Fragment key={file.id}>
-            {index > 0 && <ItemSeparator />}
-            <Item size="xs" href={`#${file.id}`}>
-              <ItemMedia>
-                <Icon icon={FileIcon} />
-              </ItemMedia>
-              <ItemContent>
-                <ItemTitle>
-                  {file.name}
-                  <ItemDetail>{file.detail}</ItemDetail>
-                </ItemTitle>
-              </ItemContent>
-            </Item>
-          </Fragment>
+      <ItemGroup aria-label="Files" stack separated>
+        {files.map((file) => (
+          <Item key={file.id} size="xs" href={`#${file.id}`}>
+            <ItemMedia>
+              <Icon icon={FileIcon} />
+            </ItemMedia>
+            <ItemContent>
+              <ItemTitle>
+                {file.name}
+                <ItemDetail>{file.detail}</ItemDetail>
+              </ItemTitle>
+            </ItemContent>
+          </Item>
         ))}
       </ItemGroup>
     </SidePanelSection>

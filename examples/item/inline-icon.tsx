@@ -24,7 +24,7 @@ const layout = stylex.create({
 export default function ItemInlineIcon() {
   return (
     <div {...stylex.props(layout.box)}>
-      <ItemGroup aria-label="AI providers">
+      <ItemGroup separated aria-label="AI providers">
         <Item size="sm">
           <ItemMedia align="center">
             <BrandIcon {...logos.chatgpt} size="xs" decorative />
@@ -41,7 +41,6 @@ export default function ItemInlineIcon() {
             </Button>
           </ItemActions>
         </Item>
-        <ItemSeparator />
         <Item size="sm">
           <ItemMedia align="center">
             <BrandIcon {...logos.claude} size="xs" decorative />

@@ -149,6 +149,17 @@ declare global {
   }
 }
 
+/** The page's live region of that politeness, where `announce` and UI SDK's parts speak. */
+export const liveRegion = (
+  page: Page,
+  politeness: "polite" | "assertive" = "polite"
+): Locator =>
+  page.locator(
+    politeness === "polite"
+      ? '[data-ui-sdk-announcer=""]'
+      : '[data-ui-sdk-announcer="assertive"]'
+  );
+
 /**
  * Listens, from before the page opens, to what its live regions (`announce`'s) say, and returns
  * what reads it: every message, in the order it was said.
@@ -167,7 +178,7 @@ export const listenToLiveRegions = async (
               ? change.target
               : change.target.parentElement
           )
-          .filter((node) => node?.matches("[data-slot=live-region]") === true)
+          .filter((node) => node?.matches("[data-ui-sdk-announcer]") === true)
       );
       for (const region of regions) {
         const text = region?.textContent ?? "";
@@ -221,6 +232,10 @@ export const ringCut = async (focused: Locator): Promise<number> =>
       box.bottom + reach - edge.bottom
     );
   });
+
+/** The key that moves focus on: WebKit on a Mac moves Tab only between fields unless Option is held. */
+export const tab = (browserName: string): string =>
+  browserName === "webkit" ? "Alt+Tab" : "Tab";
 
 /** Waits until the page's fonts have loaded and it has drawn twice, so what is measured stands still. */
 export const settled = async (page: Page): Promise<void> => {

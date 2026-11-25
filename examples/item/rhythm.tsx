@@ -49,7 +49,7 @@ export default function ItemRhythm() {
             <CardTitle level={2}>Members</CardTitle>
           </CardHeader>
           <CardContent flush>
-            <ItemGroup aria-label="Members">
+            <ItemGroup separated aria-label="Members">
               <Item size="xs">
                 <ItemMedia align="center">
                   <Avatar name="Anna de Vries" size="xs" decorative>
@@ -82,7 +82,6 @@ export default function ItemRhythm() {
                   </>
                 </ItemActions>
               </Item>
-              <ItemSeparator />
               <Item size="xs">
                 <ItemMedia align="center">
                   <Avatar name="Ravi Menon" size="xs" decorative>
@@ -116,7 +115,7 @@ export default function ItemRhythm() {
             <CardTitle level={2}>Providers</CardTitle>
           </CardHeader>
           <CardContent flush>
-            <ItemGroup aria-label="Providers">
+            <ItemGroup separated aria-label="Providers">
               <Item size="xs">
                 <ItemMedia align="center">
                   <BrandIcon {...logos.chatgpt} size="xs" decorative />
@@ -130,7 +129,6 @@ export default function ItemRhythm() {
                   </Button>
                 </ItemActions>
               </Item>
-              <ItemSeparator />
               <Item size="xs">
                 <ItemMedia align="center">
                   <BrandIcon {...logos.claude} size="xs" decorative />

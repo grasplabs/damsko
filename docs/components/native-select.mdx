@@ -1,0 +1,226 @@
+---
+title: Native select
+description: The browser's own select in the field's box, for a form that posts as it is and a long list on a phone.
+---
+
+<Head
+  lead={frontmatter.description}
+  install="pnpm dlx shadcn@4.23.0 add @damsko/native-select @damsko/field"
+/>
+
+## Basic usage
+
+A FieldLabel names it. A first option with the value "" is its placeholder, a verb and the thing, muted while it is chosen. Closed it is Select's control to the pixel; open it is the system's own list: the wheel on a phone, the platform's menu on a computer.
+
+<Stage path="native-select/basic" live label="Basic usage" />
+
+## Beside other fields
+
+The same fill, hairline, lift, corner, words and heights as Input and Select, so a form uses whichever fits each choice.
+
+<Stage path="native-select/fields" label="Beside other fields" />
+
+## Sizes
+
+Input's heights: 36px, 32 in a dense table or toolbar, 44 for the one choice that matters on a phone.
+
+<Stage path="native-select/sizes" label="Sizes" />
+
+## Groups
+
+NativeSelectOptGroup names a run of options by its `heading`; the name is never chosen. An option out of use is shown, greyed.
+
+<Stage path="native-select/groups" label="Groups" />
+
+## In a form
+
+It is a `<select>`: sent under its Field's `name`, held back by `required` until a value other than "" is chosen, with its FieldError under it, and back to its first value on a reset.
+
+<Stage path="native-select/form" label="In a form" />
+
+## States
+
+Wrong, with what to do, and out of use, with why.
+
+<Stage path="native-select/invalid" label="States" />
+
+## Every state
+
+Hover and keyboard focus are forced from its own CSS; the rest are props.
+
+<States
+  path="native-select/states"
+  cells={[
+    { label: "Placeholder" },
+    { label: "Hover", force: "hover" },
+    { label: "Keyboard focus", force: "focus-visible" },
+    { label: "Chosen", props: { value: "Editor" } },
+    { label: "Invalid", props: { invalid: true } },
+    {
+      label: "Invalid, focused",
+      force: "focus-visible",
+      props: { invalid: true },
+    },
+    { label: "Disabled", props: { value: "Editor", disabled: true } },
+  ]}
+/>
+
+<Part title="Using it" />
+
+## When to use it
+
+<Intent
+  of="native-select"
+  always={[
+    "A form that posts as it is, or code and tests that set a select's own value.",
+    "A long list on a phone, where the system's wheel is the easiest way to choose.",
+    "Choices that are words alone: the system's list draws no icon, description or second line.",
+    'A first option with the value "" and a verb and the thing as its placeholder: Choose a channel.',
+  ]}
+  never={[
+    "Choices that need more than words, a ghost look, or an agent that chooses by name: use Select.",
+    "A list people find by typing: use Combobox.",
+    "Several values: use a CheckboxGroup, or Combobox with `multiple`.",
+    "Colours, heights or corners set from outside: `style` takes layout and width only.",
+  ]}
+/>
+
+## Specification
+
+<Rows
+  title="Values"
+  rows={[
+    {
+      key: "Height",
+      value: "{control-sm}, {control-default}, {control-lg}",
+      note: "Input's, Select's and Button's",
+    },
+    {
+      key: "Padding",
+      value: "{space-3} before, {space-2} + {icon-sm} + {space-2} after",
+      note: "the words where Select's stand",
+    },
+    {
+      key: "Chevron",
+      value: "{icon-sm}, {space-2} from the end, stroke {icon-stroke}",
+      tokens: ["muted"],
+    },
+    {
+      key: "Look",
+      note: "Input's fill, hairline, lift and corner",
+      tokens: ["input-bg", "input", "input-shadow"],
+    },
+    {
+      key: "Focus",
+      value: "The hairline a step darker and a faint halo",
+      note: "Input's; no ring",
+      tokens: ["input-focus", "ring"],
+    },
+    {
+      key: "Wrong",
+      note: "Input's danger hairline",
+      tokens: ["input-border-invalid", "destructive"],
+    },
+    {
+      key: "Words",
+      value: "{text-sm} / {text-sm-line}",
+      note: "{input-text-touch} on a phone or a touch screen, so the page does not zoom",
+    },
+    {
+      key: "Placeholder",
+      note: 'while the option with the value "" is chosen',
+      tokens: ["muted"],
+    },
+    {
+      key: "Disabled",
+      value: "{opacity-disabled} opacity",
+      note: "the chevron too",
+    },
+    {
+      key: "Touch target",
+      value: "{tap-target}",
+      note: "on a touch screen, at every size, as Input's",
+    },
+    {
+      key: "List",
+      value: "The system's own",
+      note: "its rows in the ink on the raised ground where the system draws them from the page",
+      tokens: ["popover"],
+    },
+  ]}
+/>
+<Rows
+  title="Motion"
+  rows={[
+    {
+      key: "Hover",
+      value: "Hairline one step stronger, {duration-hover}",
+      note: "pointer only",
+      tokens: ["ease"],
+    },
+  ]}
+/>
+<Rows
+  title="Behaviour"
+  rows={[
+    {
+      group: "Keyboard",
+      key: "Closed",
+      value:
+        "The system's: a letter chooses the next option that starts with it; Space, Enter or Alt+Down opens the list where the system does.",
+    },
+    {
+      group: "Pointer",
+      key: "Choosing",
+      value: "A press opens the system's list: a wheel on a phone.",
+    },
+    {
+      group: "Form",
+      key: "Sent",
+      value:
+        "The chosen value under its `name`; a reset returns to the first value.",
+    },
+    {
+      group: "Form",
+      key: "Checking",
+      value: 'A required select stops the form while its value is "".',
+    },
+  ]}
+/>
+<Rows
+  title="Accessibility"
+  rows={[
+    { key: "Role", value: "`combobox`", note: "the browser's own select" },
+    { key: "Name", value: "Its FieldLabel, or `aria-label`" },
+    { key: "Wrong", value: "`aria-invalid` while its error shows" },
+    {
+      key: "Agents",
+      value:
+        "Not on the page's agent bridge: where an agent chooses, use Select",
+    },
+  ]}
+/>
+
+<Reference>
+
+## API
+
+<Props
+  source="src/components/native-select.tsx"
+  type="NativeSelectProps"
+  label="NativeSelect"
+/>
+
+<Props
+  source="src/components/native-select.tsx"
+  type="NativeSelectOptionProps"
+  label="NativeSelectOption"
+/>
+
+<Props
+  source="src/components/native-select.tsx"
+  type="NativeSelectOptGroupProps"
+  label="NativeSelectOptGroup"
+/>
+
+</Reference>
