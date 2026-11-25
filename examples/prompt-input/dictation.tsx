@@ -84,7 +84,7 @@ export default function PromptInputDictation() {
           </PromptInputActionMenu>
         </PromptInputTools>
         {/* At the end, the microphone beside Send. */}
-        <PromptInputTools>
+        <PromptInputTools align="end">
           <PromptInputSpeechButton
             listening={listening}
             onListeningChange={(next) => {
@@ -111,7 +111,7 @@ export default function PromptInputDictation() {
             sample={sound}
             interim={hearing ? heard[words] : undefined}
           />
-          <PromptInputSubmit style={layout.apart} />
+          <PromptInputSubmit />
         </PromptInputTools>
       </PromptInputFooter>
     </PromptInput>

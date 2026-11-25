@@ -118,6 +118,7 @@
       "barTooltipLeft",
       "valueOf",
       "orderRows",
+      "rowKeys",
       "extentOf",
       "Span",
       "spanOf",
@@ -533,7 +534,8 @@
       "AlertActionProps",
       "AlertVariant",
       "AlertAppearance"
-    ]
+    ],
+    "src/components/alert.stylex.ts": null
   },
   "attachment": {
     "src/components/attachment.tsx": [
@@ -1350,13 +1352,16 @@
       "MarkdownLinkProvider",
       "parseMarkdown",
       "MarkdownProps",
+      "MarkdownComponents",
+      "MarkdownNode",
       "MarkdownLink",
       "MarkdownLinkRenderer",
       "MarkdownSoftBreaks",
       "MarkdownRoot"
     ],
     "src/components/markdown/markdown.tsx": null,
-    "src/components/markdown/parse.ts": null
+    "src/components/markdown/parse.ts": null,
+    "src/components/markdown/repair.ts": null
   },
   "model-selector": {
     "src/components/model-selector.tsx": [
@@ -1443,7 +1448,6 @@
       "sidebarStateScript",
       "Sidebar",
       "SidebarTrigger",
-      "SidebarRail",
       "SidebarInset",
       "SidebarHeader",
       "SidebarContent",
@@ -1472,7 +1476,6 @@
       "SidebarProviderProps",
       "SidebarProps",
       "SidebarTriggerProps",
-      "SidebarRailProps",
       "SidebarInsetProps",
       "SidebarHeaderProps",
       "SidebarContentProps",

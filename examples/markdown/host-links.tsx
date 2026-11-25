@@ -152,7 +152,6 @@ export default function MarkdownHostLinks() {
           <DialogFooter>
             <DialogClose>Cancel</DialogClose>
             <Button
-              size="sm"
               onClick={() => {
                 if (leaving !== null) {
                   window.open(leaving, "_blank", "noopener,noreferrer");

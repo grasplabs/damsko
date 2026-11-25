@@ -4,8 +4,8 @@ import { pageAgent } from "../../site/behaviour/agent";
 
 // The agent fixture, not shown on the page: tests/button.spec.ts drives it through the page's one
 // agent bridge (`window.damskoAgent`), with a yes it gives or withholds (`window.damskoAgentYes`).
-// Saving works, sending always fails, and deleting waits for the person's yes. What ran is written
-// to `window.buttonLog`.
+// Saving works, sending always fails, and deleting and approving wait for the person's yes. What
+// ran is written to `window.buttonLog`.
 declare global {
   interface Window {
     buttonLog?: string[];
@@ -46,6 +46,9 @@ export default function ButtonAgent() {
       </Button>
       <Button variant="destructive" onClick={did("archived")}>
         Archive the plan
+      </Button>
+      <Button variant="success" onClick={did("approved")}>
+        Approve the request
       </Button>
     </div>
   );

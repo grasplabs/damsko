@@ -132,10 +132,6 @@ import {
 } from "./chat-page-data";
 
 const layout = stylex.create({
-  // In the box's one row: the model, the voice and Send together at its end, a space-2 apart (the
-  // model chip keeps its own step).
-  end: { gridArea: "end", marginInlineStart: "auto" },
-  apart: { marginInlineStart: space["1"] },
   // The Chats group's label, a button that folds it: its count and chevron at its end.
   fold: { display: "flex", alignItems: "center", gap: space["1"] },
   count: { marginInlineStart: "auto", fontVariantNumeric: "tabular-nums" },
@@ -592,10 +588,10 @@ const ChatBox = ({ run, state }: { run: ChatRun; state: ChatState }) => {
             </PromptInputActionMenuContent>
           </PromptInputActionMenu>
         </PromptInputTools>
-        <PromptInputTools style={layout.end}>
+        <PromptInputTools align="end">
           {chip}
           <PromptInputSpeechButton />
-          <PromptInputSubmit onStop={run.stop} style={layout.apart} />
+          <PromptInputSubmit onStop={run.stop} />
         </PromptInputTools>
       </PromptInputFooter>
       <PromptInputNote />

@@ -42,7 +42,7 @@ export default function DrawerCheckFailed() {
         </DrawerHeader>
         <DrawerFooter>
           <DrawerClose>Cancel</DrawerClose>
-          <Button size="sm" onClick={test} loadingText="Testing">
+          <Button onClick={test} loadingText="Testing">
             Test
           </Button>
         </DrawerFooter>

@@ -19,7 +19,7 @@ const layout = stylex.create({
 
 const sizes = ["xs", "sm", "default", "lg"] as const;
 
-// Cancel, two main steps and Delete side by side at each size: one size reads as one height,
+// Cancel, a main step, Delete and Approve side by side at each size: one size reads as one height,
 // whatever its fill.
 export default function ButtonHeights() {
   return (
@@ -35,7 +35,7 @@ export default function ButtonHeights() {
           <Button size={size} variant="destructive">
             Delete
           </Button>
-          <Button size={size} variant="default">
+          <Button size={size} variant="success">
             Approve
           </Button>
         </div>

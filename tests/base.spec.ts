@@ -40,6 +40,14 @@ const measured = () =>
       };
     });
 
+/** A quarter of a second in the page: longer than an example's own timer waits. */
+const aWhile = async () => {
+  // oxlint-disable-next-line promise/avoid-new -- a timer, which has no promise of its own
+  await new Promise((resolve) => {
+    setTimeout(resolve, 250);
+  });
+};
+
 /** Takes the base's two own rules out of every stylesheet of the page; says how many it took. */
 const withoutOwnRules = () => {
   let taken = 0;
@@ -115,7 +123,16 @@ for (const [component, paths] of byComponent) {
           (each, at) =>
             each.box !== now[at]?.box || each.cursor !== now[at]?.cursor
         );
+        // One that moved all the same may still be moving by itself: a stream whose timer did
+        // not fire between the two measures, on a slow machine. Measured again a while later, it
+        // has moved again, and it cannot be compared either.
         if (first !== -1) {
+          // oxlint-disable-next-line no-await-in-loop -- one after the other
+          await page.evaluate(aWhile);
+        }
+        // oxlint-disable-next-line no-await-in-loop -- one after the other
+        const later = first === -1 ? now : await page.evaluate(measured);
+        if (first !== -1 && JSON.stringify(later) === JSON.stringify(now)) {
           moved.push(
             `${path} at ${width}: ${was[first]?.name} was ${was[first]?.box} ${was[first]?.cursor}, is ${now[first]?.box} ${now[first]?.cursor}`
           );

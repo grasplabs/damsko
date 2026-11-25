@@ -28,6 +28,10 @@ catalog:
   # The registry build and the words check read TypeScript through its
   # JavaScript API, which TypeScript 7 has none of.
   typescript6: npm:typescript@6.0.3
+  # The ReDoS checker Markdown's patterns gate runs.
+  recheck: 4.6.2
+  # A DOM for the unit tests that stream into a component (the product's version).
+  happy-dom: 21.0.4
 
   # The docs site.
   "@astrojs/mdx": 8.1.5

@@ -34,7 +34,7 @@ A row with `href`, `onClick` or `asChild` may still hold `ItemActions`, wherever
 
 ## Actions on hover
 
-`ItemActions showOnHover` keeps the actions quiet until the row is pointed at or holds focus, and always shows them on touch and for the keyboard: a side panel's card of tools, one row each. In a SidePanelSection's card an `xs` row takes the panel's rhythm: 44px, the panel's smaller words, its bare icon in the accent, its `ItemDetail` at the row's end, and the list flush with a hairline between rows. The row that adds one more is an Item with `onClick`, after the list.
+`ItemActions showOnHover` keeps the actions quiet until the row is pointed at or holds focus, and always shows them on touch and for the keyboard: a side panel's card of tools, one row each. In a SidePanelSection's card an `xs` row takes the panel's rhythm: 44px, the panel's smaller words, its bare icon in the accent, its `ItemDetail` at the row's end, and the list flush with a hairline between rows, each hairline the top of the row under it. In a list where some row has actions, a row without them keeps their room at its end, so every detail ends in one column; in a list with none, each detail ends at the panel's inset. The row that adds one more is an Item with `onClick`, after the list.
 
 <Stage path="item/tools" label="Actions on hover" />
 
@@ -55,6 +55,12 @@ An Avatar or a logo, drawn as it is, stands in the middle of its row with `ItemM
 `ItemDetail` puts a word after the name on its line, in the muted ink: a role, or "You".
 
 <Stage path="item/detail" label="A quieter detail" />
+
+## A detail under the name on a phone
+
+In a side panel's card an `xs` row's detail stands at the row's end and its name is cut short to make room. Where the name matters as much as the detail, `stack` on the ItemGroup puts each row's detail on a line under its name below 30rem of the list's own width, and lets the name wrap whole. It does so at every row size. The list lays out by its own width, as the original's row list did, so it takes none from its rows: inside a box that sizes to its content, such as a shrink-wrapped flex item, give the list or the box a width.
+
+<Stage path="item/stack" label="A detail under the name on a phone" />
 
 ## An icon in line
 
@@ -160,7 +166,7 @@ Only a row with a press (`href`, `onClick`, `asChild`) has states: hover, keyboa
       value: "{space-4} between its parts",
       note: "small: {space-3}",
     },
-    { group: "Size", key: "Corner", value: "{radius-lg}, {radius-shape}" },
+    { group: "Size", key: "Corner", value: "{radius-xl}, {radius-shape}" },
     {
       group: "Words",
       key: "Title",

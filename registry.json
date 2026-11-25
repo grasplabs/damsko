@@ -72,6 +72,11 @@
       },
       "files": [
         {
+          "path": "src/components/alert.stylex.ts",
+          "type": "registry:file",
+          "target": "~/src/components/alert.stylex.ts"
+        },
+        {
           "path": "src/components/alert.tsx",
           "type": "registry:file",
           "target": "~/src/components/alert.tsx"
@@ -244,6 +249,7 @@
         "@stylexjs/stylex"
       ],
       "registryDependencies": [
+        "@damsko/alert",
         "@damsko/breadcrumb",
         "@damsko/button",
         "@damsko/inline-edit",
@@ -820,13 +826,14 @@
       "name": "combobox",
       "type": "registry:ui",
       "title": "Combobox",
-      "description": "A field you type into to find one value in a long list, then choose it.",
+      "description": "A field you type into to find a value in a long list, then choose it, or several.",
       "dependencies": [
         "@stylexjs/stylex",
         "@ui-sdk/core",
         "@ui-sdk/react"
       ],
       "registryDependencies": [
+        "@damsko/avatar",
         "@damsko/lib"
       ],
       "docs": "https://damsko.joingrasp.com/components/combobox",
@@ -2077,6 +2084,11 @@
           "path": "src/components/markdown/parse.ts",
           "type": "registry:file",
           "target": "~/src/components/markdown/parse.ts"
+        },
+        {
+          "path": "src/components/markdown/repair.ts",
+          "type": "registry:file",
+          "target": "~/src/components/markdown/repair.ts"
         }
       ]
     },

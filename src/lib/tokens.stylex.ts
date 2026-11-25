@@ -72,6 +72,7 @@ export const colors = stylex.defineConsts({
   successFillForeground: "var(--damsko-success-fill-foreground)",
   successLight: "var(--damsko-success-light)",
   successGlow: "var(--damsko-success-glow)",
+  successGlowHover: "var(--damsko-success-glow-hover)",
   buttonSheen: "var(--damsko-button-sheen)",
   // Controls: bevels.
   bevelMutedBorder: "var(--damsko-bevel-muted-border)",
@@ -315,6 +316,9 @@ export const radius = stylex.defineConsts({
   shape: "var(--damsko-radius-shape)",
   // Prompt input and attachments: prompt input and attachments.
   promptInputRadius: "var(--damsko-prompt-input-radius)",
+  // Sidebar: sidebar sizes.
+  sidebarRowRadius: "var(--damsko-sidebar-row-radius)",
+  sidebarRowRadiusLg: "var(--damsko-sidebar-row-radius-lg)",
 });
 
 export const shadow = stylex.defineConsts({
@@ -338,6 +342,8 @@ export const shadow = stylex.defineConsts({
   bevelDestructivePress: "var(--damsko-bevel-destructive-press)",
   bevelSuccessFace: "var(--damsko-bevel-success-face)",
   bevelSuccess: "var(--damsko-bevel-success)",
+  bevelSuccessHover: "var(--damsko-bevel-success-hover)",
+  bevelSuccessPress: "var(--damsko-bevel-success-press)",
   // Fields: fields.
   inputShadow: "var(--damsko-input-shadow)",
   // Popups: popups and their items.
@@ -466,6 +472,8 @@ export const duration = stylex.defineConsts({
 export const size = stylex.defineConsts({
   // Colour: the light.
   textureStrength: "var(--damsko-texture-strength)",
+  textureDot: "var(--damsko-texture-dot)",
+  texturePitch: "var(--damsko-texture-pitch)",
   // Elevation: edge and lifts.
   borderStrong: "var(--damsko-border-strong)",
   // Sizes: targets and controls.
@@ -489,6 +497,7 @@ export const size = stylex.defineConsts({
   successLightSize: "var(--damsko-success-light-size)",
   successLightRest: "var(--damsko-success-light-rest)",
   successLightLean: "var(--damsko-success-light-lean)",
+  successLightPress: "var(--damsko-success-light-press)",
   buttonPressScale: "var(--damsko-button-press-scale)",
   opacityDisabled: "var(--damsko-opacity-disabled)",
   // Controls: pressed and failed.

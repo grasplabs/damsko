@@ -54,7 +54,6 @@ export default function AlertDialogConfirm() {
         <AlertDialogFooter>
           <AlertDialogCancel>Not yet</AlertDialogCancel>
           <Button
-            size="sm"
             onClick={sending}
             loadingText="Sending"
             errorText="Could not send"
