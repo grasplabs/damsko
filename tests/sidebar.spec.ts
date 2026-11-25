@@ -441,6 +441,33 @@ test("before the rows arrive its bars are hidden from a screen reader", async ({
   await expect(menu.getByRole("link")).toHaveCount(0);
 });
 
+test("before the rows arrive each row waits as Skeleton's pixel field, its icon a whole 16px square", async ({
+  page,
+}) => {
+  await openExample(page, "sidebar", "states");
+  const row = page
+    .getByRole("list", { name: "Projects, loading" })
+    .getByRole("listitem")
+    .first();
+  const waits = await row.evaluate((item) =>
+    [...item.querySelectorAll<HTMLElement>("[data-slot=skeleton]")].map(
+      (node) => {
+        const box = node.getBoundingClientRect();
+        return {
+          animation: node.dataset.animation,
+          variant: node.dataset.variant,
+          width: node.dataset.variant === "text" ? 0 : box.width,
+          height: node.dataset.variant === "text" ? 0 : box.height,
+        };
+      }
+    )
+  );
+  expect(waits).toStrictEqual([
+    { animation: "wave", variant: "rectangular", width: 16, height: 16 },
+    { animation: "wave", variant: "text", width: 0, height: 0 },
+  ]);
+});
+
 test("the head script draws what was kept before the page wakes, and only a kept true or false", async ({
   page,
 }) => {

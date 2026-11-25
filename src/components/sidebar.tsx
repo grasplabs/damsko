@@ -102,7 +102,7 @@ import {
 import { durations, px } from "../lib/tokens.values";
 import { announce, listOf, slotProps, slotWords } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
-import { iconVars, motionVars } from "../lib/vars.stylex";
+import { iconVars, motionVars, skeletonVars } from "../lib/vars.stylex";
 import { Collapsible } from "./collapsible";
 import { Input } from "./input";
 import type { InputProps } from "./input";
@@ -738,16 +738,13 @@ const styles = stylex.create({
     height: ROW,
     paddingInline: size.sidebarRowInline,
   },
-  // The icon's square: the Skeleton inside cut to the icon's box, with its corner.
+  // The icon's square, which its Skeleton fills.
   skeletonIcon: {
+    [skeletonVars.size]: "100%",
     display: "flex",
-    flexDirection: "column",
     flexShrink: 0,
     width: ICON,
     height: ICON,
-    overflow: "hidden",
-    borderRadius: radius.sm,
-    cornerShape: radius.shape,
   },
 
   // The rows under a row, their words in line with its words; folded to its icons, they go.
@@ -2011,7 +2008,6 @@ export interface SidebarMenuSkeletonProps {
 const skeletonWidth = stylex.create({
   words: (width: string) => ({
     display: "flex",
-    flexDirection: "column",
     flexGrow: 1,
     maxWidth: width,
   }),
@@ -2027,7 +2023,7 @@ const widthOf = (id: string) => {
 };
 
 /**
- * Quiet bars in a row's own box, before the rows arrive. Hidden from a screen reader: say what is
+ * Placeholders in a row's own box, before the rows arrive: an icon's square and a line of words. Hidden from a screen reader: say what is
  * loading where the menu stands (`aria-busy`).
  */
 export const SidebarMenuSkeleton = ({
@@ -2044,11 +2040,11 @@ export const SidebarMenuSkeleton = ({
     >
       {showIcon && (
         <span {...stylex.props(styles.skeletonIcon)}>
-          <Skeleton variant="rectangular" animation={false} />
+          <Skeleton variant="rectangular" />
         </span>
       )}
       <span {...stylex.props(skeletonWidth.words(widthOf(id)))}>
-        <Skeleton animation={false} />
+        <Skeleton />
       </span>
     </div>
   );
