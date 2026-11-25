@@ -23,6 +23,12 @@ description: Hugeicons only, named by their shape, at two sizes and one stroke.
   note="Small beside small words, medium where there is room, and always a 1.5 line."
 />
 
+<Scene
+  path="foundations/icons-any"
+  title="Any other drawing"
+  note="A drawing the set does not hold: imported from Hugeicons by the product, drawn through the same Icon."
+/>
+
 <AllTokens>
 
 ## Sizes and stroke
@@ -35,7 +41,7 @@ description: Hugeicons only, named by their shape, at two sizes and one stroke.
 
 ## Every icon
 
-Import an icon by the name it has in Damsko, from `lib/icons`.
+Import an icon by the name it has in Damsko, from `lib/icons`. The set holds what Damsko's own parts draw, and the shapes products share one meaning for, so "more actions" is the same drawing everywhere.
 
 Two that are easy to mix up: `PencilOffIcon` (the pencil, struck through) marks what may be opened and read but not changed; `LockIcon` marks what cannot be opened at all.
 
@@ -43,18 +49,35 @@ Two that are easy to mix up: `PencilOffIcon` (the pencil, struck through) marks 
 
 </AllTokens>
 
+## Any other drawing
+
+A product needs drawings the set does not hold. It imports them from `@hugeicons/core-free-icons`, the package `lib/icons` draws from and which the CLI added to its `package.json` with the first component, by Hugeicons' own name, and draws them through `Icon`: nothing in Damsko changes. Only the drawings a page imports reach its bundle. A drawing that points along the line (an arrow, a chevron, send) is marked once where it is named, so it turns round in right-to-left text. In a workspace, the app that imports a drawing names the package too, at the catalog's version.
+
+```tsx
+import { directional, Icon } from "@grasp-os/ui/lib/icons";
+import { ArrowRight03Icon, Briefcase01Icon } from "@hugeicons/core-free-icons";
+
+const NextIcon = directional(ArrowRight03Icon);
+
+<Icon icon={Briefcase01Icon} />
+<Icon icon={NextIcon} />
+```
+
+A drawing that every product comes to share moves into the set, named by its shape.
+
 ## Rules
 
 <Rules
   always={[
-    "Import icons from `lib/icons`, and add a missing one there first, named by its shape with an `Icon` suffix.",
+    "Take an icon from `lib/icons` when the set has its shape; any other from `@hugeicons/core-free-icons`, drawn through `Icon`, marked `directional` when it points along the line.",
     "Give an icon that stands alone a label; one beside words that say the same needs none.",
     "Size an icon from its holder, through `iconVars` in `lib/vars.stylex`.",
     "Show another company with its own mark through BrandIcon: the marks are the product's, never drawn in Damsko.",
   ]}
   never={[
     "A hand-drawn glyph: an inline `svg`, a path, or a CSS-drawn arrow, tick or cross.",
-    "An icon imported from Hugeicons directly.",
+    "A drawing from another icon set, or a Hugeicons drawing drawn without `Icon` (Hugeicons' own component).",
+    "A second drawing for a shape the set already has.",
     "A stroke or size of your own.",
   ]}
 />
