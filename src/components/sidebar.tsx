@@ -86,6 +86,7 @@ import type {
   ReactNode,
 } from "react";
 
+import { useScrollEdges } from "../hooks/use-scroll-edges";
 import { useI18n } from "../lib/i18n";
 import { Icon, PanelLeftIcon } from "../lib/icons";
 import { focusRingInset, scrollbarHidden } from "../lib/styles";
@@ -139,6 +140,21 @@ const iconSidebar = () =>
   stylex.when.ancestor('[data-collapsible="icon"]', sidebarMarker);
 const folded = () =>
   stylex.when.ancestor('[data-state="collapsed"]', sidebarMarker);
+// A row with an action of its own (SidebarMenuAction): while the pointer is anywhere on it, and
+// while the action's menu is open, the row keeps its hover and the action takes the ink, as the
+// original's row and its dots. A row holding a nested list does not light up from a nested row.
+const rowWithAction = () =>
+  stylex.when.ancestor(
+    ':hover:has(> [data-slot="sidebar-menu-action"])',
+    sidebarMenuItemMarker
+  );
+const rowMenuOpen = () =>
+  stylex.when.ancestor(
+    ':has(> [data-slot="sidebar-menu-action"][aria-expanded="true"])',
+    sidebarMenuItemMarker
+  );
+// In the sheet on a narrow window.
+const inSheet = () => stylex.when.ancestor("[data-mobile]", sidebarMarker);
 const onRail = () =>
   stylex.when.ancestor(
     '[data-state="collapsed"][data-collapsible="icon"]',
@@ -351,7 +367,12 @@ const styles = stylex.create({
     display: "flex",
     flexDirection: "column",
     gap: space["2"],
-    paddingBlockStart: space["4"],
+    // In the sheet, the sheet's own inset is taken from its room above, so the head stands as high
+    // in the window as beside the page, as the original's phone menu stood its head on the bar's row.
+    paddingBlockStart: {
+      default: space["4"],
+      [inSheet()]: `calc(${space["4"]} - ${size.sheetPadding})`,
+    },
     paddingBlockEnd: space["1"],
     paddingInline: space["2"],
   },
@@ -360,6 +381,24 @@ const styles = stylex.create({
     flexDirection: "column",
     gap: space["2"],
     padding: space["2"],
+  },
+  // The end with more rows beyond it fades out over a space-10, clear a space-1 from the edge.
+  contentFade: {
+    maskImage: {
+      default: null,
+      ":is([data-under-end]:not([data-under-start]))": {
+        default: `linear-gradient(to bottom, black calc(100% - ${space["10"]}), transparent calc(100% - ${space["1"]}))`,
+        [FORCED]: "none",
+      },
+      ":is([data-under-start]:not([data-under-end]))": {
+        default: `linear-gradient(to bottom, transparent ${space["1"]}, black ${space["10"]})`,
+        [FORCED]: "none",
+      },
+      ":is([data-under-start][data-under-end])": {
+        default: `linear-gradient(to bottom, transparent ${space["1"]}, black ${space["10"]}, black calc(100% - ${space["10"]}), transparent calc(100% - ${space["1"]}))`,
+        [FORCED]: "none",
+      },
+    },
   },
   // The one part that scrolls, its bar hidden; folded to its icons, nothing scrolls sideways.
   content: {
@@ -479,12 +518,29 @@ const styles = stylex.create({
     insetBlockStart: `calc((${ROW} - ${ACTION}) / 2)`,
     insetInlineEnd: `calc(${space["2"]} + (${ROW} - ${ACTION}) / 2)`,
   },
+  // A row's action: a space-1 from the row's end; in the ink while its row is pointed at or holds
+  // focus, or its menu is open; filled only under the pointer itself, as the original's dots.
   menuAction: {
     insetBlockStart: {
       default: `calc((${ROW} - ${ACTION}) / 2)`,
       [COARSE]: `calc((${size.tapTarget} - ${ACTION}) / 2)`,
     },
-    insetInlineEnd: `calc((${ROW} - ${ACTION}) / 2)`,
+    insetInlineEnd: space["1"],
+    color: {
+      default: colors.sidebarSecondaryForeground,
+      [HOVER]: { default: null, ":hover": colors.foreground },
+      [stylex.when.ancestor(":hover", sidebarMenuItemMarker)]: {
+        default: null,
+        [HOVER]: colors.foreground,
+      },
+      [stylex.when.ancestor(":focus-within", sidebarMenuItemMarker)]:
+        colors.foreground,
+      ":is([aria-expanded=true])": colors.foreground,
+    },
+    backgroundColor: {
+      default: "transparent",
+      [HOVER]: { default: null, ":hover": colors.accent },
+    },
   },
   // Shown while the pointer is on its row, focus is in the row or its menu is open; on a touch
   // screen, always.
@@ -547,10 +603,14 @@ const styles = stylex.create({
     color: {
       default: colors.sidebarSecondaryForeground,
       [HOVER]: { default: null, ":hover": colors.sidebarForeground },
+      [rowWithAction()]: { default: null, [HOVER]: colors.sidebarForeground },
+      [rowMenuOpen()]: colors.sidebarForeground,
     },
     backgroundColor: {
       default: "transparent",
       [HOVER]: { default: null, ":hover": colors.sidebarHover },
+      [rowWithAction()]: { default: null, [HOVER]: colors.sidebarHover },
+      [rowMenuOpen()]: colors.sidebarHover,
     },
     fontFamily: font.sans,
     fontSize: font.textSm,
@@ -617,6 +677,8 @@ const styles = stylex.create({
     },
     boxShadow: `inset 0 0 0 ${size.hairline} ${colors.border}`,
   },
+  onPage: { color: colors.foreground },
+  quiet: { fontWeight: font.weightNormal },
   // A button that is only its icon (a search in the head, the trigger): round, the icon button's
   // size, a finger's on a touch screen.
   icon: {
@@ -829,6 +891,8 @@ export const useSidebar = (): SidebarApi => {
 /** The side the sidebar stands on, for its parts (the tooltips open away from it). */
 type Side = "start" | "end";
 const SideContext = createContext<Side>("start");
+// Whether a part stands in the sidebar itself, or on the page beside it (a page's bar).
+const InSidebar = createContext(false);
 
 // The kept choice, read where it can be: on the server, and while the page wakes, there is none.
 const readKept = (key?: string): boolean | undefined => {
@@ -1227,7 +1291,7 @@ export const Sidebar = ({
             data-sidebar="sidebar"
             data-mobile="true"
             data-side={side}
-            {...stylex.props(styles.ground, styles.sheet)}
+            {...stylex.props(sidebarMarker, styles.ground, styles.sheet)}
           >
             {children}
           </div>
@@ -1279,7 +1343,11 @@ export const Sidebar = ({
       </aside>
     );
   }
-  return <SideContext value={side}>{sidebar}</SideContext>;
+  return (
+    <SideContext value={side}>
+      <InSidebar value>{sidebar}</InSidebar>
+    </SideContext>
+  );
 };
 
 /** A button's title: its name, and its keys when it has them. */
@@ -1313,6 +1381,9 @@ export const SidebarTrigger = ({
   const { open, openMobile, isMobile, toggleSidebar, id, keys } =
     useSidebarState("SidebarTrigger");
   const label = named ?? toggle;
+  // On the page (a page's bar) it stands in the page's ink, as the original's Menu button; in the
+  // sidebar's head, the sidebar's quiet ink.
+  const onPage = !use(InSidebar);
   return (
     <button
       type="button"
@@ -1327,7 +1398,13 @@ export const SidebarTrigger = ({
         onClick?.(event);
         toggleSidebar();
       }}
-      {...stylex.props(styles.button, styles.icon, focusRingInset, style)}
+      {...stylex.props(
+        styles.button,
+        styles.icon,
+        onPage && styles.onPage,
+        focusRingInset,
+        style
+      )}
     >
       <Icon icon={PanelLeftIcon} />
     </button>
@@ -1422,13 +1499,21 @@ export const SidebarContent = ({
   ...rest
 }: SidebarContentProps) => {
   const { main } = useI18n().sidebar;
+  // With more rows above or below than it shows, that end fades out, so a row is never seen cut
+  // at the head's or the foot's edge (the original's list).
+  const edges = useScrollEdges({ axis: "block" });
   return (
     <nav
-      {...rest}
+      {...mergeProps(rest, { ref: edges })}
       aria-label={named ?? main}
       data-slot="sidebar-content"
       data-sidebar="content"
-      {...stylex.props(styles.content, scrollbarHidden, style)}
+      {...stylex.props(
+        styles.content,
+        styles.contentFade,
+        scrollbarHidden,
+        style
+      )}
     >
       {children}
     </nav>
@@ -1841,10 +1926,12 @@ export interface SidebarMenuButtonProps extends SlotPartProps, Own<"button"> {
    */
   size?: "default" | "sm" | "lg" | "icon";
   /**
-   * `default` lies on the sidebar's ground; `outline` stands on the page's ground with a hairline.
+   * `default` lies on the sidebar's ground, a place's words in the medium weight; `quiet`, a thing
+   * in a list of them (a chat, a file), its words in the regular weight, cut and shown whole in a
+   * tooltip as any row's; `outline` stands on the page's ground with a hairline.
    * @default "default"
    */
-  variant?: "default" | "outline";
+  variant?: "default" | "quiet" | "outline";
 }
 
 /** A place: a link (with `asChild`) or a button, with its icon and its words. */
@@ -1870,6 +1957,7 @@ export const SidebarMenuButton = ({
       sized === "lg" && styles.lg,
       sized === "icon" && styles.icon,
       variant === "outline" && styles.outline,
+      variant === "quiet" && styles.quiet,
       isActive && styles.active,
       focusRingInset,
       style
