@@ -29,8 +29,8 @@ const PUBLIC_ROOT = new Set([
   "public/site.webmanifest",
 ]);
 
-/** The folders under public/: the brand book's assets, example media and people. */
-const PUBLIC_FOLDERS = /^public\/(?:brand|media|people)\//u;
+/** The folders under public/: the brand book's assets, example media, people and the idle screen's scenes. */
+const PUBLIC_FOLDERS = /^public\/(?:brand|media|people|scenes)\//u;
 
 /** A font file: only in src/styles/fonts/, which the registry's `fonts` item ships and the site loads. */
 const FONT = /\.(?:woff2?|ttf|otf|eot)$/iu;

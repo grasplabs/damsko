@@ -6,10 +6,11 @@
 //
 // A stage's own controls (tabs, ground, variant switch, previews that never leave the page) are
 // in site/blocks/blocks.ts, loaded here with the rest. The site's one copy behaviour is in ./copy.ts, the frame's (theme, phone menu, sidebar line, rail)
-// in ./chrome.ts and ./theme.ts, search in ./search.ts; all loaded from here.
+// in ./chrome.ts and ./theme.ts, search in ./search.ts, the idle screen in ./idle.ts; all loaded from here.
 import "./copy";
 import "./chrome";
 import "./search";
+import "./idle";
 import "../blocks/blocks.ts";
 import { forceStates } from "./force-states";
 

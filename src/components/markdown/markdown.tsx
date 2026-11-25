@@ -1172,6 +1172,12 @@ const lessWaiting = (end: string) => {
   if (parse.inOpenFence(end)) {
     return end;
   }
+  // A tag's or an autolink's start waits for a space or its `>`; then it shows as it is written.
+  const tag = end.lastIndexOf("<", to - 1);
+  to =
+    tag !== -1 && /^<\/?(?:[a-z][^\s<>]*)?$/iu.test(end.slice(tag, to))
+      ? tag
+      : to;
   while (to > 0 && "*_~`[!< \t".includes(end.charAt(to - 1))) {
     to -= 1;
   }
@@ -1265,7 +1271,12 @@ const useBlocks = (
 ) => {
   const source = children.replaceAll(/\r\n?/gu, "\n");
   const starts = useStarts(source);
-  parse.nextPass();
+  // This answer's readings of its blocks: once drawn, it keeps those of the text it draws.
+  // oxlint-disable-next-line react/hook-use-state -- made once, never replaced
+  const [reads] = useState(parse.newReads);
+  useLayoutEffect(() => {
+    parse.settle(reads);
+  });
   const open = streaming || truncated;
   const last = open ? (starts.at(-1) ?? 0) : source.length;
   let end = source.slice(last);
@@ -1277,33 +1288,36 @@ const useBlocks = (
     const to = starts[at + 1] ?? source.length;
     return { start, to, text: source.slice(start, to) };
   });
-  // The definitions and notes in the finished blocks that may hold one, read without names.
+  // The definitions and notes in the finished blocks that may hold one, as last read: no name
+  // changes a definition.
   const defined = texts
     .filter(({ text }) => text.search(DEFINED) !== -1)
-    .flatMap(({ text }) => placesOf(parse.readBlock(text)))
+    .flatMap(({ text }) => placesOf(parse.readDefinitions(text, reads)))
     .flatMap(([, block]) => foundIn(block));
   const links = defined.flatMap((node) =>
     node.type === "definition" ? [node] : []
   );
   const names = {
-    links: links.map((node) => node.identifier),
-    notes: [
+    links: new Set(links.map((node) => node.identifier)),
+    notes: new Set([
       ...defined.flatMap((node) =>
         node.type === "footnoteDefinition" ? [node.identifier] : []
       ),
       ...notesIn(end),
-    ],
+    ]),
   };
   const blocks = texts.map(({ start, to, text }) => ({
     start,
     to,
-    nodes: parse.readBlock(text, { names }),
+    nodes: parse.readBlock(text, { names }, reads),
   }));
   const done = blocks.flatMap((block) => block.nodes);
   const code = streaming ? parse.openCode(end) : null;
   const whole = lessWaiting(end);
   const ending = useEnding(whole, streaming && code === null, () =>
-    open && code === null ? parse.readBlock(whole, { open: true, names }) : []
+    open && code === null
+      ? parse.readBlock(whole, { open: true, names }, reads)
+      : []
   );
   const nodes = code ?? ending.nodes;
   // Words shown before are never faded again: a block shown whole before is shown (Infinity).
