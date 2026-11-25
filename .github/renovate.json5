@@ -80,6 +80,7 @@
         "mdast-util-from-markdown",
         "mdast-util-gfm",
         "micromark-extension-gfm",
+        "remend",
         "@types/mdast",
         "prismjs",
         "@types/prismjs",
