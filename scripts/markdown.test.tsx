@@ -587,7 +587,7 @@ describe("bounds a model's answer cannot pass", () => {
     expect(textOf(html)).toContain("500 more rows");
   });
 
-  test("bare addresses are links beside a word of 1,000 characters, and a longer word makes its block words", () => {
+  test("bare addresses are links beside a word of 1,000 characters; past it they are words, and only they", () => {
     const long = `https://example.com/${"x".repeat(950)}`;
     const source = `See www.example.com, https://example.com/a_b and team@example.com, or **read** [the page](${long}).`;
     const html = draw(source);
@@ -597,8 +597,17 @@ describe("bounds a model's answer cannot pass", () => {
     expect(html).toContain(`href="${long}"`);
     const longer = draw(source.replace(long, `${long}${"x".repeat(50)}`));
     expect([count(longer, "<a\\b"), count(longer, "<strong")]).toStrictEqual([
-      0, 0,
+      1, 1,
     ]);
+    // Only a space, a tab or a line's end ends a word.
+    const joined = "a\u00A0".repeat(501);
+    expect(count(draw(`www.example.com ${joined}`), "<a\\b")).toBe(0);
+    expect(
+      count(
+        draw(`www.example.com ${joined.replaceAll("\u00A0", " ")}`),
+        "<a\\b"
+      )
+    ).toBe(1);
   });
 
   test("a quote's `>` nests the same with or without a space after it, at most 64 deep", () => {
@@ -611,6 +620,14 @@ describe("bounds a model's answer cannot pass", () => {
     expect(textOf(deep)).toBe("a");
   });
 
+  test("a list of more than 1,000 lines goes on as another at its next item, numbered on", () => {
+    const html = draw(
+      Array.from({ length: 1500 }, (_, at) => `${at + 1}. a`).join("\n")
+    );
+    expect([count(html, "<ol"), count(html, "<li")]).toStrictEqual([2, 1500]);
+    expect(html).toContain('start="1001"');
+  });
+
   test("while written, a half link shows its words with room for its arrow, and no address", () => {
     const html = draw("Read [the docs](https://exa", { streaming: true });
     expect(textOf(html)).toBe("Read the");
@@ -620,7 +637,8 @@ describe("bounds a model's answer cannot pass", () => {
 });
 
 // Hostile answers: nesting past any stack, delimiter runs micromark weighs against each other, a
-// huge table, links by the thousand.
+// huge table, links by the thousand, bare addresses read again to the end of their word, brackets
+// remend 1.5.0 heals in their depth squared.
 const hostile: Record<string, (size: number) => string> = {
   "deep nesting": (size) =>
     `${"> ".repeat(size / 4)}a\n\n${Array.from({ length: size / 200 }, (_, at) => `${"  ".repeat(at % 50)}- a`).join("\n")}`,
@@ -641,6 +659,15 @@ const hostile: Record<string, (size: number) => string> = {
     ).join("\n"),
   "sections left open": (size) =>
     "<details>\n<summary>s</summary>\n\nx\n\n".repeat(size / 34),
+  "bare addresses after `_` in one word": (size) => "www.a_".repeat(size / 6),
+  "a bare address and its dots": (size) => `\nwww.a${".".repeat(size)}b`,
+  "bare addresses in words joined by no-break spaces": (size) =>
+    `\n${`${"www.-".repeat(199)}\u00A0`.repeat(size / 996)}`,
+  "brackets nested deep": (size) =>
+    `${"[".repeat(size / 2)}${"]".repeat(size / 2)}`,
+  "lists in quotes with no space after `>`": (size) =>
+    `\n${">- ".repeat(size / 3)}a`,
+  "lists in lists": (size) => `\n${"- - a\n".repeat(size / 6)}`,
 };
 
 // Each block wraps the one before it in 32 more sections: read first at the top, a block
@@ -700,28 +727,6 @@ describe("time and size grow in step with the answer", () => {
     // Each chunk drawn anew is read whole (on the server nothing is kept): none much slower.
     expect(sorted.at(-1) ?? 0).toBeLessThan(Math.max(median, 1) * 6);
   }, 600_000);
-
-  // Each took seconds before its bound: a bare address read again from each start to its word's end,
-  // brackets remend 1.5.0 heals in their depth squared, quotes and lists with no space after `>`.
-  const slow = {
-    "bare addresses after `_` in one word (24 KB)": "www.a_".repeat(4000),
-    "the same under 1,000 marks (56 KB)": `${"www.a_".repeat(999)}${"a".repeat(50_000)}`,
-    "a bare address and 20,000 dots": `www.a${".".repeat(20_000)}b`,
-    "brackets nested 16,000 deep": `${"[".repeat(16_000)}${"]".repeat(16_000)}`,
-    "lists in quotes with no space after `>` (30 KB)": `${">- ".repeat(10_000)}a`,
-  };
-
-  test.each(Object.entries(slow))(
-    "%s: drawn whole, and while written, each in under 200 ms",
-    (_, source) => {
-      for (const streaming of [false, true]) {
-        const start = performance.now();
-        draw(source, { streaming });
-        expect(performance.now() - start).toBeLessThan(200);
-      }
-    },
-    120_000
-  );
 
   test.each(Object.entries(hostile))(
     "%s: nine times the answer, whole and while written, under 27 times the time and 10 times the nodes",
