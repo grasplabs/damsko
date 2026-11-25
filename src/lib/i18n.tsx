@@ -102,8 +102,7 @@ export interface I18nCatalog {
     agentPresses: (words: string) => string;
     /**
      * An action whose work failed when the host gives no `errorText` of its own: neutral, as the
-     * work may be a save, a check or a send. Shown on a Button laid out with its states (one given
-     * any words for them), and on Dialog's, Alert dialog's, Drawer's and Popover's actions.
+     * work may be a save, a check or a send. Dialog's, Alert dialog's, Drawer's and Popover's actions.
      */
     error: string;
     /** Said to a screen reader while it works, when no `loadingText` is given. */

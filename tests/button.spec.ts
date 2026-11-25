@@ -588,21 +588,23 @@ test("a button that runs work is as wide at rest as while it works, its working 
       );
     });
   expect(connect).toBeCloseTo(24, 0);
-  // With no failure words of its own, Delete for good keeps the room of the catalogue's.
-  const [inner, failure] = await rest
+  // With only `loadingText`, Delete for good keeps the tick's room beside its words, and no more.
+  const deleting = await rest
     .getByRole("button", { name: "Delete for good" })
     .evaluate((node) => {
       const content = node.querySelector("[data-slot=button-content]");
-      const layer = [...(content?.children ?? [])].find(
-        (each) => each.textContent === "Could not finish"
+      const words = [...node.querySelectorAll("span")].find(
+        (span) =>
+          span.childElementCount === 0 && span.textContent === "Delete for good"
       );
-      return [
-        content?.getBoundingClientRect().width ?? -1,
-        layer?.getBoundingClientRect().width ?? 0,
-      ];
+      const range = document.createRange();
+      range.selectNodeContents(words ?? node);
+      return (
+        (content?.getBoundingClientRect().width ?? -1) -
+        range.getBoundingClientRect().width
+      );
     });
-  expect(failure).toBeGreaterThan(0);
-  expect(inner).toBeCloseTo(failure, 0);
+  expect(deleting).toBeCloseTo(24, 0);
 });
 
 test("on a filled button the working spinner is drawn heavier, its last bars kept seen, as the original's", async ({

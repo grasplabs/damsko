@@ -84,15 +84,13 @@ test("a failed action says so and keeps it open", async ({ page }) => {
   const popover = page.getByRole("dialog", { name: "Test the connection" });
   const check = popover.getByRole("button", { name: "Test", exact: true });
   await check.click();
-  // With no errorText, the button shows the catalogue's words beside the alert, and says them.
-  await expect(
-    popover.getByRole("button", { name: "Could not finish" })
-  ).toHaveAttribute("data-status", "error");
+  // With no errorText, the alert stands on the button and the catalogue's words are said.
+  await expect(check).toHaveAttribute("data-status", "error");
   await expect.poll(said).toContain("Could not finish");
   await expect(popover).toBeVisible();
 });
 
-test("one that holds no control leaves focus on its trigger", async ({
+test("one that only explains keeps focus on its trigger with initialFocus none", async ({
   page,
 }) => {
   await openExample(page, "popover", "explains");

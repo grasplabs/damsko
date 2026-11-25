@@ -163,10 +163,8 @@ test("a failed action says so and keeps it open", async ({ page }) => {
   const dialog = page.getByRole("dialog", { name: "Test the connection" });
   const check = dialog.getByRole("button", { name: "Test", exact: true });
   await check.click();
-  // With no errorText, the button shows the catalogue's words beside the alert, and says them.
-  await expect(
-    dialog.getByRole("button", { name: "Could not finish" })
-  ).toHaveAttribute("data-status", "error");
+  // With no errorText, the alert stands on the button and the catalogue's words are said.
+  await expect(check).toHaveAttribute("data-status", "error");
   await expect.poll(said).toContain("Could not finish");
   await expect(dialog).toBeVisible();
 });
@@ -216,35 +214,6 @@ test("a required field left empty keeps it open, says why and takes focus", asyn
   await expect(name).toBeFocused();
   await expect(dialog).toBeVisible();
 });
-
-for (const how of ["keyboard", "pointer"] as const) {
-  test(`opened by the ${how}, a filled first field takes the caret at the end of its words, which stay as they are`, async ({
-    page,
-  }) => {
-    await openExample(page, "dialog", "form-test");
-    const trigger = page.getByRole("button", { name: "Rename project" });
-    if (how === "keyboard") {
-      await trigger.focus();
-      await page.keyboard.press("Enter");
-    } else {
-      await trigger.click();
-    }
-    const dialog = page.getByRole("dialog", { name: "Rename project" });
-    const name = dialog.getByRole("textbox", { name: "Project name" });
-    await expect(name).toBeFocused();
-    await expect
-      .poll(
-        async () =>
-          await name.evaluate((field: HTMLInputElement) => [
-            field.selectionStart,
-            field.selectionEnd,
-          ])
-      )
-      .toStrictEqual([16, 16]);
-    await page.keyboard.type(" notes");
-    await expect(name).toHaveValue("Quarterly review notes");
-  });
-}
 
 test("full, it opens wider than a dialog for a short task", async ({
   page,

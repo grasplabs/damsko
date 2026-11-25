@@ -13,15 +13,15 @@
 // while it works the button is busy, takes no second press and shows a spinner; once it settles, a
 // tick or the alert for a moment, then it rests. While it works the spinner takes the place of its
 // icon and the words stay; with no icon the mark stands over the words, which keep their place
-// unseen (and their name for a screen reader), so the button never changes width. Words for its
-// states say it runs work, and lay it out with them, as the original's: `loadingText` is said, never
-// shown (the spinner shows it works); `successText` and `errorText` are said and shown in the
+// unseen (and their name for a screen reader), so the button never changes width. `loadingText` is
+// announced to a screen reader, never shown: the spinner shows that it works, as the original's and
+// the common kits' loading buttons do. `successText` and `errorText` are announced and shown in the
 // words' place, each beside its mark, every one stacked in the same cell so the widest sets the
-// width; a failure with no `errorText` shows the catalogue's words; success with no words of its
-// own is the tick before the button's words, so the button keeps the tick's room at rest (its width
-// never changes as the tick comes). Failed, it draws the quiet fill with destructive words and edge,
-// whatever its variant. A page that runs the work elsewhere (a form's submit) gives `status`
-// instead.
+// width; a failure with no `errorText` shows the alert alone, and its announcement is the
+// catalogue's. Given any of the three, success with no words of its own is the tick before the
+// button's words, so the button keeps the tick's room at rest (its width never changes as the tick
+// comes). Failed, it draws the quiet fill with destructive words and edge, whatever its variant. A
+// page that runs the work elsewhere (a form's submit) gives `status` instead.
 //
 // `tooltip` gives it a Tooltip of its own, as SidebarMenuButton's: an icon-only button shows its
 // name (`aria-label`) by default, `tooltip={false}` shows none, and words show those. Inside a
@@ -138,16 +138,16 @@ interface ButtonBase extends Omit<
    */
   onClick?: ComponentProps<typeof ButtonPrimitive>["onClick"];
   /**
-   * Said while its press works ("Saving"). Not shown: the spinner shows it works, and the button
-   * keeps its words. Given, or either of the two below, the button is laid out with its states and
-   * keeps their room at rest.
+   * Announced to a screen reader while its press works ("Saving"); never shown: the spinner shows
+   * that it works, and the button keeps its words. Given, it keeps the tick's room at rest, as
+   * either text below does.
    */
   loadingText?: string;
-  /** Said once its press worked, and shown in place of its words for a moment ("Saved"). */
+  /** Announced once its press worked, and shown in place of its words for a moment ("Saved"). */
   successText?: string;
   /**
-   * Said when its press failed, and shown in place of its words for a moment ("Not saved"). Left
-   * out on a button laid out with its states, the catalogue's (`action.error`, "Could not finish").
+   * Announced when its press failed, and shown in place of its words for a moment ("Not saved").
+   * Left out, the alert shows alone and the catalogue's word is announced.
    */
   errorText?: string;
   /**
@@ -1073,15 +1073,17 @@ const cutWords = (children: ReactNode): ReactNode[] =>
 const Status = ({
   status,
   labels,
+  laidOut: stacked,
   truncate,
   children: given,
 }: {
   status: ActionStatus;
   labels: Labels;
+  /** Given words for any state: laid out with its states, in one cell. */
+  laidOut: boolean;
   truncate: boolean;
   children: ReactNode;
 }) => {
-  const stacked = Object.values(labels).some((each) => each !== undefined);
   const label =
     status === "idle" || status === "loading" ? undefined : labels[status];
   // Laid out with its states side by side, success with no words of its own is the tick before the
@@ -1215,7 +1217,7 @@ const Pressable = ({
   children,
   ...rest
 }: ButtonProps) => {
-  const { agentAsks, agentPresses, error: failed } = useI18n().action;
+  const { agentAsks, agentPresses } = useI18n().action;
   const { status, press } = usePress(onClick, held, {
     loadingText,
     successText,
@@ -1238,9 +1240,8 @@ const Pressable = ({
     asChild && isValidElement<{ children?: ReactNode }>(children)
       ? children
       : undefined;
-  // Given words for its states, it runs work: laid out with its states, as the original's, so a
-  // failure says so in words (the catalogue's when it has none of its own). An icon-only button
-  // keeps its square: its words are said, never shown.
+  // Given words for its states, it runs work, and is laid out with them. An icon-only button keeps
+  // its square: its words are said, never shown.
   const laidOut =
     !isIconSize(size) &&
     [loadingText, successText, errorText].some((each) => each !== undefined);
@@ -1248,9 +1249,8 @@ const Pressable = ({
     <Status
       status={status}
       truncate={truncate}
-      labels={
-        laidOut ? { success: successText, error: errorText ?? failed } : {}
-      }
+      laidOut={laidOut}
+      labels={laidOut ? { success: successText, error: errorText } : {}}
     >
       {content}
     </Status>
