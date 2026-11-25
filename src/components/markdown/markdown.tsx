@@ -307,6 +307,8 @@ const styles = stylex.create({
     // Each button's touch target reaches the middle of the gap to the next, and the room under it.
     "--tap-room-inline": `calc(${space["2"]} / 2)`,
     marginBlockEnd: space["2"],
+    // and past the last one's end, inside the answer: a target past it would scroll a box round it.
+    paddingInlineEnd: `calc((${size.tapTarget} - ${size.controlSm}) / 2)`,
   },
   more: {
     margin: 0,
