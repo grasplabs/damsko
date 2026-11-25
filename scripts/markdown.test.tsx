@@ -475,12 +475,13 @@ describe("while it is written, nothing shows that the whole answer will not", ()
   });
 
   test("a tag still open shows its words, as the whole answer does", () => {
+    // Each ends in a space: the word still being written waits for it.
     for (const source of [
-      "Hello <div class=x and more words",
-      "<span title=x y",
+      "Hello <div class=x and more words ",
+      "<span title=x y ",
     ]) {
       const words = textOf(draw(source, { streaming: true }));
-      expect(words).toBe(textOf(draw(source)));
+      expect(words.trim()).toBe(textOf(draw(source)).trim());
     }
   });
 
@@ -702,6 +703,11 @@ describe("time and size grow in step with the answer", () => {
       2000,
       (at: number) => `[x][l${at}]\n\n[l${at}]: https://x.example/${at}`,
     ],
+    // About 420 KB, its reads past the cache's bound.
+    "2,000 notes of 100 words": [
+      2000,
+      (at: number) => `t[^${at}]\n\n[^${at}]: ${"*n* ".repeat(50)}`,
+    ],
   } as const;
 
   test.each(Object.entries(named))(
@@ -739,4 +745,29 @@ describe("time and size grow in step with the answer", () => {
     },
     600_000
   );
+
+  test("past the cache's bound, a chunk reads again none of the blocks it had read", () => {
+    const text = Array.from(
+      { length: 2000 },
+      (_, at) => `t[^${at}]\n\n[^${at}]: ${"*n* ".repeat(50)}`
+    ).join("\n\n");
+    // Each emphasis node drawn: a block read again draws new ones.
+    const drawn = (source: string) => {
+      const nodes = new Set<unknown>();
+      const components: MarkdownComponents = {
+        em: ({ node, ...props }) => {
+          nodes.add(node);
+          return <em {...props} />;
+        },
+      };
+      draw(source, { streaming: true, components });
+      return nodes;
+    };
+    const before = drawn(text.slice(0, -2000));
+    const after = drawn(text);
+    const fresh = [...after].filter((node) => !before.has(node));
+    // The ten or so blocks the chunk adds, and the one still being written: 50 each.
+    expect(fresh.length).toBeLessThan(1000);
+    expect(after.size).toBeGreaterThan(99_000);
+  }, 120_000);
 });

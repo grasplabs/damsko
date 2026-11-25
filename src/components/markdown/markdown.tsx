@@ -1285,10 +1285,11 @@ const useBlocks = (
     const to = starts[at + 1] ?? source.length;
     return { start, to, text: source.slice(start, to) };
   });
-  // The definitions and notes in the finished blocks that may hold one, read without names.
+  // The definitions and notes in the finished blocks that may hold one, as last read: no name
+  // changes a definition.
   const defined = texts
     .filter(({ text }) => text.search(DEFINED) !== -1)
-    .flatMap(({ text }) => placesOf(parse.readBlock(text)))
+    .flatMap(({ text }) => placesOf(parse.readDefinitions(text)))
     .flatMap(([, block]) => foundIn(block));
   const links = defined.flatMap((node) =>
     node.type === "definition" ? [node] : []

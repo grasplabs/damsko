@@ -396,9 +396,10 @@ const lessRows = (block: string) => {
 };
 
 // Blocks read once, while the same and while each name their read asked about is defined or not as
-// it was, up to about 32 MB in all (`weigh`): past that, the ones used longest ago go first, but
-// never one used in this pass (since the answer being drawn began its reads, `nextPass`), so an
-// answer that needs more keeps what it reads now, and lets it go once it is gone (`release`).
+// it was, up to about 32 MB in all (`weigh`). Past that, as a pass starts (an answer about to read
+// its blocks, `nextPass`), the ones used longest ago go first, but never one the pass before used:
+// an answer that needs more keeps what it reads while it is drawn, and lets it go once it is gone
+// (`release`).
 interface Entry {
   nodes: Block[];
   asked: readonly Asked[];
@@ -428,10 +429,10 @@ const weigh = (key: string, asked: readonly Asked[], nodes: Block[]) => {
   }
   return weight;
 };
-/** Lets go of the blocks used longest ago, those of this pass too when `all`, down to the bound. */
-const evict = (all: boolean) => {
+/** Lets go of the blocks used longest ago, down to the bound, but none used since pass `kept`. */
+const evict = (kept: number) => {
   for (const [key, entry] of cache) {
-    if (cached <= BOUND || (entry.pass === pass && !all)) {
+    if (cached <= BOUND || entry.pass >= kept) {
       break;
     }
     cache.delete(key);
@@ -440,11 +441,12 @@ const evict = (all: boolean) => {
 };
 /** Starts a pass: an answer is about to read its blocks. */
 export const nextPass = () => {
+  evict(pass);
   pass += 1;
 };
 /** An answer is gone: what it kept past the bound goes. */
 export const release = () => {
-  evict(true);
+  evict(Number.POSITIVE_INFINITY);
 };
 
 /** A section's reads ask what its blocks' reads asked. */
@@ -455,9 +457,8 @@ const tell = (into: Asked[], asked: readonly Asked[]) => {
 };
 const readInto = (block: string, reading: Reading, into: Asked[]): Block[] => {
   const { open = false, names = NO_NAMES, depth = 0 } = reading;
-  // A section read inside others stops at 32 deep, so how deep it is read is part of the key; read
-  // without the answer's names (to find them), it is kept apart.
-  const key = `${depth}${reading.names === undefined ? "" : "+"} ${block}`;
+  // A section read inside others stops at 32 deep, so how deep it is read is part of the key.
+  const key = `${depth} ${block}`;
   const known = open ? undefined : cache.get(key);
   if (
     known !== undefined &&
@@ -485,7 +486,6 @@ const readInto = (block: string, reading: Reading, into: Asked[]): Block[] => {
     const weight = weigh(key, asked, nodes);
     cache.set(key, { nodes, asked, pass, weight });
     cached += weight;
-    evict(false);
   }
   return nodes;
 };
@@ -495,6 +495,12 @@ const readInto = (block: string, reading: Reading, into: Asked[]): Block[] => {
  */
 export const readBlock = (block: string, reading: Reading = {}): Block[] =>
   readInto(block, reading, []);
+/**
+ * A block's nodes for the definitions it holds, which no name changes: as last read, whatever names
+ * that read was told, so finding the answer's names reads no block again.
+ */
+export const readDefinitions = (block: string) =>
+  cache.get(`0 ${block}`)?.nodes ?? readBlock(block);
 
 /**
  * An address as CommonMark writes it into a page: a character outside an address's own set is
