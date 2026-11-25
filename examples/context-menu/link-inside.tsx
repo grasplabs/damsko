@@ -14,6 +14,7 @@ const layout = stylex.create({
     display: "block",
     padding: space[3],
     borderRadius: radius.xl,
+    cornerShape: radius.shape,
     color: colors.foreground,
     fontFamily: font.sans,
     fontSize: font.textSm,

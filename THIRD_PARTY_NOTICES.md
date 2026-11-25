@@ -153,3 +153,14 @@ The Markdown tests' fixtures `scripts/fixtures/commonmark-spec.json` and `script
 - the CommonMark Spec 0.31.2, by John MacFarlane (https://spec.commonmark.org/0.31.2/, from its `spec.json`);
 - the GitHub Flavored Markdown Spec 0.29, by GitHub, Inc., based on the CommonMark Spec (https://github.github.com/gfm/), its extension examples, from cmark-gfm's `test/spec.txt` at 7fe8904ee31fa24b772ae565c4908b1394850de6 (https://github.com/github/cmark-gfm);
 - cmark-gfm's extensions test, by Yuki Izumi, from its `test/extensions.txt` at the same commit.
+
+## The idle screen's scenes
+
+The docs site's idle screen (`site/behaviour/idle-screen.ts`) draws six pictures, kept as grey light maps in `public/scenes/`. They are the site's own and not part of the registry. Five are in the public domain. The Webb picture is credited as its publishers ask.
+
+- `cliffs.jpg`: the Cosmic Cliffs of the Carina Nebula, James Webb Space Telescope, 2022. Credit: NASA, ESA, CSA, STScI. NASA's release is in the public domain; ESA's copy is under Creative Commons Attribution 4.0 International (https://creativecommons.org/licenses/by/4.0/). Changed: made grey and resized.
+- `wave.jpg`: The Great Wave off Kanagawa, Katsushika Hokusai, about 1831. Public domain.
+- `aurora.jpg`: a northern light from orbit, over the Manicouagan crater. NASA. Public domain.
+- `starry.jpg`: The Starry Night, Vincent van Gogh, 1889. Public domain.
+- `fuji.jpg`: Fine Wind, Clear Morning, Katsushika Hokusai, about 1831. Public domain.
+- `wanderer.jpg`: Wanderer above the Sea of Fog, Caspar David Friedrich, about 1818. Public domain.

@@ -65,6 +65,7 @@ const styles = stylex.create({
     width: 12,
     height: 12,
     borderRadius: 3,
+    cornerShape: radius.shape,
     backgroundColor: colors.card,
     boxShadow: `inset 0 0 0 1px color-mix(in oklch, ${colors.mutedForeground} 55%, transparent)`,
   },

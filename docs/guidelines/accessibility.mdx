@@ -229,7 +229,12 @@ On a touch screen every control takes a 44px press area, unseen round the one dr
     {
       key: "The system",
       value:
-        "A control drawn smaller than {tap-target} reaches it on a touch screen, past its drawn edge.",
+        "A control drawn smaller than {tap-target} reaches it on a touch screen, past its drawn edge. Towards a control beside it, it stops at the middle of the gap, so it never covers another control or takes its press.",
+    },
+    {
+      key: "The room",
+      value:
+        "A part that sets controls a gap apart says how far their targets may reach: `--tap-room-inline` in a row, `--tap-room-block` in a column, half the gap. Unset, a target stops at its own edge towards a control beside it. `--tap-reach` caps every side: 0 for a control set on another one's box.",
     },
     {
       key: "Still open",
@@ -239,7 +244,7 @@ On a touch screen every control takes a 44px press area, unseen round the one dr
     {
       key: "Yours",
       value:
-        "Never shrink a press area, and never two targets inside one. Neighbours stand a finger apart, so no two areas overlap.",
+        "Never shrink a press area, and never two targets inside one. Set controls a gap apart, and give half the gap as their room, from the gap's own token, so the areas meet in the middle.",
     },
   ]}
 />
@@ -368,7 +373,7 @@ What a script proves, what a person has looked at, and what nobody has yet.
       group: "By a script",
       key: "Touch",
       value:
-        "Every page as a touch phone at 390 and 320: every control in a stage reaches 44px each way. Text fields are left out.",
+        "Every component example as a touch phone at 390: every pixel of a control lands on it, every control reaches 44px each way where there is room and stops at the middle of a gap, and no target makes a box scroll. Text fields keep their height.",
     },
     {
       group: "By a script",

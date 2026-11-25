@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 import type { Locator, Page } from "@playwright/test";
 
-import { fixedTime, openExample } from "./example.ts";
+import { fixedTime, listenToLiveRegions, openExample } from "./example.ts";
 
 // Only Chromium has the clipboard's permissions: a context asked for them elsewhere does not open.
 test.use({
@@ -46,13 +46,15 @@ test("the block is a region named by its language, or by its title", async ({
 test("copy puts the code on the clipboard exactly and says so once", async ({
   page,
 }) => {
+  const said = await listenToLiveRegions(page);
   await openExample(page, "code-block", "basic");
   await page.getByRole("button", { name: COPY }).click();
   // Exactly the code: no line numbers, nothing added.
   await expect.poll(async () => await clipboard(page)).toBe(basicCode);
-  await expect(
-    page.getByRole("status").filter({ hasText: /^Copied$/u })
-  ).toHaveCount(1);
+  await expect.poll(said).toContain("Copied");
+  // A second time would come a message's hold (400ms) after the first.
+  await page.waitForTimeout(600);
+  expect(await said()).toStrictEqual(["Copied"]);
 });
 
 test("the keyboard copies too", async ({ page }) => {
@@ -466,9 +468,10 @@ const neverHeld = async (
   const coloured = await drawOut(page, code, language, how);
   if (browserName === "chromium") {
     // Drawing a thousand lines of text can itself take a task past 50 ms on a slow machine: what
-    // the colours add is what counts. 25 ms is the machine's own unevenness; the colours drawn
+    // the colours add is what counts. 100 ms is the machine's own unevenness, with the worker
+    // reading for up to its second on one of CI's two cores beside the page; the colours drawn
     // again each frame, as before, blocked it for seconds.
-    expect(coloured.blocked).toBeLessThanOrEqual(plain.blocked + 25);
+    expect(coloured.blocked).toBeLessThanOrEqual(plain.blocked + 100);
   } else {
     // A frame in ten either way is the machine, not the page: on a loaded machine the same text
     // drawn twice differs by that much. The colours drawn again each frame made half of them slow.

@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { openExample } from "./example.ts";
+import { liveRegion, openExample } from "./example.ts";
 
 test("a unified diff is a table of lines, its columns named", async ({
   page,
@@ -110,7 +110,7 @@ test("a review takes an answer, says it, and Undo puts it back", async ({
   await page.keyboard.press("Enter");
   await expect(page.getByText("Accepted").first()).toBeVisible();
   await expect(
-    page.getByRole("status").filter({ hasText: "Change 1 accepted" })
+    liveRegion(page).filter({ hasText: "Change 1 accepted" })
   ).toHaveCount(1);
   const undo = page.getByRole("button", { name: "Undo" }).first();
   await expect(undo).toBeFocused();

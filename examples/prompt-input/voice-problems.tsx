@@ -25,7 +25,14 @@ const problems = [
 ] as const;
 
 const styles = stylex.create({
-  row: { display: "flex", flexWrap: "wrap", gap: 8 },
+  // Wrapped onto lines: each button's touch target reaches the middle of the gap to the next.
+  row: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: 8,
+    "--tap-room-inline": "4px",
+    "--tap-room-block": "4px",
+  },
 });
 
 // What stops a voice stands in a banner over the card at rest, with what was typed kept.

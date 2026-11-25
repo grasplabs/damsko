@@ -5,6 +5,8 @@
 //
 //   pnpm exec vp test scripts/markdown-stream.test.tsx
 import { setTimeout as sleep } from "node:timers/promises";
+import { getHeapStatistics, setFlagsFromString } from "node:v8";
+import { runInNewContext } from "node:vm";
 
 import { act } from "react";
 import type { ReactNode } from "react";
@@ -12,6 +14,7 @@ import { createRoot } from "react-dom/client";
 import { describe, expect, test, vi } from "vitest";
 
 import { Markdown } from "../src/components/markdown/index.ts";
+import type { MarkdownComponents } from "../src/components/markdown/index.ts";
 import { Message, MessageResponse } from "../src/components/message.tsx";
 import { isRecord, readJson } from "./json.ts";
 
@@ -216,6 +219,104 @@ describe("while written, words once shown stay shown", () => {
   );
 });
 
+// A paragraph, list items, a table's cells and fenced code, no word in them longer than 32 characters.
+const written = `What changed this week, team by team.
+
+- Support closed the most requests.
+- Sales has the fewest open.
+
+| Team | Closed | Open |
+| :-- | --: | --: |
+| Support | 58 | 4 |
+| Sales | 33 | 2 |
+
+\`\`\`python
+def closed(requests):
+    return sum(1 for request in requests if request.closed_at)
+\`\`\`
+
+That is all.`;
+
+describe("while written a character at a time, each word comes whole", () => {
+  test("no word drawn in a paragraph, a list item, a table's cell or fenced code ever grows", () => {
+    vi.useFakeTimers({ toFake: ["performance"] });
+    const { box, root, render } = live();
+    const seen = new Map<Element, string[]>();
+    const grown: string[] = [];
+    const places = new Set<string>();
+    for (let at = 1; at < written.length; at += 1) {
+      render(<Markdown streaming>{written.slice(0, at)}</Markdown>);
+      for (const block of box.querySelectorAll(
+        "p, li, td, [data-slot=code-block-line]"
+      )) {
+        const words = block.textContent.split(/\s+/u).filter(Boolean);
+        const before = seen.get(block) ?? [];
+        const changed = before.findIndex(
+          (word, index) => words[index] !== word
+        );
+        if (changed !== -1) {
+          grown.push(`${before[changed]} to ${words[changed]} @${at}`);
+        }
+        seen.set(block, words);
+        if (words.length > 0) {
+          places.add(block.localName);
+        }
+      }
+    }
+    act(() => {
+      root.unmount();
+    });
+    vi.useRealTimers();
+    expect(grown).toStrictEqual([]);
+    expect([...places].toSorted()).toStrictEqual(["li", "p", "span", "td"]);
+  });
+
+  test("the word at the end shows once nothing more has come for a quarter second, and stays shown", () => {
+    vi.useFakeTimers();
+    const { box, root, render } = live();
+    render(<Markdown streaming>Waiting on the supp</Markdown>);
+    expect(box.textContent).toBe("Waiting on the");
+    act(() => {
+      vi.advanceTimersByTime(249);
+    });
+    expect(box.textContent).toBe("Waiting on the");
+    act(() => {
+      vi.advanceTimersByTime(1);
+    });
+    expect(box.textContent).toBe("Waiting on the supp");
+    // The rest of that word waits for its end in turn, so it grows once, not a letter at a time.
+    render(<Markdown streaming>Waiting on the suppl</Markdown>);
+    expect(box.textContent).toBe("Waiting on the supp");
+    render(<Markdown streaming>Waiting on the supplier to</Markdown>);
+    expect(box.textContent).toBe("Waiting on the supplier");
+    act(() => {
+      root.unmount();
+    });
+    vi.useRealTimers();
+  });
+
+  test("a run longer than 32 characters comes 32 at a time, past 256 as it comes, and nothing waits once it is written", () => {
+    vi.useFakeTimers({ toFake: ["performance"] });
+    const text = "a=1;b=2;".repeat(40);
+    const { box, root, render } = live();
+    const held: number[] = [];
+    for (let at = 1; at <= text.length; at += 1) {
+      render(<Markdown streaming>{text.slice(0, at)}</Markdown>);
+      held.push(at - box.textContent.length);
+    }
+    render(<Markdown>{text}</Markdown>);
+    expect(box.textContent).toBe(text);
+    act(() => {
+      root.unmount();
+    });
+    vi.useRealTimers();
+    expect(Math.max(...held)).toBe(31);
+    expect(held).toStrictEqual(
+      held.map((_, at) => (at + 1 < 256 ? (at + 1) % 32 : 0))
+    );
+  });
+});
+
 describe("a block that takes long to read is read again as often as a fifth of the time allows", () => {
   test(
     "a small one at every chunk; a big one once four times its last read has passed, chunk or not",
@@ -281,4 +382,98 @@ describe("nothing runs on once it is gone", () => {
     expect(vi.getTimerCount()).toBe(0);
     vi.useRealTimers();
   });
+
+  test("an answer, once gone, leaves none of its readings held", () => {
+    setFlagsFromString("--expose-gc");
+    // With the flag set, a new context's `gc` is V8's collector.
+    const collect: unknown = runInNewContext("gc");
+    const held = () => {
+      if (typeof collect === "function") {
+        Reflect.apply(collect, undefined, []);
+      }
+      return getHeapStatistics().used_heap_size;
+    };
+    // 2,000 notes of 100 words each, never marked, so never drawn: about 200 MB of readings.
+    const text = Array.from(
+      { length: 2000 },
+      (_, at) => `[^${at}]: ${"*n* ".repeat(50)}`
+    ).join("\n\n");
+    const before = held();
+    const { root, render } = live();
+    render(<Markdown>{text}</Markdown>);
+    act(() => {
+      root.unmount();
+    });
+    expect(held() - before).toBeLessThan(16_000_000);
+  }, 120_000);
+});
+
+// Two answers of notes, each note's block of its own, marked from a block of its own.
+const noted = (words: number) =>
+  ["a", "b"].map((word) =>
+    Array.from(
+      { length: 400 },
+      (_, at) => `t[^${at}]\n\n[^${at}]: ${`*${word}* `.repeat(words)}`
+    ).join("\n\n")
+  );
+/** Both drawn a twentieth more at a time, in turn, as two answers stream at once. */
+const stream = (
+  texts: string[],
+  components: MarkdownComponents,
+  drawn: () => void
+) => {
+  const roots = texts.map(() => createRoot(document.createElement("div")));
+  for (let chunk = 1; chunk <= 20; chunk += 1) {
+    for (const [at, root] of roots.entries()) {
+      const text = texts[at] ?? "";
+      const end = Math.round((text.length * chunk) / 20);
+      act(() => {
+        root.render(
+          <Markdown streaming components={components}>
+            {text.slice(0, end)}
+          </Markdown>
+        );
+      });
+      drawn();
+    }
+  }
+  act(() => {
+    for (const root of roots) {
+      root.unmount();
+    }
+  });
+};
+
+describe("answers streamed together, each keeps its own readings", () => {
+  test("a chunk reads again none of the blocks either answer had read", () => {
+    const seen = new Set<unknown>();
+    let fresh = 0;
+    const components: MarkdownComponents = {
+      em: ({ node, ...props }) => {
+        fresh += Number(!seen.has(node));
+        seen.add(node);
+        return <em {...props} />;
+      },
+    };
+    const each: number[] = [];
+    stream(noted(10), components, () => {
+      each.push(fresh);
+      fresh = 0;
+    });
+    // A chunk adds a twentieth of an answer's 4,000 marks of emphasis, and the block being written.
+    expect(Math.max(...each)).toBeLessThan(400);
+    expect(seen.size).toBeGreaterThan(8000);
+  }, 120_000);
+
+  test("two answers of 400 notes streamed together take under 4 times as long as two of words", () => {
+    const cost = (texts: string[]) => {
+      const start = performance.now();
+      stream(texts, {}, () => {});
+      return performance.now() - start;
+    };
+    const plain = cost(
+      noted(20).map((text) => text.replaceAll(/[[\]^:]/gu, "w"))
+    );
+    expect(cost(noted(20))).toBeLessThan(plain * 4);
+  }, 300_000);
 });

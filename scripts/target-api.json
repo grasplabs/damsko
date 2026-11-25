@@ -1366,6 +1366,7 @@
       "InspectorProps",
       "InspectorSection",
       "InspectorRow",
+      "InspectorView",
       "InspectorLabels"
     ]
   },

@@ -6,6 +6,8 @@ const layout = stylex.create({
   list: {
     display: "grid",
     gap: space["2"],
+    // Each row's button reaches the middle of the gap to the next on a touch screen.
+    "--tap-room-block": `calc(${space["2"]} / 2)`,
     width: "100%",
     maxWidth: 420,
     margin: 0,

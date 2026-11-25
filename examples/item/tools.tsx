@@ -48,7 +48,7 @@ export default function ItemTools() {
   const next = more.find((tool) => !tools.some((had) => had.id === tool.id));
   return (
     <SidePanelSection title="Tools" style={layout.section}>
-      <ItemGroup aria-label="Tools">
+      <ItemGroup separated aria-label="Tools">
         <Item size="xs">
           <ItemMedia>
             <Icon icon={DatabaseIcon} />
@@ -64,29 +64,26 @@ export default function ItemTools() {
           </ItemContent>
         </Item>
         {tools.map((tool) => (
-          <Fragment key={tool.id}>
-            <ItemSeparator />
-            <Item size="xs">
-              <ItemMedia>
-                <Icon icon={tool.icon} />
-              </ItemMedia>
-              <ItemContent>
-                <ItemTitle>{tool.name}</ItemTitle>
-              </ItemContent>
-              <ItemActions showOnHover>
-                <Button
-                  variant="ghost"
-                  size="icon-xs"
-                  aria-label={`Remove ${tool.name}`}
-                  onClick={() => {
-                    setTools((was) => was.filter((had) => had.id !== tool.id));
-                  }}
-                >
-                  <Icon icon={TrashIcon} />
-                </Button>
-              </ItemActions>
-            </Item>
-          </Fragment>
+          <Item key={tool.id} size="xs">
+            <ItemMedia>
+              <Icon icon={tool.icon} />
+            </ItemMedia>
+            <ItemContent>
+              <ItemTitle>{tool.name}</ItemTitle>
+            </ItemContent>
+            <ItemActions showOnHover>
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                aria-label={`Remove ${tool.name}`}
+                onClick={() => {
+                  setTools((was) => was.filter((had) => had.id !== tool.id));
+                }}
+              >
+                <Icon icon={TrashIcon} />
+              </Button>
+            </ItemActions>
+          </Item>
         ))}
       </ItemGroup>
       {next && <ItemSeparator />}

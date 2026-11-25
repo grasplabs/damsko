@@ -53,6 +53,10 @@ const layout = stylex.create({
     flexWrap: "wrap",
     alignItems: "center",
     gap: space["2"],
+    // On a touch screen each control's target reaches the middle of the gap to the next, beside it
+    // and on the next line.
+    "--tap-room-inline": `calc(${space["2"]} / 2)`,
+    "--tap-room-block": `calc(${space["2"]} / 2)`,
   },
   order: {
     display: "flex",

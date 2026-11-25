@@ -5,6 +5,7 @@
 // markdown-stream.test.tsx.
 //
 //   pnpm exec vp test scripts/markdown.test.tsx
+import { setTimeout as sleep } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
 
 import { renderToStaticMarkup } from "react-dom/server";
@@ -155,8 +156,8 @@ describe("the parse is micromark's, block by block", () => {
           node.type === type && "identifier" in node ? [node.identifier] : []
         );
       const names = {
-        links: of("definition"),
-        notes: of("footnoteDefinition"),
+        links: new Set(of("definition")),
+        notes: new Set(of("footnoteDefinition")),
       };
       const { starts } = parse.blockStarts(source);
       const blocks = starts.flatMap((start, at) =>
@@ -389,8 +390,8 @@ describe("what an answer may hold besides prose", () => {
   });
 
   test("a mark is as written until its note has come, while written too, as Streamdown draws it", () => {
-    const source = "First[^x] and[^y].\n\n[^y]: Why.";
-    expect(textOf(draw(source.slice(0, 18), { streaming: true }))).toBe(
+    const source = "First[^x] and[^y].\n\n[^y]: Why.\n";
+    expect(textOf(draw(source.slice(0, 19), { streaming: true }))).toBe(
       "First[^x] and[^y]."
     );
     expect(textOf(draw(source, { streaming: true }))).toBe(
@@ -427,9 +428,15 @@ describe("what an answer may hold besides prose", () => {
     );
   });
 
-  test("while written, each word fades in, and each character where words have no spaces", () => {
+  test("while written, each whole word fades in, and each character where words have no spaces; the word at the end waits", () => {
     const html = draw("你好 world and more", { streaming: true });
-    expect(count(html, "<span")).toBe(5);
+    expect(count(html, "<span")).toBe(4);
+    expect(textOf(html)).toBe("你好 world and");
+    expect(
+      count(draw("你好 world and more ", { streaming: true }), "<span")
+    ).toBe(5);
+    // Each character where words have no spaces is a word of its own, so none waits.
+    expect(textOf(draw("world 你好", { streaming: true }))).toBe("world 你好");
   });
 
   test("soft breaks: a single newline is a line break when asked, a space otherwise", () => {
@@ -467,6 +474,17 @@ describe("while it is written, nothing shows that the whole answer will not", ()
     }
   });
 
+  test("a tag still open shows its words, as the whole answer does", () => {
+    // Each ends in a space: the word still being written waits for it.
+    for (const source of [
+      "Hello <div class=x and more words ",
+      "<span title=x y ",
+    ]) {
+      const words = textOf(draw(source, { streaming: true }));
+      expect(words.trim()).toBe(textOf(draw(source)).trim());
+    }
+  });
+
   test("a mark of emphasis or code at the very end, and a closing fence half typed, wait", () => {
     for (const mark of ["**", "*", "`", "~~", "__", "_"]) {
       const html = draw(`The cost is ${mark}`, { streaming: true });
@@ -487,7 +505,7 @@ describe("while it is written, nothing shows that the whole answer will not", ()
       ["Done.\n\n</det", "Done."],
       ["Summary\n=", "Summary"],
       ["Para\n#", "Para"],
-      ["See [the docs]", "See the docs"],
+      ["See [the docs] ", "See the docs"],
     ];
     const drawn = cases.map(([source = ""]) => {
       const html = draw(source, { streaming: true });
@@ -513,7 +531,7 @@ describe("while it is written, nothing shows that the whole answer will not", ()
   });
 
   test("a block read alone knows the answer's names: links and notes defined elsewhere", () => {
-    const names = { links: ["the guide"], notes: ["1"] };
+    const names = { links: new Set(["the guide"]), notes: new Set(["1"]) };
     const told = parse.readBlock("See [the guide] and a mark[^1].", {
       names,
     });
@@ -628,24 +646,29 @@ describe("time and size grow in step with the answer", () => {
     expect(drawn.map(deepest)).toStrictEqual([32, 32]);
   }, 120_000);
 
-  test("the block cache keeps what an answer reads, however far past its 2 MB: a block is read once while it is the same", () => {
-    // Fifteen blocks, each wrapping the one before in 32 more sections: read at every depth, more
-    // than the cache's 2 MB.
+  test("a long answer of sections around sections streams with no read much slower than the rest", async () => {
     const blocks = [wrap("x")];
     for (let at = 1; at <= 14; at += 1) {
       blocks.push(wrap(blocks.at(-1) ?? ""));
     }
-    const readAll = () => blocks.map((text) => parse.readBlock(text));
-    parse.nextPass();
-    const first = readAll();
-    const same = () => readAll().every((nodes, at) => nodes === first[at]);
-    // In the same pass (one render), and in each pass after it, as an answer streams on.
-    expect(same()).toBeTruthy();
-    for (let pass = 0; pass < 3; pass += 1) {
-      parse.nextPass();
-      expect(same()).toBeTruthy();
+    const source = blocks.join("\n\n");
+    const times: number[] = [];
+    let most = 0;
+    for (let at = 500; at < source.length + 500; at += 500) {
+      // Each chunk drawn in a task of its own, as a page draws it.
+      // oxlint-disable-next-line no-await-in-loop -- one chunk after another, as they stream
+      await sleep(0);
+      const start = performance.now();
+      const html = draw(source.slice(0, at), { streaming: true });
+      times.push(performance.now() - start);
+      most = Math.max(most, deepest(html));
     }
-  });
+    const sorted = times.toSorted((a, b) => a - b);
+    const median = sorted[Math.floor(sorted.length / 2)] ?? 0;
+    expect(most).toBe(32);
+    // Each chunk drawn anew is read whole (on the server nothing is kept): none much slower.
+    expect(sorted.at(-1) ?? 0).toBeLessThan(Math.max(median, 1) * 6);
+  }, 600_000);
 
   test.each(Object.entries(hostile))(
     "%s: nine times the answer, whole and while written, under 27 times the time and 10 times the nodes",
@@ -670,5 +693,51 @@ describe("time and size grow in step with the answer", () => {
       expect(large?.nodes ?? 0).toBeLessThan((small?.nodes ?? 0) * 10);
     },
     120_000
+  );
+
+  // Each a block of its own, marked or linked from a block of its own: every block is read with
+  // every name the answer defines, which must cost each block nothing more as the names grow.
+  const named = {
+    "5,000 notes": [5000, (at: number) => `t[^${at}]\n\n[^${at}]: n`],
+    "2,000 link definitions": [
+      2000,
+      (at: number) => `[x][l${at}]\n\n[l${at}]: https://x.example/${at}`,
+    ],
+  } as const;
+
+  test.each(Object.entries(named))(
+    "%s, whole and streamed, take under 4 times as long as as many blocks of words",
+    (_, [blocks, make]) => {
+      const answer = (block: (at: number) => string, run: string) =>
+        Array.from({ length: blocks }, (__, at) => `${block(at)}${run}`).join(
+          "\n\n"
+        );
+      const words = (at: number) => make(at).replaceAll(/[[\]^:]/gu, "w");
+      // Whole, then streamed in 20 chunks, each drawn anew (on the server nothing is kept).
+      const cost = (block: (at: number) => string) => {
+        const start = performance.now();
+        const whole = draw(answer(block, "a"));
+        const streamed = answer(block, "b");
+        let last = "";
+        for (let chunk = 1; chunk <= 20; chunk += 1) {
+          const at = Math.round((streamed.length * chunk) / 20);
+          last = draw(streamed.slice(0, at), { streaming: chunk < 20 });
+        }
+        return { time: performance.now() - start, html: [whole, last] };
+      };
+      const plain = cost(words);
+      const { time, html } = cost(make);
+      // Each mark found its note and each reference its definition, those streamed ahead of
+      // their definition too.
+      const linked = (one: string) => count(one, '<a href="https://x.example');
+      const marks = (one: string) => count(one, "<sup");
+      expect(
+        html.map((one) => Math.max(linked(one), marks(one)))
+      ).toStrictEqual([blocks, blocks]);
+      // Each block keyed by every name: 6 times as long for 2,000 link definitions, minutes for
+      // 5,000 notes.
+      expect(time).toBeLessThan(plain.time * 4);
+    },
+    600_000
   );
 });

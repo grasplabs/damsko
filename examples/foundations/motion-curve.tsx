@@ -6,6 +6,7 @@ import {
   duration,
   font,
   media,
+  radius,
   size,
   space,
 } from "@grasp-os/ui/lib/tokens.stylex";
@@ -132,7 +133,7 @@ const styles = stylex.create({
     position: "absolute",
     width: space["3"],
     height: space["3"],
-    borderRadius: "50%",
+    borderRadius: radius.circle,
     backgroundColor: colors.foreground,
     boxShadow: `0 0 0 ${space["1"]} ${colors.card}`,
   },
