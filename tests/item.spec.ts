@@ -1,7 +1,21 @@
 import { expect, test } from "@playwright/test";
-import type { Locator } from "@playwright/test";
+import type { Page, Locator } from "@playwright/test";
 
 import { hasFocusRing, openExample } from "./example.ts";
+
+/**
+ * The system's corner as this engine draws it: 20px in the squircle, or its plain-radius stand-in
+ * where the engine draws no squircle (Firefox), read from the token on a probe.
+ */
+const systemCorner = async (page: Page): Promise<string> =>
+  await page.evaluate(() => {
+    const probe = document.createElement("div");
+    probe.style.borderTopLeftRadius = "var(--damsko-radius-xl)";
+    document.body.append(probe);
+    const { borderTopLeftRadius } = getComputedStyle(probe);
+    probe.remove();
+    return borderTopLeftRadius;
+  });
 
 /** Whether a row's press has the keyboard's focus and its ring shows round the row it covers. */
 const ringsItsRow = async (press: Locator): Promise<boolean> =>
@@ -379,10 +393,11 @@ test("an outline or muted row takes the system's corner, the card's 20px", async
   page,
 }) => {
   await openExample(page, "item", "basic");
+  const corner = await systemCorner(page);
   for (const words of ["Quarterly summary", "Supplier list for the spring"]) {
     const row = page.locator("[data-slot=item]", { hasText: words });
     // oxlint-disable-next-line no-await-in-loop -- one row after the other
-    await expect(row).toHaveCSS("border-top-left-radius", "20px");
+    await expect(row).toHaveCSS("border-top-left-radius", corner);
   }
 });
 

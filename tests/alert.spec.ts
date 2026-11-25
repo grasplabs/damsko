@@ -1,6 +1,21 @@
 import { expect, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
 
 import { hasFocusRing, openExample } from "./example.ts";
+
+/**
+ * The system's corner as this engine draws it: 20px in the squircle, or its plain-radius stand-in
+ * where the engine draws no squircle (Firefox), read from the token on a probe.
+ */
+const systemCorner = async (page: Page): Promise<string> =>
+  await page.evaluate(() => {
+    const probe = document.createElement("div");
+    probe.style.borderTopLeftRadius = "var(--damsko-radius-xl)";
+    document.body.append(probe);
+    const { borderTopLeftRadius } = getComputedStyle(probe);
+    probe.remove();
+    return borderTopLeftRadius;
+  });
 
 for (const theme of ["light", "dark"] as const) {
   test(`a warning or a destructive alert is said at once, the others when the reader is free, ${theme}`, async ({
@@ -111,7 +126,10 @@ test("a banner has 12px of room all round and the system's corner; across a shel
   const banner = page.locator("[data-slot=alert]").first();
   await expect(banner).toHaveCSS("padding-inline-start", "12px");
   await expect(banner).toHaveCSS("padding-block-start", "12px");
-  await expect(banner).toHaveCSS("border-top-left-radius", "20px");
+  await expect(banner).toHaveCSS(
+    "border-top-left-radius",
+    await systemCorner(page)
+  );
   await openExample(page, "app-shell-01", "banner");
   const band = page.locator("[data-slot=app-shell-banner] [data-slot=alert]");
   await expect(band).toHaveCSS("border-top-left-radius", "0px");

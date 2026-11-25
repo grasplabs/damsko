@@ -54,7 +54,11 @@ import {
 } from "../lib/tokens.stylex";
 import { isBlank, listOf } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
-import { iconVars, sidePanelCardMarker } from "../lib/vars.stylex";
+import {
+  iconVars,
+  sidePanelCardMarker,
+  skeletonVars,
+} from "../lib/vars.stylex";
 import { itemMarker, itemVars } from "./item.stylex";
 import { Separator } from "./separator";
 import { Skeleton } from "./skeleton";
@@ -666,10 +670,10 @@ const waits = stylex.create({
   },
   // The bare icon's box, in line with the title: a block the icon's size, with the one corner
   // capped at half of it, as the original's.
-  // Its placeholder shrinks to it (a column), never a control's height cut at its foot.
+  // Its placeholder is its own size (skeletonVars), never a control's height cut at its foot.
   icon: {
+    [skeletonVars.block]: "100%",
     display: "flex",
-    flexDirection: "column",
     flexShrink: 0,
     width: sizes.iconSm,
     height: sizes.iconSm,
