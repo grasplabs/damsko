@@ -5,6 +5,8 @@
 //
 //   pnpm exec vp test scripts/markdown-stream.test.tsx
 import { setTimeout as sleep } from "node:timers/promises";
+import { getHeapStatistics, setFlagsFromString } from "node:v8";
+import { runInNewContext } from "node:vm";
 
 import { act } from "react";
 import type { ReactNode } from "react";
@@ -12,6 +14,7 @@ import { createRoot } from "react-dom/client";
 import { describe, expect, test, vi } from "vitest";
 
 import { Markdown } from "../src/components/markdown/index.ts";
+import type { MarkdownComponents } from "../src/components/markdown/index.ts";
 import { Message, MessageResponse } from "../src/components/message.tsx";
 import { isRecord, readJson } from "./json.ts";
 
@@ -379,4 +382,98 @@ describe("nothing runs on once it is gone", () => {
     expect(vi.getTimerCount()).toBe(0);
     vi.useRealTimers();
   });
+
+  test("an answer, once gone, leaves none of its readings held", () => {
+    setFlagsFromString("--expose-gc");
+    // With the flag set, a new context's `gc` is V8's collector.
+    const collect: unknown = runInNewContext("gc");
+    const held = () => {
+      if (typeof collect === "function") {
+        Reflect.apply(collect, undefined, []);
+      }
+      return getHeapStatistics().used_heap_size;
+    };
+    // 2,000 notes of 100 words each, never marked, so never drawn: about 200 MB of readings.
+    const text = Array.from(
+      { length: 2000 },
+      (_, at) => `[^${at}]: ${"*n* ".repeat(50)}`
+    ).join("\n\n");
+    const before = held();
+    const { root, render } = live();
+    render(<Markdown>{text}</Markdown>);
+    act(() => {
+      root.unmount();
+    });
+    expect(held() - before).toBeLessThan(16_000_000);
+  }, 120_000);
+});
+
+// Two answers of notes, each note's block of its own, marked from a block of its own.
+const noted = (words: number) =>
+  ["a", "b"].map((word) =>
+    Array.from(
+      { length: 400 },
+      (_, at) => `t[^${at}]\n\n[^${at}]: ${`*${word}* `.repeat(words)}`
+    ).join("\n\n")
+  );
+/** Both drawn a twentieth more at a time, in turn, as two answers stream at once. */
+const stream = (
+  texts: string[],
+  components: MarkdownComponents,
+  drawn: () => void
+) => {
+  const roots = texts.map(() => createRoot(document.createElement("div")));
+  for (let chunk = 1; chunk <= 20; chunk += 1) {
+    for (const [at, root] of roots.entries()) {
+      const text = texts[at] ?? "";
+      const end = Math.round((text.length * chunk) / 20);
+      act(() => {
+        root.render(
+          <Markdown streaming components={components}>
+            {text.slice(0, end)}
+          </Markdown>
+        );
+      });
+      drawn();
+    }
+  }
+  act(() => {
+    for (const root of roots) {
+      root.unmount();
+    }
+  });
+};
+
+describe("answers streamed together, each keeps its own readings", () => {
+  test("a chunk reads again none of the blocks either answer had read", () => {
+    const seen = new Set<unknown>();
+    let fresh = 0;
+    const components: MarkdownComponents = {
+      em: ({ node, ...props }) => {
+        fresh += Number(!seen.has(node));
+        seen.add(node);
+        return <em {...props} />;
+      },
+    };
+    const each: number[] = [];
+    stream(noted(10), components, () => {
+      each.push(fresh);
+      fresh = 0;
+    });
+    // A chunk adds a twentieth of an answer's 4,000 marks of emphasis, and the block being written.
+    expect(Math.max(...each)).toBeLessThan(400);
+    expect(seen.size).toBeGreaterThan(8000);
+  }, 120_000);
+
+  test("two answers of 400 notes streamed together take under 4 times as long as two of words", () => {
+    const cost = (texts: string[]) => {
+      const start = performance.now();
+      stream(texts, {}, () => {});
+      return performance.now() - start;
+    };
+    const plain = cost(
+      noted(20).map((text) => text.replaceAll(/[[\]^:]/gu, "w"))
+    );
+    expect(cost(noted(20))).toBeLessThan(plain * 4);
+  }, 300_000);
 });

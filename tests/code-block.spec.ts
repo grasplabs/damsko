@@ -468,9 +468,10 @@ const neverHeld = async (
   const coloured = await drawOut(page, code, language, how);
   if (browserName === "chromium") {
     // Drawing a thousand lines of text can itself take a task past 50 ms on a slow machine: what
-    // the colours add is what counts. 25 ms is the machine's own unevenness; the colours drawn
+    // the colours add is what counts. 100 ms is the machine's own unevenness, with the worker
+    // reading for up to its second on one of CI's two cores beside the page; the colours drawn
     // again each frame, as before, blocked it for seconds.
-    expect(coloured.blocked).toBeLessThanOrEqual(plain.blocked + 25);
+    expect(coloured.blocked).toBeLessThanOrEqual(plain.blocked + 100);
   } else {
     // A frame in ten either way is the machine, not the page: on a loaded machine the same text
     // drawn twice differs by that much. The colours drawn again each frame made half of them slow.
