@@ -51,7 +51,6 @@ const outer = "the room given is less than the room there";
 
 const excused = new Map<string, string>([
   ["alert-dialog/removes: Delete Supplier list", outer],
-  ["app-shell-01/basic: Projects", noTarget],
   ["app-shell-01/panel: Show or hide the panel", outer],
   ["attachment/basic: Remove quarter-figures.xlsx", clipped],
   ["attachment/basic: Remove supplier-contract-2027-final.pdf", clipped],
@@ -79,6 +78,8 @@ const excused = new Map<string, string>([
   ],
   ["collapsible/several: Section 1", outer],
   ["collapsible/several: Section 2", outer],
+  ["combobox/multiple: Remove Amara Okafor", dense],
+  ["combobox/multiple: Remove Design team", dense],
   ["container/settings: BUTTON", noTarget],
   ["data-grid/active-halo: Budget", clipped],
   ["data-grid/active-halo: Owner", clipped],
@@ -176,7 +177,6 @@ const excused = new Map<string, string>([
   ["page-header/actions-kinds: More actions", outer],
   ["page-header/actions: More actions", outer],
   ["page-header/band: More actions", outer],
-  ["page-header/band: Notes", noTarget],
   ["page-header/band: Show or hide the panel", outer],
   ["page-header/basic: More actions", outer],
   ["page-header/loading: More actions", outer],
@@ -187,10 +187,12 @@ const excused = new Map<string, string>([
   ["prompt-input/attachments: Add to message", outer],
   ["prompt-input/banner: Add to message", outer],
   ["prompt-input/banner: Dismiss", outer],
+  ["prompt-input/basic: Add to message", outer],
   ["prompt-input/basic: Dictate", outer],
   ["prompt-input/compact: Add to message", outer],
   ["prompt-input/compact: Dictate", outer],
   ["prompt-input/compact: Model: Claude Opus 5.5, Medium", outer],
+  ["prompt-input/dictation: Add to message", outer],
   ["prompt-input/dictation: Dictate", outer],
   ["prompt-input/glass: Add to message", outer],
   ["prompt-input/glass: Dictate", outer],
@@ -213,6 +215,9 @@ const excused = new Map<string, string>([
   ["sheet/removes: Delete Supplier list", outer],
   ["snippet/colours: Copy --damsko-foreground", outer],
   ["snippet/colours: Copy --damsko-mint", outer],
+  ["sources/open: By kind", outer],
+  ["sources/open: By relevance", outer],
+  ["sources/open: Fold them away", outer],
   ["stack-trace/basic: Copy the stack trace", outer],
   ["stack-trace/browser: Copy the stack trace", outer],
   ["stack-trace/files: Copy the stack trace", outer],
@@ -262,8 +267,12 @@ const excused = new Map<string, string>([
   ["test-results/suites: times out a slow query, 5.00s, Failed", clipped],
   ["test-results/suites: updates a user profile, 240ms, Failed", clipped],
   ["text/truncate: More actions", outer],
+  ["toggle/sized: Day", outer],
   ["toggle/sizes: Align to the end", dense],
   ["toggle/sizes: Align to the start", dense],
+  ["toggle/wrap: Deutsch", dense],
+  ["toggle/wrap: Français", dense],
+  ["toggle/wrap: Nederlands", dense],
   ["tooltip/link: Anna de Vries", noTarget],
   ["tooltip/link: Reports", noTarget],
   ["trace/commit: Edited app/login/page.tsx, +1 \u22121", clipped],
@@ -546,11 +555,12 @@ const inThePage = (): string[] => {
       }
       got = step;
       // A switch's or a checkbox's press area over its whole Field row is the row's, not a
-      // target past the control.
+      // target past the control, and so is a press stretched over its whole row (Item's).
       if (
         drawn === step - 0.5 &&
         isTarget(control, hit) &&
-        hit.closest('[data-slot$="hit-area"]') === null
+        hit.closest('[data-slot$="hit-area"]') === null &&
+        !control.matches("[data-row-press]")
       ) {
         drawn = step;
       }
