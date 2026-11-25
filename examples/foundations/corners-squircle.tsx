@@ -40,6 +40,7 @@ const styles = stylex.create({
     position: "absolute",
     inset: 0,
     borderRadius: BIG,
+    cornerShape: radius.shape,
   },
   fill: {
     backgroundColor: `color-mix(in oklab, ${colors.mint} 30%, ${colors.card})`,
@@ -49,7 +50,6 @@ const styles = stylex.create({
     transitionTimingFunction: duration.ease,
   },
   round: { cornerShape: "round" },
-  squircle: { cornerShape: radius.shape },
   dashed: {
     borderWidth: size.hairline,
     borderStyle: "dashed",
@@ -60,7 +60,6 @@ const styles = stylex.create({
     borderWidth: `calc(${size.hairline} * 2)`,
     borderStyle: "solid",
     borderColor: colors.mintDeep,
-    cornerShape: radius.shape,
   },
   // Inside the tile, a real card's words, so the magnified corner reads as a part.
   words: {
@@ -132,7 +131,11 @@ export default function CornersSquircle() {
       <div {...stylex.props(styles.tile)}>
         <div
           aria-hidden="true"
-          {...stylex.props(styles.shape, styles.fill, styles[shape])}
+          {...stylex.props(
+            styles.shape,
+            styles.fill,
+            shape === "round" && styles.round
+          )}
         />
         <div
           aria-hidden="true"

@@ -1434,7 +1434,50 @@ test("levels: on a phone the sheet shows the level, and Back and focus stay insi
   await expect(sheet).toBeVisible();
 });
 
-test("a floating sidebar nests round its rows in the squircle; the page card beside an inset one keeps its plain corner", async ({
+// A box's top-start corner: its radius and its shape, `none` where the engine draws no corner
+// shape (Firefox, older Safari) and so cannot say which one is written.
+const cornerOf = async (locator: Locator): Promise<string> =>
+  await locator.evaluate((element) => {
+    const style = getComputedStyle(element);
+    const shape = style.getPropertyValue("corner-top-left-shape");
+    const named = new Map([
+      ["", "none"],
+      ["superellipse(1)", "round"],
+      ["superellipse(2)", "squircle"],
+    ]);
+    return `${style.borderTopLeftRadius} ${named.get(shape) ?? shape}`;
+  });
+
+// A corner of this radius in the system's squircle, wherever the engine draws one.
+const squircle = (radius: string): RegExp =>
+  new RegExp(`^${radius} (?:squircle|none)$`, "u");
+
+// A corner that reads like the original's round one: its squircle radius where the engine draws a
+// squircle, else the round radius itself.
+const reads = async (
+  page: Page,
+  inSquircle: string,
+  round: string
+): Promise<RegExp> =>
+  squircle(
+    (await page.evaluate(() => CSS.supports("corner-shape", "squircle")))
+      ? inSquircle
+      : round
+  );
+
+// A radius as this engine draws it: a squircle corner's own, or its plain-radius stand-in where
+// the engine draws no squircle (tokens.css), read from the tokens on a probe.
+const drawn = async (page: Page, radius: string): Promise<string> =>
+  await page.evaluate((value) => {
+    const probe = document.createElement("div");
+    probe.style.borderTopLeftRadius = value;
+    document.body.append(probe);
+    const { borderTopLeftRadius } = getComputedStyle(probe);
+    probe.remove();
+    return borderTopLeftRadius;
+  }, radius);
+
+test("a floating sidebar nests round its rows in the squircle; the page card beside an inset one reads like the original's round 12px", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
@@ -1457,45 +1500,33 @@ test("a floating sidebar nests round its rows in the squircle; the page card bes
       ];
     });
   // A row's 16px corner plus the 8px the sidebar keeps round its rows.
-  expect(floating?.[0]).toBe("24px");
+  expect(floating?.[0]).toBe(await drawn(page, "var(--damsko-radius-2xl)"));
   expect(floating?.[1]).not.toBe("round");
   expect(floating?.[1]).not.toBe("superellipse(1)");
 
   await openExample(page, "sidebar", "inset");
-  // The app's main surface holds no sidebar rows: the original's plain 12px corner.
-  const inset = await page.getByRole("main").evaluate((element) => {
-    const look = getComputedStyle(element);
-    return [
-      look.borderTopLeftRadius,
-      look.getPropertyValue("corner-top-left-shape"),
-    ];
-  });
-  expect(inset[0]).toBe("12px");
-  expect(["round", "superellipse(1)"]).toContain(inset[1]);
+  // The app's main surface holds no sidebar rows: the original's 12px corner, as a squircle reads it.
+  expect(await cornerOf(page.getByRole("main"))).toMatch(
+    await reads(page, "22px", "12px")
+  );
 });
 
-// A box's top-start corner: its radius, and round where the browser draws a squircle as round.
-const cornerOf = async (locator: Locator): Promise<string> =>
-  await locator.evaluate((element) => {
-    const style = getComputedStyle(element);
-    const shape = style.getPropertyValue("corner-top-left-shape");
-    return `${style.borderTopLeftRadius} ${shape === "superellipse(1)" || shape === "" ? "round" : shape}`;
-  });
-
-test("a row and a group's label take the original's plain 6px corner, the large row 10px", async ({
+test("a row and a group's label read like the original's round 6px corner, the large row 10px", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
   await openExample(page, "sidebar", "basic");
   const sidebar = sidebarOf(page);
   const row = sidebar.getByRole("link", { name: "Chat" });
-  expect(await cornerOf(row)).toBe("6px round");
+  expect(await cornerOf(row)).toMatch(await reads(page, "11px", "6px"));
   const person = sidebar.locator(
     "[data-slot=sidebar-menu-button][data-size=lg]"
   );
-  expect(await cornerOf(person.first())).toBe("10px round");
+  expect(await cornerOf(person.first())).toMatch(
+    await reads(page, "18px", "10px")
+  );
   const label = sidebar.locator("[data-slot=sidebar-group-label]").first();
-  expect(await cornerOf(label)).toBe("6px round");
+  expect(await cornerOf(label)).toMatch(await reads(page, "11px", "6px"));
 });
 
 test("a row's action takes the original's corner, a small icon button's: 14px, half its height, not the row's", async ({
@@ -1504,13 +1535,15 @@ test("a row's action takes the original's corner, a small icon button's: 14px, h
   await page.setViewportSize({ width: 1440, height: 900 });
   await openExample(page, "sidebar", "actions");
   const more = page.getByRole("button", { name: "More for Supplier invoices" });
-  expect(await cornerOf(more)).toMatch(/^14px (?:superellipse\(2\)|round)$/u);
+  expect(await cornerOf(more)).toMatch(
+    squircle(await drawn(page, "min(var(--damsko-radius-xl), 14px)"))
+  );
 });
 
 test.describe("on a narrow window", () => {
   test.use({ viewport: { width: 390, height: 844 } });
 
-  test("its sheet takes the page card's plain 12px corner", async ({
+  test("its sheet takes the page card's corner, reading like the original's round 12px", async ({
     page,
   }) => {
     await openExample(page, "sidebar", "basic");
@@ -1519,7 +1552,7 @@ test.describe("on a narrow window", () => {
       "[data-slot=drawer-content]:has(> [data-slot=sidebar])"
     );
     await expect(sheet).toBeVisible();
-    expect(await cornerOf(sheet)).toBe("12px round");
+    expect(await cornerOf(sheet)).toMatch(await reads(page, "22px", "12px"));
   });
 
   test("its head stands as high in the window as beside the page: the sheet's inset taken from its room above", async ({

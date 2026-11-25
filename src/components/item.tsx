@@ -425,6 +425,7 @@ const styles = stylex.create({
     width: sizes.controlSm,
     height: sizes.controlSm,
     borderRadius: `min(${radius.xl}, calc(${sizes.controlSm} / 2))`,
+    cornerShape: radius.shape,
   },
   title: {
     fontSize: font.textSm,

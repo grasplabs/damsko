@@ -104,7 +104,6 @@ const groupStyles = stylex.create({
       },
     },
     borderColor: "currentColor",
-    cornerShape: radius.shape,
     backgroundColor: {
       default: colors.inputBg,
       ":has(:is(input, textarea):read-only:not(:disabled))": colors.inputBgRead,
@@ -150,14 +149,17 @@ const groupStyles = stylex.create({
   sm: {
     minHeight: sizes.controlSm,
     borderRadius: `min(${radius.xl}, calc(${sizes.controlSm} / 2))`,
+    cornerShape: radius.shape,
   },
   default: {
     minHeight: sizes.controlDefault,
     borderRadius: `min(${radius.xl}, calc(${sizes.controlDefault} / 2))`,
+    cornerShape: radius.shape,
   },
   lg: {
     minHeight: sizes.controlLg,
     borderRadius: `min(${radius.xl}, calc(${sizes.controlLg} / 2))`,
+    cornerShape: radius.shape,
   },
 });
 

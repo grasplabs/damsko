@@ -463,6 +463,7 @@ const styles = stylex.create({
     width: size.stepperDotActive,
     height: size.stepperDotActive,
     borderRadius: radius.xs,
+    cornerShape: radius.shape,
     backgroundColor: { default: colors.destructive, [FORCED]: "CanvasText" },
     borderColor: { default: colors.destructive, [FORCED]: "CanvasText" },
   },
