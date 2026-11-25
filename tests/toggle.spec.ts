@@ -182,6 +182,11 @@ test.describe("full width on a 320px phone", () => {
   });
 });
 
+test("a ref given to a group reaches the group's element", async ({ page }) => {
+  await openExample(page, "toggle", "ref");
+  await expect(page.getByText("The ref holds View")).toBeVisible();
+});
+
 test("a toggle that is only an icon shows its name under a pointer and on keyboard focus, and one with words shows none", async ({
   page,
 }) => {

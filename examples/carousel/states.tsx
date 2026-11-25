@@ -17,7 +17,8 @@ const look = stylex.create({
     width: { default: 176, [COARSE]: 248 },
     maxWidth: "100%",
     height: size.tapTarget,
-    overflow: "hidden",
+    // Clipped, not a box that scrolls: a target past its edge adds no room to scroll.
+    overflow: "clip",
   },
   // Onto one button or one mark.
   small: { width: size.tapTarget },

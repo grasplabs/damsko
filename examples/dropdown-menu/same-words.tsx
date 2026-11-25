@@ -16,7 +16,12 @@ import * as stylex from "@stylexjs/stylex";
 import { useState } from "react";
 
 const layout = stylex.create({
-  row: { display: "flex", alignItems: "center", gap: space[2] },
+  row: {
+    display: "flex",
+    alignItems: "center",
+    gap: space[2],
+    "--tap-room-inline": `calc(${space[2]} / 2)`,
+  },
 });
 
 // Two items with the same words, each its own: a group's label tells them apart, and each turns

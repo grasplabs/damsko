@@ -65,5 +65,11 @@ export const layout = stylex.create({
     fontWeight: font.weightNormal,
     color: colors.foreground,
   },
-  pair: { display: "flex", alignItems: "center", gap: space["3"] },
+  pair: {
+    display: "flex",
+    alignItems: "center",
+    gap: space["3"],
+    // On a touch screen each control's target reaches the middle of the gap to the next.
+    "--tap-room-inline": `calc(${space["3"]} / 2)`,
+  },
 });

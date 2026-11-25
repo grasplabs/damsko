@@ -45,7 +45,12 @@ import type { ComponentProps, ReactNode } from "react";
 import { useReturnFocus } from "../hooks/use-return-focus";
 import { useI18n } from "../lib/i18n";
 import { shadeProps, watchBody, watchPanel } from "../lib/layer";
-import { focusRingInset, scrollbarHidden } from "../lib/styles";
+import {
+  focusRingInset,
+  scrollbarHidden,
+  tapRows,
+  watchRows,
+} from "../lib/styles";
 import { space } from "../lib/tokens.stylex";
 import { className, slotProps } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
@@ -321,8 +326,9 @@ export const AlertDialogFooter = ({
   style,
 }: AlertDialogFooterProps) => (
   <div
+    ref={watchRows}
     data-slot="alert-dialog-footer"
-    {...stylex.props(layerFooterMarker, dialogStyles.footer, style)}
+    {...stylex.props(layerFooterMarker, dialogStyles.footer, tapRows, style)}
   >
     {children}
   </div>

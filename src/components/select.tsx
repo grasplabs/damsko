@@ -47,6 +47,7 @@ import {
   hyphenate,
   inputStyles,
   scrollbarHidden,
+  tapTarget,
 } from "../lib/styles";
 import {
   colors,
@@ -598,12 +599,6 @@ const sizeStyles = {
   default: inputStyles.default,
   lg: inputStyles.lg,
 } as const;
-const targetStyles = {
-  sm: inputStyles.targetSm,
-  default: inputStyles.targetDefault,
-  lg: inputStyles.targetLg,
-} as const;
-
 /** A variant's own look over the field's, for the trigger's state, and its focus. */
 const variantLook = (variant: SelectVariant, state: SelectTriggerState) =>
   variant === "ghost"
@@ -675,10 +670,7 @@ export const SelectTrigger = ({
     >
       {(state: SelectTriggerState) => (
         <>
-          <span
-            aria-hidden="true"
-            {...stylex.props(inputStyles.target, targetStyles[scale])}
-          />
+          <span aria-hidden="true" {...stylex.props(tapTarget)} />
           <Truncated value={truncate}>{children}</Truncated>
           <span
             aria-hidden="true"
