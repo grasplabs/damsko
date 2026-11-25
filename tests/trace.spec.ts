@@ -6,8 +6,9 @@ import {
   hasFocusRing,
   listenToLiveRegions,
   openExample,
+  markStart,
   paintedBox,
-  startsOf,
+  settled,
   tab,
 } from "./example.ts";
 
@@ -71,7 +72,7 @@ test("rows open inside rows: a commit opens on its files, and a file on its diff
 });
 
 for (const dir of ["ltr", "rtl"]) {
-  test(`a row inside a row stands in by its padding: its fill from the parent's mark, whole under the pointer and with its ring, ${dir}`, async ({
+  test(`a row inside a row stands on the parent's mark, turns to ink under the pointer with no fill, and shows its ring whole, ${dir}`, async ({
     page,
     browserName,
   }) => {
@@ -81,27 +82,55 @@ for (const dir of ["ltr", "rtl"]) {
     }, dir);
     const commit = page.getByRole("button", { name: /^Committed a1b2c3/u });
     const file = page.getByRole("button", { name: /^Edited app\/login/u });
-    await file.click();
-    const parent = await startsOf(commit);
-    const nested = await startsOf(file);
-    // The parent's fill reaches past its words by its padding; its panel starts on its words.
-    const room = parent.mark - parent.box;
-    expect(room).toBeCloseTo(8, 0);
-    expect(parent.panel).toBeCloseTo(parent.mark, 0);
-    // The nested row's fill starts under the parent's mark; its mark, and its panel, a step in.
-    expect(nested.box).toBeCloseTo(parent.mark, 0);
-    expect(nested.mark - nested.box).toBeCloseTo(room, 0);
-    expect(nested.panel).toBeCloseTo(nested.mark, 0);
-    const whole = { left: 0, top: 0, right: 0, bottom: 0, squareCorners: 0 };
-    // Under the pointer the fill fades in, and out again when it leaves: each is read once it stands.
+    expect(await markStart(file)).toBeCloseTo(await markStart(commit), 0);
+    const title = file.getByText("Edited app/login/page.tsx");
+    const inks = async () =>
+      await file.evaluate((node) => {
+        const chevron = node.lastElementChild;
+        return [
+          getComputedStyle(node).color,
+          chevron === null ? "" : getComputedStyle(chevron).color,
+        ];
+      });
+    await expect(title).toBeVisible();
+    const resting = await inks();
     await file.hover();
-    await expect.poll(async () => await paintedBox(file)).toMatchObject(whole);
+    // Its words and its chevron turn to ink, each in its own colour now.
+    await expect
+      .poll(async () => {
+        const [words, chevron] = await inks();
+        return [words !== resting[0], chevron !== resting[1]];
+      })
+      .toStrictEqual([true, true]);
+    // Nothing is painted across its edge, from the ground outside into the room before its mark:
+    // no fill.
+    const box = await file.boundingBox();
+    if (box === null) {
+      throw new Error("The row is not drawn.");
+    }
+    await settled(page);
+    expect(
+      await drawnParts(page, {
+        x: dir === "ltr" ? box.x - 6 : box.x + box.width - 6,
+        y: box.y + box.height / 4,
+        width: 12,
+        height: box.height / 2,
+      })
+    ).toStrictEqual([]);
     await page.mouse.move(0, 0);
     await commit.focus();
     await page.keyboard.press(tab(browserName));
     await expect(file).toBeFocused();
     expect(await hasFocusRing(file)).toBe(true);
-    await expect.poll(async () => await paintedBox(file)).toMatchObject(whole);
+    await expect
+      .poll(async () => await paintedBox(file))
+      .toMatchObject({
+        left: 0,
+        top: 0,
+        right: 0,
+        bottom: 0,
+        squareCorners: 0,
+      });
   });
 }
 

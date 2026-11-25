@@ -30,9 +30,9 @@
 // is the trigger's words, the original's activity line: its mark beside its title, a space-2 apart,
 // at the text's own weight and line, muted until the pointer is on it or it is open, as tall as a
 // small control. The trigger's words stand on the column's edge, where the panel's lines and
-// surfaces start; its fill under the pointer reaches past them by its own padding. Rows inside a
-// row's panel stand in by that padding, with the steps beside them: a row's fill starts on the
-// parent's column edge, under the parent's mark, and each level deeper steps in again. In a card that
+// surfaces start; its fill under the pointer reaches past them by its own padding. A row inside a
+// row's panel stands on the same edge and takes no fill: under the pointer its words and chevron
+// turn to ink, as a step that opens did in the original, and the keyboard's ring shows. In a card that
 // carries traceCardMarker (Tool's) the trigger runs the card's width and takes no fill: its words
 // turn to ink, as a step that opens did in the original. A TraceIcon with nothing in it is the
 // status mark: a dot, the working mark (Agent indicator) on the trace's last running line, the
@@ -214,18 +214,6 @@ const styles = stylex.create({
     lineHeight: font.textSmLine,
     color: colors.mutedForeground,
   },
-  // A trace inside a row's panel that holds rows: in by a trigger's padding, steps and rows alike,
-  // so a row's fill starts on the parent's column edge and never past it, and the dots still meet
-  // every mark. In a card (Tool's) the row is the card's, and stands on its edge.
-  traceNested: {
-    paddingInlineStart: {
-      default: 0,
-      ":has(> [data-slot=trace-collapsible])": {
-        default: size.collapsiblePadding,
-        [stylex.when.ancestor(":is(*)", traceCardMarker)]: 0,
-      },
-    },
-  },
   // A line: its mark in its seat, its words and whatever stands beside them, wrapping where there
   // is no room; a long title wraps beside its mark rather than under it.
   line: {
@@ -348,7 +336,7 @@ const styles = stylex.create({
   // The trigger: the original's activity line, only as wide as its line and chevron (a card's width
   // in a card), at the text's own weight and line, muted until the pointer is on it or it is open,
   // as tall as a small control. Its fill under the pointer reaches past its words by its padding;
-  // in a card it takes none.
+  // in a card, or inside a row's panel, it takes none.
   trigger: {
     justifySelf: {
       default: "start",
@@ -390,12 +378,23 @@ const styles = stylex.create({
       [OFF]: { default: colors.subtleForeground, [FORCED]: "GrayText" },
     },
   },
+  // A row inside a row's panel: no fill under the pointer or the press, only its ink.
+  triggerNested: {
+    backgroundColor: "transparent",
+  },
   // Points down while closed and turns up as it opens.
   chevron: {
     color: colors.mutedForeground,
     transform: {
       default: null,
       ":is([aria-expanded=true] > *)": "rotate(0.5turn)",
+    },
+  },
+  // A nested row's chevron turns to ink with its words under the pointer.
+  chevronNested: {
+    color: {
+      default: colors.mutedForeground,
+      ":is(:hover > *)": { default: null, [HOVER]: colors.foreground },
     },
   },
 });
@@ -445,17 +444,11 @@ const NestedContext = createContext(false);
 const StatusContext = createContext<TraceLineStatus | undefined>(undefined);
 
 /** A list of lines: the steps an assistant takes. */
-export const Trace = ({ children, style }: TraceProps) => {
-  const nested = use(NestedContext);
-  return (
-    <div
-      data-slot="trace"
-      {...stylex.props(styles.trace, nested && styles.traceNested, style)}
-    >
-      <StepContext value>{children}</StepContext>
-    </div>
-  );
-};
+export const Trace = ({ children, style }: TraceProps) => (
+  <div data-slot="trace" {...stylex.props(styles.trace, style)}>
+    <StepContext value>{children}</StepContext>
+  </div>
+);
 
 /** One line: its mark, its title and a quiet description. Wrap it in a trigger or a link to make it do something. */
 export const TraceLine = ({ children, status, style }: TraceLineProps) => {
@@ -624,6 +617,7 @@ export const TraceCollapsibleTrigger = ({
   asChild = false,
   style,
 }: TraceCollapsibleTriggerProps) => {
+  const nested = use(NestedContext);
   if (asChild && isValidElement<Record<string, unknown>>(children)) {
     return (
       <CollapsibleTriggerPrimitive
@@ -643,6 +637,7 @@ export const TraceCollapsibleTrigger = ({
         disclosureStyles.trigger,
         disclosureStyles.ghost,
         styles.trigger,
+        nested && styles.triggerNested,
         focusRing,
         style
       )}
@@ -651,7 +646,11 @@ export const TraceCollapsibleTrigger = ({
       {children}
       <span
         aria-hidden="true"
-        {...stylex.props(disclosureStyles.chevron, styles.chevron)}
+        {...stylex.props(
+          disclosureStyles.chevron,
+          styles.chevron,
+          nested && styles.chevronNested
+        )}
       >
         <Icon icon={ChevronDownIcon} />
       </span>
