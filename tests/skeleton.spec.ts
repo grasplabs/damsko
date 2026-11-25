@@ -107,8 +107,16 @@ const field = async (page: Page, png: Buffer) =>
     };
   }, png.toString("base64"));
 
-/** The runs of lit columns or rows, and the widest gap between two of them. */
-const runs = (lit: boolean[]) => {
+/** How many of a picture's pixels make one CSS pixel. */
+const ratio = async (page: Page) =>
+  await page.evaluate(() => window.devicePixelRatio);
+
+/**
+ * The pixels along a side, and the widest gap between two of them, in the picture's pixels. A run
+ * under one and a half CSS pixels is a sliver, not a pixel: on a dense screen WebKit draws a sliver
+ * of one more tile at the far end, of the original's dots as of these.
+ */
+const runs = (lit: boolean[], dense: number) => {
   const line = lit.map((on) => (on ? "1" : " ")).join("");
   const gaps = line
     .trim()
@@ -116,10 +124,18 @@ const runs = (lit: boolean[]) => {
     .filter((gap) => gap !== "")
     .map((gap) => gap.length);
   return {
-    count: line.split(" ").filter((run) => run !== "").length,
+    count: line.split(" ").filter((run) => run.length >= 1.5 * dense).length,
     widestGap: Math.max(0, ...gaps),
   };
 };
+
+/**
+ * How many pixels fit along a side: one for every whole 4px tile, and in WebKit one more where the
+ * room left over holds a whole pixel (it ends 3px into its tile), as it draws the original's dots.
+ */
+const fits = (side: number) => [
+  ...new Set([Math.floor(side / 4), Math.floor((side + 1) / 4)]),
+];
 
 for (const theme of ["light", "dark"] as const) {
   for (const [example, shape, at] of [
@@ -157,18 +173,21 @@ for (const theme of ["light", "dark"] as const) {
         };
       });
       const drawn = await field(page, await box.screenshot());
-      const columns = runs(drawn.columns);
-      const rows = runs(drawn.rows);
+      const dense = await ratio(page);
+      const columns = runs(drawn.columns, dense);
+      const rows = runs(drawn.rows, dense);
       // One pixel in every 4px, as many as fit, with the room left over shared out between them
-      // all: no run of pixels broken off from the next (an 18px line holds four rows).
-      expect(columns.count).toBe(Math.floor(room.width / 4));
-      expect(rows.count).toBe(Math.floor(room.height / 4));
-      expect(columns.widestGap).toBeLessThan(4);
-      expect(rows.widestGap).toBeLessThan(4);
+      // all: no run of pixels broken off from the next (a large line's 17px holds four rows).
+      expect(fits(room.width)).toContain(columns.count);
+      expect(fits(room.height)).toContain(rows.count);
+      // Where a browser draws the shared room in whole pixels (WebKit), one gap may be a pixel
+      // wider than the rest: never a tile's.
+      expect(columns.widestGap).toBeLessThanOrEqual(4 * dense);
+      expect(rows.widestGap).toBeLessThanOrEqual(4 * dense);
       // As far from the start as from the end, and from the top as from the foot, give or take
       // the pixel a box on part of a pixel is pictured with.
-      expect(Math.abs(drawn.left - drawn.right)).toBeLessThanOrEqual(1);
-      expect(Math.abs(drawn.top - drawn.bottom)).toBeLessThanOrEqual(1);
+      expect(Math.abs(drawn.left - drawn.right)).toBeLessThanOrEqual(dense);
+      expect(Math.abs(drawn.top - drawn.bottom)).toBeLessThanOrEqual(dense);
     });
   }
 }
@@ -183,6 +202,7 @@ test("a line holds one pixel in every 4px at every width, none dropped and no ru
     .locator("xpath=span[@aria-hidden='true']")
     .nth(1)
     .locator("xpath=*[1]");
+  const dense = await ratio(page);
   for (let width = 220; width <= 260; width += 1) {
     // oxlint-disable-next-line no-await-in-loop -- one width after the other
     await region.evaluate((node, to) => {
@@ -192,12 +212,9 @@ test("a line holds one pixel in every 4px at every width, none dropped and no ru
     }, width);
     // oxlint-disable-next-line no-await-in-loop -- one width after the other
     const drawn = await field(page, await line.screenshot());
-    const columns = runs(drawn.columns);
-    expect({ width, count: columns.count }).toStrictEqual({
-      width,
-      count: Math.floor(width / 4),
-    });
-    expect(columns.widestGap).toBeLessThan(4);
+    const columns = runs(drawn.columns, dense);
+    expect(fits(width), `at ${width}px`).toContain(columns.count);
+    expect(columns.widestGap).toBeLessThanOrEqual(4 * dense);
   }
 });
 
