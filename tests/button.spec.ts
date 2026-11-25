@@ -542,9 +542,8 @@ test("with words for working and failing only, it keeps the tick's room at rest 
   await button.click();
   await expect(button).toHaveAttribute("data-status", "success");
   await expect(button.locator("svg").filter({ visible: true })).toHaveCount(1);
-  await expect(
-    button.getByText("Replace the key").filter({ visible: true })
-  ).toHaveCount(1);
+  // The words are drawn once, in every state: the tick stands beside them.
+  await expect(button.getByText("Replace the key")).toHaveCount(1);
   expect(await widthOf(page, "Replace the key")).toBe(before);
 });
 

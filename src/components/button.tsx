@@ -33,7 +33,7 @@
 import * as stylex from "@stylexjs/stylex";
 import { Button as ButtonPrimitive } from "@ui-sdk/react/button";
 import { mergeProps } from "@ui-sdk/react/primitive";
-import { Fragment, isValidElement } from "react";
+import { isValidElement } from "react";
 import type { ComponentProps, ReactElement, ReactNode } from "react";
 
 import { useAction } from "../hooks/use-action";
@@ -996,6 +996,11 @@ const statusStyles = stylex.create({
     opacity: 0,
     whiteSpace: "nowrap",
   },
+  // The tick's room, kept at rest by words with no icon, half at each side so they stay centred:
+  // once the work went well the tick and its gap stand there, and the width never changes.
+  tickRoom: {
+    paddingInline: `calc((${iconVars.size} + ${space["2"]}) / 2)`,
+  },
   // The room a state's mark takes beside its words, while another state shows; and the spinner
   // where the button's icon stood, centred in the icon's own box so the words do not move.
   place: {
@@ -1041,6 +1046,50 @@ const spinning = (children: ReactNode) => {
       );
 };
 
+/**
+ * The button's content once its work went well, with no words of its own for it: the tick in the
+ * icon's place, or before the words when it has no icon. The words are the same nodes as at rest.
+ */
+const ticked = (children: ReactNode, iconed: boolean): ReactNode[] => {
+  const parts = listOf(children);
+  const tick = (
+    <span
+      key="tick"
+      data-slot="button-tick"
+      {...stylex.props(statusStyles.place)}
+    >
+      <Icon icon={CheckIcon} />
+    </span>
+  );
+  if (!iconed) {
+    return [tick, ...parts];
+  }
+  const at = parts.findIndex(
+    (part) => isValidElement(part) && part.type === Icon
+  );
+  return parts.with(at, tick);
+};
+
+/**
+ * What a state draws in the words' own layer, or nothing when it draws a layer or a mark of its
+ * own: the spinner where the icon stood while it works with no words for it; the tick once it
+ * worked, where the words keep its room.
+ */
+const inPlaceOf = (
+  status: ActionStatus,
+  label: string | undefined,
+  tickRoom: boolean,
+  iconed: boolean,
+  children: ReactNode
+): ReactNode => {
+  if (status === "loading" && label === undefined) {
+    return spinning(children);
+  }
+  return status === "success" && tickRoom
+    ? ticked(children, iconed)
+    : undefined;
+};
+
 /** The content with each run of words in a box that cuts them with an ellipsis (`truncate`). */
 const cutWords = (children: ReactNode): ReactNode[] =>
   listOf(children).map((child, index): ReactNode =>
@@ -1070,23 +1119,15 @@ const Status = ({
   children: ReactNode;
 }) => {
   const stacked = Object.values(labels).some((each) => each !== undefined);
-  // Laid out with its states side by side, success with no words of its own shows the tick before
-  // the button's own words (its icon left out), as the original's done state: the button keeps the
-  // tick's room at rest. What a screen reader hears is unchanged (hooks/use-action says it).
-  const shown: Partial<Record<Exclude<ActionStatus, "idle">, ReactNode>> =
-    stacked && labels.success === undefined
-      ? {
-          ...labels,
-          success: listOf(given)
-            .filter((part) => !(isValidElement(part) && part.type === Icon))
-            // A part has no id of its own; its place among the words is its key.
-            .map((part, index) => <Fragment key={index}>{part}</Fragment>),
-        }
-      : labels;
-  const label = status === "idle" ? undefined : shown[status];
-  // While it works with no words of its own, the spinner stands where the icon stood.
-  const inPlace =
-    status === "loading" && label === undefined ? spinning(given) : undefined;
+  const label = status === "idle" ? undefined : labels[status];
+  // Laid out with its states side by side, success with no words of its own is the tick before the
+  // button's own words, as the original's done state: drawn in the words' own layer (the words are
+  // never drawn twice), in the icon's place, or with no icon in the room the words keep at rest.
+  const tickRoom = stacked && labels.success === undefined;
+  const iconed = listOf(given).some(
+    (part) => isValidElement(part) && part.type === Icon
+  );
+  const inPlace = inPlaceOf(status, label, tickRoom, iconed, given);
   const resting = status === "idle" || inPlace !== undefined;
   const content = inPlace ?? given;
   const children = truncate ? cutWords(content) : content;
@@ -1119,6 +1160,10 @@ const Status = ({
           aria-hidden={label === undefined ? undefined : true}
           {...stylex.props(
             statusStyles.layer,
+            tickRoom &&
+              !iconed &&
+              status !== "success" &&
+              statusStyles.tickRoom,
             !resting &&
               (label === undefined ? statusStyles.faded : statusStyles.gone)
           )}
@@ -1126,7 +1171,7 @@ const Status = ({
           {children}
         </span>
         {(["loading", "success", "error"] as const).map((each) =>
-          shown[each] === undefined ? null : (
+          labels[each] === undefined ? null : (
             <span
               key={each}
               aria-hidden={status === each ? undefined : true}
@@ -1140,7 +1185,7 @@ const Status = ({
               ) : (
                 <span {...stylex.props(statusStyles.place)} />
               )}
-              {shown[each]}
+              {labels[each]}
             </span>
           )
         )}
