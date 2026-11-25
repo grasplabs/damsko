@@ -571,7 +571,7 @@ export interface I18nCatalog {
     back: (number: number, mark: number) => string;
     /** The name of a table's copy button, whose menu holds the formats. */
     copyTable: string;
-    /** The format names in a table's copy and download menus. */
+    /** A format in a table's copy and download menus: comma-separated values. */
     csv: string;
     /** What a ticked task says to a screen reader. */
     done: string;
@@ -579,6 +579,7 @@ export interface I18nCatalog {
     downloadTable: string;
     /** A footnote's mark, said to a screen reader, from its number. */
     footnote: (number: number) => string;
+    /** A format in a table's copy and download menus: the table as Markdown. */
     markdown: string;
     /** Under a table drawn only in part, how many rows are not drawn. */
     moreRows: (count: number) => string;
@@ -586,6 +587,7 @@ export interface I18nCatalog {
     notDone: string;
     /** A table's name when no heading stands above it (`tableLabel`). */
     table: string;
+    /** A format in a table's copy menu: tab-separated values. */
     tsv: string;
   };
   /** The menus' items: a context menu's and a menubar's. */

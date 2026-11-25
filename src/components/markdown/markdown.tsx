@@ -25,6 +25,7 @@ import type {
   ReactNode,
 } from "react";
 
+import { useCopy } from "../../hooks/use-copy";
 import { useI18n } from "../../lib/i18n";
 import {
   CheckIcon,
@@ -53,6 +54,7 @@ import {
   csvOf,
   safeHref,
   saveFile,
+  tsvOf,
   useReducedMotion,
 } from "../../lib/utils";
 import type { LayoutStyle } from "../../lib/utils";
@@ -732,21 +734,10 @@ const markdownOf = (rows: readonly (readonly string[])[]) =>
         : [line];
     })
     .join("\n");
-/** A table's cells as TSV: a tab or a line break in a cell written as `\t` or `\n`. */
-const tsvOf = (rows: readonly (readonly string[])[]) =>
-  rows
-    .map((cells) =>
-      cells
-        .map((cell) =>
-          cell.replaceAll("\t", "\\t").replaceAll(/\r?\n/gu, "\\n")
-        )
-        .join("\t")
-    )
-    .join("\n");
-
 /**
  * A table's Copy (as Markdown, CSV or TSV) and Download (as CSV or Markdown), as a chat's tables
- * have them: out of use while the answer is written.
+ * have them: out of use while the answer is written. Each is written from the rows when it is
+ * chosen, not each time the table is drawn.
  */
 const TableActions = ({
   rows,
@@ -756,27 +747,35 @@ const TableActions = ({
   disabled: boolean;
 }) => {
   const words = useI18n().markdown;
-  const { copied } = useI18n().copyButton;
-  const copy = (text: string) => async () => {
-    await navigator.clipboard.writeText(text);
-    announce(copied);
+  // The format chosen in Copy's menu, read when it copies: CopyButton's copy, said as its is.
+  const format = useRef(markdownOf);
+  const copy = useCopy(() => format.current(rows));
+  const copyAs = (as: typeof markdownOf) => () => {
+    format.current = as;
+    void copy.run();
   };
   return (
     <div {...stylex.props(styles.tableActions)}>
       <DropdownMenu>
         <DropdownMenuTrigger asChild disabled={disabled}>
-          <Button variant="ghost" size="icon-sm" aria-label={words.copyTable}>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            aria-label={words.copyTable}
+            // A copy is over within a frame: it shows where it went, never a spinner.
+            status={copy.status === "loading" ? "idle" : copy.status}
+          >
             <Icon icon={CopyIcon} />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onSelect={copy(markdownOf(rows))}>
+          <DropdownMenuItem onSelect={copyAs(markdownOf)}>
             {words.markdown}
           </DropdownMenuItem>
-          <DropdownMenuItem onSelect={copy(csvOf(rows))}>
+          <DropdownMenuItem onSelect={copyAs(csvOf)}>
             {words.csv}
           </DropdownMenuItem>
-          <DropdownMenuItem onSelect={copy(tsvOf(rows))}>
+          <DropdownMenuItem onSelect={copyAs(tsvOf)}>
             {words.tsv}
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -1232,6 +1231,10 @@ const draw: { [T in Node["type"]]?: Draw<T> } = {
         );
       return Pre === undefined ? code : <Pre node={node}>{code}</Pre>;
     }
+    // Numbered from the fence's `startLine=N` (up to 7 digits), or not with `noLineNumbers`.
+    const meta = node.meta ?? "";
+    const startLine =
+      Number(/\bstartLine=(?<at>\d{1,7})(?!\d)/u.exec(meta)?.groups?.at) || 1;
     return (
       <Code.CodeBlock
         language={node.lang ?? "text"}
@@ -1252,14 +1255,9 @@ const draw: { [T in Node["type"]]?: Draw<T> } = {
           </Code.CodeBlockActions>
         </Code.CodeBlockHeader>
         {/* `false` never folds, yet still draws at most 2,000 lines: a model's code has no bound. */}
-        {/* Its lines numbered from `startLine=N` on, or not at all with `noLineNumbers`, as Streamdown reads a fence's words after its language. */}
         <Code.CodeBlockContent
-          lineNumbers={!/\bnoLineNumbers\b/u.test(node.meta ?? "")}
-          startLine={
-            Number(
-              /\bstartLine=(?<at>\d+)/u.exec(node.meta ?? "")?.groups?.at ?? 1
-            ) || 1
-          }
+          lineNumbers={!/\bnoLineNumbers\b/u.test(meta)}
+          startLine={startLine}
           maxLines={
             shared.codeMaxLines === false
               ? Number.POSITIVE_INFINITY
