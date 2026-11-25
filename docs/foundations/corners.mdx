@@ -63,7 +63,7 @@ An outer corner is the inner corner plus the room between them, and an inner cor
 
 ## The shape
 
-`radius-shape` is the system's corner shape, a squircle: every corner writes it as `corner-shape` after its radius, the scale's steps and a part's own token alike, so the curve eases into the edge. A pill and a circle leave it out: they are round by their radius alone, and the squircle would draw a rounded rectangle. A corner taken from the parent (`inherit`) takes the parent's shape too, so an inner corner follows the outer one exactly. A browser that draws no squircle ignores `corner-shape` and draws each corner round, at the smaller radius that reads like it. `scripts/check-corners.ts` fails a rounded radius with no `corner-shape` beside it.
+`radius-shape` is the system's corner shape, a squircle: every corner writes it as `corner-shape` after its radius, the scale's steps and a part's own token alike, so the curve eases into the edge. A pill and a circle leave it out: they are round by their radius alone, and the squircle would draw a rounded rectangle. Badges and tags are pills, while controls and rows are squircles. A corner taken from the parent (`inherit`) takes the parent's shape too, so an inner corner follows the outer one exactly. A browser that draws no squircle ignores `corner-shape` and draws each corner round, at the smaller radius that reads like it. `scripts/check-corners.ts` fails a rounded radius with no `corner-shape` beside it.
 
 ## Rules
 
