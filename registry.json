@@ -2054,7 +2054,8 @@
         "@stylexjs/stylex",
         "mdast-util-from-markdown",
         "mdast-util-gfm",
-        "micromark-extension-gfm"
+        "micromark-extension-gfm",
+        "remend"
       ],
       "registryDependencies": [
         "@damsko/code-block",
@@ -2084,11 +2085,6 @@
           "path": "src/components/markdown/parse.ts",
           "type": "registry:file",
           "target": "~/src/components/markdown/parse.ts"
-        },
-        {
-          "path": "src/components/markdown/repair.ts",
-          "type": "registry:file",
-          "target": "~/src/components/markdown/repair.ts"
         }
       ]
     },

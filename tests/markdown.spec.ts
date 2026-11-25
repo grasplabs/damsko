@@ -114,7 +114,7 @@ test("headings start at the caller's level", async ({ page }) => {
   await expect(page.getByRole("heading", { level: 1 })).toHaveCount(0);
 });
 
-test("untrusted text: raw HTML is text, and only http, https and mailto lead anywhere", async ({
+test("untrusted text: raw HTML is text, and only http, https, mailto and paths here lead anywhere", async ({
   page,
 }) => {
   await openExample(page, "markdown", "safe");
@@ -123,11 +123,12 @@ test("untrusted text: raw HTML is text, and only http, https and mailto lead any
   ).toBeVisible();
   await expect(page.locator("b")).toHaveCount(0);
   await expect(
-    page.getByText(/script link.* relative link are words, not links\.$/u)
+    page.getByText(/script link.* data link are words, not links\.$/u)
   ).toBeVisible();
   await expect(page.getByRole("link", { name: "script link" })).toHaveCount(0);
-  await expect(page.getByRole("link", { name: "relative link" })).toHaveCount(
-    0
+  await expect(page.getByRole("link", { name: "a page here" })).toHaveAttribute(
+    "href",
+    "/components/markdown"
   );
   await expect(
     page.getByRole("link", { name: "safe link (opens in a new tab)" })
@@ -149,9 +150,7 @@ test("untrusted text: a script stays text, a data link is words, a picture never
   await openExample(page, "markdown", "safe");
   await expect(page.getByText("<script>alert(1)</script>")).toBeVisible();
   await expect(
-    page.getByText(
-      "A script link, a data link and a relative link are words, not links."
-    )
+    page.getByText("A script link and a data link are words, not links.")
   ).toBeVisible();
   await expect(page.getByRole("link", { name: "data link" })).toHaveCount(0);
   await expect(page.getByRole("img")).toHaveCount(0);
@@ -173,6 +172,60 @@ test("tasks are said as done or not, and a rule separates", async ({
   await expect(page.getByRole("separator")).toHaveCount(1);
 });
 
+test("a task's box is round at the corner, its tick the icon's own size", async ({
+  page,
+}) => {
+  await openExample(page, "markdown", "tasks");
+  const done = page.getByRole("listitem").filter({ hasText: "Done" }).first();
+  const box = await done.evaluate((item) => {
+    const mark = item.querySelector("svg");
+    const face = mark?.parentElement;
+    if (mark === null || face === null || face === undefined) {
+      return null;
+    }
+    const look = getComputedStyle(face);
+    return {
+      // Where the browser draws corner shapes, the plain round one (computed as superellipse(1)),
+      // not the system's squircle.
+      round:
+        !CSS.supports("corner-shape", "round") ||
+        ["round", "superellipse(1)"].includes(
+          look.getPropertyValue("corner-shape")
+        ),
+      // The system's small corner, 6px, or 4px where no corner-shape is drawn (tokens.css).
+      radius:
+        look.borderTopLeftRadius ===
+        getComputedStyle(face).getPropertyValue("--damsko-radius-sm").trim(),
+      tick: mark.getBoundingClientRect().width,
+    };
+  });
+  expect(box).toEqual({ round: true, radius: true, tick: 16 });
+});
+
+test("footnotes: a mark leads to its note at the foot, and the note leads back", async ({
+  page,
+}) => {
+  await openExample(page, "markdown", "footnotes");
+  const marks = page.getByRole("link", { name: /^Footnote \d$/u });
+  await expect(marks).toHaveText(["1", "2", "1"]);
+  const notes = page.getByRole("list").last().getByRole("listitem");
+  await expect(notes).toHaveText([
+    "Year on year, in euros, before currency effects. ↩ ↩2",
+    "Churn counts cancelled seats only, not downgrades. ↩",
+  ]);
+  await marks.nth(1).click();
+  await expect(page).toHaveURL(/-fn-2$/u);
+  await notes.nth(1).getByRole("link", { name: "Back to reference 2" }).click();
+  // Back to the mark it came from: the second, numbered 2.
+  expect(
+    await page.evaluate(
+      () =>
+        document.querySelector(`#${CSS.escape(location.hash.slice(1))}`)
+          ?.textContent
+    )
+  ).toBe("2");
+});
+
 test("while it is written: no pipes, no fence marks, no brackets, and the table arrives whole", async ({
   page,
 }) => {
@@ -182,7 +235,7 @@ test("while it is written: no pipes, no fence marks, no brackets, and the table 
   expect(seen.tables).toBeGreaterThan(0);
 });
 
-test("caught part way: an open fence is code being written, a half link its words, a half table a table", async ({
+test("caught part way: an open fence is code being written, a half link its words, a half table a table with its half row", async ({
   page,
 }) => {
   await openExample(page, "markdown", "half-written");
@@ -201,7 +254,8 @@ test("caught part way: an open fence is code being written, a half link its word
     name: "A table still being written",
   });
   await expect(table.getByRole("row", { name: "Support 58 4" })).toBeVisible();
-  await expect(table.getByRole("row")).toHaveCount(2);
+  // Its half row is drawn as it is written, as Streamdown draws it.
+  await expect(table.getByRole("row")).toHaveCount(3);
   await expect(table.getByText("|")).toHaveCount(0);
 });
 
@@ -221,36 +275,21 @@ test("cut off: stopped part way and drawn from history, no raw mark and no link 
   await expect(page.getByRole("link")).toHaveCount(0);
 });
 
-test("single line breaks: space runs on, line breaks every one, auto only the short lines", async ({
+test("single line breaks: off runs on, softBreaks breaks every one", async ({
   page,
 }) => {
   await openExample(page, "markdown", "line-breaks");
-  // The three ways in order: space, line, auto; each paragraph's line breaks.
+  // The two ways in order: off, then softBreaks; each paragraph's line breaks.
   const breaks = async (start: RegExp) =>
     await Promise.all(
-      [0, 1, 2].map(
+      [0, 1].map(
         async (way) =>
           await page.getByText(start).nth(way).locator("br").count()
       )
     );
-  expect(await breaks(/^When: 14 and 15 August/u)).toStrictEqual([0, 3, 3]);
-  expect(await breaks(/^I checked three venues/u)).toStrictEqual([0, 2, 0]);
-  expect(await breaks(/^Next steps/u)).toStrictEqual([0, 3, 3]);
-});
-
-test("single line breaks while written: the paragraph wrapped by hand never breaks", async ({
-  page,
-}) => {
-  await openExample(page, "markdown", "line-breaks-stream");
-  const wrapped = page.getByText(/^I checked three venues/u).locator("br");
-  let most = 0;
-  const end = Date.now() + 6000;
-  while (Date.now() < end) {
-    // One look at a time, in order: each waits for the one before.
-    // oxlint-disable-next-line no-await-in-loop
-    most = Math.max(most, await wrapped.count());
-  }
-  expect(most).toBe(0);
+  expect(await breaks(/^When: 14 and 15 August/u)).toStrictEqual([0, 3]);
+  expect(await breaks(/^I checked three venues/u)).toStrictEqual([0, 2]);
+  expect(await breaks(/^Next steps/u)).toStrictEqual([0, 3]);
 });
 
 test("a section folds: its summary names its button, Enter and a press open and close it", async ({
@@ -288,77 +327,6 @@ test("sections: nested ones fold, and any other HTML or an unclosed one stays te
       timeout: 10_000,
     }
   );
-});
-
-test("the host draws links: out asks first, a path goes through its router, a citation is its chip, a script link is words", async ({
-  page,
-}) => {
-  await openExample(page, "markdown", "host-links");
-  await expect(page.getByRole("button", { name: "Source 1" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Source 2" })).toBeVisible();
-  const router = page.getByRole("link", { name: "the contracts page" });
-  await expect(router).toHaveAttribute("href", "#/contracts/q4");
-  await expect(router).toHaveAttribute("data-router-link", "");
-  await expect(page.getByRole("link", { name: "like this one" })).toHaveCount(
-    0
-  );
-  await expect(page.getByRole("link", { name: /on their site/u })).toHaveCount(
-    0
-  );
-  await page.getByRole("button", { name: "on their site" }).click();
-  const dialog = page.getByRole("dialog", { name: "Open external link?" });
-  await expect(
-    dialog.getByText("https://tailspin.example.com/notices/2026-rates")
-  ).toBeVisible();
-  await dialog.getByRole("button", { name: "Cancel" }).click();
-  await expect(dialog).toBeHidden();
-});
-
-test("your own elements: a link names its site, fenced code is the product's CodeBlock, a script link never reaches them", async ({
-  page,
-}) => {
-  await openExample(page, "markdown", "components");
-  await expect(
-    page.getByRole("link", {
-      name: /^the reporting service \(reports\.example\.com\)/u,
-    })
-  ).toHaveAttribute("href", "https://reports.example.com/docs");
-  const code = page.getByRole("region", { name: /report\.ts/u });
-  await expect(code).toContainText(
-    'export const totals = await report.daily({ team: "support" });'
-  );
-  await expect(page.getByText("daily_totals")).toBeVisible();
-  await expect(
-    page.getByRole("link", { name: /link the model was tricked into/u })
-  ).toHaveCount(0);
-  await expect(page.getByText("link the model was tricked into")).toBeVisible();
-});
-
-test("a task's box is round at the corner, its tick the icon's own size", async ({
-  page,
-}) => {
-  await openExample(page, "markdown", "tasks");
-  const done = page.getByRole("listitem").filter({ hasText: "Done" }).first();
-  const box = await done.evaluate((item) => {
-    const mark = item.querySelector("svg");
-    const face = mark?.parentElement;
-    if (mark === null || face === null || face === undefined) {
-      return null;
-    }
-    const look = getComputedStyle(face);
-    return {
-      // Where the browser draws corner shapes, the plain round one (computed as superellipse(1)),
-      // not the system's squircle.
-      round:
-        !CSS.supports("corner-shape", "round") ||
-        ["round", "superellipse(1)"].includes(
-          look.getPropertyValue("corner-shape")
-        ),
-      radius: look.borderTopLeftRadius,
-      tick: mark.getBoundingClientRect().width,
-    };
-  });
-  expect(box).toEqual({ round: true, radius: "6px", tick: 16 });
 });
 
 test("a closed section's words are found by find in page, which opens it", async ({
@@ -426,6 +394,138 @@ test("a section written open stands open from the first paint, without opening",
   );
 });
 
+test("the host draws links: out asks first, a path goes through its router, a citation is its chip, a script link is words", async ({
+  page,
+}) => {
+  await openExample(page, "markdown", "host-links");
+  await expect(page.getByRole("button", { name: "Source 1" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Source 2" })).toBeVisible();
+  const router = page.getByRole("link", { name: "the contracts page" });
+  await expect(router).toHaveAttribute("href", "#/contracts/q4");
+  await expect(router).toHaveAttribute("data-router-link", "");
+  await expect(page.getByRole("link", { name: "like this one" })).toHaveCount(
+    0
+  );
+  await expect(page.getByRole("link", { name: /on their site/u })).toHaveCount(
+    0
+  );
+  await page.getByRole("button", { name: "on their site" }).click();
+  const dialog = page.getByRole("dialog", { name: "Open external link?" });
+  await expect(
+    dialog.getByText("https://tailspin.example.com/notices/2026-rates")
+  ).toBeVisible();
+  await dialog.getByRole("button", { name: "Cancel" }).click();
+  await expect(dialog).toBeHidden();
+});
+
+/**
+ * Watches the streaming example for `ms`, a frame at a time: every row, cell and code block once
+ * shown keeps its place until the answer starts again, and every word added fades in or, with
+ * reduced motion, is there at once. Gives back what moved and how the words came.
+ */
+const watchFrames = async (page: Page, ms: number) =>
+  await page.evaluate(
+    async (time) =>
+      // oxlint-disable-next-line promise/avoid-new -- frames until the time is up, which have no promise of their own
+      await new Promise<{ moved: string[]; faded: number; popped: number }>(
+        (resolve) => {
+          const placed = new WeakMap<Element, string>();
+          const moved: string[] = [];
+          const counts = { faded: 0, popped: 0 };
+          const root = document.querySelector("[data-slot=markdown]");
+          let length = 0;
+          new MutationObserver((changes) => {
+            for (const added of changes.flatMap((change) => [
+              ...change.addedNodes,
+            ])) {
+              const spans =
+                added instanceof Element
+                  ? [added, ...added.querySelectorAll("span")]
+                  : [];
+              // A word: a span of words alone in a block's text, not one hidden for a screen reader.
+              for (const span of spans) {
+                const word =
+                  span instanceof HTMLSpanElement &&
+                  span.closest("p, li, td, th") !== null &&
+                  span.children.length === 0 &&
+                  span.textContent.trim() !== "" &&
+                  getComputedStyle(span).position !== "absolute";
+                if (word) {
+                  counts[
+                    span.getAnimations().length > 0 ? "faded" : "popped"
+                  ] += 1;
+                }
+              }
+            }
+          }).observe(root ?? document.body, { childList: true, subtree: true });
+          const frame = () => {
+            const now = root?.textContent?.length ?? 0;
+            const restarted = now < length;
+            length = now;
+            for (const part of root?.querySelectorAll(
+              "tr, th, td, [data-slot=code-block]"
+            ) ?? []) {
+              const box = part.getBoundingClientRect();
+              const at = `${Math.round(box.top)},${Math.round(box.left)},${Math.round(box.width)}`;
+              const was = placed.get(part);
+              if (was !== undefined && was !== at && !restarted) {
+                moved.push(`${part.localName}: ${was} to ${at}`);
+              }
+              placed.set(part, at);
+            }
+            if (performance.now() < time) {
+              requestAnimationFrame(frame);
+            } else {
+              resolve({ moved, ...counts });
+            }
+          };
+          requestAnimationFrame(frame);
+        }
+      ),
+    await page.evaluate((wait) => performance.now() + wait, ms)
+  );
+
+test("while it is written, a table and a code block keep their place and each new word fades in", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await openExample(page, "markdown", "streaming");
+  const seen = await watchFrames(page, 9000);
+  expect(seen.moved).toStrictEqual([]);
+  // One pass of the example draws 32 words outside its link; 9 s holds at least one in any engine.
+  expect(seen.faded).toBeGreaterThan(30);
+  expect(seen.popped).toBe(0);
+});
+
+test("with reduced motion, each new word is there at once", async ({
+  page,
+}) => {
+  await openExample(page, "markdown", "streaming");
+  const seen = await watchFrames(page, 9000);
+  expect(seen.popped).toBeGreaterThan(30);
+  expect(seen.faded).toBe(0);
+});
+
+test("your own elements: a link names its site, fenced code is the product's CodeBlock, a script link never reaches them", async ({
+  page,
+}) => {
+  await openExample(page, "markdown", "components");
+  await expect(
+    page.getByRole("link", {
+      name: /^the reporting service \(reports\.example\.com\)/u,
+    })
+  ).toHaveAttribute("href", "https://reports.example.com/docs");
+  const code = page.getByRole("region", { name: /report\.ts/u });
+  await expect(code).toContainText(
+    'export const totals = await report.daily({ team: "support" });'
+  );
+  await expect(page.getByText("daily_totals")).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: /link the model was tricked into/u })
+  ).toHaveCount(0);
+  await expect(page.getByText("link the model was tricked into")).toBeVisible();
+});
+
 test("a fence with codeMaxLines={false} never folds, yet draws only its first 2,000 lines and says how many more", async ({
   page,
 }) => {
@@ -435,4 +535,136 @@ test("a fence with codeMaxLines={false} never folds, yet draws only its first 2,
   await expect(page.getByText("entry 1001", { exact: true })).toHaveCount(0);
   await expect(page.getByText("999 more lines")).toBeVisible();
   await expect(page.getByRole("button", { name: "Show more" })).toHaveCount(0);
+});
+
+/**
+ * Watches the stream-cases example for `ms`, a frame at a time, and gives back what it should never
+ * draw: a link's words, once shown in full, fading again; a heading; a raw mark at the end of the
+ * words; a closing fence still being typed as a line of code.
+ */
+// The words the frame-by-frame check follows in markdown/stream-cases.
+const PHRASES = [
+  "full",
+  "www.example",
+  "gradually",
+  "eventually",
+  "wordy",
+  "handbook",
+];
+const watchCases = async (page: Page, ms: number) =>
+  await page.evaluate(
+    async ({ time, phrases }) =>
+      // oxlint-disable-next-line promise/avoid-new -- frames until the time is up, which have no promise of their own
+      await new Promise<string[]>((resolve) => {
+        const root = document.querySelector("[data-slot=markdown]");
+        const wrong = new Set<string>();
+        const shown = new Set<string>();
+        let length = 0;
+        /** How visible a text is: its element's opacity times each of its ancestors'. */
+        const opacityOf = (node: Node) => {
+          let seen = 1;
+          for (
+            let element = node.parentElement;
+            element !== null && element !== root;
+            element = element.parentElement
+          ) {
+            seen *= Number(getComputedStyle(element).opacity);
+          }
+          return seen;
+        };
+        /** One text: words fading again once shown, or a fence still being typed as code. */
+        const look = (text: Node, inCode: boolean) => {
+          for (const phrase of phrases) {
+            if (text.textContent?.includes(phrase) === true) {
+              if (opacityOf(text) > 0.99) {
+                shown.add(phrase);
+              } else if (shown.has(phrase)) {
+                wrong.add(`${phrase} faded again`);
+              }
+            }
+          }
+          if (inCode && /^[`~]+$/u.test(text.textContent?.trim() ?? "")) {
+            wrong.add(`a fence as code: ${text.textContent ?? ""}`);
+          }
+        };
+        const frame = () => {
+          // The answer starts again (a mark becoming a note's number shortens it a little).
+          const now = root?.textContent?.length ?? 0;
+          if (now < length / 2) {
+            shown.clear();
+          }
+          length = now;
+          const walker = document.createTreeWalker(
+            root ?? document.body,
+            NodeFilter.SHOW_TEXT
+          );
+          let words = "";
+          for (let text = walker.nextNode(); text; text = walker.nextNode()) {
+            const inCode = text.parentElement?.closest("code") !== null;
+            words += inCode ? " " : (text.textContent ?? "");
+            look(text, inCode);
+          }
+          for (const phrase of shown) {
+            if (root?.textContent?.includes(phrase) !== true) {
+              wrong.add(`${phrase} went`);
+            }
+          }
+          const heading = root?.querySelector("h1, h2, h3, h4, h5, h6");
+          if (heading) {
+            wrong.add(`a heading: ${heading.textContent}`);
+          }
+          if (/[*_~`]\s*$/u.test(words)) {
+            wrong.add(`a raw mark: ${words.slice(-30)}`);
+          }
+          if (performance.now() < time) {
+            requestAnimationFrame(frame);
+          } else {
+            resolve([...wrong]);
+          }
+        };
+        requestAnimationFrame(frame);
+      }),
+    {
+      time: await page.evaluate((wait) => performance.now() + wait, ms),
+      phrases: PHRASES,
+    }
+  );
+
+test("while it is written, words never fade again or go as a link, a note or a reference resolves, no line is a heading for a moment, and no raw mark shows", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await openExample(page, "markdown", "stream-cases");
+  expect(await watchCases(page, 12_000)).toStrictEqual([]);
+});
+
+test("streaming a table of 300 rows and a paragraph of 2,000 words starts a fade per word at most, and never an empty one", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.addInitScript(() => {
+    let started = 0;
+    let empty = 0;
+    document.addEventListener(
+      "animationstart",
+      (event) => {
+        started += 1;
+        if (
+          event.target instanceof Element &&
+          event.target.textContent === ""
+        ) {
+          empty += 1;
+        }
+        document.documentElement.dataset.fades = `${started} ${empty}`;
+      },
+      true
+    );
+  });
+  await openExample(page, "markdown", "stream-long");
+  await expect(page.locator("[data-done]")).toBeAttached({ timeout: 30_000 });
+  const fades = await page.locator("html").getAttribute("data-fades");
+  const [started = 0, empty = 0] = (fades ?? "").split(" ").map(Number);
+  // Over 3,000 words: a fade for each of the first 1,000 of a block, then one for each read.
+  expect(empty).toBe(0);
+  expect(started).toBeLessThan(2500);
 });

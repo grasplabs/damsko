@@ -1357,12 +1357,10 @@
       "MarkdownNode",
       "MarkdownLink",
       "MarkdownLinkRenderer",
-      "MarkdownSoftBreaks",
       "MarkdownRoot"
     ],
     "src/components/markdown/markdown.tsx": null,
-    "src/components/markdown/parse.ts": null,
-    "src/components/markdown/repair.ts": null
+    "src/components/markdown/parse.ts": null
   },
   "model-selector": {
     "src/components/model-selector.tsx": [
