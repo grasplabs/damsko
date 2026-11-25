@@ -403,9 +403,15 @@ test("a file dragged over the page tints the card and says what a drop does, bef
     );
   });
   await expect(page.getByText("Drop to add")).toBeVisible();
-  expect(
-    await card.evaluate((element) => getComputedStyle(element).backgroundColor)
-  ).not.toBe(atRest);
+  // The tint comes in by a transition: it is read until it has started.
+  await expect
+    .poll(
+      async () =>
+        await card.evaluate(
+          (element) => getComputedStyle(element).backgroundColor
+        )
+    )
+    .not.toBe(atRest);
   await page.evaluate(() => {
     const data = new DataTransfer();
     data.items.add(new File(["x"], "plan.pdf", { type: "application/pdf" }));
