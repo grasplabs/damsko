@@ -296,8 +296,10 @@ const styles = stylex.create({
   tableActions: {
     display: "flex",
     justifyContent: "flex-end",
-    gap: space["1"],
-    marginBlockEnd: `calc(-1 * ${space["2"]})`,
+    gap: space["2"],
+    // Each button's touch target reaches the middle of the gap to the next, and the room under it.
+    "--tap-room-inline": `calc(${space["2"]} / 2)`,
+    marginBlockEnd: space["2"],
   },
   more: {
     margin: 0,
