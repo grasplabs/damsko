@@ -11,9 +11,11 @@ export type RootContent = MarkdownRoot["children"][number];
 
 // Strike-through is two tildes, as a model writes it (`20~25°C` is a tilde). micromark weighs each
 // emphasis or link mark of a paragraph against those before it, so many unmatched ones cost their
-// number squared (`a*` repeated: 1.7 s for 40 KB): a block with a paragraph of more than 1,000 (its
-// fenced code aside) is read without them, as words, and without `![^1]`, a note's mark after a `!`,
-// which looks back for its picture.
+// number squared (`a*` repeated: 1.7 s for 40 KB): a block with a paragraph of more than 1,000, or
+// with more than 5,000 in all (its fenced code aside), is read without them, as words, and without
+// `![^1]`, a note's mark after a `!`, which looks back for its picture. A paragraph is counted from
+// each line that may start a part, so the total holds where such a line only goes on with it
+// (`1a*a*…` lines: 19 s for 80 KB).
 const MARKS =
   "attention strikethrough labelStartLink labelStartImage labelEnd gfmPotentialFootnoteCall".split(
     " "
@@ -107,11 +109,12 @@ const DEEP = /^(?:[ \t>]|(?:[-*+]|\d{1,9}[.)])(?=[ \t])){65,}/u;
 /**
  * The source as it is read, fenced code left as it is: a line nested past 32 deep keeps its last 64
  * characters of lead, so it is drawn at most 64 deep; whether a paragraph has more than 1,000 marks
- * (`many`), and whether a word has more than 1,000 characters (`long`).
+ * or the block more than 5,000 (`many`), and whether a word has more than 1,000 characters (`long`).
  */
 const bounded = (source: string) => {
   let fence = "";
   let marks = 0;
+  let total = 0;
   let many = false;
   let long = false;
   const out: string[] = [];
@@ -120,8 +123,10 @@ const bounded = (source: string) => {
     fence = fenceAfter(was, line);
     // A fence, a list item, a row, a heading or a blank line starts a part of its own.
     const starts = fence !== "" || /^[ \t>]*(?:[-*+|#\d]|$)/u.test(line);
-    marks = (starts ? 0 : marks) + line.replaceAll(/[^*_~[\]]/gu, "").length;
-    many ||= was === "" && marks > 1000;
+    const count = line.replaceAll(/[^*_~[\]]/gu, "").length;
+    marks = (starts ? 0 : marks) + count;
+    total += was === "" ? count : 0;
+    many ||= was === "" && (marks > 1000 || total > 5000);
     long ||=
       was === "" && line.split(/[\t\r ]/u).some((word) => word.length > 1000);
     out.push(

@@ -620,6 +620,17 @@ describe("bounds a model's answer cannot pass", () => {
     expect(textOf(deep)).toBe("a");
   });
 
+  test("a long list and a long table keep their bold: a few hundred phrases are not too many marks", () => {
+    const list = Array.from(
+      { length: 400 },
+      (_, at) => `- **Step ${at}** and *why*`
+    );
+    expect(count(draw(list.join("\n")), "<strong")).toBe(400);
+    const rows = Array.from({ length: 300 }, (_, at) => `| **${at}** | x |`);
+    const table = draw(`| a | b |\n| - | - |\n${rows.join("\n")}`);
+    expect(count(table, "<strong")).toBe(300);
+  });
+
   test("a list of more than 1,000 lines goes on as another at its next item, numbered on", () => {
     const html = draw(
       Array.from({ length: 1500 }, (_, at) => `${at + 1}. a`).join("\n")
@@ -668,6 +679,10 @@ const hostile: Record<string, (size: number) => string> = {
   "lists in quotes with no space after `>`": (size) =>
     `\n${">- ".repeat(size / 3)}a`,
   "lists in lists": (size) => `\n${"- - a\n".repeat(size / 6)}`,
+  "marks on lines a digit leads": (size) =>
+    `\n${`1${"a*".repeat(499)}\n`.repeat(size / 1000)}`,
+  "brackets nested over lines a digit leads": (size) =>
+    `\n${`1${"[".repeat(999)}\n`.repeat(size / 4000)}${`1${"]".repeat(999)}\n`.repeat(size / 4000)}`,
 };
 
 // Each block wraps the one before it in 32 more sections: read first at the top, a block
