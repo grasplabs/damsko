@@ -13,8 +13,9 @@ const sendInvite = async () => {
   throw new Error("The invite was not sent.");
 };
 
-// Press each one. The button says it is working, then how it went, in the action's own words:
-// Saved, Could not send. Wrong: the same work, said as Done! and Error.
+// Press each one. While it works the button shows a spinner and announces its loading words
+// (Saving, not Please wait: heard, not seen); then it shows and announces how it went, in the
+// action's own words: Saved, Not sent. Wrong: the same work, said as Done! and Error.
 export default function WritingProgress() {
   const save = saveChanges;
   const invite = sendInvite;

@@ -23,10 +23,18 @@ const layout = stylex.create({
     maxWidth: 640,
   },
   said: { margin: 0, color: colors.mutedForeground, fontSize: font.textSm },
+  // A name or a line that must stay on one line ends in an ellipsis at the row's edge.
+  cut: {
+    display: "block",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+  },
 });
 
 // Items as choices: each row one button (`onClick`), named by its title alone, where it runs said
-// after it. No chevron: it chooses, it goes nowhere.
+// after it. No chevron: it chooses, it goes nowhere. A name too long for its tile, kept on one
+// line, ends in an ellipsis at the tile's edge.
 export default function ItemChoice() {
   const [chosen, setChosen] = useState("nothing yet");
   return (
@@ -42,6 +50,11 @@ export default function ItemChoice() {
           brand: "chatgpt" as const,
           region: "United States",
         },
+        {
+          id: "OpenAI-compatible endpoint",
+          brand: "chatgpt" as const,
+          region: "Wherever your endpoint runs",
+        },
       ].map((each) => (
         <Item
           key={each.id}
@@ -55,8 +68,12 @@ export default function ItemChoice() {
             <BrandIcon {...logos[each.brand]} size="default" decorative />
           </ItemMedia>
           <ItemContent>
-            <ItemTitle>{each.id}</ItemTitle>
-            <ItemDescription>{each.region}</ItemDescription>
+            <ItemTitle>
+              <span {...stylex.props(layout.cut)}>{each.id}</span>
+            </ItemTitle>
+            <ItemDescription>
+              <span {...stylex.props(layout.cut)}>{each.region}</span>
+            </ItemDescription>
           </ItemContent>
         </Item>
       ))}
