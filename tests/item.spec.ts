@@ -1,7 +1,21 @@
 import { expect, test } from "@playwright/test";
-import type { Locator } from "@playwright/test";
+import type { Page, Locator } from "@playwright/test";
 
 import { hasFocusRing, openExample } from "./example.ts";
+
+/**
+ * The system's corner as this engine draws it: 20px in the squircle, or its plain-radius stand-in
+ * where the engine draws no squircle (Firefox), read from the token on a probe.
+ */
+const systemCorner = async (page: Page): Promise<string> =>
+  await page.evaluate(() => {
+    const probe = document.createElement("div");
+    probe.style.borderTopLeftRadius = "var(--damsko-radius-xl)";
+    document.body.append(probe);
+    const { borderTopLeftRadius } = getComputedStyle(probe);
+    probe.remove();
+    return borderTopLeftRadius;
+  });
 
 /** Whether a row's press has the keyboard's focus and its ring shows round the row it covers. */
 const ringsItsRow = async (press: Locator): Promise<boolean> =>
@@ -355,3 +369,62 @@ for (const [name, detail] of [
     expect(Math.round(under?.x ?? 0)).toBe(Math.round(title?.left ?? 1));
   });
 }
+
+test("while it loads, a bare icon waits as a block the icon's size, with its corner at half of it", async ({
+  page,
+}) => {
+  await openExample(page, "item", "loading");
+  const media = page
+    .getByRole("list", { name: "Files" })
+    .locator("[data-slot=item-media] [data-slot=skeleton]");
+  const box = await media.evaluate((node) => {
+    const own = node.getBoundingClientRect();
+    const holder = node.parentElement?.getBoundingClientRect();
+    return {
+      width: Math.round(own.width),
+      height: Math.round(own.height),
+      inside: holder !== undefined && own.bottom <= holder.bottom + 0.5,
+    };
+  });
+  expect(box).toStrictEqual({ width: 16, height: 16, inside: true });
+});
+
+test("an outline or muted row takes the system's corner, the card's 20px", async ({
+  page,
+}) => {
+  await openExample(page, "item", "basic");
+  const corner = await systemCorner(page);
+  for (const words of ["Quarterly summary", "Supplier list for the spring"]) {
+    const row = page.locator("[data-slot=item]", { hasText: words });
+    // oxlint-disable-next-line no-await-in-loop -- one row after the other
+    await expect(row).toHaveCSS("border-top-left-radius", corner);
+  }
+});
+
+test("in a side panel's card the hairline is the top of the row under it: a stacked row grows by it, a short row stays 44px", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openExample(page, "item", "stack");
+  const items = page
+    .getByRole("list", { name: "Files" })
+    .locator("[data-slot=item]");
+  const tops = await items.evaluateAll((all) =>
+    all.map((item) => getComputedStyle(item).borderTopWidth)
+  );
+  expect(tops[0]).toBe("0px");
+  expect(tops.slice(1).every((top) => top === "1px")).toBe(true);
+  // A name and its detail on two lines, 52px, and the hairline above: 53px, as the original's row.
+  const second = await items
+    .nth(1)
+    .evaluate((item) => item.getBoundingClientRect().height);
+  expect(second).toBeCloseTo(53, 0);
+  await openExample(page, "side-panel", "basic");
+  const short = await page
+    .getByText("Quarterly plan", { exact: true })
+    .evaluate(
+      (name) =>
+        name.closest("[data-slot=item]")?.getBoundingClientRect().height ?? 0
+    );
+  expect(short).toBeCloseTo(44, 0);
+});

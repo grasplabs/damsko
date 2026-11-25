@@ -192,3 +192,14 @@ test("in a small card a value that cannot be changed starts where the field abov
   // The field's words stand a field's padding in from its edge; the value from the same edge.
   expect(Math.abs((value?.x ?? 0) - (field?.x ?? 0))).toBeLessThanOrEqual(1);
 });
+
+test("a description breaks its lines as the browser does, as the original's: no pretty wrap", async ({
+  page,
+}) => {
+  await openExample(page, "card", "basic");
+  const style = await page
+    .locator("[data-slot=card-description]")
+    .first()
+    .evaluate((node) => getComputedStyle(node).textWrapStyle);
+  expect(style).toBe("auto");
+});

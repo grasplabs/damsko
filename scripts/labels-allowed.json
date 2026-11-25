@@ -11,6 +11,7 @@
   "src/components/chart.tsx#ChartContainerProps.xLabel": "data",
   "src/components/chart.tsx#ChartSeries.label": "data",
   "src/components/chart.tsx#ChartSparklineProps.pointLabels": "names",
+  "src/components/combobox.tsx#ComboboxSingle.triggerLabel": "names",
   "src/components/combobox.tsx#ComboboxItem.label": "data",
   "src/components/command.tsx#CommandGroupData.label": "data",
   "src/components/command.tsx#CommandItemAction.label": "data",

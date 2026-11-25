@@ -1679,3 +1679,20 @@ test("a plain banner, never said as it appears, describes the text, so a screen 
     "Asking about Quarterly plan.pdf"
   );
 });
+
+test("with a dithered edge the working light is seen through the system's pixels; a smooth one is not", async ({
+  page,
+}) => {
+  const maskOf = async () =>
+    await page
+      .locator("[data-slot=prompt-input-light]")
+      .evaluate((light) => getComputedStyle(light).maskImage);
+  await openExample(page, "prompt-input", "dither");
+  expect(await maskOf()).not.toBe("none");
+  await expect(page.locator("[data-slot=prompt-input-light]")).toHaveCSS(
+    "opacity",
+    "1"
+  );
+  await openExample(page, "prompt-input", "working");
+  expect(await maskOf()).toBe("none");
+});
