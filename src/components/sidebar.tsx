@@ -152,17 +152,6 @@ const rowMenuOpen = () =>
     ':has(> [data-slot="sidebar-menu-action"][aria-expanded="true"])',
     sidebarMenuItemMarker
   );
-// The content's ends while it scrolls (contentFade): where more rows lie beyond, that end fades.
-const SCROLLS = "@supports (animation-timeline: scroll())";
-const FADE_TOP = `transparent ${space["1"]}, black ${space["10"]}`;
-const FADE_FOOT = `black calc(100% - ${space["10"]}), transparent calc(100% - ${space["1"]})`;
-const contentEdges = stylex.keyframes({
-  "0%": { maskImage: `linear-gradient(to bottom, ${FADE_FOOT})` },
-  "1%, 99%": {
-    maskImage: `linear-gradient(to bottom, ${FADE_TOP}, ${FADE_FOOT})`,
-  },
-  "100%": { maskImage: `linear-gradient(to bottom, ${FADE_TOP}, black)` },
-});
 // In the sheet on a narrow window.
 const inSheet = () => stylex.when.ancestor("[data-mobile]", sidebarMarker);
 const onRail = () =>
@@ -391,20 +380,6 @@ const styles = stylex.create({
     flexDirection: "column",
     gap: space["2"],
     padding: space["2"],
-  },
-  // The end with more rows beyond it fades out over a space-10, clear a space-1 from the edge, by
-  // its own scroll (no script, so it is there from the first paint): the foot at the top, both in
-  // between, the top at the end. A list that fits has no scroll timeline, so no fade.
-  contentFade: {
-    // In forced colours there is no fade: it would dissolve the rows' edges.
-    animationName: {
-      default: null,
-      [SCROLLS]: { default: contentEdges, [FORCED]: "none" },
-    },
-    animationDuration: { default: null, [SCROLLS]: "auto" },
-    animationTimingFunction: { default: null, [SCROLLS]: "linear" },
-    animationFillMode: { default: null, [SCROLLS]: "both" },
-    animationTimeline: { default: null, [SCROLLS]: "scroll(self)" },
   },
   // The one part that scrolls, its bar hidden; folded to its icons, nothing scrolls sideways.
   content: {
@@ -683,7 +658,19 @@ const styles = stylex.create({
     },
     boxShadow: `inset 0 0 0 ${size.hairline} ${colors.border}`,
   },
-  onPage: { color: colors.foreground },
+  // The trigger: on the page (a page's bar) in the page's ink, as the original's Menu button; in the
+  // sidebar itself (its head, by its place in the page, so a dialog opened from the sidebar is the
+  // page again) the sidebar's quiet ink, the ink under a pointer.
+  trigger: {
+    color: {
+      default: colors.foreground,
+      ":is([data-sidebar=sidebar] *)": colors.sidebarSecondaryForeground,
+      [HOVER]: {
+        default: null,
+        ":is([data-sidebar=sidebar] *):hover": colors.sidebarForeground,
+      },
+    },
+  },
   quiet: { fontWeight: font.weightNormal },
   // A button that is only its icon (a search in the head, the trigger): round, the icon button's
   // size, a finger's on a touch screen.
@@ -897,8 +884,6 @@ export const useSidebar = (): SidebarApi => {
 /** The side the sidebar stands on, for its parts (the tooltips open away from it). */
 type Side = "start" | "end";
 const SideContext = createContext<Side>("start");
-// Whether a part stands in the sidebar itself, or on the page beside it (a page's bar).
-const InSidebar = createContext(false);
 
 // The kept choice, read where it can be: on the server, and while the page wakes, there is none.
 const readKept = (key?: string): boolean | undefined => {
@@ -1349,11 +1334,7 @@ export const Sidebar = ({
       </aside>
     );
   }
-  return (
-    <SideContext value={side}>
-      <InSidebar value>{sidebar}</InSidebar>
-    </SideContext>
-  );
+  return <SideContext value={side}>{sidebar}</SideContext>;
 };
 
 /** A button's title: its name, and its keys when it has them. */
@@ -1387,9 +1368,6 @@ export const SidebarTrigger = ({
   const { open, openMobile, isMobile, toggleSidebar, id, keys } =
     useSidebarState("SidebarTrigger");
   const label = named ?? toggle;
-  // On the page (a page's bar) it stands in the page's ink, as the original's Menu button; in the
-  // sidebar's head, the sidebar's quiet ink.
-  const onPage = !use(InSidebar);
   return (
     <button
       type="button"
@@ -1407,7 +1385,7 @@ export const SidebarTrigger = ({
       {...stylex.props(
         styles.button,
         styles.icon,
-        onPage && styles.onPage,
+        styles.trigger,
         focusRingInset,
         style
       )}
@@ -1511,12 +1489,7 @@ export const SidebarContent = ({
       aria-label={named ?? main}
       data-slot="sidebar-content"
       data-sidebar="content"
-      {...stylex.props(
-        styles.content,
-        styles.contentFade,
-        scrollbarHidden,
-        style
-      )}
+      {...stylex.props(styles.content, scrollbarHidden, style)}
     >
       {children}
     </nav>
