@@ -55,7 +55,7 @@ import {
 import { isBlank, listOf } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { iconVars, sidePanelCardMarker } from "../lib/vars.stylex";
-import { itemMarker } from "./item.stylex";
+import { itemMarker, itemVars } from "./item.stylex";
 import { Separator } from "./separator";
 import { Skeleton } from "./skeleton";
 
@@ -233,7 +233,8 @@ const styles = stylex.create({
     width: "100%",
     minWidth: 0,
     margin: 0,
-    borderRadius: radius.lg,
+    // The system's corner, as the original's Item: the card's.
+    borderRadius: radius.xl,
     cornerShape: radius.shape,
     color: colors.foreground,
     fontFamily: font.sans,
@@ -249,8 +250,9 @@ const styles = stylex.create({
     paddingInline: space["4"],
   },
   // The setting rows' rhythm: 8px above and below, a table cell's inset, a field row at least.
-  // In a side panel's card: a finger's 44px, the panel's inset, and at the row's end the room of
-  // an action (a 28px button and its gap) on a row that has none, so every detail ends on one line.
+  // In a side panel's card: a finger's 44px, the panel's inset, and at the row's end, in a list
+  // where some row has an action, the room of one (a 28px button and its gap) on a row that has
+  // none, so every detail ends on one line; in a list with none, every detail ends at the inset.
   xs: {
     gap: {
       default: space["3"],
@@ -270,13 +272,25 @@ const styles = stylex.create({
       default: space.tableCellInline,
       [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: {
         default: space.sidePanelPadding,
-        ":not(:has([data-slot=item-actions]))": `calc(${space.sidePanelPadding} + ${sizes.controlXs} + ${space["2"]})`,
+        ":not(:has([data-slot=item-actions]))": `calc(${space.sidePanelPadding} + ${itemVars.actionRoom})`,
       },
     },
     minHeight: {
       default: space.fieldRow,
       [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: sizes.tapTarget,
     },
+    // In a side panel's card the hairline before a row is that row's own top, as the original's
+    // row list drew it: the separator lies over this edge, so a row taller than a finger's 44px
+    // (a detail on its own line) is one hairline taller, and a short row stays 44px.
+    borderBlockStartWidth: {
+      default: null,
+      [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: {
+        default: null,
+        ":is([data-slot=item-separator] + *)": sizes.hairline,
+      },
+    },
+    borderBlockStartStyle: "solid",
+    borderBlockStartColor: "transparent",
   },
   plain: { backgroundColor: "transparent" },
   outline: {
@@ -572,6 +586,11 @@ const styles = stylex.create({
   stack: { containerType: "inline-size", containerName: "item-group-stack" },
   // Lists: a real list, the rows one under another, 8px apart, or 4px either side of a hairline.
   group: {
+    // The room a row keeps for an action it lacks: only where some row holds one.
+    [itemVars.actionRoom]: {
+      default: "0px",
+      ":has([data-slot=item-actions])": `calc(${sizes.controlXs} + ${space["2"]})`,
+    },
     display: "grid",
     width: "100%",
     margin: 0,
@@ -640,14 +659,17 @@ const waits = stylex.create({
     height: sizes.controlSm,
     borderRadius: `min(${radius.xl}, calc(${sizes.controlSm} / 2))`,
   },
-  // The bare icon's box, in line with the title.
+  // The bare icon's box, in line with the title: a block the icon's size, with the one corner
+  // capped at half of it, as the original's.
+  // Its placeholder shrinks to it (a column), never a control's height cut at its foot.
   icon: {
     display: "flex",
+    flexDirection: "column",
     flexShrink: 0,
     width: sizes.iconSm,
     height: sizes.iconSm,
     overflow: "hidden",
-    borderRadius: radius.sm,
+    borderRadius: `min(${radius.xl}, calc(${sizes.iconSm} / 2))`,
     cornerShape: radius.shape,
   },
   // The title's and the description's lines, as long as a short name and a short line.

@@ -235,3 +235,20 @@ test("a cover can be the system's faint dither, and a section's action is muted 
   });
   await expect(add).toHaveCSS("color", muted);
 });
+
+test("in a list with no actions a row's detail ends at the card's inset; where rows have them, the room is kept", async ({
+  page,
+}) => {
+  await openExample(page, "side-panel", "basic");
+  const endOf = async (words: string) =>
+    await page.getByText(words, { exact: true }).evaluate((detail) => {
+      const row = detail.closest("[data-slot=item]")?.getBoundingClientRect();
+      return row === undefined
+        ? -1
+        : Math.round(row.right - detail.getBoundingClientRect().right);
+    });
+  // No row of the Owner list has an action: its detail ends at the panel's 12px inset.
+  expect(await endOf("Delivery lead")).toBe(12);
+  // Every source has its action; the detail stands before it.
+  expect(await endOf("Document")).toBeGreaterThan(12);
+});

@@ -4,3 +4,7 @@
 import * as stylex from "@stylexjs/stylex";
 
 export const itemMarker = stylex.defineMarker();
+
+// The room a row in a side panel's card keeps at its end for an action it does not have: an
+// action's (a 28px button and its gap) where some row of its list holds one, else none.
+export const itemVars = stylex.defineVars({ actionRoom: "0px" });

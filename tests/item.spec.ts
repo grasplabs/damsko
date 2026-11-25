@@ -355,3 +355,33 @@ for (const [name, detail] of [
     expect(Math.round(under?.x ?? 0)).toBe(Math.round(title?.left ?? 1));
   });
 }
+
+test("while it loads, a bare icon waits as a block the icon's size, with its corner at half of it", async ({
+  page,
+}) => {
+  await openExample(page, "item", "loading");
+  const media = page
+    .getByRole("list", { name: "Files" })
+    .locator("[data-slot=item-media] [data-slot=skeleton]");
+  const box = await media.evaluate((node) => {
+    const own = node.getBoundingClientRect();
+    const holder = node.parentElement?.getBoundingClientRect();
+    return {
+      width: Math.round(own.width),
+      height: Math.round(own.height),
+      inside: holder !== undefined && own.bottom <= holder.bottom + 0.5,
+    };
+  });
+  expect(box).toStrictEqual({ width: 16, height: 16, inside: true });
+});
+
+test("an outline or muted row takes the system's corner, the card's 20px", async ({
+  page,
+}) => {
+  await openExample(page, "item", "basic");
+  for (const words of ["Quarterly summary", "Supplier list for the spring"]) {
+    const row = page.locator("[data-slot=item]", { hasText: words });
+    // oxlint-disable-next-line no-await-in-loop -- one row after the other
+    await expect(row).toHaveCSS("border-top-left-radius", "20px");
+  }
+});
