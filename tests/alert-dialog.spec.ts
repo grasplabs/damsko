@@ -112,10 +112,8 @@ test("while its action works it stays open and Escape waits; a failure says so o
     dialog.getByRole("button", { name: "Keep it" })
   ).not.toHaveAttribute("data-agent-confirm");
   await action.click();
-  // Working, it says so in its loading words, busy.
-  await expect(
-    dialog.getByRole("button", { name: "Deleting" })
-  ).toHaveAttribute("aria-busy", "true");
+  // Working, it is busy and keeps its words; its loading words are said, not shown.
+  await expect(action).toHaveAttribute("aria-busy", "true");
   await page.keyboard.press("Escape");
   await page.mouse.click(12, 450);
   await expect(dialog).toBeVisible();

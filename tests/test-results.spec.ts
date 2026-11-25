@@ -1,6 +1,12 @@
 import { expect, test } from "@playwright/test";
 
-import { drawnEdges, hasFocusRing, openExample, panelOf } from "./example.ts";
+import {
+  drawnEdges,
+  hasFocusRing,
+  markStart,
+  openExample,
+  panelOf,
+} from "./example.ts";
 
 test("a failed run says its counts and Failed in words, and is open on its tests", async ({
   page,
@@ -86,3 +92,25 @@ test("what opens under the line starts on the line's own start edge, its mark's"
   const body = await drawnEdges(panel);
   expect(Math.abs(body.start - header.start)).toBeLessThanOrEqual(1);
 });
+
+for (const dir of ["ltr", "rtl"]) {
+  test(`every level of rows stands on one edge: a suite and its failed test on the run's mark, ${dir}`, async ({
+    page,
+  }) => {
+    await openExample(page, "test-results", "suites");
+    await page.evaluate((direction) => {
+      document.documentElement.dir = direction;
+    }, dir);
+    const run = await markStart(
+      page.getByRole("button", { name: /^Ran 8 tests/u })
+    );
+    const suite = await markStart(
+      page.getByRole("button", { name: /^user-api\.test\.ts/u })
+    );
+    const failed = await markStart(
+      page.getByRole("button", { name: /^updates a user profile/u })
+    );
+    expect(suite).toBeCloseTo(run, 0);
+    expect(failed).toBeCloseTo(run, 0);
+  });
+}

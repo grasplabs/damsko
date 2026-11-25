@@ -108,10 +108,7 @@ test("while its action works it stays open, and it closes once the work is done"
   const drawer = page.getByRole("dialog", { name: "Remind me tomorrow" });
   const save = drawer.getByRole("button", { name: "Set reminder" });
   await save.click();
-  await expect(drawer.getByRole("button", { name: "Saving" })).toHaveAttribute(
-    "aria-busy",
-    "true"
-  );
+  await expect(save).toHaveAttribute("aria-busy", "true");
   await page.keyboard.press("Escape");
   await expect(drawer).toBeVisible();
   await expect(drawer).toBeHidden();
