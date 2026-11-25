@@ -51,7 +51,12 @@ import {
   useLayerBody,
   watchPanel,
 } from "../lib/layer";
-import { focusRingInset, scrollbarHidden } from "../lib/styles";
+import {
+  focusRingInset,
+  scrollbarHidden,
+  tapRows,
+  watchRows,
+} from "../lib/styles";
 import {
   duration,
   font,
@@ -274,6 +279,9 @@ const look = stylex.create({
     justifyContent: "flex-end",
     alignItems: "center",
     gap: space["2"],
+    // Each action's touch target reaches the middle of the gap to the next, beside it and, once
+    // the actions wrap, above and below (tapRows).
+    "--tap-room-inline": `calc(${space["2"]} / 2)`,
     marginBlockStart: space["6"],
     paddingInline: space["6"],
     paddingBlockEnd: {
@@ -288,6 +296,9 @@ const look = stylex.create({
     insetBlockStart: `calc(${space["6"]} + (${font.textBaseLine} - ${sizes.controlSm}) / 2)`,
     insetInlineEnd: `calc(${space["6"]} - ${space["2"]})`,
     display: "flex",
+    // Drawn in the corner, away from the parts it follows in the page: its touch target reaches
+    // the full 44px towards them (tapTarget).
+    "--tap-room-inline": sizes.tapTarget,
   },
 });
 
@@ -459,8 +470,9 @@ export interface DialogFooterProps extends PartProps {
 export const DialogFooter = ({ children, style }: DialogFooterProps) => (
   // The marker a Button reads to take its share of the line on a phone.
   <div
+    ref={watchRows}
     data-slot="dialog-footer"
-    {...stylex.props(layerFooterMarker, styles.footer, style)}
+    {...stylex.props(layerFooterMarker, styles.footer, tapRows, style)}
   >
     {children}
   </div>

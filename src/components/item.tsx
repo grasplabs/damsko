@@ -529,6 +529,8 @@ const styles = stylex.create({
     flexShrink: 0,
     alignItems: "center",
     gap: space["2"],
+    // Each control's touch target reaches the middle of the gap to the next (tapTarget).
+    "--tap-room-inline": `calc(${space["2"]} / 2)`,
     marginInlineStart: "auto",
   },
   // Hidden only to the eye, never to the keyboard or a screen reader: focus shows them.

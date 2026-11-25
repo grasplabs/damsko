@@ -298,6 +298,8 @@ const styles = stylex.create({
     transitionDuration: motionVars.hover,
   },
   // The smallest round button that keeps a 24px target on a fine pointer, and a 44px one on touch.
+  // On touch the target grows away from the well, up and out from its corner, so it never takes a
+  // press on the picture.
   removeDefault: {
     [iconVars.size]: 10,
     width: 16,
@@ -305,7 +307,13 @@ const styles = stylex.create({
     "::before": {
       content: "''",
       position: "absolute",
-      inset: { default: -4, [COARSE]: -14 },
+      top: { default: -4, [COARSE]: `calc(16px - ${sizes.tapTarget})` },
+      insetInlineEnd: {
+        default: -4,
+        [COARSE]: `calc(16px - ${sizes.tapTarget})`,
+      },
+      bottom: { default: -4, [COARSE]: 0 },
+      insetInlineStart: { default: -4, [COARSE]: 0 },
     },
   },
   removeLg: {
@@ -315,7 +323,13 @@ const styles = stylex.create({
     "::before": {
       content: "''",
       position: "absolute",
-      inset: { default: -2, [COARSE]: -12 },
+      top: { default: -2, [COARSE]: `calc(20px - ${sizes.tapTarget})` },
+      insetInlineEnd: {
+        default: -2,
+        [COARSE]: `calc(20px - ${sizes.tapTarget})`,
+      },
+      bottom: { default: -2, [COARSE]: 0 },
+      insetInlineStart: { default: -2, [COARSE]: 0 },
     },
   },
   // A failed save: the whole well is Try again, the picture under a veil with the retry mark, so a

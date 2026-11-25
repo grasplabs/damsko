@@ -26,7 +26,7 @@ import { useEffect, useRef } from "react";
 import type { ComponentProps, ReactNode, Ref } from "react";
 
 import { ChevronDownIcon, Icon } from "../lib/icons";
-import { focusField, inputStyles } from "../lib/styles";
+import { focusField, inputStyles, tapTarget } from "../lib/styles";
 import { colors, size, space } from "../lib/tokens.stylex";
 import { assignRef, isInvalid, warnUnnamed } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
@@ -156,14 +156,8 @@ const styles = stylex.create({
   chevronDisabled: { opacity: size.opacityDisabled },
 });
 
-const targetStyles = {
-  sm: inputStyles.targetSm,
-  default: inputStyles.targetDefault,
-  lg: inputStyles.targetLg,
-} as const;
-
 /**
- * The finger's 44px round the select on a touch screen (inputStyles.target) opens it as a press on
+ * The finger's 44px round the select on a touch screen (tapTarget) opens it as a press on
  * the select does: the system's list where the browser can open it from code, focus elsewhere,
  * which on a phone brings the same wheel. A pointer's extension of a control the keys reach already.
  */
@@ -228,7 +222,7 @@ export const NativeSelect = ({
       <span
         aria-hidden="true"
         ref={opener(() => own.current)}
-        {...stylex.props(inputStyles.target, targetStyles[scale])}
+        {...stylex.props(tapTarget)}
       />
       <FieldControl
         // What the Field merges with its own: its id wins, its description joins the caller's.

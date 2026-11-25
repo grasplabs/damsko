@@ -6,7 +6,12 @@ import { useRef, useState } from "react";
 
 const layout = stylex.create({
   stack: { display: "grid", gap: space[2], justifyItems: "start" },
-  row: { display: "flex", alignItems: "center", gap: space[2] },
+  row: {
+    display: "flex",
+    alignItems: "center",
+    gap: space[2],
+    "--tap-room-inline": `calc(${space[2]} / 2)`,
+  },
   said: {
     margin: 0,
     fontFamily: font.sans,

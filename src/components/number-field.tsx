@@ -28,7 +28,7 @@ import { useId } from "react";
 
 import { useI18n } from "../lib/i18n";
 import { Icon, MinusIcon, PlusIcon } from "../lib/icons";
-import { focusField, inputStyles } from "../lib/styles";
+import { focusField, tapTarget } from "../lib/styles";
 import {
   colors,
   duration,
@@ -273,14 +273,6 @@ const styles = stylex.create({
   },
 });
 
-// A finger needs 44px: on a touch screen an invisible area makes up the height, Input's, round the
-// field and round each step, as tall as the field's.
-const targetStyles = {
-  sm: inputStyles.targetSm,
-  default: inputStyles.targetDefault,
-  lg: inputStyles.targetLg,
-} as const;
-
 /** The ids of the words that describe the field, the sign and the unit, for those it has. */
 const describedBy = (parts: [string | undefined, string][]) => {
   const ids = parts
@@ -361,10 +353,7 @@ export const NumberField = ({
         render={<div data-slot="number-field-group" />}
         {...stylex.props(styles.box, styles[size], focusField.within)}
       >
-        <span
-          aria-hidden="true"
-          {...stylex.props(inputStyles.target, targetStyles[size])}
-        />
+        <span aria-hidden="true" {...stylex.props(tapTarget)} />
         {prefix !== undefined && prefix !== "" ? (
           <span id={prefixId} {...stylex.props(styles.affix, styles.prefix)}>
             {prefix}
@@ -397,10 +386,7 @@ export const NumberField = ({
           }
           {...stylex.props(styles.step, readOnly === true && styles.stepStill)}
         >
-          <span
-            aria-hidden="true"
-            {...stylex.props(inputStyles.target, targetStyles[size])}
-          />
+          <span aria-hidden="true" {...stylex.props(tapTarget)} />
           <Icon icon={MinusIcon} />
         </NumberInputDecrement>
         <NumberInputIncrement
@@ -418,10 +404,7 @@ export const NumberField = ({
             readOnly === true && styles.stepStill
           )}
         >
-          <span
-            aria-hidden="true"
-            {...stylex.props(inputStyles.target, targetStyles[size])}
-          />
+          <span aria-hidden="true" {...stylex.props(tapTarget)} />
           <Icon icon={PlusIcon} />
         </NumberInputIncrement>
       </NumberInputGroup>

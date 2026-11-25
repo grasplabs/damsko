@@ -238,7 +238,13 @@ const styles = stylex.create({
     },
     marginBlockEnd: `calc(-1 * ${space["1"]})`,
   },
-  close: { display: "flex", marginInlineStart: space["4"] },
+  // A step off the words, whose own controls stand under them: its touch target reaches the
+  // words' edge, half that step.
+  close: {
+    display: "flex",
+    marginInlineStart: space["4"],
+    "--tap-room-inline": `calc(${space["4"]} / 2)`,
+  },
 });
 
 const icons: Record<AlertVariant, IconData> = {

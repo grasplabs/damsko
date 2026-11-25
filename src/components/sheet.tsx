@@ -44,7 +44,12 @@ import { useReturnFocus } from "../hooks/use-return-focus";
 import { useI18n } from "../lib/i18n";
 import { Icon, XIcon } from "../lib/icons";
 import { keepBodyPut, shadeProps, useLayerBody } from "../lib/layer";
-import { focusRingInset, scrollbarHidden } from "../lib/styles";
+import {
+  focusRingInset,
+  scrollbarHidden,
+  tapRows,
+  watchRows,
+} from "../lib/styles";
 import {
   colors,
   duration,
@@ -275,6 +280,9 @@ const styles = stylex.create({
     insetBlockStart: `calc((${sizes.sheetHeadHeight} - ${sizes.controlSm}) / 2)`,
     insetInlineEnd: `calc((${sizes.sheetHeadHeight} - ${sizes.controlSm}) / 2)`,
     display: "flex",
+    // Drawn in the corner, away from the parts it follows in the page: its touch target reaches
+    // the full 44px towards them (tapTarget).
+    "--tap-room-inline": sizes.tapTarget,
   },
 });
 
@@ -461,10 +469,12 @@ export interface SheetFooterProps extends PartProps {
  */
 export const SheetFooter = ({ children, style }: SheetFooterProps) => (
   <div
+    ref={watchRows}
     data-slot="sheet-footer"
     {...stylex.props(
       layerFooterMarker,
       dialogStyles.footer,
+      tapRows,
       styles.footer,
       style
     )}

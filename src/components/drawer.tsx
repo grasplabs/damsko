@@ -53,7 +53,9 @@ import {
   focusRing,
   focusRingInset,
   scrollbarHidden,
+  tapRows,
   visuallyHidden,
+  watchRows,
 } from "../lib/styles";
 import {
   colors,
@@ -264,6 +266,9 @@ const styles = stylex.create({
     justifyContent: "flex-end",
     alignItems: "center",
     gap: space["2"],
+    // Each action's touch target reaches the middle of the gap to the next, beside it and, once
+    // the actions wrap, above and below (tapRows).
+    "--tap-room-inline": `calc(${space["2"]} / 2)`,
     marginBlockStart: space["6"],
     paddingInline: space["6"],
     paddingBlockEnd: `max(${space["6"]}, env(safe-area-inset-bottom))`,
@@ -473,10 +478,12 @@ export const DrawerFooter = ({ children, style }: DrawerFooterProps) => {
   const snaps = use(SnapsContext);
   return (
     <div
+      ref={watchRows}
       data-slot="drawer-footer"
       {...stylex.props(
         layerFooterMarker,
         styles.footer,
+        tapRows,
         snaps && styles.footerRests,
         style
       )}

@@ -27,6 +27,8 @@ const layout = stylex.create({
   list: {
     display: "grid",
     gap: space["3"],
+    // On a touch screen each control's target reaches the middle of the gap to the next.
+    "--tap-room-block": `calc(${space["3"]} / 2)`,
     margin: 0,
     padding: 0,
     listStyle: "none",
