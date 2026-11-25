@@ -1603,3 +1603,21 @@ test("a quiet row's words are in the regular weight, cut where the row ends and 
   await row.hover();
   await expect(page.getByRole("tooltip")).toHaveText(name);
 });
+
+test("with more rows than it shows, the content fades out at the end that has more, then at both once scrolled", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 400 });
+  await openExample(page, "sidebar", "basic");
+  const content = page.locator("[data-slot=sidebar-content]");
+  await expect(content).toHaveAttribute("data-under-end", "");
+  await expect(content).not.toHaveAttribute("data-under-start");
+  expect(
+    await content.evaluate((node) => getComputedStyle(node).maskImage)
+  ).toMatch(/^linear-gradient/u);
+  await content.evaluate((node) => {
+    node.scrollTop = 40;
+  });
+  await expect(content).toHaveAttribute("data-under-start", "");
+  await expect(content).toHaveAttribute("data-under-end", "");
+});
