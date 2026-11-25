@@ -5,7 +5,14 @@ import * as stylex from "@stylexjs/stylex";
 import { announce as say, prepareAnnouncements } from "@ui-sdk/core";
 import { renderElement } from "@ui-sdk/react/primitive";
 import type { RenderProp } from "@ui-sdk/react/primitive";
-import { createContext, createElement, isValidElement, lazy, use } from "react";
+import {
+  createContext,
+  createElement,
+  isValidElement,
+  lazy,
+  use,
+  useSyncExternalStore,
+} from "react";
 import type { ReactElement, ReactNode, Ref } from "react";
 
 import { durations } from "./tokens.values";
@@ -381,6 +388,22 @@ export const saveFile = (text: string, name: string, type: string) => {
 export const nothing = () => {
   // Nothing was started, so nothing stops.
 };
+
+const REDUCE = "(prefers-reduced-motion: reduce)";
+const watchMotion = (changed: () => void) => {
+  const query = window.matchMedia(REDUCE);
+  query.addEventListener("change", changed);
+  return () => {
+    query.removeEventListener("change", changed);
+  };
+};
+/** Whether the reader asked for less motion, kept current; on the server, not. */
+export const useReducedMotion = () =>
+  useSyncExternalStore(
+    watchMotion,
+    () => window.matchMedia(REDUCE).matches,
+    () => false
+  );
 
 /** Sets a ref, a function or an object, to `node`. */
 export const assignRef = <T>(ref: Ref<T> | undefined, node: T | null) => {

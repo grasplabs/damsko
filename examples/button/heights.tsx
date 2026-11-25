@@ -11,6 +11,7 @@ const layout = stylex.create({
     gap: space["4"],
     padding: space["6"],
     borderRadius: radius.xl,
+    cornerShape: radius.shape,
     backgroundColor: colors.card,
     boxShadow: shadow.sm,
   },

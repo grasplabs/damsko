@@ -29,9 +29,9 @@ const layout = stylex.create({
   },
 });
 
-// An answer arriving a few characters at a time: the table is a table from its first row, the code
-// shows as it is written, a link still being written is its words, and each new framed block fades
-// in. Then it starts again. It begins written in
+// An answer arriving a few characters at a time, each word shown once it is whole: the table is a
+// table from its first row, the code shows as it is written, a link still being written is its
+// words, and each new word and framed block fades in. Then it starts again. It begins written in
 // full, so the page shows the answer before its script runs or without one.
 export default function MarkdownStreaming() {
   const [shown, setShown] = useState(answer.length);

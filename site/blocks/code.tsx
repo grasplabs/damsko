@@ -73,6 +73,7 @@ const styles = stylex.create({
     whiteSpace: "pre",
     tabSize: 2,
     borderRadius: "inherit",
+    cornerShape: "inherit",
     // No bar (CONTRIBUTING.md): it scrolls sideways by wheel, touch and keys, and an edge fades
     // while there is more beyond it (site/behaviour/code-edges.ts marks which; site.css draws it).
     scrollbarWidth: "none",

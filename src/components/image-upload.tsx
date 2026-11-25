@@ -170,7 +170,7 @@ const styles = stylex.create({
     },
     borderColor: "currentColor",
     borderRadius: "inherit",
-    cornerShape: radius.shape,
+    cornerShape: "inherit",
     backgroundColor: colors.muted,
     boxShadow: {
       default: sizes.borderStrong,
@@ -345,7 +345,7 @@ const styles = stylex.create({
     appearance: "none",
     borderWidth: 0,
     borderRadius: "inherit",
-    cornerShape: radius.shape,
+    cornerShape: "inherit",
     backgroundColor: { default: colors.dialogScrim, [FORCED]: "Canvas" },
     // The destructive edge drawn again over the veil, as the well's own lies under it.
     boxShadow: `inset 0 0 0 ${sizes.hairline} ${colors.destructive}`,

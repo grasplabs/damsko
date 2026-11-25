@@ -28,6 +28,7 @@ const layout = stylex.create({
     height: 560,
     overflow: "hidden",
     borderRadius: `calc(${radius.md} + ${size.sidebarCardGap})`,
+    cornerShape: radius.shape,
     boxShadow: `0 0 0 ${size.hairline} ${colors.border}`,
   },
   shell: { height: "100%", minHeight: 0 },

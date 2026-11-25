@@ -100,6 +100,7 @@ const styles = stylex.create({
     position: "absolute",
     inset: 0,
     borderRadius: "inherit",
+    cornerShape: "inherit",
     pointerEvents: "none",
     maskImage: "linear-gradient(to bottom, black, transparent 45%)",
   },
