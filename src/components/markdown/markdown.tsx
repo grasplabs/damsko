@@ -1015,6 +1015,10 @@ const draw: { [T in Node["type"]]?: Draw<T> } = {
         );
       return Pre === undefined ? code : <Pre node={node}>{code}</Pre>;
     }
+    // Numbered from the fence's `startLine=N` (up to 7 digits), or not with `noLineNumbers`.
+    const meta = node.meta ?? "";
+    const startLine =
+      Number(/\bstartLine=(?<at>\d{1,7})(?!\d)/u.exec(meta)?.groups?.at) || 1;
     return (
       <Code.CodeBlock
         language={node.lang ?? "text"}
@@ -1035,14 +1039,9 @@ const draw: { [T in Node["type"]]?: Draw<T> } = {
           </Code.CodeBlockActions>
         </Code.CodeBlockHeader>
         {/* `false` never folds, yet still draws at most 2,000 lines: a model's code has no bound. */}
-        {/* Its lines numbered from `startLine=N` on, or not at all with `noLineNumbers`, as Streamdown reads a fence's words after its language. */}
         <Code.CodeBlockContent
-          lineNumbers={!/\bnoLineNumbers\b/u.test(node.meta ?? "")}
-          startLine={
-            Number(
-              /\bstartLine=(?<at>\d+)/u.exec(node.meta ?? "")?.groups?.at ?? 1
-            ) || 1
-          }
+          lineNumbers={!/\bnoLineNumbers\b/u.test(meta)}
+          startLine={startLine}
           maxLines={
             shared.codeMaxLines === false
               ? Number.POSITIVE_INFINITY
