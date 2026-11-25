@@ -1,11 +1,10 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
-import { openExample, settled } from "./example.ts";
+import { liveRegion, openExample, settled } from "./example.ts";
 
 /** What the page's live region last said. */
-const said = (page: Page) =>
-  page.getByRole("status").filter({ hasText: /\S/u }).last();
+const said = (page: Page) => liveRegion(page).filter({ hasText: /\S/u }).last();
 
 test("a press opens the field with the value chosen; Enter saves, says so, and focus goes back to the text", async ({
   page,

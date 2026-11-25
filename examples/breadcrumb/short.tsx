@@ -13,7 +13,13 @@ import * as stylex from "@stylexjs/stylex";
 // the page. Trails of one, two and three levels, one under the other: a short trail never wraps, and
 // the phone form still shows its back link.
 const styles = stylex.create({
-  stack: { display: "flex", flexDirection: "column", gap: space["4"] },
+  stack: {
+    display: "flex",
+    flexDirection: "column",
+    gap: space["4"],
+    // On a touch screen each control's target reaches the middle of the gap to the next.
+    "--tap-room-block": `calc(${space["4"]} / 2)`,
+  },
 });
 
 export default function BreadcrumbShort() {

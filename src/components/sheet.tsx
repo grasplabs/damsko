@@ -43,8 +43,13 @@ import type { ComponentProps, ReactNode } from "react";
 import { useReturnFocus } from "../hooks/use-return-focus";
 import { useI18n } from "../lib/i18n";
 import { Icon, XIcon } from "../lib/icons";
-import { keepBodyPut, useLayerBody } from "../lib/layer";
-import { focusRingInset, scrollbarHidden } from "../lib/styles";
+import { keepBodyPut, shadeProps, useLayerBody } from "../lib/layer";
+import {
+  focusRingInset,
+  scrollbarHidden,
+  tapRows,
+  watchRows,
+} from "../lib/styles";
 import {
   colors,
   duration,
@@ -199,13 +204,6 @@ const INSET = sizes.sheetPadding;
 // A sheet's own look; what it shares with a Dialog (the panel's ground and type, the description,
 // the body, the footer) comes from dialogStyles.
 const styles = stylex.create({
-  // The shade over the page. UI SDK sets its opacity as the panel moves.
-  overlay: {
-    position: "fixed",
-    inset: 0,
-    backgroundColor: colors.dialogScrim,
-  },
-
   // The panel: the window's height, sheet-width wide, a little off the window's edges with every
   // corner rounded, the same inset on a phone from both sides as from the top and foot.
   panel: {
@@ -285,6 +283,9 @@ const styles = stylex.create({
     insetBlockStart: `calc((${sizes.sheetHeadHeight} - ${sizes.controlSm}) / 2)`,
     insetInlineEnd: `calc((${sizes.sheetHeadHeight} - ${sizes.controlSm}) / 2)`,
     display: "flex",
+    // Drawn in the corner, away from the parts it follows in the page: its touch target reaches
+    // the full 44px towards them (tapTarget).
+    "--tap-room-inline": sizes.tapTarget,
   },
 });
 
@@ -340,10 +341,7 @@ export const SheetContent = ({
   }, [setSide, side]);
   return (
     <>
-      <BackdropPrimitive
-        render={<div data-slot="sheet-overlay" />}
-        {...stylex.props(styles.overlay)}
-      />
+      <BackdropPrimitive {...shadeProps("sheet-overlay")} />
       {/* The panel keeps UI SDK's own slot, drawer-content: named otherwise through its render
           element, UI SDK's focus trap no longer holds Tab inside it. */}
       <ContentPrimitive
@@ -474,10 +472,12 @@ export interface SheetFooterProps extends PartProps {
  */
 export const SheetFooter = ({ children, style }: SheetFooterProps) => (
   <div
+    ref={watchRows}
     data-slot="sheet-footer"
     {...stylex.props(
       layerFooterMarker,
       dialogStyles.footer,
+      tapRows,
       styles.footer,
       style
     )}

@@ -48,7 +48,14 @@ const layout = stylex.create({
     width: "100%",
     maxWidth: `calc(${size.popupWidth} * 1.8)`,
   },
-  questions: { display: "flex", flexWrap: "wrap", gap: space["2"] },
+  // Wrapped onto lines: each button's touch target reaches the middle of the gap to the next.
+  questions: {
+    display: "flex",
+    flexWrap: "wrap",
+    gap: space["2"],
+    "--tap-room-inline": `calc(${space["2"]} / 2)`,
+    "--tap-room-block": `calc(${space["2"]} / 2)`,
+  },
 });
 
 /** A button for each question; the one being read is pressed. */

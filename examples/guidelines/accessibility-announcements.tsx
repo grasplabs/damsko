@@ -33,9 +33,9 @@ const styles = stylex.create({
   },
 });
 
-// What the page's one live region says, in the order it said it (lib announce, `data-slot=
-// "live-region"`), where every part speaks: the message's Writing and Answer ready, and the answer's
-// sentences. Kept here, outside React, as its words change; cleared when the answer starts again.
+// What the page's polite live region says, in the order it said it (lib announce, the page's one
+// pair of regions, UI SDK's), where every part speaks: the message's Writing and Answer ready, and
+// the answer's sentences. Kept here, outside React, as its words change; cleared when the answer starts again.
 const said: string[] = [];
 let last = "";
 let snapshot = "";
@@ -44,7 +44,7 @@ const listen = (changed: () => void) => {
   const hear = () => {
     const region =
       document
-        .querySelector('[data-slot="live-region"]')
+        .querySelector('[data-ui-sdk-announcer=""]')
         ?.textContent?.trim() ?? "";
     if (region !== last && region !== "") {
       said.push(region);

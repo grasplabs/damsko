@@ -1,7 +1,12 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
-import { fixedTime, hasFocusRing, openExample } from "./example.ts";
+import {
+  fixedTime,
+  hasFocusRing,
+  listenToLiveRegions,
+  openExample,
+} from "./example.ts";
 
 test.use({ permissions: ["clipboard-read", "clipboard-write"] });
 
@@ -13,12 +18,14 @@ const command = "shadcn@4.23.0 add @damsko/button";
 test("a press on the button copies the value and says so once", async ({
   page,
 }) => {
+  const said = await listenToLiveRegions(page);
   await openExample(page, "snippet", "basic");
   await page.getByRole("button", { name: "Copy the install command" }).click();
   await expect.poll(async () => await clipboard(page)).toContain(command);
-  await expect(
-    page.getByRole("status").filter({ hasText: /^Copied$/u })
-  ).toHaveCount(1);
+  await expect.poll(said).toContain("Copied");
+  // A second time would come a message's hold (400ms) after the first.
+  await page.waitForTimeout(600);
+  expect(await said()).toStrictEqual(["Copied"]);
 });
 
 test("a press on the value copies it too", async ({ page }) => {

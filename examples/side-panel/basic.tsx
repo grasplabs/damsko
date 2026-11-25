@@ -118,31 +118,28 @@ export default function SidePanelBasic() {
               </Button>
             }
           >
-            <ItemGroup>
-              {sources.map((source, index) => (
-                <Fragment key={source.name}>
-                  {index > 0 && <ItemSeparator />}
-                  <Item size="xs">
-                    <ItemMedia>
-                      <Icon icon={source.icon} />
-                    </ItemMedia>
-                    <ItemContent>
-                      <ItemTitle>
-                        {source.name}
-                        <ItemDetail>{source.kind}</ItemDetail>
-                      </ItemTitle>
-                    </ItemContent>
-                    <ItemActions showOnHover>
-                      <Button
-                        variant="ghost"
-                        size="icon-xs"
-                        aria-label={`Remove ${source.name}`}
-                      >
-                        <Icon icon={TrashIcon} />
-                      </Button>
-                    </ItemActions>
-                  </Item>
-                </Fragment>
+            <ItemGroup separated>
+              {sources.map((source) => (
+                <Item key={source.name} size="xs">
+                  <ItemMedia>
+                    <Icon icon={source.icon} />
+                  </ItemMedia>
+                  <ItemContent>
+                    <ItemTitle>
+                      {source.name}
+                      <ItemDetail>{source.kind}</ItemDetail>
+                    </ItemTitle>
+                  </ItemContent>
+                  <ItemActions showOnHover>
+                    <Button
+                      variant="ghost"
+                      size="icon-xs"
+                      aria-label={`Remove ${source.name}`}
+                    >
+                      <Icon icon={TrashIcon} />
+                    </Button>
+                  </ItemActions>
+                </Item>
               ))}
             </ItemGroup>
           </SidePanelSection>

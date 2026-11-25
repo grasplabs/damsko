@@ -360,6 +360,8 @@ const styles = stylex.create({
     display: "inline-flex",
     alignItems: "center",
     gap: space["1"],
+    // Each control's touch target reaches the middle of the gap to the next (tapTarget).
+    "--tap-room-inline": `calc(${space["1"]} / 2)`,
     flexShrink: 0,
   },
   // With no badge before them the buttons take the row's end themselves.

@@ -10,6 +10,9 @@ const layout = stylex.create({
     display: "flex",
     flexWrap: "wrap",
     gap: space["2"],
+    // A badge's × stands at its end, the next badge's at that one's far end: room for a whole
+    // touch target between them.
+    "--tap-room-inline": size.tapTarget,
     justifyContent: "center",
     minHeight: size.badgeLabelHeight,
   },

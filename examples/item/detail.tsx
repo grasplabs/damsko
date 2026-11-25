@@ -19,7 +19,7 @@ const layout = stylex.create({
 export default function ItemWithDetail() {
   return (
     <div {...stylex.props(layout.box)}>
-      <ItemGroup aria-label="Members">
+      <ItemGroup separated aria-label="Members">
         <Item size="xs">
           <ItemMedia align="center">
             <Avatar name="Anna de Vries" size="xs" decorative>
@@ -34,7 +34,6 @@ export default function ItemWithDetail() {
             <ItemDescription>anna@northwind.example</ItemDescription>
           </ItemContent>
         </Item>
-        <ItemSeparator />
         <Item size="xs">
           <ItemMedia align="center">
             <Avatar name="Ravi Menon" size="xs" decorative>

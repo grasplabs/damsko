@@ -11,13 +11,15 @@
 //     <ItemActions><Button size="sm">Open</Button></ItemActions>
 //   </Item>
 //
-// A row that goes somewhere or does one thing: `href` makes it a link, with a chevron at its end;
-// `onClick` makes it one button; `asChild` makes the caller's element (a router's link) its press
-// (`<Item asChild><Link to="/billing">…</Link></Item>`). The press is always the title, stretched
-// over the whole row and described by the description, so ItemActions anywhere in the row stand
-// above it as their own stops for the keyboard, never inside the link or the button.
+// A row that goes somewhere or does one thing: `href` makes it a link, with a chevron at its end
+// unless `showChevron={false}`; `onClick` makes it one button; `asChild` makes the caller's element
+// (a router's link) its press (`<Item asChild><Link to="/billing">…</Link></Item>`). The press is
+// always the title, stretched over the whole row and described by the description, so ItemActions
+// anywhere in the row stand above it as their own stops for the keyboard, never inside the link or
+// the button. `disabled` puts the press out of use, dimmed as a disabled Button is.
 //
-// In an ItemGroup each Item is a list item; an ItemSeparator between two draws the page's hairline.
+// In an ItemGroup each Item is a list item; an ItemSeparator between two draws the page's hairline,
+// and `separated` draws it between every two.
 // An ItemGrid lays Items out as tiles. Before its data, `loading` keeps the row's boxes: a part
 // given empty waits as a quiet placeholder of its own size. In a narrow row the actions drop under
 // the words, on the row's end edge, by the row's own width.
@@ -97,6 +99,12 @@ export interface ItemProps {
   /** Where the whole row leads: it is one link, with a chevron at its end. */
   href?: string;
   /**
+   * The chevron at the end of a row that is a link (`href` or `asChild`). Leave it out where every
+   * row of a list plainly opens its own page (a list of sources, a page's sections).
+   * @default true
+   */
+  showChevron?: boolean;
+  /**
    * Makes the row one button: a choice ("Acme AI, European Union"), pressed by pointer, Enter or
    * Space anywhere on the row. Named by its title alone; its description is said after it. No
    * chevron: it chooses.
@@ -109,6 +117,13 @@ export interface ItemProps {
    * @default false
    */
   asChild?: boolean;
+  /**
+   * Out of use, for a row that is a link or a button (`href`, `onClick` or `asChild`): dimmed as a
+   * disabled Button is, with no light under a pointer, said as unavailable and still reached by Tab
+   * so it can be read; a click, a middle click, Enter or Space does nothing. Say why near it.
+   * @default false
+   */
+  disabled?: boolean;
   /**
    * Before its data: each part given empty waits as a quiet placeholder of its own size (an
    * ItemMedia its square or its icon's box, an ItemTitle its line, an ItemDescription its line), so
@@ -124,6 +139,13 @@ export interface ItemProps {
 export interface ItemGroupProps {
   /** The Items, in the order they are read, with an ItemSeparator between two for a hairline. */
   children: ReactNode;
+  /**
+   * The page's hairline between every two rows, for plain rows in a long list; outlined or muted
+   * rows stand apart by the gap instead. The list keeps 4px at its top and foot whatever its count,
+   * a list of one row too (none in a side panel's card).
+   * @default false
+   */
+  separated?: boolean;
   /** What the list holds, when no heading above it says ("Recent projects"). */
   "aria-label"?: string;
   /** The id of a heading that names it, in place of `aria-label`. */
@@ -308,6 +330,8 @@ const styles = stylex.create({
   },
   // A row that holds a stretched press: the press's target covers it.
   stretched: { position: "relative" },
+  // Out of use: dimmed as a disabled Button is, with no light under a pointer.
+  disabled: { opacity: sizes.opacityDisabled, cursor: "not-allowed" },
   // A row that answers a pointer lights under it, as a ghost button does.
   link: {
     cursor: "pointer",
@@ -504,6 +528,8 @@ const styles = stylex.create({
     flexShrink: 0,
     alignItems: "center",
     gap: space["2"],
+    // Each control's touch target reaches the middle of the gap to the next (tapTarget).
+    "--tap-room-inline": `calc(${space["2"]} / 2)`,
     marginInlineStart: "auto",
   },
   // Hidden only to the eye, never to the keyboard or a screen reader: focus shows them.
@@ -549,7 +575,10 @@ const styles = stylex.create({
     fontWeight: "inherit",
     textAlign: "start",
     textDecoration: "none",
-    cursor: "pointer",
+    cursor: {
+      default: "pointer",
+      ":is([aria-disabled=true])": "not-allowed",
+    },
     outline: "none",
     "::after": {
       content: '""',
@@ -617,6 +646,19 @@ const styles = stylex.create({
         default: space["1"],
         [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: 0,
       },
+    },
+  },
+  // A list given `separated` keeps a hairline list's rhythm whatever its count, so a list of one
+  // row has the same 4px at its top and foot as a longer one, as the original's.
+  separated: {
+    rowGap: {
+      default: space["1"],
+      [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: 0,
+    },
+    columnGap: "normal",
+    paddingBlock: {
+      default: space["1"],
+      [stylex.when.ancestor(":is(*)", sidePanelCardMarker)]: 0,
     },
   },
   // A list's row: after a hairline, it tells its Item so (itemVars.lineAbove).
@@ -714,7 +756,30 @@ interface Press {
   onClick?: MouseEventHandler<HTMLElement>;
   element?: ReactElement<{ children?: ReactNode }>;
   active: boolean;
+  disabled: boolean;
 }
+
+/** Stops a press of a row out of use: its own action, a link's way and a router's. */
+const refuse = (event: { preventDefault: () => void }) => {
+  event.preventDefault();
+};
+
+/**
+ * A row out of use, whatever its press: said unavailable and still a stop for Tab, so its name and
+ * its reason can be read; a click, a middle click, Enter or Space does nothing and goes nowhere.
+ */
+const outOfUse = {
+  "aria-disabled": true,
+  onClick: refuse,
+  onAuxClick: refuse,
+};
+/** An element's attributes the DOM draws on any element: ARIA, data, its id, class, style, title, language and direction. */
+const attributesOf = (props: object): Record<string, unknown> =>
+  Object.fromEntries(
+    Object.entries(props).filter(([key]) =>
+      /^(?:aria-|data-|(?:id|className|style|title|lang|dir)$)/u.test(key)
+    )
+  );
 const TitlePress = createContext<Press | undefined>(undefined);
 // Whether the Item stands in an ItemGroup or an ItemGrid: then it is a list item.
 const InList = createContext(false);
@@ -805,14 +870,14 @@ const TitleWords = ({ children }: { children: ReactNode }): ReactNode => {
   if (press === undefined) {
     return children;
   }
-  const { id, href, onClick, element, active } = press;
+  const { id, href, onClick, element, active, disabled } = press;
   const own = {
     "data-row-press": "",
     "aria-describedby": `${id}-description`,
     ...stylex.props(styles.press, dense && styles.pressXs),
   };
   // The caller's element (a router's link) carries the title alone; the row holds its other parts.
-  if (element !== undefined) {
+  if (element !== undefined && !disabled) {
     return createElement(
       element.type,
       mergeProps(
@@ -822,13 +887,21 @@ const TitleWords = ({ children }: { children: ReactNode }): ReactNode => {
       children
     );
   }
-  if (href !== undefined) {
+  if (href !== undefined || element !== undefined) {
+    // Out of use a link has no address, so nothing (a middle click, the menu's "Open in new tab")
+    // can follow it: still a link, and a stop for Tab. A router's link is then this plain one, as
+    // its own element would draw its address whatever it is given; it keeps the caller's attributes
+    // (a name, a class, an id, a test id), never its address or its handlers.
     return (
       <a
-        href={href}
-        aria-current={active ? "page" : undefined}
-        onClick={onClick}
-        {...own}
+        href={disabled ? undefined : href}
+        role={disabled ? "link" : undefined}
+        tabIndex={disabled ? 0 : undefined}
+        {...mergeProps(
+          { ...own, "aria-current": active ? "page" : undefined },
+          element === undefined ? {} : attributesOf(element.props),
+          disabled ? outOfUse : { onClick }
+        )}
       >
         {children}
       </a>
@@ -838,7 +911,7 @@ const TitleWords = ({ children }: { children: ReactNode }): ReactNode => {
     <button
       type="button"
       aria-current={active ? "true" : undefined}
-      onClick={onClick}
+      {...(disabled ? outOfUse : { onClick })}
       {...own}
     >
       {children}
@@ -985,6 +1058,7 @@ const lookOf = (
     variant = "default",
     size = "default",
     active = false,
+    disabled = false,
     wraps,
     style,
   }: RowShape,
@@ -995,12 +1069,9 @@ const lookOf = (
     styles.item,
     roomOf[size],
     looks[variant],
-    pressed && [
-      styles.link,
-      linkLooks[variant],
-      styles.stretched,
-      styles.focusBand,
-    ],
+    pressed && [styles.stretched, styles.focusBand],
+    pressed && !disabled && [styles.link, linkLooks[variant]],
+    pressed && disabled && styles.disabled,
     wraps && styles.wraps,
     active && styles.active,
     style
@@ -1019,7 +1090,14 @@ const PressRow = ({
   ...shape
 }: RowShape & { element: Press["element"] }) => {
   const id = useId();
-  const { href, onClick, active = false, loading = false } = shape;
+  const {
+    href,
+    onClick,
+    active = false,
+    disabled = false,
+    showChevron = true,
+    loading = false,
+  } = shape;
   const linked = href !== undefined && href !== "";
   const press: Press = {
     id,
@@ -1027,6 +1105,7 @@ const PressRow = ({
     onClick,
     element,
     active,
+    disabled,
   };
   return (
     <div
@@ -1038,7 +1117,7 @@ const PressRow = ({
       <TitlePress value={press}>
         <Parts {...shape} />
       </TitlePress>
-      {(linked || element !== undefined) && <Chevron />}
+      {(linked || element !== undefined) && showChevron && <Chevron />}
     </div>
   );
 };
@@ -1090,28 +1169,6 @@ export const Item = (props: ItemProps) => {
   );
 };
 
-/** A list of Items, one per row. */
-export const ItemGroup = ({
-  children,
-  "aria-label": label,
-  "aria-labelledby": labelledBy,
-  stack = false,
-  style,
-}: ItemGroupProps) => (
-  <InList value>
-    <ul
-      // oxlint-disable-next-line jsx-a11y/no-redundant-roles -- Safari drops a list's role once its markers are hidden
-      role="list"
-      aria-label={label}
-      aria-labelledby={labelledBy}
-      data-slot="item-group"
-      {...stylex.props(styles.group, stack && styles.stack, style)}
-    >
-      {children}
-    </ul>
-  </InList>
-);
-
 /** The page's hairline between two Items. */
 export const ItemSeparator = ({ style }: ItemSeparatorProps) =>
   use(InList) ? (
@@ -1127,6 +1184,45 @@ export const ItemSeparator = ({ style }: ItemSeparatorProps) =>
       <Separator decorative />
     </div>
   );
+
+/** The rows, the page's hairline between every two: an ItemSeparator before each but the first. */
+const separate = (children: ReactNode) =>
+  listOf(children).map((child, at) => (
+    <Fragment
+      key={isValidElement(child) && child.key !== null ? child.key : `@${at}`}
+    >
+      {at > 0 && <ItemSeparator />}
+      {child}
+    </Fragment>
+  ));
+
+/** A list of Items, one per row. */
+export const ItemGroup = ({
+  children,
+  separated = false,
+  "aria-label": label,
+  "aria-labelledby": labelledBy,
+  stack = false,
+  style,
+}: ItemGroupProps) => (
+  <InList value>
+    <ul
+      // oxlint-disable-next-line jsx-a11y/no-redundant-roles -- Safari drops a list's role once its markers are hidden
+      role="list"
+      aria-label={label}
+      aria-labelledby={labelledBy}
+      data-slot="item-group"
+      {...stylex.props(
+        styles.group,
+        separated && styles.separated,
+        stack && styles.stack,
+        style
+      )}
+    >
+      {separated ? separate(children) : children}
+    </ul>
+  </InList>
+);
 
 /** Items as tiles, as many per row as fit. */
 export const ItemGrid = ({

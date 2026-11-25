@@ -127,6 +127,9 @@ const styles = stylex.create({
     flexWrap: "wrap",
     alignItems: "center",
     gap: space[1],
+    // Each tag's × reaches the middle of the gap to its neighbours, beside it and on the next line.
+    "--tap-room-inline": `calc(${space[1]} / 2)`,
+    "--tap-room-block": `calc(${space[1]} / 2)`,
     boxSizing: "border-box",
     width: "100%",
     minWidth: 0,
