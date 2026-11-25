@@ -1425,6 +1425,18 @@ const cornerOf = async (locator: Locator): Promise<string> =>
 const squircle = (radius: string): RegExp =>
   new RegExp(`^${radius} (?:squircle|none)$`, "u");
 
+// A radius as this engine draws it: a squircle corner's own, or its plain-radius stand-in where
+// the engine draws no squircle (tokens.css), read from the tokens on a probe.
+const drawn = async (page: Page, radius: string): Promise<string> =>
+  await page.evaluate((value) => {
+    const probe = document.createElement("div");
+    probe.style.borderTopLeftRadius = value;
+    document.body.append(probe);
+    const { borderTopLeftRadius } = getComputedStyle(probe);
+    probe.remove();
+    return borderTopLeftRadius;
+  }, radius);
+
 test("a floating sidebar nests round its rows in the squircle; the page card beside an inset one takes its 12px corner in the squircle", async ({
   page,
 }) => {
@@ -1448,7 +1460,7 @@ test("a floating sidebar nests round its rows in the squircle; the page card bes
       ];
     });
   // A row's 16px corner plus the 8px the sidebar keeps round its rows.
-  expect(floating?.[0]).toBe("24px");
+  expect(floating?.[0]).toBe(await drawn(page, "var(--damsko-radius-2xl)"));
   expect(floating?.[1]).not.toBe("round");
   expect(floating?.[1]).not.toBe("superellipse(1)");
 
@@ -1479,7 +1491,9 @@ test("a row's action takes the original's corner, a small icon button's: 14px, h
   await page.setViewportSize({ width: 1440, height: 900 });
   await openExample(page, "sidebar", "actions");
   const more = page.getByRole("button", { name: "More for Supplier invoices" });
-  expect(await cornerOf(more)).toMatch(squircle("14px"));
+  expect(await cornerOf(more)).toMatch(
+    squircle(await drawn(page, "min(var(--damsko-radius-xl), 14px)"))
+  );
 });
 
 test.describe("on a narrow window", () => {
