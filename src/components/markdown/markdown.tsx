@@ -1030,8 +1030,14 @@ const draw: { [T in Node["type"]]?: Draw<T> } = {
           </Code.CodeBlockActions>
         </Code.CodeBlockHeader>
         {/* `false` never folds, yet still draws at most 2,000 lines: a model's code has no bound. */}
+        {/* Its lines numbered from `startLine=N` on, or not at all with `noLineNumbers`, as Streamdown reads a fence's words after its language. */}
         <Code.CodeBlockContent
-          lineNumbers
+          lineNumbers={!/\bnoLineNumbers\b/u.test(node.meta ?? "")}
+          startLine={
+            Number(
+              /\bstartLine=(?<at>\d+)/u.exec(node.meta ?? "")?.groups?.at ?? 1
+            ) || 1
+          }
           maxLines={
             shared.codeMaxLines === false
               ? Number.POSITIVE_INFINITY
