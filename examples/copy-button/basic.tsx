@@ -3,7 +3,12 @@ import { space } from "@grasp-os/ui/lib/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
 
 const layout = stylex.create({
-  row: { display: "flex", alignItems: "center", gap: space[2] },
+  row: {
+    display: "flex",
+    alignItems: "center",
+    gap: space[2],
+    "--tap-room-inline": `calc(${space[2]} / 2)`,
+  },
 });
 
 const code = `import { Badge } from "@grasp-os/ui/components/badge";

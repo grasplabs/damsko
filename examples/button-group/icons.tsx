@@ -23,6 +23,8 @@ const layout = stylex.create({
     display: "flex",
     flexWrap: "wrap",
     gap: space[3],
+    // Each control's touch target reaches the middle of the gap to the next (tapTarget).
+    "--tap-room-inline": `calc(${space[3]} / 2)`,
     justifyContent: "center",
   },
   sample: {

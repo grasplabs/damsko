@@ -154,6 +154,13 @@ useDictation({ listening, onPhrase: (phrase) => controller.insert(phrase) });
 
 <Stage path="prompt-input/voice" label="A spoken conversation" />
 
+In a `compact` card the conversation is one row, 56px tall as the card at rest: the time (or the other voice's mark), the words on the row's one line with the latest in view, the field, the microphone and the close button. The field has the row until words come, then keeps a short band beside them, and on a narrow card gives way to them. A `note` stands in the field's place, in the band, which then keeps its room on a narrow card too.
+
+<Stage
+  path="prompt-input/voice-compact"
+  label="A spoken conversation in one row"
+/>
+
 The field is one canvas: a body of the brand's light that swells with the voice in place. `sample` is the product's reading of the sound now, read at each frame with no render; `level` does for a value already in state. A noise gate, the speaker's own loudness, an envelope and a spring stand between reading and drawing. With reduced motion it is a still band; in forced colours it takes the system's text colour. Its code is fetched as the first voice starts, and `PromptInputSpeechButton` draws the same field. A stretch not made out is a `note` under the words.
 
 What stops a voice is a `PromptInputBanner`: the card is back at its text, and the banner says why at once, with Try again where another go can work.

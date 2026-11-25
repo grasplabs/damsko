@@ -669,6 +669,7 @@ export const size = stylex.defineConsts({
   attachmentThumb: "var(--damsko-attachment-thumb)",
   promptInputMentionWidth: "var(--damsko-prompt-input-mention-width)",
   promptInputFieldMin: "var(--damsko-prompt-input-field-min)",
+  promptInputVoiceBand: "var(--damsko-prompt-input-voice-band)",
   promptInputPlaceholderMin: "var(--damsko-prompt-input-placeholder-min)",
   promptInputGlassBlur: "var(--damsko-prompt-input-glass-blur)",
   promptInputLightOpacity: "var(--damsko-prompt-input-light-opacity)",

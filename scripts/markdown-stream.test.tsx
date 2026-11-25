@@ -218,6 +218,104 @@ describe("while written, words once shown stay shown", () => {
   );
 });
 
+// A paragraph, list items, a table's cells and fenced code, no word in them longer than 32 characters.
+const written = `What changed this week, team by team.
+
+- Support closed the most requests.
+- Sales has the fewest open.
+
+| Team | Closed | Open |
+| :-- | --: | --: |
+| Support | 58 | 4 |
+| Sales | 33 | 2 |
+
+\`\`\`python
+def closed(requests):
+    return sum(1 for request in requests if request.closed_at)
+\`\`\`
+
+That is all.`;
+
+describe("while written a character at a time, each word comes whole", () => {
+  test("no word drawn in a paragraph, a list item, a table's cell or fenced code ever grows", () => {
+    vi.useFakeTimers({ toFake: ["performance"] });
+    const { box, root, render } = live();
+    const seen = new Map<Element, string[]>();
+    const grown: string[] = [];
+    const places = new Set<string>();
+    for (let at = 1; at < written.length; at += 1) {
+      render(<Markdown streaming>{written.slice(0, at)}</Markdown>);
+      for (const block of box.querySelectorAll(
+        "p, li, td, [data-slot=code-block-line]"
+      )) {
+        const words = block.textContent.split(/\s+/u).filter(Boolean);
+        const before = seen.get(block) ?? [];
+        const changed = before.findIndex(
+          (word, index) => words[index] !== word
+        );
+        if (changed !== -1) {
+          grown.push(`${before[changed]} to ${words[changed]} @${at}`);
+        }
+        seen.set(block, words);
+        if (words.length > 0) {
+          places.add(block.localName);
+        }
+      }
+    }
+    act(() => {
+      root.unmount();
+    });
+    vi.useRealTimers();
+    expect(grown).toStrictEqual([]);
+    expect([...places].toSorted()).toStrictEqual(["li", "p", "span", "td"]);
+  });
+
+  test("the word at the end shows once nothing more has come for a quarter second, and stays shown", () => {
+    vi.useFakeTimers();
+    const { box, root, render } = live();
+    render(<Markdown streaming>Waiting on the supp</Markdown>);
+    expect(box.textContent).toBe("Waiting on the");
+    act(() => {
+      vi.advanceTimersByTime(249);
+    });
+    expect(box.textContent).toBe("Waiting on the");
+    act(() => {
+      vi.advanceTimersByTime(1);
+    });
+    expect(box.textContent).toBe("Waiting on the supp");
+    // The rest of that word waits for its end in turn, so it grows once, not a letter at a time.
+    render(<Markdown streaming>Waiting on the suppl</Markdown>);
+    expect(box.textContent).toBe("Waiting on the supp");
+    render(<Markdown streaming>Waiting on the supplier to</Markdown>);
+    expect(box.textContent).toBe("Waiting on the supplier");
+    act(() => {
+      root.unmount();
+    });
+    vi.useRealTimers();
+  });
+
+  test("a run longer than 32 characters comes 32 at a time, past 256 as it comes, and nothing waits once it is written", () => {
+    vi.useFakeTimers({ toFake: ["performance"] });
+    const text = "a=1;b=2;".repeat(40);
+    const { box, root, render } = live();
+    const held: number[] = [];
+    for (let at = 1; at <= text.length; at += 1) {
+      render(<Markdown streaming>{text.slice(0, at)}</Markdown>);
+      held.push(at - box.textContent.length);
+    }
+    render(<Markdown>{text}</Markdown>);
+    expect(box.textContent).toBe(text);
+    act(() => {
+      root.unmount();
+    });
+    vi.useRealTimers();
+    expect(Math.max(...held)).toBe(31);
+    expect(held).toStrictEqual(
+      held.map((_, at) => (at + 1 < 256 ? (at + 1) % 32 : 0))
+    );
+  });
+});
+
 describe("a block that takes long to read is read again as often as a fifth of the time allows", () => {
   test(
     "a small one at every chunk; a big one once four times its last read has passed, chunk or not",

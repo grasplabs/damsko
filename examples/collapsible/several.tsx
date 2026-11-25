@@ -6,7 +6,14 @@ import {
 import * as stylex from "@stylexjs/stylex";
 
 const layout = stylex.create({
-  stack: { display: "grid", gap: 8, width: "100%", maxWidth: 300 },
+  stack: {
+    display: "grid",
+    gap: 8,
+    // On a touch screen each control's target reaches the middle of the gap to the next.
+    "--tap-room-block": "4px",
+    width: "100%",
+    maxWidth: 300,
+  },
 });
 
 // Each opens on its own; for a set where one opening closes the others, use an accordion.

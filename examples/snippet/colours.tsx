@@ -3,7 +3,13 @@ import { space } from "@grasp-os/ui/lib/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
 
 const layout = stylex.create({
-  list: { display: "grid", justifyItems: "start", gap: space[2] },
+  list: {
+    display: "grid",
+    justifyItems: "start",
+    gap: space[2],
+    // On a touch screen each control's target reaches the middle of the gap to the next.
+    "--tap-room-block": `calc(${space[2]} / 2)`,
+  },
 });
 
 const tokens = ["--damsko-mint", "--damsko-foreground", "--damsko-background"];

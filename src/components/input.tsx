@@ -37,7 +37,7 @@ import { useRunsLong } from "../hooks/use-runs-long";
 import { useI18n } from "../lib/i18n";
 import { EyeIcon, EyeOffIcon, Icon } from "../lib/icons";
 import type { IconData } from "../lib/icons";
-import { focusField, focusRing, inputStyles } from "../lib/styles";
+import { focusField, focusRing, inputStyles, tapTarget } from "../lib/styles";
 import {
   colors,
   duration,
@@ -133,7 +133,6 @@ export interface InputProps extends Omit<
 
 // ---- The look --------------------------------------------------------------------------------------
 
-const COARSE = media.pointerCoarse;
 const FORCED = media.forcedColors;
 const HOVER = media.hover;
 const TYPING = media.maxSmOrCoarse;
@@ -256,12 +255,6 @@ const sizeStyles = {
   default: inputStyles.default,
   lg: inputStyles.lg,
 } as const;
-const targetStyles = {
-  sm: inputStyles.targetSm,
-  default: inputStyles.targetDefault,
-  lg: inputStyles.targetLg,
-} as const;
-
 /** Input, with the name of its box: Input's own, or SecretInput's. */
 const TextInput = ({
   slot,
@@ -291,10 +284,7 @@ const TextInput = ({
       render={<div data-slot={slot} />}
       {...stylex.props(inputStyles.box, style)}
     >
-      <span
-        aria-hidden="true"
-        {...stylex.props(inputStyles.target, targetStyles[size])}
-      />
+      <span aria-hidden="true" {...stylex.props(tapTarget)} />
       {icon && (
         <span aria-hidden="true" {...stylex.props(styles.icon)}>
           <Icon icon={icon} />
@@ -413,13 +403,13 @@ const passwordStyles = stylex.create({
   toggleSm: { width: `calc(${sizes.controlSm} - 2 * ${space[1]})` },
   toggleDefault: { width: `calc(${sizes.controlDefault} - 2 * ${space[1]})` },
   toggleLg: { width: `calc(${sizes.controlLg} - 2 * ${space[1]})` },
-  // A finger needs 44px around the button too, centred on it as the button is set in.
+  // With a pointer, a press anywhere in the end square presses the button set in it. On a touch
+  // screen it keeps to its own box (tapTarget): it stands inside the field's, and a target past it
+  // would take the field's presses.
   toggleTarget: {
-    position: "absolute",
-    inset: {
-      default: `calc(-1 * ${space[1]})`,
-      [COARSE]: `calc((100% - ${sizes.tapTarget}) / 2)`,
-    },
+    "--tap-rest-inline": `calc(-1 * ${space[1]})`,
+    "--tap-rest-block": `calc(-1 * ${space[1]})`,
+    "--tap-reach": "0px",
   },
 });
 
@@ -454,10 +444,7 @@ export const PasswordInput = ({
       autoComplete={autoComplete}
       {...stylex.props(inputStyles.box, style)}
     >
-      <span
-        aria-hidden="true"
-        {...stylex.props(inputStyles.target, targetStyles[size])}
-      />
+      <span aria-hidden="true" {...stylex.props(tapTarget)} />
       <PasswordInputControl
         aria-label={ariaLabel}
         placeholder={placeholder}
@@ -492,7 +479,7 @@ export const PasswordInput = ({
           <>
             <span
               aria-hidden="true"
-              {...stylex.props(passwordStyles.toggleTarget)}
+              {...stylex.props(tapTarget, passwordStyles.toggleTarget)}
             />
             <Icon
               icon={state.visible ? EyeOffIcon : EyeIcon}

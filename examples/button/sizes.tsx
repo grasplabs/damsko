@@ -7,7 +7,14 @@ import {
   PlusIcon,
   SettingsIcon,
 } from "@grasp-os/ui/lib/icons";
+import { space } from "@grasp-os/ui/lib/tokens.stylex";
+import * as stylex from "@stylexjs/stylex";
 import { useState } from "react";
+
+// The frame sets the buttons a step apart; each one's touch target reaches the middle of the gap.
+const layout = stylex.create({
+  row: { display: "contents", "--tap-room-inline": `calc(${space[3]} / 2)` },
+});
 
 // Stand-in for a real request: a moment's work that succeeds.
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -18,7 +25,7 @@ const work = () => wait(900);
 export default function ButtonSizes() {
   const [toast] = useState(() => createToaster());
   return (
-    <>
+    <div {...stylex.props(layout.row)}>
       <Button
         size="icon-xs"
         variant="ghost"
@@ -60,6 +67,6 @@ export default function ButtonSizes() {
         <Icon icon={SettingsIcon} />
       </Button>
       <Toaster toaster={toast} />
-    </>
+    </div>
   );
 }

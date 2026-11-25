@@ -3,6 +3,7 @@
 import { Inspector } from "@grasp-os/ui/blocks/inspector-01/inspector-01";
 import { Badge } from "@grasp-os/ui/components/badge";
 import { IconTile } from "@grasp-os/ui/components/icon-tile";
+import { Text } from "@grasp-os/ui/components/text";
 import {
   ChartColumnIcon,
   CircleUserIcon,
@@ -12,16 +13,17 @@ import {
   SettingsIcon,
   UsersIcon,
 } from "@grasp-os/ui/lib/icons";
-import { size } from "@grasp-os/ui/lib/tokens.stylex";
+import { size, space } from "@grasp-os/ui/lib/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
 
 const layout = stylex.create({
   panel: { width: "100%", maxWidth: size.sidePanelWidth, height: 560 },
   text: { margin: 0 },
+  footer: { marginInline: space.sidePanelPadding },
 });
 
 // A report's details in two views: the tabs fold into the bar as icons once the panel scrolls. Long
-// words fold with a fade and a button that opens them.
+// words fold with a fade and a button that opens them. A view has a footer of its own.
 export default function InspectorViews() {
   return (
     <Inspector
@@ -33,7 +35,16 @@ export default function InspectorViews() {
       meta={["Updated 2 days ago"]}
       views={[
         { value: "details", label: "Details", icon: SettingsIcon },
-        { value: "activity", label: "Activity", icon: ClockIcon },
+        {
+          value: "activity",
+          label: "Activity",
+          icon: ClockIcon,
+          footer: (
+            <Text as="p" size="sm" color="muted" style={layout.footer}>
+              Activity older than 90 days is removed.
+            </Text>
+          ),
+        },
       ]}
       sections={[
         {

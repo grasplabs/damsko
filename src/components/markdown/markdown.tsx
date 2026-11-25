@@ -1,8 +1,9 @@
 // Markdown: an agent's answer, drawn from micromark's syntax tree (parse.ts) with the system's parts,
 // never as HTML. While it streams, a finished block is read and drawn once, keyed by its place so
 // it never fades in again; only the block still being written is read again, made whole first, and
-// each new word fades in. Written here, a table keeps its even columns and lines break where they
-// fill (`greedy`), so nothing drawn moves; fenced code with no place is still coming in.
+// each new word fades in once it is whole. Written here, a table keeps its even columns and lines
+// break where they fill (`greedy`), so nothing drawn moves; fenced code with no place is still
+// coming in.
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
@@ -41,7 +42,7 @@ import {
   size,
   space,
 } from "../../lib/tokens.stylex";
-import { announce, safeHref } from "../../lib/utils";
+import { announce, safeHref, useReducedMotion } from "../../lib/utils";
 import type { LayoutStyle } from "../../lib/utils";
 import { iconVars, motionVars } from "../../lib/vars.stylex";
 import * as Code from "../code-block";
@@ -108,7 +109,7 @@ export type MarkdownComponents = {
 export interface MarkdownProps {
   /** The Markdown: the agent's answer, or as much of it as has arrived. */
   children: string;
-  /** Still being written: a half-written end is drawn whole, each new word fades in. @default false */
+  /** Still being written: a half-written end is drawn whole, each new word fades in once whole. @default false */
   streaming?: boolean;
   /** Cut off part way: the end is made whole as while streaming, so no raw mark shows. @default false */
   truncated?: boolean;
@@ -756,10 +757,14 @@ const anchor = (node: Linked, shared: Shared, kids: Kids) => (
       : (node.alt ?? "")}
   </Anchor>
 );
-// A word with what follows it; in scripts written without spaces (Chinese, Japanese, Korean, and
-// their punctuation), each character, as Streamdown animates them.
-const WORDS =
-  /[\p{sc=Han}\p{sc=Hiragana}\p{sc=Katakana}\p{sc=Hangul}\u3000-\u303F\uFF00-\uFFEF]\s*|[^\s\p{sc=Han}\p{sc=Hiragana}\p{sc=Katakana}\p{sc=Hangul}\u3000-\u303F\uFF00-\uFFEF]+\s*|\s+/gu;
+// Scripts written without spaces (Chinese, Japanese, Korean, and their punctuation): each character
+// is a word, as Streamdown animates them.
+const UNSPACED = String.raw`\p{sc=Han}\p{sc=Hiragana}\p{sc=Katakana}\p{sc=Hangul}\u3000-\u303F\uFF00-\uFFEF`;
+// A word with what follows it.
+const WORDS = new RegExp(
+  String.raw`[${UNSPACED}]\s*|[^\s${UNSPACED}]+\s*|\s+`,
+  "gu"
+);
 /**
  * Words that may fade in: each its own fade while written, but not in a link (its words move into
  * the link when it is whole, and would fade again there), nor once shown. Past many words in the
@@ -1382,6 +1387,56 @@ const namesOf = (all: readonly Node[]) => {
   });
 };
 
+// The word at the end, nothing after it yet: no space, and no character of a script without spaces.
+const UNFINISHED = new RegExp(String.raw`[^\s${UNSPACED}]*$`, "u");
+// The most of one word held back: a longer run (an address, a line of minified code) comes this many
+// characters at a time.
+const LONGEST_WORD = 32;
+// How far back the word at the end is looked for: a longer run shows as it comes.
+const LOOK_BACK = 256;
+// How long the word at the end waits once nothing more comes: a stall shows it.
+const WAIT = 250;
+/**
+ * Where the text shown ends while it is written: before the word at its end, which shows once what
+ * follows it has come, so each word comes whole, fades in once and never types itself out. Found
+ * from the end, at most LOOK_BACK characters back, so it costs the same however long the answer.
+ */
+const wordsEnd = (text: string) => {
+  const word = UNFINISHED.exec(text.slice(-LOOK_BACK))?.[0].length ?? 0;
+  const cut = text.length - (word < LOOK_BACK ? word % LONGEST_WORD : 0);
+  // Never half a character written as two (outside the basic plane: emoji, rare Han).
+  return (text.codePointAt(cut - 1) ?? 0) > 0xff_ff ? cut - 1 : cut;
+};
+/**
+ * The text as it is drawn: while written, up to the end of its last whole word (wordsEnd), and all
+ * of it once nothing more has come for WAIT; written, or with reduced motion (no word fades), all
+ * of it. What has shown stays shown.
+ */
+const useWholeWords = (text: string, streaming: boolean) => {
+  const reduced = useReducedMotion();
+  // How much a wait let out; none once the text is replaced by a shorter one.
+  const [waited, setWaited] = useState(0);
+  if (waited > text.length) {
+    setWaited(0);
+  }
+  const end =
+    streaming && !reduced
+      ? Math.max(wordsEnd(text), Math.min(waited, text.length))
+      : text.length;
+  const waiting = end < text.length;
+  useEffect(() => {
+    const timer = waiting
+      ? setTimeout(() => {
+          setWaited(text.length);
+        }, WAIT)
+      : undefined;
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [text, waiting]);
+  return waiting ? text.slice(0, end) : text;
+};
+
 const NO_COMPONENTS: MarkdownComponents = {};
 export const Markdown = ({
   children,
@@ -1415,7 +1470,7 @@ export const Markdown = ({
   };
   const notesShared = { ...shared, notes: true };
   const { all, ending, tail, many, shown, definitions } = useBlocks(
-    children,
+    useWholeWords(children, streaming),
     streaming,
     truncated
   );

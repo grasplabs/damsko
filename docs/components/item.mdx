@@ -70,9 +70,15 @@ The default `ItemMedia` stands an icon bare on the title's line, with no square:
 
 ## As links
 
-With `href` the row is one link: its title is the link, stretched over the whole row, named by the title and described by the description. An `ItemSeparator` draws a hairline between two rows.
+With `href` the row is one link: its title is the link, stretched over the whole row, named by the title and described by the description. `separated` on the ItemGroup draws the page's hairline between every two rows and keeps 4px at the list's top and foot, a list of one row too; an `ItemSeparator` draws one between two.
 
 <Stage path="item/links" label="As links" />
+
+## With no chevron
+
+Where every row of a list plainly opens its own page (a page's own sections, a list of sources), `showChevron={false}` leaves the link's chevron out.
+
+<Stage path="item/sections" label="With no chevron" />
 
 ## A router's link, the open one
 
@@ -85,6 +91,12 @@ With `href` the row is one link: its title is the link, stretched over the whole
 `onClick` makes the row one button, its title stretched over the whole row, named by the title and described by the description: a provider to choose. No chevron, since it goes nowhere.
 
 <Stage path="item/choice" label="As a choice" />
+
+## Out of use
+
+`disabled` puts a row that is a button, a link or a router's link (`asChild`) out of use, the same way for each: dimmed as a disabled Button is, with no light under the pointer, and said as unavailable (`aria-disabled`). It is still reached by Tab, so its name and its reason can be read, but a click, a middle click, Enter or Space does nothing and it goes nowhere. A link has no address while out of use, a router's link neither (it is drawn as a plain link then, with the attributes given it, such as `aria-label`, `className`, `id` and `data-*`, but not its address or its handlers), so the browser's "Open in new tab" has nothing to follow. Say why near it, in its description, which is said with its name.
+
+<Stage path="item/disabled" label="Out of use" />
 
 ## Loading
 
