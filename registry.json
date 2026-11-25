@@ -2066,8 +2066,10 @@
         "remend"
       ],
       "registryDependencies": [
+        "@damsko/button",
         "@damsko/code-block",
         "@damsko/collapsible",
+        "@damsko/dropdown-menu",
         "@damsko/lib",
         "@damsko/link",
         "@damsko/separator",
