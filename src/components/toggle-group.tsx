@@ -16,7 +16,13 @@ import type { ToggleState } from "@ui-sdk/react/toggle";
 import { createContext, useContext } from "react";
 import type { ComponentProps, ReactNode } from "react";
 
-import { focusRing, segmentedStyles, tapTarget } from "../lib/styles";
+import {
+  focusRing,
+  segmentedStyles,
+  tapRows,
+  tapTarget,
+  watchRows,
+} from "../lib/styles";
 import {
   colors,
   media,
@@ -24,7 +30,7 @@ import {
   size as sizes,
   space,
 } from "../lib/tokens.stylex";
-import { className } from "../lib/utils";
+import { assignRef, className } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
 import { ringInsetMarker } from "../lib/vars.stylex";
 import { iconOnly, toggleVariants } from "./toggle";
@@ -78,8 +84,7 @@ interface ToggleGroupOwnProps {
 export type ToggleGroupProps = ToggleGroupOwnProps &
   Omit<
     ToggleGroupPrimitiveProps,
-    // The group watches its own rows (watchRows).
-    keyof ToggleGroupOwnProps | "className" | "render" | "ref"
+    keyof ToggleGroupOwnProps | "className" | "render"
   >;
 
 type TogglePrimitiveProps = ComponentProps<typeof TogglePrimitive>;
@@ -130,12 +135,8 @@ const styles = stylex.create({
     alignItems: "center",
     gap: sizes.toggleGap,
     // Each item's touch target reaches the middle of the gap to the next (tapTarget), and once the
-    // items take more than one row (watchRows), the middle of the gap to the row above or below.
+    // items take more than one row, the middle of the gap to the row above or below (tapRows).
     "--tap-room-inline": `calc(${sizes.toggleGap} / 2)`,
-    "--tap-room-block": {
-      default: null,
-      ":is([data-wrapped])": `calc(${sizes.toggleGap} / 2)`,
-    },
     boxSizing: "border-box",
     maxWidth: "100%",
   },
@@ -215,34 +216,6 @@ const sizeStyle = (size: ToggleSize) => {
   return styles.xs;
 };
 
-/**
- * Marks the group `data-wrapped` while its items take more than one row (five languages on a
- * phone), now and on each resize. Only then does an item stand above another, so only then does
- * its touch target stop at the middle of the gap between the rows: a row's target never covers the
- * next row's items, and a single row keeps its full 44px up and down.
- */
-const watchRows = (group: HTMLElement) => {
-  const measure = () => {
-    const items = [...group.children].filter(
-      (item) => item.getClientRects().length > 0
-    );
-    const first = items.at(0)?.getBoundingClientRect();
-    const last = items.at(-1)?.getBoundingClientRect();
-    group.toggleAttribute(
-      "data-wrapped",
-      first !== undefined && last !== undefined && last.top >= first.bottom
-    );
-  };
-  measure();
-  const observer = new ResizeObserver(measure);
-  observer.observe(group);
-  return () => {
-    observer.disconnect();
-  };
-};
-const watchGroup = (group: HTMLElement | null) =>
-  group === null ? undefined : watchRows(group);
-
 // The group's size, which every item in it takes.
 const GroupSize = createContext<ToggleSize>("xs");
 // Whether the items share the group's full width (fullWidth, side by side).
@@ -253,19 +226,30 @@ export const ToggleGroup = ({
   size = "xs",
   fullWidth = false,
   style,
+  ref,
   ...rest
 }: ToggleGroupProps) => {
   const upright = rest.orientation === "vertical";
+  // The caller's ref gets the group, and a group side by side watches its rows (tapRows).
+  const attach = (group: HTMLDivElement | null) => {
+    assignRef(ref, group);
+    const stop = upright || fullWidth ? undefined : watchRows(group);
+    return () => {
+      stop?.();
+      assignRef(ref, null);
+    };
+  };
   return (
     <GroupSize value={size}>
       <GroupShared value={fullWidth && !upright}>
         <ToggleGroupPrimitive
           {...rest}
-          ref={upright || fullWidth ? undefined : watchGroup}
+          ref={attach}
           data-slot="toggle-group"
           {...stylex.props(
             segmentedStyles.track,
             styles.group,
+            tapRows,
             fullWidth && styles.fullWidth,
             upright && styles.vertical,
             ringInsetMarker,

@@ -150,6 +150,9 @@ const excused = new Map<string, string>([
   ["data-table/views: Column: Report", dense],
   ["data-table/workflows: Column: Owner", dense],
   ["data-table/workflows: Column: Workflow", dense],
+  ["dialog/footer-sizes: Close", outer],
+  ["dialog/footer-sizes: Hold to stop sharing", outer],
+  ["dialog/footer-sizes: More ways", outer],
   ["diff-viewer/basic: Show 10 unchanged lines", clipped],
   ["diff-viewer/folded: Show 10 unchanged lines", clipped],
   ["diff-viewer/hunks: Show 3 unchanged lines", clipped],
@@ -696,5 +699,47 @@ for (const [component, paths] of byComponent) {
       found.push(...new Set(issues.map((issue) => `${path}: ${issue}`)));
     }
     expect(found.filter((each) => !isExcused(each))).toStrictEqual([]);
+  });
+}
+
+// A layer's footer is closed in its example: opened, its actions stand side by side, and on a
+// phone four of them wrap onto rows, each row's targets clear of the next.
+for (const { example, trigger, width, height, rows } of [
+  {
+    example: "basic",
+    trigger: "Publish report",
+    width: 820,
+    height: 1180,
+    rows: 1,
+  },
+  {
+    example: "footer-sizes",
+    trigger: "Share the report",
+    width: 390,
+    height: 844,
+    rows: 2,
+  },
+]) {
+  test(`dialog/${example}: the footer's actions, on ${rows} row(s), each take a finger, and only their own presses`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height });
+    await openExample(page, "dialog", example);
+    await page.getByRole("button", { name: trigger }).click();
+    const footer = page
+      .getByRole("dialog")
+      .locator('[data-slot="dialog-footer"]');
+    await expect(footer).toBeVisible();
+    await settled(page);
+    const tops = await footer
+      .getByRole("button")
+      .evaluateAll((actions) =>
+        actions.map((action) => Math.round(action.getBoundingClientRect().top))
+      );
+    expect(new Set(tops).size).toBe(rows);
+    const found = await page.evaluate(inThePage);
+    expect(
+      found.filter((each) => !isExcused(`dialog/${example}: ${each}`))
+    ).toStrictEqual([]);
   });
 }

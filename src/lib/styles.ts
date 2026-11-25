@@ -1109,6 +1109,12 @@ const sides = (where: (selectors: string[]) => string) => ({
 const tapStyles = stylex.create({
   target: sides(inControl),
   after: { "::after": { content: '""', ...sides(onControl) } },
+  rows: {
+    "--tap-room-block": {
+      default: null,
+      ":is([data-wrapped])": "var(--tap-room-inline)",
+    },
+  },
 });
 
 /** A control's touch target: an empty `aria-hidden` span inside it, `position: relative`. */
@@ -1116,6 +1122,40 @@ export const tapTarget = tapStyles.target;
 
 /** The same target drawn as the control's own `::after`, for a control that draws its words alone. */
 export const tapTargetAfter = tapStyles.after;
+
+/**
+ * A row of controls that wraps (a toggle group's items, a layer footer's actions): once its
+ * controls take more than one row (watchRows marks it `data-wrapped`), each target stops at the
+ * middle of the gap to the row above or below, the same room as beside it. A row that fits keeps
+ * the full 44px up and down. The row sets `--tap-room-inline` to half its gap.
+ */
+export const tapRows = tapStyles.rows;
+
+const measureRows = (row: HTMLElement) => {
+  const measure = () => {
+    const items = [...row.children].filter(
+      (item) =>
+        item.getClientRects().length > 0 &&
+        !["absolute", "fixed"].includes(getComputedStyle(item).position)
+    );
+    const first = items.at(0)?.getBoundingClientRect();
+    const last = items.at(-1)?.getBoundingClientRect();
+    row.toggleAttribute(
+      "data-wrapped",
+      first !== undefined && last !== undefined && last.top >= first.bottom
+    );
+  };
+  measure();
+  const observer = new ResizeObserver(measure);
+  observer.observe(row);
+  return () => {
+    observer.disconnect();
+  };
+};
+
+/** The ref of a row that wears `tapRows`: marks it while it wraps, now and on each resize. */
+export const watchRows = (row: HTMLElement | null) =>
+  row === null ? undefined : measureRows(row);
 
 // ---- Disclosure ---------------------------------------------------------------------------------
 //
