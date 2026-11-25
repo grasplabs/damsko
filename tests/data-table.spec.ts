@@ -343,6 +343,15 @@ test("no rows yet, loading and an error each say so in the rows' place", async (
     "Loading reports"
   );
   await expect(loading.getByRole("rowheader")).toHaveCount(0);
+  // A person's column waits as a picture an sm avatar's size, its circle whole, beside two lines.
+  const picture = await loading.evaluate((table) => {
+    const circle = table.querySelector(
+      "[data-slot=skeleton][data-variant=circular]"
+    );
+    const box = circle?.getBoundingClientRect();
+    return box === undefined ? null : { width: box.width, height: box.height };
+  });
+  expect(picture).toStrictEqual({ width: 32, height: 32 });
   const failed = page.getByRole("table", { name: "Reports, failed" });
   await expect(failed).toContainText("The reports did not load");
   await expect(failed.getByRole("button", { name: "Try again" })).toBeVisible();
