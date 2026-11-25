@@ -2810,7 +2810,6 @@
       ],
       "registryDependencies": [
         "@damsko/collapsible",
-        "@damsko/hooks",
         "@damsko/input",
         "@damsko/lib",
         "@damsko/sheet",
