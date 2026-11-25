@@ -427,29 +427,16 @@ export const paintedBox = async (
   };
 };
 
-/**
- * How far from the page's start edge (its left, or its right in a right-to-left page) a row that
- * opens, its first mark and the panel it opens start.
- */
-export const startsOf = async (
-  row: Locator
-): Promise<{ box: number; mark: number; panel: number }> =>
-  await row.evaluate((node) => {
-    const rtl = getComputedStyle(node).direction === "rtl";
-    const start = (element: Element | null | undefined): number => {
-      const rect = element?.getBoundingClientRect();
-      if (rect === undefined) {
-        return Number.NaN;
-      }
-      return rtl ? window.innerWidth - rect.right : rect.left;
-    };
-    return {
-      box: start(node),
-      mark: start(node.querySelector("svg")),
-      panel: start(
-        document.querySelector(`[id="${node.getAttribute("aria-controls")}"]`)
-      ),
-    };
+/** How far from the page's start edge (its left, or its right in a right-to-left page) an element's first mark starts. */
+export const markStart = async (element: Locator): Promise<number> =>
+  await element.evaluate((node) => {
+    const rect = node.querySelector("svg")?.getBoundingClientRect();
+    if (rect === undefined) {
+      return Number.NaN;
+    }
+    return getComputedStyle(node).direction === "rtl"
+      ? window.innerWidth - rect.right
+      : rect.left;
   });
 
 /**
