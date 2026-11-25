@@ -253,9 +253,10 @@ test("diagrams: drawn by Mermaid once loaded, only for a diagram; Download as SV
 }) => {
   // Mermaid by what it holds, whatever its files are named: dagre, the layout it draws with.
   const scripts: string[] = [];
+  // A body still on its way when the test ends is not read: the page is gone, and so is it.
   page.on("response", async (response) => {
     if (response.request().resourceType() === "script") {
-      scripts.push(await response.text());
+      scripts.push(await response.text().catch(() => ""));
     }
   });
   const mermaidLoaded = () => scripts.some((text) => text.includes("dagre"));
