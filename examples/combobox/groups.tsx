@@ -39,6 +39,7 @@ const layout = stylex.create({
   field: { width: "100%", maxWidth: 320 },
 });
 
+// The chevron's button says what its list holds (`triggerLabel`).
 export default function ComboboxGroups() {
   return (
     <Field name="zone" style={layout.field}>
@@ -47,6 +48,7 @@ export default function ComboboxGroups() {
         items={zones}
         defaultValue="Europe/Amsterdam"
         placeholder="Search cities"
+        triggerLabel="Show the time zones"
       />
     </Field>
   );

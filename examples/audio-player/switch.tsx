@@ -12,7 +12,8 @@ const styles = stylex.create({
     gridTemplateColumns: "minmax(0, 1fr)",
     gap: space["4"],
     width: "100%",
-    maxWidth: size.promptInputWidth,
+    // As wide as a player: each one stands at its own width.
+    maxWidth: size.audioWidth,
     justifyItems: "start",
   },
 });

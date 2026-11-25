@@ -50,9 +50,9 @@ export const plan: PlanStep[] = [
 /** The answer, in Markdown. */
 export const answer = `**Yes, raise it to 13.** The numbers leave room for it.
 
-- Teams of ten or more churned at 2.1% a month last quarter, half the rate of smaller teams.
-- Your own rule allows a rise of up to 10% while churn stays under 3%; 12 to 13 is 8%.
-- Comparable team plans sit between 12 and 16 a seat, so 13 stays near the low end.
+- Teams of ten or more churned at 2.1% a month last quarter, half the rate of smaller teams [1](cite:1).
+- Your own rule allows a rise of up to 10% while churn stays under 3% [2](cite:2); 12 to 13 is 8%.
+- Comparable team plans sit between 12 and 16 a seat [3](cite:3), so 13 stays near the low end.
 
 Tell existing customers before 1 December, so the new price starts with the year.`;
 

@@ -23,6 +23,17 @@ test("an ordered list, named, the current step marked and each status said", asy
   await expect(list.locator('[aria-current="step"]')).toHaveCount(1);
 });
 
+test("across, a step is its ring's height and its name's line: 47px, as the original drew it", async ({
+  page,
+}) => {
+  await openExample(page, "stepper", "basic");
+  const steps = page
+    .getByRole("list", { name: "Setting up the workspace" })
+    .getByRole("listitem");
+  const box = await steps.first().boundingBox();
+  expect(box?.height).toBe(47);
+});
+
 test("Tab reaches the done steps only, with a ring, and Enter goes back to one", async ({
   page,
 }) => {

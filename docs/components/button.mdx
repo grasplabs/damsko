@@ -10,7 +10,7 @@ description: A button you press to do one thing now, like Save or Send.
 
 ## Variants
 
-Each variant has its own job and its own look. `default` is the one main step of a view, Save changes; never two in one view. `outline`, the quiet fill with a field's edge and lift, is the ordinary button: the lesser action beside a main one, Cancel beside Save, Previous beside Next; and a standalone action or trigger, Invite people, Export, the button that opens a dialog or a menu. `outline` stands anywhere, on a card too. `secondary`, a flat veil with no edge, is for a repeated or dense action, where a row of edged, lifted buttons would be too heavy: the same action on every row of a list, a toolbar of several equal actions. A filter, or anything that is on or off, is a Toggle, not a `secondary` Button: at rest `secondary` wears a pressed toggle's fill. `ghost` is for toolbars, rows and icon buttons, Edit. `destructive` is for what cannot be undone, Delete workspace. `link` is an action that reads as words, Read the guide.
+Each variant has its own job and its own look. `default` is the one main step of a view, Save changes; never two in one view. `outline`, the quiet fill with a field's edge and lift, is the ordinary button: the lesser action beside a main one, Cancel beside Save, Previous beside Next; and a standalone action or trigger, Invite people, Export, the button that opens a dialog or a menu. `outline` stands anywhere, on a card too. `secondary`, a flat veil with no edge, is for a repeated or dense action, where a row of edged, lifted buttons would be too heavy: the same action on every row of a list, a toolbar of several equal actions. A filter, or anything that is on or off, is a Toggle, not a `secondary` Button: at rest `secondary` wears a pressed toggle's fill. `ghost` is for toolbars, rows and icon buttons, Edit. `destructive` is for what cannot be undone, Delete workspace. `success` is the yes that approves or confirms, Approve on a request: a pane of the success light that leans a step deeper under a pointer, one per view like `default`, and the yes a Confirmation draws. `link` is an action that reads as words, Read the guide.
 
 <Stage path="button/variants" live label="Variants" />
 
@@ -40,7 +40,7 @@ To go somewhere, `asChild` draws the link itself, `<a href>`, so it opens in a n
 
 ## A press that takes time
 
-It is automatic: when `onClick` returns a Promise, the Button is busy until it settles, takes no second press and shows a spinner, in its icon's place or over its words when it has none, then a tick or the alert for a moment, and the words stay in their place so the width never changes. Failed, it draws the quiet fill with destructive words and edge, whatever its variant. `loadingText`, `successText` and `errorText` are said and shown in place of the words, all stacked so the widest sets the width (an icon-only button says them only). When the page runs the work itself, as a form's submit, it gives `status` instead.
+It is automatic: when `onClick` returns a Promise, the Button is busy until it settles, takes no second press and shows a spinner, in its icon's place or over its words when it has none, then a tick or the alert for a moment, and the words stay in their place so the width never changes. Failed, it draws the quiet fill with destructive words and edge, whatever its variant. `loadingText`, `successText` and `errorText` are said and shown in place of the words, all stacked so the widest sets the width (an icon-only button says them only); given any of them, success with no `successText` shows the tick before the button's own words, so the button keeps the tick's room at rest. When the page runs the work itself, as a form's submit, it gives `status` instead.
 
 <Stage path="button/action" live label="A press that takes time" />
 
@@ -80,6 +80,7 @@ Loading keeps focus on the button; success and failure show for a moment, then i
       { id: "secondary", label: "Secondary" },
       { id: "outline", label: "Outline" },
       { id: "destructive", label: "Destructive" },
+      { id: "success", label: "Success" },
     ],
   }}
   cells={[
@@ -106,6 +107,7 @@ Loading keeps focus on the button; success and failure show for a moment, then i
     "`secondary` for a repeated or dense action, where a row of edged, lifted buttons would be too heavy: the same action on every row of a list, a toolbar of several equal actions.",
     "`ghost` in a toolbar, on a row or for an icon button; `link` for an action that reads as words.",
     "`destructive` for what cannot be undone: Delete workspace.",
+    "`success` for the yes that approves or confirms: Approve.",
     "A verb first, in sentence case: Save changes, Invite people.",
     "Say a failure plainly: Could not save, not Error.",
     "Say why near a disabled button, tied to it by `aria-describedby`.",
@@ -196,6 +198,23 @@ Loading keeps focus on the button; success and failure show for a moment, then i
       ],
     },
     {
+      group: "Colour",
+      key: "Success",
+      note: "the light leans a step deeper under a pointer, to its deepest pressed",
+      tokens: [
+        "success-fill",
+        "success-fill-foreground",
+        "success-light",
+        "success-light-size",
+        "success-light-rest",
+        "success-light-lean",
+        "success-light-press",
+        "bevel-success",
+        "bevel-success-hover",
+        "bevel-success-press",
+      ],
+    },
+    {
       group: "Focus and disabled",
       key: "Focus ring",
       value: "{ring-width}, {ring-offset} off its edge, keyboard only",
@@ -267,7 +286,7 @@ Loading keeps focus on the button; success and failure show for a moment, then i
       group: "Input",
       key: "Agents",
       value:
-        "A `destructive` button, or one with `agentConfirm`, waits for the person's yes before an agent's press runs.",
+        "A `destructive` or `success` button, or one with `agentConfirm`, waits for the person's yes before an agent's press runs.",
     },
     {
       group: "Content",

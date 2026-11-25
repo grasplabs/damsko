@@ -40,7 +40,7 @@ export default defineConfig({
     {
       name: "webkit",
       use: { ...devices["Desktop Safari"] },
-      testIgnore: ["first-visit.spec.ts"],
+      testIgnore: "first-visit.spec.ts",
       grepInvert: /: a wheel reaches the end$|, by a finger$/u,
     },
   ],

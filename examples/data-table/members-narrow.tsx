@@ -1,5 +1,7 @@
 import { DataTable } from "@grasp-os/ui/components/data-table";
 
+import { Person } from "./members";
+
 const members = [
   {
     id: "m1",
@@ -33,7 +35,8 @@ const date = new Intl.DateTimeFormat("en-GB", {
   timeZone: "UTC",
 });
 
-// Columns that make room on a narrow box: Teams goes under the tablet breakpoint and Last seen under
+// The person as the members table draws them (picture, name, email). Columns that make room on a
+// narrow box: Teams goes under the tablet breakpoint and Last seen under
 // the phone's, measured on the table's own box. Neither is the only place its fact lives: both are
 // on the member's own page, so the row keeps who they are and their role. Role's info mark says
 // what each role may do.
@@ -48,6 +51,7 @@ export default function DataTableMembersNarrow() {
           id: "name",
           header: "Name",
           value: (member) => member.name,
+          cell: (member) => <Person member={member} />,
         },
         {
           id: "role",

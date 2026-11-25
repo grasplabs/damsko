@@ -1,6 +1,6 @@
 ---
 title: Combobox
-description: A field you type into to find one value in a long list, then choose it.
+description: A field you type into to find a value in a long list, then choose it, or several.
 ---
 
 <Head
@@ -20,11 +20,19 @@ A group hides while none of its items match, and an item out of use is skipped.
 
 <Stage path="combobox/groups" label="Groups" />
 
+The chevron's button is named by the catalogue ("Show the choices"); `triggerLabel` says what this list holds.
+
 ## People
 
 An item can carry `media` and a `description`: here each person's avatar and role, and a role finds someone too. The chosen person's avatar stands at the field's start; `media` on the combobox is the quiet icon that holds its place while no one is chosen.
 
 <Stage path="combobox/people" live label="People" />
+
+## Several
+
+With `multiple` it takes several values, each a chip in the field: the item's media (an Avatar drawn at the line's 16px), its words and a button that takes it away. The field is the system's corner with no chevron; the list opens as you type or press the arrow keys, and Backspace in the empty field reaches the last chip. The value is a list.
+
+<Stage path="combobox/multiple" live label="Several" />
 
 ## Sizes
 

@@ -197,3 +197,76 @@ test("a long text opens to its full height by its corner button, which says whet
   await expect(button).toHaveAttribute("aria-expanded", "false");
   expect(await topOf(last)).toBe(shut);
 });
+
+test("a cover can be the system's faint dither, and a section's action is muted at rest", async ({
+  page,
+}) => {
+  await openExample(page, "side-panel", "cover");
+  const dither = await page
+    .getByRole("complementary", { name: "Report details" })
+    .evaluate((panel) => {
+      const cover = panel.querySelector("[data-slot=side-panel-cover] > *");
+      return cover === null ? "" : getComputedStyle(cover).maskImage;
+    });
+  expect(dither).not.toBe("none");
+  // Under a cover the sections stand straight in the panel: a row runs its width.
+  const panel = await page
+    .getByRole("complementary", { name: "Report details" })
+    .boundingBox();
+  const row = await page
+    .getByText("Delivery lead", { exact: true })
+    .evaluate(
+      (name) =>
+        name.closest("[data-slot=item]")?.getBoundingClientRect().width ?? 0
+    );
+  expect(row).toBeCloseTo(panel?.width ?? 0, 0);
+  await openExample(page, "side-panel", "basic");
+  const add = page.getByRole("button", { name: "Add", exact: true });
+  // The muted token's colour, read from a probe; the action's ink is then awaited until it is
+  // that colour, as under load it was once read still easing to it (a colour between the two)
+  // when the page was live. A failure says both colours.
+  const muted = await add.evaluate((button) => {
+    const probe = document.createElement("span");
+    probe.style.color = "var(--damsko-muted-foreground)";
+    button.append(probe);
+    const { color } = getComputedStyle(probe);
+    probe.remove();
+    return color;
+  });
+  await expect(add).toHaveCSS("color", muted);
+});
+
+test("in a list with no actions a row's detail ends at the card's inset; where rows have them, the room is kept", async ({
+  page,
+}) => {
+  await openExample(page, "side-panel", "basic");
+  const endOf = async (words: string) =>
+    await page.getByText(words, { exact: true }).evaluate((detail) => {
+      const row = detail.closest("[data-slot=item]")?.getBoundingClientRect();
+      return row === undefined
+        ? -1
+        : Math.round(row.right - detail.getBoundingClientRect().right);
+    });
+  // No row of the Owner list has an action: its detail ends at the panel's 12px inset.
+  expect(await endOf("Delivery lead")).toBe(12);
+  // Every source has its action; the detail stands before it.
+  expect(await endOf("Document")).toBeGreaterThan(12);
+});
+
+test("a cover's dither is the original's: the light through a grid of fine round dots, 3px apart", async ({
+  page,
+}) => {
+  await openExample(page, "side-panel", "cover");
+  const mask = await page
+    .getByRole("complementary", { name: "Report details" })
+    .evaluate((panel) => {
+      const cover = panel.querySelector("[data-slot=side-panel-cover] > *");
+      if (cover === null) {
+        return { image: "", size: "" };
+      }
+      const style = getComputedStyle(cover);
+      return { image: style.maskImage, size: style.maskSize };
+    });
+  expect(mask.image).toMatch(/^radial-gradient\(circle/u);
+  expect(mask.size).toBe("3px 3px");
+});

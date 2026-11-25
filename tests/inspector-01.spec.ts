@@ -99,6 +99,19 @@ test("with no sections it says what will stand there", async ({ page }) => {
   ).toBeVisible();
 });
 
+test("the head draws a bare icon on a tinted tile and an element as it is given, and who made it shows their face", async ({
+  page,
+}) => {
+  const tile = page
+    .locator("[data-slot=inspector] [data-slot=icon-tile]")
+    .first();
+  await openExample(page, "inspector-01", "views");
+  await expect(tile).toHaveAttribute("data-variant", "gradient");
+  await openExample(page, "inspector-01", "basic");
+  await expect(tile).toHaveAttribute("data-variant", "tinted");
+  await expect(page.getByText("By AO Amara Okafor")).toBeVisible();
+});
+
 test("at a phone's width a date stays whole on one line, and a long name gives way to it", async ({
   page,
 }) => {

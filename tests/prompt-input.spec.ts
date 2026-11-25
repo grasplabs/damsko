@@ -5,8 +5,15 @@ import {
   fixedTime,
   listenToLiveRegions,
   openExample,
+  openExampleAsleep,
   pickerFrom,
 } from "./example.ts";
+
+/** A part's width as drawn, in whole pixels. */
+const widthOf = async (part: Locator): Promise<number> => {
+  const box = await part.boundingBox();
+  return Math.round(box?.width ?? 0);
+};
 
 /** One prompt input of the Send example, by its name. */
 const form = (page: Page, name: string) =>
@@ -500,6 +507,17 @@ test("the words stay until the send succeeds, and words typed while it is out st
   await page.clock.runFor(1000);
   await expect(page.getByText("Sent: second")).toBeVisible();
   await expect(text).toHaveText("second and more");
+});
+
+test("the microphone stands at the end, a space-2 before Send", async ({
+  page,
+}) => {
+  await openExample(page, "prompt-input", "dictation", { time: fixedTime });
+  const speech = await page
+    .getByRole("button", { name: "Dictate" })
+    .boundingBox();
+  const send = await page.getByRole("button", { name: "Send" }).boundingBox();
+  expect((send?.x ?? 0) - ((speech?.x ?? 0) + (speech?.width ?? 0))).toBe(8);
 });
 
 test("the speech button says whether it listens", async ({ page }) => {
@@ -1534,4 +1552,147 @@ test("while a voice is heard a dithered light stands over the card, and goes wit
   await expect.poll(async () => Number(await light())).toBeGreaterThan(0.1);
   await page.getByRole("button", { name: "Cancel dictation" }).click();
   await expect.poll(light).toBe("0");
+});
+
+test("in one row the model chip shows whole where the text has room, and only its maker's mark, still named, where it has not", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await openExample(page, "patterns", "chat-page");
+  const box = page.getByRole("form", { name: "Message the assistant" });
+  const chip = box.getByRole("button", {
+    name: "Model: Claude Opus 5.5, Medium",
+  });
+  await expect(chip.getByText("Medium")).toBeVisible();
+  // At 430 the row is a phone's: the words fold, the chip keeps its name, at rest and typed.
+  await page.setViewportSize({ width: 430, height: 900 });
+  await expect(chip.getByText("Medium")).toBeHidden();
+  expect(await widthOf(chip)).toBe(52);
+  await box.getByRole("textbox", { name: "Message" }).click();
+  await page.keyboard.type("And churn among teams of five?");
+  await expect(chip.getByText("Medium")).toBeHidden();
+  await expect(chip).toBeVisible();
+});
+
+test("at rest in a row too narrow even for the mark, the model chip is away, out of the tab order and unsaid, and comes back as its mark once something is typed", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openExample(page, "patterns", "chat-page");
+  const box = page.getByRole("form", { name: "Message the assistant" });
+  const chip = box.getByRole("button", { name: /^Model: /u });
+  const field = box.getByRole("textbox", { name: "Message" });
+  await expect(chip).toHaveCount(0);
+  // The placeholder whole beside the plus, the microphone and Send.
+  expect(
+    await field.evaluate(
+      (element) => element.scrollWidth <= element.clientWidth
+    )
+  ).toBe(true);
+  // Tab goes from the plus to the microphone.
+  await box.getByRole("button", { name: "Add to message" }).focus();
+  await page.keyboard.press("Tab");
+  await expect(box.getByRole("button", { name: "Dictate" })).toBeFocused();
+  await field.click();
+  await page.keyboard.type("And churn among teams of five?");
+  await expect(chip.getByText("Medium")).toBeHidden();
+  expect(await widthOf(chip)).toBe(52);
+});
+
+test("on a phone's row the server's HTML already folds the model chip's level to its mark, so the placeholder is whole before the scripts run", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 430, height: 900 });
+  const wake = await openExampleAsleep(page, "patterns", "chat-page");
+  const box = page.getByRole("form", { name: "Message the assistant" });
+  const chip = box.getByRole("button", { name: /^Model: /u });
+  await expect(chip).toBeVisible();
+  await expect(chip.getByText("Medium")).toBeHidden();
+  const field = box.getByRole("textbox", { name: "Message" });
+  expect(
+    await field.evaluate(
+      (element) => element.scrollWidth <= element.clientWidth
+    )
+  ).toBe(true);
+  await wake();
+  await expect(chip.getByText("Medium")).toBeHidden();
+});
+
+test("a plain banner stands as the original's strip: its mark 8px in, its words 8px after, 64px tall, and never said as it appears", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await openExample(page, "prompt-input", "banner");
+  const box = page.getByRole("form", { name: "Message, about a file" });
+  const banner = box.locator("[data-slot=prompt-input-banner]");
+  const look = await banner.evaluate((element) => {
+    const strip = element.getBoundingClientRect();
+    const mark = element.querySelector("svg")?.getBoundingClientRect();
+    const words = [...element.querySelectorAll("span")]
+      .find(
+        (span) =>
+          span.childElementCount === 0 &&
+          span.textContent === "Asking about Quarterly plan.pdf"
+      )
+      ?.getBoundingClientRect();
+    return {
+      height: strip.height,
+      markIn: (mark?.left ?? 0) - strip.left,
+      wordsAfter: (words?.left ?? 0) - (mark?.right ?? 0),
+    };
+  });
+  expect(look.height).toBe(64);
+  expect(look.markIn).toBe(8);
+  expect(look.wordsAfter).toBe(8);
+  await expect(box.getByRole("status")).toHaveCount(0);
+  await expect(box.getByRole("alert")).toHaveCount(0);
+  await expect(banner.locator("[aria-live]")).toHaveCount(0);
+});
+
+test("in one row the tools at the end stand a space-2 apart, as the original's", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await openExample(page, "prompt-input", "compact");
+  const chip = page.getByRole("button", { name: /^Model/u });
+  const mic = page.getByRole("button", { name: "Dictate" });
+  const send = page.getByRole("button", { name: "Send" });
+  const [chipBox, micBox, sendBox] = await Promise.all([
+    chip.boundingBox(),
+    mic.boundingBox(),
+    send.boundingBox(),
+  ]);
+  expect(
+    Math.round((micBox?.x ?? 0) - (chipBox?.x ?? 0) - (chipBox?.width ?? 0))
+  ).toBe(8);
+  expect(
+    Math.round((sendBox?.x ?? 0) - (micBox?.x ?? 0) - (micBox?.width ?? 0))
+  ).toBe(8);
+});
+
+test("a plain banner, never said as it appears, describes the text, so a screen reader still hears it there", async ({
+  page,
+}) => {
+  await openExample(page, "prompt-input", "banner");
+  const box = page.getByRole("form", { name: "Message, about a file" });
+  await expect(box.getByRole("textbox")).toHaveAccessibleDescription(
+    "Asking about Quarterly plan.pdf"
+  );
+});
+
+test("with a dithered edge the working light is seen through the system's pixels; a smooth one is not", async ({
+  page,
+}) => {
+  const maskOf = async () =>
+    await page
+      .locator("[data-slot=prompt-input-light]")
+      .evaluate((light) => getComputedStyle(light).maskImage);
+  await openExample(page, "prompt-input", "dither");
+  expect(await maskOf()).not.toBe("none");
+  await expect(page.locator("[data-slot=prompt-input-light]")).toHaveCSS(
+    "opacity",
+    "1"
+  );
+  await openExample(page, "prompt-input", "working");
+  expect(await maskOf()).toBe("none");
 });

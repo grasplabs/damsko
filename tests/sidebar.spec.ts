@@ -93,6 +93,91 @@ test("folded off the canvas by the keys while focus is inside, focus goes to the
   await expect(triggerOf(page)).toBeFocused();
 });
 
+test("folded to its icons by the keys while focus is on a nested row the rail hides, focus goes to the trigger", async ({
+  page,
+}) => {
+  await openExample(page, "sidebar", "icon");
+  await sidebarOf(page).getByRole("link", { name: "Plan" }).focus();
+  await pressKeys(page);
+  await expect(
+    sidebarOf(page).getByRole("link", { name: "Plan" })
+  ).toBeHidden();
+  await expect(triggerOf(page)).toBeFocused();
+});
+
+test("opened from the page's trigger, which shows only while the sidebar is away, focus goes to the sidebar's own trigger as it slides in", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await openExample(page, "sidebar", "basic");
+  const own = sidebarOf(page).getByRole("button", { name: TOGGLE });
+  await own.focus();
+  await page.keyboard.press("Enter");
+  // Folded off the canvas with focus inside: the page's trigger, which now shows, takes it.
+  const bar = triggerOf(page);
+  await expect(bar).toBeFocused();
+  // Once it has slid away whole, opened again.
+  await expect(own).toBeHidden();
+  await page.keyboard.press("Enter");
+  await expect(bar).toBeHidden();
+  await expect(own).toBeFocused();
+});
+
+test("a row and a nested row keep their own slots under their tooltips, for a product's styles", async ({
+  page,
+}) => {
+  await openExample(page, "sidebar", "basic");
+  const sidebar = sidebarOf(page);
+  await expect(sidebar.getByRole("link", { name: "Brain" })).toHaveAttribute(
+    "data-slot",
+    "sidebar-menu-button"
+  );
+  await expect(sidebar.getByRole("link", { name: "Claims" })).toHaveAttribute(
+    "data-slot",
+    "sidebar-menu-sub-button"
+  );
+});
+
+test("on a phone the keys open the sheet and close it again, and focus goes back to the trigger", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await openExample(page, "sidebar", "basic");
+  const trigger = triggerOf(page);
+  const keys = (await trigger.getAttribute("aria-keyshortcuts")) ?? "";
+  expect(keys).toMatch(/\+B$/u);
+  const sheet = page.getByRole("dialog", { name: "Sidebar" });
+  await trigger.focus();
+  await page.keyboard.press(keys.replace(/B$/u, "b"));
+  await expect(sheet).toBeVisible();
+  await page.keyboard.press(keys.replace(/B$/u, "b"));
+  await expect(sheet).toBeHidden();
+  await expect(trigger).toHaveAttribute("aria-expanded", "false");
+  await expect(trigger).toBeFocused();
+});
+
+test("on a phone the page can keep the sheet's state, the one copy: the trigger, the keys and a place chosen all change it there", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await openExample(page, "sidebar", "from-the-page");
+  const trigger = triggerOf(page);
+  const keys = (await trigger.getAttribute("aria-keyshortcuts")) ?? "";
+  const sheet = page.getByRole("dialog", { name: "Sidebar" });
+  await trigger.click();
+  await expect(sheet).toBeVisible();
+  await page.keyboard.press(keys.replace(/B$/u, "b"));
+  await expect(sheet).toBeHidden();
+  await page.keyboard.press(keys.replace(/B$/u, "b"));
+  await expect(sheet).toBeVisible();
+  // The page closes it itself as a place is chosen; the next press builds on the page's state.
+  await sheet.getByRole("link", { name: "Inbox" }).click();
+  await expect(sheet).toBeHidden();
+  await expect(trigger).toHaveAttribute("aria-expanded", "false");
+  await page.keyboard.press(keys.replace(/B$/u, "b"));
+  await expect(sheet).toBeVisible();
+});
+
 test("folded to its icons, every place keeps its name and shows it in a tooltip", async ({
   page,
 }) => {
@@ -122,20 +207,7 @@ test("folded to its icons, every place keeps its name and shows it in a tooltip"
   await expect(sidebar.getByRole("link", { name: "Plan" })).toBeHidden();
 });
 
-test("the rail folds and opens it, and says whether it is open", async ({
-  page,
-}) => {
-  await openExample(page, "sidebar", "icon");
-  const rail = sidebarOf(page).getByRole("button", { name: TOGGLE });
-  await expect(rail).toHaveAttribute("aria-expanded", "true");
-  await rail.click();
-  await expect(rail).toHaveAttribute("aria-expanded", "false");
-  await expect(triggerOf(page)).toHaveAttribute("aria-expanded", "false");
-  await rail.click();
-  await expect(triggerOf(page)).toHaveAttribute("aria-expanded", "true");
-});
-
-test("Tab goes down the places, a place's own rows after it, the rail and a disabled place no stop, then the page", async ({
+test("Tab goes down the places, a place's own rows after it, a disabled place no stop, then the page", async ({
   page,
 }) => {
   await openExample(page, "sidebar", "icon");
@@ -411,12 +483,17 @@ test("with its shortcut off it still draws, folds by its trigger, and names no k
   expect(errors).toStrictEqual([]);
 });
 
-test("the page's own control folds it with an updater, and two in one moment build on each other", async ({
+test("the page can keep whether it is open, the one copy: its own control folds it with an updater, two in one moment build on each other, and the keys and the trigger change it there", async ({
   page,
 }) => {
   await openExample(page, "sidebar", "from-the-page");
   const focus = page.getByRole("button", { name: "Focus mode" });
   const trigger = triggerOf(page);
+  await pressKeys(page);
+  await expect(focus).toHaveAttribute("aria-pressed", "true");
+  await trigger.click();
+  await expect(focus).toHaveAttribute("aria-pressed", "false");
+  await expect(trigger).toHaveAttribute("aria-expanded", "true");
   await focus.click();
   await expect(trigger).toHaveAttribute("aria-expanded", "false");
   await expect(focus).toHaveAttribute("aria-pressed", "true");
@@ -1369,3 +1446,187 @@ test("a floating sidebar nests round its rows in the squircle; the page card bes
   expect(inset[0]).toBe("12px");
   expect(["round", "superellipse(1)"]).toContain(inset[1]);
 });
+
+// A box's top-start corner: its radius, and round where the browser draws a squircle as round.
+const cornerOf = async (locator: Locator): Promise<string> =>
+  await locator.evaluate((element) => {
+    const style = getComputedStyle(element);
+    const shape = style.getPropertyValue("corner-top-left-shape");
+    return `${style.borderTopLeftRadius} ${shape === "superellipse(1)" || shape === "" ? "round" : shape}`;
+  });
+
+test("a row and a group's label take the original's plain 6px corner, the large row 10px", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await openExample(page, "sidebar", "basic");
+  const sidebar = sidebarOf(page);
+  const row = sidebar.getByRole("link", { name: "Chat" });
+  expect(await cornerOf(row)).toBe("6px round");
+  const person = sidebar.locator(
+    "[data-slot=sidebar-menu-button][data-size=lg]"
+  );
+  expect(await cornerOf(person.first())).toBe("10px round");
+  const label = sidebar.locator("[data-slot=sidebar-group-label]").first();
+  expect(await cornerOf(label)).toBe("6px round");
+});
+
+test("a row's action takes the original's corner, a small icon button's: 14px, half its height, not the row's", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await openExample(page, "sidebar", "actions");
+  const more = page.getByRole("button", { name: "More for Supplier invoices" });
+  expect(await cornerOf(more)).toMatch(/^14px (?:superellipse\(2\)|round)$/u);
+});
+
+test.describe("on a narrow window", () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+
+  test("its sheet takes the page card's plain 12px corner", async ({
+    page,
+  }) => {
+    await openExample(page, "sidebar", "basic");
+    await triggerOf(page).click();
+    const sheet = page.locator(
+      "[data-slot=drawer-content]:has(> [data-slot=sidebar])"
+    );
+    await expect(sheet).toBeVisible();
+    expect(await cornerOf(sheet)).toBe("12px round");
+  });
+
+  test("its head stands as high in the window as beside the page: the sheet's inset taken from its room above", async ({
+    page,
+  }) => {
+    await openExample(page, "sidebar", "basic");
+    await triggerOf(page).click();
+    const sheet = page.locator(
+      "[data-slot=drawer-content]:has(> [data-slot=sidebar])"
+    );
+    await expect(sheet).toBeVisible();
+    const [panel, search] = await Promise.all([
+      boxOf(sheet),
+      boxOf(sheet.getByRole("button", { name: "Search" })),
+    ]);
+    expect(search.y - panel.y).toBeCloseTo(10, 0);
+  });
+
+  test("the trigger in the page's bar stands in the page's ink; in the sidebar's head, in the sidebar's", async ({
+    page,
+  }) => {
+    await openExample(page, "sidebar", "basic");
+    const [bar, ink] = await Promise.all([
+      triggerOf(page).evaluate((node) => getComputedStyle(node).color),
+      page.evaluate(() => {
+        const probe = document.createElement("span");
+        probe.style.color = "var(--damsko-foreground)";
+        document.body.append(probe);
+        const { color } = getComputedStyle(probe);
+        probe.remove();
+        return color;
+      }),
+    ]);
+    expect(bar).toBe(ink);
+  });
+});
+
+/** A colour token as the page draws it, read from a probe. */
+const ink = async (page: Page, name: string) =>
+  await page.evaluate((token) => {
+    const probe = document.createElement("span");
+    probe.style.color = `var(${token})`;
+    document.body.append(probe);
+    const { color } = getComputedStyle(probe);
+    probe.remove();
+    return color;
+  }, name);
+
+test.describe("a row with an action, as the original's row and its dots", () => {
+  test.use({ viewport: { width: 1440, height: 900 } });
+
+  test("the action stands 4px from the row's end, in the ink while the row is pointed at", async ({
+    page,
+  }) => {
+    await openExample(page, "sidebar", "actions");
+    const more = page.getByRole("button", {
+      name: "More for Supplier invoices",
+    });
+    const row = page.getByRole("link", { name: "Supplier invoices" });
+    const [rowBox, moreBox] = await Promise.all([boxOf(row), boxOf(more)]);
+    expect(rowBox.x + rowBox.width - (moreBox.x + moreBox.width)).toBeCloseTo(
+      4,
+      0
+    );
+    await page.mouse.move(rowBox.x + 20, rowBox.y + rowBox.height / 2);
+    await expect(more).toHaveCSS(
+      "color",
+      await ink(page, "--damsko-foreground")
+    );
+    await expect(more).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+  });
+
+  test("the row keeps its fill and ink while the pointer is on its action and while the action's menu is open", async ({
+    page,
+  }) => {
+    await openExample(page, "sidebar", "actions");
+    const more = page.getByRole("button", {
+      name: "More for Supplier invoices",
+    });
+    const row = page.getByRole("link", { name: "Supplier invoices" });
+    const words = await ink(page, "--damsko-sidebar-foreground");
+    await more.hover();
+    await expect(row).toHaveCSS("color", words);
+    const hovered = await row.evaluate(
+      (node) => getComputedStyle(node).backgroundColor
+    );
+    expect(hovered).not.toBe("rgba(0, 0, 0, 0)");
+    await more.click();
+    await expect(page.getByRole("menuitem", { name: "Rename" })).toBeVisible();
+    await page.mouse.move(1400, 880);
+    await expect(row).toHaveCSS("background-color", hovered);
+    await expect(row).toHaveCSS("color", words);
+  });
+});
+
+test("a quiet row's words are in the regular weight, cut where the row ends and shown whole in its tooltip", async ({
+  page,
+}) => {
+  await openExample(page, "sidebar", "long-names");
+  const sidebar = sidebarOf(page);
+  const name = "Which suppliers changed their payment terms this spring";
+  const row = sidebar.getByRole("link", { name });
+  await expect(row).toHaveCSS("font-weight", "400");
+  await expect(
+    sidebar.getByRole("link", { name: /Every supplier contract/u })
+  ).toHaveCSS("font-weight", "500");
+  await expect(row.getByText(name)).toHaveCSS("text-overflow", "ellipsis");
+  await row.hover();
+  await expect(page.getByRole("tooltip")).toHaveText(name);
+});
+
+for (const [width, place] of [
+  [1440, "beside the page"],
+  [390, "in its sheet"],
+] as const) {
+  test(`a row renamed ${place} with F2 takes the words typed in place of its whole name`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 844 });
+    await openExample(page, "patterns", "sidebar-rows");
+    if (width < 1024) {
+      await page
+        .getByRole("button", { name: "Show or hide the sidebar" })
+        .first()
+        .click();
+    }
+    const row = page.getByRole("link", { name: "Spring launch plan" });
+    await row.focus();
+    await page.keyboard.press("F2");
+    const field = page.getByRole("textbox", {
+      name: "Name of Spring launch plan",
+    });
+    await expect(field).toBeFocused();
+    await page.keyboard.type("Launch notes");
+    await expect(field).toHaveValue("Launch notes");
+  });
+}
