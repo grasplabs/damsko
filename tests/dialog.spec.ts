@@ -217,6 +217,34 @@ test("a required field left empty keeps it open, says why and takes focus", asyn
   await expect(dialog).toBeVisible();
 });
 
+for (const how of ["click", "Enter"] as const) {
+  test(`a filled field focused as it opens keeps its words, the caret at their end, after a ${how}`, async ({
+    page,
+  }) => {
+    await openExample(page, "dialog", "form-test");
+    const trigger = page.getByRole("button", { name: "Rename project" });
+    if (how === "click") {
+      await trigger.click();
+    } else {
+      await trigger.focus();
+      await page.keyboard.press("Enter");
+    }
+    const name = page
+      .getByRole("dialog", { name: "Rename project" })
+      .getByRole("textbox", { name: "Project name" });
+    await expect(name).toBeFocused();
+    const caret = async () => {
+      const at = await name.evaluate((input) =>
+        input instanceof HTMLInputElement
+          ? [input.selectionStart, input.selectionEnd]
+          : []
+      );
+      return at;
+    };
+    await expect.poll(caret).toStrictEqual([16, 16]);
+  });
+}
+
 test("full, it opens wider than a dialog for a short task", async ({
   page,
 }) => {

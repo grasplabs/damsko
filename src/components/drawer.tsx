@@ -38,12 +38,18 @@ import type {
   DrawerDismissAttemptDetails,
   SnapPoint,
 } from "@ui-sdk/react/drawer";
+import { mergeProps } from "@ui-sdk/react/primitive";
 import { createContext, use } from "react";
 import type { ComponentProps, ReactNode } from "react";
 
 import { useReturnFocus } from "../hooks/use-return-focus";
 import { useI18n } from "../lib/i18n";
-import { keepBodyPut, layerStyles, useLayerBody } from "../lib/layer";
+import {
+  keepBodyPut,
+  keepCaret,
+  layerStyles,
+  useLayerBody,
+} from "../lib/layer";
 import {
   focusRing,
   focusRingInset,
@@ -341,7 +347,7 @@ export const DrawerContent = ({
         {...stylex.props(styles.overlay)}
       />
       <ContentPrimitive
-        {...rest}
+        {...mergeProps(rest, { ref: keepCaret })}
         {...stylex.props(
           drawerMarker,
           layerStyles.panel,

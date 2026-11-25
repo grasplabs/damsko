@@ -37,13 +37,14 @@ import {
   DrawerTrigger as TriggerPrimitive,
 } from "@ui-sdk/react/drawer";
 import type { DrawerDismissAttemptDetails } from "@ui-sdk/react/drawer";
+import { mergeProps } from "@ui-sdk/react/primitive";
 import { createContext, use, useLayoutEffect, useState } from "react";
 import type { ComponentProps, ReactNode } from "react";
 
 import { useReturnFocus } from "../hooks/use-return-focus";
 import { useI18n } from "../lib/i18n";
 import { Icon, XIcon } from "../lib/icons";
-import { keepBodyPut, useLayerBody } from "../lib/layer";
+import { keepBodyPut, keepCaret, useLayerBody } from "../lib/layer";
 import { focusRingInset, scrollbarHidden } from "../lib/styles";
 import {
   colors,
@@ -315,6 +316,11 @@ export interface SheetContentProps extends Omit<
    * @default true
    */
   showCloseButton?: boolean;
+  /**
+   * Its name, for a screen reader and an agent, when it shows no SheetTitle: a sheet whose own
+   * content heads it (a picture, a sidebar). With a SheetTitle, the title names it.
+   */
+  "aria-label"?: string;
   /** Layout only. */
   style?: LayoutStyle;
 }
@@ -342,7 +348,7 @@ export const SheetContent = ({
       {/* The panel keeps UI SDK's own slot, drawer-content: named otherwise through its render
           element, UI SDK's focus trap no longer holds Tab inside it. */}
       <ContentPrimitive
-        {...rest}
+        {...mergeProps(rest, { ref: keepCaret })}
         {...stylex.props(
           panelMarker,
           dialogStyles.panel,
