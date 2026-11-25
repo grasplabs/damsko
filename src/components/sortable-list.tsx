@@ -303,6 +303,19 @@ const sortableList = definePrimitive({
         for (const name of ["--drag-scroll", "--drag-min", "--drag-max"]) {
           item.style.removeProperty(name);
         }
+        if (!dragging) {
+          return;
+        }
+        // The list stays no scroll anchor until the frame after a drag ends: as the dragged item
+        // drops its translate, Firefox anchors to the list and scrolls the page or the box back,
+        // here to its top, undoing what the drag scrolled.
+        list.style.overflowAnchor = "none";
+        const view = doc.defaultView;
+        view?.requestAnimationFrame(() => {
+          view.requestAnimationFrame(() => {
+            list.style.removeProperty("overflow-anchor");
+          });
+        });
       });
       const moved = (event: PointerEvent) => {
         if (event.pointerId !== down.pointerId || !dragged()) {
