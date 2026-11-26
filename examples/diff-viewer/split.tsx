@@ -8,6 +8,7 @@ export default function DiffViewerSplit() {
     <DiffViewer
       mode="split"
       title="invoice.ts"
+      language="ts"
       oldValue={before}
       newValue={after}
     />

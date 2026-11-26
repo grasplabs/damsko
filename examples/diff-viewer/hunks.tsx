@@ -7,6 +7,7 @@ export default function DiffViewerHunks() {
   return (
     <DiffViewer
       title="invoice.ts"
+      language="ts"
       oldValue={before}
       newValue={after}
       showHunkHeaders

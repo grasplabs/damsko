@@ -3,7 +3,12 @@ import { readFileSync } from "node:fs";
 import { expect, test } from "@playwright/test";
 import type { Locator, Page } from "@playwright/test";
 
-import { fixedTime, listenToLiveRegions, openExample } from "./example.ts";
+import {
+  fixedTime,
+  listenToLiveRegions,
+  openExample,
+  tokenColour,
+} from "./example.ts";
 
 // Only Chromium has the clipboard's permissions: a context asked for them elsewhere does not open.
 test.use({
@@ -346,17 +351,6 @@ const colouredRuns = async (block: Locator) =>
 /** A file of this repository's, ordinary code. */
 const fileOf = (path: string) =>
   readFileSync(new URL(`../${path}`, import.meta.url), "utf-8");
-
-/** The colour a token of Damsko's resolves to on the page: the colour a run in it must have. */
-const tokenColour = async (page: Page, token: string) =>
-  await page.evaluate((name) => {
-    const probe = document.createElement("span");
-    probe.style.color = `var(${name})`;
-    document.body.append(probe);
-    const { color } = getComputedStyle(probe);
-    probe.remove();
-    return color;
-  }, token);
 
 /** The colour a run of the block's code is drawn in. */
 const colourOf = async (run: Locator) =>

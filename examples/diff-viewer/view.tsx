@@ -37,6 +37,7 @@ export default function DiffViewerView() {
         mode={mode}
         splitMinWidth={0}
         title="invoice.ts"
+        language="ts"
         oldValue={before}
         newValue={after}
       />

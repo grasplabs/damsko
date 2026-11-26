@@ -1010,6 +1010,8 @@
       "CodeBlockLine",
       "CodeBlockFooter",
       "useHighlightedCode",
+      "useHighlightedTokens",
+      "HighlightedToken",
       "CodeBlockProps",
       "CodeBlockHeaderProps",
       "CodeBlockTitleProps",

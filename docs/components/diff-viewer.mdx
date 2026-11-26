@@ -15,6 +15,8 @@ description: A before-and-after view of changes, marked by line for code and by 
 
 Each removed line over the one that replaced it; the words that changed are marked a step deeper. Every line says Added or Removed to a screen reader, as well as its colour and its plus or minus.
 
+`language` colours the code in Damsko's syntax colours, by the lexers Code block uses (`ts`, `tsx`, `python`, `css`, a file's extension), loaded the first time a diff with a language is drawn. The colours run on inside a changed word's mark. Without `language` the lines are plain text.
+
 <Stage path="diff-viewer/unified" label="Unified" />
 
 ## Side by side
@@ -49,13 +51,13 @@ Accept or reject each change of an edit: it is taken at once, the row stays put,
 
 ## A long file
 
-Unchanged stretches fold away; past `virtualizeThreshold` rows a long diff draws only the lines in view.
+5,000 lines, 300 of them changed. Unchanged stretches fold away; past `virtualizeThreshold` rows a long diff draws only the lines in view, each coloured.
 
 <Stage path="diff-viewer/long" label="A long file" />
 
 ## Several files
 
-`DiffViewerFiles`: each file under its own header, the folder quiet, the file's name strong, Added, Deleted or Modified in a Badge, and its lines added and removed. A file with no `oldValue` is new; one with no `newValue` is deleted. Its lines are DiffViewer's, unified, with a hunk's header before each run and long lines kept whole.
+`DiffViewerFiles`: each file under its own header, the folder quiet, the file's name strong, Added, Deleted or Modified in a Badge, and its lines added and removed. A file with no `oldValue` is new; one with no `newValue` is deleted. Its lines are DiffViewer's, unified, with a hunk's header before each run and long lines kept whole, coloured in the language its extension names (or its `language`).
 
 <Stage path="diff-viewer/basic" label="Several files" />
 
@@ -64,6 +66,12 @@ Unchanged stretches fold away; past `virtualizeThreshold` rows a long diff draws
 A file with more changed lines than `foldFrom` opens folded, so it does not bury the rest; its header, a Collapsible's trigger, opens it.
 
 <Stage path="diff-viewer/folded" label="A big file" />
+
+## Many files
+
+Past `virtualizeThreshold` rows (400) across the files that open on their own, DiffViewerFiles stands at most `diff-viewer-height` tall and scrolls inside its own box. Every file's header is drawn, so the keys and a screen reader go from file to file in order. A file's rows are drawn, and its code coloured, only while they are near the view; each file is still a table with every row counted (`aria-rowcount`, `aria-rowindex`). Give it the room it may fill with `style` (`height`, `maxHeight`). The browser's find in page finds only what is drawn: the file names, and the lines near the view.
+
+<Stage path="diff-viewer/many" label="Many files" />
 
 ## Every state
 
@@ -150,6 +158,21 @@ Hover and keyboard focus on a fold are forced from its own CSS.
       key: "Removed",
       value: "Changed words also struck through",
       tokens: ["diff-viewer-removed-bg", "diff-viewer-removed-word"],
+    },
+    {
+      group: "Lines",
+      key: "Code",
+      value:
+        "With a `language`, each run in its syntax colour, as Code block's",
+      tokens: [
+        "syntax-keyword",
+        "syntax-string",
+        "syntax-constant",
+        "syntax-comment",
+        "syntax-function",
+        "syntax-punctuation",
+        "syntax-attribute",
+      ],
     },
     {
       group: "Folds",
