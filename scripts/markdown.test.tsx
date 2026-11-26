@@ -401,6 +401,48 @@ const formulas = (html: string) =>
       `${groups?.display === undefined ? "" : "block "}${groups?.tex ?? ""}`
   );
 
+/** A table's cells, each as Markdown that reads back the same (what Copy as Markdown writes). */
+const cellsOf = (source: string) => {
+  const table = parse
+    .parseMarkdown(source)
+    .children.find((node) => node.type === "table");
+  return (table?.children ?? []).map((row) =>
+    row.children.map((cell) => parse.markdownOfCell(cell))
+  );
+};
+/** Cells written back as a table. */
+const tableOf = (cells: string[][]) =>
+  cells
+    .flatMap((line, at) =>
+      at === 0
+        ? [
+            `| ${line.join(" | ")} |`,
+            `| ${line.map(() => "---").join(" | ")} |`,
+          ]
+        : [`| ${line.join(" | ")} |`]
+    )
+    .join("\n");
+
+describe("a table copied as Markdown", () => {
+  test("reads back as the same cells: code, emphasis, links, maths, and marks that are words", () => {
+    const source = [
+      "| Code | Words |",
+      "| --- | --- |",
+      "| `Array<T>` | **bold** and *em* and ~~gone~~ |",
+      "| `a \\| b` and `` `x` `` | [a link](https://example.com/a_(b)) |",
+      "| $$x^2$$ | \\*not em\\*, snake\\_case, \\<T\\>, 50\\$, \\[x\\] |",
+      "| a <b>tag</b> | a&amp;b # 1 |",
+    ].join("\n");
+    const once = cellsOf(source);
+    const again = cellsOf(tableOf(once));
+    expect(again).toStrictEqual(once);
+    // Code keeps its tag as code, never a tag that would be dropped.
+    expect(once[1]?.[0]).toBe("`Array<T>`");
+    // The words drawn are the words copied back.
+    expect(textOf(draw(tableOf(once)))).toBe(textOf(draw(source)));
+  });
+});
+
 describe("what an answer may hold besides prose", () => {
   test("fenced code: Download and Copy, which wait while the answer is written, and its lines numbered as its words say", () => {
     const fence = "```ts\nconst a = 1;\n```";
