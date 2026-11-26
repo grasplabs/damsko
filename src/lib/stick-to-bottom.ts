@@ -68,10 +68,13 @@ export interface StickToBottom {
 
 /** A frame at 60 frames a second, in milliseconds: the unit the easing is set in. */
 const FRAME = 1000 / 60;
-/** The share of what is left that a frame at 60 a second closes while following: a line in ~150ms. */
-const SHARE = 0.25;
-/** The share for a glide the person asked for (Jump to latest, a sent turn): a view in under 300ms. */
-const ASKED = 0.3;
+/**
+ * The share of what is left that a frame at 60 a second closes: the speed is in proportion to the
+ * distance, so it catches up harder the further behind it is and never passes the end. A line
+ * comes in over about 80ms, a code block landing at once (200px) within about 150ms, a whole view
+ * within about 200ms.
+ */
+const SHARE = 0.4;
 /** How much of its last speed the end's speed keeps each frame at 60 a second. */
 const KEEP = 0.85;
 /** The longest frame the easing counts, in milliseconds: after a stall it does not leap. */
@@ -100,7 +103,7 @@ export const still: Glide = { end: null, at: 0, speed: 0 };
 
 /**
  * One frame of following, at `now`, `ms` after the frame before: from where the scroller stands
- * (`top`) toward the end (`end`), closing `share` of the gap a 60th of a second, the next place and
+ * (`top`) toward the end (`end`), closing SHARE of the gap a 60th of a second, the next place and
  * what to carry on. The end's speed is how far it moved since it was last seen over how long that
  * was, so a stream that grows a line now and then is followed at its own pace. Never past the end,
  * and the end itself once it is CLOSE.
@@ -110,8 +113,7 @@ export const glide = (
   end: number,
   now: number,
   ms: number,
-  was: Glide,
-  share = SHARE
+  was: Glide
 ): { top: number; glide: Glide } => {
   const dt = Math.min(Math.max(ms, 1), LONGEST);
   let speed = 0;
@@ -123,7 +125,7 @@ export const glide = (
   }
   const next = { end, at: now, speed };
   const gap = end - top;
-  const step = gap * (1 - (1 - share) ** (dt / FRAME)) + speed * dt;
+  const step = gap * (1 - (1 - SHARE) ** (dt / FRAME)) + speed * dt;
   if (gap - step <= CLOSE) {
     return { top: end, glide: next };
   }
@@ -219,7 +221,7 @@ export const createStickToBottom = ({
   let motion: Glide = still;
   // Where the follower last left the scroll: a scroll that moved it elsewhere is not its own.
   let rest = 0;
-  // The run was asked for (Jump to latest, a sent turn): it glides there a little quicker.
+  // The run was asked for (Jump to latest, a sent turn): it starts from where the log stands.
   let asked = false;
   // While reading back: the first row in view and where it stood, kept there as rows above change.
   let pinned: Pinned | undefined;
@@ -323,8 +325,7 @@ export const createStickToBottom = ({
         end,
         now,
         last === 0 ? FRAME : now - last,
-        motion,
-        asked ? ASKED : SHARE
+        motion
       );
       next = step.top;
       motion = step.glide;

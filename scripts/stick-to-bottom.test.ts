@@ -54,15 +54,15 @@ describe(glide, () => {
 
   test("a line glides in over several frames, and is all in view within half a second", () => {
     const { steps, gaps } = follow((frame) => (frame === 0 ? LINE : 0), 30);
-    expect(Math.max(...steps)).toBeLessThan(LINE / 3);
-    expect(steps.filter((step) => step > 0).length).toBeGreaterThan(4);
+    expect(Math.max(...steps)).toBeLessThan(LINE / 2);
+    expect(steps.filter((step) => step > 0).length).toBeGreaterThan(3);
     expect(gaps.at(-1)).toBe(0);
   });
 
   test("a code block that lands at once is caught up within a few frames", () => {
     const { gaps } = follow((frame) => (frame === 0 ? 200 : 0), 40);
-    // Most of it in a quarter of a second, all of it in two thirds.
-    expect(gaps[14]).toBeLessThan(10);
+    // All of it within about 150ms: nine frames.
+    expect(gaps[9]).toBe(0);
     expect(gaps.at(-1)).toBe(0);
   });
 
