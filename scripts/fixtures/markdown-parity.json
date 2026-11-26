@@ -3184,37 +3184,37 @@
     {
       "name": "tag-line",
       "at": 89,
-      "roles": "p I found **41 issues** assigned to you that are **In Progress** in Linear:"
+      "roles": "p I found **41 issues** assigned to you that are **in progress** in the tracker:"
     },
     {
       "name": "tag-line",
       "at": 178,
-      "roles": "p I found **41 issues** assigned to you that are **In Progress** in Linear:\np - [GRA-2306](streamdown:incomplete-link)"
+      "roles": "p I found **41 issues** assigned to you that are **in progress** in the tracker:\np - [ISS-2306](streamdown:incomplete-link)"
     },
     {
       "name": "tag-line",
       "at": 267,
-      "roles": "p I found **41 issues** assigned to you that are **In Progress** in Linear:\np - [GRA-2306](https://linear.app/grasp-os/issue/GRA-2306/connector-layer) — Connector layer phase 0: threat model - [GRA-2235](streamdown:incomplete-link)"
+      "roles": "p I found **41 issues** assigned to you that are **in progress** in the tracker:\np - [ISS-2306](https://tracker.example.com/issue/ISS-2306/export-queue) — Move the export to a queue - [ISS-2235](streamdown:incomplete-link)"
     },
     {
       "name": "tag-line",
       "at": 356,
-      "roles": "p I found **41 issues** assigned to you that are **In Progress** in Linear:\np - [GRA-2306](https://linear.app/grasp-os/issue/GRA-2306/connector-layer) — Connector layer phase 0: threat model - [GRA-2235](https://linear.app/grasp-os/issue/GRA-2235/guests) — Guests: outsiders with a platform account - [GRA-2056](streamdown:incomplete-link)"
+      "roles": "p I found **41 issues** assigned to you that are **in progress** in the tracker:\np - [ISS-2306](https://tracker.example.com/issue/ISS-2306/export-queue) — Move the export to a queue - [ISS-2235](https://tracker.example.com/issue/ISS-2235/guests) — Guests see the pages shared with them - [ISS-2056](streamdown:incomplete-link)"
     },
     {
       "name": "tag-line",
       "at": 445,
-      "roles": "p I found **41 issues** assigned to you that are **In Progress** in Linear:\np - [GRA-2306](https://linear.app/grasp-os/issue/GRA-2306/connector-layer) — Connector layer phase 0: threat model - [GRA-2235](https://linear.app/grasp-os/issue/GRA-2235/guests) — Guests: outsiders with a platform account - [GRA-2056](https://linear.app/grasp-os/issue/GRA-2056/keep-people) — Keep people and teams current"
+      "roles": "p I found **41 issues** assigned to you that are **in progress** in the tracker:\np - [ISS-2306](https://tracker.example.com/issue/ISS-2306/export-queue) — Move the export to a queue - [ISS-2235](https://tracker.example.com/issue/ISS-2235/guests) — Guests see the pages shared with them - [ISS-2056](https://tracker.example.com/issue/ISS-2056/keep-teams) — Keep teams current\np A"
     },
     {
       "name": "tag-line",
       "at": 534,
-      "roles": "p I found **41 issues** assigned to you that are **In Progress** in Linear:\np - [GRA-2306](https://linear.app/grasp-os/issue/GRA-2306/connector-layer) — Connector layer phase 0: threat model - [GRA-2235](https://linear.app/grasp-os/issue/GRA-2235/guests) — Guests: outsiders with a platform account - [GRA-2056](https://linear.app/grasp-os/issue/GRA-2056/keep-people) — Keep people and teams current\np A\np wrapper:\np Some **bold** words in it.\np A comm"
+      "roles": "p I found **41 issues** assigned to you that are **in progress** in the tracker:\np - [ISS-2306](https://tracker.example.com/issue/ISS-2306/export-queue) — Move the export to a queue - [ISS-2235](https://tracker.example.com/issue/ISS-2235/guests) — Guests see the pages shared with them - [ISS-2056](https://tracker.example.com/issue/ISS-2056/keep-teams) — Keep teams current\np A\np wrapper:\np Some **bold** words in it.\np A comment  stays,"
     },
     {
       "name": "tag-line",
-      "at": 616,
-      "roles": "p I found **41 issues** assigned to you that are **In Progress** in Linear:\np - [GRA-2306](https://linear.app/grasp-os/issue/GRA-2306/connector-layer) — Connector layer phase 0: threat model - [GRA-2235](https://linear.app/grasp-os/issue/GRA-2235/guests) — Guests: outsiders with a platform account - [GRA-2056](https://linear.app/grasp-os/issue/GRA-2056/keep-people) — Keep people and teams current\np A\np wrapper:\np Some **bold** words in it.\np A comment  stays, a line break⏎too, and [https://example.com](https://example.com/) is a link."
+      "at": 591,
+      "roles": "p I found **41 issues** assigned to you that are **in progress** in the tracker:\np - [ISS-2306](https://tracker.example.com/issue/ISS-2306/export-queue) — Move the export to a queue - [ISS-2235](https://tracker.example.com/issue/ISS-2235/guests) — Guests see the pages shared with them - [ISS-2056](https://tracker.example.com/issue/ISS-2056/keep-teams) — Keep teams current\np A\np wrapper:\np Some **bold** words in it.\np A comment  stays, a line break⏎too, and [https://example.com](https://example.com/) is a link."
     },
     {
       "name": "commonmark 1",

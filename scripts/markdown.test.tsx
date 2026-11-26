@@ -528,10 +528,10 @@ describe("what an answer may hold besides prose", () => {
 
   test("a tag on a line of its own is its words, and the lines after it are Markdown", () => {
     const html = draw(
-      "I found **41 issues**:\n\n<untrusted-ExpoGBLIFfAjjZadRE8wCg>\n- [GRA-2306](https://linear.app/a/GRA-2306) — Connector layer\n- [GRA-2235](https://linear.app/a/GRA-2235) — Guests\n</untrusted-ExpoGBLIFfAjjZadRE8wCg>"
+      "I found **41 issues**:\n\n<untrusted-ExpoGBLIFfAjjZadRE8wCg>\n- [ISS-2306](https://tracker.example.com/a/ISS-2306) — Move the export\n- [ISS-2235](https://tracker.example.com/a/ISS-2235) — Guests\n</untrusted-ExpoGBLIFfAjjZadRE8wCg>"
     );
     expect(count(html, "<li")).toBe(2);
-    expect(count(html, 'href="https://linear.app/a/GRA-')).toBe(2);
+    expect(count(html, 'href="https://tracker.example.com/a/ISS-')).toBe(2);
     expect(textOf(html)).toContain("&lt;untrusted-ExpoGBLIFfAjjZadRE8wCg&gt;");
     expect(html).not.toMatch(/<untrusted/iu);
   });

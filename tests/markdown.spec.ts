@@ -170,9 +170,9 @@ test("a tag on a line of its own is its words, and the list after it a list of l
   ).toBeVisible();
   const list = page.getByRole("list");
   await expect(list.getByRole("listitem")).toHaveCount(3);
-  await expect(list.getByRole("link", { name: "GRA-2306" })).toHaveAttribute(
+  await expect(list.getByRole("link", { name: "ISS-2306" })).toHaveAttribute(
     "href",
-    "https://linear.app/grasp-os/issue/GRA-2306/connector-layer"
+    "https://tracker.example.com/issue/ISS-2306/export-queue"
   );
   await expect(page.locator("untrusted-expogbliffajjzadre8wcg")).toHaveCount(0);
 });
