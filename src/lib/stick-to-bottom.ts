@@ -7,7 +7,8 @@
 //   stick.release();                                stop following, as for a jump to a message
 //
 // What the references do, and what is kept here:
-// - Only the person lets go: a wheel, a finger moving down the screen, a key up or Tab. A scroll
+// - Only the person lets go: a wheel, a finger moving down the screen, a key up, or focus moving
+//   to something out of view in the log (Tab, a screen reader's cursor). A scroll
 //   event never does by itself, because the browser scrolls on its own too: it clamps the scroll
 //   when what it holds is shorter for a moment (a row drawn again, content-visibility measuring a
 //   row), and Safari's own corrections land there. Reading such a scroll as the person's let go of
@@ -15,6 +16,8 @@
 //   never on an upward scroll). While the log is changing size, such a scroll is undone at once,
 //   before the frame is drawn. Once it has settled (SETTLE), a scroll that lands away from the end
 //   came from somewhere else (find in page, a link to a row) and lets go, so Jump to latest shows.
+//   Past SETTLE, a row shorter and whole again within one script (no size change left to see) is
+//   taken for such a scroll: the one case where the browser's own scroll still lets go.
 // - It glides toward the moving end, one write a frame from requestAnimationFrame, as
 //   use-stick-to-bottom animates toward it, instead of jumping a line each time the words wrap.
 //   Its step is the gap's share for the frame plus the speed the end has been moving at, so a
@@ -66,9 +69,9 @@ export interface StickToBottom {
 /** A frame at 60 frames a second, in milliseconds: the unit the easing is set in. */
 const FRAME = 1000 / 60;
 /** The share of what is left that a frame at 60 a second closes while following: a line in ~150ms. */
-export const SHARE = 0.25;
+const SHARE = 0.25;
 /** The share for a glide the person asked for (Jump to latest, a sent turn): a view in under 300ms. */
-export const ASKED = 0.3;
+const ASKED = 0.3;
 /** How much of its last speed the end's speed keeps each frame at 60 a second. */
 const KEEP = 0.85;
 /** The longest frame the easing counts, in milliseconds: after a stall it does not leap. */
@@ -127,7 +130,7 @@ export const glide = (
   return { top: top + Math.max(1, step), glide: next };
 };
 
-const UP_KEYS = new Set(["ArrowUp", "PageUp", "Home", "Tab"]);
+const UP_KEYS = new Set(["ArrowUp", "PageUp", "Home"]);
 
 /** Whether a key there types or moves within a control rather than scrolling the log. */
 const isControl = (target: EventTarget | null) =>
@@ -366,6 +369,7 @@ export const createStickToBottom = ({
       const sizes = new view.ResizeObserver(() => {
         changed = performance.now();
         if (!state.following) {
+          left ||= endOf(element) - element.scrollTop > threshold;
           if (!hold(element)) {
             pin(element);
           }
@@ -442,7 +446,25 @@ export const createStickToBottom = ({
           letGo(element);
         }
       };
+      // Focus moving to something out of view in the log (Tab, a screen reader's cursor) is the
+      // person going there: read before the browser scrolls it into view.
+      const focused = (event: FocusEvent) => {
+        const { target } = event;
+        if (
+          !state.following ||
+          target === element ||
+          !(target instanceof Element)
+        ) {
+          return;
+        }
+        const box = element.getBoundingClientRect();
+        const rect = target.getBoundingClientRect();
+        if (rect.bottom <= box.top || rect.top >= box.bottom) {
+          letGo(element);
+        }
+      };
       element.addEventListener("scroll", scrolled, { passive: true });
+      element.addEventListener("focusin", focused);
       element.addEventListener("wheel", wheel, { passive: true });
       element.addEventListener("touchstart", touchStart, { passive: true });
       element.addEventListener("touchmove", touchMove, { passive: true });
@@ -460,6 +482,7 @@ export const createStickToBottom = ({
         element.removeEventListener("touchstart", touchStart);
         element.removeEventListener("touchmove", touchMove);
         element.removeEventListener("keydown", key);
+        element.removeEventListener("focusin", focused);
         if (scroller === element) {
           stop();
           scroller = undefined;
@@ -468,13 +491,15 @@ export const createStickToBottom = ({
       };
     },
     scrollToBottom: ({ behavior = "auto" } = {}) => {
+      const was = state.following;
       set(true);
       const element = scroller;
       if (element === undefined) {
         return;
       }
       if (behavior === "smooth" && reduced?.matches !== true) {
-        if (frame === 0) {
+        // A new glide from where it stands, unless one is already under way.
+        if (!was || frame === 0) {
           asked = true;
           rest = element.scrollTop;
         }
