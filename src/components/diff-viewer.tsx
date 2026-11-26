@@ -1495,6 +1495,10 @@ const watchFocus = (
     setFocused(true);
   };
   const left = (event: FocusEvent) => {
+    // The window losing focus is not focus leaving: it comes back to the same row.
+    if (event.relatedTarget === null && !document.hasFocus()) {
+      return;
+    }
     setFocused(
       event.relatedTarget instanceof Node && room.contains(event.relatedTarget)
     );
@@ -2535,32 +2539,34 @@ export const DiffViewerFiles = ({
           />
         </p>
       ) : null}
-      <div ref={setContent} {...stylex.props(styles.files)}>
-        {counted.map((each) => (
-          <File
-            key={each.file.path}
-            file={each.file}
-            change={each.change}
-            oldValue={each.oldValue}
-            newValue={each.newValue}
-            added={each.added}
-            removed={each.removed}
-            foldFrom={foldFrom}
-            contextLines={contextLines}
-            showHunkHeaders={showHunkHeaders}
-            wrap={wrap}
-            words={words}
-            held={
-              windowed
-                ? {
-                    model: each.model,
-                    shared: { scroller, content, firstRows: each.firstRows },
-                  }
-                : { model: each.model }
-            }
-          />
-        ))}
-      </div>
+      {files.length > 0 ? (
+        <div ref={setContent} {...stylex.props(styles.files)}>
+          {counted.map((each) => (
+            <File
+              key={each.file.path}
+              file={each.file}
+              change={each.change}
+              oldValue={each.oldValue}
+              newValue={each.newValue}
+              added={each.added}
+              removed={each.removed}
+              foldFrom={foldFrom}
+              contextLines={contextLines}
+              showHunkHeaders={showHunkHeaders}
+              wrap={wrap}
+              words={words}
+              held={
+                windowed
+                  ? {
+                      model: each.model,
+                      shared: { scroller, content, firstRows: each.firstRows },
+                    }
+                  : { model: each.model }
+              }
+            />
+          ))}
+        </div>
+      ) : null}
     </section>
   );
 };
