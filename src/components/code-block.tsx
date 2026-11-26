@@ -67,7 +67,6 @@ import {
   newReading,
   noEngine,
   plainLines,
-  stopReading,
   watchEngine,
   writtenLines,
 } from "./code-block-highlight";
@@ -546,12 +545,6 @@ const useLinesOf = (
   const engine = useSyncExternalStore(watchEngine, currentEngine, noEngine);
   // oxlint-disable-next-line react/hook-use-state -- made once, never replaced
   const [reading] = useState(newReading);
-  useEffect(
-    () => () => {
-      stopReading(reading);
-    },
-    [reading]
-  );
   if (engine === null || code === "") {
     return plainLines(code, most);
   }

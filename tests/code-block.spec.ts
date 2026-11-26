@@ -405,11 +405,18 @@ test("in forced colours the code is drawn in the system's colour, every run", as
   expect(colours).toBe(1);
 });
 
-test("the lexers load the first time a block is drawn, never with a page that has none", async ({
+/** Whether a script is a language's lexer: it names the language, however the build quotes it. */
+const isLexer = (text: string, name: string) =>
+  new RegExp(
+    `["'\`]?name["'\`]?\\s*:\\s*["'\`]${name}["'\`]\\s*,\\s*["'\`]?aliases`,
+    "u"
+  ).test(text);
+
+test("the core loads the first time a block is drawn, and a language's lexer the first time a block in it is", async ({
   page,
 }) => {
-  /** How many of the scripts the page has loaded hold the lexers' WebAssembly. */
-  const lexers = async () => {
+  /** Which of the core and the lexers the page has loaded, by what their scripts hold. */
+  const loaded = async () => {
     const scripts = await page.evaluate(() =>
       performance
         .getEntriesByType("resource")
@@ -422,19 +429,52 @@ test("the lexers load the first time a block is drawn, never with a page that ha
         return await response.text();
       })
     );
-    return texts.filter((text) => text.includes("WebAssembly.Module")).length;
+    return {
+      core: texts.filter((text) =>
+        text.includes("highlights is not initialized")
+      ).length,
+      typescript: texts.filter((text) => isLexer(text, "typescript")).length,
+      python: texts.filter((text) => isLexer(text, "python")).length,
+    };
   };
   await openExample(page, "button", "sizes");
   await page.waitForLoadState("networkidle");
-  expect(await lexers()).toBe(0);
+  expect(await loaded()).toStrictEqual({ core: 0, typescript: 0, python: 0 });
   await openExample(page, "code-block", "basic");
   const block = page.getByRole("region", { name: "TSX" });
   await expect
     .poll(async () => await isColoured(runOf(block, /^export\b/u)))
     .toBe(true);
-  expect(await lexers()).toBe(1);
+  expect(await loaded()).toStrictEqual({ core: 1, typescript: 1, python: 0 });
 });
 
+test("a language whose lexer does not load stays plain, and nothing is said", async ({
+  page,
+}) => {
+  const said: string[] = [];
+  page.on("console", (message) => {
+    said.push(`${message.type()}: ${message.text()}`);
+  });
+  page.on("pageerror", (error) => {
+    said.push(`thrown: ${error.message}`);
+  });
+  // Python's lexer, by what its script holds, never arrives.
+  await page.route(/\.js$/u, async (route) => {
+    const response = await route.fetch();
+    const text = await response.text();
+    await (isLexer(text, "python")
+      ? route.abort()
+      : route.fulfill({ response, body: text }));
+  });
+  await openExample(page, "code-block", "streaming", { time: fixedTime });
+  await page.waitForLoadState("networkidle");
+  const block = page.getByRole("region", { name: "Python" });
+  await expect(
+    block.getByText("def closed_per_month(requests):")
+  ).toBeVisible();
+  expect(await colouredRuns(block)).toBe(0);
+  expect(said.filter((each) => !each.includes("ERR_FAILED"))).toStrictEqual([]);
+});
 test("while it is written, the finished lines are coloured once and the line being written is plain, and nothing moves", async ({
   page,
 }) => {

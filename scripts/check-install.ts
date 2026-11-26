@@ -60,7 +60,6 @@ import {
   readFileSync,
   readdirSync,
   rmSync,
-  statSync,
   writeFileSync,
 } from "node:fs";
 import { availableParallelism, tmpdir } from "node:os";
@@ -428,6 +427,7 @@ const workspaceAt = async (
   );
   const settings = new Set([
     "minimumReleaseAge",
+    "minimumReleaseAgeExclude",
     "blockExoticSubdeps",
     "strictDepBuilds",
     "allowBuilds",
@@ -976,13 +976,23 @@ const checkPage = async (
     "the build did not find the six font files"
   );
   // The page's own icon is a Hugeicons drawing the house set does not hold, imported by the app:
-  // the bundle keeps that drawing, never the package's thousands (tens of megabytes).
-  const scripts = built
+  // the bundle keeps that drawing, never the package's thousands (tens of megabytes). CodeBlock's
+  // lexers are left out: each language's is a script of its own (code-block-lexers.ts), loaded
+  // only when a block in it is drawn, and all of them are some 2MB.
+  const lexer = /\{"?name"?:\s*["'`][\w+#.-]+["'`],\s*"?aliases"?:\s*\{/u;
+  const sources = built
     .filter((file) => file.endsWith(".js"))
-    .reduce(
-      (bytes, file) => bytes + statSync(nodePath.join(dist, file)).size,
-      0
-    );
+    .map((file) => readFileSync(nodePath.join(dist, file), "utf-8"));
+  const lexers = sources.filter((source) =>
+    lexer.test(source.slice(0, 300))
+  ).length;
+  const scripts = sources
+    .filter((source) => !lexer.test(source.slice(0, 300)))
+    .reduce((bytes, source) => bytes + Buffer.byteLength(source), 0);
+  expectBuilt(
+    !code || lexers > 150,
+    `the build made ${String(lexers)} scripts of CodeBlock's lexers, not one for each language`
+  );
   expectBuilt(
     scripts < 1_000_000,
     `the app's scripts are ${String(scripts)} bytes: the bundle kept more of Hugeicons than the drawings it imports`
