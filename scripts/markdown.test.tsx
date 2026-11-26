@@ -380,6 +380,17 @@ const gutterOf = (html: string) =>
     )?.groups?.classes ?? ""
   ).split(" ").length;
 
+/** The formulas drawn: each one's TeX, `block` before one on lines of its own. */
+const formulas = (html: string) =>
+  [
+    ...html.matchAll(
+      /data-slot="markdown-math" data-tex="(?<tex>[^"]*)"(?<display> data-display)?/gu
+    ),
+  ].map(
+    ({ groups }) =>
+      `${groups?.display === undefined ? "" : "block "}${groups?.tex ?? ""}`
+  );
+
 describe("what an answer may hold besides prose", () => {
   test("fenced code: Download and Copy, which wait while the answer is written, and its lines numbered as its words say", () => {
     const fence = "```ts\nconst a = 1;\n```";
@@ -409,6 +420,21 @@ describe("what an answer may hold besides prose", () => {
     expect(
       buttonsOf(draw(`${table}\n\nMore`, { streaming: true }))
     ).toStrictEqual(["Copy table (waits)", "Download table (waits)"]);
+  });
+
+  test("maths between two dollars: in a sentence, on lines of its own (blank lines and all), closed while written; one dollar is a dollar", () => {
+    expect(formulas(draw("a $$x^2$$ b"))).toStrictEqual(["x^2"]);
+    expect(formulas(draw("$$\na = 1\n\nb = 2\n$$\n\nAfter."))).toStrictEqual([
+      "block a = 1\n\nb = 2",
+    ]);
+    expect(formulas(draw("It costs $5 and $6."))).toStrictEqual([]);
+    // Closed as it is written, its last word waiting for the space after it, as every word does.
+    expect(formulas(draw("Cost $$C = n", { streaming: true }))).toStrictEqual([
+      "C =",
+    ]);
+    expect(
+      formulas(draw("$$\nC = n \\cdot", { streaming: true }))
+    ).toStrictEqual(["block C = n"]);
   });
 
   test("a task is Checkbox's box, read only, said as done or not", () => {

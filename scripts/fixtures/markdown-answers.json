@@ -1987,6 +1987,26 @@
       "name": "m20",
       "about": "Ends mid-footnote and mid-emphasis",
       "lines": ["The rate fell by a third[^1], which is *significant for a"]
+    },
+    {
+      "name": "formulas",
+      "lines": [
+        "The quadratic formula gives the roots:",
+        "",
+        "$$",
+        "x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}",
+        "$$",
+        "",
+        "For $$a = 1$$, $$b = -3$$ and $$c = 2$$ the roots are $$x = 1$$ and $$x = 2$$.",
+        "",
+        "A sum over every term:",
+        "",
+        "$$",
+        "\\sum_{i=1}^{n} i = \\frac{n(n+1)}{2}",
+        "$$",
+        "",
+        "Prices such as $5 and $10 stay as written, and so does \\$$ escaped."
+      ]
     }
   ]
 }

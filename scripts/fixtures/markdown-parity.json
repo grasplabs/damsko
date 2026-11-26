@@ -204,42 +204,42 @@
     {
       "name": "math",
       "at": 470,
-      "roles": "p The cost model is simple. Each request costs $0.002, so 1,000 requests cost $2 and a month of 3M requests costs about $6,000.\np Write the cost as C = n * p, where n is the number of requests and p the price per request. With a discount d for volume, it becomes C = n * p * (1 - d); at d = 0.15 the monthly bill drops to $5,100.\np In LaTeX that is $C = n \\cdot p \\cdot (1 - d)$, and the break-even point is $$n_{break} = \\frac{F}{p - c}$$ where F is the fixed cost and c th"
+      "roles": "p The cost model is simple. Each request costs $0.002, so 1,000 requests cost $2 and a month of 3M requests costs about $6,000.\np Write the cost as C = n * p, where n is the number of requests and p the price per request. With a discount d for volume, it becomes C = n * p * (1 - d); at d = 0.15 the monthly bill drops to $5,100.\np In LaTeX that is $C = n \\cdot p \\cdot (1 - d)$, and the break-even point is ⟦n_{break} = \\frac{F}{p - c}⟧ where F is the fixed cost and c th"
     },
     {
       "name": "math",
       "at": 564,
-      "roles": "p The cost model is simple. Each request costs $0.002, so 1,000 requests cost $2 and a month of 3M requests costs about $6,000.\np Write the cost as C = n * p, where n is the number of requests and p the price per request. With a discount d for volume, it becomes C = n * p * (1 - d); at d = 0.15 the monthly bill drops to $5,100.\np In LaTeX that is $C = n \\cdot p \\cdot (1 - d)$, and the break-even point is $$n_{break} = \\frac{F}{p - c}$$ where F is the fixed cost and c the marginal cost.\np Variables in the code follow snake_case: `total_cost`, `unit_price`, `discou`"
+      "roles": "p The cost model is simple. Each request costs $0.002, so 1,000 requests cost $2 and a month of 3M requests costs about $6,000.\np Write the cost as C = n * p, where n is the number of requests and p the price per request. With a discount d for volume, it becomes C = n * p * (1 - d); at d = 0.15 the monthly bill drops to $5,100.\np In LaTeX that is $C = n \\cdot p \\cdot (1 - d)$, and the break-even point is ⟦n_{break} = \\frac{F}{p - c}⟧ where F is the fixed cost and c the marginal cost.\np Variables in the code follow snake_case: `total_cost`, `unit_price`, `discou`"
     },
     {
       "name": "math",
       "at": 658,
-      "roles": "p The cost model is simple. Each request costs $0.002, so 1,000 requests cost $2 and a month of 3M requests costs about $6,000.\np Write the cost as C = n * p, where n is the number of requests and p the price per request. With a discount d for volume, it becomes C = n * p * (1 - d); at d = 0.15 the monthly bill drops to $5,100.\np In LaTeX that is $C = n \\cdot p \\cdot (1 - d)$, and the break-even point is $$n_{break} = \\frac{F}{p - c}$$ where F is the fixed cost and c the marginal cost.\np Variables in the code follow snake_case: `total_cost`, `unit_price`, `discount_rate`. The function is:\ncode python def total_cost(n_requests, unit_price, discount_rate=0.0 [download copy] off"
+      "roles": "p The cost model is simple. Each request costs $0.002, so 1,000 requests cost $2 and a month of 3M requests costs about $6,000.\np Write the cost as C = n * p, where n is the number of requests and p the price per request. With a discount d for volume, it becomes C = n * p * (1 - d); at d = 0.15 the monthly bill drops to $5,100.\np In LaTeX that is $C = n \\cdot p \\cdot (1 - d)$, and the break-even point is ⟦n_{break} = \\frac{F}{p - c}⟧ where F is the fixed cost and c the marginal cost.\np Variables in the code follow snake_case: `total_cost`, `unit_price`, `discount_rate`. The function is:\ncode python def total_cost(n_requests, unit_price, discount_rate=0.0 [download copy] off"
     },
     {
       "name": "math",
       "at": 752,
-      "roles": "p The cost model is simple. Each request costs $0.002, so 1,000 requests cost $2 and a month of 3M requests costs about $6,000.\np Write the cost as C = n * p, where n is the number of requests and p the price per request. With a discount d for volume, it becomes C = n * p * (1 - d); at d = 0.15 the monthly bill drops to $5,100.\np In LaTeX that is $C = n \\cdot p \\cdot (1 - d)$, and the break-even point is $$n_{break} = \\frac{F}{p - c}$$ where F is the fixed cost and c the marginal cost.\np Variables in the code follow snake_case: `total_cost`, `unit_price`, `discount_rate`. The function is:\ncode python def total_cost(n_requests, unit_price, discount_rate=0.0): return n_requests * unit_price * (1 - discount_rate) [download copy] off\np Some edge cases:\nul\n  li\n    p 5*3 = 15"
+      "roles": "p The cost model is simple. Each request costs $0.002, so 1,000 requests cost $2 and a month of 3M requests costs about $6,000.\np Write the cost as C = n * p, where n is the number of requests and p the price per request. With a discount d for volume, it becomes C = n * p * (1 - d); at d = 0.15 the monthly bill drops to $5,100.\np In LaTeX that is $C = n \\cdot p \\cdot (1 - d)$, and the break-even point is ⟦n_{break} = \\frac{F}{p - c}⟧ where F is the fixed cost and c the marginal cost.\np Variables in the code follow snake_case: `total_cost`, `unit_price`, `discount_rate`. The function is:\ncode python def total_cost(n_requests, unit_price, discount_rate=0.0): return n_requests * unit_price * (1 - discount_rate) [download copy] off\np Some edge cases:\nul\n  li\n    p 5*3 = 15"
     },
     {
       "name": "math",
       "at": 846,
-      "roles": "p The cost model is simple. Each request costs $0.002, so 1,000 requests cost $2 and a month of 3M requests costs about $6,000.\np Write the cost as C = n * p, where n is the number of requests and p the price per request. With a discount d for volume, it becomes C = n * p * (1 - d); at d = 0.15 the monthly bill drops to $5,100.\np In LaTeX that is $C = n \\cdot p \\cdot (1 - d)$, and the break-even point is $$n_{break} = \\frac{F}{p - c}$$ where F is the fixed cost and c the marginal cost.\np Variables in the code follow snake_case: `total_cost`, `unit_price`, `discount_rate`. The function is:\ncode python def total_cost(n_requests, unit_price, discount_rate=0.0): return n_requests * unit_price * (1 - discount_rate) [download copy] off\np Some edge cases:\nul\n  li\n    p 5*3 = 15 and 2*2*2 = 8, written with a star between the numbers.\n  li\n    p A_1, A_2 and x_i are subscripts, not"
+      "roles": "p The cost model is simple. Each request costs $0.002, so 1,000 requests cost $2 and a month of 3M requests costs about $6,000.\np Write the cost as C = n * p, where n is the number of requests and p the price per request. With a discount d for volume, it becomes C = n * p * (1 - d); at d = 0.15 the monthly bill drops to $5,100.\np In LaTeX that is $C = n \\cdot p \\cdot (1 - d)$, and the break-even point is ⟦n_{break} = \\frac{F}{p - c}⟧ where F is the fixed cost and c the marginal cost.\np Variables in the code follow snake_case: `total_cost`, `unit_price`, `discount_rate`. The function is:\ncode python def total_cost(n_requests, unit_price, discount_rate=0.0): return n_requests * unit_price * (1 - discount_rate) [download copy] off\np Some edge cases:\nul\n  li\n    p 5*3 = 15 and 2*2*2 = 8, written with a star between the numbers.\n  li\n    p A_1, A_2 and x_i are subscripts, not"
     },
     {
       "name": "math",
       "at": 940,
-      "roles": "p The cost model is simple. Each request costs $0.002, so 1,000 requests cost $2 and a month of 3M requests costs about $6,000.\np Write the cost as C = n * p, where n is the number of requests and p the price per request. With a discount d for volume, it becomes C = n * p * (1 - d); at d = 0.15 the monthly bill drops to $5,100.\np In LaTeX that is $C = n \\cdot p \\cdot (1 - d)$, and the break-even point is $$n_{break} = \\frac{F}{p - c}$$ where F is the fixed cost and c the marginal cost.\np Variables in the code follow snake_case: `total_cost`, `unit_price`, `discount_rate`. The function is:\ncode python def total_cost(n_requests, unit_price, discount_rate=0.0): return n_requests * unit_price * (1 - discount_rate) [download copy] off\np Some edge cases:\nul\n  li\n    p 5*3 = 15 and 2*2*2 = 8, written with a star between the numbers.\n  li\n    p A_1, A_2 and x_i are subscripts, not emphasis.\n  li\n    p **init** and **main** are Python's own names.\n  li\n    p A price range of $10-$20 is fine;"
+      "roles": "p The cost model is simple. Each request costs $0.002, so 1,000 requests cost $2 and a month of 3M requests costs about $6,000.\np Write the cost as C = n * p, where n is the number of requests and p the price per request. With a discount d for volume, it becomes C = n * p * (1 - d); at d = 0.15 the monthly bill drops to $5,100.\np In LaTeX that is $C = n \\cdot p \\cdot (1 - d)$, and the break-even point is ⟦n_{break} = \\frac{F}{p - c}⟧ where F is the fixed cost and c the marginal cost.\np Variables in the code follow snake_case: `total_cost`, `unit_price`, `discount_rate`. The function is:\ncode python def total_cost(n_requests, unit_price, discount_rate=0.0): return n_requests * unit_price * (1 - discount_rate) [download copy] off\np Some edge cases:\nul\n  li\n    p 5*3 = 15 and 2*2*2 = 8, written with a star between the numbers.\n  li\n    p A_1, A_2 and x_i are subscripts, not emphasis.\n  li\n    p **init** and **main** are Python's own names.\n  li\n    p A price range of $10-$20 is fine;"
     },
     {
       "name": "math",
       "at": 1034,
-      "roles": "p The cost model is simple. Each request costs $0.002, so 1,000 requests cost $2 and a month of 3M requests costs about $6,000.\np Write the cost as C = n * p, where n is the number of requests and p the price per request. With a discount d for volume, it becomes C = n * p * (1 - d); at d = 0.15 the monthly bill drops to $5,100.\np In LaTeX that is $C = n \\cdot p \\cdot (1 - d)$, and the break-even point is $$n_{break} = \\frac{F}{p - c}$$ where F is the fixed cost and c the marginal cost.\np Variables in the code follow snake_case: `total_cost`, `unit_price`, `discount_rate`. The function is:\ncode python def total_cost(n_requests, unit_price, discount_rate=0.0): return n_requests * unit_price * (1 - discount_rate) [download copy] off\np Some edge cases:\nul\n  li\n    p 5*3 = 15 and 2*2*2 = 8, written with a star between the numbers.\n  li\n    p A_1, A_2 and x_i are subscripts, not emphasis.\n  li\n    p **init** and **main** are Python's own names.\n  li\n    p A price range of $10-$20 is fine; so is 20~25 units.\n  li\n    p The ratio is 3:1, roughly 75 % of the budget.\np So for most teams the *va*"
+      "roles": "p The cost model is simple. Each request costs $0.002, so 1,000 requests cost $2 and a month of 3M requests costs about $6,000.\np Write the cost as C = n * p, where n is the number of requests and p the price per request. With a discount d for volume, it becomes C = n * p * (1 - d); at d = 0.15 the monthly bill drops to $5,100.\np In LaTeX that is $C = n \\cdot p \\cdot (1 - d)$, and the break-even point is ⟦n_{break} = \\frac{F}{p - c}⟧ where F is the fixed cost and c the marginal cost.\np Variables in the code follow snake_case: `total_cost`, `unit_price`, `discount_rate`. The function is:\ncode python def total_cost(n_requests, unit_price, discount_rate=0.0): return n_requests * unit_price * (1 - discount_rate) [download copy] off\np Some edge cases:\nul\n  li\n    p 5*3 = 15 and 2*2*2 = 8, written with a star between the numbers.\n  li\n    p A_1, A_2 and x_i are subscripts, not emphasis.\n  li\n    p **init** and **main** are Python's own names.\n  li\n    p A price range of $10-$20 is fine; so is 20~25 units.\n  li\n    p The ratio is 3:1, roughly 75 % of the budget.\np So for most teams the *va*"
     },
     {
       "name": "math",
       "at": 1128,
-      "roles": "p The cost model is simple. Each request costs $0.002, so 1,000 requests cost $2 and a month of 3M requests costs about $6,000.\np Write the cost as C = n * p, where n is the number of requests and p the price per request. With a discount d for volume, it becomes C = n * p * (1 - d); at d = 0.15 the monthly bill drops to $5,100.\np In LaTeX that is $C = n \\cdot p \\cdot (1 - d)$, and the break-even point is $$n_{break} = \\frac{F}{p - c}$$ where F is the fixed cost and c the marginal cost.\np Variables in the code follow snake_case: `total_cost`, `unit_price`, `discount_rate`. The function is:\ncode python def total_cost(n_requests, unit_price, discount_rate=0.0): return n_requests * unit_price * (1 - discount_rate) [download copy]\np Some edge cases:\nul\n  li\n    p 5*3 = 15 and 2*2*2 = 8, written with a star between the numbers.\n  li\n    p A_1, A_2 and x_i are subscripts, not emphasis.\n  li\n    p **init** and **main** are Python's own names.\n  li\n    p A price range of $10-$20 is fine; so is 20~25 units.\n  li\n    p The ratio is 3:1, roughly 75 % of the budget.\np So for most teams the *variable* part dominates, and the **fixed** part matters only below about 10k requests a month."
+      "roles": "p The cost model is simple. Each request costs $0.002, so 1,000 requests cost $2 and a month of 3M requests costs about $6,000.\np Write the cost as C = n * p, where n is the number of requests and p the price per request. With a discount d for volume, it becomes C = n * p * (1 - d); at d = 0.15 the monthly bill drops to $5,100.\np In LaTeX that is $C = n \\cdot p \\cdot (1 - d)$, and the break-even point is ⟦n_{break} = \\frac{F}{p - c}⟧ where F is the fixed cost and c the marginal cost.\np Variables in the code follow snake_case: `total_cost`, `unit_price`, `discount_rate`. The function is:\ncode python def total_cost(n_requests, unit_price, discount_rate=0.0): return n_requests * unit_price * (1 - discount_rate) [download copy]\np Some edge cases:\nul\n  li\n    p 5*3 = 15 and 2*2*2 = 8, written with a star between the numbers.\n  li\n    p A_1, A_2 and x_i are subscripts, not emphasis.\n  li\n    p **init** and **main** are Python's own names.\n  li\n    p A price range of $10-$20 is fine; so is 20~25 units.\n  li\n    p The ratio is 3:1, roughly 75 % of the budget.\np So for most teams the *variable* part dominates, and the **fixed** part matters only below about 10k requests a month."
     },
     {
       "name": "cjk",
@@ -3004,7 +3004,7 @@
     {
       "name": "m6",
       "at": 175,
-      "roles": "p The area of a circle is $A = \\pi r^2$, and its circumference is $C = 2\\pi r$.\np For a sphere:\np $$ V = \\frac{4}{3}\\pi r^3 $$\np So doubling $r$ multiplies the volume by $2^3 = 8$."
+      "roles": "p The area of a circle is $A = \\pi r^2$, and its circumference is $C = 2\\pi r$.\np For a sphere:\nmath V = \\frac{4}{3}\\pi r^3\np So doubling $r$ multiplies the volume by $2^3 = 8$."
     },
     {
       "name": "m7",
@@ -3145,6 +3145,26 @@
       "name": "m20",
       "at": 57,
       "roles": "p The rate fell by a third[^1], which is *significant for a"
+    },
+    {
+      "name": "formulas",
+      "at": 89,
+      "roles": "p The quadratic formula gives the roots:\nmath x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}\np For"
+    },
+    {
+      "name": "formulas",
+      "at": 178,
+      "roles": "p The quadratic formula gives the roots:\nmath x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}\np For ⟦a = 1⟧, ⟦b = -3⟧ and ⟦c = 2⟧ the roots are ⟦x = 1⟧ and ⟦x = 2⟧.\np A sum over e"
+    },
+    {
+      "name": "formulas",
+      "at": 267,
+      "roles": "p The quadratic formula gives the roots:\nmath x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}\np For ⟦a = 1⟧, ⟦b = -3⟧ and ⟦c = 2⟧ the roots are ⟦x = 1⟧ and ⟦x = 2⟧.\np A sum over every term:\nmath \\sum_{i=1}^{n} i = \\frac{n(n+1)}{2}\np Prices such as $5 and $10 stay as"
+    },
+    {
+      "name": "formulas",
+      "at": 300,
+      "roles": "p The quadratic formula gives the roots:\nmath x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}\np For ⟦a = 1⟧, ⟦b = -3⟧ and ⟦c = 2⟧ the roots are ⟦x = 1⟧ and ⟦x = 2⟧.\np A sum over every term:\nmath \\sum_{i=1}^{n} i = \\frac{n(n+1)}{2}\np Prices such as $5 and $10 stay as written, and so does $$ escaped."
     },
     {
       "name": "commonmark 1",
