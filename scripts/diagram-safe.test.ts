@@ -11,6 +11,7 @@ import {
   MOST_LINES,
   MOST_PARTS,
   drawable,
+  refusalOf,
   safeSvg,
 } from "../src/components/markdown/diagram-safe.ts";
 
@@ -62,6 +63,16 @@ describe(drawable, () => {
       (_, at) => `  s${at} --> s${at + 1} : step number ${at}`
     );
     expect(drawable(["stateDiagram-v2", ...steps].join("\n"))).toBeTruthy();
+  });
+
+  test("says why it is code: past a bound, or a way to an address in it", () => {
+    expect(refusalOf("flowchart LR\n  A --> B")).toBeNull();
+    expect(refusalOf(`flowchart LR${"\n  A --> B".repeat(MOST_LINES)}`)).toBe(
+      "limit"
+    );
+    expect(refusalOf("flowchart LR\n  A[see https://example.com] --> B")).toBe(
+      "source"
+    );
   });
 
   test("past its characters, its lines or its parts it is code", () => {
