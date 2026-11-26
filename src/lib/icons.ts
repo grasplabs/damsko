@@ -57,6 +57,9 @@ import {
   CheckmarkSquare02Icon,
   CircleIcon as HugeCircleIcon,
   Clock01Icon,
+  HistoryIcon as HugeHistoryIcon,
+  HourglassIcon as HugeHourglassIcon,
+  UnplugIcon as HugeUnplugIcon,
   Coins01Icon,
   ComputerIcon,
   ComputerTerminal01Icon,
@@ -455,6 +458,10 @@ export const GoForward10Icon: IconData = GoForward10SecIcon;
 export const GripVerticalIcon: IconData = HugeGripVerticalIcon;
 /** A column of numbers. HashtagIcon. */
 export const HashIcon: IconData = HashtagIcon;
+/** What happened before: a log, a record of changes. HistoryIcon. */
+export const HistoryIcon: IconData = HugeHistoryIcon;
+/** Waiting for its time: not ready yet, hours counted. HourglassIcon. */
+export const HourglassIcon: IconData = HugeHourglassIcon;
 /** The first page, a workspace's home. Home01Icon. */
 export const HouseIcon: IconData = Home01Icon;
 /** An image or a picture. Image01Icon. */
@@ -636,6 +643,8 @@ export const TriangleAlertIcon: IconData = Alert02Icon;
 export const TypeIcon: IconData = TextFontIcon;
 /** Underlined text. TextUnderlineIcon. */
 export const UnderlineIcon: IconData = TextUnderlineIcon;
+/** Not connected: a service that doesn't answer, a link taken away. UnplugIcon. */
+export const UnplugIcon: IconData = HugeUnplugIcon;
 /** Undo the last change. Undo02Icon. */
 export const UndoIcon: IconData =
   /* @__PURE__ */

@@ -61,6 +61,12 @@ A card has no `loading` prop: while its words are coming, put a Skeleton in the 
 
 <Stage path="card/flush" label="Flush" />
 
+## As tall as its cell
+
+`fullHeight` makes the card as tall as its grid cell: its CardContent takes the room the header and the footer leave, so the footer stands at the foot. In a row as tall as its tallest card, each shows what it holds whole; in a cell of a set height, what runs past the foot is clipped.
+
+<Stage path="card/full-height" label="As tall as its cell" />
+
 ## In a narrow card
 
 When the card is narrow, the header's actions take the line under the title, never past the edge.
@@ -227,7 +233,7 @@ Each ground, and without padding, holding one word. Large padding is in Padding 
       group: "Content",
       key: "Fill",
       value:
-        "`fullHeight`: the height of its grid cell; one child, or the CardContent, stretches to it, several stand from the top, and what runs past the foot is clipped.",
+        "`fullHeight`: the height of its grid cell; one child, or the CardContent, stretches to it, several stand from the top. In a row sized by the cards, all of each shows; past a set height, it is clipped.",
     },
     {
       group: "Settings",
