@@ -46,7 +46,10 @@ const over: Record<string, { requests?: number; bytes?: number }> = {
   "/components/container": { requests: 31 },
   // A CodeBlock on the first screen loads its lexers, all 150 languages in @pierre/highlights
   // 0.5.2's one module: 161KB. 0.6.0 (allowed by the 3-day rule from 2026-11-29) has a core of
-  // 14KB and a module for each language, which brings these pages back under 600KB.
+  // 14KB and a module for each language, which brings these pages back under 600KB. The diff
+  // viewer's first diff is coloured by the same lexers: 615KB; the code block's page, 600KB.
+  "/components/code-block": { bytes: 640 * 1024 },
+  "/components/diff-viewer": { bytes: 640 * 1024 },
   "/components/markdown": { bytes: 700 * 1024 },
   "/components/message": { bytes: 690 * 1024 },
   "/components/trace": { bytes: 640 * 1024 },
