@@ -467,8 +467,10 @@ describe("what an answer may hold besides prose", () => {
     expect(draw("> [!WARNING]\n> Words.")).not.toMatch(
       /role="(?:alert|status)"/u
     );
-    // While written, the mark alone is already the alert, so the mark never shows.
-    expect(alerts("> [!TIP]\n\nMore", { streaming: true })).toBe(1);
+    // While its block is written, the mark alone is already the alert, so the mark never shows;
+    // once the quote is finished it is a quote, as it stays.
+    expect(alerts("Intro\n\n> [!TIP]\n", { streaming: true })).toBe(1);
+    expect(alerts("> [!TIP]\n\nMore words ", { streaming: true })).toBe(0);
   });
 
   test("each block takes its own direction: paragraphs, headings, list items, quotes and table cells", () => {
@@ -479,7 +481,7 @@ describe("what an answer may hold besides prose", () => {
       expect(html).toMatch(new RegExp(`<${tag}\\b[^>]*dir="auto"`, "u"));
     }
     // A quote's paragraph takes the quote's direction, so the quote's `auto` reads its words.
-    expect(count(html, 'dir="auto"')).toBe(8);
+    expect(html).toMatch(/<blockquote[^>]*>\s*<p(?![^>]*\bdir=)/u);
   });
 
   test("maths between two dollars: in a sentence, on lines of its own (blank lines and all), closed while written; one dollar is a dollar", () => {

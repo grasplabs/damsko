@@ -95,6 +95,33 @@ test("a table wider than its box scrolls in a named region the keys can scroll, 
   expect(pageScrolls).toBe(false);
 });
 
+test("cells and heads that wrap let a table of sentences fit a phone, a column of figures on one line, and a cell in Hebrew reads from the right", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openExample(page, "table", "sentences");
+  await expect(page.getByRole("region")).toHaveCount(0);
+  const table = page.getByRole("table");
+  const lines = await table
+    .getByRole("cell", { name: /^The writer drafts/u })
+    .evaluate((cell) => {
+      const range = document.createRange();
+      range.selectNodeContents(cell);
+      return new Set(
+        [...range.getClientRects()].map((rect) => Math.round(rect.bottom))
+      ).size;
+    });
+  expect(lines).toBeGreaterThan(1);
+  await expect(table.getByRole("cell", { name: "3" })).toHaveCSS(
+    "white-space",
+    "nowrap"
+  );
+  await expect(table.getByRole("cell", { name: "שליחה" })).toHaveCSS(
+    "direction",
+    "rtl"
+  );
+});
+
 test("a table that fits takes no focus of its own", async ({ page }) => {
   await openExample(page, "table", "basic");
   await expect(page.getByRole("region")).toHaveCount(0);

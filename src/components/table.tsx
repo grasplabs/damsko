@@ -102,8 +102,8 @@ export interface TableProps {
   /**
    * Its rows arrive one at a time (an answer being written): the columns share the width evenly,
    * so no row that comes moves the ones above it. Keep it on once the table is whole and nothing
-   * moves then either. Each column keeps room for a few words and its name wraps, so a table of
-   * many columns scrolls sideways rather than squeezing them.
+   * moves then either. Each column is at least the narrowest a column may be and its name wraps, so
+   * a table of many columns scrolls sideways rather than squeezing them.
    */
   streaming?: boolean;
   /** Something after the table, inside its box: a data table's mark for endless loading. */
@@ -294,8 +294,8 @@ export interface TableCellProps {
   /** The cell's whole text, shown on hover where `truncate` cuts it short. */
   title?: string;
   /**
-   * Its words may wrap onto more lines: a cell that holds a sentence. It keeps room for a short
-   * word, so a table too narrow for its columns scrolls rather than squeezing it. Only the row
+   * Its words may wrap onto more lines: a cell that holds a sentence. It keeps the narrowest a
+   * column may be, so a table too narrow for its columns scrolls rather than squeezing it. Only the row
    * header wraps by itself; every other cell (a figure, a date, a name, a badge) stays on one line,
    * and a table too narrow for its rows scrolls sideways inside its box.
    * @default false
@@ -343,11 +343,6 @@ const ROW_FOCUS =
 const selectedFill = `linear-gradient(${colors.tableRowBgSelectedMint}, ${colors.tableRowBgSelectedMint})`;
 const hoverFill = `linear-gradient(${colors.tableRowBgHover}, ${colors.tableRowBgHover})`;
 const headLine = `linear-gradient(to top, ${colors.border} ${size.hairline}, transparent ${size.hairline})`;
-
-// The least a column of words keeps (a wrapping cell, a head in a table whose columns share the
-// width): room for a short word or a figure, so a table too narrow for its columns scrolls sideways
-// rather than squeezing them to a letter a line.
-const FEW_WORDS = "5ch";
 
 const styles = stylex.create({
   // What holds the box. The box fades at an edge with more beyond it (a mask), and a mask would
@@ -619,10 +614,10 @@ const styles = stylex.create({
   },
   headCompact: { height: size.tableHeadHeightCompact },
   headWrap: { whiteSpace: "normal" },
-  // A head in a table whose columns share the width (streaming), whose name wraps: the column keeps
-  // room for a few words. A fixed table takes its columns' widths from its head, and grows past its
-  // box, which then scrolls, when they add up to more.
-  headEven: { width: `calc(${FEW_WORDS} + 2 * ${space.tableCellInline})` },
+  // A head in a table whose columns share the width (streaming): the column is at least the
+  // narrowest a column may be. A fixed table takes its columns' widths from its head, and grows past
+  // its box, which then scrolls, when they add up to more.
+  headEven: { width: size.tableColumnMin },
   // Where a dragged column will land: a pine line on that side of the head.
   dropBefore: {
     boxShadow: {
@@ -689,11 +684,9 @@ const styles = stylex.create({
   // Every cell but the row header (and one asked to wrap) on one line: on a phone the row header
   // gives way first, in whole words, and when the row still does not fit the box scrolls sideways.
   oneLine: { whiteSpace: "nowrap" },
-  // A head or a cell whose words wrap keeps room for a few of them, its padding beside them.
-  fewWords: {
-    boxSizing: "border-box",
-    minWidth: `calc(${FEW_WORDS} + 2 * ${space.tableCellInline})`,
-  },
+  // A head or a cell whose words wrap keeps the narrowest a column may be, so a table too narrow
+  // for its columns scrolls sideways rather than squeezing them to a letter a line.
+  fewWords: { boxSizing: "border-box", minWidth: size.tableColumnMin },
   // A column of figures stands at the end, so units line up.
   end: { textAlign: "end" },
   centre: { textAlign: "center" },
@@ -1128,7 +1121,8 @@ export const TableHead = ({
 }: TableHeadProps) => {
   const density = use(DensityContext);
   const stickyHead = use(StickyHeadContext);
-  const even = use(EvenContext);
+  // In a table whose columns share the width, a head with no width of its own sets its column's.
+  const even = use(EvenContext) && width === undefined;
   const direction = sortDirection ?? "none";
   return (
     <th
@@ -1148,9 +1142,9 @@ export const TableHead = ({
         styles.head,
         actions !== undefined && styles.headWithActions,
         density === "compact" && styles.headCompact,
-        (wrap || (even && width === undefined)) && styles.headWrap,
+        (wrap || even) && styles.headWrap,
         wrap && styles.fewWords,
-        even && width === undefined && styles.headEven,
+        even && styles.headEven,
         alignOf(align),
         stickyHead && styles.stuck,
         heldHeadOf(pin, stickyHead),

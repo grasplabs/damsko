@@ -8,8 +8,8 @@ const answer = `## Ways to send the report
 
 | Way | What happens | When to use it | Cost |
 | :-- | :-- | :-- | --: |
-| Email | Everyone on the list gets the PDF in their inbox the moment it is ready. | When readers are outside the workspace. | €0 |
-| Shared folder | The file lands in \`/reports/2026/quarterly-summary-final.pdf\`, and the folder's members are told. | When the team keeps its files together. | €0 |
+| Email | Everyone on the list gets the PDF in their inbox the moment it is ready. | When readers are not in the team. | €0 |
+| Shared folder | The file lands in \`/reports/2026/quarterly-summary-final.pdf\`, and the folder's members are told. | When the team keeps its files in one place. | €0 |
 | Printed copy | The print room sends it by post the next working day. | For the board meeting. | €12.50 |
 
 ## Opening hours

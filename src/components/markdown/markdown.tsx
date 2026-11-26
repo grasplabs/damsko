@@ -500,6 +500,7 @@ const Notes = createContext(NO_NOTES);
 const Tail = createContext("");
 const Shown = createContext(0);
 const Many = createContext(false);
+const Writing = createContext(false);
 const At = createContext("");
 // SAFETY: every node a node of the tree holds is a node of the tree.
 const kidsOf = (node: Node) =>
@@ -1190,42 +1191,57 @@ const ALERTS: Readonly<Record<AlertKind, AlertVariant>> = {
   caution: "destructive",
 };
 const ALERT = /^\[!(?<kind>[a-z]+)\][ \t]*(?:\n|$)/iu;
-const KINDS = Object.keys(ALERTS);
-/** A quote's first paragraph less the mark's line `cut` long, and a hard break after it. */
-const afterMark = (first: Of<"paragraph">, cut: number): Node[] => {
-  const [lead, ...phrases] = first.children;
-  const words = lead?.type === "text" ? lead.value.slice(cut) : "";
-  const at = lead?.position?.start;
-  const shifted = at && { ...at, offset: (at.offset ?? 0) + cut };
+/**
+ * A quote's first paragraph, its first words `lead`, less the mark's line `cut` long and a hard
+ * break after it. The words kept end where `lead` ends, so they start that far from its end.
+ */
+const afterMark = (
+  first: Of<"paragraph">,
+  lead: Of<"text">,
+  cut: number
+): Node[] => {
+  const phrases = first.children.slice(1);
+  const words = lead.value.slice(cut);
+  const end = lead.position?.end;
   const kept: Phrase[] =
-    lead === undefined || words === ""
+    words === ""
       ? phrases.slice(phrases[0]?.type === "break" ? 1 : 0)
       : [
           {
             type: "text",
             value: words,
-            ...(shifted &&
+            ...(end &&
               lead.position && {
-                position: { ...lead.position, start: shifted },
+                position: {
+                  ...lead.position,
+                  start: { ...end, offset: (end.offset ?? 0) - words.length },
+                },
               }),
           },
           ...phrases,
         ];
   return kept.length > 0 ? [{ ...first, children: kept }] : [];
 };
-/** The alert a quote is (its kind and its blocks after the mark), or null for a quote. */
-const alertOf = (node: Of<"blockquote">, streaming: boolean) => {
+const isKind = (kind: string): kind is AlertKind => Object.hasOwn(ALERTS, kind);
+/**
+ * The alert a quote is (its kind and its blocks after the mark), or null for a quote. `writing`: the
+ * quote is in the block still being written, where the mark alone is already the alert.
+ */
+const alertOf = (node: Of<"blockquote">, writing: boolean) => {
   const [first, ...blocks] = node.children;
   const lead = first?.type === "paragraph" ? first.children[0] : undefined;
   const found = lead?.type === "text" ? ALERT.exec(lead.value) : null;
-  const kind = KINDS.find(
-    (each): each is AlertKind => each === found?.groups?.kind?.toLowerCase()
-  );
-  if (first?.type !== "paragraph" || found === null || kind === undefined) {
+  const kind = found?.groups?.kind?.toLowerCase() ?? "";
+  if (
+    first?.type !== "paragraph" ||
+    lead?.type !== "text" ||
+    found === null ||
+    !isKind(kind)
+  ) {
     return null;
   }
-  const said = [...afterMark(first, found[0].length), ...blocks];
-  return said.length > 0 || streaming ? { kind, blocks: said } : null;
+  const said = [...afterMark(first, lead, found[0].length), ...blocks];
+  return said.length > 0 || writing ? { kind, blocks: said } : null;
 };
 /** An alert in the answer: its kind's Alert, titled by its kind, part of the answer (not said again). */
 const AlertBlock = ({
@@ -1243,6 +1259,22 @@ const AlertBlock = ({
         <div {...stylex.props(styles.alertBody)}>{children}</div>
       </AlertDescription>
     </Alert>
+  );
+};
+
+/** A quote, or the alert it is. */
+const Quote = ({ node, shared, kids }: Part<Of<"blockquote">>) => {
+  const alert = alertOf(node, use(Writing) && shared.streaming);
+  return alert === null ? (
+    part(
+      shared,
+      "blockquote",
+      node,
+      { dir: "auto", children: kids(node.children, QUOTED) },
+      [styles.quote]
+    )
+  ) : (
+    <AlertBlock kind={alert.kind}>{kids(alert.blocks)}</AlertBlock>
   );
 };
 
@@ -1337,20 +1369,9 @@ const draw: { [T in Node["type"]]?: Draw<T> } = {
       task && styles.task,
     ]);
   },
-  blockquote: (node, shared, kids) => {
-    const alert = alertOf(node, shared.streaming);
-    return alert === null ? (
-      part(
-        shared,
-        "blockquote",
-        node,
-        { dir: "auto", children: kids(node.children, QUOTED) },
-        [styles.quote]
-      )
-    ) : (
-      <AlertBlock kind={alert.kind}>{kids(alert.blocks)}</AlertBlock>
-    );
-  },
+  blockquote: (node, shared, kids) => (
+    <Quote node={node} shared={shared} kids={kids} />
+  ),
   thematicBreak: (node, shared) =>
     part(shared, "hr", node, {}, [], <Separator />),
   code: (node, shared) => {
@@ -1500,7 +1521,7 @@ const saidOf = (
   const alert = node.type === "blockquote" ? alertOf(node, false) : null;
   if (alert !== null) {
     const text = alert.blocks.map((block) => textOf(block)).join(" ");
-    return `${words.alerts[alert.kind]}: ${text}`;
+    return `${words.alerts[alert.kind]} ${text}`;
   }
   return FOUND.test(node.type) || node.type === "code" ? "" : textOf(node);
 };
@@ -1882,7 +1903,9 @@ export const Markdown = ({
                   <Tail value={writing ? tail : ""}>
                     <Shown value={shown[at] ?? 0}>
                       <Many value={writing && many}>
-                        <Drawn node={node} shared={shared} name={names[at]} />
+                        <Writing value={writing}>
+                          <Drawn node={node} shared={shared} name={names[at]} />
+                        </Writing>
                       </Many>
                     </Shown>
                   </Tail>

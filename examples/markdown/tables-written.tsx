@@ -6,7 +6,7 @@ import * as stylex from "@stylexjs/stylex";
 // width evenly, so no row that comes moves the ones above it, each at least a few words wide.
 const answer = `| Way | What happens | When to use it | Cost |
 | :-- | :-- | :-- | --: |
-| Email | Everyone on the list gets the PDF in their inbox the moment it is ready. | When readers are outside the workspace. | €0 |
+| Email | Everyone on the list gets the PDF in their inbox the moment it is ready. | When readers are not in the team. | €0 |
 | Printed copy | The print room sends it by post the next working day. | For the board meeting. | €12.50 |
 
 | Office | Mon | Tue | Wed | Thu | Fri | Sat | Sun |
