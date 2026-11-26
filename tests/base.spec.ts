@@ -11,11 +11,6 @@ import { componentExamples, openExample, settled } from "./example.ts";
 
 const widths = [1280, 390];
 
-const byComponent = Map.groupBy(
-  componentExamples(),
-  (path) => path.split("/")[0] ?? path
-);
-
 /** Every box of the example and every control's cursor, in the order of the page. */
 const measured = () =>
   [...document.querySelectorAll<HTMLElement>("[data-site-example] *")]
@@ -82,61 +77,61 @@ const withoutOwnRules = () => {
   return taken;
 };
 
-for (const [component, paths] of byComponent) {
-  test(`${component}: stands without the base's own rules`, async ({
-    page,
-  }) => {
-    test.setTimeout(180_000);
+// One test per example, run in parallel: a shard is cut by the number of tests, and as one test
+// per component, each over all its examples on one worker, these took 9 to 11 minutes of the
+// first shard's 11 to 14, and it ended every run minutes after the other three (November 2026).
+test.describe.configure({ mode: "parallel" });
+
+for (const path of componentExamples()) {
+  test(`${path}: stands without the base's own rules`, async ({ page }) => {
+    const [component = "", name = ""] = path.split("/");
     const moved: string[] = [];
-    for (const path of paths) {
-      const [, name = ""] = path.split("/");
-      // Opened anew at each width: a part drawn again as the window crosses a breakpoint (a
-      // skeleton of another length) would read as moved.
-      for (const width of widths) {
+    // Opened anew at each width: a part drawn again as the window crosses a breakpoint (a
+    // skeleton of another length) would read as moved.
+    for (const width of widths) {
+      // oxlint-disable-next-line no-await-in-loop -- one after the other
+      await page.setViewportSize({ width, height: 900 });
+      // oxlint-disable-next-line no-await-in-loop -- one after the other
+      await openExample(page, component, name);
+      // oxlint-disable-next-line no-await-in-loop -- one after the other
+      await settled(page);
+      // oxlint-disable-next-line no-await-in-loop -- one after the other
+      const was = await page.evaluate(measured);
+      // oxlint-disable-next-line no-await-in-loop -- one after the other
+      await settled(page);
+      // oxlint-disable-next-line no-await-in-loop -- one after the other
+      const again = await page.evaluate(measured);
+      // oxlint-disable-next-line no-await-in-loop -- one after the other
+      const taken = await page.evaluate(withoutOwnRules);
+      expect(taken, "the base's two own rules are in the page").toBe(2);
+      // oxlint-disable-next-line no-await-in-loop -- one after the other
+      await settled(page);
+      // oxlint-disable-next-line no-await-in-loop -- one after the other
+      const now = await page.evaluate(measured);
+      // An example that moves by itself (a stream being written) cannot be compared.
+      if (
+        JSON.stringify(was) !== JSON.stringify(again) ||
+        was.length !== now.length
+      ) {
+        continue;
+      }
+      const first = was.findIndex(
+        (each, at) =>
+          each.box !== now[at]?.box || each.cursor !== now[at]?.cursor
+      );
+      // One that moved all the same may still be moving by itself: a stream whose timer did
+      // not fire between the two measures, on a slow machine. Measured again a while later, it
+      // has moved again, and it cannot be compared either.
+      if (first !== -1) {
         // oxlint-disable-next-line no-await-in-loop -- one after the other
-        await page.setViewportSize({ width, height: 900 });
-        // oxlint-disable-next-line no-await-in-loop -- one after the other
-        await openExample(page, component, name);
-        // oxlint-disable-next-line no-await-in-loop -- one after the other
-        await settled(page);
-        // oxlint-disable-next-line no-await-in-loop -- one after the other
-        const was = await page.evaluate(measured);
-        // oxlint-disable-next-line no-await-in-loop -- one after the other
-        await settled(page);
-        // oxlint-disable-next-line no-await-in-loop -- one after the other
-        const again = await page.evaluate(measured);
-        // oxlint-disable-next-line no-await-in-loop -- one after the other
-        const taken = await page.evaluate(withoutOwnRules);
-        expect(taken, "the base's two own rules are in the page").toBe(2);
-        // oxlint-disable-next-line no-await-in-loop -- one after the other
-        await settled(page);
-        // oxlint-disable-next-line no-await-in-loop -- one after the other
-        const now = await page.evaluate(measured);
-        // An example that moves by itself (a stream being written) cannot be compared.
-        if (
-          JSON.stringify(was) !== JSON.stringify(again) ||
-          was.length !== now.length
-        ) {
-          continue;
-        }
-        const first = was.findIndex(
-          (each, at) =>
-            each.box !== now[at]?.box || each.cursor !== now[at]?.cursor
+        await page.evaluate(aWhile);
+      }
+      // oxlint-disable-next-line no-await-in-loop -- one after the other
+      const later = first === -1 ? now : await page.evaluate(measured);
+      if (first !== -1 && JSON.stringify(later) === JSON.stringify(now)) {
+        moved.push(
+          `${path} at ${width}: ${was[first]?.name} was ${was[first]?.box} ${was[first]?.cursor}, is ${now[first]?.box} ${now[first]?.cursor}`
         );
-        // One that moved all the same may still be moving by itself: a stream whose timer did
-        // not fire between the two measures, on a slow machine. Measured again a while later, it
-        // has moved again, and it cannot be compared either.
-        if (first !== -1) {
-          // oxlint-disable-next-line no-await-in-loop -- one after the other
-          await page.evaluate(aWhile);
-        }
-        // oxlint-disable-next-line no-await-in-loop -- one after the other
-        const later = first === -1 ? now : await page.evaluate(measured);
-        if (first !== -1 && JSON.stringify(later) === JSON.stringify(now)) {
-          moved.push(
-            `${path} at ${width}: ${was[first]?.name} was ${was[first]?.box} ${was[first]?.cursor}, is ${now[first]?.box} ${now[first]?.cursor}`
-          );
-        }
       }
     }
     expect(moved).toStrictEqual([]);
