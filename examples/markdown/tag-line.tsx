@@ -1,8 +1,8 @@
 import { Markdown } from "@grasp-os/ui/components/markdown";
 
 // For the spec only (tests/markdown.spec.ts), at /examples/markdown/tag-line; not on the page. A
-// tool's tag on a line of its own, as a model passes it on, over a list of links: the tag is its
-// words, and the list is a list.
+// tool's tag on a line of its own, as a model passes it on, over a list of links: the tag is
+// dropped, and the list is a list.
 const answer = `I found **41 issues** assigned to you that are **in progress** in the tracker:
 
 <untrusted-ExpoGBLIFfAjjZadRE8wCg>

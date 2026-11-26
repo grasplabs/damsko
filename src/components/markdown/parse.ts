@@ -28,10 +28,11 @@ const MARKS =
 // repeated: 3 s for 24 KB): a block with a word of more than 1,000 characters (its fenced code
 // aside) is read without bare addresses.
 const ADDRESSES = ["wwwAutolink", "protocolAutolink", "emailAutolink"];
-// HTML is never drawn, so it is never read: a tag is its words, and the lines after a tag on a line
-// of its own are Markdown, not an HTML block that runs on to the next blank line. An address in
-// angle brackets (`<https://…>`) is still a link: that is an autolink, not HTML.
-const HTML = ["htmlFlow", "htmlText"];
+// HTML is never drawn: a tag (an open or closing tag, a comment) is read where it stands, inside a
+// line, and dropped (markdown.tsx), so a tag on a line of its own is not an HTML block that would
+// run on to the next blank line, and the lines after it are Markdown. An address in angle brackets
+// (`<https://…>`) is an autolink, not HTML: it stays a link.
+const HTML = ["htmlFlow"];
 const GFM = gfm({ singleTilde: false });
 const MATH = math({ singleDollarTextMath: false });
 const MATH_FROM = mathFromMarkdown();

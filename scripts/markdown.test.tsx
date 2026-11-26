@@ -107,7 +107,7 @@ const notePartsOf = (
 
 /**
  * The parts one node draws, by the elements' patterns: a paragraph in a list item or a note is its
- * words, HTML outside a phrase a paragraph of text, a link in a link its words, and a table's row
+ * words, a paragraph of tags alone nothing, a link in a link its words, and a table's row
  * as many cells as its head at most.
  */
 const partsOf = (
@@ -130,9 +130,19 @@ const partsOf = (
   if (node.type === "heading") {
     parts.push([`<h${node.depth}\\b`, 1]);
   }
-  const block = place === "block" || (place === "item" && node.type === "html");
-  if (block && (node.type === "paragraph" || node.type === "html")) {
+  // A paragraph of tags alone draws nothing; `<br>` is a line break, any other tag nothing.
+  const tagsOnly =
+    node.type === "paragraph" &&
+    node.children.every((child) =>
+      child.type === "html"
+        ? !/^<br\s*\/?>$/iu.test(child.value)
+        : child.type === "text" && child.value.trim() === ""
+    );
+  if (place === "block" && node.type === "paragraph" && !tagsOnly) {
     parts.push(["<p\\b", 1]);
+  }
+  if (node.type === "html" && /^<br\s*\/?>$/iu.test(node.value)) {
+    parts.push(["<br", 1]);
   }
   const url =
     "url" in node
@@ -514,58 +524,71 @@ describe("what an answer may hold besides prose", () => {
     expect(count(draw("One\nTwo\nThree", { softBreaks: true }), "<br")).toBe(2);
   });
 
-  test("a section folds: <details> with a <summary> line, nested; any other HTML stays text", () => {
+  test("a section folds: <details> with a <summary> line, nested; any other tag is dropped", () => {
     const html = draw(
       "<details>\n<summary>Outer **one**</summary>\n\nWords.\n\n<details open>\n<summary>Inner</summary>\n\nMore.\n\n</details>\n\n</details>\n\n<div>Other</div>\n\n<details>\n<summary>Never closed</summary>\n\nText."
     );
     expect(count(html, 'data-slot="markdown-section"')).toBe(2);
     expect(html).toMatch(/<strong[^>]*>one<\/strong>/u);
-    expect(textOf(html)).toContain("&lt;div&gt;Other&lt;/div&gt;");
-    expect(textOf(html)).toContain(
-      "&lt;summary&gt;Never closed&lt;/summary&gt;"
-    );
+    expect(textOf(html)).toContain("Other");
+    expect(textOf(html)).toContain("Never closed");
+    expect(textOf(html)).not.toMatch(/&lt;\/?(?:div|summary|details)/u);
   });
 
-  test("a tag on a line of its own is its words, and the lines after it are Markdown", () => {
+  test("a tag on a line of its own is dropped, and the lines after it are Markdown", () => {
     const html = draw(
       "I found **41 issues**:\n\n<untrusted-ExpoGBLIFfAjjZadRE8wCg>\n- [ISS-2306](https://tracker.example.com/a/ISS-2306) — Move the export\n- [ISS-2235](https://tracker.example.com/a/ISS-2235) — Guests\n</untrusted-ExpoGBLIFfAjjZadRE8wCg>"
     );
     expect(count(html, "<li")).toBe(2);
     expect(count(html, 'href="https://tracker.example.com/a/ISS-')).toBe(2);
-    expect(textOf(html)).toContain("&lt;untrusted-ExpoGBLIFfAjjZadRE8wCg&gt;");
-    expect(html).not.toMatch(/<untrusted/iu);
+    expect(html).not.toMatch(/untrusted/iu);
+    // The tag's own line draws no paragraph of its own.
+    expect(count(html, "<p[ >]")).toBe(1);
   });
 
-  test("HTML is never read: a <div> round a paragraph and a tag in a cell are words", () => {
+  test("a tag round a paragraph or in a cell is dropped and its words stay Markdown", () => {
     const wrapped = draw("<div>\nSome **bold** words.\n</div>");
     expect(wrapped).toMatch(/<strong[^>]*>bold<\/strong>/u);
-    expect(textOf(wrapped)).toContain("&lt;div&gt;");
+    expect(textOf(wrapped)).not.toContain("&lt;");
     const cell = draw("| A | B |\n| --- | --- |\n| <b>x</b> | y |");
-    expect(textOf(cell)).toContain("&lt;b&gt;x&lt;/b&gt;");
-    expect(cell).not.toMatch(/<b>/u);
+    expect(textOf(cell)).toContain("x");
+    expect(cell).not.toMatch(/<b>|&lt;b&gt;/u);
   });
 
-  test("a comment and <br> are words, and an address in angle brackets is a link", () => {
+  test("a comment is dropped and <br> is a line break; an address in angle brackets is a link", () => {
     const words = draw("A comment <!-- note --> and a break<br>here.");
-    expect(textOf(words)).toContain("&lt;!-- note --&gt;");
-    expect(textOf(words)).toContain("&lt;br&gt;");
-    expect(count(words, "<br")).toBe(0);
-    // An address in angle brackets is a link, not HTML.
+    expect(textOf(words)).not.toContain("note");
+    expect(count(words, "<br")).toBe(1);
     expect(draw("See <https://example.com/angle>.")).toContain(
       'href="https://example.com/angle"'
     );
+    expect(draw("Mail <a@example.com>.")).toContain(
+      'href="mailto:a@example.com"'
+    );
   });
 
-  test("a tag still being written at the end is its words", () => {
-    const html = draw("Look:\n\n<untrusted-Expo", { streaming: true });
-    expect(html).not.toMatch(/<untrusted/iu);
+  test("what is not a tag stays words: a < b and c > d, <3, <-, and a tag in code", () => {
+    for (const source of ["a < b and c > d", "I <3 it", "go <- back"]) {
+      expect(textOf(draw(source)).trim()).toBe(
+        source.replaceAll("<", "&lt;").replaceAll(">", "&gt;")
+      );
+    }
+    expect(textOf(draw("Use `Array<string>` here."))).toContain(
+      "Array&lt;string&gt;"
+    );
+    expect(textOf(draw("```ts\nconst a: Array<string> = [];\n```"))).toContain(
+      "Array&lt;string&gt;"
+    );
+    // Outside code, a generic's `<string>` is a tag, and dropped (as Streamdown drops it).
+    expect(textOf(draw("An Array<string> here."))).not.toContain("string");
   });
 
-  test("sections nest 32 deep, and deeper is words", () => {
+  test("sections nest 32 deep, and deeper is words with its tags dropped", () => {
     const source = `${"<details>\n<summary>s</summary>\n\n".repeat(40)}x\n\n${"</details>\n\n".repeat(40)}`;
     const html = draw(source);
     expect(count(html, 'data-slot="markdown-section"')).toBe(32);
-    expect(textOf(html)).toContain("&lt;details&gt;");
+    expect(textOf(html)).not.toContain("&lt;details&gt;");
+    expect(textOf(html)).toContain("x");
   });
 });
 
@@ -579,15 +602,21 @@ describe("while it is written, nothing shows that the whole answer will not", ()
     }
   });
 
-  test("a tag still open shows its words, as the whole answer does", () => {
-    // Each ends in a space: the word still being written waits for it.
+  test("a tag still being written waits, attributes and all, and never shows as words", () => {
     for (const source of [
+      "Look:\n\n<untrusted-Expo",
       "Hello <div class=x and more words ",
-      "<span title=x y ",
+      '<span title="a b',
+      "Done </untrusted",
+      "A note <!-- still",
     ]) {
       const words = textOf(draw(source, { streaming: true }));
-      expect(words.trim()).toBe(textOf(draw(source)).trim());
+      expect(words).not.toMatch(/&lt;[a-z/!]/iu);
     }
+    // Text that cannot be a tag shows as it comes.
+    expect(textOf(draw("a < b and c ", { streaming: true }))).toContain(
+      "a &lt; b"
+    );
   });
 
   test("a mark of emphasis or code at the very end, and a closing fence half typed, wait", () => {

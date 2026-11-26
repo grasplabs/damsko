@@ -1,8 +1,8 @@
 import { Markdown } from "@grasp-os/ui/components/markdown";
 
-// What an answer must never do, drawn as plain text: raw HTML, a script link, a data link, a
-// picture that would load, a formula that would link.
-const risky = `This line holds <b onmouseover="alert(1)">raw HTML</b>, shown as the text it is.
+// What an answer must never do, drawn as plain text: raw HTML (its tags dropped, never elements), a
+// script link, a data link, a picture that would load, a formula that would link.
+const risky = `This line holds <b onmouseover="alert(1)">raw HTML</b>, shown as words without its tags.
 
 <script>alert(1)</script>
 
