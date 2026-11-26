@@ -1,19 +1,29 @@
 "use client";
 
-import { AppShell } from "@grasp-os/ui/blocks/app-shell-01/app-shell-01";
-import { Avatar, AvatarImage } from "@grasp-os/ui/components/avatar";
 import {
-  BreadcrumbItem,
-  BreadcrumbLink,
-} from "@grasp-os/ui/components/breadcrumb";
+  AppShell,
+  AppShellHeader,
+  AppShellPage,
+} from "@grasp-os/ui/blocks/app-shell-01/app-shell-01";
+import { Avatar, AvatarImage } from "@grasp-os/ui/components/avatar";
 import { Button } from "@grasp-os/ui/components/button";
+import {
+  Command,
+  CommandEmpty,
+  CommandInput,
+  CommandList,
+} from "@grasp-os/ui/components/command";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from "@grasp-os/ui/components/dialog";
 import { PageHeader } from "@grasp-os/ui/components/page-header";
 import {
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarHeader,
   SidebarMenu,
   SidebarMenuBadge,
   SidebarMenuButton,
@@ -38,7 +48,6 @@ import {
   media,
   radius,
   size,
-  space,
 } from "@grasp-os/ui/lib/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
 import { useState } from "react";
@@ -55,9 +64,9 @@ const layout = stylex.create({
     boxShadow: `0 0 0 ${size.hairline} ${colors.border}`,
   },
   shell: { height: "100%", minHeight: 0 },
-  // The product's mark at the head, where the rows' icons start: its file as a mask, in the words'
-  // colour, so it follows the theme; in forced colours in the system's ink.
-  head: { display: "flex", paddingInlineStart: space["2"] },
+  // The product's mark: its file as a mask, in the words' colour, so it follows the theme; in
+  // forced colours in the system's ink.
+  home: { display: "flex", color: "inherit" },
   mark: {
     display: "block",
     width: size.appShellMark,
@@ -93,23 +102,31 @@ const places: { name: string; icon: IconData; count?: number }[] = [
   { name: "Integrations", icon: LinkIcon },
 ];
 
-// The sidebar down the start (the product's mark at its head, the person at its foot), the page
-// beside it as a card, and across the card's top the header:
-// the sidebar's trigger, where the page is (its name renames in place) and its actions. The page
-// scrolls under the header. On a phone the trigger opens the sidebar as a sheet.
+// The sidebar down the start, its head the shell's: the product's mark, the search (the slash
+// too) and the fold. The page beside it as a card draws its own bar: where the page is (its
+// name renames in place) and its actions; the fold stands in the bar only while the sidebar is
+// away, and the fold is kept for the next visit. The page scrolls under its bar. On a phone the
+// bar's fold opens the sidebar as a sheet, and the bar says the page and the step before it.
 export default function AppShellBasic() {
   const [name, setName] = useState("Spring launch");
+  const [searching, setSearching] = useState(false);
   return (
     <div {...stylex.props(layout.frame)}>
       <AppShell
         style={layout.shell}
+        storageKey="app-shell-01-basic"
+        mark={
+          <a href="#home" aria-label="Home" {...stylex.props(layout.home)}>
+            <span aria-hidden="true" {...stylex.props(layout.mark)} />
+          </a>
+        }
+        onSearch={() => {
+          setSearching(true);
+        }}
+        // This site keeps Cmd+K for its own search: here the slash opens the example's.
+        searchShortcut="/"
         sidebar={
           <>
-            <SidebarHeader>
-              <div {...stylex.props(layout.head)}>
-                <span aria-hidden="true" {...stylex.props(layout.mark)} />
-              </div>
-            </SidebarHeader>
             <SidebarContent>
               <SidebarGroup>
                 <SidebarGroupContent>
@@ -154,24 +171,44 @@ export default function AppShellBasic() {
             </SidebarFooter>
           </>
         }
-        breadcrumb={
-          <BreadcrumbItem>
-            <BreadcrumbLink href="#projects">Projects</BreadcrumbLink>
-          </BreadcrumbItem>
-        }
-        title={name}
-        onRename={setName}
-        actions={
-          <Button variant="outline" size="sm">
-            Share
-          </Button>
-        }
       >
-        <PageHeader
+        <AppShellHeader
+          breadcrumb={[{ label: "Projects", href: "#projects" }]}
           title={name}
-          description="Everything the team ships in March, and who owns each part."
+          onRename={setName}
+          actions={
+            <Button variant="outline" size="sm">
+              Share
+            </Button>
+          }
         />
+        <AppShellPage>
+          <PageHeader
+            title={name}
+            description="Everything the team ships in March, and who owns each part."
+          />
+        </AppShellPage>
       </AppShell>
+      <Dialog open={searching} onOpenChange={setSearching}>
+        <DialogContent>
+          <DialogTitle>Search</DialogTitle>
+          <Command
+            items={places.map((place) => ({
+              value: place.name.toLowerCase(),
+              label: place.name,
+              icon: place.icon,
+            }))}
+            onAction={(value) => {
+              setSearching(false);
+              window.location.hash = value;
+            }}
+          >
+            <CommandInput placeholder="Find a place" />
+            <CommandEmpty>Nothing by that name.</CommandEmpty>
+            <CommandList />
+          </Command>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

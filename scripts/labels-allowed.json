@@ -1,4 +1,5 @@
 {
+  "src/blocks/app-shell-01/app-shell-01.tsx#AppShellCrumb.label": "data",
   "src/blocks/app-shell-01/app-shell-01.tsx#AppShellProps.labels": "words",
   "src/blocks/connect-api-key-01/connect-api-key-01.tsx#ConnectApiKeyProps.labels": "words",
   "src/blocks/connect-api-key-01/connect-api-key-01.tsx#ConnectApiKeyProvider.addressLabel": "data",

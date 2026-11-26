@@ -46,12 +46,12 @@ test("the bar draws its path as a slash between steps, the page in medium weight
   // The rule: a hairline across the foot of the bar the path stands in.
   const rule = await crumbs.evaluate((node) => {
     const bar = node.closest("header");
-    return bar === null ? "" : getComputedStyle(bar, "::after").height;
+    return bar === null ? "" : getComputedStyle(bar).borderBottomWidth;
   });
   expect(rule).toBe("1px");
 });
 
-test("the sidebar is a named landmark beside the main page, which holds the header", async ({
+test("the sidebar is a named landmark with the fold in its head, beside the main page, which holds the bar", async ({
   page,
 }) => {
   await openExample(page, "app-shell-01", "basic");
@@ -60,31 +60,84 @@ test("the sidebar is a named landmark beside the main page, which holds the head
     "aria-current",
     "page"
   );
+  await expect(sidebar.getByRole("button", { name: TOGGLE })).toBeVisible();
+  await expect(sidebar.getByRole("link", { name: "Home" })).toBeVisible();
   const main = page.getByRole("main");
-  await expect(main.getByRole("button", { name: TOGGLE })).toBeVisible();
   await expect(
     main.getByRole("navigation", { name: "Breadcrumb" })
   ).toBeVisible();
-  // The header is the page's, inside main: no banner landmark of its own.
+  // While the sidebar is open its head holds the fold: the bar has none.
+  await expect(main.getByRole("button", { name: TOGGLE })).toHaveCount(0);
+  // The bar is the page's, inside main: no banner landmark of its own.
   await expect(page.getByRole("banner")).toHaveCount(0);
 });
 
-test("the trigger and Cmd+B or Ctrl+B fold the sidebar away and bring it back", async ({
+test("the head's fold puts the sidebar away and the bar's brings it back, focus going on to the head's", async ({
   page,
 }) => {
   await openExample(page, "app-shell-01", "basic");
-  const trigger = page.getByRole("main").getByRole("button", { name: TOGGLE });
+  const sidebar = page.getByRole("complementary", { name: "Sidebar" });
+  const fold = sidebar.getByRole("button", { name: TOGGLE });
+  const row = sidebar.getByRole("link", { name: "Chat" });
+  await expect(fold).toHaveAttribute("aria-expanded", "true");
+  await fold.click();
+  await expect(row).toBeHidden();
+  const barFold = page.getByRole("main").getByRole("button", { name: TOGGLE });
+  await expect(barFold).toHaveAttribute("aria-expanded", "false");
+  await barFold.focus();
+  await page.keyboard.press("Enter");
+  await expect(row).toBeVisible();
+  // The bar's fold went with the sidebar's return: focus is on the head's, never lost.
+  await expect(barFold).toHaveCount(0);
+  await expect(fold).toBeFocused();
+});
+
+test("Cmd+B or Ctrl+B fold the sidebar away and bring it back", async ({
+  page,
+}) => {
+  await openExample(page, "app-shell-01", "basic");
   const row = page
     .getByRole("complementary", { name: "Sidebar" })
     .getByRole("link", { name: "Chat" });
-  await expect(trigger).toHaveAttribute("aria-expanded", "true");
-  await trigger.click();
-  await expect(trigger).toHaveAttribute("aria-expanded", "false");
+  await pressKeys(page);
   await expect(row).toBeHidden();
   await pressKeys(page);
   await expect(row).toBeVisible();
-  await pressKeys(page);
-  await expect(row).toBeHidden();
+});
+
+test("the fold is kept for the next visit (storageKey)", async ({ page }) => {
+  await openExample(page, "app-shell-01", "basic");
+  const sidebar = page.getByRole("complementary", { name: "Sidebar" });
+  await sidebar.getByRole("button", { name: TOGGLE }).click();
+  await expect(sidebar.getByRole("link", { name: "Chat" })).toBeHidden();
+  await page.reload();
+  await expect(
+    page.getByRole("main").getByRole("button", { name: TOGGLE })
+  ).toHaveAttribute("aria-expanded", "false");
+  await expect(
+    page
+      .getByRole("complementary", { name: "Sidebar" })
+      .getByRole("link", { name: "Chat" })
+  ).toBeHidden();
+});
+
+test("the head's search opens the product's search, and so do its keys", async ({
+  page,
+}) => {
+  await openExample(page, "app-shell-01", "basic");
+  const search = page
+    .getByRole("complementary", { name: "Sidebar" })
+    .getByRole("button", { name: "Search" });
+  await expect(search).toHaveAttribute("aria-keyshortcuts", "/");
+  await expect(search).toHaveAttribute("title", /^Search \(.*\/.*\)$/u);
+  await search.click();
+  const dialog = page.getByRole("dialog", { name: "Search" });
+  await expect(dialog).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  await page.getByRole("heading", { name: "Spring launch" }).click();
+  await page.keyboard.press("/");
+  await expect(dialog).toBeVisible();
 });
 
 test("the page's name renames in place: Enter saves, and the page says the new name", async ({
@@ -167,13 +220,64 @@ test("on a phone the sidebar is a sheet, and a link followed in it closes it", a
   await expect(page).toHaveURL(/#dashboard$/u);
 });
 
-test("a banner stands above the header, across the page", async ({ page }) => {
+test("on a phone the sheet's head closes it, and its search opens over the page with the sheet gone", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await openExample(page, "app-shell-01", "basic");
+  const open = page.getByRole("button", { name: TOGGLE });
+  await open.click();
+  const sheet = page.getByRole("dialog", { name: "Sidebar" });
+  await sheet.getByRole("button", { name: "Close" }).click();
+  await expect(sheet).toBeHidden();
+  await expect(open).toBeFocused();
+  await open.click();
+  await sheet.getByRole("button", { name: "Search" }).click();
+  await expect(sheet).toBeHidden();
+  await expect(page.getByRole("dialog", { name: "Search" })).toBeVisible();
+});
+
+test("on a phone the bar says the page and the step before it, and drops the step when both don't fit", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await openExample(page, "page-header", "band");
+  const crumbs = page.getByRole("navigation", { name: "Breadcrumb" });
+  // Notes / Reports / Finance: the page and its step, the first step left out.
+  await expect(crumbs).toHaveText(/^Reports\s*\/\s*Finance$/u);
+  await expect(crumbs.getByRole("link", { name: "Reports" })).toBeVisible();
+  await expect(crumbs.getByText("Finance")).toHaveAttribute(
+    "aria-current",
+    "page"
+  );
+  // A name too long for both: the page stands alone, and its step is out of reach.
+  await openExample(page, "app-shell-01", "basic");
+  const trail = page.getByRole("navigation", { name: "Breadcrumb" });
+  const step = trail.getByRole("link", { name: "Projects" });
+  await expect(step).toBeVisible();
+  await trail.getByRole("button", { name: "Spring launch" }).click();
+  await page
+    .getByRole("textbox", { name: "Rename" })
+    .fill("Spring launch for every team in the northern region");
+  await page.keyboard.press("Enter");
+  // Wrapped onto the trail's hidden second line, and out of the keys' and a screen reader's reach.
+  await expect
+    .poll(async () => await step.evaluate((link) => link.closest("li")?.inert))
+    .toBe(true);
+  const [line, under] = await step.evaluate((link) => {
+    const list = link.closest("ol")?.getBoundingClientRect();
+    return [link.getBoundingClientRect().top, list?.bottom ?? 0];
+  });
+  expect(line).toBeGreaterThanOrEqual(under);
+});
+
+test("a banner stands above the bar, across the page", async ({ page }) => {
   await openExample(page, "app-shell-01", "banner");
   const notice = page.getByText("Scheduled maintenance");
-  const trigger = page.getByRole("main").getByRole("button", { name: TOGGLE });
+  const where = page.getByRole("main").getByText("Dashboard").first();
   const above = await topOf(notice);
-  const header = await topOf(trigger);
-  expect(above).toBeLessThan(header);
+  const bar = await topOf(where);
+  expect(above).toBeLessThan(bar);
 });
 
 test("right to left, the sidebar stands at the right and the panel at the left", async ({
@@ -348,4 +452,35 @@ test("the shell writes every slash in its path, each as far from the step before
   expect(path.kinds).toEqual(["step", "/", "step", "/", "step"]);
   // Every step and slash the same room apart, the slash the shell writes before the page too.
   expect(new Set(path.gaps).size).toBe(1);
+});
+
+test("a slow page keeps its bar and says once that it is loading; a missing or failed one stands in the card's middle", async ({
+  page,
+}) => {
+  await openExample(page, "app-shell-01", "states");
+  const main = page.getByRole("main");
+  const loading = main.getByRole("status", { name: "Loading…" });
+  await expect(loading).toHaveAttribute("aria-busy", "true");
+  const sidebar = page.getByRole("complementary", { name: "Sidebar" });
+  await sidebar.getByRole("button", { name: "Missing page" }).click();
+  const missing = main.getByRole("heading", {
+    level: 1,
+    name: "This page is not here",
+  });
+  await expect(missing).toBeVisible();
+  await expect(main.getByRole("link", { name: "Go home" })).toBeVisible();
+  // In the middle of what the bar leaves of the card.
+  const card = await main.boundingBox();
+  const title = await missing.boundingBox();
+  if (card === null || title === null) {
+    throw new Error("The page has no box.");
+  }
+  const middle = card.y + 48 + (card.height - 48) / 2;
+  expect(Math.abs(title.y - middle)).toBeLessThan(card.height / 4);
+  await sidebar.getByRole("button", { name: "Failed page" }).click();
+  await expect(
+    main.getByRole("heading", { level: 1, name: "This page didn’t load" })
+  ).toBeVisible();
+  await main.getByRole("button", { name: "Try again" }).click();
+  await expect(loading).toBeVisible();
 });

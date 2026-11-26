@@ -248,7 +248,9 @@
       "title": "App shell",
       "description": "The frame every page of an app sits in, with its main navigation beside the page.",
       "dependencies": [
-        "@stylexjs/stylex"
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
       ],
       "registryDependencies": [
         "@damsko/alert",
@@ -260,7 +262,8 @@
         "@damsko/resizable",
         "@damsko/sheet",
         "@damsko/side-panel",
-        "@damsko/sidebar"
+        "@damsko/sidebar",
+        "@damsko/skeleton"
       ],
       "docs": "https://damsko.joingrasp.com/components/app-shell-01",
       "meta": {

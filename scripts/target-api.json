@@ -1582,7 +1582,14 @@
     "src/blocks/app-shell-01/app-shell-01.tsx": [
       "AppShell",
       "AppShellProps",
-      "AppShellLabels"
+      "AppShellLabels",
+      "AppShellCrumb",
+      "AppShellHeader",
+      "AppShellHeaderProps",
+      "AppShellPage",
+      "AppShellPageProps",
+      "AppShellPageSkeleton",
+      "AppShellPageSkeletonProps"
     ]
   },
   "message": {

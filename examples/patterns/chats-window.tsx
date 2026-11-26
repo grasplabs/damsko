@@ -1,6 +1,10 @@
 "use client";
 
-import { AppShell } from "@grasp-os/ui/blocks/app-shell-01/app-shell-01";
+import {
+  AppShell,
+  AppShellHeader,
+  AppShellPage,
+} from "@grasp-os/ui/blocks/app-shell-01/app-shell-01";
 import { AgentIndicator } from "@grasp-os/ui/components/agent-indicator";
 import {
   CommandDialog,
@@ -421,7 +425,6 @@ export default function ChatsWindow({
     <div {...stylex.props(layout.frame)}>
       <AppShell
         style={layout.shell}
-        title={shownChat?.title ?? "Chat"}
         sidebar={
           <SidebarContent>
             <SidebarGroup>
@@ -475,10 +478,13 @@ export default function ChatsWindow({
           </SidebarContent>
         }
       >
-        <PageHeader
-          title={shownChat?.title ?? "Chat"}
-          description="mod+K or All chats opens every chat."
-        />
+        <AppShellHeader title={shownChat?.title ?? "Chat"} />
+        <AppShellPage>
+          <PageHeader
+            title={shownChat?.title ?? "Chat"}
+            description="mod+K or All chats opens every chat."
+          />
+        </AppShellPage>
       </AppShell>
       <CommandDialog
         aria-label="Search chats"

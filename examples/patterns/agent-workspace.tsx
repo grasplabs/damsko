@@ -1,10 +1,10 @@
 "use client";
 
-import { AppShell } from "@grasp-os/ui/blocks/app-shell-01/app-shell-01";
 import {
-  BreadcrumbItem,
-  BreadcrumbLink,
-} from "@grasp-os/ui/components/breadcrumb";
+  AppShell,
+  AppShellHeader,
+  AppShellPage,
+} from "@grasp-os/ui/blocks/app-shell-01/app-shell-01";
 import { Bubble, BubbleContent } from "@grasp-os/ui/components/bubble";
 import { Button } from "@grasp-os/ui/components/button";
 import {
@@ -146,7 +146,7 @@ const layout = stylex.create({
     boxSizing: "border-box",
     width: "100%",
     maxWidth: size.promptInputWidth,
-    height: "100%",
+    flexGrow: 1,
     minHeight: 0,
     marginInline: "auto",
   },
@@ -453,216 +453,224 @@ const AgentWorkspace = () => {
             </SidebarGroup>
           </SidebarContent>
         }
-        breadcrumb={
-          <BreadcrumbItem>
-            <BreadcrumbLink href="#chat">Chat</BreadcrumbLink>
-          </BreadcrumbItem>
-        }
-        title={chats.find((each) => each.value === chat)?.label ?? ""}
-        actions={
-          <Button ref={replayButton} variant="ghost" size="sm" onClick={replay}>
-            <Icon icon={RedoIcon} />
-            Replay
-          </Button>
-        }
         panel={panel}
         panelOpen={panelOpen}
         onPanelOpenChange={setPanelOpen}
       >
-        <div {...stylex.props(layout.conversation)}>
-          <MessageScrollerProvider key={run} autoScroll>
-            <MessageScroller>
-              <MessageScrollerViewport
-                aria-label={`Conversation with the ${AGENT.toLowerCase()}`}
-              >
-                <MessageScrollerContent>
-                  {phase === "waiting" ? null : (
-                    <MessageScrollerItem key="question">
-                      <Message align="end">
-                        <MessageContent>
-                          <Bubble variant="muted" align="end">
-                            <BubbleContent>{question}</BubbleContent>
-                          </Bubble>
-                        </MessageContent>
-                      </Message>
-                      <Message aria-label={AGENT} status={workStatus}>
-                        <MessageContent>
-                          <div {...stylex.props(layout.agentBody)}>
-                            <ChainOfThought aria-label="Steps to the change">
-                              <ChainOfThoughtHeader>
-                                {allowed ? published : drafted}
-                              </ChainOfThoughtHeader>
-                              <ChainOfThoughtContent>
-                                {plan.map((step, index) => {
-                                  const status = stepStatus(
-                                    index,
-                                    phase,
-                                    count
-                                  );
-                                  return (
-                                    <ChainOfThoughtStep
-                                      key={step.id}
-                                      label={
-                                        status === "active"
-                                          ? step.active
-                                          : step.title
-                                      }
-                                      description={step.summary}
-                                      status={status}
-                                    />
-                                  );
-                                })}
-                              </ChainOfThoughtContent>
-                            </ChainOfThought>
-                            {phase === "working" ? null : (
-                              <MessageResponse
-                                streaming={phase === "answering"}
-                              >
-                                {answerWords.slice(0, answerCount).join(" ")}
-                              </MessageResponse>
-                            )}
-                            {phase === "working" ||
-                            phase === "answering" ? null : (
-                              <AnswerSources />
-                            )}
-                          </div>
-                        </MessageContent>
-                      </Message>
-                    </MessageScrollerItem>
-                  )}
-                  {asked && (
-                    <MessageScrollerItem key={`request-${run}`}>
-                      <Confirmation
-                        state={state}
-                        approval={{ id: `publish-${run}`, approved: decision }}
-                        style={layout.request}
-                      >
-                        <ConfirmationTitle>
-                          <ConfirmationRequest>
-                            Publish the new pricing page
-                          </ConfirmationRequest>
-                          <ConfirmationAccepted>
-                            Approved: the new pricing page is published.
-                          </ConfirmationAccepted>
-                          <ConfirmationRejected>
-                            Declined: the pricing page stays as it is.
-                          </ConfirmationRejected>
-                        </ConfirmationTitle>
-                        <ConfirmationDetails
-                          items={[
-                            {
-                              icon: FileIcon,
-                              label: "pricing.md",
-                              detail:
-                                "Team from 12 to 13 a seat, from 1 January",
-                            },
-                          ]}
+        <AppShellHeader
+          breadcrumb={[{ label: "Chat", href: "#chat" }]}
+          title={chats.find((each) => each.value === chat)?.label ?? ""}
+          actions={
+            <Button
+              ref={replayButton}
+              variant="ghost"
+              size="sm"
+              onClick={replay}
+            >
+              <Icon icon={RedoIcon} />
+              Replay
+            </Button>
+          }
+        />
+        <AppShellPage>
+          <div {...stylex.props(layout.conversation)}>
+            <MessageScrollerProvider key={run} autoScroll>
+              <MessageScroller>
+                <MessageScrollerViewport
+                  aria-label={`Conversation with the ${AGENT.toLowerCase()}`}
+                >
+                  <MessageScrollerContent>
+                    {phase === "waiting" ? null : (
+                      <MessageScrollerItem key="question">
+                        <Message align="end">
+                          <MessageContent>
+                            <Bubble variant="muted" align="end">
+                              <BubbleContent>{question}</BubbleContent>
+                            </Bubble>
+                          </MessageContent>
+                        </Message>
+                        <Message aria-label={AGENT} status={workStatus}>
+                          <MessageContent>
+                            <div {...stylex.props(layout.agentBody)}>
+                              <ChainOfThought aria-label="Steps to the change">
+                                <ChainOfThoughtHeader>
+                                  {allowed ? published : drafted}
+                                </ChainOfThoughtHeader>
+                                <ChainOfThoughtContent>
+                                  {plan.map((step, index) => {
+                                    const status = stepStatus(
+                                      index,
+                                      phase,
+                                      count
+                                    );
+                                    return (
+                                      <ChainOfThoughtStep
+                                        key={step.id}
+                                        label={
+                                          status === "active"
+                                            ? step.active
+                                            : step.title
+                                        }
+                                        description={step.summary}
+                                        status={status}
+                                      />
+                                    );
+                                  })}
+                                </ChainOfThoughtContent>
+                              </ChainOfThought>
+                              {phase === "working" ? null : (
+                                <MessageResponse
+                                  streaming={phase === "answering"}
+                                >
+                                  {answerWords.slice(0, answerCount).join(" ")}
+                                </MessageResponse>
+                              )}
+                              {phase === "working" ||
+                              phase === "answering" ? null : (
+                                <AnswerSources />
+                              )}
+                            </div>
+                          </MessageContent>
+                        </Message>
+                      </MessageScrollerItem>
+                    )}
+                    {asked && (
+                      <MessageScrollerItem key={`request-${run}`}>
+                        <Confirmation
+                          state={state}
+                          approval={{
+                            id: `publish-${run}`,
+                            approved: decision,
+                          }}
+                          style={layout.request}
+                        >
+                          <ConfirmationTitle>
+                            <ConfirmationRequest>
+                              Publish the new pricing page
+                            </ConfirmationRequest>
+                            <ConfirmationAccepted>
+                              Approved: the new pricing page is published.
+                            </ConfirmationAccepted>
+                            <ConfirmationRejected>
+                              Declined: the pricing page stays as it is.
+                            </ConfirmationRejected>
+                          </ConfirmationTitle>
+                          <ConfirmationDetails
+                            items={[
+                              {
+                                icon: FileIcon,
+                                label: "pricing.md",
+                                detail:
+                                  "Team from 12 to 13 a seat, from 1 January",
+                              },
+                            ]}
+                          />
+                          <ConfirmationActions>
+                            <ConfirmationAction
+                              variant="outline"
+                              errorText="Could not decline"
+                              onClick={decline}
+                            >
+                              Decline
+                            </ConfirmationAction>
+                            <ConfirmationAction
+                              errorText="Could not approve"
+                              onClick={approve}
+                            >
+                              Approve
+                            </ConfirmationAction>
+                          </ConfirmationActions>
+                        </Confirmation>
+                      </MessageScrollerItem>
+                    )}
+                    {phase === "asking" && decision === undefined && (
+                      <MessageScrollerItem key="see">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setPanelOpen(true);
+                          }}
+                        >
+                          See the change
+                        </Button>
+                      </MessageScrollerItem>
+                    )}
+                    {allowed && (
+                      <MessageScrollerItem key="done">
+                        <AgentWords
+                          words={doneWords}
+                          count={doneCount}
+                          status={phase === "publishing" ? "streaming" : "done"}
                         />
-                        <ConfirmationActions>
-                          <ConfirmationAction
-                            variant="outline"
-                            errorText="Could not decline"
-                            onClick={decline}
-                          >
-                            Decline
-                          </ConfirmationAction>
-                          <ConfirmationAction
-                            errorText="Could not approve"
-                            onClick={approve}
-                          >
-                            Approve
-                          </ConfirmationAction>
-                        </ConfirmationActions>
-                      </Confirmation>
-                    </MessageScrollerItem>
-                  )}
-                  {phase === "asking" && decision === undefined && (
-                    <MessageScrollerItem key="see">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setPanelOpen(true);
-                        }}
+                      </MessageScrollerItem>
+                    )}
+                    {typed.map((text, turn) => [
+                      <MessageScrollerItem
+                        key={`typed-${turn}`}
+                        messageId={`typed-${turn}`}
+                        scrollAnchor
                       >
-                        See the change
-                      </Button>
-                    </MessageScrollerItem>
-                  )}
-                  {allowed && (
-                    <MessageScrollerItem key="done">
-                      <AgentWords
-                        words={doneWords}
-                        count={doneCount}
-                        status={phase === "publishing" ? "streaming" : "done"}
-                      />
-                    </MessageScrollerItem>
-                  )}
-                  {typed.map((text, turn) => [
-                    <MessageScrollerItem
-                      key={`typed-${turn}`}
-                      messageId={`typed-${turn}`}
-                      scrollAnchor
-                    >
-                      <Message align="end">
-                        <MessageContent>
-                          <Bubble variant="muted" align="end">
-                            <BubbleContent>{text}</BubbleContent>
-                          </Bubble>
-                        </MessageContent>
-                      </Message>
-                    </MessageScrollerItem>,
-                    <MessageScrollerItem
-                      key={`reply-${turn}`}
-                      messageId={`reply-${turn}`}
-                    >
-                      <AgentWords
-                        words={replyWords}
-                        count={
-                          turn === typed.length - 1
-                            ? replyCount
-                            : replyWords.length
-                        }
-                        status={
-                          turn === typed.length - 1 &&
-                          replyCount < replyWords.length
-                            ? "streaming"
-                            : "done"
-                        }
-                      />
-                    </MessageScrollerItem>,
-                  ])}
-                </MessageScrollerContent>
-              </MessageScrollerViewport>
-              <MessageScrollerButton />
-            </MessageScroller>
-          </MessageScrollerProvider>
-          <PromptInput
-            aria-label="Message the research agent"
-            compact
-            status={
-              replying || phase === "working" || phase === "answering"
-                ? "streaming"
-                : "ready"
-            }
-            onSubmit={({ text }) => {
-              // A typed message is the person's own turn, and the agent answers it honestly.
-              setTyped([...typed, text]);
-              setReplyCount(0);
-            }}
-          >
-            <PromptInputBody>
-              <PromptInputTextarea
-                aria-label="Message"
-                placeholder="Ask the agent"
-              />
-            </PromptInputBody>
-            <PromptInputFooter>
-              <PromptInputTools>{null}</PromptInputTools>
-              <PromptInputSubmit />
-            </PromptInputFooter>
-          </PromptInput>
-        </div>
+                        <Message align="end">
+                          <MessageContent>
+                            <Bubble variant="muted" align="end">
+                              <BubbleContent>{text}</BubbleContent>
+                            </Bubble>
+                          </MessageContent>
+                        </Message>
+                      </MessageScrollerItem>,
+                      <MessageScrollerItem
+                        key={`reply-${turn}`}
+                        messageId={`reply-${turn}`}
+                      >
+                        <AgentWords
+                          words={replyWords}
+                          count={
+                            turn === typed.length - 1
+                              ? replyCount
+                              : replyWords.length
+                          }
+                          status={
+                            turn === typed.length - 1 &&
+                            replyCount < replyWords.length
+                              ? "streaming"
+                              : "done"
+                          }
+                        />
+                      </MessageScrollerItem>,
+                    ])}
+                  </MessageScrollerContent>
+                </MessageScrollerViewport>
+                <MessageScrollerButton />
+              </MessageScroller>
+            </MessageScrollerProvider>
+            <PromptInput
+              aria-label="Message the research agent"
+              compact
+              status={
+                replying || phase === "working" || phase === "answering"
+                  ? "streaming"
+                  : "ready"
+              }
+              onSubmit={({ text }) => {
+                // A typed message is the person's own turn, and the agent answers it honestly.
+                setTyped([...typed, text]);
+                setReplyCount(0);
+              }}
+            >
+              <PromptInputBody>
+                <PromptInputTextarea
+                  aria-label="Message"
+                  placeholder="Ask the agent"
+                />
+              </PromptInputBody>
+              <PromptInputFooter>
+                <PromptInputTools>{null}</PromptInputTools>
+                <PromptInputSubmit />
+              </PromptInputFooter>
+            </PromptInput>
+          </div>
+        </AppShellPage>
       </AppShell>
       <CommandDialog
         aria-label="Search chats"

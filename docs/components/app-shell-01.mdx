@@ -7,7 +7,7 @@ description: The frame every page of an app sits in, with its main navigation be
   lead={frontmatter.description}
   install="pnpm dlx shadcn@4.23.0 add @damsko/app-shell-01"
   use={
-    'import { AppShell } from "@grasp-os/ui/blocks/app-shell-01/app-shell-01";'
+    'import { AppShell, AppShellHeader, AppShellPage } from "@grasp-os/ui/blocks/app-shell-01/app-shell-01";'
   }
 />
 
@@ -15,19 +15,25 @@ A block is a ready-made composition of components that a product installs, then 
 
 ## Basic usage
 
-`sidebar` takes the product's Sidebar parts; the page stands beside it as a card. Across the card's top, the header holds the sidebar's trigger (Cmd+B or Ctrl+B fold it too), where the page is and its `actions`. Where the page is: `breadcrumb` is the steps before it, BreadcrumbItems alone, and `title` the page; the shell writes the slash between every two. With `onRename` a press on the page's name, Enter or F2 renames it in place. The page scrolls under the header.
+`sidebar` takes the product's Sidebar parts under the sidebar's head, which the shell draws: the product's `mark` at its start, then a search button when the shell has `onSearch`, then the fold. The search opens the product's own dialog, from its button and from Cmd+K or Ctrl+K anywhere on the page (`searchShortcut` changes the keys, `false` turns them off; this site keeps Cmd+K for its own search, so the example takes the slash). A CommandDialog as the product's search takes `shortcut={null}`: the shell holds the keys. The page stands beside the sidebar as a card and scrolls on its own.
+
+Each page draws its own bar, AppShellHeader, at its top, so a router's page says where it is: `breadcrumb` is the steps before the page, each a name and its `href`, or a router's link as `render` (`render: <Link to="/projects" />`); `title` is the page itself; the bar writes the slash between every two. With `onRename` a press on the page's name, Enter or F2 renames it in place, and `renaming` opens it from elsewhere, such as a menu's Rename. `trailing` stands after the path and gives way to the `actions` at its end. The fold stands in the bar only while the sidebar is away, folded or in its sheet; while it is open, the fold is in the sidebar's head, and focus follows it there when the bar's fold opens the sidebar. Under the bar, AppShellPage is the page's body: as wide as the card, its sides in the page's room, its parts a step apart.
 
 <Stage path="app-shell-01/basic" label="Basic usage" />
 
+## Kept as the person left it
+
+`storageKey` keeps whether the sidebar is folded, and which of its SidebarCollapsible groups are, in localStorage, so the next visit opens the frame as the person left it. Or keep it yourself with `open` and `onOpenChange`.
+
 ## A panel at the end
 
-`panel` holds one Side panel at the page's end, seated unframed. Drag its handle or move it with the arrow keys; the header's panel button hides and shows it. On a narrow window it opens as a sheet from the end, which holds Tab inside and gives focus back to the button when it closes. Keep it with `panelOpen` and `onPanelOpenChange`.
+`panel` holds one Side panel at the page's end, seated unframed, from the card's top beside the page's bar. Drag its handle or move it with the arrow keys; the bar's panel button hides and shows it. On a narrow window it opens as a sheet from the end, which holds Tab inside and gives focus back to the button when it closes. Keep it with `panelOpen` and `onPanelOpenChange`.
 
 <Stage path="app-shell-01/panel" label="A panel at the end" />
 
 ## A banner
 
-`banner` stands above the header, across the page: a notice for the whole product, on every page.
+`banner` stands above the page and its bar, across the card: a notice for the whole product, on every page.
 
 <Stage path="app-shell-01/banner" label="A banner" />
 
@@ -37,9 +43,15 @@ An area with a navigation of its own takes the sidebar while the person is in it
 
 <Stage path="app-shell-01/levels" label="Levels" />
 
+## Loading, not there, failed
+
+A page keeps its bar in every state, and with it the fold on a phone. While a slow read comes, AppShellPageSkeleton draws the pages' usual layout as skeletons and says once that it is loading. A page that is not there, or did not load, is an Empty in the AppShellPage that grows (`flexGrow: 1`) into the card's middle, with the way on.
+
+<Stage path="app-shell-01/states" label="Loading, not there, failed" />
+
 ## On a phone
 
-Under the lg breakpoint the sidebar is Sidebar's own sheet from the start, opened by the same trigger; following a link in it closes it.
+Under the lg breakpoint the sidebar is Sidebar's own sheet from the start, opened by the bar's fold; its head holds a close button in place of the fold, and following a link in it closes it. Under 640px the bar says the page and the step before it, a slash between, and drops the step when both do not fit.
 
 <Part title="Using it" />
 
@@ -51,7 +63,7 @@ Under the lg breakpoint the sidebar is Sidebar's own sheet from the start, opene
     "The frame every page of a product stands in, with its main navigation beside it.",
   ]}
   never={[
-    "A page's title row, with its actions and its tabs: use Page header.",
+    "A page's title row, with its actions and its tabs: use Page header, inside AppShellPage.",
     "The main navigation alone, without the frame: use Sidebar.",
     "Details of one thing beside a page with no frame: use Side panel or Sheet.",
   ]}
@@ -61,10 +73,44 @@ Under the lg breakpoint the sidebar is Sidebar's own sheet from the start, opene
 
 ## API
 
+### AppShell
+
 <Props
   source="src/blocks/app-shell-01/app-shell-01.tsx"
   type="AppShellProps"
   label="App shell props"
+/>
+
+### AppShellHeader
+
+<Props
+  source="src/blocks/app-shell-01/app-shell-01.tsx"
+  type="AppShellHeaderProps"
+  label="AppShellHeader"
+/>
+
+A step of `breadcrumb`:
+
+<Props
+  source="src/blocks/app-shell-01/app-shell-01.tsx"
+  type="AppShellCrumb"
+  label="AppShellCrumb"
+/>
+
+### AppShellPage
+
+<Props
+  source="src/blocks/app-shell-01/app-shell-01.tsx"
+  type="AppShellPageProps"
+  label="AppShellPage"
+/>
+
+### AppShellPageSkeleton
+
+<Props
+  source="src/blocks/app-shell-01/app-shell-01.tsx"
+  type="AppShellPageSkeletonProps"
+  label="AppShellPageSkeleton"
 />
 
 </Reference>

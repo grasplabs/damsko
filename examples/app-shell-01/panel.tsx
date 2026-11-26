@@ -1,6 +1,10 @@
 "use client";
 
-import { AppShell } from "@grasp-os/ui/blocks/app-shell-01/app-shell-01";
+import {
+  AppShell,
+  AppShellHeader,
+  AppShellPage,
+} from "@grasp-os/ui/blocks/app-shell-01/app-shell-01";
 import { Button } from "@grasp-os/ui/components/button";
 import { KeyValueList } from "@grasp-os/ui/components/key-value";
 import { PageHeader } from "@grasp-os/ui/components/page-header";
@@ -54,7 +58,7 @@ const facts = [
 ];
 
 // The page's details in one panel at its end: drag its handle, or move it with the arrow keys. The
-// header's panel button hides and shows it. On a phone the same button opens it as a sheet.
+// bar's panel button hides and shows it. On a phone the same button opens it as a sheet.
 export default function AppShellPanel() {
   return (
     <div {...stylex.props(layout.frame)}>
@@ -83,12 +87,6 @@ export default function AppShellPanel() {
             </SidebarGroup>
           </SidebarContent>
         }
-        title="Launch notes"
-        actions={
-          <Button variant="outline" size="sm">
-            Share
-          </Button>
-        }
         panel={
           <SidePanel aria-label="Note details">
             <SidePanelHeader title="Details" />
@@ -106,10 +104,20 @@ export default function AppShellPanel() {
           </SidePanel>
         }
       >
-        <PageHeader
+        <AppShellHeader
           title="Launch notes"
-          description="What the team agreed on, and what still needs an answer before Thursday."
+          actions={
+            <Button variant="outline" size="sm">
+              Share
+            </Button>
+          }
         />
+        <AppShellPage>
+          <PageHeader
+            title="Launch notes"
+            description="What the team agreed on, and what still needs an answer before Thursday."
+          />
+        </AppShellPage>
       </AppShell>
     </div>
   );

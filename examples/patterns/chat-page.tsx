@@ -1,11 +1,11 @@
 "use client";
 
-import { AppShell } from "@grasp-os/ui/blocks/app-shell-01/app-shell-01";
-import { AgentIndicator } from "@grasp-os/ui/components/agent-indicator";
 import {
-  BreadcrumbItem,
-  BreadcrumbLink,
-} from "@grasp-os/ui/components/breadcrumb";
+  AppShell,
+  AppShellHeader,
+  AppShellPage,
+} from "@grasp-os/ui/blocks/app-shell-01/app-shell-01";
+import { AgentIndicator } from "@grasp-os/ui/components/agent-indicator";
 import { Bubble, BubbleContent } from "@grasp-os/ui/components/bubble";
 import { Button } from "@grasp-os/ui/components/button";
 import {
@@ -164,7 +164,7 @@ const layout = stylex.create({
     boxSizing: "border-box",
     width: "100%",
     maxWidth: size.promptInputWidth,
-    height: "100%",
+    flexGrow: 1,
     minHeight: 0,
     marginInline: "auto",
   },
@@ -768,28 +768,25 @@ export default function ChatPage() {
         <SelectContent />
       </Select>
       <div {...stylex.props(layout.window)}>
-        <AppShell
-          style={layout.fill}
-          sidebar={<ChatSidebar current="price" />}
-          breadcrumb={
-            <BreadcrumbItem>
-              <BreadcrumbLink href="#chats">Chats</BreadcrumbLink>
-            </BreadcrumbItem>
-          }
-          title={state === "empty" ? "New chat" : name}
-          onRename={state === "empty" ? undefined : setName}
-          actions={
-            state === "empty" ? undefined : <ChatMenu onToast={onToast} />
-          }
-        >
-          {state === "empty" ? (
-            <NewChat />
-          ) : (
-            <div {...stylex.props(layout.column)}>
-              <ChatConversation run={run} state={state} />
-              <ChatBox run={run} state={state} />
-            </div>
-          )}
+        <AppShell style={layout.fill} sidebar={<ChatSidebar current="price" />}>
+          <AppShellHeader
+            breadcrumb={[{ label: "Chats", href: "#chats" }]}
+            title={state === "empty" ? "New chat" : name}
+            onRename={state === "empty" ? undefined : setName}
+            actions={
+              state === "empty" ? undefined : <ChatMenu onToast={onToast} />
+            }
+          />
+          <AppShellPage>
+            {state === "empty" ? (
+              <NewChat />
+            ) : (
+              <div {...stylex.props(layout.column)}>
+                <ChatConversation run={run} state={state} />
+                <ChatBox run={run} state={state} />
+              </div>
+            )}
+          </AppShellPage>
         </AppShell>
       </div>
       <Toaster toaster={toast} />
