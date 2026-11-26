@@ -2,11 +2,6 @@
 # exotic sub-dependencies are blocked, and only the packages listed here may
 # run install scripts.
 minimumReleaseAge: 4320
-# The one package let through younger, by the owner's decision: @pierre/highlights 0.6.0
-# (2026-11-26), CodeBlock's lexers a language at a time. Remove after 2026-11-29, when 0.6.0 is
-# 3 days old; pnpm checks the lockfile against the rule too, so it stays until then.
-minimumReleaseAgeExclude:
-  - "@pierre/highlights@0.6.0"
 blockExoticSubdeps: true
 strictDepBuilds: true
 allowBuilds:
