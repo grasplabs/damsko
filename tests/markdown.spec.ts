@@ -245,9 +245,16 @@ test("maths: a formula past 4,000 characters stays its TeX, and a huge rule stay
 }) => {
   await openExample(page, "markdown", "math-limits");
   const formulas = page.locator("[data-slot=markdown-math]");
-  await expect(formulas.locator("math")).toHaveCount(2);
+  await expect(formulas.locator("math")).toHaveCount(3);
   await expect(formulas.first().locator("math")).toHaveCount(0);
   await expect(formulas.first().locator("code")).toHaveCount(1);
+  // The 1,200-row matrix in a sentence, thousands of pixels drawn, is cut at ten lines' height.
+  const tall = await formulas.nth(1).evaluate((element) => ({
+    box: element.getBoundingClientRect().height,
+    em: Number(getComputedStyle(element).fontSize.replace("px", "")),
+  }));
+  expect(tall.box).toBeGreaterThan(tall.em * 5);
+  expect(tall.box).toBeLessThanOrEqual(tall.em * 10 + 1);
   const width = await page.evaluate(() => ({
     page: document.documentElement.scrollWidth,
     window: window.innerWidth,
