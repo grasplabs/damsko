@@ -94,29 +94,105 @@ const SECURE = [
   "altFontFamily",
   "themeVariables",
 ];
-/** Draws `code` with Mermaid, loaded the first time: its SVG, held to TAGS, or null when it cannot. */
-const drawDiagram = async (code: string, id: string) => {
-  if (!drawable(code)) {
+// The policy of the frame Mermaid draws in: nothing it puts there while drawing (a picture, a
+// style's `url()`, a font) can load, whatever the fence says. Its styles are inline.
+const FRAME_POLICY = "default-src 'none'; style-src 'unsafe-inline'";
+
+/** Gives Mermaid's frame its policy, once, before Mermaid draws in it. */
+const guard = (frame: HTMLIFrameElement) => {
+  const inside = frame.contentDocument;
+  if (inside === null || inside.querySelector("meta[http-equiv]") !== null) {
+    return;
+  }
+  const policy = inside.createElement("meta");
+  policy.httpEquiv = "Content-Security-Policy";
+  policy.content = FRAME_POLICY;
+  inside.head.append(policy);
+};
+
+/** The SVG in the frame Mermaid's sandbox gives back: a `data:` page of a body round it. */
+const svgOfFrame = (frame: string) => {
+  const encoded =
+    /src="data:text\/html;charset=UTF-8;base64,(?<page>[^"]+)"/u.exec(frame)
+      ?.groups?.page;
+  if (encoded === undefined) {
     return null;
   }
+  const page = new TextDecoder().decode(
+    Uint8Array.from(atob(encoded), (character) => character.codePointAt(0) ?? 0)
+  );
+  return (
+    /^<body[^>]*>(?<svg>[\s\S]*)<\/body>$/u.exec(page)?.groups?.svg ?? null
+  );
+};
+
+// One drawing at a time: Mermaid then makes its frame as it is asked, and it has its policy before
+// Mermaid draws in it. The drawing before this one ends when this promise does.
+let turn: Promise<unknown> = Promise.resolve();
+
+/**
+ * Draws `code` with Mermaid, loaded the first time: its SVG, held to SVG's own shapes, or null when
+ * it cannot. A fence that is not `drawable` is never drawn (`check: false` is for the spec that
+ * shows the frame alone loads nothing). Mermaid draws in its sandbox's frame, out of sight and with
+ * a policy that loads nothing, never in the page: what it measures is measured there.
+ */
+export const drawDiagram = async (
+  code: string,
+  id: string,
+  { check = true }: { check?: boolean } = {}
+) => {
+  if (check && !drawable(code)) {
+    return null;
+  }
+  const before = turn;
+  let done = nothing;
+  // oxlint-disable-next-line promise/avoid-new -- this drawing's turn, which ends when it does
+  turn = new Promise<void>((resolve) => {
+    done = resolve;
+  });
+  await before;
+  const box = document.createElement("div");
+  const watch = new MutationObserver(() => {
+    for (const frame of box.querySelectorAll("iframe")) {
+      guard(frame);
+    }
+  });
   try {
+    box.setAttribute("aria-hidden", "true");
+    // Out of sight, at a size of its own, so what Mermaid measures is laid out.
+    box.setAttribute(
+      "style",
+      "position:fixed;inset-inline-start:-10000px;top:0;width:1000px;height:1000px;visibility:hidden;pointer-events:none"
+    );
+    document.body.append(box);
+    watch.observe(box, { childList: true, subtree: true });
     const { default: mermaid } = await import("mermaid");
     mermaid.initialize({
       startOnLoad: false,
-      securityLevel: "strict",
+      securityLevel: "sandbox",
       secure: SECURE,
       suppressErrorRendering: true,
       theme: "default",
       // Labels as SVG text, not HTML in the drawing.
       htmlLabels: false,
-      // Bounds on what one diagram may cost, all on the page: Mermaid's own are 50,000 and 500.
+      // Mermaid's own bounds, under the fence's own (drawable).
       maxTextSize: 20_000,
       maxEdges: 200,
     });
-    const { svg } = await mermaid.render(id, code);
-    return safeSvg(svg);
+    const pending = mermaid.render(id, code, box);
+    // Made as Mermaid was asked, before it reads the fence and draws.
+    for (const frame of box.querySelectorAll("iframe")) {
+      guard(frame);
+    }
+    const { svg: framed } = await pending;
+    const svg = svgOfFrame(framed);
+    return svg === null ? null : safeSvg(svg, id);
   } catch {
     return null;
+  } finally {
+    watch.disconnect();
+    box.remove();
+    done();
   }
 };
 
@@ -153,14 +229,26 @@ const pngOf = async (svg: string) => {
   return png;
 };
 
-/** The drawing, zoomed by its buttons, moved by a drag and by the arrow keys. */
+/** The drawing's own title (Mermaid's `accTitle`), when it has one. */
+const titleOf = (svg: string) =>
+  new DOMParser()
+    .parseFromString(svg, "image/svg+xml")
+    .querySelector(":root > title")
+    ?.textContent?.trim() ?? "";
+
+/**
+ * The drawing, zoomed by its buttons, moved by a drag and by the arrow keys; named by its title,
+ * else as a Mermaid diagram.
+ */
 const View = ({
   svg,
   code,
+  title,
   big = false,
 }: {
   svg: string;
   code: string;
+  title: string;
   big?: boolean;
 }) => {
   const words = useI18n().markdown;
@@ -213,7 +301,7 @@ const View = ({
         role="application"
         // oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- it takes focus for the arrow keys
         tabIndex={0}
-        aria-label={words.diagram}
+        aria-label={title === "" ? words.diagram : title}
         aria-describedby={source}
         data-slot="markdown-diagram-drawing"
         onKeyDown={(event) => {
@@ -296,6 +384,7 @@ export const Diagram = ({
   const [drawn, setDrawn] = useState<{
     code: string;
     svg: string | null;
+    title: string;
   } | null>(null);
   const svg = drawn?.svg ?? null;
   // Drawn once it comes within 300px of the screen, as Streamdown draws one.
@@ -324,7 +413,11 @@ export const Diagram = ({
     const draw = async () => {
       const made = await drawDiagram(code, id);
       if (live) {
-        setDrawn({ code, svg: made });
+        setDrawn({
+          code,
+          svg: made,
+          title: made === null ? "" : titleOf(made),
+        });
       }
     };
     if (near) {
@@ -400,7 +493,7 @@ export const Diagram = ({
                   <DialogHeader>
                     <DialogTitle>{words.mermaid}</DialogTitle>
                   </DialogHeader>
-                  <View svg={svg} code={code} big />
+                  <View svg={svg} code={code} title={drawn?.title ?? ""} big />
                 </DialogContent>
               </Dialog>
             )}
@@ -409,7 +502,7 @@ export const Diagram = ({
         {svg === null ? (
           <Code.CodeBlockContent lineNumbers>{code}</Code.CodeBlockContent>
         ) : (
-          <View svg={svg} code={code} />
+          <View svg={svg} code={code} title={drawn?.title ?? ""} />
         )}
       </Code.CodeBlock>
     </div>

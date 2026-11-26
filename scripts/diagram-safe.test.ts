@@ -17,9 +17,13 @@ import {
 const window = new Window();
 Reflect.set(globalThis, "DOMParser", window.DOMParser);
 Reflect.set(globalThis, "XMLSerializer", window.XMLSerializer);
+Reflect.set(globalThis, "CSSStyleSheet", window.CSSStyleSheet);
+Reflect.set(globalThis, "CSSStyleRule", window.CSSStyleRule);
+Reflect.set(globalThis, "CSSKeyframesRule", window.CSSKeyframesRule);
 
+const ID = "mermaid-1";
 const svg = (inner: string) =>
-  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10">${inner}</svg>`;
+  `<svg xmlns="http://www.w3.org/2000/svg" id="${ID}" viewBox="0 0 10 10">${inner}</svg>`;
 
 describe(drawable, () => {
   test.each([
@@ -35,6 +39,15 @@ describe(drawable, () => {
     '%%{init: {"themeCSS": "@import x"}}%%\nflowchart LR\n  A --> B',
     'flowchart LR\n  A --> B\n  click A "https://example.com/node"',
     "flowchart LR\n  A[see https://example.com] --> B",
+    // Written with character references, which Mermaid and DOMPurify read.
+    "flowchart LR\n  A --> B\n  style A fill:url&lpar;x.png)",
+    "flowchart LR\n  A[&sol;&sol;example.com] --> B",
+    "flowchart LR\n  A --> B\n  style A fill:url#40;x.png)",
+    "flowchart LR\n  A --> B\n  style A fill:&bsol;75rl(x)",
+    // An actor's icon, from any address, and details read from the page by an id.
+    'sequenceDiagram\n  participant A\n  properties A: {"class": "x", "icon": "icon.png"}\n  A->>A: hi',
+    "sequenceDiagram\n  participant A\n  details A: secret-box\n  A->>A: hi",
+    'sequenceDiagram\n  participant A\n  PROPERTIES  A : {"icon": "a.png"}\n  A->>A: hi',
   ])("is code: %s", (code) => {
     expect(drawable(code)).toBeFalsy();
   });
@@ -66,13 +79,28 @@ describe(drawable, () => {
     const blocks = Array.from({ length: MOST_PARTS }, (_, at) => `b${at}`);
     expect(drawable(`block-beta\n  ${blocks.join(" ")}`)).toBeFalsy();
   });
+
+  test("a line ended by both a `;` and a newline, and a blank line, count once and not at all", () => {
+    const steps = Array.from(
+      { length: MOST_LINES - 1 },
+      (_, at) => `  s${at}-->s${at + 1};\n`
+    );
+    expect(drawable(`flowchart LR\n${steps.join("\n")}`)).toBeTruthy();
+  });
+
+  test("words that only look like a statement are drawn", () => {
+    expect(
+      drawable("sequenceDiagram\n  A->>B: the details of the properties")
+    ).toBeTruthy();
+  });
 });
 
 describe(safeSvg, () => {
   test("every handler goes, not every other one", () => {
     const out =
       safeSvg(
-        svg('<rect onclick="a()" onmouseover="b()" onfocus="c()" width="1"/>')
+        svg('<rect onclick="a()" onmouseover="b()" onfocus="c()" width="1"/>'),
+        ID
       ) ?? "";
     expect(out).not.toMatch(/\bon\w+=/u);
     expect(out).toContain('width="1"');
@@ -84,13 +112,15 @@ describe(safeSvg, () => {
     'style="fill:\\75rl(x)"',
     'href="https://evil.test/"',
   ])("an attribute that leads elsewhere goes: %s", (attribute) => {
-    const out = safeSvg(svg(`<rect ${attribute} width="1"/>`)) ?? "";
+    const out = safeSvg(svg(`<rect ${attribute} width="1"/>`), ID) ?? "";
     expect(out).not.toContain(`${attribute.slice(0, attribute.indexOf("="))}=`);
     expect(out).toContain('width="1"');
   });
 
   test("a fill in the drawing itself stays", () => {
-    expect(safeSvg(svg('<rect fill="url(#g)"/>'))).toContain('fill="url(#g)"');
+    expect(safeSvg(svg('<rect fill="url(#g)"/>'), ID)).toContain(
+      'fill="url(#g)"'
+    );
   });
 
   test.each([
@@ -99,7 +129,7 @@ describe(safeSvg, () => {
     ".a { fill: \\75rl(x) }",
     "@import 'x.css';",
   ])("a style that leads elsewhere goes: %s", (css) => {
-    expect(safeSvg(svg(`<style>${css}</style><rect/>`))).not.toContain(
+    expect(safeSvg(svg(`<style>${css}</style><rect/>`), ID)).not.toContain(
       "<style"
     );
   });
@@ -109,9 +139,36 @@ describe(safeSvg, () => {
       safeSvg(
         svg(
           '<a href="https://evil.test/"><text>out</text></a><foreignObject><div>x</div></foreignObject>'
-        )
+        ),
+        ID
       ) ?? "";
     expect(out).toContain("<text>out</text>");
     expect(out).not.toMatch(/<a\b|foreignObject|evil/u);
+  });
+
+  test("an element in no SVG namespace goes, and the root must be SVG's", () => {
+    const out =
+      safeSvg(
+        svg(
+          '<g><rect width="1"/></g><g xmlns="http://www.w3.org/1999/xhtml"><rect width="2"/></g>'
+        ),
+        ID
+      ) ?? "";
+    expect(out).toContain('width="1"');
+    expect(out).not.toContain('width="2"');
+    expect(safeSvg('<svg viewBox="0 0 1 1"><rect/></svg>', ID)).toBeNull();
+  });
+
+  test("a style keeps only its rules for the drawing and its keyframes", () => {
+    const out =
+      safeSvg(
+        svg(
+          `<style>#${ID} .node{fill:red}body{display:none}#${ID} a, p{color:red}@keyframes dash{to{opacity:0}}</style><rect/>`
+        ),
+        ID
+      ) ?? "";
+    expect(out).toContain(`#${ID} .node`);
+    expect(out).toContain("@keyframes dash");
+    expect(out).not.toMatch(/body|\bp\b/u);
   });
 });

@@ -320,13 +320,13 @@ test("diagrams: one with any way to an address in it is code, so nothing loads, 
 }) => {
   const elsewhere: string[] = [];
   page.on("request", (request) => {
-    if (request.url().includes("example.com")) {
+    if (/example\.com|relative-/u.test(request.url())) {
       elsewhere.push(request.url());
     }
   });
   await openExample(page, "markdown", "diagram-hostile");
   const diagrams = page.locator("[data-slot=markdown-diagram]");
-  await expect(diagrams).toHaveCount(15);
+  await expect(diagrams).toHaveCount(17);
   // Each is weighed, and drawn, once it comes near the screen.
   for (const diagram of await diagrams.all()) {
     // oxlint-disable-next-line no-await-in-loop -- one after the other, down the answer
@@ -335,12 +335,13 @@ test("diagrams: one with any way to an address in it is code, so nothing loads, 
   await expect(
     page.locator("[data-slot=markdown-diagram][aria-busy=true]")
   ).toHaveCount(0);
-  // Fourteen are their code, words and all.
+  // Sixteen are their code, words and all: an actor's icon among them, at a relative address.
   await expect(
     diagrams.filter({
       hasNot: page.locator("[data-slot=markdown-diagram-drawing]"),
     })
-  ).toHaveCount(14);
+  ).toHaveCount(16);
+  await expect(diagrams.getByText("relative-icon.png")).toBeVisible();
   await expect(diagrams.getByText("state.png")).toBeVisible();
   // The last is drawn, its HTML as words: no element of HTML's, no handler, no address.
   const drawings = page.locator("[data-slot=markdown-diagram-drawing] svg");
@@ -354,6 +355,29 @@ test("diagrams: one with any way to an address in it is code, so nothing loads, 
   // Long enough for a load to have started.
   await page.waitForTimeout(1000);
   expect(elsewhere).toStrictEqual([]);
+});
+
+test("diagrams: drawn with the source check off, in Mermaid's frame, not one fence loads anything", async ({
+  page,
+}) => {
+  // Every request for these addresses that reaches the network; one a policy refuses never does.
+  const loaded: string[] = [];
+  await page.route(/example\.com|relative-icon/u, async (route) => {
+    loaded.push(route.request().url());
+    await route.fulfill({ status: 200, contentType: "image/png", body: "" });
+  });
+  await openExample(page, "markdown", "diagram-unchecked");
+  // Mermaid drew them: only the policy stands between them and their addresses.
+  await expect(page.locator("[data-drawn]")).toHaveAttribute(
+    "data-drawn",
+    "8",
+    {
+      timeout: 30_000,
+    }
+  );
+  // Long enough for a load to have started.
+  await page.waitForTimeout(1000);
+  expect(loaded).toStrictEqual([]);
 });
 
 test("maths: a formula past 4,000 characters stays its TeX, and a huge rule stays inside the column", async ({

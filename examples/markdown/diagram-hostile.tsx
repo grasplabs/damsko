@@ -41,6 +41,12 @@ const answer = [
     "flowchart LR\n  A --> B\n  style A fill:\\75 rl(example.com/escaped.png)"
   ),
   fence(
+    `sequenceDiagram\n  participant A\n  properties A: {"class": "x", "icon": "relative-icon.png"}\n  A->>A: hi`
+  ),
+  fence(
+    "flowchart LR\n  A --> B\n  style A fill:url&lpar;relative-entity.png)"
+  ),
+  fence(
     `%%{init: {"htmlLabels": true, "flowchart": {"htmlLabels": true}}}%%\nflowchart LR\n  A["<b onmouseover=alert(1)>bold</b>"] --> B`
   ),
 ].join("\n\n");
