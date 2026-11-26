@@ -1,21 +1,35 @@
 // The product's Content Security Policy, across the library, as Damsko needs it: `img-src 'self'
-// data:`, so a picture from a `blob:` URL breaks there while it works on this site, and workers
-// only from the place the site's built scripts are served from (`worker-src <origin>/_astro/`, as
-// Get started says), as CodeBlock reads its code in one. Every component example is served here
+// data:`, so a picture from a `blob:` URL breaks there while it works on this site; scripts only
+// from the site and its own inline ones, by their hashes, with 'wasm-unsafe-eval' for CodeBlock's
+// lexers (as Get started says); and no workers at all. Every component example is served here
 // with those directives, and none may be broken by them; an image upload's new picture still
-// shows, its preview being a data: URL; and CodeBlock's code is coloured under it, and plain, said
-// once and tried once, under a policy that refuses workers.
+// shows, its preview being a data: URL; and CodeBlock's code is coloured under it, and plain,
+// refused once and nothing said, under a policy without 'wasm-unsafe-eval'.
+import { createHash } from "node:crypto";
+
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
 import { componentExamples, openExample, pickerFrom } from "./example.ts";
 
-/** The product's policy: workers only from where the built scripts are served. */
-const productPolicy = () =>
-  `img-src 'self' data:; worker-src ${new URL("/_astro/", process.env.BASE_URL).href}`;
+/** The product's policy: WebAssembly allowed, no eval, no worker. */
+const productPolicy =
+  "img-src 'self' data:; script-src 'self' 'wasm-unsafe-eval'; worker-src 'none'";
 
-/** Serves every page with `policy` (the product's) and records what it refuses. */
-const underPolicy = async (page: Page, policy = productPolicy()) => {
+/** The hashes of a page's inline scripts, for its policy's script-src: the site's own, allowed. */
+const inlineHashes = (html: string) =>
+  [...html.matchAll(/<script>(?<body>[\s\S]*?)<\/script>/gu)].map(
+    (found) =>
+      `'sha256-${createHash("sha256")
+        .update(found.groups?.body ?? "")
+        .digest("base64")}'`
+  );
+
+/**
+ * Serves every page with `policy` (the product's), its script-src allowing the page's own inline
+ * scripts by their hashes, and records what it refuses.
+ */
+const underPolicy = async (page: Page, policy = productPolicy) => {
   await page.route(
     (url) => url.pathname.startsWith("/examples/"),
     async (route) => {
@@ -24,9 +38,16 @@ const underPolicy = async (page: Page, policy = productPolicy()) => {
         return;
       }
       const response = await route.fetch();
+      const hashes = inlineHashes(await response.text()).join(" ");
       await route.fulfill({
         response,
-        headers: { ...response.headers(), "content-security-policy": policy },
+        headers: {
+          ...response.headers(),
+          "content-security-policy": policy.replace(
+            "script-src 'self'",
+            `script-src 'self' ${hashes}`
+          ),
+        },
       });
     }
   );
@@ -72,7 +93,7 @@ test("a diagram is drawn under a policy that allows no frame: Mermaid's is about
 }) => {
   await underPolicy(
     page,
-    `${productPolicy()}; frame-src 'none'; child-src 'none'`
+    `${productPolicy}; frame-src 'none'; child-src 'none'`
   );
   await openExample(page, "markdown", "diagram");
   await expect(
@@ -148,7 +169,7 @@ const coloured = async (page: Page) =>
     )
   );
 
-test("CodeBlock's code is coloured under the product's policy", async ({
+test("CodeBlock's code is coloured under the product's policy: 'wasm-unsafe-eval', and no worker", async ({
   page,
 }) => {
   await underPolicy(page);
@@ -157,38 +178,36 @@ test("CodeBlock's code is coloured under the product's policy", async ({
   expect(await page.evaluate(() => window.refused ?? [])).toStrictEqual([]);
 });
 
-test("where a policy refuses workers, every block is plain and whole, and the worker is tried and refused once", async ({
+test("where a policy refuses WebAssembly, every block is plain and whole, refused once, and CodeBlock says nothing", async ({
   page,
 }) => {
-  await underPolicy(page, "worker-src 'none'");
+  await underPolicy(page, "script-src 'self'; worker-src 'none'");
   const said: string[] = [];
   page.on("console", (message) => {
-    said.push(message.text());
+    said.push(`${message.type()}: ${message.text()}`);
   });
   page.on("pageerror", (error) => {
-    said.push(error.message);
+    said.push(`thrown: ${error.message}`);
   });
-  await openExample(page, "code-block", "many");
-  await page.getByLabel("Code").fill("export const total = 1;");
-  for (let added = 0; added < 3; added += 1) {
+  await openExample(page, "code-block", "any");
+  for (const code of ["export const total = 1;", "export const sum = 2;"]) {
     // oxlint-disable-next-line no-await-in-loop -- one block after the other
-    await page.getByRole("button", { name: "Add a block" }).click();
+    await page.getByLabel("Code").fill(code);
+    // oxlint-disable-next-line no-await-in-loop -- one block after the other
+    await page.getByRole("button", { name: "Show", exact: true }).click();
+    // oxlint-disable-next-line no-await-in-loop -- one block after the other
+    await expect(
+      page.getByRole("region", { name: "TSX" }).getByText(code, { exact: true })
+    ).toBeVisible();
   }
   await expect
     .poll(async () => await page.evaluate(() => window.refused ?? []))
     .toHaveLength(1);
-  // A second more, for any block that would try again.
+  // A second more, for anything that would try again.
   await page.waitForTimeout(1000);
   const refused = await page.evaluate(() => window.refused ?? []);
-  expect(refused).toHaveLength(1);
-  expect(refused[0]).toMatch(/^worker-src /u);
-  expect(said).toHaveLength(1);
-  for (const name of ["Block 1", "Block 2", "Block 3"]) {
-    const block = page.getByRole("region", { name });
-    // oxlint-disable-next-line no-await-in-loop -- one block after the other
-    await expect(
-      block.getByText("export const total = 1;", { exact: true })
-    ).toBeVisible();
-  }
+  expect(refused).toStrictEqual(["script-src wasm-eval"]);
+  // Nothing in the console and nothing thrown: the refusal is the policy's report, once.
+  expect(said).toStrictEqual([]);
   expect(await coloured(page)).toBe(false);
 });

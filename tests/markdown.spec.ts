@@ -79,8 +79,12 @@ test("fenced code: coloured in its language, named over it, and Download saves i
   await expect(
     block.getByText("export async function withRetry")
   ).toBeVisible();
-  // Coloured once the worker has read it: a keyword is a span of its own.
-  await expect(block.locator("span", { hasText: /^export$/u })).toHaveCount(1);
+  // Coloured once the lexers have loaded: a keyword is a run of its own.
+  await expect(
+    block.locator("[data-slot=code-block-line] > span:nth-child(2) > span", {
+      hasText: /^export\b/u,
+    })
+  ).toHaveCount(1);
   const [file] = await Promise.all([
     page.waitForEvent("download"),
     block.getByRole("button", { name: "Download" }).click(),

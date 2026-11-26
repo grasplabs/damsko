@@ -75,15 +75,19 @@ Without `lineNumbers`, for a line to copy and run.
 
 ## Any code
 
-Prism reads the code whole in a worker, off the page, so no block holds the page, whatever a model writes in it. The code shows plain at once and takes Prism's colours for the whole text when the worker answers. It stays plain, all of it and never half coloured, when the worker has not read it in its time (a tenth of a second, and 2 milliseconds more for each 1,000 characters, at most a second: some text makes Prism's grammars slow, such as a string tens of thousands of characters long or many lines that open quotes), and when the lines it draws are more than 5,000 runs of colour, as minified code or some 1,000 lines of ordinary code are, since drawing them would hold the page: a folded block draws few lines and is coloured, and opened with Show more it is weighed again. While it is written the code is read again at most every 200 milliseconds, the lines written since (and the last line, until a newline ends it) are plain until the next reading, and a line already coloured is not drawn again. A very large block that was coloured can turn plain for good while it streams, once a read no longer finishes in time; it is read once more when it is done. A read that is late or fails leaves only that block plain: the next block starts the worker again. The worker is a file of its own (`code-block-worker.ts`), which a page's Content Security Policy must allow: `worker-src` naming the place the app's built scripts are served from (Get started, Allow CodeBlock's worker). Where it is refused, and before the page's script runs, the code is plain.
+The code is coloured on the page by [@pierre/highlights](https://www.npmjs.com/package/@pierre/highlights): lexers written by hand and compiled to WebAssembly, with no regular expressions, so reading a line takes time that grows with the line and nothing else. 3,000 lines of TypeScript take about a millisecond, and text that held regular-expression highlighters for seconds (a string of 50,000 characters that never ends, thousands of nested template strings) takes a few. The lexers, one module of 161 KB compressed with every language, load the first time a block is drawn, never with the page; until then, and before the page's script runs, the code is plain. Drawing the colours is what takes time now, as each coloured run is an element: a line of 500 characters or more (minified code, generated data) is drawn as its text, and an open block whose lines would be more than 5,000 coloured runs, some 1,500 lines of ordinary code, is drawn plain, all of it. A folded block draws its few lines coloured, whatever they hold, and opened with Show more it is weighed again. While it is written, each line is coloured once its newline comes, read only once; the line still being written is plain until then, and a line already coloured is never drawn again.
 
 <Stage path="code-block/any" label="Any code" />
 
-## Many blocks
+## Content Security Policy
 
-On a page of many blocks, as in a long answer, the worker reads one block at a time: those on the screen first, the shortest of them first. A block Prism cannot read in time is stopped soon, so the others wait a fraction of a second at most; a block that is gone is no longer read, and the worker stops a second after the last block has gone.
+The lexers are WebAssembly, compiled from a script of their own that the app's build writes beside its other scripts, with the module inside it: nothing more is fetched and no worker is started. A policy that names `script-src` (or a `default-src` it falls back to) adds `'wasm-unsafe-eval'`, which allows WebAssembly and nothing else; `worker-src` needs nothing (Get started, Allow CodeBlock's WebAssembly):
 
-<Stage path="code-block/many" label="Many blocks" />
+```text
+Content-Security-Policy: script-src 'self' 'wasm-unsafe-eval'
+```
+
+Without it, and in a browser without WebAssembly, every block is plain, whole and readable, and nothing is said: the page reports the refusal to the policy once, and the console stays empty.
 
 ## Every state
 
@@ -243,13 +247,13 @@ The copy button under a pointer and with keyboard focus are forced from its own 
       group: "Highlighting",
       key: "Loading",
       value:
-        "Plain text first; coloured once Prism has read it in its worker, the blocks on the screen first.",
+        "Plain text until the lexers have loaded, the first time a block is drawn; plain where a policy refuses WebAssembly.",
     },
     {
       group: "Highlighting",
       key: "Languages",
       value:
-        "TSX, TypeScript, JavaScript, JSON, Bash, Python, CSS, HTML, Markdown, YAML, SQL, Diff, Go, Rust, Java, C, C++, C#, PHP, Ruby, Kotlin, Swift, TOML, Dockerfile; others as text.",
+        "TSX, TypeScript, JavaScript, JSON, Bash, Python, CSS, HTML, XML, Markdown, YAML, SQL, Diff, Go, Rust, Java, C, C++, C#, PHP, Ruby, Kotlin, Swift, TOML, Dockerfile, and any other of the 150 the lexers know (`zig`, `lua`, `scss`); others as text.",
     },
     {
       group: "Copy",

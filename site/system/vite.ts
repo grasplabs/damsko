@@ -104,7 +104,7 @@ const componentNames = new Set(
  * The component or block a file of src/ belongs to, as its chunk's name:
  *
  *   src/components/button.tsx, button.stylex.ts     → "component-button"
- *   src/components/code-block-prism.ts              → "component-code-block" (a helper beside it)
+ *   src/components/code-block-highlight.ts          → "component-code-block" (a helper beside it)
  *   src/components/data-table/columns.tsx           → "component-data-table" (a folder component)
  *   src/blocks/share-dialog-01/share-dialog-01.tsx  → "block-share-dialog-01"
  *
@@ -138,7 +138,7 @@ const componentOf = (id: string) => {
  * "examples/button/states.tsx" → "examples-button-states": one chunk per example, so the
  * components an example draws with load as it nears the viewport (./island.ts), not with the
  * page's first example. As one chunk per folder, a page's first example fetched what every example
- * below it uses: Markdown and Prism on the message's page, a data table on the container's, 57
+ * below it uses: Markdown and its code blocks on the message's page, a data table on the container's, 57
  * requests and 800KB on a pattern's page, whose folder holds every pattern.
  *
  * What a folder's examples share (a `.ts` beside them, a file in a subfolder: the streaming
