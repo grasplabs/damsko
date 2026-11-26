@@ -22,9 +22,17 @@ description: A line in a conversation that marks what happened to the conversati
 
 ## Separators
 
-For a day, where the unread messages start, or a span of work. Its words are ordinary content: give it no `separator` role, which would hide them. With a Button beside its words it is a checkpoint, a point the conversation can go back to: [Chat](/components/chat) shows one.
+For a day, where the unread messages start, or a span of work. Its words are ordinary content. With a Button beside its words it is a checkpoint, a point the conversation can go back to: [Chat](/components/chat) shows one.
+
+`decorative`: by default its rules are only drawn and its words read as text. Where a screen reader should announce the line as a divider, such as where the unread messages start, set `decorative={false}`: it is read as a separator named by its words, so no wrapper is needed. A separator's children are not read, so it then holds words only, never a Button.
 
 <Stage path="marker/separator" label="Separators" />
+
+## Colours
+
+`color`: `default` muted words and hairline rules, or one of the brand's colours for the words and both rules alike, each in the shade that holds as words on every ground, in light and dark: `primary` for news (where the unread messages start), `mint` and `pine` the brand's greens, `lavender` the second accent, and `success`, `warning`, `destructive` and `info` for what the line means. Under forced colours the words and rules take the system's text colour.
+
+<Stage path="marker/colors" label="Colours" />
 
 ## A status
 
@@ -50,13 +58,15 @@ With `asChild`, the Marker draws the one link or button it is given: underlined,
   of="marker"
   always={[
     "A line that marks something about the conversation itself: a day, New messages, someone joined, a checkpoint.",
+    '`color="primary"` and `decorative={false}` on the line where the unread messages start: drawn as news, announced as a divider named by its words.',
     '`role="status"` on a line whose words change while it stands (Reconnecting), so they are said as they change.',
     "Words beside an icon: the icon is hidden from screen readers.",
   ]}
   never={[
     "A message: use Message, with a Bubble for its surface.",
     'A step an assistant took, or its work under way: use a Trace line (`status="running"` while it works).',
-    'A `role="separator"` on a separator with words: its words would not be read.',
+    'A `role="separator"` on a wrapper round a Marker: give the Marker `decorative={false}`, which names it by its words.',
+    "`decorative={false}` on a Marker with a Button in it: a separator's children are not read.",
     "An icon alone with no name: give it words or an `aria-label`.",
   ]}
 />
@@ -78,6 +88,22 @@ With `asChild`, the Marker draws the one link or button it is given: underlined,
       key: "Words",
       value: "{text-xs}, medium, {space-3} clear of a hairline on each side",
       tokens: ["muted-foreground", "border"],
+    },
+    {
+      group: "Separator",
+      key: "In a colour",
+      value:
+        "Its words and both rules in the colour, in the shade that holds as words",
+      tokens: [
+        "primary",
+        "mint-deep",
+        "pine",
+        "lavender",
+        "success",
+        "warning",
+        "destructive",
+        "info",
+      ],
     },
     {
       group: "Border",
@@ -113,7 +139,8 @@ With `asChild`, the Marker draws the one link or button it is given: underlined,
     },
     {
       key: "Separator",
-      value: "Its words read as content; its rules drawn, not read",
+      value:
+        "Its words read as content; its rules drawn, not read. With `decorative={false}`, a separator named by its words",
     },
     { key: "Icon", value: "Hidden from screen readers" },
     {
@@ -121,7 +148,10 @@ With `asChild`, the Marker draws the one link or button it is given: underlined,
       value:
         "A real `a` or `button`, named by its words, with the keyboard's ring",
     },
-    { key: "Forced colours", value: "Its rules in the system's text colour" },
+    {
+      key: "Forced colours",
+      value: "Its words and rules in the system's text colour, in every colour",
+    },
   ]}
 />
 
