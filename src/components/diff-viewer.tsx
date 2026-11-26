@@ -113,7 +113,7 @@ export interface DiffViewerProps {
   /**
    * The code's language, by the names CodeBlock takes (`ts`, `tsx`, `python`, `css`, a file's
    * extension): its lines are coloured in Damsko's syntax colours, as CodeBlock colours code. Left
-   * out, they are plain text, as prose is.
+   * out, they are plain text, as prose is; `mode="inline"` is always plain.
    */
   language?: string;
   /**
@@ -810,7 +810,10 @@ const runsWithin = (runs: readonly Run[], from: number, to: number) => {
   return within;
 };
 
-/** Runs of text, each in its colour, with their break points; a run with no colour is its text alone. */
+/**
+ * Runs of text, each in its colour, with their break points; a run with no colour is its text alone.
+ * CodeBlock draws its runs the same way (its LineRuns), without the break points.
+ */
 const colouredText = (runs: readonly Run[], at: string): ReactNode[] =>
   runs.map((run, index) =>
     run.tone === null ? (
@@ -831,10 +834,10 @@ const LineText = ({ line, runs }: { line?: Line; runs?: readonly Run[] }) => {
   if (line === undefined) {
     return null;
   }
-  // The lexers' line is the line's text, and a carriage return the model left out.
-  const read = runs?.map((run) => run.text).join("");
+  // Runs that are not the line's text (a stray carriage return the model left out) are not drawn:
+  // the line is plain.
   const coloured: readonly Run[] =
-    runs !== undefined && (read === line.text || read === `${line.text}\r`)
+    runs !== undefined && runs.map((run) => run.text).join("") === line.text
       ? runs
       : [{ text: line.text, tone: null }];
   if (line.pieces === undefined) {
@@ -1600,6 +1603,38 @@ const useModel = (oldValue: string, newValue: string) => {
   return { model, open, setOpen, fresh, setFresh, own, setOwn };
 };
 
+/**
+ * The most coloured runs a diff that draws every row may hold: each is an element, and all are
+ * drawn in the frame the lexers arrive in. CodeBlock's own limit, by its measurement (some 3.5 µs a
+ * run, 10 µs at a slow processor). DiffViewerFiles opens many such diffs at once.
+ */
+const MOST_RUNS = 5000;
+
+/** How many coloured runs the lines of `rows` hold, stopping once past MOST_RUNS. */
+const colouredRunsIn = (
+  rows: readonly AnyRow[],
+  runsOf: (line: Line | undefined) => readonly Run[] | undefined
+) => {
+  let count = 0;
+  for (const row of rows) {
+    let sides: (Line | undefined)[] = [];
+    if (row.type === "line") {
+      sides = [row.line];
+    } else if (row.type === "pair") {
+      sides = [row.left, row.right];
+    }
+    for (const line of sides) {
+      for (const run of runsOf(line) ?? []) {
+        count += run.tone === null ? 0 : 1;
+      }
+    }
+    if (count > MOST_RUNS) {
+      break;
+    }
+  }
+  return count;
+};
+
 /** After a press by keys took its button away, focus goes to what replaced it, so the keys carry on. */
 const useFocusAfter = (body: HTMLDivElement | null) => {
   const [target, setTarget] = useState<Target | null>(null);
@@ -1811,6 +1846,14 @@ const LineDiff = (props: Settled) => {
     ? splitRows(lines, changes, folds, review)
     : unifiedRows(lines, changes, folds, review, showHunkHeaders);
   const virtual = rows.length > virtualizeThreshold;
+  // A removed line is read in the text before; the others in the text after. A diff that draws
+  // every row is coloured only while its rows hold at most MOST_RUNS coloured runs; one that draws
+  // only the rows in view, always.
+  const runsOf = (line: Line | undefined) =>
+    line?.kind === "removed"
+      ? oldRuns?.[(line.oldNo ?? 0) - 1]
+      : newRuns?.[(line?.newNo ?? 0) - 1];
+  const coloured = virtual || colouredRunsIn(rows, runsOf) <= MOST_RUNS;
 
   // Wide enough for the longest number, with the column's room either side.
   const digits = String(highestNumber(lines)).length;
@@ -1825,11 +1868,7 @@ const LineDiff = (props: Settled) => {
     decisions: given ?? own,
     // In a long diff a row is drawn again each time it scrolls into view: nothing fades there.
     fresh: virtual ? NO_FRESH : fresh,
-    // A removed line is read in the text before; the others in the text after.
-    runsOf: (line) =>
-      line?.kind === "removed"
-        ? oldRuns?.[(line.oldNo ?? 0) - 1]
-        : newRuns?.[(line?.newNo ?? 0) - 1],
+    runsOf: (line) => (coloured ? runsOf(line) : undefined),
     onUnfold: (row, byKeys) => {
       setOpen((was) => new Map([...was, [row.key, row.count]]));
       // The lines the fold held arrive: they fade in where the fold stood.

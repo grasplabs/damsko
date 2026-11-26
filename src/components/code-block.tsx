@@ -659,7 +659,7 @@ const useBlock = (part: string): Block => {
  * A line's runs, each in its colour. A component of its own, so the compiler keeps what it drew for
  * as long as the line is the same object (code-block-highlight.ts keeps it one while the code is
  * written and once it is done): a line already coloured is never drawn again while later lines
- * are coloured or more code comes in.
+ * are coloured or more code comes in. DiffViewer draws its runs the same way (its colouredText).
  */
 const LineRuns = ({ line }: { line: Line }) => (
   <>
@@ -719,7 +719,7 @@ const unwatched = () => () => {
 export const useHighlightedTokens = (
   code: string,
   language: string | undefined
-): HighlightedToken[][] | null => {
+): readonly (readonly HighlightedToken[])[] | null => {
   const engine = useSyncExternalStore(
     language === undefined ? unwatched : watchEngine,
     currentEngine,

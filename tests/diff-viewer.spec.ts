@@ -277,6 +277,11 @@ test("a selection across lines copies the code alone: no numbers, marks or words
   page,
 }) => {
   await openExample(page, "diff-viewer", "unified");
+  // Coloured first: the selection crosses the runs, not plain text.
+  const table = page.getByRole("table", { name: "invoice.ts" });
+  await expect
+    .poll(async () => await colourOf(runOf(table, /^export\b/u)))
+    .toBe(await tokenColour(page, "--damsko-syntax-keyword"));
   const code = (text: string) =>
     page.getByRole("row").filter({ hasText: text }).locator("[data-diff-code]");
   const from = await code(
@@ -328,26 +333,30 @@ test("5,000 lines with 300 changed are compared, drawn and coloured with no long
   expect(longest).toBeLessThan(250);
 });
 
-test("a diff with no language is plain, and never loads the lexers", async ({
+test("a diff with no language never loads the lexers; one with a language does", async ({
   page,
 }) => {
+  /** How many of the scripts the page has loaded hold the lexers' WebAssembly. */
+  const lexers = async () => {
+    await page.waitForLoadState("networkidle");
+    const scripts = await page.evaluate(() =>
+      performance
+        .getEntriesByType("resource")
+        .map((entry) => entry.name)
+        .filter((name) => name.endsWith(".js"))
+    );
+    const texts = await Promise.all(
+      scripts.map(async (url) => {
+        const response = await page.request.get(url);
+        return await response.text();
+      })
+    );
+    return texts.filter((text) => text.includes("WebAssembly.Module")).length;
+  };
   await openExample(page, "diff-viewer", "states");
-  await page.waitForLoadState("networkidle");
-  const scripts = await page.evaluate(() =>
-    performance
-      .getEntriesByType("resource")
-      .map((entry) => entry.name)
-      .filter((name) => name.endsWith(".js"))
-  );
-  const texts = await Promise.all(
-    scripts.map(async (url) => {
-      const response = await page.request.get(url);
-      return await response.text();
-    })
-  );
-  expect(
-    texts.filter((text) => text.includes("WebAssembly.Module"))
-  ).toHaveLength(0);
+  expect(await lexers()).toBe(0);
+  await openExample(page, "diff-viewer", "unified");
+  expect(await lexers()).toBe(1);
 });
 
 declare global {

@@ -1,7 +1,7 @@
 // The line diff of DiffViewer (diff-viewer.tsx), pure, with no StyleX, so the server draws the same
 // rows as the browser and the model is tested without a page. The diffs themselves are jsdiff's
-// (the npm `diff` package, which @pierre/diffs builds on too): lines, words with their spaces (within
-// a changed line) and words (prose). This file is the model on top: what changed
+// (the npm `diff` package): lines, words with their spaces (within a changed line) and words
+// (prose). This file is the model on top: what changed
 // between two texts, as lines with their numbers, changes made of removed and added lines, the words
 // that changed inside a line, and the runs of unchanged lines that fold away.
 import { diffLines, diffWords, diffWordsWithSpace } from "diff";
