@@ -92,22 +92,16 @@ const alignOf = (cell: Element) => {
 /** A line with each link drawn as its words. */
 const unlinked = (line: string) =>
   line.replaceAll(/\[(?<words>[^\]]*)\]\([^)]*\)/gu, "$<words>");
-const deliberate: [string, (streamdown: string, ours: string) => boolean][] = [
+const deliberate: [
+  string,
+  (streamdown: string, ours: string, source: string) => boolean,
+][] = [
   // GitHub's alerts (`> [!NOTE]` and its four kin) are drawn as alerts, as GitHub draws them,
   // where Streamdown draws the quote with its mark as words.
   [
     "GitHub's alerts drawn as alerts",
     (streamdown) =>
       /^\s*p \[!(?:note|tip|important|warning|caution)\]/imu.test(streamdown),
-  ],
-  // Raw HTML is never set as HTML (only `<details>` with its summary is read): a tag ours shows
-  // that Streamdown does not.
-  [
-    "raw HTML shown as text",
-    (streamdown, ours) =>
-      (ours.match(/<[a-z/!?][^>\n]*>?/giu) ?? []).some(
-        (tag) => !streamdown.includes(tag)
-      ),
   ],
   // A link of Markdown's own leads only where safeHref allows: Streamdown blocks some ours draws
   // (a path on this site) and draws some ours leaves as words (other schemes).
@@ -183,6 +177,14 @@ const deliberate: [string, (streamdown: string, ours: string) => boolean][] = [
     "a mark in a link",
     (streamdown) => /\]\(#user-content-fn-/u.test(streamdown),
   ],
+  // HTML is never set as HTML (only `<details>` with its summary is read): a tag is dropped and
+  // what it holds is read as Markdown, where Streamdown sets the elements it allows (a table, a
+  // block of code), drops a script's or a style's words, and leaves the lines of an HTML block as
+  // their text, or drops them where its start is no whole tag (ours shows such a start as words).
+  [
+    "tags dropped, what they hold read as Markdown",
+    (_streamdown, _ours, source) => /<(?:\/?[a-z]|[!?])/iu.test(source),
+  ],
 ];
 
 /** The lines of `lines` that `other` lacks, as many times as it lacks them. */
@@ -233,8 +235,9 @@ describe("drawn as Streamdown draws it", () => {
       } else if (ours !== roles) {
         const [streamdown, mine] = differenceOf(roles, ours);
         const kind =
-          deliberate.find(([, is]) => is(streamdown, mine))?.[0] ??
-          `${name} @${at}: ${streamdown} | ${mine}`;
+          deliberate.find(([, is]) =>
+            is(streamdown, mine, text.slice(0, at))
+          )?.[0] ?? `${name} @${at}: ${streamdown} | ${mine}`;
         kinds[kind] = (kinds[kind] ?? 0) + 1;
         if (process.env.SHOW === kind) {
           process.stderr.write(
@@ -251,14 +254,14 @@ describe("drawn as Streamdown draws it", () => {
       "a quote in an item": 4,
       "a section waits": 2,
       "a table's head waits": 9,
-      [HELD]: 365,
-      "addresses by safeHref": 51,
-      "addresses still being written are words": 20,
-      "no empty cells added": 18,
+      [HELD]: 366,
+      "addresses by safeHref": 70,
+      "addresses still being written are words": 23,
+      "no empty cells added": 19,
       "one tilde is a tilde": 3,
       "pictures never loaded": 17,
-      "raw HTML shown as text": 80,
-      "raw marks wait": 8,
+      "raw marks wait": 20,
+      "tags dropped, what they hold read as Markdown": 22,
     });
     expect(entries.length).toBeGreaterThan(1000);
   }, 600_000);

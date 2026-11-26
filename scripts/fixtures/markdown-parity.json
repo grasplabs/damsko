@@ -3182,6 +3182,41 @@
       "roles": "p The request goes through three services:\np Each step retries once. A diagram Mermaid cannot read stays code:"
     },
     {
+      "name": "tag-line",
+      "at": 89,
+      "roles": "p I found **41 issues** assigned to you that are **in progress** in the tracker:"
+    },
+    {
+      "name": "tag-line",
+      "at": 178,
+      "roles": "p I found **41 issues** assigned to you that are **in progress** in the tracker:\np - [ISS-2306](streamdown:incomplete-link)"
+    },
+    {
+      "name": "tag-line",
+      "at": 267,
+      "roles": "p I found **41 issues** assigned to you that are **in progress** in the tracker:\np - [ISS-2306](https://tracker.example.com/issue/ISS-2306/export-queue) — Move the export to a queue - [ISS-2235](streamdown:incomplete-link)"
+    },
+    {
+      "name": "tag-line",
+      "at": 356,
+      "roles": "p I found **41 issues** assigned to you that are **in progress** in the tracker:\np - [ISS-2306](https://tracker.example.com/issue/ISS-2306/export-queue) — Move the export to a queue - [ISS-2235](https://tracker.example.com/issue/ISS-2235/guests) — Guests see the pages shared with them - [ISS-2056](streamdown:incomplete-link)"
+    },
+    {
+      "name": "tag-line",
+      "at": 445,
+      "roles": "p I found **41 issues** assigned to you that are **in progress** in the tracker:\np - [ISS-2306](https://tracker.example.com/issue/ISS-2306/export-queue) — Move the export to a queue - [ISS-2235](https://tracker.example.com/issue/ISS-2235/guests) — Guests see the pages shared with them - [ISS-2056](https://tracker.example.com/issue/ISS-2056/keep-teams) — Keep teams current\np A"
+    },
+    {
+      "name": "tag-line",
+      "at": 534,
+      "roles": "p I found **41 issues** assigned to you that are **in progress** in the tracker:\np - [ISS-2306](https://tracker.example.com/issue/ISS-2306/export-queue) — Move the export to a queue - [ISS-2235](https://tracker.example.com/issue/ISS-2235/guests) — Guests see the pages shared with them - [ISS-2056](https://tracker.example.com/issue/ISS-2056/keep-teams) — Keep teams current\np A\np wrapper:\np Some **bold** words in it.\np A comment  stays,"
+    },
+    {
+      "name": "tag-line",
+      "at": 591,
+      "roles": "p I found **41 issues** assigned to you that are **in progress** in the tracker:\np - [ISS-2306](https://tracker.example.com/issue/ISS-2306/export-queue) — Move the export to a queue - [ISS-2235](https://tracker.example.com/issue/ISS-2235/guests) — Guests see the pages shared with them - [ISS-2056](https://tracker.example.com/issue/ISS-2056/keep-teams) — Keep teams current\np A\np wrapper:\np Some **bold** words in it.\np A comment  stays, a line break⏎too, and [https://example.com](https://example.com/) is a link."
+    },
+    {
       "name": "alerts",
       "at": 89,
       "roles": "p Before you change the export:\nquote\n  p [!NOTE] The export runs every night at two.\nquote\n  p [!TIP]"

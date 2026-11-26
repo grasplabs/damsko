@@ -1,5 +1,5 @@
 {
-  "about": "98 answers as a model writes them, written for Damsko's tests: prose, nested and ordered lists, tasks, fenced code in ten languages, tables, inline, reference and bare links, citations, footnotes, maths-like text, <details>, GitHub's alerts, and text in eight languages besides English. Each is streamed a character at a time (scripts/markdown-stream.test.tsx).",
+  "about": "99 answers as a model writes them, written for Damsko's tests: prose, nested and ordered lists, tasks, fenced code in ten languages, tables, inline, reference and bare links, citations, footnotes, maths-like text, <details>, a tag on a line of its own, GitHub's alerts, and text in eight languages besides English. Each is streamed a character at a time (scripts/markdown-stream.test.tsx).",
   "answers": [
     {
       "name": "export",
@@ -2026,6 +2026,27 @@
         "flowchart LR",
         "  A --> -->",
         "```"
+      ]
+    },
+    {
+      "name": "tag-line",
+      "about": "A tool's tag on a line of its own over a list of links, a <div> round a paragraph, a comment, a <br> and an address in angle brackets",
+      "lines": [
+        "I found **41 issues** assigned to you that are **in progress** in the tracker:",
+        "",
+        "<untrusted-ExpoGBLIFfAjjZadRE8wCg>",
+        "- [ISS-2306](https://tracker.example.com/issue/ISS-2306/export-queue) — Move the export to a queue",
+        "- [ISS-2235](https://tracker.example.com/issue/ISS-2235/guests) — Guests see the pages shared with them",
+        "- [ISS-2056](https://tracker.example.com/issue/ISS-2056/keep-teams) — Keep teams current",
+        "</untrusted-ExpoGBLIFfAjjZadRE8wCg>",
+        "",
+        "A <div> wrapper:",
+        "",
+        "<div>",
+        "Some **bold** words in it.",
+        "</div>",
+        "",
+        "A comment <!-- note --> stays, a line break<br>too, and <https://example.com> is a link."
       ]
     },
     {
