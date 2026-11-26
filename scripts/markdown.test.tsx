@@ -432,6 +432,68 @@ describe("what an answer may hold besides prose", () => {
     ).toStrictEqual(["Copy table (waits)", "Download table (waits)"]);
   });
 
+  test("GitHub's alerts: a quote whose first line is only one of the five marks, in any case, is that Alert; any other stays a quote", () => {
+    const alerts = (source: string, props: Partial<MarkdownProps> = {}) =>
+      [
+        ...draw(source, props).matchAll(
+          /data-variant="(?<variant>[a-z]+)".*?data-slot="alert-title"[^>]*>(?<title>[^<]*)</gu
+        ),
+      ].map(({ groups }) => `${groups?.variant} ${groups?.title}`);
+    expect(
+      alerts(
+        "> [!NOTE]\n> One.\n\n> [!TIP]\n> Two.\n\n> [!important]\n> Three.\n\n> [!WARNING]\n> Four.\n\n> [!Caution]\n> Five."
+      )
+    ).toStrictEqual([
+      "info Note",
+      "success Tip",
+      "default Important",
+      "warning Warning",
+      "destructive Caution",
+    ]);
+    // The mark's line goes; its words, a list, a second paragraph and a hard break after it stay.
+    const html = draw(
+      "> [!WARNING]  \n> Changing it **recalculates**:\n> - every report\n>\n> Then check."
+    );
+    expect(textOf(html)).toMatch(/^(?!.*\[!).*Then check\./su);
+    expect(html).toMatch(/<strong[^>]*>recalculates<\/strong>/u);
+    expect(count(html, "<li")).toBe(1);
+    expect(count(html, "<br")).toBe(0);
+  });
+
+  test("not an alert, as GitHub reads it: another mark, words on the mark's line, the mark alone; while written the mark alone is one", () => {
+    const alerts = (source: string, props: Partial<MarkdownProps> = {}) =>
+      count(draw(source, props), 'data-slot="alert"');
+    // Not an alert, as GitHub reads it: another mark, words on the mark's line, the mark alone.
+    for (const quote of [
+      "> [!SUMMARY]\n> Words.",
+      "> [!NOTE] Words on its line.",
+      "> [!NOTE]",
+      "> Words first.\n> [!NOTE]",
+    ]) {
+      expect(alerts(quote)).toBe(0);
+      expect(count(draw(quote), "<blockquote")).toBe(1);
+    }
+    // An alert is part of the answer: never a live region of its own.
+    expect(draw("> [!WARNING]\n> Words.")).not.toMatch(
+      /role="(?:alert|status)"/u
+    );
+    // While its block is written, the mark alone is already the alert, so the mark never shows;
+    // once the quote is finished it is a quote, as it stays.
+    expect(alerts("Intro\n\n> [!TIP]\n", { streaming: true })).toBe(1);
+    expect(alerts("> [!TIP]\n\nMore words ", { streaming: true })).toBe(0);
+  });
+
+  test("each block takes its own direction: paragraphs, headings, list items, quotes and table cells", () => {
+    const html = draw(
+      "# عنوان\n\nفقرة.\n\n- عنصر\n\n> اقتباس\n\n| أ | b |\n| - | -: |\n| ج | 1 |\n\n```\ncode\n```"
+    );
+    for (const tag of ["h1", "p", "li", "blockquote", "th", "td"]) {
+      expect(html).toMatch(new RegExp(`<${tag}\\b[^>]*dir="auto"`, "u"));
+    }
+    // A quote's paragraph takes the quote's direction, so the quote's `auto` reads its words.
+    expect(html).toMatch(/<blockquote[^>]*>\s*<p(?![^>]*\bdir=)/u);
+  });
+
   test("maths between two dollars: in a sentence, on lines of its own (blank lines and all), closed while written; one dollar is a dollar", () => {
     expect(formulas(draw("a $$x^2$$ b"))).toStrictEqual(["x^2"]);
     expect(formulas(draw("$$\na = 1\n\nb = 2\n$$\n\nAfter."))).toStrictEqual([
@@ -554,6 +616,14 @@ describe("what an answer may hold besides prose", () => {
     const cell = draw("| A | B |\n| --- | --- |\n| <b>x</b> | y |");
     expect(textOf(cell)).toContain("x");
     expect(cell).not.toMatch(/<b>|&lt;b&gt;/u);
+  });
+
+  test("<br> in a table's cell is a line break in that cell, and Copy keeps it as written", () => {
+    const html = draw(
+      "| Step | Note |\n| --- | --- |\n| Send | By post.<br>Next day. |"
+    );
+    expect(html).toMatch(/<td[^>]*>By post\.<br\/?>Next day\.<\/td>/u);
+    expect(textOf(html)).not.toContain("&lt;br");
   });
 
   test("a comment is dropped and <br> is a line break; an address in angle brackets is a link", () => {

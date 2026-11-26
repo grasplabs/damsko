@@ -37,9 +37,11 @@ A `selected` row keeps a quiet fill, and says so in its words too.
 
 ## Wider than its column
 
-A wide table scrolls sideways in its own box, which then takes keyboard focus.
+A wide table scrolls sideways in its own box, which then takes keyboard focus. A cell or a head with `wrap` lets its words run onto more lines, keeping the narrowest a column may be, so a table of sentences fits a narrow column and scrolls only when its columns cannot shrink further; `streaming` shares the width evenly, each column at least that narrowest width. `dir="auto"` on a head or a cell lets words in Arabic or Hebrew stand at its right and read from there.
 
 <Stage path="table/wide" label="Wider than its column" />
+
+<Stage path="table/sentences" label="Sentences in cells" />
 
 ## Every state
 
@@ -186,7 +188,8 @@ A row and a sortable column's name; hover and keyboard focus are forced from the
     {
       group: "Width",
       key: "Long words",
-      value: "Wrap inside their cell; column names stay on one line.",
+      value:
+        "Wrap inside their cell; column names stay on one line unless the head has `wrap` or the table is `streaming`.",
     },
     {
       group: "Sort",

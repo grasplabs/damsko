@@ -1,5 +1,5 @@
 {
-  "about": "98 answers as a model writes them, written for Damsko's tests: prose, nested and ordered lists, tasks, fenced code in ten languages, tables, inline, reference and bare links, citations, footnotes, maths-like text, <details>, a tag on a line of its own, and text in eight languages besides English. Each is streamed a character at a time (scripts/markdown-stream.test.tsx).",
+  "about": "99 answers as a model writes them, written for Damsko's tests: prose, nested and ordered lists, tasks, fenced code in ten languages, tables, inline, reference and bare links, citations, footnotes, maths-like text, <details>, a tag on a line of its own, GitHub's alerts, and text in eight languages besides English. Each is streamed a character at a time (scripts/markdown-stream.test.tsx).",
   "answers": [
     {
       "name": "export",
@@ -2047,6 +2047,33 @@
         "</div>",
         "",
         "A comment <!-- note --> stays, a line break<br>too, and <https://example.com> is a link."
+      ]
+    },
+    {
+      "name": "alerts",
+      "about": "GitHub's alerts as a model writes them: the five kinds, one holding a list, one in lower case, and a mark GitHub does not know",
+      "lines": [
+        "Before you change the export:",
+        "",
+        "> [!NOTE]",
+        "> The export runs every night at two.",
+        "",
+        "> [!TIP]",
+        "> Filter by **owner** to see only your own reports.",
+        "",
+        "> [!important]",
+        "> Reports older than a year move to the archive.",
+        "",
+        "> [!WARNING]",
+        "> Changing the currency recalculates every open report.",
+        "",
+        "> [!CAUTION]",
+        "> Deleting a workspace deletes:",
+        "> - the drafts",
+        "> - the shared copies",
+        "",
+        "> [!SUMMARY]",
+        "> Not one of the five, so a quote."
       ]
     }
   ]
