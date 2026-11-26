@@ -526,6 +526,41 @@ describe("what an answer may hold besides prose", () => {
     );
   });
 
+  test("a tag on a line of its own is its words, and the lines after it are Markdown", () => {
+    const html = draw(
+      "I found **41 issues**:\n\n<untrusted-ExpoGBLIFfAjjZadRE8wCg>\n- [GRA-2306](https://linear.app/a/GRA-2306) — Connector layer\n- [GRA-2235](https://linear.app/a/GRA-2235) — Guests\n</untrusted-ExpoGBLIFfAjjZadRE8wCg>"
+    );
+    expect(count(html, "<li")).toBe(2);
+    expect(count(html, 'href="https://linear.app/a/GRA-')).toBe(2);
+    expect(textOf(html)).toContain("&lt;untrusted-ExpoGBLIFfAjjZadRE8wCg&gt;");
+    expect(html).not.toMatch(/<untrusted/iu);
+  });
+
+  test("HTML is never read: a <div> round a paragraph and a tag in a cell are words", () => {
+    const wrapped = draw("<div>\nSome **bold** words.\n</div>");
+    expect(wrapped).toMatch(/<strong[^>]*>bold<\/strong>/u);
+    expect(textOf(wrapped)).toContain("&lt;div&gt;");
+    const cell = draw("| A | B |\n| --- | --- |\n| <b>x</b> | y |");
+    expect(textOf(cell)).toContain("&lt;b&gt;x&lt;/b&gt;");
+    expect(cell).not.toMatch(/<b>/u);
+  });
+
+  test("a comment and <br> are words, and an address in angle brackets is a link", () => {
+    const words = draw("A comment <!-- note --> and a break<br>here.");
+    expect(textOf(words)).toContain("&lt;!-- note --&gt;");
+    expect(textOf(words)).toContain("&lt;br&gt;");
+    expect(count(words, "<br")).toBe(0);
+    // An address in angle brackets is a link, not HTML.
+    expect(draw("See <https://example.com/angle>.")).toContain(
+      'href="https://example.com/angle"'
+    );
+  });
+
+  test("a tag still being written at the end is its words", () => {
+    const html = draw("Look:\n\n<untrusted-Expo", { streaming: true });
+    expect(html).not.toMatch(/<untrusted/iu);
+  });
+
   test("sections nest 32 deep, and deeper is words", () => {
     const source = `${"<details>\n<summary>s</summary>\n\n".repeat(40)}x\n\n${"</details>\n\n".repeat(40)}`;
     const html = draw(source);

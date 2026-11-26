@@ -1,5 +1,5 @@
 {
-  "about": "95 answers as a model writes them, written for Damsko's tests: prose, nested and ordered lists, tasks, fenced code in ten languages, tables, inline, reference and bare links, citations, footnotes, maths-like text, <details>, and text in eight languages besides English. Each is streamed a character at a time (scripts/markdown-stream.test.tsx).",
+  "about": "98 answers as a model writes them, written for Damsko's tests: prose, nested and ordered lists, tasks, fenced code in ten languages, tables, inline, reference and bare links, citations, footnotes, maths-like text, <details>, a tag on a line of its own, and text in eight languages besides English. Each is streamed a character at a time (scripts/markdown-stream.test.tsx).",
   "answers": [
     {
       "name": "export",
@@ -2026,6 +2026,27 @@
         "flowchart LR",
         "  A --> -->",
         "```"
+      ]
+    },
+    {
+      "name": "tag-line",
+      "about": "A tool's tag on a line of its own over a list of links, a <div> round a paragraph, a comment, a <br> and an address in angle brackets",
+      "lines": [
+        "I found **41 issues** assigned to you that are **In Progress** in Linear:",
+        "",
+        "<untrusted-ExpoGBLIFfAjjZadRE8wCg>",
+        "- [GRA-2306](https://linear.app/grasp-os/issue/GRA-2306/connector-layer) — Connector layer phase 0: threat model",
+        "- [GRA-2235](https://linear.app/grasp-os/issue/GRA-2235/guests) — Guests: outsiders with a platform account",
+        "- [GRA-2056](https://linear.app/grasp-os/issue/GRA-2056/keep-people) — Keep people and teams current",
+        "</untrusted-ExpoGBLIFfAjjZadRE8wCg>",
+        "",
+        "A <div> wrapper:",
+        "",
+        "<div>",
+        "Some **bold** words in it.",
+        "</div>",
+        "",
+        "A comment <!-- note --> stays, a line break<br>too, and <https://example.com> is a link."
       ]
     }
   ]

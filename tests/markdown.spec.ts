@@ -161,6 +161,22 @@ test.describe("a table's controls", () => {
   });
 });
 
+test("a tag on a line of its own is its words, and the list after it a list of links", async ({
+  page,
+}) => {
+  await openExample(page, "markdown", "tag-line");
+  await expect(
+    page.getByText("<untrusted-ExpoGBLIFfAjjZadRE8wCg>").first()
+  ).toBeVisible();
+  const list = page.getByRole("list");
+  await expect(list.getByRole("listitem")).toHaveCount(3);
+  await expect(list.getByRole("link", { name: "GRA-2306" })).toHaveAttribute(
+    "href",
+    "https://linear.app/grasp-os/issue/GRA-2306/connector-layer"
+  );
+  await expect(page.locator("untrusted-expogbliffajjzadre8wcg")).toHaveCount(0);
+});
+
 test("lists hold lists, and an item of two paragraphs keeps both", async ({
   page,
 }) => {

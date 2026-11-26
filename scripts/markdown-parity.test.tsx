@@ -235,7 +235,7 @@ describe("drawn as Streamdown draws it", () => {
       "no empty cells added": 18,
       "one tilde is a tilde": 3,
       "pictures never loaded": 17,
-      "raw HTML shown as text": 80,
+      "raw HTML shown as text": 86,
       "raw marks wait": 8,
     });
     expect(entries.length).toBeGreaterThan(1000);

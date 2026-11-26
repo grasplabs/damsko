@@ -3182,6 +3182,41 @@
       "roles": "p The request goes through three services:\np Each step retries once. A diagram Mermaid cannot read stays code:"
     },
     {
+      "name": "tag-line",
+      "at": 89,
+      "roles": "p I found **41 issues** assigned to you that are **In Progress** in Linear:"
+    },
+    {
+      "name": "tag-line",
+      "at": 178,
+      "roles": "p I found **41 issues** assigned to you that are **In Progress** in Linear:\np - [GRA-2306](streamdown:incomplete-link)"
+    },
+    {
+      "name": "tag-line",
+      "at": 267,
+      "roles": "p I found **41 issues** assigned to you that are **In Progress** in Linear:\np - [GRA-2306](https://linear.app/grasp-os/issue/GRA-2306/connector-layer) — Connector layer phase 0: threat model - [GRA-2235](streamdown:incomplete-link)"
+    },
+    {
+      "name": "tag-line",
+      "at": 356,
+      "roles": "p I found **41 issues** assigned to you that are **In Progress** in Linear:\np - [GRA-2306](https://linear.app/grasp-os/issue/GRA-2306/connector-layer) — Connector layer phase 0: threat model - [GRA-2235](https://linear.app/grasp-os/issue/GRA-2235/guests) — Guests: outsiders with a platform account - [GRA-2056](streamdown:incomplete-link)"
+    },
+    {
+      "name": "tag-line",
+      "at": 445,
+      "roles": "p I found **41 issues** assigned to you that are **In Progress** in Linear:\np - [GRA-2306](https://linear.app/grasp-os/issue/GRA-2306/connector-layer) — Connector layer phase 0: threat model - [GRA-2235](https://linear.app/grasp-os/issue/GRA-2235/guests) — Guests: outsiders with a platform account - [GRA-2056](https://linear.app/grasp-os/issue/GRA-2056/keep-people) — Keep people and teams current"
+    },
+    {
+      "name": "tag-line",
+      "at": 534,
+      "roles": "p I found **41 issues** assigned to you that are **In Progress** in Linear:\np - [GRA-2306](https://linear.app/grasp-os/issue/GRA-2306/connector-layer) — Connector layer phase 0: threat model - [GRA-2235](https://linear.app/grasp-os/issue/GRA-2235/guests) — Guests: outsiders with a platform account - [GRA-2056](https://linear.app/grasp-os/issue/GRA-2056/keep-people) — Keep people and teams current\np A\np wrapper:\np Some **bold** words in it.\np A comm"
+    },
+    {
+      "name": "tag-line",
+      "at": 616,
+      "roles": "p I found **41 issues** assigned to you that are **In Progress** in Linear:\np - [GRA-2306](https://linear.app/grasp-os/issue/GRA-2306/connector-layer) — Connector layer phase 0: threat model - [GRA-2235](https://linear.app/grasp-os/issue/GRA-2235/guests) — Guests: outsiders with a platform account - [GRA-2056](https://linear.app/grasp-os/issue/GRA-2056/keep-people) — Keep people and teams current\np A\np wrapper:\np Some **bold** words in it.\np A comment  stays, a line break⏎too, and [https://example.com](https://example.com/) is a link."
+    },
+    {
       "name": "commonmark 1",
       "at": 14,
       "roles": "code foo baz bim [download copy]"

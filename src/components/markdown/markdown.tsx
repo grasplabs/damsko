@@ -338,14 +338,6 @@ const styles = stylex.create({
     lineHeight: font.textSmLine,
     color: colors.mutedForeground,
   },
-  raw: {
-    direction: "ltr",
-    unicodeBidi: "isolate",
-    fontFamily: font.mono,
-    fontSize: font.textSm,
-    color: colors.mutedForeground,
-    whiteSpace: "pre-wrap",
-  },
 });
 
 // A section that folds inside prose, as a document's toggle: the chevron before the summary,
@@ -1170,12 +1162,6 @@ const draw: { [T in Node["type"]]?: Draw<T> } = {
   footnoteReference: (node, shared) => <NoteMark node={node} shared={shared} />,
   footnoteDefinition: (node, shared, kids) =>
     shared.notes === true && <Note node={node} kids={kids} />,
-  html: (node, shared) =>
-    shared.phrase === true ? (
-      <span {...stylex.props(styles.raw)}>{node.value}</span>
-    ) : (
-      <p {...stylex.props(styles.paragraph, styles.raw)}>{node.value}</p>
-    ),
   paragraph: (node, shared, kids) =>
     part(shared, "p", node, { children: kids(node.children, PHRASE) }, [
       styles.paragraph,
