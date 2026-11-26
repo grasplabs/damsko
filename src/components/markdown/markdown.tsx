@@ -343,14 +343,6 @@ const styles = stylex.create({
     lineHeight: font.textSmLine,
     color: colors.mutedForeground,
   },
-  raw: {
-    direction: "ltr",
-    unicodeBidi: "isolate",
-    fontFamily: font.mono,
-    fontSize: font.textSm,
-    color: colors.mutedForeground,
-    whiteSpace: "pre-wrap",
-  },
 });
 
 // A section that folds inside prose, as a document's toggle: the chevron before the summary,
@@ -727,6 +719,17 @@ const TaskBox = ({ done }: { done: boolean }) => {
     </>
   );
 };
+const BREAK = /^<br\s*\/?>$/iu;
+/** A phrase that draws nothing: a tag other than `<br>`, or the white space between such tags. */
+const isOnlyTag = (node: Node) =>
+  node.type === "html"
+    ? !BREAK.test(node.value)
+    : node.type === "text" && node.value.trim() === "";
+const FOUND = /^(?:definition|footnoteDefinition|footnoteReference)$/u;
+/** A block that draws nothing where it stands: a definition, a note, or a paragraph of tags alone. */
+const drawsNothing = (node: Node) =>
+  FOUND.test(node.type) ||
+  (node.type === "paragraph" && node.children.every(isOnlyTag));
 type Draw<T extends Node["type"]> = (
   node: Extract<Node, { type: T }>,
   shared: Shared,
@@ -1118,16 +1121,18 @@ const SectionBlock = ({ node, shared, kids }: Part<parse.Section>) => {
         <CollapsibleContent asChild>
           <div {...stylex.props(sectionStyles.under)}>
             <div {...stylex.props(sectionStyles.body)}>
-              {node.children.map((child, at) => (
-                <Placed key={at} node={child} shared={shared}>
-                  {/* oxlint-disable-next-line react/jsx-no-constructed-context-values -- a string */}
-                  <At value={`${place}.${at}`}>
-                    <Shown value={shown - (node.starts.children[at] ?? 0)}>
-                      {kids([child])}
-                    </Shown>
-                  </At>
-                </Placed>
-              ))}
+              {node.children.map((child, at) =>
+                drawsNothing(child) ? null : (
+                  <Placed key={at} node={child} shared={shared}>
+                    {/* oxlint-disable-next-line react/jsx-no-constructed-context-values -- a string */}
+                    <At value={`${place}.${at}`}>
+                      <Shown value={shown - (node.starts.children[at] ?? 0)}>
+                        {kids([child])}
+                      </Shown>
+                    </At>
+                  </Placed>
+                )
+              )}
             </div>
           </div>
         </CollapsibleContent>
@@ -1168,6 +1173,9 @@ const draw: { [T in Node["type"]]?: Draw<T> } = {
   inlineMath: (node) => <Formula tex={node.value} display={false} />,
   math: (node) => <Formula tex={node.value} display />,
   break: () => <br />,
+  // A tag is never drawn, and nothing in it becomes an element: `<br>` is a line break, any other
+  // tag (and a comment) is dropped, and the words round it stay Markdown.
+  html: (node) => (BREAK.test(node.value) ? <br /> : null),
   link: anchor,
   linkReference: anchor,
   image: anchor,
@@ -1175,17 +1183,14 @@ const draw: { [T in Node["type"]]?: Draw<T> } = {
   footnoteReference: (node, shared) => <NoteMark node={node} shared={shared} />,
   footnoteDefinition: (node, shared, kids) =>
     shared.notes === true && <Note node={node} kids={kids} />,
-  html: (node, shared) =>
-    shared.phrase === true ? (
-      <span {...stylex.props(styles.raw)}>{node.value}</span>
-    ) : (
-      <p {...stylex.props(styles.paragraph, styles.raw)}>{node.value}</p>
-    ),
+  // A paragraph that holds only tags (a tool's tag on a line of its own) draws nothing.
   paragraph: (node, shared, kids) =>
-    part(shared, "p", node, { children: kids(node.children, PHRASE) }, [
-      styles.paragraph,
-      shared.greedy && styles.greedy,
-    ]),
+    node.children.every(isOnlyTag)
+      ? null
+      : part(shared, "p", node, { children: kids(node.children, PHRASE) }, [
+          styles.paragraph,
+          shared.greedy && styles.greedy,
+        ]),
   heading: (node, shared, kids) => {
     // From the caller's level on; the look is a step up for the first two depths.
     const { depth } = node;
@@ -1318,7 +1323,6 @@ const useStarts = (source: string) => {
   setCut({ source, cut: next });
   return next.starts;
 };
-const FOUND = /^(?:definition|footnoteDefinition|footnoteReference)$/u;
 const found = new WeakMap<Node, Node[]>();
 /** The definitions, notes and notes' marks a block holds, in reading order: found once, by a stack. */
 const foundIn = (block: Node) => {
@@ -1409,6 +1413,10 @@ const DASHES = /^ {0,3}\|?[ \t]*:?-+:?[ \t]*(?:\||$)/mu;
 const CONTAINERS = /^(?:[ \t>]|[-*+](?=[ \t])|\d{1,9}[.)](?=[ \t]))*/u;
 const UNDECIDED =
   /^(?:[-*+]|\d{1,9}[.)]?|(?:[-*+=_][ \t]*)+|#{1,6}|\[[ xX]?\]?|\[\^[^\]\s]*\]?:?|\[(?!\^)(?:[^\]\\]|\\.){0,999}(?:\]:.*|\]?)|<\/?(?:d(?:e(?:t(?:a(?:i(?:ls?)?)?)?)?)?)?)?[ \t]*$/u;
+// The start of a tag (an open tag with its attributes so far, a closing tag, a comment) or of an
+// autolink, at the very end.
+const HALF_TAG =
+  /^<(?:\/?|[a-z][^\s<>]*|[a-z][a-z0-9-]*(?:\s+[a-z_:][\w.:-]*(?:\s*=\s*(?:[^\s"'=<>`]+|'[^'\n]*'?|"[^"\n]*"?)?)?)*\s*\/?|\/[a-z][a-z0-9-]*\s*|!-?|!--(?:(?!-->)[^])*)$/iu;
 /** `end` less what waits; each pattern is anchored or found from the end, so none scans back. */
 const lessWaiting = (end: string) => {
   const note = end.lastIndexOf("[^");
@@ -1417,12 +1425,10 @@ const lessWaiting = (end: string) => {
   if (parse.inOpenFence(end)) {
     return end;
   }
-  // A tag's or an autolink's start waits for a space or its `>`; then it shows as it is written.
+  // A tag still being written waits for its `>`, attributes and all, and is then dropped; an
+  // autolink's start waits for its `>` or a space. Text that cannot be either shows as it comes.
   const tag = end.lastIndexOf("<", to - 1);
-  to =
-    tag !== -1 && /^<\/?(?:[a-z][^\s<>]*)?$/iu.test(end.slice(tag, to))
-      ? tag
-      : to;
+  to = tag !== -1 && HALF_TAG.test(end.slice(tag, to)) ? tag : to;
   while (to > 0 && "*_~`[!< \t".includes(end.charAt(to - 1))) {
     to -= 1;
   }
@@ -1740,7 +1746,7 @@ export const Markdown = ({
         <Notes value={notes.value}>
           {all.map((node, at) => {
             const writing = open && at >= all.length - ending;
-            return FOUND.test(node.type) ? null : (
+            return drawsNothing(node) ? null : (
               <Placed key={at} node={node} shared={shared}>
                 {/* oxlint-disable-next-line react/jsx-no-constructed-context-values -- a string */}
                 <At value={String(at)}>

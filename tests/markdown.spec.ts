@@ -165,6 +165,20 @@ test.describe("a table's controls", () => {
   });
 });
 
+test("a tag on a line of its own is dropped, and the list after it is a list of links", async ({
+  page,
+}) => {
+  await openExample(page, "markdown", "tag-line");
+  await expect(page.getByText(/untrusted/u)).toHaveCount(0);
+  const list = page.getByRole("list");
+  await expect(list.getByRole("listitem")).toHaveCount(3);
+  await expect(list.getByRole("link", { name: "ISS-2306" })).toHaveAttribute(
+    "href",
+    "https://tracker.example.com/issue/ISS-2306/export-queue"
+  );
+  await expect(page.locator("untrusted-expogbliffajjzadre8wcg")).toHaveCount(0);
+});
+
 test("lists hold lists, and an item of two paragraphs keeps both", async ({
   page,
 }) => {
@@ -196,14 +210,14 @@ test("headings start at the caller's level", async ({ page }) => {
   await expect(page.getByRole("heading", { level: 1 })).toHaveCount(0);
 });
 
-test("untrusted text: raw HTML is text, and only http, https, mailto and paths here lead anywhere", async ({
+test("untrusted text: a tag is dropped, never an element, and only http, https, mailto and paths here lead anywhere", async ({
   page,
 }) => {
   await openExample(page, "markdown", "safe");
   await expect(
-    page.getByText('<b onmouseover="alert(1)">', { exact: false })
+    page.getByText("This line holds raw HTML, shown as words without its tags.")
   ).toBeVisible();
-  await expect(page.locator("b")).toHaveCount(0);
+  await expect(page.locator("b, [onmouseover]")).toHaveCount(0);
   await expect(
     page.getByText(/script link.* data link are words, not links\.$/u)
   ).toBeVisible();
@@ -220,7 +234,7 @@ test("untrusted text: raw HTML is text, and only http, https, mailto and paths h
   await expect(mail).not.toHaveAttribute("target");
 });
 
-test("untrusted text: a script stays text, a data link is words, a picture never loads", async ({
+test("untrusted text: a script is never an element, a data link is words, a picture never loads", async ({
   page,
 }) => {
   const requests: string[] = [];
@@ -230,7 +244,8 @@ test("untrusted text: a script stays text, a data link is words, a picture never
     }
   });
   await openExample(page, "markdown", "safe");
-  await expect(page.getByText("<script>alert(1)</script>")).toBeVisible();
+  await expect(page.locator("[data-slot=markdown] script")).toHaveCount(0);
+  await expect(page.getByText(/<\/?script/u)).toHaveCount(0);
   await expect(
     page.getByText("A script link and a data link are words, not links.")
   ).toBeVisible();
@@ -791,7 +806,7 @@ test("a section folds: its summary names its button, Enter and a press open and 
   await expect(page.getByText("Meals: €40 a day.")).toBeHidden();
 });
 
-test("sections: nested ones fold, and any other HTML or an unclosed one stays text", async ({
+test("sections: nested ones fold, any other tag is dropped, and an unclosed one is words", async ({
   page,
 }) => {
   await openExample(page, "markdown", "sections-cases");
@@ -799,10 +814,9 @@ test("sections: nested ones fold, and any other HTML or an unclosed one stays te
   await outer.click();
   const inner = page.getByRole("button", { name: "Inner" }).first();
   await expect(inner).toHaveAttribute("aria-expanded", "false");
-  await expect(
-    page.getByText("<div>Other HTML stays text.</div>")
-  ).toBeVisible();
-  await expect(page.getByText("<summary>Never closed</summary>")).toBeVisible();
+  await expect(page.getByText("Other HTML stays text.")).toBeVisible();
+  await expect(page.getByText(/<\/?div>/u)).toHaveCount(0);
+  await expect(page.getByText("Never closed")).toBeVisible();
   await expect(page.getByRole("button", { name: "Never closed" })).toHaveCount(
     0
   );
