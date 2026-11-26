@@ -18,6 +18,7 @@
   "dependencies": {
     "@hugeicons/core-free-icons": "catalog:",
     "@hugeicons/react": "catalog:",
+    "@pierre/highlights": "catalog:",
     "@stylexjs/stylex": "catalog:",
     "@tanstack/react-table": "catalog:",
     "@ui-sdk/core": "catalog:",
@@ -29,7 +30,6 @@
     "mermaid": "catalog:",
     "micromark-extension-gfm": "catalog:",
     "micromark-extension-math": "catalog:",
-    "prismjs": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-is": "catalog:",
@@ -49,7 +49,6 @@
     "@stylexjs/unplugin": "catalog:",
     "@types/babel__core": "catalog:",
     "@types/node": "catalog:",
-    "@types/prismjs": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "acorn": "catalog:",

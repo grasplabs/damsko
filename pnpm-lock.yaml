@@ -27,6 +27,9 @@ catalogs:
     '@hugeicons/react':
       specifier: 1.1.10
       version: 1.1.10
+    '@pierre/highlights':
+      specifier: 0.5.2
+      version: 0.5.2
     '@playwright/test':
       specifier: 1.65.0
       version: 1.65.0
@@ -54,9 +57,6 @@ catalogs:
     '@types/node':
       specifier: 26.6.2
       version: 26.6.2
-    '@types/prismjs':
-      specifier: 1.26.6
-      version: 1.26.6
     '@types/react':
       specifier: 19.3.0
       version: 19.3.0
@@ -120,9 +120,6 @@ catalogs:
     postcss:
       specifier: 8.5.32
       version: 8.5.32
-    prismjs:
-      specifier: 1.30.0
-      version: 1.30.0
     react:
       specifier: 19.3.1
       version: 19.3.1
@@ -181,6 +178,9 @@ importers:
       '@hugeicons/react':
         specifier: 'catalog:'
         version: 1.1.10(react@19.3.1)
+      '@pierre/highlights':
+        specifier: 'catalog:'
+        version: 0.5.2
       '@stylexjs/stylex':
         specifier: 'catalog:'
         version: 0.19.2
@@ -214,9 +214,6 @@ importers:
       micromark-extension-math:
         specifier: 'catalog:'
         version: 3.1.0
-      prismjs:
-        specifier: 'catalog:'
-        version: 1.30.0
       react:
         specifier: 'catalog:'
         version: 19.3.1
@@ -269,9 +266,6 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 26.6.2
-      '@types/prismjs':
-        specifier: 'catalog:'
-        version: 1.26.6
       '@types/react':
         specifier: 'catalog:'
         version: 19.3.0
@@ -1593,6 +1587,9 @@ packages:
     resolution: {integrity: sha512-S0uyoxakDINJ4DPgqxGlEEvrdSMeQb7Z2lKVjxoY2gwsbZbfg2Xr8Klfeo5ZeraHmmdBCELFUHkSe6KEmBpMvg==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
 
+  '@pierre/highlights@0.5.2':
+    resolution: {integrity: sha512-CV+yFa8dodaU3w7U42FR+AfoavrsfcH0/n3rckDu1A/UXan1Dzo6OdM/MPOAAsGM/EbKhDxD6k+qMcNUtnLfsg==}
+
   '@playwright/test@1.65.0':
     resolution: {integrity: sha512-iGURLGuKDLakSEl7Pgfv8h7f+XLT+V861Wfhz0zlEl5nyFuKUopdkFBPKqTllTUp06aOwPuH8iuUEb3yp3MpbQ==}
     engines: {node: '>=20'}
@@ -2044,9 +2041,6 @@ packages:
 
   '@types/normalize-package-data@2.4.4':
     resolution: {integrity: sha512-37i+OaWTh9qeK4LSHPsyRC7NahnGotNuZvjLSgcPzblpHB3rrCJxAOgI5gCdKm7coonsaX1Of0ILiTcnZjbfxA==}
-
-  '@types/prismjs@1.26.6':
-    resolution: {integrity: sha512-vqlvI7qlMvcCBbVe0AKAb4f97//Hy0EBTaiW8AalRnG/xAN5zOiWWyrNqNXeq8+KAuvRewjCVY1+IPxk4RdNYw==}
 
   '@types/react-dom@19.3.0':
     resolution: {integrity: sha512-ZI7bU42mZXXKHn/qNLEw2IrbiINU7X5+vfgdixBHkCNpYWXjKgfQ/P+uyGb5CjOLB9UcnTeg3rylQtV2hym44Q==}
@@ -5999,6 +5993,8 @@ snapshots:
 
   '@oxlint/plugins@1.79.0': {}
 
+  '@pierre/highlights@0.5.2': {}
+
   '@playwright/test@1.65.0':
     dependencies:
       playwright: 1.65.0
@@ -6521,8 +6517,6 @@ snapshots:
       undici-types: 8.9.0
 
   '@types/normalize-package-data@2.4.4': {}
-
-  '@types/prismjs@1.26.6': {}
 
   '@types/react-dom@19.3.0(@types/react@19.3.0)':
     dependencies:

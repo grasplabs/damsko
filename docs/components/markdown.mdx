@@ -29,7 +29,7 @@ A table has Copy and Download over it, as Streamdown's tables have: Copy takes i
 
 ## Code
 
-Fenced code is a CodeBlock in the fence's language: coloured by Prism, which reads it in a worker while the page draws it plain, the language's name over it, its lines numbered (from N with `startLine=N` after the language, not at all with `noLineNumbers`, as Streamdown reads them), and Download (as `file.ts`, by the language's extension, else `file.txt`) and Copy beside it. While the answer is written both wait, as a chat's do, and the code grows in place: the lines Prism last read keep their colours and those written since are plain until its next reading, at most every 200 ms, so no chunk colours the whole block again.
+Fenced code is a CodeBlock in the fence's language: coloured by CodeBlock's lexers, plain until they have loaded, the language's name over it, its lines numbered (from N with `startLine=N` after the language, not at all with `noLineNumbers`, as Streamdown reads them), and Download (as `file.ts`, by the language's extension, else `file.txt`) and Copy beside it. While the answer is written both wait, as a chat's do, and the code grows in place: each line is coloured once its newline comes, read once, and the line still being written is plain, so no chunk colours the whole block again.
 
 <Stage path="markdown/code" label="Code" />
 

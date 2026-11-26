@@ -180,9 +180,9 @@ export const versions: Record<string, string> = {
   // What the components import: the CLI adds each by name, and pnpm gives it this version.
   "@hugeicons/core-free-icons": "4.4.0",
   "@hugeicons/react": "1.1.10",
+  "@pierre/highlights": "0.5.2",
   "@stylexjs/stylex": "0.19.2",
   "@tanstack/react-table": "9.3.1",
-  "@types/prismjs": "1.26.6",
   "@types/react": "19.3.0",
   "@types/react-dom": "19.3.0",
   "@ui-sdk/core": "0.1.0-beta.13",
@@ -194,7 +194,6 @@ export const versions: Record<string, string> = {
   mermaid: "11.17.2",
   "micromark-extension-gfm": "3.0.0",
   "micromark-extension-math": "3.1.0",
-  prismjs: "1.30.0",
   react: "19.3.1",
   "react-dom": "19.3.1",
   "react-is": "19.3.1",
@@ -251,7 +250,7 @@ const addComponents =
 /**
  * The first page of every app here: a button, with an icon the house set does not hold, from
  * Hugeicons (the package lib/icons draws from) through Damsko's Icon, and a line of code coloured
- * by its worker.
+ * by CodeBlock's lexers.
  */
 const firstApp = [
   'import { Button } from "@grasp-os/ui/components/button";',
@@ -507,7 +506,7 @@ export const sections: Section[] = [
       {
         slug: "add-a-component",
         name: "Add components",
-        note: "A Button and a CodeBlock. Each brings the parts it needs: the focus style, its icons, the components it uses, its npm packages, and for CodeBlock the worker its code is coloured in.",
+        note: "A Button and a CodeBlock. Each brings the parts it needs: the focus style, its icons, the components it uses, its npm packages, and for CodeBlock the lexers its code is coloured by.",
         blocks: [
           {
             code: addComponents,
@@ -534,12 +533,12 @@ export const sections: Section[] = [
         ],
       },
       {
-        slug: "allow-the-worker",
-        name: "Allow CodeBlock's worker",
-        note: "CodeBlock colours its code in a worker, a script of its own that the build writes beside the app's other scripts (assets/ in a Vite build). A Content Security Policy that names worker-src, or a default-src it falls back to, allows that place, where the app's built scripts are served from, and not all of 'self': the page may then start a worker only from its own built files, which may already run on it. Without it, the code stays plain, whole and readable, with no colours.",
+        slug: "allow-webassembly",
+        name: "Allow CodeBlock's WebAssembly",
+        note: "CodeBlock colours its code with lexers compiled to WebAssembly, in a script of their own that the build writes beside the app's other scripts and the page loads when it first draws a block. The module is inside that script: nothing more is fetched, and no worker is started. A Content Security Policy that names script-src, or a default-src it falls back to, adds 'wasm-unsafe-eval', which lets the page compile WebAssembly and nothing else (no eval, no new Function); worker-src needs nothing. Without it, the code stays plain, whole and readable, with no colours, and nothing is said.",
         blocks: [
           {
-            code: "Content-Security-Policy: script-src https://app.example.com/assets/; worker-src https://app.example.com/assets/",
+            code: "Content-Security-Policy: script-src https://app.example.com/assets/ 'wasm-unsafe-eval'",
             lang: "text",
           },
         ],
@@ -895,7 +894,7 @@ export const sections: Section[] = [
       {
         slug: "check-for-drift",
         name: "Check for drift",
-        note: "In the product's own checks, with its work committed: the same install again, the fonts unpacked, then two questions. The fonts' own check fails while a font is packed, missing or not the file that was installed; it is what keeps the fonts in place, whatever builds the app. The last line fails when the product's copy is not the pin's, new and changed files alike (git diff alone misses a file git does not track yet). A check that holds the package's manifest to the product's catalog reads devDependencies as well as dependencies: an item lists a package that only gives types there (code-block's @types/prismjs). The files are never edited in the product: a change is a pull request in Damsko, then an update.",
+        note: "In the product's own checks, with its work committed: the same install again, the fonts unpacked, then two questions. The fonts' own check fails while a font is packed, missing or not the file that was installed; it is what keeps the fonts in place, whatever builds the app. The last line fails when the product's copy is not the pin's, new and changed files alike (git diff alone misses a file git does not track yet). The files are never edited in the product: a change is a pull request in Damsko, then an update.",
         blocks: [
           {
             code: `${everyItemAgain}\n${unpack}\n${unpack} --check\ntest -z "$(git status --porcelain)"`,
