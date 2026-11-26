@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
-import type { Locator } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 
-import { openExample } from "./example.ts";
+import { hasFocusRing, openExample } from "./example.ts";
 
 test("a chart is a figure named by its label, with its numbers in a table", async ({
   page,
@@ -317,4 +317,255 @@ test("a row added at the top or the rows turned round keep each row's element: t
   expect(await read(items)).toEqual(turned);
   expect(await read(rows)).toEqual(turned);
   expect(await focused()).toBe("Gamma");
+});
+
+/** A token's colour as the page computes it, read through a probe. */
+const tokenColour = async (page: Page, token: string): Promise<string> =>
+  await page.evaluate((name) => {
+    const probe = document.createElement("span");
+    probe.style.color = `var(--damsko-${name})`;
+    document.body.append(probe);
+    const colour = getComputedStyle(probe).color;
+    probe.remove();
+    return colour;
+  }, token);
+
+/** The colour of the square drawn before a series' name, in a legend row or a tooltip row. */
+const swatchOf = async (row: Locator): Promise<string> =>
+  await row.evaluate((node) => {
+    const swatch = node.querySelector("[aria-hidden='true']");
+    return swatch === null ? "" : getComputedStyle(swatch).backgroundColor;
+  });
+
+/** Every colour the bars of a figure are filled with. */
+const barFills = async (figure: Locator): Promise<string[]> =>
+  await figure.evaluate((node) => [
+    ...new Set(
+      [...node.querySelectorAll("svg rect")].map(
+        (rect) => getComputedStyle(rect).fill
+      )
+    ),
+  ]);
+
+for (const theme of ["light", "dark"] as const) {
+  test(`stacked bars draw each series in its chart tone, in the config's order, named in the legend (${theme})`, async ({
+    page,
+  }) => {
+    await openExample(page, "chart", "bar-stacked", { theme });
+    const figure = page.getByRole("figure", {
+      name: "Tickets solved by month, by channel",
+    });
+    const items = figure.getByRole("listitem");
+    await expect(items).toHaveText(["Email", "Chat", "Phone"]);
+    const tones = await Promise.all(
+      ["chart-plain", "chart-2", "chart-3"].map(
+        async (token) => await tokenColour(page, token)
+      )
+    );
+    expect(new Set(tones).size).toBe(3);
+    const swatches = await Promise.all(
+      [0, 1, 2].map(async (index) => await swatchOf(items.nth(index)))
+    );
+    expect(swatches).toStrictEqual(tones);
+    const fills = await barFills(figure);
+    for (const tone of tones) {
+      expect(fills).toContain(tone);
+    }
+  });
+}
+
+test("a stacked bar's tooltip names each series with its value, beside the square of its tone", async ({
+  page,
+}) => {
+  await openExample(page, "chart", "bar-stacked");
+  const figure = page.getByRole("figure", {
+    name: "Tickets solved by month, by channel",
+  });
+  const drawing = figure.getByRole("application", {
+    name: "Tickets solved by month, by channel",
+  });
+  const box = await drawing.boundingBox();
+  if (box === null) {
+    throw new Error("the drawing has no box");
+  }
+  await page.mouse.move(box.x + box.width * 0.93, box.y + box.height * 0.4);
+  await expect(figure.getByText("Jun", { exact: true }).last()).toBeVisible();
+  const rows = [
+    ["Email", "27", "chart-plain"],
+    ["Chat", "34", "chart-2"],
+    ["Phone", "11", "chart-3"],
+  ] as const;
+  for (const [name, value, token] of rows) {
+    const row = figure
+      .locator("span")
+      .filter({ has: page.getByText(name, { exact: true }) })
+      .filter({ has: page.getByText(value, { exact: true }) })
+      .last();
+    // oxlint-disable-next-line no-await-in-loop -- one row after the other
+    await expect(row).toBeVisible();
+    // oxlint-disable-next-line no-await-in-loop -- one row after the other
+    expect(await swatchOf(row)).toBe(await tokenColour(page, token));
+  }
+});
+
+/** The middle of a y axis label's box, up the page. */
+const middleOf = async (label: Locator): Promise<number> => {
+  const box = await label.boundingBox();
+  if (box === null) {
+    throw new Error("the label has no box");
+  }
+  return box.y + box.height / 2;
+};
+
+for (const theme of ["light", "dark"] as const) {
+  test(`a reference line stands at its value, its name in ink at its end, and is said after the summary (${theme})`, async ({
+    page,
+  }) => {
+    await openExample(page, "chart", "reference-line", { theme });
+    const figure = page.getByRole("figure", { name: "Spend by month" });
+    await expect(figure.getByText("Budget: €4,000")).toBeAttached();
+    const name = figure.getByText("Budget", { exact: true });
+    await expect(name).toBeVisible();
+    // €4,000 is two thirds of the way from €3,000 up to €4,500.
+    const low = await middleOf(figure.getByText("€3,000", { exact: true }));
+    const high = await middleOf(figure.getByText("€4,500", { exact: true }));
+    const level = low + ((4000 - 3000) / (4500 - 3000)) * (high - low);
+    const box = await name.boundingBox();
+    if (box === null) {
+      throw new Error("the name has no box");
+    }
+    // Its name stands just above the line, at the drawing's end.
+    const above = level - (box.y + box.height / 2);
+    expect(above).toBeGreaterThan(4);
+    expect(above).toBeLessThan(16);
+    const drawing = await figure.getByRole("application").boundingBox();
+    if (drawing === null) {
+      throw new Error("the drawing has no box");
+    }
+    expect(drawing.x + drawing.width - (box.x + box.width)).toBeLessThan(16);
+    const ink = await name.evaluate((node) => getComputedStyle(node).fill);
+    expect(ink).toBe(await tokenColour(page, "foreground"));
+  });
+}
+
+test("a reference line at a point along the bottom runs up the drawing, its name beside it", async ({
+  page,
+}) => {
+  await openExample(page, "chart", "reference-line-x");
+  const figure = page.getByRole("figure", { name: "Sign-ups by month" });
+  await expect(figure.getByText("Launch: Apr")).toBeAttached();
+  const tick = await figure
+    .getByRole("application")
+    .getByText("Apr", { exact: true })
+    .boundingBox();
+  const name = await figure.getByText("Launch", { exact: true }).boundingBox();
+  if (tick === null || name === null) {
+    throw new Error("no box");
+  }
+  const at = tick.x + tick.width / 2;
+  expect(name.x - at).toBeGreaterThan(0);
+  expect(name.x - at).toBeLessThan(8);
+});
+
+test("bars to press: one Tab stop, the arrow keys move with a ring and the tooltip, Enter and Space press", async ({
+  page,
+}) => {
+  await openExample(page, "chart", "bar-press");
+  const figure = page.getByRole("figure", {
+    name: "Tickets per day, by channel",
+  });
+  // The drawing is no stop of its own: the bars are.
+  await expect(figure.getByRole("application")).toHaveCount(0);
+  await page.keyboard.press("Tab");
+  const first = figure.getByRole("button", {
+    name: "1 November, Email: 18, Chat: 9",
+  });
+  await expect(first).toBeFocused();
+  await expect(first).toHaveAttribute("aria-pressed", "false");
+  await page.keyboard.press("ArrowRight");
+  const second = figure.getByRole("button", {
+    name: "2 November, Email: 22, Chat: 12",
+  });
+  await expect(second).toBeFocused();
+  expect(await hasFocusRing(second)).toBe(true);
+  // The tooltip shows the day the keys are on, beside the table's row for it, and Escape puts it away.
+  const said = figure.getByText("2 November", { exact: true });
+  await expect(said).toHaveCount(2);
+  await page.keyboard.press("Escape");
+  await expect(said).toHaveCount(1);
+  await expect(second).toBeFocused();
+  await page.keyboard.press("End");
+  await expect(
+    figure.getByRole("button", { name: /^14 November, /u })
+  ).toBeFocused();
+  await page.keyboard.press("Home");
+  await expect(first).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(first).toHaveAttribute("aria-pressed", "true");
+  await expect(second).toHaveAttribute("aria-pressed", "false");
+  await expect(page.getByText("Only 1 November: 27 tickets.")).toBeVisible();
+  await page.keyboard.press("ArrowRight");
+  await page.keyboard.press(" ");
+  await expect(second).toHaveAttribute("aria-pressed", "true");
+  await expect(first).toHaveAttribute("aria-pressed", "false");
+  await page.keyboard.press(" ");
+  await expect(second).toHaveAttribute("aria-pressed", "false");
+  await expect(
+    page.getByText("Every day. Press a day to show only that one.")
+  ).toBeVisible();
+  // Tab leaves the bars at once, and comes back to the last one.
+  await page.keyboard.press("Tab");
+  await expect(second).not.toBeFocused();
+  await page.keyboard.press("Shift+Tab");
+  await expect(second).toBeFocused();
+});
+
+test("a pressed bar stays, the others step back, and the pointer presses a day where it stands", async ({
+  page,
+}) => {
+  await openExample(page, "chart", "bar-press");
+  const figure = page.getByRole("figure", {
+    name: "Tickets per day, by channel",
+  });
+  const day = figure.getByRole("button", { name: /^9 November, /u });
+  await day.click();
+  await expect(day).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByText("Only 9 November: 34 tickets.")).toBeVisible();
+  // A click shows no ring.
+  expect(await hasFocusRing(day)).toBe(false);
+  const steps = await figure.evaluate((node) =>
+    [...node.querySelectorAll("svg g")].map((group) =>
+      Number(getComputedStyle(group).opacity)
+    )
+  );
+  expect(steps.filter((opacity) => opacity < 1)).toHaveLength(13 * 2);
+  await day.click();
+  await expect(day).toHaveAttribute("aria-pressed", "false");
+});
+
+test("on a right-to-left page the bars still run left to right, and each arrow goes the way it points", async ({
+  page,
+}) => {
+  await openExample(page, "chart", "bar-press");
+  await page.evaluate(() => {
+    document.documentElement.dir = "rtl";
+  });
+  const figure = page.getByRole("figure", {
+    name: "Tickets per day, by channel",
+  });
+  const first = figure.getByRole("button", { name: /^1 November, /u });
+  const second = figure.getByRole("button", { name: /^2 November, /u });
+  const [one, two] = await Promise.all([
+    first.boundingBox(),
+    second.boundingBox(),
+  ]);
+  if (one === null || two === null) {
+    throw new Error("no box");
+  }
+  expect(two.x).toBeGreaterThan(one.x);
+  await first.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(second).toBeFocused();
+  await page.keyboard.press("ArrowLeft");
+  await expect(first).toBeFocused();
 });

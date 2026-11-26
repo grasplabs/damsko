@@ -7,7 +7,7 @@ description: Numbers across kinds, over time, as parts of a whole, as flows betw
   lead={frontmatter.description}
   install="pnpm dlx shadcn@4.23.0 add @damsko/chart"
   use={
-    'import { ChartArea, ChartBar, ChartBarList, ChartContainer, ChartGrid, ChartLabels, ChartLine, ChartPie, ChartSankey, ChartSparkline, ChartTooltip, ChartXAxis, ChartYAxis } from "@grasp-os/ui/components/chart";'
+    'import { ChartArea, ChartBar, ChartBarList, ChartContainer, ChartGrid, ChartLabels, ChartLine, ChartPie, ChartReferenceLine, ChartSankey, ChartSparkline, ChartTooltip, ChartXAxis, ChartYAxis } from "@grasp-os/ui/components/chart";'
   }
 />
 
@@ -34,6 +34,30 @@ Two rows may share their name, a weekday over two weeks: each is its own bar and
 `pattern="dither-dots"` uses fine 1px dots on a 3px pitch instead.
 
 <Stage path="chart/bar-dots" label="Bars in dots" />
+
+## Stacked bars
+
+ChartBars that share a `stackId` stand on each other, one bar a row. Each series takes a chart tone by its place in its stack, in the config's order, the first at the foot in the value colour, the rest stepping towards the ground; a clear gap stands between two parts, and only the top is rounded. `ChartLegend` and the tooltip show each series beside a square of its tone, the tooltip with its value. Five series at most, as there are five tones: past that, gather the smallest into one "Other". In forced colours every part is the text colour, told apart by the gaps and the names.
+
+<Stage path="chart/bar-stacked" label="Stacked bars" />
+
+## A line at a value
+
+`ChartReferenceLine` with a `y` draws a level across the drawing, a budget or a limit: dashed, in ink on a halo of the card, so it reads where it crosses a bar in light and dark, with its name (children) at its end. The y axis grows to hold it. A screen reader hears its name and value after the summary ("Budget: €4,000").
+
+<Stage path="chart/reference-line" label="A line at a value" />
+
+## A line at a moment
+
+With an `x`, a value along the bottom, the line runs up the drawing, its name beside it at the top, on the side with room.
+
+<Stage path="chart/reference-line-x" label="A line at a moment" />
+
+## Bars to press
+
+`onRowClick` makes each point along the bottom a button the whole height of the drawing: it is called with the row and its place. Tab reaches the bars as one stop, the arrow keys, Home and End move between them with the system's ring and the tooltip (Escape puts the tooltip away), and Enter or Space presses. Each is named by its point and its values ("3 November, Email: 15, Chat: 8"). `selectedIndex` says which row is pressed: its bar says so to a screen reader, and the other bars step back. The drawing is not mirrored on a right-to-left page, so each arrow goes the way it points.
+
+<Stage path="chart/bar-press" label="Bars to press" />
 
 ## Bars across
 
@@ -206,6 +230,8 @@ Rising, falling, flat, noisy, crossing zero and a single point, at both sizes. F
 <Props source="src/components/chart.tsx" type="ChartYAxisProps" />
 
 <Props source="src/components/chart.tsx" type="ChartGridProps" />
+
+<Props source="src/components/chart.tsx" type="ChartReferenceLineProps" />
 
 <Props source="src/components/chart.tsx" type="ChartLegendProps" />
 
