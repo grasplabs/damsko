@@ -366,3 +366,125 @@ declare global {
     longTasks?: number[];
   }
 }
+
+/** Where an element's top stands on the screen. */
+const topOf = async (element: Locator) => {
+  const box = await element.boundingBox();
+  return box?.y ?? Number.NaN;
+};
+
+test.describe("many files", () => {
+  test("only the rows near the view are drawn; every file's header and row count are there", async ({
+    page,
+  }) => {
+    await openExample(page, "diff-viewer", "many");
+    const list = page.getByRole("region", { name: "Changed files" });
+    await expect(page.getByText("200 files changed")).toBeVisible();
+    await expect(
+      list.getByRole("button", { name: /step-\d{3}\.ts/u })
+    ).toHaveCount(200);
+    const tables = list.getByRole("table");
+    await expect(tables).toHaveCount(200);
+    const counted = await tables.evaluateAll((all) =>
+      all.reduce(
+        (sum, table) => sum + Number(table.getAttribute("aria-rowcount")) - 1,
+        0
+      )
+    );
+    expect(counted).toBeGreaterThan(4000);
+    expect(await list.getByRole("row").count()).toBeLessThan(600);
+    // The last file, out of reach, draws no rows yet: its table is only the room they take.
+    const last = list.getByRole("table", { name: "src/steps/step-200.ts" });
+    await expect(last.locator("[data-diff-code]")).toHaveCount(0);
+  });
+
+  test("a file's rows are a table: column headers, and each drawn row at its place in the count", async ({
+    page,
+  }) => {
+    await openExample(page, "diff-viewer", "many");
+    const table = page.getByRole("table", { name: "src/steps/step-001.ts" });
+    await expect(table.getByRole("columnheader")).toHaveCount(4);
+    const count = Number(await table.getAttribute("aria-rowcount"));
+    // Row 1 is the column headers; the lines are 2 onwards.
+    const places = await table
+      .locator("[role=row]:has([data-diff-code])")
+      .evaluateAll((rows) =>
+        rows.map((row) => Number(row.getAttribute("aria-rowindex")))
+      );
+    expect(places.length).toBeGreaterThan(0);
+    expect(places).toStrictEqual(places.toSorted((a, b) => a - b));
+    expect(Math.min(...places)).toBeGreaterThanOrEqual(2);
+    expect(Math.max(...places)).toBeLessThanOrEqual(count);
+  });
+
+  test("scrolled to a file far down, its rows are drawn and coloured", async ({
+    page,
+  }) => {
+    await openExample(page, "diff-viewer", "many");
+    const header = page.getByRole("button", { name: /step-150\.ts/u });
+    await header.scrollIntoViewIfNeeded();
+    const table = page.getByRole("table", { name: "src/steps/step-150.ts" });
+    await expect(table.getByRole("row").nth(3)).toBeVisible();
+    await expect
+      .poll(async () => await colourOf(runOf(table, /^export\b/u)))
+      .toBe(await tokenColour(page, "--damsko-syntax-keyword"));
+  });
+
+  test("by keys, the files' headers come in order, past the first screen", async ({
+    page,
+  }) => {
+    await openExample(page, "diff-viewer", "many");
+    await page.getByRole("button", { name: /step-001\.ts/u }).focus();
+    const seen: string[] = [];
+    for (let press = 0; press < 400 && seen.length < 30; press += 1) {
+      // oxlint-disable-next-line no-await-in-loop -- one key after the other
+      await page.keyboard.press("Tab");
+      // oxlint-disable-next-line no-await-in-loop -- one key after the other
+      const name = await page.evaluate(() => {
+        const focused = document.activeElement;
+        return focused?.matches("[data-slot=diff-viewer-file-header]") === true
+          ? (/step-(?<at>\d{3})/u.exec(focused.textContent ?? "")?.groups?.at ??
+              "")
+          : "";
+      });
+      if (name !== "") {
+        seen.push(name);
+      }
+    }
+    expect(seen).toStrictEqual(
+      Array.from({ length: 30 }, (_, at) => String(at + 2).padStart(3, "0"))
+    );
+  });
+
+  test("opening an unchanged run or a file moves nothing above it", async ({
+    page,
+  }) => {
+    await openExample(page, "diff-viewer", "many");
+    const header = page.getByRole("button", { name: /step-040\.ts/u });
+    await header.scrollIntoViewIfNeeded();
+    const file = page.getByRole("region", { name: "src/steps/step-040.ts" });
+    const fold = file.getByRole("button", {
+      name: /^Show \d+ unchanged lines$/u,
+    });
+    await fold.first().scrollIntoViewIfNeeded();
+    const before = await topOf(header);
+    const rows = Number(
+      await file.getByRole("table").getAttribute("aria-rowcount")
+    );
+    await fold.first().click();
+    // The run's lines are let out where it was folded; the file's header has not moved.
+    await expect
+      .poll(async () =>
+        Number(await file.getByRole("table").getAttribute("aria-rowcount"))
+      )
+      .toBeGreaterThan(rows);
+    expect(await topOf(header)).toBe(before);
+    // Folding a file keeps its header where it is, under the pointer that pressed it.
+    const next = page.getByRole("button", { name: /step-041\.ts/u });
+    await next.scrollIntoViewIfNeeded();
+    const place = await topOf(next);
+    await next.click();
+    await expect(next).toHaveAttribute("aria-expanded", "false");
+    expect(await topOf(next)).toBe(place);
+  });
+});

@@ -67,6 +67,12 @@ A file with more changed lines than `foldFrom` opens folded, so it does not bury
 
 <Stage path="diff-viewer/folded" label="A big file" />
 
+## Many files
+
+Past `virtualizeThreshold` rows across its open files (400), DiffViewerFiles stands at most `diff-viewer-height` tall and scrolls inside its own box. Every file's header is drawn, so the keys and a screen reader go from file to file in order. A file's rows are drawn, and its code coloured, only while they are near the view; each file is still a table with every row counted (`aria-rowcount`, `aria-rowindex`). Give it the room it may fill with `style` (`height`, `maxHeight`). The browser's find in page finds only what is drawn: the file names, and the lines near the view.
+
+<Stage path="diff-viewer/many" label="Many files" />
+
 ## Every state
 
 Hover and keyboard focus on a fold are forced from its own CSS.
