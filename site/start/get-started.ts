@@ -191,6 +191,7 @@ export const versions: Record<string, string> = {
   "mdast-util-from-markdown": "2.0.3",
   "mdast-util-gfm": "3.1.0",
   "mdast-util-math": "3.0.0",
+  mermaid: "11.17.2",
   "micromark-extension-gfm": "3.0.0",
   "micromark-extension-math": "3.1.0",
   prismjs: "1.30.0",

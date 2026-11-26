@@ -238,6 +238,146 @@ test("untrusted text: a script stays text, a data link is words, a picture never
   const formula = page.locator("[data-slot=markdown-math]");
   await expect(formula.locator(".katex mtext")).toHaveText("\\href");
   await expect(formula.locator("a, [href]")).toHaveCount(0);
+  // Mermaid draws the diagram at its strict level: no handler, no script, no link out of a node.
+  const diagram = page.locator("[data-slot=markdown-diagram-drawing] svg");
+  await expect(diagram).toHaveCount(1);
+  await expect(
+    diagram.locator(
+      "[onclick], [onerror], script, a, b, [*|href^='javascript']"
+    )
+  ).toHaveCount(0);
+});
+
+test("diagrams: drawn by Mermaid once loaded, only for a diagram; Download as SVG, PNG or MMD, full screen and zoom; one Mermaid cannot read stays code", async ({
+  page,
+}) => {
+  // Mermaid by what it holds, whatever its files are named: dagre, the layout it draws with.
+  const scripts: string[] = [];
+  // A body still on its way when the test ends is not read: the page is gone, and so is it.
+  page.on("response", async (response) => {
+    if (response.request().resourceType() === "script") {
+      scripts.push(await response.text().catch(() => ""));
+    }
+  });
+  const mermaidLoaded = () => scripts.some((text) => text.includes("dagre"));
+  await openExample(page, "markdown", "answer");
+  await expect(page.getByRole("table")).toBeVisible();
+  expect(mermaidLoaded()).toBe(false);
+  await openExample(page, "markdown", "diagram");
+  const diagrams = page.locator("[data-slot=markdown-diagram]");
+  const drawn = diagrams.nth(0);
+  const unread = diagrams.nth(1);
+  await expect(
+    drawn.locator("[data-slot=markdown-diagram-drawing] svg")
+  ).toHaveCount(1);
+  await expect(drawn.getByText("Orders").first()).toBeVisible();
+  await expect(unread.locator("svg[aria-roledescription]")).toHaveCount(0);
+  await expect(unread.getByText("A --> -->")).toBeVisible();
+  const save = async (format: string) => {
+    await drawn.getByRole("button", { name: "Download diagram" }).click();
+    const [file] = await Promise.all([
+      page.waitForEvent("download"),
+      page.getByRole("menuitem", { name: format }).click(),
+    ]);
+    return file.suggestedFilename();
+  };
+  expect(await save("SVG")).toBe("diagram.svg");
+  expect(await save("PNG")).toBe("diagram.png");
+  expect(await save("MMD")).toBe("diagram.mmd");
+  const drawing = drawn.locator("[data-slot=markdown-diagram-drawing]");
+  const before = await drawing.evaluate(
+    (node) => getComputedStyle(node).transform
+  );
+  await drawn.getByRole("button", { name: "Zoom in" }).click();
+  await expect
+    .poll(
+      async () =>
+        await drawing.evaluate((node) => getComputedStyle(node).transform)
+    )
+    .not.toBe(before);
+  expect(mermaidLoaded()).toBe(true);
+  // Named as a diagram, its code its description, moved by the arrow keys.
+  const named = drawn.getByRole("application", { name: "Mermaid diagram" });
+  await named.focus();
+  const placed = await drawing.evaluate(
+    (node) => getComputedStyle(node).transform
+  );
+  await page.keyboard.press("ArrowLeft");
+  await expect
+    .poll(
+      async () =>
+        await drawing.evaluate((node) => getComputedStyle(node).transform)
+    )
+    .not.toBe(placed);
+  await drawn.getByRole("button", { name: "View full screen" }).click();
+  await expect(
+    page.getByRole("dialog").locator("svg[aria-roledescription]")
+  ).toHaveCount(1);
+});
+
+test("diagrams: one with any way to an address in it is code, so nothing loads, in any diagram type; a drawn one holds no HTML and no handler", async ({
+  page,
+}) => {
+  const elsewhere: string[] = [];
+  page.on("request", (request) => {
+    if (/example\.com|relative-/u.test(request.url())) {
+      elsewhere.push(request.url());
+    }
+  });
+  await openExample(page, "markdown", "diagram-hostile");
+  const diagrams = page.locator("[data-slot=markdown-diagram]");
+  await expect(diagrams).toHaveCount(17);
+  // Each is weighed, and drawn, once it comes near the screen.
+  for (const diagram of await diagrams.all()) {
+    // oxlint-disable-next-line no-await-in-loop -- one after the other, down the answer
+    await diagram.scrollIntoViewIfNeeded();
+  }
+  await expect(
+    page.locator("[data-slot=markdown-diagram][aria-busy=true]")
+  ).toHaveCount(0);
+  // Sixteen are their code, words and all: an actor's icon among them, at a relative address.
+  await expect(
+    diagrams.filter({
+      hasNot: page.locator("[data-slot=markdown-diagram-drawing]"),
+    })
+  ).toHaveCount(16);
+  await expect(diagrams.getByText("relative-icon.png")).toBeVisible();
+  await expect(diagrams.getByText("state.png")).toBeVisible();
+  // The last is drawn, its HTML as words: no element of HTML's, no handler, no address.
+  const drawings = page.locator("[data-slot=markdown-diagram-drawing] svg");
+  await expect(drawings).toHaveCount(1);
+  await expect(drawings).toContainText("bold");
+  await expect(
+    drawings.locator(
+      "foreignObject, a, b, image, img, [onmouseover], [href^='http'], [*|href^='http']"
+    )
+  ).toHaveCount(0);
+  // Long enough for a load to have started.
+  await page.waitForTimeout(1000);
+  expect(elsewhere).toStrictEqual([]);
+});
+
+test("diagrams: drawn with the source check off, in Mermaid's frame, not one fence loads anything", async ({
+  page,
+}) => {
+  // Every request for these addresses that reaches the network; one a policy refuses never does.
+  const loaded: string[] = [];
+  await page.route(/example\.com|relative-icon/u, async (route) => {
+    loaded.push(route.request().url());
+    await route.fulfill({ status: 200, contentType: "image/png", body: "" });
+  });
+  await openExample(page, "markdown", "diagram-unchecked");
+  // Mermaid drew them: only the policy stands between them and their addresses.
+  await expect(page.locator("[data-drawn]")).toHaveAttribute(
+    "data-drawn",
+    "8",
+    {
+      timeout: 30_000,
+    }
+  );
+  // Long enough for a load to have started.
+  await page.waitForTimeout(1000);
+  expect(loaded).toStrictEqual([]);
 });
 
 test("maths: a formula past 4,000 characters stays its TeX, and a huge rule stays inside the column", async ({

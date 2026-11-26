@@ -3,7 +3,7 @@
 // state, table and its cells' alignment, code and its language, quote, rule, section, notes), and
 // in each its words with their marks (`**strong**`, `*emphasis*`, `~~struck~~`, `` `code` ``,
 // `[words](address)`, `![alt](address)`, `^1` for a note's mark, `↩` for a note's way back, `⏎` for
-// a line break, `⟦tex⟧` for a formula in a sentence, `math tex` for one on lines of its own). A
+// a line break, `⟦tex⟧` for a formula in a sentence, `math tex` for one on lines of its own, `diagram` for a Mermaid diagram). A
 // code block's and a table's controls are named after it (`[download copy]`, with `off` while they
 // wait); other controls, icons and words hidden from sight are left out. Read from the HTML of
 // Streamdown (scripts/markdown-parity.ts) and of Markdown (scripts/markdown-parity.test.tsx).
@@ -239,7 +239,13 @@ const blockOf = (
 ) => {
   const indent = "  ".repeat(depth);
   const tag = element.tagName;
-  if (element.matches(DISPLAYED)) {
+  if (
+    element.matches(
+      "[data-streamdown='mermaid-block'], [data-slot='markdown-diagram']"
+    )
+  ) {
+    out.push(`${indent}diagram${controlsOf(element)}`);
+  } else if (element.matches(DISPLAYED)) {
     out.push(`${indent}math ${texOf(element)}`);
   } else if (
     element.matches(

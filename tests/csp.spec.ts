@@ -49,6 +49,38 @@ const byComponent = Map.groupBy(
   (path) => path.split("/")[0] ?? path
 );
 
+test("a diagram downloads as a PNG under the product's policy, drawn from a data: picture", async ({
+  page,
+}) => {
+  await underPolicy(page);
+  await openExample(page, "markdown", "diagram");
+  const drawn = page.locator("[data-slot=markdown-diagram]").first();
+  await expect(
+    drawn.locator("[data-slot=markdown-diagram-drawing] svg")
+  ).toHaveCount(1);
+  await drawn.getByRole("button", { name: "Download diagram" }).click();
+  const [file] = await Promise.all([
+    page.waitForEvent("download"),
+    page.getByRole("menuitem", { name: "PNG" }).click(),
+  ]);
+  expect(file.suggestedFilename()).toBe("diagram.png");
+  expect(await page.evaluate(() => window.refused ?? [])).toStrictEqual([]);
+});
+
+test("a diagram is drawn under a policy that allows no frame: Mermaid's is about:blank, never fetched", async ({
+  page,
+}) => {
+  await underPolicy(
+    page,
+    `${productPolicy()}; frame-src 'none'; child-src 'none'`
+  );
+  await openExample(page, "markdown", "diagram");
+  await expect(
+    page.locator("[data-slot=markdown-diagram-drawing] svg")
+  ).toHaveCount(1);
+  expect(await page.evaluate(() => window.refused ?? [])).toStrictEqual([]);
+});
+
 for (const [component, paths] of byComponent) {
   test(`${component}: nothing is refused under the product's policy`, async ({
     page,

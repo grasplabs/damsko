@@ -12,6 +12,12 @@ A picture is never loaded: ![a tracking pixel](https://example.com/pixel.gif) sh
 
 A formula cannot lead anywhere: $$\\href{javascript:alert(1)}{click}$$ is its words.
 
+\`\`\`mermaid
+flowchart LR
+  A["<b onclick=alert(1)>bold</b>"] --> B
+  click A call alert(1)
+\`\`\`
+
 A [safe link](https://example.com), [an email](mailto:team@example.com) and [a page here](/components/markdown) lead where they say.`;
 
 export default function MarkdownSafe() {
