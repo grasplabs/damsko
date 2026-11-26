@@ -22,8 +22,19 @@ const wheelUp = async (page: Page, log: Locator, by: number) => {
   if (box === null) {
     throw new Error("the log is not on the page");
   }
+  const from = await topOf(log);
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
   await page.mouse.wheel(0, -by);
+  // A wheel's scroll lands a moment later, and in Firefox glides: it is read once it has stopped.
+  let was = from;
+  await expect
+    .poll(async () => {
+      const now = await topOf(log);
+      const still = now < from && now === was;
+      was = now;
+      return still;
+    })
+    .toBe(true);
 };
 
 test("it starts at the end and follows the answer as it grows", async ({
@@ -44,6 +55,121 @@ test("it starts at the end and follows the answer as it grows", async ({
   await expect(
     page.getByRole("button", { name: /Jump to latest/u })
   ).toHaveCount(0);
+});
+
+// The browser scrolls the log on its own when a row is shorter for a moment (drawn again, measured
+// by content-visibility): it clamps the scroll to the shorter end. Safari did this as an answer
+// finished, and the log let go of the end, thousands of pixels up. Only the person lets go.
+for (const [how, apart] of [
+  ["within one script", false],
+  ["for a moment", true],
+] as const) {
+  test(`a row shorter ${how} does not let go of the end: the browser's own scroll is not the reader's`, async ({
+    page,
+  }) => {
+    await openExample(page, "message-scroller", "script");
+    const log = theLog(page);
+    await page.evaluate(() => {
+      window.messageScrollerScript?.answer(
+        Array.from(
+          { length: 30 },
+          (_, n) => `Line ${n} of a long answer.`
+        ).join("\n\n")
+      );
+    });
+    await expect.poll(async () => await gapOf(log)).toBeLessThanOrEqual(2);
+    const answer = log.locator("[data-slot='message-scroller-item']").last();
+    // The answer out of the layout, the layout read while it is (as any script reads it), and the
+    // answer back: the browser has clamped the scroll to the shorter end meanwhile.
+    await answer.evaluate((row, back) => {
+      row.style.display = "none";
+      void row.parentElement?.scrollHeight;
+      if (!back) {
+        row.style.display = "";
+      }
+    }, apart);
+    if (apart) {
+      await answer.evaluate((row) => {
+        row.style.display = "";
+      });
+    }
+    await expect.poll(async () => await gapOf(log)).toBeLessThanOrEqual(2);
+    await expect(
+      page.getByRole("button", { name: /Jump to latest/u })
+    ).toHaveCount(0);
+  });
+}
+
+test("with motion it glides after the answer, close to its end, and stands at the end when the words stop", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await openExample(page, "message-scroller", "live");
+  const log = theLog(page);
+  await expect
+    .poll(async () => await topOf(log), { timeout: 10_000 })
+    .toBeGreaterThan(80);
+  // Within a few lines of the end on every frame for a second and a half while the words come.
+  // The furthest from the end on any frame, noted on the log by the page itself.
+  await log.evaluate((node) => {
+    const until = performance.now() + 1500;
+    node.dataset.furthest = "0";
+    const look = (now: number) => {
+      const gap = node.scrollHeight - node.clientHeight - node.scrollTop;
+      node.dataset.furthest = String(
+        Math.max(Number(node.dataset.furthest), gap)
+      );
+      if (now < until) {
+        requestAnimationFrame(look);
+      }
+    };
+    requestAnimationFrame(look);
+  });
+  await page.waitForTimeout(1600);
+  const furthest = Number(await log.getAttribute("data-furthest"));
+  expect(furthest).toBeLessThan(80);
+  await expect(
+    page.getByRole("button", { name: /Jump to latest/u })
+  ).toHaveCount(0);
+  await expect
+    .poll(async () => await gapOf(log), { timeout: 15_000 })
+    .toBeLessThanOrEqual(2);
+});
+
+test("scrolled up, then back down to the end, it follows again: a wheel reaches the end", async ({
+  page,
+}) => {
+  await openExample(page, "message-scroller", "live");
+  const log = theLog(page);
+  await expect
+    .poll(async () => await topOf(log), { timeout: 10_000 })
+    .toBeGreaterThan(80);
+  await wheelUp(page, log, 60);
+  const jump = page.getByRole("button", { name: /Jump to latest/u });
+  await expect(jump).toBeVisible();
+  await page.mouse.wheel(0, 400);
+  await expect(jump).toBeHidden();
+  const back = await heightOf(log);
+  await expect
+    .poll(async () => await heightOf(log), { timeout: 10_000 })
+    .toBeGreaterThan(back);
+  await expect.poll(async () => await gapOf(log)).toBeLessThanOrEqual(2);
+});
+
+test("once the log is still, a scroll from elsewhere (find in page, a link to a row) lets go", async ({
+  page,
+}) => {
+  await openExample(page, "message-scroller", "long");
+  const log = page.getByRole("log", { name: "A long conversation" });
+  await expect(log.getByText("(500)")).toBeInViewport();
+  // Nothing has changed size for a while: the scroll is someone's, not the browser's correction.
+  await page.waitForTimeout(1200);
+  await log.evaluate((node) => {
+    node.scrollTop = node.scrollHeight / 2;
+  });
+  await expect(
+    page.getByRole("button", { name: /Jump to latest/u })
+  ).toBeVisible();
 });
 
 test("scrolled up it stays put while the answer grows; Jump to latest brings it back to the end", async ({
@@ -242,9 +368,9 @@ test("a long conversation opens at its latest turn and scrolls back to its first
   await openExample(page, "message-scroller", "long");
   const log = page.getByRole("log", { name: "A long conversation" });
   await expect(log.getByText("(500)")).toBeInViewport();
-  await log.evaluate((node) => {
-    node.scrollTop = 0;
-  });
+  // Home, as a reader goes to the top: the rows measured on the way do not pull it back.
+  await log.focus();
+  await page.keyboard.press("Home");
   await expect(log.getByText("(1)", { exact: false }).first()).toBeInViewport();
 });
 

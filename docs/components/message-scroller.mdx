@@ -10,7 +10,7 @@ description: The scrolling transcript of a chat, which follows the reply, settle
 
 ## While the assistant writes
 
-`MessageScrollerProvider` holds where the transcript stands; with `autoScroll` it stays at the end as the answer arrives. Scroll up, or press a key up, and it stays put, and `MessageScrollerButton` shows the way back to the latest. Wrap each row in a `MessageScrollerItem` with its `key` and `messageId`.
+`MessageScrollerProvider` holds where the transcript stands; with `autoScroll` it stays at the end as the answer arrives, gliding a frame at a time as the words come. Scroll up, or press a key up, and it stays put, and `MessageScrollerButton` shows the way back to the latest. Only the person lets go: a scroll the browser makes on its own does not, and while the answer streams neither does one set from code; move the log from code with `useMessageScroller`. Wrap each row in a `MessageScrollerItem` with its `key` and `messageId`.
 
 <Stage path="message-scroller/live" label="While the assistant writes" />
 
@@ -115,8 +115,14 @@ With `loading`, the log is busy and says so once; draw placeholder rows meanwhil
       tokens: ["ease"],
     },
     {
+      key: "Following",
+      value:
+        "Glides to the end a frame at a time, at the stream's pace: a line, a code block or a table eases in",
+      note: "reduced: at once",
+    },
+    {
       key: "Jump to latest",
-      value: "Scrolls smoothly down",
+      value: "Glides down to the end",
       note: "reduced: at once; the button fades in, {duration-ui}",
     },
   ]}
@@ -133,7 +139,7 @@ With `loading`, the log is busy and says so once; draw placeholder rows meanwhil
       group: "Following",
       key: "Scrolled up",
       value:
-        "Wheel, touch, a key up or a jump let go: it stays put while rows arrive; Jump to latest appears, saying when there are new ones.",
+        "Wheel, touch, a key up, focus moving out of view or a jump to a message let go: it stays put while rows arrive; Jump to latest appears, saying when there are new ones. A scroll the browser makes on its own never lets go.",
     },
     {
       group: "Following",

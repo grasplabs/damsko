@@ -1988,6 +1988,11 @@
           "target": "~/src/lib/menu.tsx"
         },
         {
+          "path": "src/lib/stick-to-bottom.ts",
+          "type": "registry:file",
+          "target": "~/src/lib/stick-to-bottom.ts"
+        },
+        {
           "path": "src/lib/styles.ts",
           "type": "registry:file",
           "target": "~/src/lib/styles.ts"
@@ -2198,8 +2203,7 @@
       "title": "Message scroller",
       "description": "The scrolling transcript of a chat, which follows the reply, settles a new turn near the top and keeps your place.",
       "dependencies": [
-        "@stylexjs/stylex",
-        "@ui-sdk/core"
+        "@stylexjs/stylex"
       ],
       "registryDependencies": [
         "@damsko/button",
@@ -3307,8 +3311,7 @@
       "title": "Terminal",
       "description": "The output of a shell command an assistant runs, as it streams.",
       "dependencies": [
-        "@stylexjs/stylex",
-        "@ui-sdk/core"
+        "@stylexjs/stylex"
       ],
       "registryDependencies": [
         "@damsko/button",
