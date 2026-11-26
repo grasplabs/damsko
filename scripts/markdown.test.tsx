@@ -542,8 +542,9 @@ describe("what an answer may hold besides prose", () => {
     expect(count(html, "<li")).toBe(2);
     expect(count(html, 'href="https://tracker.example.com/a/ISS-')).toBe(2);
     expect(html).not.toMatch(/untrusted/iu);
-    // The tag's own line draws no paragraph of its own.
+    // The tag's own line draws no paragraph, and no empty block, of its own.
     expect(count(html, "<p[ >]")).toBe(1);
+    expect(html).not.toMatch(/<div[^>]*><\/div>/u);
   });
 
   test("a tag round a paragraph or in a cell is dropped and its words stay Markdown", () => {

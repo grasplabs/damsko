@@ -720,6 +720,11 @@ const isOnlyTag = (node: Node) =>
   node.type === "html"
     ? !BREAK.test(node.value)
     : node.type === "text" && node.value.trim() === "";
+const FOUND = /^(?:definition|footnoteDefinition|footnoteReference)$/u;
+/** A block that draws nothing where it stands: a definition, a note, or a paragraph of tags alone. */
+const drawsNothing = (node: Node) =>
+  FOUND.test(node.type) ||
+  (node.type === "paragraph" && node.children.every(isOnlyTag));
 type Draw<T extends Node["type"]> = (
   node: Extract<Node, { type: T }>,
   shared: Shared,
@@ -1111,16 +1116,18 @@ const SectionBlock = ({ node, shared, kids }: Part<parse.Section>) => {
         <CollapsibleContent asChild>
           <div {...stylex.props(sectionStyles.under)}>
             <div {...stylex.props(sectionStyles.body)}>
-              {node.children.map((child, at) => (
-                <Placed key={at} node={child} shared={shared}>
-                  {/* oxlint-disable-next-line react/jsx-no-constructed-context-values -- a string */}
-                  <At value={`${place}.${at}`}>
-                    <Shown value={shown - (node.starts.children[at] ?? 0)}>
-                      {kids([child])}
-                    </Shown>
-                  </At>
-                </Placed>
-              ))}
+              {node.children.map((child, at) =>
+                drawsNothing(child) ? null : (
+                  <Placed key={at} node={child} shared={shared}>
+                    {/* oxlint-disable-next-line react/jsx-no-constructed-context-values -- a string */}
+                    <At value={`${place}.${at}`}>
+                      <Shown value={shown - (node.starts.children[at] ?? 0)}>
+                        {kids([child])}
+                      </Shown>
+                    </At>
+                  </Placed>
+                )
+              )}
             </div>
           </div>
         </CollapsibleContent>
@@ -1311,7 +1318,6 @@ const useStarts = (source: string) => {
   setCut({ source, cut: next });
   return next.starts;
 };
-const FOUND = /^(?:definition|footnoteDefinition|footnoteReference)$/u;
 const found = new WeakMap<Node, Node[]>();
 /** The definitions, notes and notes' marks a block holds, in reading order: found once, by a stack. */
 const foundIn = (block: Node) => {
@@ -1735,7 +1741,7 @@ export const Markdown = ({
         <Notes value={notes.value}>
           {all.map((node, at) => {
             const writing = open && at >= all.length - ending;
-            return FOUND.test(node.type) ? null : (
+            return drawsNothing(node) ? null : (
               <Placed key={at} node={node} shared={shared}>
                 {/* oxlint-disable-next-line react/jsx-no-constructed-context-values -- a string */}
                 <At value={String(at)}>
