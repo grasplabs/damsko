@@ -2088,6 +2088,11 @@
       },
       "files": [
         {
+          "path": "src/components/markdown/diagram-safe.ts",
+          "type": "registry:file",
+          "target": "~/src/components/markdown/diagram-safe.ts"
+        },
+        {
           "path": "src/components/markdown/diagram.tsx",
           "type": "registry:file",
           "target": "~/src/components/markdown/diagram.tsx"

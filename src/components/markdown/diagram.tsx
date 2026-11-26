@@ -34,6 +34,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../dropdown-menu";
+import { drawable, safeSvg } from "./diagram-safe";
 
 const styles = stylex.create({
   view: {
@@ -48,8 +49,6 @@ const styles = stylex.create({
     borderRadius: radius.md,
     cornerShape: radius.shape,
     cursor: "grab",
-    // A finger scrolls the answer up and down past a diagram; across, it moves the diagram.
-    touchAction: "pan-y",
   },
   big: { height: "100%", minHeight: "60vh", touchAction: "none" },
   drawing: {
@@ -95,82 +94,9 @@ const SECURE = [
   "altFontFamily",
   "themeVariables",
 ];
-// A node drawn as a picture (`A@{ img: "…" }`) loads it while Mermaid draws: such a fence is code.
-const PICTURE = /@\{[^}]*\bimg\s*:/u;
-
-// What a drawing may hold: SVG's own shapes, text and styles, nothing that leads or loads.
-const TAGS = new Set([
-  "svg",
-  "g",
-  "path",
-  "rect",
-  "circle",
-  "ellipse",
-  "line",
-  "polyline",
-  "polygon",
-  "text",
-  "tspan",
-  "textPath",
-  "defs",
-  "marker",
-  "style",
-  "title",
-  "desc",
-  "clipPath",
-  "linearGradient",
-  "radialGradient",
-  "stop",
-  "pattern",
-  "mask",
-  "symbol",
-  "use",
-]);
-const ELSEWHERE = /url\(\s*['"]?(?!#)|@import/iu;
-
-/**
- * Mermaid's drawing, read as SVG (never as HTML), held to TAGS: a link is its words, and no
- * handler, address or `url()` to anywhere but the drawing itself stays. Null when it is no SVG.
- */
-const safeSvg = (svg: string) => {
-  // Mermaid writes a link's `xlink:href` without declaring its namespace, which SVG's own reading
-  // refuses: declared here, so the link can be read, and taken out.
-  const declared = svg.includes("xmlns:xlink=")
-    ? svg
-    : svg.replace(
-        /^<svg\b/u,
-        '<svg xmlns:xlink="http://www.w3.org/1999/xlink"'
-      );
-  const read = new DOMParser().parseFromString(declared, "image/svg+xml");
-  const root = read.documentElement;
-  if (root.localName !== "svg" || read.querySelector("parsererror") !== null) {
-    return null;
-  }
-  for (const link of [...root.querySelectorAll("a")].toReversed()) {
-    link.replaceWith(...link.childNodes);
-  }
-  for (const element of root.querySelectorAll("*")) {
-    const elsewhere =
-      element.localName === "style" &&
-      ELSEWHERE.test(element.textContent ?? "");
-    if (!TAGS.has(element.localName) || elsewhere) {
-      element.remove();
-    }
-  }
-  for (const element of [root, ...root.querySelectorAll("*")]) {
-    for (const { name, value } of element.attributes) {
-      const leads = /href$/iu.test(name) && !value.startsWith("#");
-      if (/^on/iu.test(name) || leads || ELSEWHERE.test(value)) {
-        element.removeAttribute(name);
-      }
-    }
-  }
-  return new XMLSerializer().serializeToString(root);
-};
-
 /** Draws `code` with Mermaid, loaded the first time: its SVG, held to TAGS, or null when it cannot. */
 const drawDiagram = async (code: string, id: string) => {
-  if (PICTURE.test(code)) {
+  if (!drawable(code)) {
     return null;
   }
   try {
@@ -262,7 +188,8 @@ const View = ({
     <div
       {...stylex.props(styles.view, big && styles.big)}
       onPointerDown={(event) => {
-        if (event.button === 0) {
+        // A finger scrolls the answer past a diagram, and moves it only in full screen.
+        if (event.button === 0 && (big || event.pointerType !== "touch")) {
           event.currentTarget.setPointerCapture(event.pointerId);
           setDrag({ x: event.clientX - at.x, y: event.clientY - at.y });
         }

@@ -243,7 +243,7 @@ test("untrusted text: a script stays text, a data link is words, a picture never
   await expect(diagram).toHaveCount(1);
   await expect(
     diagram.locator(
-      "[onerror], script, a[href^='javascript'], [*|href^='javascript']"
+      "[onclick], [onerror], script, a, b, [*|href^='javascript']"
     )
   ).toHaveCount(0);
 });
@@ -315,7 +315,7 @@ test("diagrams: drawn by Mermaid once loaded, only for a diagram; Download as SV
   ).toHaveCount(1);
 });
 
-test("diagrams: no setting or node of a diagram puts HTML in it, loads anything, or leads out of it; a picture node is code", async ({
+test("diagrams: one with any way to an address in it is code, so nothing loads, in any diagram type; a drawn one holds no HTML and no handler", async ({
   page,
 }) => {
   const elsewhere: string[] = [];
@@ -325,23 +325,32 @@ test("diagrams: no setting or node of a diagram puts HTML in it, loads anything,
     }
   });
   await openExample(page, "markdown", "diagram-hostile");
-  // Each is drawn once it comes near the screen.
-  for (const diagram of await page
-    .locator("[data-slot=markdown-diagram]")
-    .all()) {
+  const diagrams = page.locator("[data-slot=markdown-diagram]");
+  await expect(diagrams).toHaveCount(15);
+  // Each is weighed, and drawn, once it comes near the screen.
+  for (const diagram of await diagrams.all()) {
     // oxlint-disable-next-line no-await-in-loop -- one after the other, down the answer
     await diagram.scrollIntoViewIfNeeded();
   }
+  await expect(
+    page.locator("[data-slot=markdown-diagram][aria-busy=true]")
+  ).toHaveCount(0);
+  // Fourteen are their code, words and all.
+  await expect(
+    diagrams.filter({
+      hasNot: page.locator("[data-slot=markdown-diagram-drawing]"),
+    })
+  ).toHaveCount(14);
+  await expect(diagrams.getByText("state.png")).toBeVisible();
+  // The last is drawn, its HTML as words: no element of HTML's, no handler, no address.
   const drawings = page.locator("[data-slot=markdown-diagram-drawing] svg");
-  await expect(drawings).toHaveCount(5);
+  await expect(drawings).toHaveCount(1);
+  await expect(drawings).toContainText("bold");
   await expect(
     drawings.locator(
-      "foreignObject, a, image, img, [href^='http'], [*|href^='http']"
+      "foreignObject, a, b, image, img, [onmouseover], [href^='http'], [*|href^='http']"
     )
   ).toHaveCount(0);
-  await expect(
-    page.locator("[data-slot=markdown-diagram]").last().getByText("shape.png")
-  ).toBeVisible();
   // Long enough for a load to have started.
   await page.waitForTimeout(1000);
   expect(elsewhere).toStrictEqual([]);

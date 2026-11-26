@@ -14,8 +14,8 @@ A formula cannot lead anywhere: $$\\href{javascript:alert(1)}{click}$$ is its wo
 
 \`\`\`mermaid
 flowchart LR
-  A["<img src=x onerror=alert(1)>"] --> B
-  click A "javascript:alert(1)"
+  A["<b onclick=alert(1)>bold</b>"] --> B
+  click A call alert(1)
 \`\`\`
 
 A [safe link](https://example.com), [an email](mailto:team@example.com) and [a page here](/components/markdown) lead where they say.`;
