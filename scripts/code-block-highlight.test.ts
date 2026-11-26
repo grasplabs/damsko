@@ -23,9 +23,10 @@ import {
   writtenLines,
 } from "../src/components/code-block-highlight.ts";
 import type { Line } from "../src/components/code-block-highlight.ts";
+import { lexers } from "../src/components/code-block-lexers.ts";
 
-// Every language's lexer, as the page loads each the first time a block in it is drawn.
-await Promise.all(Object.keys(languages).map(loadLanguage));
+// Every lexer the package ships, as the page loads each the first time a block in it is drawn.
+await Promise.all(Object.keys(lexers).map(loadLanguage));
 const loaded = currentEngine();
 if (loaded === null) {
   throw new Error("the lexers did not load");
@@ -116,11 +117,12 @@ describe(doneLines, () => {
     expect(tones.flat()).toContain("inserted");
   });
 
-  test("every language a block names is coloured", () => {
-    const plain = Object.keys(languages).filter(
+  test("every language a block names, and every name a lexer the package ships answers to, is coloured", () => {
+    const plain = [...Object.keys(languages), ...Object.keys(lexers)].filter(
       (language) => whole("a = 1", language) === null
     );
     expect(plain).toStrictEqual([]);
+    expect(Object.keys(lexers).length).toBeGreaterThan(400);
   });
 
   test.each(["text", "plain", "ansi", "nonsense", "__proto__", "constructor"])(

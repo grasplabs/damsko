@@ -780,6 +780,11 @@
           "target": "~/src/components/code-block-highlight.ts"
         },
         {
+          "path": "src/components/code-block-lexers.ts",
+          "type": "registry:file",
+          "target": "~/src/components/code-block-lexers.ts"
+        },
+        {
           "path": "src/components/code-block.stylex.ts",
           "type": "registry:file",
           "target": "~/src/components/code-block.stylex.ts"
