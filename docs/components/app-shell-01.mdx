@@ -7,7 +7,7 @@ description: The frame every page of an app sits in, with its main navigation be
   lead={frontmatter.description}
   install="pnpm dlx shadcn@4.23.0 add @damsko/app-shell-01"
   use={
-    'import { AppShell, AppShellHeader, AppShellPage, AppShellPageSkeleton } from "@grasp-os/ui/blocks/app-shell-01/app-shell-01";'
+    'import { AppShell, AppShellHeader, AppShellPage, AppShellPageSkeleton } from "@grasp-os/ui/blocks/app-shell-01/app-shell-01";\nimport { AppShellNav, AppShellNavEmpty, AppShellProfile, AppShellSwitch } from "@grasp-os/ui/blocks/app-shell-01/app-shell-01-sidebar";'
   }
 />
 
@@ -48,6 +48,16 @@ AppShell is its parts composed for a frame of its own. A product that lays more 
 An area with a navigation of its own takes the sidebar while the person is in it: `sidebar` holds Sidebar's SidebarLevels, and the address says which level is shown. Under `settings/` here it is Settings' own list, with the way back to the page that was left.
 
 <Stage path="app-shell-01/levels" label="Levels" />
+
+## The sidebar's parts
+
+`app-shell-01-sidebar` holds the parts a product's sidebar is made of, drawn with Sidebar's own. AppShellSwitch stands under the head and switches the main list's views (Home | Inbox): a track whose chosen tab rides on a thumb that glides from tab to tab, one tab stop, the arrows, Home and End moving and choosing; a tab's count is a red dot on its icon and is said in its name, and again when it changes. Its children are the rows it switches, which fade from one list to the next; without children it is a level's views of the page.
+
+AppShellNav takes the rows as data, in groups: a group has a small label, a count beside it, folds away (kept under the shell's `storageKey`), may be a landmark of its own and end in a quiet way to all of them. A row is a link (`href`, or a router's link as `render`) or a button, with its icon; at its end a count, short words (`end`), the Working mark or an unread dot, each said in words (`countText`, `endText`, `workingText`, `unreadText`); a second line (`detail`); its name in the regular weight for a thing in a list of them (`quiet`). With `actions` its menu stands behind three dots at its end and on a right-click, a long press, the menu key or Shift+F10; with `onRename` its menu's Rename, F2 or a double-click lays a field over its words, which Enter or leaving saves and Escape leaves. An AppShellNavEmpty says one quiet sentence where there are no rows.
+
+A level's head is AppShellLevelHeader: Back, its chevron alone and named, and the level's name, a link to its own first page, as one raised row. AppShellProfile is the person at the foot: their face, their name and one quiet line, and their menu over the row, as wide as it, of presses, a submenu of choices with a tick, the theme as icon segments at the end of its row the arrows choose, and lines between.
+
+<Stage path="app-shell-01/frame" label="The sidebar's parts" />
 
 ## Loading, not there, failed
 
@@ -145,6 +155,100 @@ A step of `breadcrumb`:
   source="src/blocks/app-shell-01/app-shell-01.tsx"
   type="AppShellPageSkeletonProps"
   label="AppShellPageSkeleton"
+/>
+
+### AppShellNav
+
+<Props
+  source="src/blocks/app-shell-01/app-shell-01-sidebar.tsx"
+  type="AppShellNavProps"
+  label="AppShellNavProps"
+/>
+
+<Props
+  source="src/blocks/app-shell-01/app-shell-01-sidebar.tsx"
+  type="AppShellNavGroup"
+  label="AppShellNavGroup"
+/>
+
+<Props
+  source="src/blocks/app-shell-01/app-shell-01-sidebar.tsx"
+  type="AppShellNavRow"
+  label="AppShellNavRow"
+/>
+
+<Props
+  source="src/blocks/app-shell-01/app-shell-01-sidebar.tsx"
+  type="AppShellNavSubRow"
+  label="AppShellNavSubRow"
+/>
+
+<Props
+  source="src/blocks/app-shell-01/app-shell-01-sidebar.tsx"
+  type="AppShellNavMore"
+  label="AppShellNavMore"
+/>
+
+### AppShellNavEmpty
+
+<Props
+  source="src/blocks/app-shell-01/app-shell-01-sidebar.tsx"
+  type="AppShellNavEmptyProps"
+  label="AppShellNavEmptyProps"
+/>
+
+### AppShellSwitch
+
+<Props
+  source="src/blocks/app-shell-01/app-shell-01-sidebar.tsx"
+  type="AppShellSwitchProps"
+  label="AppShellSwitchProps"
+/>
+
+<Props
+  source="src/blocks/app-shell-01/app-shell-01-sidebar.tsx"
+  type="AppShellTab"
+  label="AppShellTab"
+/>
+
+### AppShellLevelHeader
+
+<Props
+  source="src/blocks/app-shell-01/app-shell-01-sidebar.tsx"
+  type="AppShellLevelHeaderProps"
+  label="AppShellLevelHeaderProps"
+/>
+
+### AppShellProfile
+
+<Props
+  source="src/blocks/app-shell-01/app-shell-01-sidebar.tsx"
+  type="AppShellProfileProps"
+  label="AppShellProfileProps"
+/>
+
+<Props
+  source="src/blocks/app-shell-01/app-shell-01-sidebar.tsx"
+  type="AppShellProfileAction"
+  label="AppShellProfileAction"
+/>
+
+<Props
+  source="src/blocks/app-shell-01/app-shell-01-sidebar.tsx"
+  type="AppShellProfileChoices"
+  label="AppShellProfileChoices"
+/>
+
+<Props
+  source="src/blocks/app-shell-01/app-shell-01-sidebar.tsx"
+  type="AppShellProfileTheme"
+  label="AppShellProfileTheme"
+/>
+
+<Props
+  source="src/blocks/app-shell-01/app-shell-01-sidebar.tsx"
+  type="AppShellProfileChoice"
+  label="AppShellProfileChoice"
 />
 
 </Reference>

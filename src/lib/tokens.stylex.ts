@@ -162,6 +162,7 @@ export const colors = stylex.defineConsts({
   sidebarAccent: "var(--damsko-sidebar-accent)",
   // Sidebar: sidebar colours.
   sidebarCard: "var(--damsko-sidebar-card)",
+  sidebarMenu: "var(--damsko-sidebar-menu)",
   sidebarHover: "var(--damsko-sidebar-hover)",
   sidebarBorder: "var(--damsko-sidebar-border)",
   sidebarForeground: "var(--damsko-sidebar-foreground)",
@@ -318,6 +319,7 @@ export const radius = stylex.defineConsts({
   promptInputRadius: "var(--damsko-prompt-input-radius)",
   // Sidebar: sidebar sizes.
   sidebarRowRadius: "var(--damsko-sidebar-row-radius)",
+  sidebarMenuRadius: "var(--damsko-sidebar-menu-radius)",
   sidebarRowRadiusLg: "var(--damsko-sidebar-row-radius-lg)",
   // Tree: tree.
   treeViewGuideElbow: "var(--damsko-tree-view-guide-elbow)",

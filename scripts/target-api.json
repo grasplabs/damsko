@@ -1596,6 +1596,29 @@
       "AppShellPageSkeletonProps",
       "AppShellPageSkeleton"
     ],
+    "src/blocks/app-shell-01/app-shell-01-sidebar.tsx": [
+      "AppShellRowAction",
+      "AppShellNavSubRow",
+      "AppShellNavRow",
+      "AppShellNavMore",
+      "AppShellNavGroup",
+      "AppShellNavProps",
+      "AppShellNavEmptyProps",
+      "AppShellNav",
+      "AppShellNavEmpty",
+      "AppShellTab",
+      "AppShellSwitchProps",
+      "AppShellSwitch",
+      "AppShellLevelHeaderProps",
+      "AppShellLevelHeader",
+      "AppShellProfileAction",
+      "AppShellProfileChoice",
+      "AppShellProfileChoices",
+      "AppShellProfileTheme",
+      "AppShellProfileEntry",
+      "AppShellProfileProps",
+      "AppShellProfile"
+    ],
     "src/blocks/app-shell-01/app-shell-01.stylex.ts": null
   },
   "message": {

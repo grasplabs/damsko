@@ -253,9 +253,14 @@
         "@ui-sdk/react"
       ],
       "registryDependencies": [
+        "@damsko/agent-indicator",
         "@damsko/alert",
+        "@damsko/avatar",
         "@damsko/breadcrumb",
         "@damsko/button",
+        "@damsko/collapsible",
+        "@damsko/context-menu",
+        "@damsko/dropdown-menu",
         "@damsko/inline-edit",
         "@damsko/lib",
         "@damsko/page-header",
@@ -263,7 +268,8 @@
         "@damsko/sheet",
         "@damsko/side-panel",
         "@damsko/sidebar",
-        "@damsko/skeleton"
+        "@damsko/skeleton",
+        "@damsko/tooltip"
       ],
       "docs": "https://damsko.joingrasp.com/components/app-shell-01",
       "meta": {
@@ -271,6 +277,11 @@
         "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
+        {
+          "path": "src/blocks/app-shell-01/app-shell-01-sidebar.tsx",
+          "type": "registry:file",
+          "target": "~/src/blocks/app-shell-01/app-shell-01-sidebar.tsx"
+        },
         {
           "path": "src/blocks/app-shell-01/app-shell-01.stylex.ts",
           "type": "registry:file",

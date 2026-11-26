@@ -3530,6 +3530,15 @@ export const groups: TokenGroup[] = [
             dark: "oklch(0.215 0 0)",
             use: "The page's card on the ground.",
           },
+          // The menu that opens from the sidebar's foot: on the card in light, a step lighter in dark,
+          // so it stands off the sidebar it covers.
+          {
+            name: "sidebar-menu",
+            category: "colors",
+            value: "{sidebar-card}",
+            dark: "oklch(0.26 0 0)",
+            use: "The menu that opens from the sidebar's foot.",
+          },
           {
             name: "sidebar-hover",
             category: "colors",
@@ -3597,6 +3606,12 @@ export const groups: TokenGroup[] = [
             category: "radius",
             value: "11px",
             use: "A row's corner, and a group's label's: the squircle that reads like the original frame's round 6px, which is what a browser with no squircle draws. Its own token, not the row corner: the frame's rows are tighter than a list's.",
+          },
+          {
+            name: "sidebar-menu-radius",
+            category: "radius",
+            value: "14px",
+            use: "The corner of the menu that opens from the sidebar's foot: the squircle that reads like a round 8px, tighter than a popup's.",
           },
           {
             name: "sidebar-row-radius-lg",

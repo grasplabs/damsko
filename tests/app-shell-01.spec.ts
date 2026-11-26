@@ -647,3 +647,131 @@ test("a slow page keeps its bar and says once that it is loading; a missing or f
   await main.getByRole("button", { name: "Try again" }).click();
   await expect(loading).toBeVisible();
 });
+
+test("the view switch is one tab stop: the arrows move and choose, the Inbox's count is said, and its rows take the list's place", async ({
+  page,
+}) => {
+  await openExample(page, "app-shell-01", "frame");
+  const sidebar = page.getByRole("complementary", { name: "Sidebar" });
+  const views = sidebar.getByRole("tablist", { name: "Views" });
+  const home = views.getByRole("tab", { name: "Home" });
+  const inbox = views.getByRole("tab", { name: "Inbox 3 things wait" });
+  await expect(home).toHaveAttribute("aria-selected", "true");
+  await expect(inbox).toHaveAttribute("tabindex", "-1");
+  await home.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(inbox).toBeFocused();
+  await expect(inbox).toHaveAttribute("aria-selected", "true");
+  const panel = sidebar.getByRole("tabpanel", { name: "Inbox 3 things wait" });
+  await expect(
+    panel.getByRole("navigation", { name: "Inbox" }).getByRole("link", {
+      name: "The agreement on handling data is not signed yet.",
+    })
+  ).toBeVisible();
+  await page.keyboard.press("Home");
+  await expect(home).toHaveAttribute("aria-selected", "true");
+  await expect(sidebar.getByRole("navigation", { name: "Main" })).toBeVisible();
+});
+
+test("a row says its count, its time, the Working mark and the unread dot in words; a group folds, and is a landmark of its own", async ({
+  page,
+}) => {
+  await openExample(page, "app-shell-01", "frame");
+  const sidebar = page.getByRole("complementary", { name: "Sidebar" });
+  await expect(
+    sidebar.getByRole("link", { name: "Answering Acme 3 things wait" })
+  ).toBeVisible();
+  await expect(
+    sidebar.getByRole("link", { name: "Q3 numbers 2h ago Being written" })
+  ).toBeVisible();
+  await expect(
+    sidebar.getByRole("link", { name: "Kickoff notes 1d ago Unread" })
+  ).toBeVisible();
+  const organisations = sidebar.getByRole("navigation", {
+    name: "Organisations",
+  });
+  const fold = organisations.getByRole("button", { name: "Organisations 1" });
+  await expect(fold).toHaveAttribute("aria-expanded", "true");
+  await fold.click();
+  await expect(fold).toHaveAttribute("aria-expanded", "false");
+  await expect(
+    organisations.getByRole("link", { name: /Answering Acme/u })
+  ).toBeHidden();
+});
+
+test("a row's menu, from its dots or a right-click, renames it in place; F2 does too, and Escape keeps the name", async ({
+  page,
+}) => {
+  await openExample(page, "app-shell-01", "frame");
+  const sidebar = page.getByRole("complementary", { name: "Sidebar" });
+  const row = sidebar.getByRole("link", { name: /^Hiring plan/u });
+  await row.hover();
+  await sidebar.getByRole("button", { name: "More for Hiring plan" }).click();
+  await page.getByRole("menuitem", { name: "Rename" }).click();
+  const field = page.getByRole("textbox", { name: "Rename Hiring plan" });
+  await expect(field).toBeFocused();
+  await field.fill("Hiring plan 2027");
+  await page.keyboard.press("Enter");
+  const renamed = sidebar.getByRole("link", { name: /^Hiring plan 2027/u });
+  await expect(renamed).toBeFocused();
+  await page.keyboard.press("F2");
+  await page
+    .getByRole("textbox", { name: "Rename Hiring plan 2027" })
+    .fill("Gone");
+  await page.keyboard.press("Escape");
+  await expect(renamed).toBeVisible();
+  await renamed.click({ button: "right" });
+  await page.getByRole("menuitem", { name: "Delete" }).click();
+  await expect(renamed).toHaveCount(0);
+});
+
+test("an organisation's level heads itself with Back and its name as one row, its name the level's own first page", async ({
+  page,
+}) => {
+  await openExample(page, "app-shell-01", "frame");
+  const sidebar = page.getByRole("complementary", { name: "Sidebar" });
+  await sidebar
+    .getByRole("link", { name: "Answering Acme 3 things wait" })
+    .click();
+  const name = sidebar.getByRole("heading", {
+    level: 2,
+    name: "Answering Acme",
+  });
+  await expect(name.getByRole("link")).toHaveAttribute("aria-current", "page");
+  const back = sidebar.getByRole("link", { name: "Back" });
+  const [backBox, nameBox] = await Promise.all([
+    back.boundingBox(),
+    name.boundingBox(),
+  ]);
+  // One row: Back and the name stand side by side, on the same line.
+  expect(Math.abs((backBox?.y ?? 0) - (nameBox?.y ?? 1))).toBeLessThan(2);
+  await back.click();
+  await expect(sidebar.getByRole("navigation", { name: "Main" })).toBeVisible();
+});
+
+test("the person at the foot opens their menu: presses, the theme as segments the arrows choose, a submenu of choices", async ({
+  page,
+}) => {
+  await openExample(page, "app-shell-01", "frame");
+  const person = page
+    .getByRole("complementary", { name: "Sidebar" })
+    .getByRole("button", { name: "Anna de Vries" });
+  await person.click();
+  const menu = page.getByRole("menu");
+  await expect(menu.getByRole("menuitem", { name: "Settings" })).toBeVisible();
+  const theme = menu.getByRole("group", { name: "Appearance" });
+  await expect(
+    theme.getByRole("menuitemradio", { name: "System" })
+  ).toHaveAttribute("aria-checked", "true");
+  await theme.getByRole("menuitemradio", { name: "Dark" }).focus();
+  await page.keyboard.press("ArrowLeft");
+  await expect(
+    theme.getByRole("menuitemradio", { name: "Light" })
+  ).toHaveAttribute("aria-checked", "true");
+  await menu.getByRole("menuitem", { name: "Switch organisation" }).click();
+  await expect(
+    page.getByRole("menuitemradio", { name: "Northwind Finance" })
+  ).toHaveAttribute("aria-checked", "true");
+  await page.keyboard.press("Escape");
+  await expect(menu.getByRole("menuitem", { name: "Sign out" })).toBeVisible();
+});
