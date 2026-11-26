@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
-import { listenToLiveRegions, openExample } from "./example.ts";
+import { listenToLiveRegions, openExample, settled } from "./example.ts";
 
 /** What the page shows now that it should never show while an answer streams. */
 const strayMarks = async (page: Page) =>
@@ -79,8 +79,12 @@ test("fenced code: coloured in its language, named over it, and Download saves i
   await expect(
     block.getByText("export async function withRetry")
   ).toBeVisible();
-  // Coloured once the worker has read it: a keyword is a span of its own.
-  await expect(block.locator("span", { hasText: /^export$/u })).toHaveCount(1);
+  // Coloured once the lexers have loaded: a keyword is a run of its own.
+  await expect(
+    block.locator("[data-slot=code-block-line] > span:nth-child(2) > span", {
+      hasText: /^export\b/u,
+    })
+  ).toHaveCount(1);
   const [file] = await Promise.all([
     page.waitForEvent("download"),
     block.getByRole("button", { name: "Download" }).click(),
@@ -261,6 +265,209 @@ test("untrusted text: a script is never an element, a data link is words, a pict
       "[onclick], [onerror], script, a, b, [*|href^='javascript']"
     )
   ).toHaveCount(0);
+});
+
+test("maths: a formula sits at the words' size and on their baseline, in a heading, a sentence, a list item and a table cell", async ({
+  page,
+}) => {
+  await openExample(page, "markdown", "math-places");
+  await expect(page.locator("[data-slot=markdown-math] math")).toHaveCount(6);
+  await settled(page);
+  const placed = await page.evaluate(() => {
+    const MATHML = "http://www.w3.org/1998/Math/MathML";
+    /** A mark one x-height tall, or none tall on the baseline, inside `parent`: its box. */
+    const mark = (parent: Element, height: string) => {
+      const math = parent.namespaceURI === MATHML;
+      const element = math
+        ? document.createElementNS(MATHML, "mspace")
+        : document.createElement("span");
+      if (math) {
+        element.setAttribute("height", height);
+        element.setAttribute("width", "1px");
+      } else {
+        element.setAttribute(
+          "style",
+          `display:inline-block;width:1px;height:${height}`
+        );
+      }
+      parent.append(element);
+      const box = element.getBoundingClientRect();
+      element.remove();
+      return box;
+    };
+    return [...document.querySelectorAll("[data-slot=markdown-math]")].map(
+      (formula) => {
+        const math = formula.querySelector("math");
+        const words = formula.parentElement;
+        if (math === null || words === null) {
+          return { place: "none", ratio: 0, shift: 0 };
+        }
+        return {
+          place: words.tagName,
+          ratio: mark(math, "1ex").height / mark(words, "1ex").height,
+          shift: formula.matches("[data-display]")
+            ? 0
+            : mark(math, "0").bottom - mark(words, "0").bottom,
+        };
+      }
+    );
+  });
+  // The formula's x-height meets the words' (a maths font's letters are smaller at one size).
+  for (const { place, ratio, shift } of placed) {
+    expect(ratio, place).toBeGreaterThan(0.95);
+    expect(ratio, place).toBeLessThan(1.15);
+    expect(Math.abs(shift), place).toBeLessThan(0.6);
+  }
+  expect(placed.map(({ place }) => place)).toStrictEqual([
+    "H2",
+    "P",
+    "P",
+    "SPAN",
+    "TD",
+    "DIV",
+  ]);
+});
+
+/** A diagram's parts as drawn: a node's fill, edge and words, and an edge's line. */
+const diagramColours = async (page: Page) =>
+  await page.evaluate(() => {
+    const drawing = document.querySelector(
+      "[data-slot=markdown-diagram-drawing] svg"
+    );
+    const of = (selector: string, property: "fill" | "stroke") => {
+      const element = drawing?.querySelector(selector);
+      return element ? getComputedStyle(element)[property] : "none";
+    };
+    return {
+      fill: of(".node rect", "fill"),
+      stroke: of(".node rect", "stroke"),
+      words: of(".node text", "fill"),
+      line: of(".flowchart-link", "stroke"),
+    };
+  });
+
+/** The tokens as the diagram's theme reads them: each laid on the page's ground, as `rgb()`. */
+const tokenColours = async (page: Page) =>
+  await page.evaluate(() => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 1;
+    canvas.height = 1;
+    const context = canvas.getContext("2d", { willReadFrequently: true });
+    const place = document.querySelector("[data-slot=markdown-diagram]");
+    const probe = document.createElement("span");
+    place?.append(probe);
+    const resolved = (token: string) => {
+      probe.style.color = `var(--damsko-${token})`;
+      return getComputedStyle(probe).color;
+    };
+    const ground = resolved("background");
+    const laid = (token: string) => {
+      if (context === null) {
+        return "";
+      }
+      context.fillStyle = ground;
+      context.fillRect(0, 0, 1, 1);
+      context.fillStyle = resolved(token);
+      context.fillRect(0, 0, 1, 1);
+      const [red, green, blue] = context.getImageData(0, 0, 1, 1).data;
+      return `rgb(${red}, ${green}, ${blue})`;
+    };
+    const colours = {
+      fill: laid("muted"),
+      stroke: laid("mint-deep"),
+      words: laid("foreground"),
+      line: laid("muted-foreground"),
+    };
+    probe.remove();
+    return colours;
+  });
+
+for (const theme of ["light", "dark"] as const) {
+  test(`diagrams: drawn in the design's look, by token, in ${theme}`, async ({
+    page,
+  }) => {
+    await openExample(page, "markdown", "math-places", { theme });
+    await expect(
+      page.locator("[data-slot=markdown-diagram-drawing] svg")
+    ).toHaveCount(1);
+    await expect(
+      page.locator("[data-slot=markdown-diagram][aria-busy=true]")
+    ).toHaveCount(0);
+    expect(await diagramColours(page)).toStrictEqual(await tokenColours(page));
+  });
+}
+
+test("diagrams: drawn again in the other colour scheme when the page's changes, and saved on its ground", async ({
+  page,
+}) => {
+  await openExample(page, "markdown", "math-places", { theme: "light" });
+  const drawing = page.locator("[data-slot=markdown-diagram-drawing] svg");
+  await expect(drawing).toHaveCount(1);
+  const light = await diagramColours(page);
+  await page.evaluate(() => {
+    document.documentElement.style.colorScheme = "dark";
+  });
+  await expect
+    .poll(async () => await diagramColours(page))
+    .not.toStrictEqual(light);
+  await expect(
+    page.locator("[data-slot=markdown-diagram][aria-busy=true]")
+  ).toHaveCount(0);
+  expect(await diagramColours(page)).toStrictEqual(await tokenColours(page));
+  // The file holds the drawing on its ground: the page's background, as a first rect.
+  await page.getByRole("button", { name: "Download diagram" }).click();
+  const [file] = await Promise.all([
+    page.waitForEvent("download"),
+    page.getByRole("menuitem", { name: "SVG" }).click(),
+  ]);
+  const saved = await readFile(await file.path(), "utf-8");
+  const ground =
+    /<svg\b[^>]*>\s*<rect\b[^>]*fill="(?<fill>#[0-9a-f]{6})"/u.exec(saved)
+      ?.groups?.fill;
+  const background = await page.evaluate(() => {
+    const probe = document.createElement("span");
+    document.querySelector("[data-slot=markdown-diagram]")?.append(probe);
+    probe.style.color = "var(--damsko-background)";
+    const canvas = document.createElement("canvas");
+    canvas.width = 1;
+    canvas.height = 1;
+    const context = canvas.getContext("2d", { willReadFrequently: true });
+    if (context === null) {
+      return "";
+    }
+    context.fillStyle = getComputedStyle(probe).color;
+    context.fillRect(0, 0, 1, 1);
+    probe.remove();
+    const channels = Array.from(
+      context.getImageData(0, 0, 1, 1).data.slice(0, 3),
+      (value) => value.toString(16).padStart(2, "0")
+    );
+    return `#${channels.join("")}`;
+  });
+  expect(ground).toBe(background);
+});
+
+test("diagrams: under forced colours, drawn in the system's colours, its words readable", async ({
+  page,
+}) => {
+  await page.emulateMedia({ forcedColors: "active" });
+  await openExample(page, "markdown", "math-places");
+  await expect(
+    page.locator("[data-slot=markdown-diagram-drawing] svg")
+  ).toHaveCount(1);
+  const system = await page.evaluate(() => {
+    const probe = document.createElement("span");
+    probe.style.cssText =
+      "forced-color-adjust:none;color:CanvasText;background:Canvas";
+    document.body.append(probe);
+    const style = getComputedStyle(probe);
+    const colours = { ink: style.color, ground: style.backgroundColor };
+    probe.remove();
+    return colours;
+  });
+  const drawn = await diagramColours(page);
+  expect(drawn.words).toBe(system.ink);
+  expect(drawn.fill).toBe(system.ground);
 });
 
 test("diagrams: drawn by Mermaid once loaded, only for a diagram; Download as SVG, PNG or MMD, full screen and zoom; one Mermaid cannot read stays code", async ({

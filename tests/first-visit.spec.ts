@@ -21,8 +21,8 @@
 // The two tests at the end hold that: an example far down the page sleeps until it is near, wakes
 // in the place it was drawn in, and is woken by an address that names its section.
 //
-// The page below needs more requests, for what it loads, said beside it: what the page takes, plus
-// a request. No page needs more bytes: the heaviest, the data table's, takes 542KB.
+// The pages below need more, for what they load, said beside each: what the page takes, plus a
+// little. Of the rest, the heaviest, the data table's, takes 542KB.
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
@@ -44,6 +44,12 @@ const over: Record<string, { requests?: number; bytes?: number }> = {
   // Table, Pagination, Checkbox, Select) under a Page header, with a Card, a Switch, an Avatar
   // and the Alert dialog and Toast its rows answer with, each component a file. It takes 30.
   "/components/container": { requests: 31 },
+  // A CodeBlock on the first screen loads its lexers, all 150 languages in @pierre/highlights
+  // 0.5.2's one module: 161KB. 0.6.0 (allowed by the 3-day rule from 2026-11-29) has a core of
+  // 14KB and a module for each language, which brings these pages back under 600KB.
+  "/components/markdown": { bytes: 700 * 1024 },
+  "/components/message": { bytes: 690 * 1024 },
+  "/components/trace": { bytes: 640 * 1024 },
 };
 
 for (const path of docsPages().filter((each) =>

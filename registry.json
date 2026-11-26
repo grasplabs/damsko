@@ -757,11 +757,8 @@
       "title": "Code block",
       "description": "A box of highlighted code, with its language named, line numbers and a copy button.",
       "dependencies": [
-        "@stylexjs/stylex",
-        "prismjs"
-      ],
-      "devDependencies": [
-        "@types/prismjs"
+        "@pierre/highlights",
+        "@stylexjs/stylex"
       ],
       "registryDependencies": [
         "@damsko/button",
@@ -778,19 +775,9 @@
       },
       "files": [
         {
-          "path": "src/components/code-block-grammars.d.ts",
+          "path": "src/components/code-block-highlight.ts",
           "type": "registry:file",
-          "target": "~/src/components/code-block-grammars.d.ts"
-        },
-        {
-          "path": "src/components/code-block-prism.ts",
-          "type": "registry:file",
-          "target": "~/src/components/code-block-prism.ts"
-        },
-        {
-          "path": "src/components/code-block-worker.ts",
-          "type": "registry:file",
-          "target": "~/src/components/code-block-worker.ts"
+          "target": "~/src/components/code-block-highlight.ts"
         },
         {
           "path": "src/components/code-block.stylex.ts",
@@ -2091,6 +2078,11 @@
           "path": "src/components/markdown/diagram-safe.ts",
           "type": "registry:file",
           "target": "~/src/components/markdown/diagram-safe.ts"
+        },
+        {
+          "path": "src/components/markdown/diagram-theme.ts",
+          "type": "registry:file",
+          "target": "~/src/components/markdown/diagram-theme.ts"
         },
         {
           "path": "src/components/markdown/diagram.tsx",

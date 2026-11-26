@@ -1021,9 +1021,7 @@
       "CodeBlockFooterProps"
     ],
     "src/components/code-block.stylex.ts": null,
-    "src/components/code-block-prism.ts": null,
-    "src/components/code-block-worker.ts": null,
-    "src/components/code-block-grammars.d.ts": null
+    "src/components/code-block-highlight.ts": null
   },
   "command": {
     "src/components/command.tsx": [
@@ -1388,6 +1386,7 @@
     ],
     "src/components/markdown/diagram.tsx": null,
     "src/components/markdown/diagram-safe.ts": null,
+    "src/components/markdown/diagram-theme.ts": null,
     "src/components/markdown/markdown.tsx": null,
     "src/components/markdown/parse.ts": null
   },

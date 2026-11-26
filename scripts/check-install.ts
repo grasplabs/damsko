@@ -857,8 +857,9 @@ const drawn = async (page: Page) => {
 };
 
 /**
- * Whether the app's CodeBlock took Prism's colours, which come from its worker: so the app's build
- * wrote the worker and the page started it. A run of the code then has a colour its line has not.
+ * Whether the app's CodeBlock took its lexers' colours: so the app's build wrote the lexers' script,
+ * the page loaded it when it drew the block, and compiled their WebAssembly. A run of the code then
+ * has a colour its line has not.
  */
 const coloured = async (page: Page) => {
   try {
@@ -942,7 +943,7 @@ const inBrowser = async (
 
 /**
  * The app the page's blocks built, as the page left it: one button, drawn by its own styles, and
- * with `code`, a line of code coloured in its worker; `placed`, in a row of the page's own whose
+ * with `code`, a line of code coloured by its lexers; `placed`, in a row of the page's own whose
  * Tailwind classes put it at the row's end; `icon`, with the Hugeicons drawing the page's first app
  * imports drawn in it.
  */
@@ -1019,7 +1020,7 @@ const checkPage = async (
     if (code) {
       expect(
         await coloured(page),
-        "the code block's code was not coloured: its worker was not built or did not start"
+        "the code block's code was not coloured: its lexers were not built or did not load"
       );
     }
     expect(
@@ -1068,7 +1069,7 @@ const checkApp = async (label: string, app: string) => {
       const seen = await drawn(page);
       expect(
         await coloured(page),
-        "the code block's code was not coloured: its worker was not built or did not start"
+        "the code block's code was not coloured: its lexers were not built or did not load"
       );
 
       // The fonts: each family loaded, from the six files.
@@ -1315,7 +1316,7 @@ const ownGeist = async (product: string) => {
     const seen = await drawn(page);
     expect(
       await coloured(page),
-      "the code block's code was not coloured: its worker was not built or did not start"
+      "the code block's code was not coloured: its lexers were not built or did not load"
     );
     expect(
       seen.loaded.includes("Geist Variable") &&
