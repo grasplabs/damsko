@@ -65,24 +65,27 @@ test.describe("on a phone", () => {
   });
 });
 
-test("a group of Stat children reads as the same list", async ({ page }) => {
+test("a group of Stat children reads as the same list, the ones made with map too", async ({
+  page,
+}) => {
   await openExample(page, "stat", "children");
   const row = page.getByRole("list", { name: "This week" });
   await expect(row.getByRole("listitem")).toHaveText([
     "Spend€2,310−4% on last week",
     "Refunds€184+3 since Monday",
+    "Orders96+12 on last week",
   ]);
-  // Two figures, two columns: the second ends where the box does, no place left empty.
+  // Three figures, three columns: the last ends where the box does, no place left empty.
   const list = await row.boundingBox();
-  const refunds = await row
-    .getByRole("listitem", { name: "Refunds" })
+  const orders = await row
+    .getByRole("listitem", { name: "Orders" })
     .boundingBox();
   expect(list).not.toBeNull();
-  expect(refunds).not.toBeNull();
+  expect(orders).not.toBeNull();
   expect(
     Math.abs(
-      (refunds?.x ?? 0) +
-        (refunds?.width ?? 0) -
+      (orders?.x ?? 0) +
+        (orders?.width ?? 0) -
         (list?.x ?? 0) -
         (list?.width ?? 0)
     )

@@ -89,6 +89,38 @@ test("a part of a page is a region named by its title, its foot after what it ho
   expect(foot?.y ?? 0).toBeGreaterThan(facts?.y ?? 0);
 });
 
+test("cards as tall as their cell, in a row sized by them, show all they hold, each footer at the foot", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await openExample(page, "card", "full-height");
+  const cards = page.getByRole("listitem");
+  await expect(cards).toHaveCount(3);
+  await expect(
+    page.getByText("Every change kept for a year, to look back on or restore.")
+  ).toBeVisible();
+  const measured = await cards.evaluateAll((items) =>
+    items.map((item) => {
+      const content = item.querySelector("[data-slot=card-content]");
+      const footer = item.querySelector("[data-slot=card-footer]");
+      const card = item.getBoundingClientRect();
+      return {
+        height: card.height,
+        // Nothing of what it holds is clipped.
+        clipped: content ? content.scrollHeight - content.clientHeight : -1,
+        // Its footer ends where the card does.
+        gap: footer ? card.bottom - footer.getBoundingClientRect().bottom : -1,
+      };
+    })
+  );
+  expect(new Set(measured.map((card) => card.height)).size).toBe(1);
+  for (const card of measured) {
+    expect(card.clipped).toBe(0);
+    expect(card.gap).toBeLessThan(1);
+    expect(card.gap).toBeGreaterThanOrEqual(0);
+  }
+});
+
 test("a flush table runs edge to edge, the header and foot on its first column", async ({
   page,
 }) => {
