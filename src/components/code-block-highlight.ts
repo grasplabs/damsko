@@ -16,127 +16,63 @@
 import type * as Highlights from "@pierre/highlights/core";
 
 import { ownValue } from "../lib/utils";
-
-/** Loads one language's lexer. */
-type Lexer = () => Promise<{ default: Highlights.Language }>;
-
-// Each lexer by its own name: written out, so a bundler makes each a script of its own.
-const typescript: Lexer = async () =>
-  await import("@pierre/highlights/langs/typescript");
-const html: Lexer = async () => await import("@pierre/highlights/langs/html");
-const xml: Lexer = async () => await import("@pierre/highlights/langs/xml");
-const css: Lexer = async () => await import("@pierre/highlights/langs/css");
-const json: Lexer = async () => await import("@pierre/highlights/langs/json");
-const shellscript: Lexer = async () =>
-  await import("@pierre/highlights/langs/shellscript");
-const python: Lexer = async () =>
-  await import("@pierre/highlights/langs/python");
-const markdown: Lexer = async () =>
-  await import("@pierre/highlights/langs/markdown");
-const yaml: Lexer = async () => await import("@pierre/highlights/langs/yaml");
-const sql: Lexer = async () => await import("@pierre/highlights/langs/sql");
-const diff: Lexer = async () => await import("@pierre/highlights/langs/diff");
-const go: Lexer = async () => await import("@pierre/highlights/langs/go");
-const rust: Lexer = async () => await import("@pierre/highlights/langs/rust");
-const java: Lexer = async () => await import("@pierre/highlights/langs/java");
-const c: Lexer = async () => await import("@pierre/highlights/langs/c");
-const cpp: Lexer = async () => await import("@pierre/highlights/langs/cpp");
-const csharp: Lexer = async () =>
-  await import("@pierre/highlights/langs/csharp");
-const php: Lexer = async () => await import("@pierre/highlights/langs/php");
-const ruby: Lexer = async () => await import("@pierre/highlights/langs/ruby");
-const kotlin: Lexer = async () =>
-  await import("@pierre/highlights/langs/kotlin");
-const swift: Lexer = async () => await import("@pierre/highlights/langs/swift");
-const toml: Lexer = async () => await import("@pierre/highlights/langs/toml");
-const docker: Lexer = async () =>
-  await import("@pierre/highlights/langs/docker");
+import { lexers } from "./code-block-lexers";
+import type { Lexer } from "./code-block-lexers";
 
 /**
  * The languages a block names, by the names people write: the name shown over the code, the
- * lexer's name for it, the extension its file is saved with, and the lexer that reads it. Another
- * language is plain text.
+ * lexer's name for it, and the extension its file is saved with. Any other language a lexer reads
+ * (code-block-lexers.ts) is coloured too, named as it is written and saved as `.txt`.
  */
 export const languages: Record<
   string,
-  { name: string; lang: string; extension: string; lexer: Lexer }
+  { name: string; lang: string; extension: string }
 > = {
-  ts: {
-    name: "TypeScript",
-    lang: "typescript",
-    extension: "ts",
-    lexer: typescript,
-  },
-  typescript: {
-    name: "TypeScript",
-    lang: "typescript",
-    extension: "ts",
-    lexer: typescript,
-  },
-  tsx: { name: "TSX", lang: "tsx", extension: "tsx", lexer: typescript },
-  jsx: { name: "JSX", lang: "jsx", extension: "jsx", lexer: typescript },
-  js: {
-    name: "JavaScript",
-    lang: "javascript",
-    extension: "js",
-    lexer: typescript,
-  },
-  javascript: {
-    name: "JavaScript",
-    lang: "javascript",
-    extension: "js",
-    lexer: typescript,
-  },
-  html: { name: "HTML", lang: "html", extension: "html", lexer: html },
-  markup: { name: "HTML", lang: "html", extension: "html", lexer: html },
-  xml: { name: "XML", lang: "xml", extension: "xml", lexer: xml },
-  svg: { name: "SVG", lang: "xml", extension: "svg", lexer: xml },
-  css: { name: "CSS", lang: "css", extension: "css", lexer: css },
-  json: { name: "JSON", lang: "json", extension: "json", lexer: json },
-  bash: { name: "Bash", lang: "bash", extension: "sh", lexer: shellscript },
-  sh: { name: "Shell", lang: "bash", extension: "sh", lexer: shellscript },
-  shell: { name: "Shell", lang: "bash", extension: "sh", lexer: shellscript },
-  python: { name: "Python", lang: "python", extension: "py", lexer: python },
-  py: { name: "Python", lang: "python", extension: "py", lexer: python },
-  markdown: {
-    name: "Markdown",
-    lang: "markdown",
-    extension: "md",
-    lexer: markdown,
-  },
-  md: { name: "Markdown", lang: "markdown", extension: "md", lexer: markdown },
-  yaml: { name: "YAML", lang: "yaml", extension: "yaml", lexer: yaml },
-  yml: { name: "YAML", lang: "yaml", extension: "yml", lexer: yaml },
-  sql: { name: "SQL", lang: "sql", extension: "sql", lexer: sql },
-  diff: { name: "Diff", lang: "diff", extension: "diff", lexer: diff },
-  go: { name: "Go", lang: "go", extension: "go", lexer: go },
-  rust: { name: "Rust", lang: "rust", extension: "rs", lexer: rust },
-  rs: { name: "Rust", lang: "rust", extension: "rs", lexer: rust },
-  java: { name: "Java", lang: "java", extension: "java", lexer: java },
-  c: { name: "C", lang: "c", extension: "c", lexer: c },
-  cpp: { name: "C++", lang: "cpp", extension: "cpp", lexer: cpp },
-  "c++": { name: "C++", lang: "cpp", extension: "cpp", lexer: cpp },
-  csharp: { name: "C#", lang: "csharp", extension: "cs", lexer: csharp },
-  cs: { name: "C#", lang: "csharp", extension: "cs", lexer: csharp },
-  "c#": { name: "C#", lang: "csharp", extension: "cs", lexer: csharp },
-  php: { name: "PHP", lang: "php", extension: "php", lexer: php },
-  ruby: { name: "Ruby", lang: "ruby", extension: "rb", lexer: ruby },
-  rb: { name: "Ruby", lang: "ruby", extension: "rb", lexer: ruby },
-  kotlin: { name: "Kotlin", lang: "kotlin", extension: "kt", lexer: kotlin },
-  kt: { name: "Kotlin", lang: "kotlin", extension: "kt", lexer: kotlin },
-  swift: { name: "Swift", lang: "swift", extension: "swift", lexer: swift },
-  toml: { name: "TOML", lang: "toml", extension: "toml", lexer: toml },
-  docker: {
-    name: "Dockerfile",
-    lang: "dockerfile",
-    extension: "dockerfile",
-    lexer: docker,
-  },
+  ts: { name: "TypeScript", lang: "typescript", extension: "ts" },
+  typescript: { name: "TypeScript", lang: "typescript", extension: "ts" },
+  tsx: { name: "TSX", lang: "tsx", extension: "tsx" },
+  jsx: { name: "JSX", lang: "jsx", extension: "jsx" },
+  js: { name: "JavaScript", lang: "javascript", extension: "js" },
+  javascript: { name: "JavaScript", lang: "javascript", extension: "js" },
+  html: { name: "HTML", lang: "html", extension: "html" },
+  markup: { name: "HTML", lang: "html", extension: "html" },
+  xml: { name: "XML", lang: "xml", extension: "xml" },
+  svg: { name: "SVG", lang: "xml", extension: "svg" },
+  css: { name: "CSS", lang: "css", extension: "css" },
+  json: { name: "JSON", lang: "json", extension: "json" },
+  bash: { name: "Bash", lang: "bash", extension: "sh" },
+  sh: { name: "Shell", lang: "bash", extension: "sh" },
+  shell: { name: "Shell", lang: "bash", extension: "sh" },
+  python: { name: "Python", lang: "python", extension: "py" },
+  py: { name: "Python", lang: "python", extension: "py" },
+  markdown: { name: "Markdown", lang: "markdown", extension: "md" },
+  md: { name: "Markdown", lang: "markdown", extension: "md" },
+  yaml: { name: "YAML", lang: "yaml", extension: "yaml" },
+  yml: { name: "YAML", lang: "yaml", extension: "yml" },
+  sql: { name: "SQL", lang: "sql", extension: "sql" },
+  diff: { name: "Diff", lang: "diff", extension: "diff" },
+  go: { name: "Go", lang: "go", extension: "go" },
+  rust: { name: "Rust", lang: "rust", extension: "rs" },
+  rs: { name: "Rust", lang: "rust", extension: "rs" },
+  java: { name: "Java", lang: "java", extension: "java" },
+  c: { name: "C", lang: "c", extension: "c" },
+  cpp: { name: "C++", lang: "cpp", extension: "cpp" },
+  "c++": { name: "C++", lang: "cpp", extension: "cpp" },
+  csharp: { name: "C#", lang: "csharp", extension: "cs" },
+  cs: { name: "C#", lang: "csharp", extension: "cs" },
+  "c#": { name: "C#", lang: "csharp", extension: "cs" },
+  php: { name: "PHP", lang: "php", extension: "php" },
+  ruby: { name: "Ruby", lang: "ruby", extension: "rb" },
+  rb: { name: "Ruby", lang: "ruby", extension: "rb" },
+  kotlin: { name: "Kotlin", lang: "kotlin", extension: "kt" },
+  kt: { name: "Kotlin", lang: "kotlin", extension: "kt" },
+  swift: { name: "Swift", lang: "swift", extension: "swift" },
+  toml: { name: "TOML", lang: "toml", extension: "toml" },
+  docker: { name: "Dockerfile", lang: "dockerfile", extension: "dockerfile" },
   dockerfile: {
     name: "Dockerfile",
     lang: "dockerfile",
     extension: "dockerfile",
-    lexer: docker,
   },
 };
 
@@ -391,15 +327,17 @@ export interface Engine {
  * not coloured, while its lexer loads (the first ask starts it) and where it cannot.
  */
 const highlighterOf = (engine: Engine, language: string) => {
-  const found = ownValue(languages, language.toLowerCase());
-  if (found === undefined) {
+  const key = language.toLowerCase();
+  const lang = ownValue(languages, key)?.lang ?? key;
+  const lexer = ownValue(lexers, lang);
+  if (lexer === undefined) {
     return null;
   }
-  if (!engine.highlighters.has(found.lexer)) {
-    void load(found.lexer);
+  if (!engine.highlighters.has(lexer)) {
+    void load(lexer);
   }
-  const highlighter = engine.highlighters.get(found.lexer) ?? null;
-  return highlighter === null ? null : { highlighter, lang: found.lang };
+  const highlighter = engine.highlighters.get(lexer) ?? null;
+  return highlighter === null ? null : { highlighter, lang };
 };
 
 /** `code`'s lines as the lexer reads them, a last empty line from a trailing newline left out. */
@@ -528,8 +466,9 @@ export const noEngine = (): Engine | null => null;
 
 /** Loads `language`'s lexer, for a reading outside the page (the unit tests). */
 export const loadLanguage = async (language: string) => {
-  const found = ownValue(languages, language.toLowerCase());
-  if (found !== undefined) {
-    await load(found.lexer);
+  const key = language.toLowerCase();
+  const lexer = ownValue(lexers, ownValue(languages, key)?.lang ?? key);
+  if (lexer !== undefined) {
+    await load(lexer);
   }
 };

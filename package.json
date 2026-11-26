@@ -9,7 +9,7 @@
     "dev": "astro dev --port 4517",
     "build": "astro build && node scripts/registry-dist.ts dist --versions",
     "preview": "astro preview --port 4519",
-    "generate": "node tokens/generate.ts && node scripts/build-registry.ts",
+    "generate": "node tokens/generate.ts && node scripts/highlight-lexers.ts && node scripts/build-registry.ts",
     "check": "vp check && node scripts/guard.ts && node scripts/gates.ts",
     "check:secrets": "secretlint \"**/*\"",
     "test": "vp test",

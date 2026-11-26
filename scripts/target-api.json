@@ -1021,7 +1021,8 @@
       "CodeBlockFooterProps"
     ],
     "src/components/code-block.stylex.ts": null,
-    "src/components/code-block-highlight.ts": null
+    "src/components/code-block-highlight.ts": null,
+    "src/components/code-block-lexers.ts": null
   },
   "command": {
     "src/components/command.tsx": [
