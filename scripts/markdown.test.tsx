@@ -366,7 +366,51 @@ describe("no address still being written, and none unsafe, is ever handed on", (
 const types = (nodes: parse.Block[]) =>
   JSON.stringify(nodes).match(/"type":"\w+"/gu) ?? [];
 
+/** The names of the buttons drawn, `(waits)` after one out of use. */
+const buttonsOf = (html: string) =>
+  [...html.matchAll(/<button[^>]*aria-label="(?<name>[^"]*)"[^>]*>/gu)].map(
+    ({ groups, 0: tag }) =>
+      `${groups?.name ?? ""}${tag.includes(" disabled") ? " (waits)" : ""}`
+  );
+/** How many classes the first code line's gutter has. */
+const gutterOf = (html: string) =>
+  (
+    /data-slot="code-block-line"[^>]*><span aria-hidden="true" class="(?<classes>[^"]*)"/u.exec(
+      html
+    )?.groups?.classes ?? ""
+  ).split(" ").length;
+
 describe("what an answer may hold besides prose", () => {
+  test("fenced code: Download and Copy, which wait while the answer is written, and its lines numbered as its words say", () => {
+    const fence = "```ts\nconst a = 1;\n```";
+    expect(buttonsOf(draw(fence))).toStrictEqual(["Download", "Copy"]);
+    expect(
+      buttonsOf(draw(`${fence}\n\nMore`, { streaming: true }))
+    ).toStrictEqual(["Download (waits)", "Copy (waits)"]);
+    expect(draw("```ts startLine=10\na\nb\n```")).toContain(
+      "code-block-line 9"
+    );
+    // A number past 7 digits is not read: it starts from 1.
+    expect(draw("```ts startLine=99999999999\na\n```")).toContain(
+      "code-block-line 0"
+    );
+    // A numbered line's gutter is drawn in the number's look; without numbers it is bare.
+    expect(gutterOf(draw("```ts noLineNumbers\na\n```"))).toBeLessThan(
+      gutterOf(draw("```ts\na\n```"))
+    );
+  });
+
+  test("a table: Copy and Download, which wait while the answer is written", () => {
+    const table = "| a | b |\n| - | - |\n| 1 | 2 |";
+    expect(buttonsOf(draw(table))).toStrictEqual([
+      "Copy table",
+      "Download table",
+    ]);
+    expect(
+      buttonsOf(draw(`${table}\n\nMore`, { streaming: true }))
+    ).toStrictEqual(["Copy table (waits)", "Download table (waits)"]);
+  });
+
   test("a task is Checkbox's box, read only, said as done or not", () => {
     const html = draw("- [x] Gather the comments\n- [ ] Share them\n- Plain");
     expect(count(html, "<li")).toBe(3);
@@ -528,6 +572,7 @@ describe("while it is written, nothing shows that the whole answer will not", ()
     }
     expect(wrong).toStrictEqual([]);
     expect(text.length).toBeGreaterThan(1000);
+    // Each of its 1,400 prefixes drawn whole: a few seconds on a CI runner.
   }, 120_000);
 
   test("a block read alone knows the answer's names: links and notes defined elsewhere", () => {

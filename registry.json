@@ -768,7 +768,8 @@
         "@damsko/copy-button",
         "@damsko/hooks",
         "@damsko/lib",
-        "@damsko/spinner"
+        "@damsko/spinner",
+        "@damsko/tooltip"
       ],
       "docs": "https://damsko.joingrasp.com/components/code-block",
       "meta": {
@@ -785,6 +786,11 @@
           "path": "src/components/code-block-prism.ts",
           "type": "registry:file",
           "target": "~/src/components/code-block-prism.ts"
+        },
+        {
+          "path": "src/components/code-block-worker.ts",
+          "type": "registry:file",
+          "target": "~/src/components/code-block-worker.ts"
         },
         {
           "path": "src/components/code-block.stylex.ts",
@@ -2060,8 +2066,11 @@
         "remend"
       ],
       "registryDependencies": [
+        "@damsko/button",
         "@damsko/code-block",
         "@damsko/collapsible",
+        "@damsko/dropdown-menu",
+        "@damsko/hooks",
         "@damsko/lib",
         "@damsko/link",
         "@damsko/separator",

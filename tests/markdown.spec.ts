@@ -1,7 +1,9 @@
+import { readFile } from "node:fs/promises";
+
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
-import { openExample } from "./example.ts";
+import { listenToLiveRegions, openExample } from "./example.ts";
 
 /** What the page shows now that it should never show while an answer streams. */
 const strayMarks = async (page: Page) =>
@@ -52,7 +54,9 @@ test("an answer: its heading, list, table, code with copy, quote and a link that
     ]
   );
   await expect(page.getByText("await report.share(")).toBeVisible();
-  await expect(page.getByRole("button", { name: /^Copy/u })).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Copy", exact: true })
+  ).toBeVisible();
   await expect(
     page.getByText('Lena: "Can we add the survey results before Friday?"')
   ).toBeVisible();
@@ -65,6 +69,34 @@ test("an answer: its heading, list, table, code with copy, quote and a link that
   );
   await expect(link).toHaveAttribute("target", "_blank");
   await expect(link).toHaveAttribute("rel", "noopener noreferrer");
+});
+
+test("fenced code: coloured in its language, named over it, and Download saves it as a file of that language", async ({
+  page,
+}) => {
+  await openExample(page, "markdown", "code");
+  const block = page.getByRole("region", { name: "TypeScript" });
+  await expect(
+    block.getByText("export async function withRetry")
+  ).toBeVisible();
+  // Coloured once the worker has read it: a keyword is a span of its own.
+  await expect(block.locator("span", { hasText: /^export$/u })).toHaveCount(1);
+  const [file] = await Promise.all([
+    page.waitForEvent("download"),
+    block.getByRole("button", { name: "Download" }).click(),
+  ]);
+  expect(file.suggestedFilename()).toBe("file.ts");
+  const saved = await file.path();
+  expect(await readFile(saved, "utf-8")).toContain(
+    "export async function withRetry(call: () => Promise<Response>, tries = 3) {"
+  );
+  const shell = page.getByRole("region", { name: "Bash" });
+  const [script] = await Promise.all([
+    page.waitForEvent("download"),
+    shell.getByRole("button", { name: "Download" }).click(),
+  ]);
+  expect(script.suggestedFilename()).toBe("file.sh");
+  await expect(shell.getByRole("button", { name: "Copy" })).toBeEnabled();
 });
 
 test("a table is a table, named by the heading above it, its columns headed", async ({
@@ -81,6 +113,52 @@ test("a table is a table, named by the heading above it, its columns headed", as
   await expect(
     table.getByRole("row", { name: "Risks 4 2" }).getByRole("cell")
   ).toHaveText(["Risks", "4", "2"]);
+});
+
+test.describe("a table's controls", () => {
+  // Only Chromium has the clipboard's permissions: a context asked for them elsewhere does not open.
+  test.use({
+    permissions: async ({ browserName }, give) => {
+      await give(browserName === "chromium" ? ["clipboard-write"] : []);
+    },
+  });
+
+  test("a table: Copy as Markdown, CSV or TSV, and Download as CSV or Markdown", async ({
+    page,
+  }) => {
+    const said = await listenToLiveRegions(page);
+    await openExample(page, "markdown", "answer");
+    const save = async (format: string) => {
+      await page.getByRole("button", { name: "Download table" }).click();
+      const [file] = await Promise.all([
+        page.waitForEvent("download"),
+        page.getByRole("menuitem", { name: format }).click(),
+      ]);
+      return {
+        name: file.suggestedFilename(),
+        text: await readFile(await file.path(), "utf-8"),
+      };
+    };
+    // Each names itself in a tooltip, as CodeBlock's buttons do.
+    await page.getByRole("button", { name: "Copy table" }).hover();
+    await expect(page.getByRole("tooltip")).toHaveText("Copy table");
+    expect(await save("CSV")).toStrictEqual({
+      name: "table.csv",
+      text: "\uFEFFSection,Comments,Open\r\nHighlights,5,0\r\nRisks,4,2\r\nNext steps,3,0",
+    });
+    expect(await save("Markdown")).toStrictEqual({
+      name: "table.md",
+      text: "| Section | Comments | Open |\n| --- | --- | --- |\n| Highlights | 5 | 0 |\n| Risks | 4 | 2 |\n| Next steps | 3 | 0 |",
+    });
+    await page.getByRole("button", { name: "Copy table" }).click();
+    await expect(page.getByRole("menuitem")).toHaveText([
+      "Markdown",
+      "CSV",
+      "TSV",
+    ]);
+    await page.getByRole("menuitem", { name: "TSV" }).click();
+    await expect.poll(said).toContain("Copied");
+  });
 });
 
 test("lists hold lists, and an item of two paragraphs keeps both", async ({
@@ -240,6 +318,9 @@ test("caught part way: an open fence is code being written, a half link its word
   await expect(fence.getByText("def closed(requests):")).toBeVisible();
   await expect(fence.getByText("Writing")).toBeVisible();
   await expect(fence.getByText("```")).toHaveCount(0);
+  // Saved and copied once the answer is written, as a chat's are.
+  await expect(fence.getByRole("button", { name: "Download" })).toBeDisabled();
+  await expect(fence.getByRole("button", { name: "Copy" })).toBeDisabled();
   const link = page.getByRole("region", {
     name: "A link still being written",
   });
@@ -251,6 +332,13 @@ test("caught part way: an open fence is code being written, a half link its word
     name: "A table still being written",
   });
   await expect(table.getByRole("row", { name: "Support 58 4" })).toBeVisible();
+  // Copied and saved once the answer is written, as a chat's tables are.
+  await expect(
+    table.getByRole("button", { name: "Copy table" })
+  ).toBeDisabled();
+  await expect(
+    table.getByRole("button", { name: "Download table" })
+  ).toBeDisabled();
   // Its half row is drawn as it is written, as Streamdown draws it.
   await expect(table.getByRole("row")).toHaveCount(3);
   await expect(table.getByText("|")).toHaveCount(0);

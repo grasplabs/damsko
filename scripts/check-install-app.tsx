@@ -3,10 +3,14 @@
 // takes the place of its src/App.tsx, and nothing else changes: no package, no setting. It holds
 // one thing for each further claim the docs make to a product: text in each of the three font
 // families (with a letter only the full Latin file has), an element with no style of its own for
-// the base, a choice of mode that is kept, and the components' words from a translation library
-// in miniature, built while rendering. Never run here.
+// the base, a choice of mode that is kept, the components' words from a translation library in
+// miniature, built while rendering, and code coloured in CodeBlock's worker. Never run here.
 /* oxlint-disable shadcn/no-inline-styles -- the page's app has no StyleX of its own and this file adds no package to it, so its three styles are inline */
 import { Button } from "@grasp-os/ui/components/button";
+import {
+  CodeBlock,
+  CodeBlockContent,
+} from "@grasp-os/ui/components/code-block";
 import { I18nProvider, useI18n } from "@grasp-os/ui/lib/i18n";
 import type { I18nCatalog } from "@grasp-os/ui/lib/i18n";
 import { useState, useSyncExternalStore } from "react";
@@ -89,6 +93,9 @@ const App = () => {
           const naïve = 1;
         </code>
         <Button variant="default">Save changes</Button>
+        <CodeBlock language="ts" aria-label="A sum">
+          <CodeBlockContent>export const total = 1 + 2;</CodeBlockContent>
+        </CodeBlock>
         <Button
           variant="outline"
           onClick={() => {

@@ -354,7 +354,7 @@ describe("a block that takes long to read is read again as often as a fifth of t
 });
 
 describe("nothing runs on once it is gone", () => {
-  test("unmounted mid-stream, no frame or timer is left", () => {
+  test("unmounted mid-stream, every frame and timer it started comes to an end", () => {
     vi.useFakeTimers();
     const text = answers.map((answer) => answer.text).join("\n\n");
     const { root, render } = live();
@@ -373,6 +373,11 @@ describe("nothing runs on once it is gone", () => {
     }
     act(() => {
       root.unmount();
+    });
+    // What it started comes to an end: the page's live region says what was left to say, a message
+    // at a time, and CodeBlock's worker is stopped a second after the last block has gone.
+    act(() => {
+      vi.advanceTimersByTime(60_000);
     });
     expect(vi.getTimerCount()).toBe(0);
     vi.useRealTimers();

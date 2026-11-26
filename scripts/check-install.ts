@@ -856,6 +856,33 @@ const drawn = async (page: Page) => {
   return { button, ...rest };
 };
 
+/**
+ * Whether the app's CodeBlock took Prism's colours, which come from its worker: so the app's build
+ * wrote the worker and the page started it. A run of the code then has a colour its line has not.
+ */
+const coloured = async (page: Page) => {
+  try {
+    await page.waitForFunction(
+      () =>
+        [
+          ...document.querySelectorAll(
+            "[data-slot=code-block-line] > span:nth-child(2) > span"
+          ),
+        ].some(
+          (part) =>
+            part.parentElement !== null &&
+            getComputedStyle(part).color !==
+              getComputedStyle(part.parentElement).color
+        ),
+      null,
+      { timeout: 15_000 }
+    );
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 /** The page's ground and the scheme its root is in. */
 const ground = async (page: Page) =>
   await page.evaluate(() => ({
@@ -914,14 +941,15 @@ const inBrowser = async (
 };
 
 /**
- * The app the page's blocks built, as the page left it: one button, drawn by its own styles;
- * `placed`, in a row of the page's own whose Tailwind classes put it at the row's end; `icon`, with
- * the Hugeicons drawing the page's first app imports drawn in it.
+ * The app the page's blocks built, as the page left it: one button, drawn by its own styles, and
+ * with `code`, a line of code coloured in its worker; `placed`, in a row of the page's own whose
+ * Tailwind classes put it at the row's end; `icon`, with the Hugeicons drawing the page's first app
+ * imports drawn in it.
  */
 const checkPage = async (
   label: string,
   app: string,
-  { placed = false, icon = false } = {}
+  { placed = false, code = false, icon = false } = {}
 ) => {
   const dist = nodePath.join(app, "dist");
   const built = filesUnder(dist);
@@ -988,6 +1016,12 @@ const checkPage = async (
       await page.evaluate<boolean>(`(${sansProvided})()`),
       "the page does not provide the family its sans token names"
     );
+    if (code) {
+      expect(
+        await coloured(page),
+        "the code block's code was not coloured: its worker was not built or did not start"
+      );
+    }
     expect(
       seen.loaded.includes("Geist") &&
         seen.button.family.startsWith("Geist") &&
@@ -1032,6 +1066,10 @@ const checkApp = async (label: string, app: string) => {
     async (page, url, expect, fonts) => {
       await open(page, url, "button");
       const seen = await drawn(page);
+      expect(
+        await coloured(page),
+        "the code block's code was not coloured: its worker was not built or did not start"
+      );
 
       // The fonts: each family loaded, from the six files.
       for (const family of ["Geist", "Geist Mono", "Geist Serif"]) {
@@ -1276,6 +1314,10 @@ const ownGeist = async (product: string) => {
     await open(page, url, "button");
     const seen = await drawn(page);
     expect(
+      await coloured(page),
+      "the code block's code was not coloured: its worker was not built or did not start"
+    );
+    expect(
       seen.loaded.includes("Geist Variable") &&
         seen.button.family.startsWith('"Geist Variable"'),
       `the button is not drawn in the app's own Geist (${seen.button.family}; loaded: ${seen.loaded.join(", ")})`
@@ -1325,7 +1367,7 @@ const thePage = async () => {
   if (await follow("install", plain)) {
     const app = nodePath.join(plain, "app");
     const label = "the app with the components in its own src/";
-    await checkPage(label, app, { icon: true });
+    await checkPage(label, app, { code: true, icon: true });
     if (await follow("light-and-dark", app)) {
       await checkApp(label, app);
     }
@@ -1335,7 +1377,7 @@ const thePage = async () => {
   if (await follow("in-a-workspace-package", product)) {
     const app = nodePath.join(product, "apps/web");
     const label = "the app that imports the workspace package";
-    await checkPage(label, app, { icon: true });
+    await checkPage(label, app, { code: true, icon: true });
     if (await follow("light-and-dark", app)) {
       await checkApp(label, app);
     }

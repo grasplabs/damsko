@@ -31,7 +31,7 @@ A title in `CodeBlockTitle`, such as a file name, heads it beside the language a
 
 ## More beside Copy
 
-More in `CodeBlockActions` before the copy button, in the order given: Download here, a ghost icon Button the copy button's size (`icon-sm`). On a phone they stay in the header and the title gives way.
+More in `CodeBlockActions` before the copy button, in the order given: here `CodeBlockDownloadButton`, which saves the code as a file (`file.ts` by the language's extension, or the `filename` given); any other is a ghost icon Button the copy button's size (`icon-sm`). Both wait while the code is written. On a phone they stay in the header and the title gives way.
 
 <Stage path="code-block/actions" label="More beside Copy" />
 
@@ -43,7 +43,7 @@ More in `CodeBlockActions` before the copy button, in the order given: Download 
 
 ## Long code
 
-Past `maxLines` on `CodeBlockContent`, 18 by default, it is folded under Show more, with a fade where it is cut. Show more is a Button: Enter or Space opens it, and again folds it. Past 1,000 lines or 50,000 characters the rest is plain, so a whole file pasted in never draws hundreds of thousands of coloured runs.
+Past `maxLines` on `CodeBlockContent`, 18 by default, it is folded under Show more, with a fade where it is cut. Show more is a Button: Enter or Space opens it, and again folds it.
 
 <Stage path="code-block/long" label="Long code" />
 
@@ -72,6 +72,18 @@ Without `lineNumbers`, for a line to copy and run.
 `streaming` on the `CodeBlock`: the title says it is being written, copying waits, and the code grows in place, read again at most once a frame however fast it comes. `showStreamingIndicator` adds a Spinner beside the words.
 
 <Stage path="code-block/streaming" label="While it is written" />
+
+## Any code
+
+Prism reads the code whole in a worker, off the page, so no block holds the page, whatever a model writes in it. The code shows plain at once and takes Prism's colours for the whole text when the worker answers. It stays plain, all of it and never half coloured, when the worker has not read it in its time (a tenth of a second, and 2 milliseconds more for each 1,000 characters, at most a second: some text makes Prism's grammars slow, such as a string tens of thousands of characters long or many lines that open quotes), and when the lines it draws are more than 5,000 runs of colour, as minified code or some 1,000 lines of ordinary code are, since drawing them would hold the page: a folded block draws few lines and is coloured, and opened with Show more it is weighed again. While it is written the code is read again at most every 200 milliseconds, the lines written since (and the last line, until a newline ends it) are plain until the next reading, and a line already coloured is not drawn again. A very large block that was coloured can turn plain for good while it streams, once a read no longer finishes in time; it is read once more when it is done. A read that is late or fails leaves only that block plain: the next block starts the worker again. The worker is a file of its own (`code-block-worker.ts`), which a page's Content Security Policy must allow: `worker-src` naming the place the app's built scripts are served from (Get started, Allow CodeBlock's worker). Where it is refused, and before the page's script runs, the code is plain.
+
+<Stage path="code-block/any" label="Any code" />
+
+## Many blocks
+
+On a page of many blocks, as in a long answer, the worker reads one block at a time: those on the screen first, the shortest of them first. A block Prism cannot read in time is stopped soon, so the others wait a fraction of a second at most; a block that is gone is no longer read, and the worker stops a second after the last block has gone.
+
+<Stage path="code-block/many" label="Many blocks" />
 
 ## Every state
 
@@ -231,13 +243,13 @@ The copy button under a pointer and with keyboard focus are forced from its own 
       group: "Highlighting",
       key: "Loading",
       value:
-        "Plain text first; Prism and the language load the first time it is shown.",
+        "Plain text first; coloured once Prism has read it in its worker, the blocks on the screen first.",
     },
     {
       group: "Highlighting",
       key: "Languages",
       value:
-        "TSX, TypeScript, JavaScript, JSON, Bash, Python, CSS, HTML, Markdown, YAML, SQL, Diff, Go, Rust; others as text.",
+        "TSX, TypeScript, JavaScript, JSON, Bash, Python, CSS, HTML, Markdown, YAML, SQL, Diff, Go, Rust, Java, C, C++, C#, PHP, Ruby, Kotlin, Swift, TOML, Dockerfile; others as text.",
     },
     {
       group: "Copy",
@@ -348,6 +360,14 @@ The copy button under a pointer and with keyboard focus are forced from its own 
   source="src/components/code-block.tsx"
   type="CodeBlockCopyButtonProps"
   label="CodeBlockCopyButton"
+/>
+
+### CodeBlockDownloadButton
+
+<Props
+  source="src/components/code-block.tsx"
+  type="CodeBlockDownloadButtonProps"
+  label="CodeBlockDownloadButton"
 />
 
 ### CodeBlockContent

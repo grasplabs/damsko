@@ -1003,6 +1003,7 @@
       "CodeBlockTitle",
       "CodeBlockActions",
       "CodeBlockCopyButton",
+      "CodeBlockDownloadButton",
       "CodeBlockContent",
       "CodeBlockLine",
       "CodeBlockFooter",
@@ -1012,12 +1013,14 @@
       "CodeBlockTitleProps",
       "CodeBlockActionsProps",
       "CodeBlockCopyButtonProps",
+      "CodeBlockDownloadButtonProps",
       "CodeBlockContentProps",
       "CodeBlockLineProps",
       "CodeBlockFooterProps"
     ],
     "src/components/code-block.stylex.ts": null,
     "src/components/code-block-prism.ts": null,
+    "src/components/code-block-worker.ts": null,
     "src/components/code-block-grammars.d.ts": null
   },
   "command": {
