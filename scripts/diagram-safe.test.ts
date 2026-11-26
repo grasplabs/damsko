@@ -117,6 +117,25 @@ describe(safeSvg, () => {
     expect(out).toContain('width="1"');
   });
 
+  test("a style's `url()` to the drawing itself stays, quoted as a browser writes it", () => {
+    const out =
+      safeSvg(
+        svg(
+          `<style>#${ID} .node rect{stroke:url("#${ID}-gradient")} #${ID} .a{fill:url('#g')}</style><rect/>`
+        ),
+        ID
+      ) ?? "";
+    expect(out).toContain(`url("#${ID}-gradient")`);
+    expect(
+      safeSvg(
+        svg(
+          `<style>#${ID} .a{fill:url("https://evil.test/x.png")}</style><rect/>`
+        ),
+        ID
+      )
+    ).not.toContain("<style");
+  });
+
   test("a fill in the drawing itself stays", () => {
     expect(safeSvg(svg('<rect fill="url(#g)"/>'), ID)).toContain(
       'fill="url(#g)"'

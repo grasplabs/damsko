@@ -239,15 +239,20 @@ const styles = stylex.create({
   // A formula in a sentence, and one on lines of its own, wider than the column scrolling sideways.
   // One in a sentence is cut at ten lines' height: a matrix of a thousand rows is thousands of
   // pixels tall.
+  // Clipped, not a scroll box, and a flex box, whose baseline is its formula's in every engine
+  // (WebKit puts a clipped inline-block's at its bottom): it sits on the line as the words do.
   math: {
-    display: "inline-block",
+    display: "inline-flex",
     maxWidth: "100%",
     maxHeight: "10em",
-    overflow: "hidden",
-    verticalAlign: "middle",
+    overflow: "clip",
+    verticalAlign: "baseline",
     direction: "ltr",
     unicodeBidi: "isolate",
   },
+  // The formula a size up, as KaTeX's own styles set it: a maths font's letters are smaller than
+  // the text's at the same size, and at 1.21em its x-height meets the words'.
+  mathSize: { fontSize: "1.21em" },
   mathBlock: {
     display: "block",
     direction: "ltr",
@@ -1056,7 +1061,7 @@ const Formula = ({ tex, display }: { tex: string; display: boolean }) => {
       data-display={display || undefined}
       {...stylex.props(display ? styles.mathBlock : styles.math)}
     >
-      <span ref={box} hidden={!drawn} />
+      <span ref={box} hidden={!drawn} {...stylex.props(styles.mathSize)} />
       {!drawn && <code {...stylex.props(styles.inlineCode)}>{tex}</code>}
     </span>
   );
