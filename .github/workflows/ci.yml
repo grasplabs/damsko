@@ -102,7 +102,22 @@ jobs:
       # The check installs into a fresh project with pnpm itself, as a product does: Corepack
       # provides the version package.json pins.
       - run: corepack enable
-      - run: vp exec playwright install --with-deps chromium
+      # Chromium as specs restores it (below); this job saves it when the
+      # cache missed, so one job packs it, not five.
+      - id: chromium
+        run: echo "key=playwright-chromium-$ImageOS-$(node -p 'require("@playwright/test/package.json").version')" >> "$GITHUB_OUTPUT"
+      - id: chromium-cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ steps.chromium.outputs.key }}
+      - if: steps.chromium-cache.outputs.cache-hit != 'true'
+        run: vp exec playwright install --only-shell chromium
+      - if: steps.chromium-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ steps.chromium.outputs.key }}
       - run: node scripts/check-install.ts
 
   # The browser specs (tests/*.spec.ts) against the built site, in four
@@ -131,7 +146,24 @@ jobs:
           cache: true
           run-install: false
       - run: vp install --frozen-lockfile
-      - run: vp exec playwright install --with-deps "$PROJECT"
+      # Chromium's headless shell, the only Chromium the specs run, from the
+      # cache by Playwright's version and the runner's image, whose system
+      # packages it needs: installing them each time took 19 s a shard, and
+      # 328 s once when Ubuntu's mirror was slow (November 2026). Firefox and
+      # WebKit, nightly only, install with the packages they need.
+      - id: chromium
+        if: matrix.project == 'chromium'
+        run: echo "key=playwright-chromium-$ImageOS-$(node -p 'require("@playwright/test/package.json").version')" >> "$GITHUB_OUTPUT"
+      - id: chromium-cache
+        if: matrix.project == 'chromium'
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ steps.chromium.outputs.key }}
+      - if: matrix.project == 'chromium' && steps.chromium-cache.outputs.cache-hit != 'true'
+        run: vp exec playwright install --only-shell chromium
+      - if: matrix.project != 'chromium'
+        run: vp exec playwright install --with-deps "$PROJECT"
         env:
           PROJECT: ${{ matrix.project }}
       - run: vp run build
