@@ -237,8 +237,8 @@ export const ringCut = async (focused: Locator): Promise<number> =>
 export const tab = (browserName: string): string =>
   browserName === "webkit" ? "Alt+Tab" : "Tab";
 
-/** Waits until the page's fonts have loaded and it has drawn twice, so what is measured stands still. */
-export const settled = async (page: Page): Promise<void> => {
+/** The page's fonts loaded, and two frames drawn. */
+const twoFrames = async (page: Page) => {
   await page.evaluate(async () => {
     await document.fonts.ready;
     // oxlint-disable-next-line promise/avoid-new -- the next frames, which have no promise of their own
@@ -248,6 +248,22 @@ export const settled = async (page: Page): Promise<void> => {
       });
     });
   });
+};
+
+/**
+ * Waits until the page's fonts have loaded, it has drawn twice, and no diagram near the screen is
+ * still being drawn by Mermaid (then twice more), so what is measured stands still.
+ */
+export const settled = async (page: Page): Promise<void> => {
+  await twoFrames(page);
+  await page.waitForFunction(
+    () =>
+      document.querySelector("[data-slot=markdown-diagram][aria-busy=true]") ===
+      null,
+    undefined,
+    { timeout: 30_000 }
+  );
+  await twoFrames(page);
 };
 
 /** One thing drawn: pixels that touch, of another colour than the ground, in CSS pixels. */

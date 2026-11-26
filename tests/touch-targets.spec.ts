@@ -694,13 +694,6 @@ for (const [component, paths] of byComponent) {
       await openExample(page, component, name);
       // oxlint-disable-next-line no-await-in-loop -- one example after the other
       await settled(page);
-      // A diagram's controls are measured once Mermaid has drawn it.
-      // oxlint-disable-next-line no-await-in-loop -- one example after the other
-      await expect(
-        page.locator("[data-slot=markdown-diagram][aria-busy=true]")
-      ).toHaveCount(0, {
-        timeout: 30_000,
-      });
       // oxlint-disable-next-line no-await-in-loop -- one example after the other
       const issues = await page.evaluate(inThePage);
       found.push(...new Set(issues.map((issue) => `${path}: ${issue}`)));
