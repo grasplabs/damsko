@@ -19,7 +19,7 @@ A `CodeBlock` in its `language`, a `CodeBlockHeader` with its `CodeBlockTitle` (
 
 ## A title and highlighted lines
 
-A title in `CodeBlockTitle`, such as a file name, heads it beside the language and names the region. To mark lines, give `CodeBlockContent` its lines as `CodeBlockLine`s: `useHighlightedCode` gives them highlighted, and `variant="highlighted"` washes the lines an answer is about in mint, with a bar.
+A title in `CodeBlockTitle`, such as a file name, heads it beside the language and names the region. To mark lines, give `CodeBlockContent` its lines as `CodeBlockLine`s: `useHighlightedCode` gives them highlighted, and `variant="highlighted"` washes the lines an answer is about in mint, with a bar. A part that draws code its own way, such as Diff viewer's lines, reads it with `useHighlightedTokens(code, language)`: its lines as runs, each with the syntax colour it takes, by the same lexers.
 
 <Stage path="code-block/file" label="A title and highlighted lines" />
 

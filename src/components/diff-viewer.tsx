@@ -10,15 +10,17 @@
 // agent's edit (Accept and Reject per change, the change kept readable once decided) and document
 // suggestions (prose changed in place).
 //
-//   <DiffViewer title="invoice.ts" oldValue={old} newValue={next} />
+//   <DiffViewer title="invoice.ts" language="ts" oldValue={old} newValue={next} />
 //   <DiffViewer mode="split" oldValue={old} newValue={next} />
 //   <DiffViewer mode="inline" oldValue={draft} newValue={edited} />            prose
 //   <DiffViewer oldValue={old} newValue={next} review onDecisionChange={(change, decision) => …} />
 //   <DiffViewerFiles files={[{ path: "src/routes/index.tsx", oldValue, newValue }]} />
 //
-// On its own line diff (diff-viewer-diff.ts). A long diff draws only the lines in view, on UI SDK's
-// virtualiser. No highlighting: plain text, so it reads the same for every language. Line numbers
-// are never selected. Every value is a token; a caller sets layout only (`style`).
+// On jsdiff's diffs (diff-viewer-diff.ts). A long diff draws only the lines in view, on UI SDK's
+// virtualiser. Given a `language`, its lines are coloured as CodeBlock colours code, by the same
+// lexers (CodeBlock's useHighlightedTokens), loaded the first time such a diff is drawn; without one they
+// are plain text. Line numbers are never selected. Every value is a token; a caller sets layout
+// only (`style`).
 "use client";
 // The rows are a grid table of divs, not <table>: a long diff places each row absolutely in its
 // scroller, which table elements cannot do, so the table's roles are written out.
@@ -51,6 +53,7 @@ import {
   fadeIn,
   focusRingInset,
   scrollbarHidden,
+  syntaxStyles,
   visuallyHidden,
 } from "../lib/styles";
 import {
@@ -67,6 +70,8 @@ import type { LayoutStyle } from "../lib/utils";
 import { iconVars, motionVars, ringInsetMarker } from "../lib/vars.stylex";
 import { Badge } from "./badge";
 import { Button } from "./button";
+import { useHighlightedTokens } from "./code-block";
+import type { HighlightedToken as Run } from "./code-block";
 import { Collapsible, CollapsibleTrigger } from "./collapsible";
 import {
   compare,
@@ -105,6 +110,12 @@ export interface DiffViewerProps {
   splitMinWidth?: number;
   /** What changed: a file's name ("invoice.ts") or the document's. It names the diff. */
   title?: string;
+  /**
+   * The code's language, by the names CodeBlock takes (`ts`, `tsx`, `python`, `css`, a file's
+   * extension): its lines are coloured in Damsko's syntax colours, as CodeBlock colours code. Left
+   * out, they are plain text, as prose is.
+   */
+  language?: string;
   /**
    * The line over the diff with its title and the count of lines added and removed. Leave it on
    * unless something beside the diff already says them.
@@ -166,6 +177,11 @@ export interface DiffViewerFile {
   oldValue?: string;
   /** The file as it is now. Left out, the file is deleted. */
   newValue?: string;
+  /**
+   * Its language, by the names CodeBlock takes, for its colours.
+   * @default the path's extension, or the file's name when it has none (`Dockerfile`)
+   */
+  language?: string;
 }
 
 /** Every prop a DiffViewerFiles takes. */
@@ -777,27 +793,77 @@ const indentOf = (text: string) => {
   return columns;
 };
 
-/** A line's words, with the words that changed within it marked. */
-const LineText = ({ line }: { line?: Line }) => {
+/** The runs of a line that fall between `from` and `to`, cut to them. */
+const runsWithin = (runs: readonly Run[], from: number, to: number) => {
+  const within: Run[] = [];
+  let at = 0;
+  for (const run of runs) {
+    const end = at + run.text.length;
+    if (end > from && at < to) {
+      within.push({
+        text: run.text.slice(Math.max(from - at, 0), Math.min(to, end) - at),
+        tone: run.tone,
+      });
+    }
+    at = end;
+  }
+  return within;
+};
+
+/** Runs of text, each in its colour, with their break points; a run with no colour is its text alone. */
+const colouredText = (runs: readonly Run[], at: string): ReactNode[] =>
+  runs.map((run, index) =>
+    run.tone === null ? (
+      breakable(run.text, `${at}r${index}`)
+    ) : (
+      // A run has no id; its place in the line is its key, and runs never reorder.
+      <span key={`${at}r${index}`} {...stylex.props(syntaxStyles[run.tone])}>
+        {breakable(run.text, `${at}r${index}`)}
+      </span>
+    )
+  );
+
+/**
+ * A line's words, in their colours when it has them, with the words that changed within it marked:
+ * a changed piece is one mark, and the colours run on inside it.
+ */
+const LineText = ({ line, runs }: { line?: Line; runs?: readonly Run[] }) => {
   if (line === undefined) {
     return null;
   }
+  // The lexers' line is the line's text, and a carriage return the model left out.
+  const read = runs?.map((run) => run.text).join("");
+  const coloured: readonly Run[] =
+    runs !== undefined && (read === line.text || read === `${line.text}\r`)
+      ? runs
+      : [{ text: line.text, tone: null }];
   if (line.pieces === undefined) {
-    return line.text === "" ? " " : breakable(line.text, "t");
+    return line.text === "" ? " " : colouredText(coloured, "t");
   }
   const look = line.kind === "added" ? styles.wordAdded : styles.wordRemoved;
+  const starts: number[] = [];
+  let from = 0;
+  for (const piece of line.pieces) {
+    starts.push(from);
+    from += piece.text.length;
+  }
   return (
     <>
-      {line.pieces.map((piece, index) =>
-        piece.changed ? (
+      {line.pieces.map((piece, index) => {
+        const start = starts[index] ?? 0;
+        const text = colouredText(
+          runsWithin(coloured, start, start + piece.text.length),
+          `p${index}`
+        );
+        return piece.changed ? (
           // A piece has no id; its place in the line is its key, and pieces never reorder.
           <span key={index} {...stylex.props(look)}>
-            {breakable(piece.text, `p${index}`)}
+            {text}
           </span>
         ) : (
-          breakable(piece.text, `p${index}`)
-        )
-      )}
+          text
+        );
+      })}
     </>
   );
 };
@@ -805,10 +871,12 @@ const LineText = ({ line }: { line?: Line }) => {
 /** The code cell: its line hangs, so a wrapped line goes on under its own start, past the gutter. */
 const Code = ({
   line,
+  runs,
   cell,
   wrap,
 }: {
   line?: Line;
+  runs?: readonly Run[];
   cell: boolean;
   wrap: boolean;
 }) => (
@@ -820,7 +888,7 @@ const Code = ({
       wrap ? styles.hang(indentOf(line?.text ?? "") + 2) : styles.codeWhole
     )}
   >
-    <LineText line={line} />
+    <LineText line={line} runs={runs} />
   </span>
 );
 
@@ -902,6 +970,8 @@ interface Drawing {
   decisions: Readonly<Record<number, DiffViewerDecision>>;
   /** The lines a fold just let out: they fade in. */
   fresh: ReadonlySet<string>;
+  /** A line's runs in their colours; none with no language, and until the lexers have loaded. */
+  runsOf: (line: Line | undefined) => readonly Run[] | undefined;
   onUnfold: (
     row: { key: string; from: number; count: number },
     byKeys: boolean
@@ -1122,7 +1192,7 @@ const LineRow = ({
         words={drawing.words}
         look={pin(`calc(2 * ${drawing.number})`)}
       />
-      <Code line={line} cell wrap={drawing.wrap} />
+      <Code line={line} runs={drawing.runsOf(line)} cell wrap={drawing.wrap} />
     </div>
   );
 };
@@ -1155,7 +1225,12 @@ const Side = ({
       ) : (
         <Mark kind={line.kind} cell={false} words={drawing.words} />
       )}
-      <Code line={line} cell={false} wrap={drawing.wrap} />
+      <Code
+        line={line}
+        runs={drawing.runsOf(line)}
+        cell={false}
+        wrap={drawing.wrap}
+      />
     </span>
   );
 };
@@ -1595,6 +1670,7 @@ interface Settled {
   mode: "unified" | "split" | "inline";
   splitMinWidth: number;
   title: string | undefined;
+  language: string | undefined;
   showHeader: boolean;
   label: string | undefined;
   contextLines: number;
@@ -1698,6 +1774,7 @@ const LineDiff = (props: Settled) => {
     mode,
     splitMinWidth,
     title,
+    language,
     showHeader,
     label,
     contextLines,
@@ -1718,6 +1795,9 @@ const LineDiff = (props: Settled) => {
     newValue
   );
   const { lines, changes } = model;
+  // Each text read once in its colours: a removed line in the text before, the others after.
+  const oldRuns = useHighlightedTokens(oldValue, language);
+  const newRuns = useHighlightedTokens(newValue, language);
   const [body, setBody] = useState<HTMLDivElement | null>(null);
   const setTarget = useFocusAfter(body);
   const name = useId();
@@ -1745,6 +1825,11 @@ const LineDiff = (props: Settled) => {
     decisions: given ?? own,
     // In a long diff a row is drawn again each time it scrolls into view: nothing fades there.
     fresh: virtual ? NO_FRESH : fresh,
+    // A removed line is read in the text before; the others in the text after.
+    runsOf: (line) =>
+      line?.kind === "removed"
+        ? oldRuns?.[(line.oldNo ?? 0) - 1]
+        : newRuns?.[(line?.newNo ?? 0) - 1],
     onUnfold: (row, byKeys) => {
       setOpen((was) => new Map([...was, [row.key, row.count]]));
       // The lines the fold held arrive: they fade in where the fold stood.
@@ -1881,6 +1966,7 @@ const useSettled = (
     oldValue,
     newValue,
     title,
+    language,
     decisions,
     onDecisionChange,
     style,
@@ -1890,6 +1976,7 @@ const useSettled = (
   oldValue,
   newValue,
   title,
+  language,
   decisions,
   onDecisionChange,
   style,
@@ -1946,6 +2033,15 @@ const changeOf = (
 const partsOf = (path: string) => {
   const cut = path.lastIndexOf("/") + 1;
   return { folder: path.slice(0, cut), name: path.slice(cut) };
+};
+
+/** A file's language: its own, else its extension, else its name ("Dockerfile"). */
+const languageOf = (file: DiffViewerFile) => {
+  if (file.language !== undefined) {
+    return file.language;
+  }
+  const { name } = partsOf(file.path);
+  return name.slice(name.lastIndexOf(".") + 1).toLowerCase();
 };
 
 interface FileProps {
@@ -2036,6 +2132,7 @@ const File = ({
               oldValue={oldValue}
               newValue={newValue}
               title={file.path}
+              language={languageOf(file)}
               showHeader={false}
               showHunkHeaders={showHunkHeaders}
               wrap={wrap}

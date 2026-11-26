@@ -518,3 +518,14 @@ export const panelOf = async (trigger: Locator): Promise<Locator> => {
   const id = await trigger.getAttribute("aria-controls");
   return trigger.page().locator(`[id="${id ?? ""}"]`);
 };
+
+/** The colour a token of Damsko's resolves to on the page: the colour a run in it must have. */
+export const tokenColour = async (page: Page, token: string): Promise<string> =>
+  await page.evaluate((name) => {
+    const probe = document.createElement("span");
+    probe.style.color = `var(${name})`;
+    document.body.append(probe);
+    const { color } = getComputedStyle(probe);
+    probe.remove();
+    return color;
+  }, token);

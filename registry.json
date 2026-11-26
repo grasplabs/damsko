@@ -1206,11 +1206,13 @@
       "dependencies": [
         "@stylexjs/stylex",
         "@ui-sdk/core",
-        "@ui-sdk/react"
+        "@ui-sdk/react",
+        "diff"
       ],
       "registryDependencies": [
         "@damsko/badge",
         "@damsko/button",
+        "@damsko/code-block",
         "@damsko/collapsible",
         "@damsko/lib"
       ],

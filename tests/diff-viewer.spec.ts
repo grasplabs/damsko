@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
+import type { Locator } from "@playwright/test";
 
-import { liveRegion, openExample } from "./example.ts";
+import { liveRegion, openExample, tokenColour } from "./example.ts";
 
 test("a unified diff is a table of lines, its columns named", async ({
   page,
@@ -191,3 +192,166 @@ test("at a phone's width the page never scrolls sideways", async ({ page }) => {
     await page.evaluate(() => document.documentElement.scrollWidth)
   ).toBeLessThanOrEqual(390);
 });
+
+/** A diff's runs of code drawn in a colour of their own whose text is `text`. */
+const runOf = (table: Locator, text: RegExp) =>
+  table.locator("[data-diff-code] span:not(:has(span))", { hasText: text });
+
+/** The colour a run is drawn in. */
+const colourOf = async (run: Locator) =>
+  await run.first().evaluate((node) => getComputedStyle(node).color);
+
+for (const theme of ["light", "dark"] as const) {
+  test(`code takes Damsko's syntax colours, inside a changed word's mark too, ${theme}`, async ({
+    page,
+  }) => {
+    await openExample(page, "diff-viewer", "unified", { theme });
+    const table = page.getByRole("table", { name: "invoice.ts" });
+    const keyword = runOf(table, /^export\b/u);
+    const syntaxKeyword = await tokenColour(page, "--damsko-syntax-keyword");
+    await expect.poll(async () => await colourOf(keyword)).toBe(syntaxKeyword);
+    expect(await colourOf(runOf(table, /"Your invoice is due"/u))).toBe(
+      await tokenColour(page, "--damsko-syntax-string")
+    );
+    // ", days = 30" was put into the line: one mark, and its number in its colour inside it.
+    const row = table
+      .getByRole("row")
+      .filter({ hasText: "dueDate(issued: Date, days = 30)" });
+    const number = runOf(row, /^30$/u);
+    expect(await colourOf(number)).toBe(
+      await tokenColour(page, "--damsko-syntax-constant")
+    );
+    expect(
+      await number
+        .first()
+        .evaluate((node) =>
+          node.parentElement === null
+            ? ""
+            : getComputedStyle(node.parentElement).backgroundColor
+        )
+    ).toBe(
+      await page.evaluate(() => {
+        const probe = document.createElement("span");
+        probe.style.backgroundColor = "var(--damsko-diff-viewer-added-word)";
+        document.body.append(probe);
+        const { backgroundColor } = getComputedStyle(probe);
+        probe.remove();
+        return backgroundColor;
+      })
+    );
+  });
+}
+
+test("in forced colours every run of code is drawn in the system's colour", async ({
+  page,
+}) => {
+  await page.emulateMedia({ forcedColors: "active" });
+  await openExample(page, "diff-viewer", "unified");
+  const table = page.getByRole("table", { name: "invoice.ts" });
+  // Coloured: the keyword is a run of its own.
+  await expect(runOf(table, /^export\b/u).first()).toBeAttached();
+  const colours = await table.evaluate(
+    (node) =>
+      new Set(
+        [
+          ...node.querySelectorAll("[data-diff-code], [data-diff-code] span"),
+        ].map((each) => getComputedStyle(each).color)
+      ).size
+  );
+  expect(colours).toBe(1);
+});
+
+test("files are coloured in the language their extension names", async ({
+  page,
+}) => {
+  await openExample(page, "diff-viewer", "basic");
+  const file = page
+    .getByRole("table", { name: "apps/web/src/server/expenses.ts" })
+    .first();
+  await expect
+    .poll(async () => await colourOf(runOf(file, /^export\b/u)))
+    .toBe(await tokenColour(page, "--damsko-syntax-keyword"));
+});
+
+test("a selection across lines copies the code alone: no numbers, marks or words said", async ({
+  page,
+}) => {
+  await openExample(page, "diff-viewer", "unified");
+  const code = (text: string) =>
+    page.getByRole("row").filter({ hasText: text }).locator("[data-diff-code]");
+  const from = await code(
+    "export function dueDate(issued: Date): Date {"
+  ).boundingBox();
+  const to = await code("due.setDate(due.getDate() + days);").boundingBox();
+  if (from === null || to === null) {
+    throw new Error("the rows are not drawn");
+  }
+  await page.mouse.move(from.x + 1, from.y + from.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(to.x + to.width - 2, to.y + to.height / 2, {
+    steps: 5,
+  });
+  await page.mouse.up();
+  expect(await page.evaluate(() => getSelection()?.toString())).toBe(
+    [
+      "export function dueDate(issued: Date): Date {",
+      "export function dueDate(issued: Date, days = 30): Date {",
+      "  const due = new Date(issued);",
+      "  due.setDate(due.getDate() + 30);",
+      "  due.setDate(due.getDate() + days);",
+    ].join("\n")
+  );
+});
+
+test("5,000 lines with 300 changed are compared, drawn and coloured with no long frame", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    window.longTasks = [];
+    new PerformanceObserver((list) => {
+      for (const entry of list.getEntries()) {
+        window.longTasks?.push(entry.duration);
+      }
+    }).observe({ type: "longtask", buffered: true });
+  });
+  await openExample(page, "diff-viewer", "long");
+  const table = page.getByRole("table", { name: "items.ts" });
+  await expect
+    .poll(async () => await colourOf(runOf(table, /^"Item 26 \(refill\)"$/u)))
+    .toBe(await tokenColour(page, "--damsko-syntax-string"));
+  await expect(page.getByText("200 lines added, 100 removed")).toBeAttached();
+  // Measured at 0 long tasks locally (a task over 50 ms); a slow runner gets room.
+  const longest = Math.max(
+    0,
+    ...(await page.evaluate(() => window.longTasks ?? []))
+  );
+  expect(longest).toBeLessThan(250);
+});
+
+test("a diff with no language is plain, and never loads the lexers", async ({
+  page,
+}) => {
+  await openExample(page, "diff-viewer", "states");
+  await page.waitForLoadState("networkidle");
+  const scripts = await page.evaluate(() =>
+    performance
+      .getEntriesByType("resource")
+      .map((entry) => entry.name)
+      .filter((name) => name.endsWith(".js"))
+  );
+  const texts = await Promise.all(
+    scripts.map(async (url) => {
+      const response = await page.request.get(url);
+      return await response.text();
+    })
+  );
+  expect(
+    texts.filter((text) => text.includes("WebAssembly.Module"))
+  ).toHaveLength(0);
+});
+
+declare global {
+  interface Window {
+    longTasks?: number[];
+  }
+}

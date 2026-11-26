@@ -187,6 +187,7 @@ export const versions: Record<string, string> = {
   "@types/react-dom": "19.3.0",
   "@ui-sdk/core": "0.1.0-beta.13",
   "@ui-sdk/react": "0.1.0-beta.13",
+  diff: "9.0.0",
   katex: "0.18.10",
   "mdast-util-from-markdown": "2.0.3",
   "mdast-util-gfm": "3.1.0",

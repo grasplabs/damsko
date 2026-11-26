@@ -178,6 +178,27 @@ test("CodeBlock's code is coloured under the product's policy: 'wasm-unsafe-eval
   expect(await page.evaluate(() => window.refused ?? [])).toStrictEqual([]);
 });
 
+test("DiffViewer's code is coloured under the product's policy, by CodeBlock's lexers", async ({
+  page,
+}) => {
+  await underPolicy(page);
+  await openExample(page, "diff-viewer", "unified");
+  await expect
+    .poll(
+      async () =>
+        await page.evaluate(() =>
+          [...document.querySelectorAll("[data-diff-code] span")].some(
+            (run) =>
+              run.closest("[data-diff-code]") !== null &&
+              getComputedStyle(run).color !==
+                getComputedStyle(run.closest("[data-diff-code]") ?? run).color
+          )
+        )
+    )
+    .toBe(true);
+  expect(await page.evaluate(() => window.refused ?? [])).toStrictEqual([]);
+});
+
 test("where a policy refuses WebAssembly, every block is plain and whole, refused once, and CodeBlock says nothing", async ({
   page,
 }) => {
