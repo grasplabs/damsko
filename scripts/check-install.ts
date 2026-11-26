@@ -427,7 +427,6 @@ const workspaceAt = async (
   );
   const settings = new Set([
     "minimumReleaseAge",
-    "minimumReleaseAgeExclude",
     "blockExoticSubdeps",
     "strictDepBuilds",
     "allowBuilds",
