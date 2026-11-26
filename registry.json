@@ -2080,6 +2080,11 @@
           "target": "~/src/components/markdown/diagram-safe.ts"
         },
         {
+          "path": "src/components/markdown/diagram-theme.ts",
+          "type": "registry:file",
+          "target": "~/src/components/markdown/diagram-theme.ts"
+        },
+        {
           "path": "src/components/markdown/diagram.tsx",
           "type": "registry:file",
           "target": "~/src/components/markdown/diagram.tsx"
