@@ -75,13 +75,13 @@ Without `lineNumbers`, for a line to copy and run.
 
 ## Any code
 
-The code is coloured on the page by [@pierre/highlights](https://www.npmjs.com/package/@pierre/highlights): lexers written by hand and compiled to WebAssembly, with no regular expressions, so reading a line takes time that grows with the line and nothing else. 3,000 lines of TypeScript take about a millisecond, and text that held regular-expression highlighters for seconds (a string of 50,000 characters that never ends, thousands of nested template strings) takes a few. The lexers, one module of 161 KB compressed with every language, load the first time a block is drawn, never with the page; until then, and before the page's script runs, the code is plain. Drawing the colours is what takes time now, as each coloured run is an element: a line of 250 characters or more (minified code, generated data) is drawn as its text, and a block whose lines would be more than 5,000 coloured runs, some 1,500 lines of ordinary code, is drawn plain, all of it. So the 18 lines a folded block shows are always coloured, whatever they hold, and opened with Show more it is weighed again. While it is written, each line is coloured once its newline comes, read only once; the line still being written is plain until then, and a line already coloured is never drawn again.
+The code is coloured on the page by [@pierre/highlights](https://www.npmjs.com/package/@pierre/highlights): lexers written by hand and compiled to WebAssembly, with no regular expressions, so reading a line takes time that grows with the line and nothing else. 3,000 lines of TypeScript take about a millisecond, and text that held regular-expression highlighters for seconds (a string of 50,000 characters that never ends, thousands of nested template strings) takes a few. Nothing of them loads with the page: the package's core (22 KB gzipped, with its emitter) and a language's lexer (2 to 11 KB) load the first time a block in that language is drawn, and each other lexer the first time a block in its language is; until then, and before the page's script runs, the code is plain. A lexer that does not load leaves its language plain. Drawing the colours is what takes time now, as each coloured run is an element: a line of 250 characters or more (minified code, generated data) is drawn as its text, and a block whose lines would be more than 5,000 coloured runs, some 1,500 lines of ordinary code, is drawn plain, all of it. So the 18 lines a folded block shows are always coloured, whatever they hold, and opened with Show more it is weighed again. While it is written, each line is coloured once its newline comes; the line still being written is plain until then, and a line already coloured is never drawn again.
 
 <Stage path="code-block/any" label="Any code" />
 
 ## Content Security Policy
 
-The lexers are WebAssembly, compiled from a script of their own that the app's build writes beside its other scripts, with the module inside it: nothing more is fetched and no worker is started. A policy that names `script-src` (or a `default-src` it falls back to) adds `'wasm-unsafe-eval'`, which allows WebAssembly and nothing else; `worker-src` needs nothing (Get started, Allow CodeBlock's WebAssembly):
+The lexers are WebAssembly, compiled from scripts of their own that the app's build writes beside its other scripts (the core, and one for each language), each module inside its script: nothing else is fetched and no worker is started. A policy that names `script-src` (or a `default-src` it falls back to) adds `'wasm-unsafe-eval'`, which allows WebAssembly and nothing else; `worker-src` needs nothing (Get started, Allow CodeBlock's WebAssembly):
 
 ```text
 Content-Security-Policy: script-src 'self' 'wasm-unsafe-eval'
@@ -253,7 +253,7 @@ The copy button under a pointer and with keyboard focus are forced from its own 
       group: "Highlighting",
       key: "Languages",
       value:
-        "TSX, TypeScript, JavaScript, JSON, Bash, Python, CSS, HTML, XML, Markdown, YAML, SQL, Diff, Go, Rust, Java, C, C++, C#, PHP, Ruby, Kotlin, Swift, TOML, Dockerfile, and any other of the 150 the lexers know (`zig`, `lua`, `scss`); others as text.",
+        "TSX, TypeScript, JavaScript, JSON, Bash, Python, CSS, HTML, XML, Markdown, YAML, SQL, Diff, Go, Rust, Java, C, C++, C#, PHP, Ruby, Kotlin, Swift, TOML, Dockerfile, each by its own lexer; others as text.",
     },
     {
       group: "Copy",
