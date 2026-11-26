@@ -648,6 +648,51 @@ test("diagrams: under forced colours, drawn in the system's colours, its words r
   expect(drawn.fill).toBe(system.ground);
 });
 
+for (const chunk of ["mermaid.core", "flowDiagram-"]) {
+  test(`diagrams: drawn when a chunk of Mermaid's (${chunk}) fails to load once, as a dropped request does`, async ({
+    page,
+  }) => {
+    let dropped = 0;
+    await page.route(
+      (url) => url.pathname.includes(`/${chunk}`),
+      async (route) => {
+        if (dropped === 0) {
+          dropped += 1;
+          await route.abort("failed");
+          return;
+        }
+        await route.continue();
+      }
+    );
+    await openExample(page, "markdown", "diagram");
+    const diagrams = page.locator("[data-slot=markdown-diagram]");
+    // It is asked for again, and drawn; the one Mermaid cannot read says so.
+    await expect(diagrams.first()).toHaveAttribute("data-diagram", "drawn", {
+      timeout: 15_000,
+    });
+    await expect(diagrams.last()).toHaveAttribute(
+      "data-diagram",
+      "failed:syntax"
+    );
+    expect(dropped).toBe(1);
+  });
+}
+
+test("diagrams: each one the source check refuses says it was skipped, not that it failed", async ({
+  page,
+}) => {
+  await openExample(page, "markdown", "diagram-hostile");
+  const diagrams = page.locator("[data-slot=markdown-diagram]");
+  for (const diagram of await diagrams.all()) {
+    // oxlint-disable-next-line no-await-in-loop -- one after the other, down the answer
+    await diagram.scrollIntoViewIfNeeded();
+  }
+  await expect(
+    page.locator("[data-slot=markdown-diagram][data-diagram='skipped:source']")
+  ).toHaveCount(16);
+  await expect(diagrams.last()).toHaveAttribute("data-diagram", "drawn");
+});
+
 test("diagrams: drawn by Mermaid once loaded, only for a diagram; Download as SVG, PNG or MMD, full screen and zoom; one Mermaid cannot read stays code", async ({
   page,
 }) => {
@@ -800,6 +845,18 @@ test("maths: a formula past 4,000 characters stays its TeX, and a huge rule stay
     window: window.innerWidth,
   }));
   expect(width.page).toBeLessThanOrEqual(width.window);
+});
+
+test("maths: a formula written past 4,000 characters loses its drawing and is its TeX", async ({
+  page,
+}) => {
+  await openExample(page, "markdown", "math-growing");
+  const formula = page.locator("[data-slot=markdown-math]");
+  // Drawn while it is under the cap.
+  await expect(formula.locator("math")).toHaveCount(1);
+  await expect(page.locator("[data-done]")).toHaveCount(1, { timeout: 15_000 });
+  await expect(formula.locator("math")).toHaveCount(0);
+  await expect(formula.locator("code")).toHaveText(/^(?:x\+){2040}x$/u);
 });
 
 test("maths: a formula in a sentence and on lines of its own, drawn as MathML by KaTeX, loaded only for maths, a dollar alone a dollar", async ({
