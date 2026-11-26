@@ -9,6 +9,12 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, test } from "vitest";
 
 import { Markdown } from "../src/components/markdown/index.ts";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableRow,
+} from "../src/components/table.tsx";
 import { isRecord, readJson } from "./json.ts";
 import { rolesOf } from "./markdown-roles.ts";
 
@@ -46,10 +52,18 @@ const entries = (
     : []
 );
 
-// The classes a cell takes for each side, read from a table Markdown draws.
+// The classes a cell takes for each side, read from Table's cells, which differ by their side alone.
 const sides = (() => {
   const html = renderToStaticMarkup(
-    <Markdown>{"| a | b | c |\n| :- | :-: | -: |\n| 1 | 2 | 3 |"}</Markdown>
+    <Table aria-label="Sides">
+      <TableBody>
+        <TableRow>
+          <TableCell>a</TableCell>
+          <TableCell align="center">b</TableCell>
+          <TableCell align="end">c</TableCell>
+        </TableRow>
+      </TableBody>
+    </Table>
   );
   const cells = [...html.matchAll(/<td[^>]*class="(?<classes>[^"]*)"/gu)].map(
     (found) => new Set((found.groups?.classes ?? "").split(" "))
@@ -79,6 +93,13 @@ const alignOf = (cell: Element) => {
 const unlinked = (line: string) =>
   line.replaceAll(/\[(?<words>[^\]]*)\]\([^)]*\)/gu, "$<words>");
 const deliberate: [string, (streamdown: string, ours: string) => boolean][] = [
+  // GitHub's alerts (`> [!NOTE]` and its four kin) are drawn as alerts, as GitHub draws them,
+  // where Streamdown draws the quote with its mark as words.
+  [
+    "GitHub's alerts drawn as alerts",
+    (streamdown) =>
+      /^\s*p \[!(?:note|tip|important|warning|caution)\]/imu.test(streamdown),
+  ],
   // Raw HTML is never set as HTML (only `<details>` with its summary is read): a tag ours shows
   // that Streamdown does not.
   [
@@ -223,6 +244,7 @@ describe("drawn as Streamdown draws it", () => {
       }
     }
     expect(kinds).toStrictEqual({
+      "GitHub's alerts drawn as alerts": 5,
       "a line's start waits": 7,
       "a diagram's code until Mermaid draws it": 3,
       "a mark in a link": 3,

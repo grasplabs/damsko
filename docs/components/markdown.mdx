@@ -17,13 +17,17 @@ Headings, lists, a table (Table, scrolling sideways in its own box), code in a s
 
 ## While it is written
 
-`streaming`: what is drawn and when follows Streamdown, our parts and safety rules drawing it. The block still being written is drawn as what it will be (remend makes it whole): bold is bold from its first letter, code is code, a link still being written is its words and a picture nothing yet. A table comes with its row of dashes, then each row as it is written; an open fence is code in a CodeBlock that says it is being written. A bare address is its words until the space after it, and only a whole address is handed to the host; while a link of Markdown's own is still being written, the room its arrow will take is kept, so nothing after it moves when it is whole. A task's box waits for the words after it, and a section that folds is one from its whole summary line. A reference to a link and a note's mark are as written until their definition has come (for a link, once the block that holds it is finished, so its address can no longer change), then the link or the note's number. Each new word comes whole and fades in once (each character in Chinese, Japanese and Korean), never typing itself out: the word at the very end, in prose, a cell or code, waits for the space after it, or for a quarter second once nothing more comes, and a run of more than 32 characters (an address, minified code) comes 32 at a time, past 256 as it comes. With reduced motion nothing fades and nothing waits: the words show as they arrive. A link's words do not fade, as they move into the link when it is whole; a mark of emphasis or code at the very end waits for its words, and a closing fence for its last mark; pacing the words is the message's job. A finished block is read once and drawn once, so a long answer costs no more to draw at its end than at its start. A screen reader hears each block once it is finished, never each word; `live="off"` keeps it silent, for words beside the answer that another part already says (Reasoning's thoughts).
+`streaming`: what is drawn and when follows Streamdown, our parts and safety rules drawing it. The block still being written is drawn as what it will be (remend makes it whole): bold is bold from its first letter, code is code, a link still being written is its words and a picture nothing yet. A table comes with its row of dashes, then each row as it is written; an open fence is code in a CodeBlock that says it is being written. A bare address is its words until the space after it, and only a whole address is handed to the host; while a link of Markdown's own is still being written, the room its arrow will take is kept, so nothing after it moves when it is whole. A task's box waits for the words after it, and a section that folds is one from its whole summary line. A reference to a link and a note's mark are as written until their definition has come (for a link, once the block that holds it is finished, so its address can no longer change), then the link or the note's number. Each new word comes whole and fades in once (each character in Chinese, Japanese and Korean), never typing itself out: the word at the very end, in prose, a cell or code, waits for the space after it, or for a quarter second once nothing more comes, and a run of more than 32 characters (an address, minified code) comes 32 at a time, past 256 as it comes. With reduced motion nothing fades and nothing waits: the words show as they arrive. A link's words do not fade, as they move into the link when it is whole; a mark of emphasis or code at the very end waits for its words, and a closing fence for its last mark; pacing the words is the message's job. A finished block is read once and drawn once, so a long answer costs no more to draw at its end than at its start. A screen reader hears each block once it is finished, never each word: the blocks already finished when it is first drawn are said then, once, and an answer first drawn whole (opened from history) is not said at all; `live="off"` keeps it silent, for words beside the answer that another part already says (Reasoning's thoughts).
 
 <Stage path="markdown/streaming" label="While it is written" />
 
 <Stage path="markdown/half-written" label="Caught part way" />
 
 ## Tables
+
+A cell's words wrap as a sentence's do, its column's name too (as GitHub draws them), so a table fits the answer's column, on a phone as well; a column the Markdown sets to the right (`--:`, figures) stays on one line, and code in a cell may break. Each column keeps room for a short word, so a table that cannot fit (many columns, a long address) scrolls sideways in its own box: the edge with more beyond it fades, and the box is a region named by the table that Tab reaches and the arrow keys move. While the answer is written its columns share the width evenly, each at least a few words wide, so no row that comes moves the ones above it.
+
+<Stage path="markdown/tables" label="Tables" />
 
 A table has Copy and Download over it, as Streamdown's tables have: Copy takes its cells' words as Markdown, CSV or TSV, Download saves them as `table.csv` or `table.md`. A cell that starts like a formula (`=`, `+`, `-`, `@`) is kept as words in CSV and TSV, as DataTable's export keeps it, by an apostrophe before it; a figure such as `-12` or `+3.5%` is left as it is. Both wait while the answer is written, and a caller's own `table` draws neither.
 
@@ -74,6 +78,18 @@ Task lists are Checkbox's box, read only, each said as done or not done; a rule 
 A note's mark (`[^1]`) is a number up high, numbered by where it first stands, leading to its note in a list at the foot; each note leads back to each of its marks (`↩`, `↩²`). A mark whose note is never written is shown as written, and a note no mark refers to is not drawn.
 
 <Stage path="markdown/footnotes" label="Footnotes" />
+
+## Alerts
+
+A quote whose first line is only one of GitHub's marks, `[!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!WARNING]` or `[!CAUTION]` (in any case), is an Alert of that meaning (info, success, the plain one, warning, destructive), titled from the I18nProvider (`markdown.alerts`), with the rest of the quote as its words. It is part of the answer, never said again as it appears. As GitHub reads one, any other mark, words on the mark's line or a mark with nothing after it leave a quote; unlike GitHub, an alert in a list or in another quote is one too. While written, the mark alone already draws the alert, so `[!NOTE]` never shows.
+
+<Stage path="markdown/alerts" label="Alerts" />
+
+## Right to left
+
+Each paragraph, heading, list item, quote and table cell takes the direction of its own words (`dir="auto"`, as GitHub sets it): one in Arabic or Hebrew runs right to left, a list item's marker and a quote's bar on its right, beside blocks in English that run left to right. A quote's paragraphs take the quote's direction. Code, in a sentence or fenced, and formulas always run left to right.
+
+<Stage path="markdown/right-to-left" label="Right to left" />
 
 ## Sections that fold
 
@@ -167,7 +183,7 @@ Markdown knows no router and no citation. `renderLink` draws every link and pict
 
 ## Your own elements
 
-`components` draws elements in Markdown's place, keyed by HTML element name (the keys react-markdown and Streamdown take, so a map written for them carries over): `a`, `blockquote`, `code`, `del`, `em`, `h1` to `h6`, `hr`, `img`, `li`, `ol`, `p`, `pre`, `strong`, `table`, `thead`, `tbody`, `tr`, `th`, `td` and `ul`. Each is given the element's own props and the syntax tree's `node`. The safe defaults hold: `a` gets only an address Markdown would lead to, whole, and `img` only a picture at an http or https address, whole: giving it chooses to load pictures. `code` draws code in a sentence and fenced code (`node.type` is `code`, `className` is `language-…`) in CodeBlock's place, so a fence can be a diagram or maths of the product's own. Task boxes, notes and sections stay Markdown's own. Here a link names its site and fenced code has no line numbers.
+`components` draws elements in Markdown's place, keyed by HTML element name (the keys react-markdown and Streamdown take, so a map written for them carries over): `a`, `blockquote`, `code`, `del`, `em`, `h1` to `h6`, `hr`, `img`, `li`, `ol`, `p`, `pre`, `strong`, `table`, `thead`, `tbody`, `tr`, `th`, `td` and `ul`. Each is given the element's own props (`dir="auto"` on a paragraph, heading, list item, quote and cell) and the syntax tree's `node`. The safe defaults hold: `a` gets only an address Markdown would lead to, whole, and `img` only a picture at an http or https address, whole: giving it chooses to load pictures. `code` draws code in a sentence and fenced code (`node.type` is `code`, `className` is `language-…`) in CodeBlock's place, so a fence can be a diagram or maths of the product's own. Task boxes, notes and sections stay Markdown's own. Here a link names its site and fenced code has no line numbers.
 
 **`node` is internal.** It is the parser's syntax tree node (mdast), given so a part can tell what it draws, as `node.type` and a fence's `node.value` do here. Its shape is the parser's and changes when the parser does, and it holds the answer as written: its `url` and its raw HTML are unchecked. Draw a link or a picture from the checked `href` and `src`, never from `node.url`.
 
@@ -214,7 +230,7 @@ The parse is micromark's (with GitHub's additions), so the tests hold what is Ma
       group: "Read and drawn",
       key: "Streamdown 2.8.1",
       value:
-        "What it draws, by role (headings, lists, tasks, tables and their cells' alignment, code, marks, links, notes, sections), for 95 answers at a sample of their prefixes while written and whole, and for every spec example: ours the same, but in the ways it deliberately differs (raw HTML is text, a picture is never loaded, an address only as safeHref allows and never half, a raw mark waits for its words, a row has no empty cells added, one tilde is a tilde), each counted",
+        "What it draws, by role (headings, lists, tasks, tables and their cells' alignment, code, marks, links, notes, sections), for 98 answers at a sample of their prefixes while written and whole, and for every spec example: ours the same, but in the ways it deliberately differs (GitHub's alerts are alerts, raw HTML is text, a picture is never loaded, an address only as safeHref allows and never half, a raw mark waits for its words, a row has no empty cells added, one tilde is a tilde), each counted",
     },
     {
       group: "Untrusted text",
@@ -285,7 +301,8 @@ The parse is micromark's (with GitHub's additions), so the tests hold what is Ma
     {
       group: "Blocks",
       key: "Tables",
-      value: "Table, scrolling sideways in its own box with no bar",
+      value:
+        "Table, its words wrapping, each column at least a short word wide; wider, scrolling sideways in its own box with no bar",
     },
     { group: "Blocks", key: "Fenced code", value: "CodeBlock" },
     { group: "Blocks", key: "Tasks", value: "Checkbox's box, read only" },
@@ -294,6 +311,11 @@ The parse is micromark's (with GitHub's additions), so the tests hold what is Ma
       key: "Quote",
       value: "A 2px line at its start, in muted words",
       tokens: ["border", "muted"],
+    },
+    {
+      group: "Blocks",
+      key: "Alert",
+      value: "An Alert of the mark's meaning, titled by its kind",
     },
     {
       group: "Blocks",

@@ -27,6 +27,7 @@ import type {
 
 import { useCopy } from "../../hooks/use-copy";
 import { useI18n } from "../../lib/i18n";
+import type { I18nCatalog } from "../../lib/i18n";
 import {
   CheckIcon,
   ChevronRightIcon,
@@ -59,6 +60,8 @@ import {
 } from "../../lib/utils";
 import type { LayoutStyle } from "../../lib/utils";
 import { iconVars, motionVars } from "../../lib/vars.stylex";
+import { Alert, AlertDescription, AlertTitle } from "../alert";
+import type { AlertVariant } from "../alert";
 import { Button } from "../button";
 import * as Code from "../code-block";
 import {
@@ -119,7 +122,8 @@ type MarkdownElement = `h${1 | 2 | 3 | 4 | 5 | 6}` | Blocks | Cells | Phrases;
  * Elements drawn in Markdown's place, keyed by HTML element name (a map written for react-markdown
  * or Streamdown carries over): each is given the element's own props (its `children`; `href` and
  * `title` for `a`, `src`, `alt` and `title` for `img`, `className` `language-…` for fenced code,
- * `start` for `ol`, `align` for a cell) and the syntax tree's `node` it draws, which is internal.
+ * `start` for `ol`, `align` for a cell, `dir` `auto` for a paragraph, heading, item, quote or cell)
+ * and the syntax tree's `node` it draws, which is internal.
  */
 export type MarkdownComponents = {
   [Tag in MarkdownElement]?: ComponentType<
@@ -234,6 +238,8 @@ const styles = stylex.create({
     fontFamily: font.mono,
     fontSize: font.textSm,
     color: colors.foreground,
+    // In a cell too, where a table keeps whole words: code may break, so its column still fits.
+    overflowWrap: "anywhere",
   },
   xsCode: { fontSize: `calc(${size.messageText} * 0.92)` },
   // A formula in a sentence, and one on lines of its own, wider than the column scrolling sideways.
@@ -264,10 +270,13 @@ const styles = stylex.create({
     flexDirection: "column",
     gap: space["1"],
     margin: 0,
-    paddingInlineStart: space["6"],
+    padding: 0,
   },
   ordered: { listStyleType: "decimal" },
   unordered: { listStyleType: "disc" },
+  // An item's room for its marker, on its own start side: an item in Arabic or Hebrew has its
+  // marker on the right, whatever the items round it run.
+  indent: { marginInlineStart: space["6"] },
   item: {
     paddingInlineStart: space["1"],
     "::marker": { color: colors.mutedForeground },
@@ -276,7 +285,7 @@ const styles = stylex.create({
   // A task: Checkbox's box, read only, before the words.
   task: {
     listStyleType: "none",
-    marginInlineStart: `calc(-1 * ${space["6"]})`,
+    marginInlineStart: 0,
     display: "flex",
     alignItems: "flex-start",
     gap: space["2"],
@@ -296,6 +305,8 @@ const styles = stylex.create({
     cornerShape: radius.shape,
     color: colors.primaryForeground,
   },
+  // An alert's blocks, a quote's gap apart.
+  alertBody: { display: "flex", flexDirection: "column", gap: space["2"] },
   quote: {
     display: "flex",
     flexDirection: "column",
@@ -314,13 +325,20 @@ const styles = stylex.create({
     display: "inline-block",
     width: `calc(${size.linkMarkGap} + ${size.linkMark} + ${space["1"]} / 4)`,
   },
-  footnoteMark: { fontSize: font.textXs, verticalAlign: "super" },
+  // Up high within its line, never above it: a reset's `position: relative` and `top` (Tailwind's,
+  // base.css) would raise it again, out of the line and, on an answer's first line, out of its box.
+  footnoteMark: {
+    position: "static",
+    fontSize: font.textXs,
+    lineHeight: 0,
+    verticalAlign: "super",
+  },
   footnotes: {
     display: "flex",
     flexDirection: "column",
     gap: space["1"],
     margin: 0,
-    paddingInlineStart: space["6"],
+    padding: 0,
     fontSize: font.textSm,
     lineHeight: font.textSmLine,
     color: colors.mutedForeground,
@@ -444,9 +462,16 @@ interface Shared {
   codeMaxLines: number | false;
   inLink?: boolean;
   phrase?: boolean;
+  quoted?: boolean;
   notes?: boolean;
 }
 const PHRASE = { phrase: true };
+// A quote takes the direction of its words, and its paragraphs, headings and items the quote's: one
+// of their own would hide their words from the quote's `dir="auto"`, which skips an element that
+// sets its own.
+const QUOTED = { quoted: true };
+/** A block's direction: its own words', but in a quote the quote's. */
+const dirOf = (shared: Shared) => (shared.quoted === true ? undefined : "auto");
 type Kids = (nodes: readonly Node[], within?: Partial<Shared>) => ReactNode;
 interface Part<T> {
   node: T;
@@ -700,7 +725,12 @@ const Note = ({
     </>
   );
   return (
-    <li value={number} id={`${prefix}-fn-${number}`}>
+    <li
+      value={number}
+      id={`${prefix}-fn-${number}`}
+      dir="auto"
+      {...stylex.props(styles.indent)}
+    >
       {body(node.children, kids, back === false ? undefined : back)}
     </li>
   );
@@ -838,8 +868,20 @@ const TableBlock = ({ node, shared, kids, name }: Part<Of<"table">>) => {
     const Cell = tag === "th" ? Tables.TableHead : Tables.TableCell;
     const drawn = cells?.children.slice(0, align.length).map((cell, at) => {
       const children = kids(cell.children, PHRASE);
-      const props = { align: node.align?.[at] ?? undefined, children };
-      const own = <Cell align={align[at]}>{children}</Cell>;
+      const side = align[at] ?? "start";
+      const props = {
+        align: node.align?.[at] ?? undefined,
+        dir: "auto",
+        children,
+      };
+      // Its words wrap as a sentence's do, its name too (as GitHub's), so the table fits its column
+      // and scrolls sideways only when they cannot: a column of figures the Markdown sets to the
+      // right stays on one line.
+      const own = (
+        <Cell align={side} dir="auto" wrap={side !== "end"}>
+          {children}
+        </Cell>
+      );
       return (
         <Fragment key={at}>{part(shared, tag, cell, props, [], own)}</Fragment>
       );
@@ -1136,6 +1178,74 @@ const SectionBlock = ({ node, shared, kids }: Part<parse.Section>) => {
   );
 };
 
+// GitHub's alerts, each as the Alert of its meaning. A quote is one when its first line is only the
+// mark, in any case, and more follows it, as GitHub reads one; any other mark leaves it a quote.
+// While written, a quote of the mark alone is already the alert, so the mark never shows.
+type AlertKind = keyof I18nCatalog["markdown"]["alerts"];
+const ALERTS: Readonly<Record<AlertKind, AlertVariant>> = {
+  note: "info",
+  tip: "success",
+  important: "default",
+  warning: "warning",
+  caution: "destructive",
+};
+const ALERT = /^\[!(?<kind>[a-z]+)\][ \t]*(?:\n|$)/iu;
+const KINDS = Object.keys(ALERTS);
+/** A quote's first paragraph less the mark's line `cut` long, and a hard break after it. */
+const afterMark = (first: Of<"paragraph">, cut: number): Node[] => {
+  const [lead, ...phrases] = first.children;
+  const words = lead?.type === "text" ? lead.value.slice(cut) : "";
+  const at = lead?.position?.start;
+  const shifted = at && { ...at, offset: (at.offset ?? 0) + cut };
+  const kept: Phrase[] =
+    lead === undefined || words === ""
+      ? phrases.slice(phrases[0]?.type === "break" ? 1 : 0)
+      : [
+          {
+            type: "text",
+            value: words,
+            ...(shifted &&
+              lead.position && {
+                position: { ...lead.position, start: shifted },
+              }),
+          },
+          ...phrases,
+        ];
+  return kept.length > 0 ? [{ ...first, children: kept }] : [];
+};
+/** The alert a quote is (its kind and its blocks after the mark), or null for a quote. */
+const alertOf = (node: Of<"blockquote">, streaming: boolean) => {
+  const [first, ...blocks] = node.children;
+  const lead = first?.type === "paragraph" ? first.children[0] : undefined;
+  const found = lead?.type === "text" ? ALERT.exec(lead.value) : null;
+  const kind = KINDS.find(
+    (each): each is AlertKind => each === found?.groups?.kind?.toLowerCase()
+  );
+  if (first?.type !== "paragraph" || found === null || kind === undefined) {
+    return null;
+  }
+  const said = [...afterMark(first, found[0].length), ...blocks];
+  return said.length > 0 || streaming ? { kind, blocks: said } : null;
+};
+/** An alert in the answer: its kind's Alert, titled by its kind, part of the answer (not said again). */
+const AlertBlock = ({
+  kind,
+  children,
+}: {
+  kind: AlertKind;
+  children: ReactNode;
+}) => {
+  const words = useI18n().markdown.alerts;
+  return (
+    <Alert variant={ALERTS[kind]} live="off">
+      <AlertTitle>{words[kind]}</AlertTitle>
+      <AlertDescription>
+        <div {...stylex.props(styles.alertBody)}>{children}</div>
+      </AlertDescription>
+    </Alert>
+  );
+};
+
 const headings = ["h1", "h2", "h3", "h4", "h5", "h6"] as const;
 const headingLooks: Partial<
   Record<Shared["size"], readonly stylex.StyleXStyles[]>
@@ -1182,10 +1292,13 @@ const draw: { [T in Node["type"]]?: Draw<T> } = {
       <p {...stylex.props(styles.paragraph, styles.raw)}>{node.value}</p>
     ),
   paragraph: (node, shared, kids) =>
-    part(shared, "p", node, { children: kids(node.children, PHRASE) }, [
-      styles.paragraph,
-      shared.greedy && styles.greedy,
-    ]),
+    part(
+      shared,
+      "p",
+      node,
+      { dir: dirOf(shared), children: kids(node.children, PHRASE) },
+      [styles.paragraph, shared.greedy && styles.greedy]
+    ),
   heading: (node, shared, kids) => {
     // From the caller's level on; the look is a step up for the first two depths.
     const { depth } = node;
@@ -1193,7 +1306,8 @@ const draw: { [T in Node["type"]]?: Draw<T> } = {
       headings[Math.min(shared.headingLevel - 1 + depth, 6) - 1] ?? "h6";
     const looks = headingLooks[shared.size] ?? [styles.major, styles.minor];
     const look = looks[depth <= 2 ? 0 : 1];
-    return part(shared, tag, node, { children: kids(node.children, PHRASE) }, [
+    const children = kids(node.children, PHRASE);
+    return part(shared, tag, node, { dir: dirOf(shared), children }, [
       styles.heading,
       look,
       shared.greedy && styles.greedy,
@@ -1217,15 +1331,26 @@ const draw: { [T in Node["type"]]?: Draw<T> } = {
         {body(node.children, kids)}
       </>
     );
-    return part(shared, "li", node, { children }, [
+    return part(shared, "li", node, { dir: dirOf(shared), children }, [
+      styles.indent,
       styles.item,
       task && styles.task,
     ]);
   },
-  blockquote: (node, shared, kids) =>
-    part(shared, "blockquote", node, { children: kids(node.children) }, [
-      styles.quote,
-    ]),
+  blockquote: (node, shared, kids) => {
+    const alert = alertOf(node, shared.streaming);
+    return alert === null ? (
+      part(
+        shared,
+        "blockquote",
+        node,
+        { dir: "auto", children: kids(node.children, QUOTED) },
+        [styles.quote]
+      )
+    ) : (
+      <AlertBlock kind={alert.kind}>{kids(alert.blocks)}</AlertBlock>
+    );
+  },
   thematicBreak: (node, shared) =>
     part(shared, "hr", node, {}, [], <Separator />),
   code: (node, shared) => {
@@ -1360,9 +1485,29 @@ const notesIn = (text: string) =>
       ? [(groups.label ?? "").replaceAll(/\s+/gu, " ").trim().toLowerCase()]
       : []
   );
+/** What a finished block says: a table its name, a section its summary, an alert its title and words. */
+const saidOf = (
+  node: Node,
+  name: string | undefined,
+  words: I18nCatalog["markdown"]
+) => {
+  if (node.type === "table") {
+    return name ?? words.table;
+  }
+  if (node.type === "section") {
+    return node.summary;
+  }
+  const alert = node.type === "blockquote" ? alertOf(node, false) : null;
+  if (alert !== null) {
+    const text = alert.blocks.map((block) => textOf(block)).join(" ");
+    return `${words.alerts[alert.kind]}: ${text}`;
+  }
+  return FOUND.test(node.type) || node.type === "code" ? "" : textOf(node);
+};
 /**
- * While written, what a block says once it is finished: never each word, nor code (CodeBlock says
- * it is being written); a table says its name, a section its summary.
+ * While written, what each block says once it is finished (saidOf): never each word, nor code
+ * (CodeBlock says it is being written). The blocks already finished when it is first drawn while
+ * written are said then, once; an answer first drawn whole (opened from history) is not said.
  */
 const useSaid = (
   blocks: readonly Node[],
@@ -1374,30 +1519,20 @@ const useSaid = (
   const told = useRef<number | null>(null);
   const finished = streaming ? Math.max(blocks.length - 1, 0) : blocks.length;
   useEffect(() => {
-    const from = told.current;
+    const from = told.current ?? (streaming ? 0 : finished);
     told.current = finished;
-    if (!live || from === null || finished <= from) {
+    if (!live || finished <= from) {
       return;
     }
     const said = blocks
       .slice(from, finished)
-      .map((node, at) => {
-        if (node.type === "table") {
-          return names[from + at] ?? words.table;
-        }
-        if (node.type === "section") {
-          return node.summary;
-        }
-        return FOUND.test(node.type) || node.type === "code"
-          ? ""
-          : textOf(node).trim();
-      })
+      .map((node, at) => saidOf(node, names[from + at], words).trim())
       .filter((text) => text !== "")
       .join(" ");
     if (said !== "") {
       announce(said);
     }
-  }, [blocks, finished, live, names, words.table]);
+  }, [blocks, finished, live, names, streaming, words]);
 };
 // While written, a table's head waits for its row of dashes. A last
 // line that is only the start of a block's mark waits for the characters that decide it: a list's

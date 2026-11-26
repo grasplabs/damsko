@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 
 import { expect, test } from "@playwright/test";
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 
 import { listenToLiveRegions, openExample, settled } from "./example.ts";
 
@@ -163,6 +163,178 @@ test.describe("a table's controls", () => {
     await page.getByRole("menuitem", { name: "TSV" }).click();
     await expect.poll(said).toContain("Copied");
   });
+});
+
+/** Whether a table's box scrolls sideways, and the cells whose words run past their edge. */
+const fitOf = async (table: Locator) =>
+  await table.evaluate((node) => {
+    const box = node.parentElement;
+    return {
+      scrolls: box !== null && box.scrollWidth > box.clientWidth + 1,
+      spilling: [...node.querySelectorAll("th, td")]
+        .filter((cell) => cell.scrollWidth > cell.clientWidth + 1)
+        .map((cell) => cell.textContent),
+    };
+  });
+/** How many lines a cell's words take. */
+const linesOf = async (cell: Locator) =>
+  await cell.evaluate((node) => {
+    const range = document.createRange();
+    range.selectNodeContents(node);
+    return new Set(
+      [...range.getClientRects()].map((rect) => Math.round(rect.bottom))
+    ).size;
+  });
+
+for (const width of [1440, 390]) {
+  test.describe(`tables at ${width}`, () => {
+    test.use({ viewport: { width, height: 900 } });
+
+    test("a sentence in a cell wraps, so the table fits its column; figures the Markdown sets right stay on one line, at the end", async ({
+      page,
+    }) => {
+      await openExample(page, "markdown", "tables");
+      const name = "Ways to send the report";
+      const table = page.getByRole("table", { name });
+      expect(await fitOf(table)).toStrictEqual({
+        scrolls: false,
+        spilling: [],
+      });
+      // Not a region to scroll: there is nothing beyond the column.
+      await expect(page.getByRole("region", { name })).toHaveCount(0);
+      expect(
+        await linesOf(
+          table.getByRole("cell", { name: /^Everyone on the list/u })
+        )
+      ).toBeGreaterThan(1);
+      const figure = table.getByRole("cell", { name: "€12.50" });
+      await expect(figure).toHaveCSS("white-space", "nowrap");
+      await expect(figure).toHaveCSS("text-align", "end");
+    });
+
+    test("an answer still being written keeps even columns, and no cell's words run into the next", async ({
+      page,
+    }) => {
+      await openExample(page, "markdown", "tables-written");
+      const table = page.getByRole("table", { name: "Table" }).first();
+      const fit = await fitOf(table);
+      expect(fit.spilling).toStrictEqual([]);
+      const widths = await table
+        .getByRole("columnheader")
+        .evaluateAll((heads) => heads.map((head) => head.clientWidth));
+      expect(new Set(widths).size).toBe(1);
+    });
+  });
+}
+
+test("a table of more columns than fit scrolls sideways in its own box: a region named by its heading, reached by Tab and moved by the keys", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await openExample(page, "markdown", "tables");
+  const name = "Opening hours";
+  expect(await fitOf(page.getByRole("table", { name }))).toStrictEqual({
+    scrolls: true,
+    spilling: [],
+  });
+  const region = page.getByRole("region", { name });
+  await region.focus();
+  await expect(region).toBeFocused();
+  await page.keyboard.press("ArrowRight");
+  await expect
+    .poll(async () => await region.evaluate((box) => box.scrollLeft))
+    .toBeGreaterThan(0);
+});
+
+test("while it is written, a table of many columns keeps each a few words wide and scrolls sideways rather than squeezing them", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await openExample(page, "markdown", "tables-written");
+  const table = page.getByRole("table", { name: "Table" }).nth(1);
+  expect(await fitOf(table)).toStrictEqual({ scrolls: true, spilling: [] });
+  const widths = await table
+    .getByRole("columnheader")
+    .evaluateAll((heads) => heads.map((head) => head.clientWidth));
+  // Eight even columns, together wider than the 326 px a phone gives the answer.
+  expect(new Set(widths).size).toBe(1);
+  expect((widths[0] ?? 0) * widths.length).toBeGreaterThan(400);
+});
+
+test("GitHub's alerts: each of the five kinds is its Alert, titled by its kind, its mark gone; another mark stays a quote", async ({
+  page,
+}) => {
+  await openExample(page, "markdown", "alerts");
+  await expect(
+    page.getByText(/^(?:Note|Tip|Important|Warning|Caution)$/u)
+  ).toHaveText(["Note", "Tip", "Important", "Warning", "Caution"]);
+  await expect(
+    page.getByText("The export runs every night at two.")
+  ).toBeVisible();
+  await expect(
+    page.getByText(/\[!(?:NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]/u)
+  ).toHaveCount(0);
+  await expect(page.getByRole("listitem")).toHaveText([
+    "the drafts",
+    "the shared copies",
+  ]);
+  await expect(page.getByText(/^\[!SUMMARY\]/u)).toBeVisible();
+  // Part of the answer, read where it stands: none is said again as it appears.
+  await expect(page.getByRole("alert")).toHaveCount(0);
+  await expect(page.getByRole("status")).toHaveCount(0);
+});
+
+test("right to left: each block takes the direction of its words, its marker and its quote bar on its own side; code stays left to right", async ({
+  page,
+}) => {
+  await openExample(page, "markdown", "right-to-left");
+  const direction = async (text: string) =>
+    await page
+      .getByText(text, { exact: true })
+      .evaluate((node) => getComputedStyle(node).direction);
+  expect(await direction("ملخص الاجتماع")).toBe("rtl");
+  expect(
+    await direction(
+      "اتفق الفريق على موعد الإطلاق الجديد، وسيرسل التقرير قبل يوم الجمعة."
+    )
+  ).toBe("rtl");
+  expect(
+    await direction("The meeting notes, in the languages they were written in.")
+  ).toBe("ltr");
+  const items = page.getByRole("listitem");
+  await expect(items).toHaveCount(3);
+  const sides = await items.evaluateAll((all) =>
+    all.map((item) => getComputedStyle(item).direction)
+  );
+  expect(sides).toStrictEqual(["rtl", "rtl", "ltr"]);
+  // An item in Arabic has its room for the marker on its right.
+  const [arabic, english] = await Promise.all(
+    [items.first(), items.last()].map(
+      async (item) =>
+        await item.evaluate((node) => ({
+          right: getComputedStyle(node).marginRight,
+          left: getComputedStyle(node).marginLeft,
+        }))
+    )
+  );
+  expect(arabic?.right).not.toBe("0px");
+  expect(arabic?.left).toBe("0px");
+  expect(english?.left).not.toBe("0px");
+  const quote = page.locator("blockquote");
+  await expect(quote).toHaveCSS("direction", "rtl");
+  await expect(quote).toHaveCSS("border-right-style", "solid");
+  const table = page.getByRole("table");
+  await expect(table.getByRole("cell", { name: "القاهرة" })).toHaveCSS(
+    "direction",
+    "rtl"
+  );
+  await expect(table.getByRole("columnheader", { name: "Orders" })).toHaveCSS(
+    "direction",
+    "ltr"
+  );
+  await expect(
+    page.getByRole("region", { name: "TypeScript" }).getByText("const city")
+  ).toHaveCSS("direction", "ltr");
 });
 
 test("lists hold lists, and an item of two paragraphs keeps both", async ({
@@ -698,6 +870,48 @@ test("footnotes: a mark leads to its note at the foot, and the note leads back",
           ?.textContent
     )
   ).toBe("2");
+});
+
+test("a note's mark on the answer's first line stands within the line, never above the answer", async ({
+  page,
+}) => {
+  await openExample(page, "markdown", "footnotes");
+  const mark = page.getByRole("link", { name: "Footnote 1" }).first();
+  await expect(mark).toBeVisible();
+  // Where the mark's digit is inked, from its box and its font's own measures, against the top of
+  // the paragraph it stands in: a box that clips the answer there would cut it.
+  const above = await mark.evaluate(async (node) => {
+    await document.fonts.ready;
+    const style = getComputedStyle(node);
+    const context = document.createElement("canvas").getContext("2d");
+    if (context === null) {
+      return Number.NaN;
+    }
+    context.font = `${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+    const measured = context.measureText(node.textContent);
+    const ink =
+      node.getBoundingClientRect().top +
+      measured.fontBoundingBoxAscent -
+      measured.actualBoundingBoxAscent;
+    return (node.closest("p")?.getBoundingClientRect().top ?? 0) - ink;
+  });
+  expect(above).toBeLessThanOrEqual(0);
+});
+
+test("a screen reader hears the blocks finished before the answer is first drawn, once, then each block as it is finished; an answer drawn whole is not said", async ({
+  page,
+}) => {
+  const said = await listenToLiveRegions(page);
+  await openExample(page, "markdown", "said-first");
+  await expect
+    .poll(said)
+    .toStrictEqual([
+      "Here is the breakdown you asked for.",
+      "Revenue grew in every region. That is all for now.",
+    ]);
+  await openExample(page, "markdown", "answer");
+  await expect(page.getByText("Twelve people commented")).toBeVisible();
+  expect(await said()).toStrictEqual([]);
 });
 
 test("while it is written: no pipes, no fence marks, no brackets, and the table arrives whole", async ({
