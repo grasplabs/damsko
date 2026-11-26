@@ -36,5 +36,14 @@ export default function MarkdownDiagramUnchecked() {
     };
     void draw();
   }, []);
-  return <p data-drawn={drawn ?? undefined}>Drawn: {drawn ?? "…"}</p>;
+  // Busy while they are drawn, as a diagram is: a spec that measures the page waits for it.
+  return (
+    <p
+      data-slot="markdown-diagram"
+      aria-busy={drawn === null}
+      data-drawn={drawn ?? undefined}
+    >
+      Drawn: {drawn ?? "…"}
+    </p>
+  );
 }
