@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 
 import { expect, test } from "@playwright/test";
-import type { Locator, Page } from "@playwright/test";
+import type { Locator, Page, Route } from "@playwright/test";
 
 import { listenToLiveRegions, openExample, settled } from "./example.ts";
 
@@ -677,6 +677,43 @@ for (const chunk of ["mermaid.core", "flowDiagram-"]) {
     expect(dropped).toBe(1);
   });
 }
+
+test("diagrams: one whose draw never ends is its code once each of its three attempts has taken too long, and leaves nothing in the page", async ({
+  page,
+}) => {
+  // The layout's chunk, asked for while Mermaid draws in the box out of sight: never answered.
+  const held: Route[] = [];
+  await page.route(
+    (url) => url.pathname.includes("/elk-"),
+    (route) => {
+      held.push(route);
+    }
+  );
+  await page.clock.install();
+  await openExample(page, "markdown", "math-places");
+  const diagram = page.locator("[data-slot=markdown-diagram]");
+  const boxes = page.locator("body > div[aria-hidden=true]");
+  // The first attempt's box out of sight, with Mermaid's frame in it, drawing; then time stands
+  // still but for the steps below.
+  await expect(boxes.locator("iframe")).toHaveCount(1);
+  const now = await page.evaluate(() => Date.now());
+  await page.clock.pauseAt(now + 1000);
+  // An attempt's box stays until the attempt has taken ten seconds, the longest it may.
+  const timeOut = async () => {
+    await expect(boxes).toHaveCount(1);
+    await page.clock.fastForward(10_000);
+    await expect(boxes).toHaveCount(0);
+  };
+  await timeOut();
+  // Tried again after 0.4 s, and again after 1.6 s.
+  await page.clock.fastForward(400);
+  await timeOut();
+  await page.clock.fastForward(1600);
+  await timeOut();
+  await expect(diagram).toHaveAttribute("data-diagram", "failed:timeout");
+  await expect(page.locator("iframe")).toHaveCount(0);
+  expect(held).toHaveLength(1);
+});
 
 test("diagrams: each one the source check refuses says it was skipped, not that it failed", async ({
   page,
