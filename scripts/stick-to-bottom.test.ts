@@ -65,4 +65,24 @@ describe(glide, () => {
     expect(gaps[14]).toBeLessThan(10);
     expect(gaps.at(-1)).toBe(0);
   });
+
+  test("a stalled frame counts as a short one, and uneven frames still end at the end", () => {
+    expect(glide(0, 200, 1000, 1000, still).top).toBe(
+      glide(0, 200, 100, 100, still).top
+    );
+    let top = 0;
+    let motion: Glide = still;
+    let now = 0;
+    for (const ms of [
+      8, 33, 8, 50, 16, 7, 120, 16, 16, 16, 33, 8, 16, 16, 16,
+    ]) {
+      now += ms;
+      const { top: at, glide: carried } = glide(top, 300, now, ms, motion);
+      expect(at).toBeGreaterThanOrEqual(top);
+      expect(at).toBeLessThanOrEqual(300);
+      top = at;
+      motion = carried;
+    }
+    expect(top).toBe(300);
+  });
 });

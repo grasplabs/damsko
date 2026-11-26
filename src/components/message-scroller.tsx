@@ -976,7 +976,7 @@ export const MessageScrollerContent = ({
     }
     sentDone.current = anchor;
     return nowAndNextFrame(() => {
-      toEnd({ viewport, stick, autoScroll }, "smooth");
+      toEnd({ viewport, stick, autoScroll }, autoScroll ? "smooth" : "auto");
     });
   }, [anchor, mounted, viewport, stick, autoScroll]);
 
