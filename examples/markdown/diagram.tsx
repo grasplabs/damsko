@@ -9,14 +9,14 @@ flowchart LR
   Orders --> Database
 \`\`\`
 
-A diagram Mermaid cannot read stays its code:
+A diagram that does not read stays its code:
 
 \`\`\`mermaid
 flowchart LR
   A --> -->
 \`\`\``;
 
-// A Mermaid fence: its diagram, with Download, Copy, full screen and zoom; one that does not read, code.
+// A `mermaid` fence: its diagram, with Download, Copy, full screen and zoom; one that does not read, code.
 export default function MarkdownDiagram() {
   return <Markdown>{answer}</Markdown>;
 }

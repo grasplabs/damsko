@@ -88,17 +88,21 @@ test("a diagram downloads as a PNG under the product's policy, drawn from a data
   expect(await page.evaluate(() => window.refused ?? [])).toStrictEqual([]);
 });
 
-test("a diagram is drawn under a policy that allows no frame: Mermaid's is about:blank, never fetched", async ({
+test("every diagram type is drawn under a policy that allows no frame, no connection and nothing from elsewhere: Pele fetches nothing", async ({
   page,
 }) => {
   await underPolicy(
     page,
-    `${productPolicy}; frame-src 'none'; child-src 'none'`
+    `${productPolicy}; default-src 'self'; style-src 'self' 'unsafe-inline'; frame-src 'none'; child-src 'none'; connect-src 'none'`
   );
-  await openExample(page, "markdown", "diagram");
-  await expect(
-    page.locator("[data-slot=markdown-diagram-drawing] svg")
-  ).toHaveCount(1);
+  await openExample(page, "markdown", "diagram-types");
+  const diagrams = page.locator("[data-slot=markdown-diagram]");
+  for (const diagram of await diagrams.all()) {
+    // oxlint-disable-next-line no-await-in-loop -- one after the other, down the answer
+    await diagram.scrollIntoViewIfNeeded();
+    // oxlint-disable-next-line no-await-in-loop -- one after the other, down the answer
+    await expect(diagram).toHaveAttribute("data-diagram", "drawn");
+  }
   expect(await page.evaluate(() => window.refused ?? [])).toStrictEqual([]);
 });
 

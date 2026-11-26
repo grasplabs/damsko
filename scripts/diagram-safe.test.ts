@@ -1,4 +1,4 @@
-// What a `mermaid` fence may be for Mermaid to draw it, and what its drawing keeps
+// What a `mermaid` fence may be for Pele to draw it, and what its drawing keeps
 // (src/components/markdown/diagram-safe.ts): a fence with any way to an address in it, or too big,
 // is code; a drawing loses every handler, link and outside address, each of them, not every other.
 //
@@ -22,7 +22,7 @@ Reflect.set(globalThis, "CSSStyleSheet", window.CSSStyleSheet);
 Reflect.set(globalThis, "CSSStyleRule", window.CSSStyleRule);
 Reflect.set(globalThis, "CSSKeyframesRule", window.CSSKeyframesRule);
 
-const ID = "mermaid-1";
+const ID = "diagram-1";
 const svg = (inner: string) =>
   `<svg xmlns="http://www.w3.org/2000/svg" id="${ID}" viewBox="0 0 10 10">${inner}</svg>`;
 
@@ -40,7 +40,7 @@ describe(drawable, () => {
     '%%{init: {"themeCSS": "@import x"}}%%\nflowchart LR\n  A --> B',
     'flowchart LR\n  A --> B\n  click A "https://example.com/node"',
     "flowchart LR\n  A[see https://example.com] --> B",
-    // Written with character references, which Mermaid and DOMPurify read.
+    // Written with character references, which Mermaid's syntax reads.
     "flowchart LR\n  A --> B\n  style A fill:url&lpar;x.png)",
     "flowchart LR\n  A[&sol;&sol;example.com] --> B",
     "flowchart LR\n  A --> B\n  style A fill:url#40;x.png)",
@@ -122,11 +122,18 @@ describe(safeSvg, () => {
     'style="mask-image:image-set(&quot;x.png&quot; 1x)"',
     'style="fill:\\75rl(x)"',
     'href="https://evil.test/"',
-  ])("an attribute that leads elsewhere goes: %s", (attribute) => {
-    const out = safeSvg(svg(`<rect ${attribute} width="1"/>`), ID) ?? "";
-    expect(out).not.toContain(`${attribute.slice(0, attribute.indexOf("="))}=`);
-    expect(out).toContain('width="1"');
-  });
+    'data-icon="https://evil.test/icon.svg"',
+    'data-id="A"',
+  ])(
+    "an attribute that leads elsewhere, or is the renderer's own note, goes: %s",
+    (attribute) => {
+      const out = safeSvg(svg(`<rect ${attribute} width="1"/>`), ID) ?? "";
+      expect(out).not.toContain(
+        `${attribute.slice(0, attribute.indexOf("="))}=`
+      );
+      expect(out).toContain('width="1"');
+    }
+  );
 
   test("a style's `url()` to the drawing itself stays, quoted as a browser writes it", () => {
     const out =

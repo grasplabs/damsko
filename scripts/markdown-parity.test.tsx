@@ -165,10 +165,10 @@ const deliberate: [
     (streamdown, ours) =>
       /^\s*p > /mu.test(streamdown) && ours.includes("quote"),
   ],
-  // A Mermaid diagram is its frame and its code until Mermaid has drawn it (its code while its
-  // fence is open); Streamdown's server HTML holds only a spinner in its place.
+  // A diagram is its frame and its code until it is drawn (its code while its fence is open);
+  // Streamdown's server HTML holds only a spinner in its place.
   [
-    "a diagram's code until Mermaid draws it",
+    "a diagram's code until it is drawn",
     (streamdown, ours) =>
       streamdown.trim() === "" && /^\s*(?:diagram|code mermaid)\b/u.test(ours),
   ],
@@ -249,7 +249,7 @@ describe("drawn as Streamdown draws it", () => {
     expect(kinds).toStrictEqual({
       "GitHub's alerts drawn as alerts": 5,
       "a line's start waits": 7,
-      "a diagram's code until Mermaid draws it": 3,
+      "a diagram's code until it is drawn": 3,
       "a mark in a link": 3,
       "a quote in an item": 4,
       "a section waits": 2,
