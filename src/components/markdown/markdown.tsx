@@ -237,9 +237,12 @@ const styles = stylex.create({
   },
   xsCode: { fontSize: `calc(${size.messageText} * 0.92)` },
   // A formula in a sentence, and one on lines of its own, wider than the column scrolling sideways.
+  // One in a sentence is cut at ten lines' height: a matrix of a thousand rows is thousands of
+  // pixels tall.
   math: {
     display: "inline-block",
     maxWidth: "100%",
+    maxHeight: "10em",
     overflow: "hidden",
     verticalAlign: "middle",
     direction: "ltr",
