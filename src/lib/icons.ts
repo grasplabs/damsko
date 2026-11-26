@@ -48,6 +48,8 @@ import {
   Building03Icon,
   CableIcon as HugeCableIcon,
   Calendar03Icon,
+  Call02Icon,
+  CallEnd01Icon,
   Cancel01Icon,
   ChartDecreaseIcon,
   ChartIncreaseIcon,
@@ -108,6 +110,7 @@ import {
   Mail01Icon,
   Message01Icon,
   Mic01Icon,
+  MicOff01Icon,
   MinusSignCircleIcon,
   MinusSignIcon,
   Moon02Icon,
@@ -512,6 +515,8 @@ export const MessageCircleIcon: IconData = BubbleChatIcon;
 export const MessageSquareIcon: IconData = Message01Icon;
 /** Speak instead of typing. Mic01Icon. */
 export const MicIcon: IconData = Mic01Icon;
+/** The microphone off: muted, or turn it back on. MicOff01Icon. */
+export const MicOffIcon: IconData = MicOff01Icon;
 /** Back to its own size: leave full screen, Maximize2Icon's pair. ArrowShrink01Icon. */
 export const Minimize2Icon: IconData = ArrowShrink01Icon;
 /** Some, not all: a checkbox whose group is partly checked. MinusSignIcon. */
@@ -537,6 +542,10 @@ export const PanelRightIcon: IconData =
   directional(SidebarRightIcon);
 /** Attach a file. Attachment01Icon. */
 export const PaperclipIcon: IconData = Attachment01Icon;
+/** A call: start one, or call someone. Call02Icon. */
+export const PhoneIcon: IconData = Call02Icon;
+/** End a call: hang up. CallEnd01Icon. */
+export const PhoneOffIcon: IconData = CallEnd01Icon;
 /** Pause what is playing. PauseIcon. */
 export const PauseIcon: IconData = HugePauseIcon;
 /** Edit or rename. PencilEdit02Icon. */
