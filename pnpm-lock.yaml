@@ -88,8 +88,8 @@ catalogs:
       specifier: 21.0.4
       version: 21.0.4
     katex:
-      specifier: 0.16.47
-      version: 0.16.47
+      specifier: 0.18.10
+      version: 0.18.10
     lightningcss:
       specifier: 1.33.0
       version: 1.33.0
@@ -195,7 +195,7 @@ importers:
         version: 0.1.0-beta.13(@types/react@19.3.0)(@ui-sdk/core@0.1.0-beta.13)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       katex:
         specifier: 'catalog:'
-        version: 0.16.47
+        version: 0.18.10
       mdast-util-from-markdown:
         specifier: 2.0.3
         version: 2.0.3(supports-color@10.2.2)
@@ -3570,6 +3570,10 @@ packages:
 
   katex@0.16.47:
     resolution: {integrity: sha512-Eeo8Ys1doU1z+x8AZsPpQu+p/QcZBI5PeOo7QGQdy2x2m0MU/hYagBbGOmXwr5KVbEfVuWv9LpnQWeehogurjg==}
+    hasBin: true
+
+  katex@0.18.10:
+    resolution: {integrity: sha512-/B6p9eY9DX7aHBfpkHdpirDTZ5QH9xTwL9y837PWuzuv41O5jFdqNQwVQEQsimY0/iVNkwBY4+4hMfhQ7d4Dbw==}
     hasBin: true
 
   khroma@2.1.0:
@@ -7841,6 +7845,10 @@ snapshots:
   katex@0.16.47:
     dependencies:
       commander: 8.3.0
+
+  katex@0.18.10:
+    dependencies:
+      commander: 15.1.0
 
   khroma@2.1.0: {}
 
