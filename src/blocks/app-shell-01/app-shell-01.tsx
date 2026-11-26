@@ -301,7 +301,10 @@ const styles = stylex.create({
     alignItems: "center",
     gap: space["3"],
     minWidth: 0,
-    overflow: "hidden",
+    // Cut along the bar, never across it: a link's 44px reach on a touch screen stands past the
+    // words' line. Room at the end for the renamable name's own padding, or its ring is cut.
+    overflowX: "clip",
+    paddingInlineEnd: space["1"],
     [breadcrumbVars.mutedForeground]: colors.sidebarSecondaryForeground,
     [breadcrumbVars.subtleForeground]: colors.sidebarTertiaryForeground,
     [breadcrumbVars.foreground]: colors.sidebarForeground,
@@ -936,13 +939,20 @@ export const AppShellHeader = ({
         step={breadcrumb.at(-1)}
         label={words.breadcrumb}
         page={
-          <span
-            aria-current="page"
-            title={title}
-            {...stylex.props(styles.phonePageWords)}
-          >
-            {name}
-          </span>
+          // A field is never cut by the words' box: its finger's reach stands past them.
+          onRename === undefined ? (
+            <span
+              aria-current="page"
+              title={title}
+              {...stylex.props(styles.phonePageWords)}
+            >
+              {name}
+            </span>
+          ) : (
+            <span aria-current="page" {...stylex.props(styles.rename)}>
+              {name}
+            </span>
+          )
         }
       />
     );

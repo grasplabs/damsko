@@ -51,6 +51,7 @@ const outer = "the room given is less than the room there";
 
 const excused = new Map<string, string>([
   ["alert-dialog/removes: Delete Supplier list", outer],
+  ["app-shell-01/basic: Spring launch", noTarget],
   ["app-shell-01/panel: Show or hide the panel", outer],
   ["attachment/basic: Remove quarter-figures.xlsx", clipped],
   ["attachment/basic: Remove supplier-contract-2027-final.pdf", clipped],
