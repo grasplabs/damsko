@@ -336,7 +336,7 @@ test("5,000 lines with 300 changed are compared, drawn and coloured with no long
 test("a diff with no language never loads the lexers; one with a language does", async ({
   page,
 }) => {
-  /** How many of the scripts the page has loaded hold the lexers' WebAssembly. */
+  /** How many of the scripts the page has loaded are the highlighter's core. */
   const lexers = async () => {
     await page.waitForLoadState("networkidle");
     const scripts = await page.evaluate(() =>
@@ -351,7 +351,9 @@ test("a diff with no language never loads the lexers; one with a language does",
         return await response.text();
       })
     );
-    return texts.filter((text) => text.includes("WebAssembly.Module")).length;
+    return texts.filter((text) =>
+      text.includes("highlights is not initialized")
+    ).length;
   };
   await openExample(page, "diff-viewer", "states");
   expect(await lexers()).toBe(0);

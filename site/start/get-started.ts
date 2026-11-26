@@ -180,7 +180,7 @@ export const versions: Record<string, string> = {
   // What the components import: the CLI adds each by name, and pnpm gives it this version.
   "@hugeicons/core-free-icons": "4.4.0",
   "@hugeicons/react": "1.1.10",
-  "@pierre/highlights": "0.5.2",
+  "@pierre/highlights": "0.6.0",
   "@stylexjs/stylex": "0.19.2",
   "@tanstack/react-table": "9.3.1",
   "@types/react": "19.3.0",
@@ -536,7 +536,7 @@ export const sections: Section[] = [
       {
         slug: "allow-webassembly",
         name: "Allow CodeBlock's WebAssembly",
-        note: "CodeBlock colours its code with lexers compiled to WebAssembly, in a script of their own that the build writes beside the app's other scripts and the page loads when it first draws a block. The module is inside that script: nothing more is fetched, and no worker is started. A Content Security Policy that names script-src, or a default-src it falls back to, adds 'wasm-unsafe-eval', which lets the page compile WebAssembly and nothing else (no eval, no new Function); worker-src needs nothing. Without it, the code stays plain, whole and readable, with no colours, and nothing is said.",
+        note: "CodeBlock colours its code with lexers compiled to WebAssembly, in scripts of their own that the build writes beside the app's other scripts: a core the page loads when it first draws a block, and one for each language, loaded when a block in it is first drawn. Each module is inside its script: nothing else is fetched, and no worker is started. A Content Security Policy that names script-src, or a default-src it falls back to, adds 'wasm-unsafe-eval', which lets the page compile WebAssembly and nothing else (no eval, no new Function); worker-src needs nothing. Without it, the code stays plain, whole and readable, with no colours, and nothing is said.",
         blocks: [
           {
             code: "Content-Security-Policy: script-src https://app.example.com/assets/ 'wasm-unsafe-eval'",

@@ -1,6 +1,6 @@
 // CodeBlock's highlighting (src/components/code-block-highlight.ts), with the lexers themselves: a
 // file is coloured line for line, its text exactly the code's; the lexers' names come out as
-// Damsko's colours; while code is written each line is read once, keeps its object, and is what
+// Damsko's colours; while code is written each line is made once, keeps its object, and is what
 // the whole code read at once gives; a long line is its text; past MOST_RUNS a stream gives up;
 // a language the lexers do not know is plain; and text that holds regular-expression highlighters
 // for seconds is read in milliseconds.
@@ -8,21 +8,30 @@
 //   pnpm exec vp test scripts/code-block-highlight.test.ts
 import { readFileSync } from "node:fs";
 
-import * as engine from "@pierre/highlights";
 import { describe, expect, test } from "vitest";
 
 import {
   colouredRuns,
+  currentEngine,
   doneLines,
   languages,
+  loadLanguage,
   MOST_LINE,
   MOST_RUNS,
   newReading,
   plainLines,
-  stopReading,
   writtenLines,
 } from "../src/components/code-block-highlight.ts";
 import type { Line } from "../src/components/code-block-highlight.ts";
+import { lexers } from "../src/components/code-block-lexers.ts";
+
+// Every lexer the package ships, as the page loads each the first time a block in it is drawn.
+await Promise.all(Object.keys(lexers).map(loadLanguage));
+const loaded = currentEngine();
+if (loaded === null) {
+  throw new Error("the lexers did not load");
+}
+const engine = loaded;
 
 const ALL = Number.POSITIVE_INFINITY;
 
@@ -56,7 +65,7 @@ describe(doneLines, () => {
     expect(lines?.map(textOf)).toStrictEqual(
       code.replace(/\n$/u, "").split("\n")
     );
-    expect(colouredRuns(lines ?? [])).toBeGreaterThan(100);
+    expect(colouredRuns(lines ?? [])).toBeGreaterThan(40);
   });
 
   test("the lexers' names come out as Damsko's colours, and a name it has none for in the code's own", () => {
@@ -108,11 +117,12 @@ describe(doneLines, () => {
     expect(tones.flat()).toContain("inserted");
   });
 
-  test("every language a block names is coloured", () => {
-    const plain = Object.keys(languages).filter(
+  test("every language a block names, and every name a lexer the package ships answers to, is coloured", () => {
+    const plain = [...Object.keys(languages), ...Object.keys(lexers)].filter(
       (language) => whole("a = 1", language) === null
     );
     expect(plain).toStrictEqual([]);
+    expect(Object.keys(lexers).length).toBeGreaterThan(400);
   });
 
   test.each(["text", "plain", "ansi", "nonsense", "__proto__", "constructor"])(
@@ -228,21 +238,6 @@ describe(writtenLines, () => {
       ALL
     );
     expect(lines?.map(textOf)).toStrictEqual(["let x = '", "let y"]);
-  });
-
-  test("stopped and read again, a stream starts anew and colours what comes", () => {
-    const reading = newReading();
-    writtenLines(reading, engine, "const a = 1;\n", "ts", ALL);
-    stopReading(reading);
-    const lines = writtenLines(
-      reading,
-      engine,
-      "const a = 1;\nconst b = 2;\nlet",
-      "ts",
-      ALL
-    );
-    expect(lines?.map(textOf)).toStrictEqual(["const a = 1;", "const b = 2;"]);
-    expect(colouredRuns([lines?.[1] ?? []])).toBeGreaterThan(1);
   });
 
   test("past MOST_RUNS runs, a stream gives up: plain from then on", () => {

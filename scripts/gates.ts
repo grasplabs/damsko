@@ -1,5 +1,5 @@
 /**
- * The static gates beside `vp check`: generated files are current, the
+ * The static gates beside `vp check`: generated files are current (the tokens, CodeBlock's lexers), the
  * registry agrees with the source, every component compiles under the
  * React Compiler, as the product builds it, and every component is
  * its target API, has a spec, an example and a page under its own name, and
@@ -14,6 +14,7 @@ import { spawnSync } from "node:child_process";
 
 const gates: readonly (readonly string[])[] = [
   ["tokens/generate.ts", "--check"],
+  ["scripts/highlight-lexers.ts", "--check"],
   ["scripts/check-registry.ts"],
   ["scripts/check-react-compiler.ts"],
   ["scripts/check-no-memo.ts"],

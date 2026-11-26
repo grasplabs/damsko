@@ -28,8 +28,8 @@ catalogs:
       specifier: 1.1.10
       version: 1.1.10
     '@pierre/highlights':
-      specifier: 0.5.2
-      version: 0.5.2
+      specifier: 0.6.0
+      version: 0.6.0
     '@playwright/test':
       specifier: 1.65.0
       version: 1.65.0
@@ -183,7 +183,7 @@ importers:
         version: 1.1.10(react@19.3.1)
       '@pierre/highlights':
         specifier: 'catalog:'
-        version: 0.5.2
+        version: 0.6.0
       '@stylexjs/stylex':
         specifier: 'catalog:'
         version: 0.19.2
@@ -1606,8 +1606,8 @@ packages:
     resolution: {integrity: sha512-S0uyoxakDINJ4DPgqxGlEEvrdSMeQb7Z2lKVjxoY2gwsbZbfg2Xr8Klfeo5ZeraHmmdBCELFUHkSe6KEmBpMvg==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
 
-  '@pierre/highlights@0.5.2':
-    resolution: {integrity: sha512-CV+yFa8dodaU3w7U42FR+AfoavrsfcH0/n3rckDu1A/UXan1Dzo6OdM/MPOAAsGM/EbKhDxD6k+qMcNUtnLfsg==}
+  '@pierre/highlights@0.6.0':
+    resolution: {integrity: sha512-5RhenEkZxlcsw2hrDaYlGyT6ERfQgHSvZxRg/ByZ11SVkoWuAwDMozL7HxUfUnOVyShD5WKMxqiakg8S/8Fi7A==}
 
   '@playwright/test@1.65.0':
     resolution: {integrity: sha512-iGURLGuKDLakSEl7Pgfv8h7f+XLT+V861Wfhz0zlEl5nyFuKUopdkFBPKqTllTUp06aOwPuH8iuUEb3yp3MpbQ==}
@@ -6031,7 +6031,7 @@ snapshots:
 
   '@oxlint/plugins@1.79.0': {}
 
-  '@pierre/highlights@0.5.2': {}
+  '@pierre/highlights@0.6.0': {}
 
   '@playwright/test@1.65.0':
     dependencies:
