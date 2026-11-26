@@ -1,7 +1,7 @@
 import { DiffViewerFiles } from "@grasp-os/ui/components/diff-viewer";
 import type { DiffViewerFile } from "@grasp-os/ui/components/diff-viewer";
 
-// A change across 200 files, each a module of 120 lines with a few lines edited and some added.
+// A change across 60 files, each a module of 120 lines with a few lines edited and some added.
 // Past 400 rows the list scrolls in its own box and draws only the rows in view.
 const moduleOf = (at: number) =>
   Array.from({ length: 120 }, (_, line) =>
@@ -10,7 +10,7 @@ const moduleOf = (at: number) =>
       : `  const value${line} = input * ${line} + ${at}; // step ${line}`
   );
 
-const files: DiffViewerFile[] = Array.from({ length: 200 }, (_, at) => {
+const files: DiffViewerFile[] = Array.from({ length: 60 }, (_, at) => {
   const before = moduleOf(at);
   const after = before.flatMap((line, index) => {
     if (index % 40 === 7) {

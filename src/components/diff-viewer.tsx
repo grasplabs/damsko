@@ -217,8 +217,8 @@ export interface DiffViewerFilesProps {
    */
   wrap?: boolean;
   /**
-   * Past this many rows across its open files it stands at most `diff-viewer-height` tall, scrolls
-   * inside, and draws only the rows in view. Give it the room it may fill with `style`
+   * Past this many rows across the files that open on their own (see `foldFrom`) it stands at
+   * most `diff-viewer-height` tall, scrolls inside, and draws only the rows near the view. Give it the room it may fill with `style`
    * (`height`, `maxHeight`).
    * @default 400
    */
@@ -648,6 +648,13 @@ const styles = stylex.create({
     fontSize: font.textSm,
     lineHeight: font.textSmLine,
     color: colors.mutedForeground,
+  },
+  // The files, one under another.
+  files: {
+    display: "grid",
+    gridTemplateColumns: "minmax(0, 1fr)",
+    gap: space["3"],
+    minWidth: 0,
   },
   // One file: its header and its lines in one box.
   file: {
@@ -1377,6 +1384,14 @@ const makeWindow = (firstRows: number) => {
   let rows: readonly AnyRow[] = [];
   let room: HTMLElement | null = null;
   let scroller: HTMLElement | null = null;
+  let connected = false;
+  // Told when it starts and stops reading its scroller, which changes what it draws.
+  const told = new Set<() => void>();
+  const tell = () => {
+    for (const each of told) {
+      each();
+    }
+  };
   let kept: readonly number[] = NO_ITEMS;
   // Before the browser measures anything (the first HTML, and with JavaScript off), the top of the
   // diff is there: its first rows at their first guess, one line each.
@@ -1394,7 +1409,8 @@ const makeWindow = (firstRows: number) => {
     overscan: 12,
     // The row holding focus stays drawn when it scrolls away, so focus is never lost.
     keep: () => kept,
-    // Read on every scroll and resize: the files and lines above move it.
+    // Read on every scroll and resize: the files and lines above move it. UI SDK reads
+    // `scrollMargin` each time it places the rows (0.1.0-beta.13); a getter keeps it current.
     get scrollMargin() {
       if (room === null || scroller === null) {
         return 0;
@@ -1408,11 +1424,46 @@ const makeWindow = (firstRows: number) => {
   });
   return {
     virtual,
-    connect: (to: HTMLElement, box: HTMLElement | null) => {
+    /**
+     * Reads `to`'s scroll until the returned function runs. In DiffViewerFiles, `content` holds
+     * every file: when a file above opens or closes it resizes, and the rows are placed again.
+     */
+    connect: (
+      to: HTMLElement,
+      box: HTMLElement | null,
+      content: HTMLElement | null
+    ) => {
       scroller = to;
       room = box;
-      return virtual.connect(to);
+      connected = true;
+      const stop = virtual.connect(to);
+      tell();
+      const moved = new ResizeObserver(() => {
+        virtual.refresh();
+      });
+      if (content !== null) {
+        moved.observe(content);
+      }
+      return () => {
+        moved.disconnect();
+        stop();
+        connected = false;
+        scroller = null;
+        room = null;
+        tell();
+      };
     },
+    subscribe: (listener: () => void) => {
+      told.add(listener);
+      const stop = virtual.subscribe(listener);
+      return () => {
+        told.delete(listener);
+        stop();
+      };
+    },
+    // Until it reads its scroller it draws nothing: rows placed for a scroll it has not read would
+    // be measured in the wrong place and move what is in view.
+    items: () => (connected ? virtual.items() : NO_ITEMS),
     show: (next: readonly AnyRow[]) => {
       rows = next;
       virtual.refresh();
@@ -1432,6 +1483,27 @@ const makeWindow = (firstRows: number) => {
       }
       return firstItems;
     },
+  };
+};
+
+/** Says whether focus is inside `room`, as it comes and goes. */
+const watchFocus = (
+  room: HTMLElement,
+  setFocused: (focused: boolean) => void
+) => {
+  const arrived = () => {
+    setFocused(true);
+  };
+  const left = (event: FocusEvent) => {
+    setFocused(
+      event.relatedTarget instanceof Node && room.contains(event.relatedTarget)
+    );
+  };
+  room.addEventListener("focusin", arrived);
+  room.addEventListener("focusout", left);
+  return () => {
+    room.removeEventListener("focusin", arrived);
+    room.removeEventListener("focusout", left);
   };
 };
 
@@ -1457,22 +1529,25 @@ const watchNear = (
  * Whether a file's rows are within a screen of its scroller's view, for DiffViewerFiles: a file
  * further away draws none, only the room they take. Always, for a diff with a scroller of its own.
  */
-const useNear = (
-  room: HTMLElement | null,
-  scroller: HTMLElement | null,
-  shared: boolean,
-  firstRows: number
-) => {
+const useNear = (room: HTMLElement | null, shared: Shared | undefined) => {
+  const scroller = shared?.scroller ?? null;
+  const inList = shared !== undefined;
   // The files at the top are drawn before the browser has measured anything.
-  const [near, setNear] = useState(firstRows > 0);
+  const [near, setNear] = useState((shared?.firstRows ?? 1) > 0);
+  // A file whose lines hold focus stays drawn wherever it is scrolled, so focus is never lost.
+  const [focused, setFocused] = useState(false);
   useEffect(
     () =>
-      !shared || room === null || scroller === null
+      !inList || room === null || scroller === null
         ? undefined
         : watchNear(room, scroller, setNear),
-    [room, scroller, shared]
+    [room, scroller, inList]
   );
-  return !shared || near;
+  useEffect(
+    () => (!inList || room === null ? undefined : watchFocus(room, setFocused)),
+    [room, inList]
+  );
+  return !inList || near || focused;
 };
 
 /**
@@ -1487,12 +1562,7 @@ const useRead = (
   newValue: string,
   language: string | undefined
 ) => {
-  const near = useNear(
-    body,
-    held.within ?? null,
-    held.within !== undefined,
-    held.firstRows ?? FIRST_ROWS
-  );
+  const near = useNear(body, held.shared);
   const read = near ? language : undefined;
   return {
     near,
@@ -1508,12 +1578,15 @@ const VirtualRows = ({
   drawing,
   firstRows,
   near,
+  content,
 }: {
   rows: readonly AnyRow[];
   scroller: HTMLElement | null;
   drawing: Drawing;
   /** How many rows are drawn before the browser has measured any. */
   firstRows: number;
+  /** In DiffViewerFiles, what holds every file: when it resizes, the rows are placed again. */
+  content: HTMLElement | null;
   /** Within reach of the view: a file of DiffViewerFiles further away draws no rows, nor reads its scroll. */
   near: boolean;
 }) => {
@@ -1523,15 +1596,18 @@ const VirtualRows = ({
   useLayoutEffect(() => {
     win.show(rows);
   }, [rows, win]);
-  useEffect(
+  // Before paint, so a file that comes into reach is drawn in the same frame.
+  useLayoutEffect(
     () =>
-      scroller === null || !near ? undefined : win.connect(scroller, room),
-    [scroller, room, win, near]
+      scroller === null || !near
+        ? undefined
+        : win.connect(scroller, room, content),
+    [scroller, room, content, win, near]
   );
-  const subscribe = (change: () => void) => win.virtual.subscribe(change);
+  const subscribe = (change: () => void) => win.subscribe(change);
   const items = useSyncExternalStore(
     subscribe,
-    () => win.virtual.items(),
+    () => win.items(),
     () => win.first(rows)
   );
   const height = useSyncExternalStore(
@@ -1541,7 +1617,7 @@ const VirtualRows = ({
   );
   return (
     <div ref={setRoom} {...stylex.props(styles.room(height))}>
-      {(near ? items : NO_ITEMS).map((item) => {
+      {items.map((item) => {
         const row = rows[item.index];
         if (row === undefined) {
           return null;
@@ -1774,6 +1850,7 @@ const Table = ({
   width,
   firstRows,
   near,
+  content,
 }: {
   rows: readonly AnyRow[];
   said: string;
@@ -1782,6 +1859,7 @@ const Table = ({
   drawing: Drawing;
   firstRows: number;
   near: boolean;
+  content: HTMLElement | null;
   /** With lines kept whole, as wide as the longest line and its gutter. */
   width: string | undefined;
 }) => (
@@ -1799,6 +1877,7 @@ const Table = ({
         drawing={drawing}
         firstRows={firstRows}
         near={near}
+        content={content}
       />
     ) : (
       rows.map((row, index) => (
@@ -1821,10 +1900,18 @@ const Table = ({
  */
 interface Held {
   model?: Model;
-  /** The files' scroller: its rows are drawn only in view, in it. */
-  within?: HTMLElement | null;
-  /** How many of its rows are drawn before the browser has measured any. */
-  firstRows?: number;
+  /** In DiffViewerFiles' scroller: its rows are drawn only in view, in it. */
+  shared?: Shared;
+}
+
+/** DiffViewerFiles' scroller, as a file's lines draw in it. */
+interface Shared {
+  /** The scroller; null until it is on the page. */
+  scroller: HTMLElement | null;
+  /** What holds every file inside it. */
+  content: HTMLElement | null;
+  /** How many of this file's rows are drawn before the browser has measured any. */
+  firstRows: number;
 }
 
 /** Every prop of DiffViewer, with its defaults filled and its words whole. */
@@ -1941,18 +2028,18 @@ const windowOf = (
   rows: number,
   threshold: number
 ) =>
-  held.within === undefined
+  held.shared === undefined
     ? {
         virtual: rows > threshold,
         ownBox: true,
         scroller: body,
+        content: null,
         firstRows: FIRST_ROWS,
       }
     : {
         virtual: true,
         ownBox: false,
-        scroller: held.within,
-        firstRows: held.firstRows ?? FIRST_ROWS,
+        ...held.shared,
       };
 
 /** The diff by line: unified or side by side, with folds, and the answers when reviewing. */
@@ -2005,7 +2092,7 @@ const LineDiff = (props: Settled) => {
   const rows: AnyRow[] = split
     ? splitRows(lines, changes, folds, review)
     : unifiedRows(lines, changes, folds, review, showHunkHeaders);
-  const { virtual, ownBox, scroller, firstRows } = windowOf(
+  const { virtual, ownBox, scroller, content, firstRows } = windowOf(
     held,
     body,
     rows.length,
@@ -2114,6 +2201,7 @@ const LineDiff = (props: Settled) => {
             width={width}
             firstRows={firstRows}
             near={near}
+            content={content}
           />
         )}
       </Body>
@@ -2382,6 +2470,7 @@ export const DiffViewerFiles = ({
 }: DiffViewerFilesProps) => {
   const words = useI18n().diffViewer;
   const [scroller, setScroller] = useState<HTMLElement | null>(null);
+  const [content, setContent] = useState<HTMLDivElement | null>(null);
   // Each file compared once: its counts, how many rows it draws open, and the rows drawn before
   // the browser has measured any (the first FIRST_ROWS across the files).
   const counted: Counted[] = [];
@@ -2421,7 +2510,7 @@ export const DiffViewerFiles = ({
     <section
       ref={windowed ? setScroller : undefined}
       aria-label={label ?? words.filesName}
-      // Windowed, it scrolls: it takes focus, so the keys can scroll it.
+      // Windowed, it scrolls: it takes focus, so the keys can scroll it, as the region it is.
       role={windowed ? "region" : undefined}
       tabIndex={windowed ? 0 : undefined}
       data-slot="diff-viewer-files"
@@ -2446,31 +2535,32 @@ export const DiffViewerFiles = ({
           />
         </p>
       ) : null}
-      {counted.map((each) => (
-        <File
-          key={each.file.path}
-          file={each.file}
-          change={each.change}
-          oldValue={each.oldValue}
-          newValue={each.newValue}
-          added={each.added}
-          removed={each.removed}
-          foldFrom={foldFrom}
-          contextLines={contextLines}
-          showHunkHeaders={showHunkHeaders}
-          wrap={wrap}
-          words={words}
-          held={
-            windowed
-              ? {
-                  model: each.model,
-                  within: scroller,
-                  firstRows: each.firstRows,
-                }
-              : { model: each.model }
-          }
-        />
-      ))}
+      <div ref={setContent} {...stylex.props(styles.files)}>
+        {counted.map((each) => (
+          <File
+            key={each.file.path}
+            file={each.file}
+            change={each.change}
+            oldValue={each.oldValue}
+            newValue={each.newValue}
+            added={each.added}
+            removed={each.removed}
+            foldFrom={foldFrom}
+            contextLines={contextLines}
+            showHunkHeaders={showHunkHeaders}
+            wrap={wrap}
+            words={words}
+            held={
+              windowed
+                ? {
+                    model: each.model,
+                    shared: { scroller, content, firstRows: each.firstRows },
+                  }
+                : { model: each.model }
+            }
+          />
+        ))}
+      </div>
     </section>
   );
 };

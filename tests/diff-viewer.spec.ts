@@ -379,22 +379,22 @@ test.describe("many files", () => {
   }) => {
     await openExample(page, "diff-viewer", "many");
     const list = page.getByRole("region", { name: "Changed files" });
-    await expect(page.getByText("200 files changed")).toBeVisible();
+    await expect(page.getByText("60 files changed")).toBeVisible();
     await expect(
       list.getByRole("button", { name: /step-\d{3}\.ts/u })
-    ).toHaveCount(200);
+    ).toHaveCount(60);
     const tables = list.getByRole("table");
-    await expect(tables).toHaveCount(200);
+    await expect(tables).toHaveCount(60);
     const counted = await tables.evaluateAll((all) =>
       all.reduce(
         (sum, table) => sum + Number(table.getAttribute("aria-rowcount")) - 1,
         0
       )
     );
-    expect(counted).toBeGreaterThan(4000);
-    expect(await list.getByRole("row").count()).toBeLessThan(600);
+    expect(counted).toBeGreaterThan(1200);
+    expect(await list.getByRole("row").count()).toBeLessThan(400);
     // The last file, out of reach, draws no rows yet: its table is only the room they take.
-    const last = list.getByRole("table", { name: "src/steps/step-200.ts" });
+    const last = list.getByRole("table", { name: "src/steps/step-060.ts" });
     await expect(last.locator("[data-diff-code]")).toHaveCount(0);
   });
 
@@ -421,9 +421,9 @@ test.describe("many files", () => {
     page,
   }) => {
     await openExample(page, "diff-viewer", "many");
-    const header = page.getByRole("button", { name: /step-150\.ts/u });
+    const header = page.getByRole("button", { name: /step-050\.ts/u });
     await header.scrollIntoViewIfNeeded();
-    const table = page.getByRole("table", { name: "src/steps/step-150.ts" });
+    const table = page.getByRole("table", { name: "src/steps/step-050.ts" });
     await expect(table.getByRole("row").nth(3)).toBeVisible();
     await expect
       .poll(async () => await colourOf(runOf(table, /^export\b/u)))
@@ -454,6 +454,69 @@ test.describe("many files", () => {
     expect(seen).toStrictEqual(
       Array.from({ length: 30 }, (_, at) => String(at + 2).padStart(3, "0"))
     );
+  });
+
+  test("closing files above brings the next files' rows into view, drawn", async ({
+    page,
+  }) => {
+    await openExample(page, "diff-viewer", "many");
+    const list = page.getByRole("region", { name: "Changed files" });
+    for (const at of ["021", "022", "023"]) {
+      const header = page.getByRole("button", {
+        name: new RegExp(`step-${at}\\.ts`, "u"),
+      });
+      // oxlint-disable-next-line no-await-in-loop -- one file after the other
+      await header.scrollIntoViewIfNeeded();
+      // oxlint-disable-next-line no-await-in-loop -- one file after the other
+      await header.click();
+      // oxlint-disable-next-line no-await-in-loop -- one file after the other
+      await expect(header).toHaveAttribute("aria-expanded", "false");
+    }
+    // Every line row in view has its words drawn: no blank room where the rows should be.
+    await expect
+      .poll(
+        async () =>
+          await list.evaluate((scroller) => {
+            const view = scroller.getBoundingClientRect();
+            const blank: number[] = [];
+            for (const room of scroller.querySelectorAll("[role=table]")) {
+              const box = room.getBoundingClientRect();
+              const top = Math.max(box.top + 40, view.top);
+              const bottom = Math.min(box.bottom, view.bottom);
+              if (bottom - top > 40) {
+                const drawn = [
+                  ...room.querySelectorAll("[data-diff-code]"),
+                ].some((cell) => {
+                  const at = cell.getBoundingClientRect();
+                  return at.bottom > top && at.top < bottom;
+                });
+                if (!drawn) {
+                  blank.push(Math.round(bottom - top));
+                }
+              }
+            }
+            return blank;
+          })
+      )
+      .toStrictEqual([]);
+  });
+
+  test("a control that holds focus stays when its file is scrolled far away", async ({
+    page,
+  }) => {
+    await openExample(page, "diff-viewer", "many");
+    const file = page.getByRole("region", { name: "src/steps/step-002.ts" });
+    const control = file
+      .getByRole("button", { name: /^Show \d+ unchanged lines$/u })
+      .first();
+    await control.focus();
+    await page
+      .getByRole("region", { name: "Changed files" })
+      .evaluate((scroller) => {
+        scroller.scrollTop += scroller.clientHeight * 6;
+      });
+    await page.waitForTimeout(300);
+    await expect(control).toBeFocused();
   });
 
   test("opening an unchanged run or a file moves nothing above it", async ({
