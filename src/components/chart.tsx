@@ -2230,6 +2230,8 @@ const REFERENCE_WIDTH = 1.5;
 const REFERENCE_HALO = 5;
 const REFERENCE_NAME_HALO = 4;
 const REFERENCE_GAP = 4;
+// The room its name takes up and down: one line of the axis's type.
+const REFERENCE_NAME_LINE = 16;
 
 const referenceStyles = stylex.create({
   halo: {
@@ -2250,36 +2252,43 @@ const referenceStyles = stylex.create({
     fontFamily: font.sans,
     fontSize: font.textXs,
     fontWeight: font.weightMedium,
-    dominantBaseline: "central",
+    // Its anchor is a side of the drawing on any page; its words still read in their own
+    // direction, set from their first letter.
+    direction: "ltr",
+    unicodeBidi: "plaintext",
   },
 });
 
 /**
- * Where a reference line's name is centred: across, at the line's end, above it, or under it where
- * the drawing's top is too near; up, beside it at the top, on the side with room.
+ * Where a reference line's name stands, by the edge of its words that meets the line's end: across,
+ * its end at the line's end, above the line, or under it where the drawing's top is too near; up,
+ * at the top beside it, after it in the drawing's left half and before it in the right.
  */
 const referenceNameAt = (
   line: { x1: number; y1: number; x2: number; y2: number },
   across: boolean,
-  name: TextBox,
   plot: { x: number; y: number; width: number }
-) => {
-  const half = { x: name.width / 2, y: name.height / 2 };
+): {
+  x: number;
+  y: number;
+  anchor: "start" | "end";
+  baseline: "text-after-edge" | "text-before-edge";
+} => {
   if (across) {
-    const above = line.y1 - REFERENCE_GAP - name.height >= plot.y;
+    const above = line.y1 - REFERENCE_GAP - REFERENCE_NAME_LINE >= plot.y;
     return {
-      x: line.x2 - half.x,
-      y: above
-        ? line.y1 - REFERENCE_GAP - half.y
-        : line.y1 + REFERENCE_GAP + half.y,
+      x: line.x2,
+      y: above ? line.y1 - REFERENCE_GAP : line.y1 + REFERENCE_GAP,
+      anchor: "end",
+      baseline: above ? "text-after-edge" : "text-before-edge",
     };
   }
-  const after = line.x1 + REFERENCE_GAP + name.width <= plot.x + plot.width;
+  const after = line.x1 <= plot.x + plot.width / 2;
   return {
-    x: after
-      ? line.x1 + REFERENCE_GAP + half.x
-      : line.x1 - REFERENCE_GAP - half.x,
-    y: Math.min(line.y1, line.y2) + half.y,
+    x: after ? line.x1 + REFERENCE_GAP : line.x1 - REFERENCE_GAP,
+    y: Math.min(line.y1, line.y2),
+    anchor: after ? "start" : "end",
+    baseline: "text-before-edge",
   };
 };
 
@@ -2300,12 +2309,6 @@ export const ChartReferenceLine = ({
   const { chart: words } = useI18n();
   const plot = usePlotArea();
   const key = useId();
-  // Its name's box, measured, so it is centred where it stands: right to left as left to right.
-  const look = className(referenceStyles.name);
-  const [name = noBox] = useTextBoxes(
-    children === undefined ? [] : [children],
-    look
-  );
   const value = y === undefined ? x : writtenValue(y, valueFormatter);
   const said =
     children === undefined || value === undefined
@@ -2321,7 +2324,7 @@ export const ChartReferenceLine = ({
     const at =
       plot === undefined
         ? null
-        : referenceNameAt({ x1, y1, x2, y2 }, y !== undefined, name, plot);
+        : referenceNameAt({ x1, y1, x2, y2 }, y !== undefined, plot);
     return (
       <g aria-hidden="true" data-slot="chart-reference-line">
         <line
@@ -2341,11 +2344,12 @@ export const ChartReferenceLine = ({
           strokeDasharray={REFERENCE_DASH}
           {...stylex.props(referenceStyles.line)}
         />
-        {children !== undefined && at !== null && name.width > 0 && (
+        {children !== undefined && at !== null && (
           <text
             x={at.x}
             y={at.y}
-            textAnchor="middle"
+            textAnchor={at.anchor}
+            dominantBaseline={at.baseline}
             {...stylex.props(referenceStyles.name)}
           >
             {children}

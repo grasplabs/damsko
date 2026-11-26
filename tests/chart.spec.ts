@@ -462,9 +462,12 @@ test("a reference line at a point along the bottom runs up the drawing, its name
   if (tick === null || name === null) {
     throw new Error("no box");
   }
+  // Beside the line at April, on the side with room (before it, in the drawing's right half),
+  // never across it.
   const at = tick.x + tick.width / 2;
-  expect(name.x - at).toBeGreaterThan(0);
-  expect(name.x - at).toBeLessThan(8);
+  const end = name.x + name.width;
+  expect(end).toBeLessThanOrEqual(at);
+  expect(at - end).toBeLessThan(8);
 });
 
 test("bars to press: one Tab stop, the arrow keys move with a ring and the tooltip, Enter and Space press", async ({
