@@ -171,15 +171,10 @@ const excused = new Map<string, string>([
   ["input-group/search: Clear search", onAnother],
   ["inspector-01/facts: northwind.example", noTarget],
   ["link/states: Quarterly report", noTarget],
-  // Its row's room (half the actions' gap) holds past its end, where the header gives 6px: the
-  // drawing under the header holds the zoom controls, so the row reads as followed by a control.
-  ["markdown/diagram: View full screen", outer],
-  ["markdown/diagram-hostile: View full screen", outer],
   ["markdown/host-links: Source 1", noTarget],
   ["markdown/host-links: Source 2", noTarget],
   ["markdown/host-links: on their site", noTarget],
   ["markdown/sections-cases: BUTTON", noTarget],
-  ["markdown/safe: View full screen", outer],
   ["markdown/sections: BUTTON", noTarget],
   ["message-scroller/jump: Turn that into a test.", outer],
   ["page-header/actions-kinds: More actions", outer],
