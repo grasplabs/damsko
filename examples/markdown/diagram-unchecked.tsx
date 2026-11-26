@@ -32,7 +32,7 @@ export default function MarkdownDiagramUnchecked() {
             await drawDiagram(code, `unchecked-${place}`, { check: false })
         )
       );
-      setDrawn(made.filter((each) => "svg" in each).length);
+      setDrawn(made.filter((each) => each !== null && "svg" in each).length);
     };
     void draw();
   }, []);

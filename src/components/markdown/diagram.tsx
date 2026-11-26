@@ -159,8 +159,8 @@ const WAITS = [400, 1600];
 const LONGEST = 10_000;
 
 // One drawing at a time: Mermaid makes its frame as it is asked, and it has its policy before
-// Mermaid draws in it. The drawing before this one ends when this promise does, or when it has
-// taken LONGEST, so one that never ends (a request for a chunk that is never answered) is given up.
+// Mermaid draws in it. The drawing before this one ends when this promise does: when it has drawn,
+// failed, taken LONGEST (a request for a chunk that is never answered) or been stopped.
 let turn: Promise<unknown> = Promise.resolve();
 // Each attempt's own id: an attempt that took too long may still be drawing in its frame, which
 // Mermaid finds by its id.
@@ -180,110 +180,156 @@ const failure = (error: unknown, otherwise: DiagramReason): DiagramReason =>
   error instanceof TypeError ? "failed:load" : otherwise;
 
 /**
- * One attempt at drawing `code`: in Mermaid's sandbox frame, out of sight and with a policy that
- * loads nothing, never in the page, so what it measures is measured there.
+ * The box one attempt draws in, in the page out of sight, at a size of its own so what Mermaid
+ * measures is laid out; each frame Mermaid makes in it is given its policy as it is made. `remove`
+ * takes the box and its watch away, whether the attempt drew, failed, took too long or was stopped:
+ * an attempt given up never ends, so it cannot clear up after itself.
  */
-const attempt = async (
-  code: string,
-  id: string,
-  theme: DiagramTheme | undefined
-): Promise<Drawing> => {
+const hiddenBox = () => {
   const box = document.createElement("div");
+  box.setAttribute("aria-hidden", "true");
+  box.setAttribute(
+    "style",
+    "position:fixed;inset-inline-start:-10000px;top:0;width:1000px;height:1000px;visibility:hidden;pointer-events:none"
+  );
   const watch = new MutationObserver(() => {
     for (const frame of box.querySelectorAll("iframe")) {
       guard(frame);
     }
   });
+  watch.observe(box, { childList: true, subtree: true });
+  document.body.append(box);
+  return {
+    box,
+    remove: () => {
+      watch.disconnect();
+      box.remove();
+    },
+  };
+};
+
+/**
+ * One attempt at drawing `code`: in Mermaid's sandbox frame, in `box`, with a policy that loads
+ * nothing, never in the page, so what it measures is measured there.
+ */
+const attempt = async (
+  code: string,
+  id: string,
+  theme: DiagramTheme | undefined,
+  box: HTMLElement
+): Promise<Drawing> => {
+  let mermaid;
   try {
-    let mermaid;
-    try {
-      ({ default: mermaid } = await import("mermaid"));
-    } catch {
-      return { reason: "failed:load" };
-    }
-    mermaid.initialize({
-      startOnLoad: false,
-      securityLevel: "sandbox",
-      secure: SECURE,
-      suppressErrorRendering: true,
-      // The design system's look, from its tokens as they resolve where the diagram stands.
-      theme: "base",
-      themeVariables: theme?.variables ?? {},
-      // Labels as SVG text, not HTML in the drawing.
-      htmlLabels: false,
-      // Mermaid's own bounds, under the fence's own (refusalOf).
-      maxTextSize: 20_000,
-      maxEdges: 200,
-    });
-    try {
-      await mermaid.parse(code);
-    } catch (error) {
-      return { reason: failure(error, "failed:syntax") };
-    }
-    box.setAttribute("aria-hidden", "true");
-    // Out of sight, at a size of its own, so what Mermaid measures is laid out.
-    box.setAttribute(
-      "style",
-      "position:fixed;inset-inline-start:-10000px;top:0;width:1000px;height:1000px;visibility:hidden;pointer-events:none"
-    );
-    document.body.append(box);
-    watch.observe(box, { childList: true, subtree: true });
-    // Made as Mermaid is asked (or, behind a render still in its queue, as it starts: the observer
-    // gives that frame its policy), before Mermaid reads the fence and draws.
-    const pending = mermaid.render(id, code, box);
-    for (const frame of box.querySelectorAll("iframe")) {
-      guard(frame);
-    }
-    let framed: string;
-    try {
-      ({ svg: framed } = await pending);
-    } catch (error) {
-      return { reason: failure(error, "failed:render") };
-    }
-    const inner = svgOfFrame(framed);
-    const svg = inner === null ? null : safeSvg(inner, id);
-    return svg === null ? { reason: "failed:output" } : { svg };
-  } finally {
-    watch.disconnect();
-    box.remove();
+    ({ default: mermaid } = await import("mermaid"));
+  } catch {
+    return { reason: "failed:load" };
   }
+  mermaid.initialize({
+    startOnLoad: false,
+    securityLevel: "sandbox",
+    secure: SECURE,
+    suppressErrorRendering: true,
+    // The design system's look, from its tokens as they resolve where the diagram stands.
+    theme: "base",
+    themeVariables: theme?.variables ?? {},
+    // Labels as SVG text, not HTML in the drawing.
+    htmlLabels: false,
+    // Mermaid's own bounds, under the fence's own (refusalOf).
+    maxTextSize: 20_000,
+    maxEdges: 200,
+  });
+  try {
+    await mermaid.parse(code);
+  } catch (error) {
+    return { reason: failure(error, "failed:syntax") };
+  }
+  // Made as Mermaid is asked (or, behind a render still in its queue, as it starts: the box's watch
+  // gives that frame its policy), before Mermaid reads the fence and draws.
+  const pending = mermaid.render(id, code, box);
+  for (const frame of box.querySelectorAll("iframe")) {
+    guard(frame);
+  }
+  let framed: string;
+  try {
+    ({ svg: framed } = await pending);
+  } catch (error) {
+    return { reason: failure(error, "failed:render") };
+  }
+  const inner = svgOfFrame(framed);
+  const svg = inner === null ? null : safeSvg(inner, id);
+  return svg === null ? { reason: "failed:output" } : { svg };
 };
 
 /**
  * Draws `code` with Mermaid, loaded the first time: its SVG, held to SVG's own shapes, or why it is
  * its code. A fence `refusalOf` refuses is never drawn (`check: false` is for the spec that shows
  * the frame alone loads nothing). A failure that may pass is tried again (AGAIN), twice at most.
+ * Aborting `signal` stops it at once, its box taken away: it gives null.
  */
 export const drawDiagram = async (
   code: string,
   id: string,
-  { check = true, theme }: { check?: boolean; theme?: DiagramTheme } = {}
-): Promise<Drawing> => {
+  {
+    check = true,
+    theme,
+    signal,
+  }: { check?: boolean; theme?: DiagramTheme; signal?: AbortSignal } = {}
+): Promise<Drawing | null> => {
   const refused = check ? refusalOf(code) : null;
   if (refused !== null) {
     return { reason: `skipped:${refused}` };
   }
+  // Settles, as null, once `signal` aborts; never without one.
+  // oxlint-disable-next-line promise/avoid-new -- an abort has no promise of its own
+  const stopped = new Promise<null>((resolve) => {
+    if (signal?.aborted === true) {
+      resolve(null);
+    }
+    signal?.addEventListener(
+      "abort",
+      () => {
+        resolve(null);
+      },
+      { once: true }
+    );
+  });
   let drawing: Drawing = { reason: "failed:render" };
   for (const [tried, wait] of [0, ...WAITS].entries()) {
     if (tried > 0) {
       // oxlint-disable-next-line no-await-in-loop -- one attempt after the other
-      await after(wait, null);
+      await Promise.race([after(wait, null), stopped]);
     }
     const before = turn;
     let done = nothing;
     // oxlint-disable-next-line promise/avoid-new -- this attempt's turn, which ends when it does
-    turn = new Promise<void>((resolve) => {
+    const mine = new Promise<void>((resolve) => {
       done = resolve;
     });
-    // oxlint-disable-next-line no-await-in-loop -- one attempt after the other
-    await before;
-    attempts += 1;
+    // Never before the one ahead of it has ended, even when this one is stopped while it waits.
+    turn = Promise.all([before, mine]);
     try {
       // oxlint-disable-next-line no-await-in-loop -- one attempt after the other
-      drawing = await Promise.race([
-        attempt(code, `${id}-${attempts}`, theme),
-        after<Drawing>(LONGEST, { reason: "failed:timeout" }),
-      ]);
+      await Promise.race([before, stopped]);
+      if (signal?.aborted === true) {
+        return null;
+      }
+      attempts += 1;
+      const hidden = hiddenBox();
+      let made: Drawing | null;
+      try {
+        // oxlint-disable-next-line no-await-in-loop -- one attempt after the other
+        made = await Promise.race([
+          attempt(code, `${id}-${attempts}`, theme, hidden.box),
+          after<Drawing>(LONGEST, { reason: "failed:timeout" }),
+          stopped,
+        ]);
+      } finally {
+        hidden.remove();
+      }
+      if (made === null) {
+        return null;
+      }
+      drawing = made;
     } finally {
       done();
     }
@@ -536,10 +582,15 @@ export const Diagram = ({
     };
   }, []);
   useEffect(() => {
-    let live = true;
+    // Stopped when the diagram leaves the page or is drawn again, so its attempt, its box and its
+    // turn end there rather than when it would have drawn.
+    const stop = new AbortController();
     const draw = async (look: DiagramTheme) => {
-      const made = await drawDiagram(code, id, { theme: look });
-      if (!live) {
+      const made = await drawDiagram(code, id, {
+        theme: look,
+        signal: stop.signal,
+      });
+      if (made === null || stop.signal.aborted) {
         return;
       }
       if ("reason" in made && made.reason.startsWith("failed:")) {
@@ -562,17 +613,21 @@ export const Diagram = ({
       void draw(theme);
     }
     return () => {
-      live = false;
+      stop.abort();
     };
   }, [code, id, theme]);
+  const busy = near && (drawn?.code !== code || drawn.theme !== theme?.key);
   return (
     // Busy while Mermaid loads and draws it, once it is near the screen.
     <div
       ref={frame}
       data-slot="markdown-diagram"
-      // Drawn, or why it is its code (DiagramReason), for a host and its tests.
-      data-diagram={drawn === null ? undefined : (drawn.reason ?? "drawn")}
-      aria-busy={near && (drawn?.code !== code || drawn.theme !== theme?.key)}
+      // Once settled, drawn or why it is its code (DiagramReason), for a host and its tests to wait
+      // on; not there while it is drawn, the first time or again.
+      data-diagram={
+        drawn === null || busy ? undefined : (drawn.reason ?? "drawn")
+      }
+      aria-busy={busy}
     >
       <Code.CodeBlock language="mermaid">
         <Code.CodeBlockHeader>

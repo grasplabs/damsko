@@ -403,11 +403,13 @@ const formulas = (html: string) =>
 
 /** A table's cells, each as Markdown that reads back the same (what Copy as Markdown writes). */
 const cellsOf = (source: string) => {
-  const table = parse
-    .parseMarkdown(source)
-    .children.find((node) => node.type === "table");
+  const nodes = parse.parseMarkdown(source).children;
+  const table = nodes.find((node) => node.type === "table");
+  const definitions = nodes.flatMap((node) =>
+    node.type === "definition" ? [node] : []
+  );
   return (table?.children ?? []).map((row) =>
-    row.children.map((cell) => parse.markdownOfCell(cell))
+    row.children.map((cell) => parse.markdownOfCell(cell, definitions))
   );
 };
 /** Cells written back as a table. */
@@ -440,6 +442,38 @@ describe("a table copied as Markdown", () => {
     expect(once[1]?.[0]).toBe("`Array<T>`");
     // The words drawn are the words copied back.
     expect(textOf(draw(tableOf(once)))).toBe(textOf(draw(source)));
+  });
+
+  test("keeps a picture as a picture, its alt text its words, and a link or a picture by reference with its address", () => {
+    const source = [
+      "| State | Docs |",
+      "| --- | --- |",
+      "| ![Status](https://example.com/status.png) | [the guide][guide] |",
+      "| ![Logo *new*][logo] | ![](https://example.com/blank.png) |",
+      "| ![a\\|b](https://example.com/c.png) | none |",
+      "",
+      "[guide]: https://example.com/guide",
+      "[logo]: https://example.com/logo.png",
+    ].join("\n");
+    const once = cellsOf(source);
+    expect(once.slice(1)).toStrictEqual([
+      [
+        "![Status](<https://example.com/status.png>)",
+        "[the guide](<https://example.com/guide>)",
+      ],
+      [
+        "![Logo new](<https://example.com/logo.png>)",
+        "![](<https://example.com/blank.png>)",
+      ],
+      ["![a\\|b](<https://example.com/c.png>)", "none"],
+    ]);
+    // Copied without the answer's definitions, it reads back as the same cells and draws the same.
+    expect(cellsOf(tableOf(once))).toStrictEqual(once);
+    expect(textOf(draw(tableOf(once)))).toBe(textOf(draw(source)));
+    // A note's mark as written: the note is not in the table.
+    expect(cellsOf("| a |\n| - |\n| b[^1] |\n\n[^1]: The note.")).toStrictEqual(
+      [["a"], ["b[^1]"]]
+    );
   });
 });
 
