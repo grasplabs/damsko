@@ -10,7 +10,7 @@
 // of a theme that has no colours of its own (`cssVariables: true`); those names are turned here
 // into Damsko's syntax colours, and the page draws them as text in spans, never as HTML.
 //
-// 0.5.2 is one module with every language, 143 KB gzipped. From 0.6.0 (allowed by the 3-day rule
+// 0.5.2 is one module with every language, 161 KB compressed. From 0.6.0 (allowed by the 3-day rule
 // from 2026-11-29), load `@pierre/highlights/core` and each language from `langs/*` on demand: a
 // change in this file alone.
 import type * as Highlights from "@pierre/highlights";
@@ -158,7 +158,7 @@ export interface Run {
 export type Line = Run[];
 
 /**
- * The most coloured runs the lines an open block draws may have: past it, they are all plain. Each
+ * The most coloured runs the lines a block draws may have: past it, they are all plain. Each
  * coloured run is an element, and drawing them is what takes time now, not reading them (3,000
  * lines are read in about a millisecond): all in one frame when the block opens or its code is
  * given. Measured in Chromium against the same lines drawn as text, each run adds some 3.5 µs, and
@@ -169,13 +169,13 @@ export const MOST_RUNS = 5000;
 
 /**
  * The longest line the lexers colour: a line this long or longer is drawn as its text, one run.
- * Ordinary code has none so long; minified code and generated data do, and a line of them can be
- * a run every other character. At this length the 18 lines a block shows folded are at most 4,500
- * runs (`a,a,a,…`), under MOST_RUNS, so a folded block is always coloured: they add 25 ms to
- * drawing the same lines as text, 75 ms slowed down. At 2,000 such lines were 18,000 runs, and
- * added 77 ms and 250 ms.
+ * Ordinary code has few so long; minified code and generated data have many, and a line of them
+ * can be a coloured run at every character (`1,1,1,…`). At this length the 18 lines a block shows
+ * folded are at most 4,500 runs, under MOST_RUNS, so a folded block is always coloured: 4,500 such
+ * runs add 25 ms to drawing the same lines as text, 75 ms slowed down. Lines of 2,000 characters
+ * could be 36,000 runs folded.
  */
-export const MOST_LINE = 500;
+export const MOST_LINE = 250;
 
 // The theme: no colours, each run named by a CSS variable.
 const theme: Highlights.Theme = {
@@ -227,7 +227,10 @@ export const colouredRuns = (lines: Line[]) => {
   return count;
 };
 
-/** `code` up to its `count`th line's end: all of it when it has no more lines than that. */
+/**
+ * `code` up to its `count`th line's end, the newline that ends it kept (so a blank last line is a
+ * line): all of it when it has no more lines than that.
+ */
 const firstLines = (code: string, count: number): string => {
   let at = -1;
   for (let line = 0; line < count; line += 1) {
@@ -236,7 +239,7 @@ const firstLines = (code: string, count: number): string => {
       return code;
     }
   }
-  return code.slice(0, Math.max(at, 0));
+  return code.slice(0, at + 1);
 };
 
 /** The first `most` lines of `code`, as text: a last newline ends a line, it does not start one. */
@@ -250,8 +253,9 @@ export const plainLines = (code: string, most: number): string[] => {
 
 /**
  * One block's reading of its code: while it is written, a stream that reads only what is new and
- * gives back each line a newline ends, with its own WebAssembly instance; once it is done, the
- * lines of the code as read last, kept while the code is the same.
+ * gives back each line a newline ends, with its own WebAssembly instance (none once it has given
+ * up, past MOST_RUNS); once it is done, the lines of the code as read last, kept while the code is
+ * the same, `whole` when they are all its lines.
  */
 export interface Reading {
   stream: {
@@ -261,17 +265,20 @@ export interface Reading {
     runs: number;
     tokenizer: Highlights.StreamTokenizer | null;
   } | null;
-  done: { code: string; language: string; most: number; lines: Line[] } | null;
+  done: {
+    code: string;
+    language: string;
+    lines: Line[];
+    whole: boolean;
+  } | null;
 }
 
 export const newReading = (): Reading => ({ stream: null, done: null });
 
-/** Lets the stream's WebAssembly instance go, if it has one. */
+/** Lets the stream and its WebAssembly instance go; the next reading starts a new one. */
 export const stopReading = (reading: Reading) => {
   reading.stream?.tokenizer?.dispose();
-  if (reading.stream !== null) {
-    reading.stream.tokenizer = null;
-  }
+  reading.stream = null;
 };
 
 /**
@@ -289,6 +296,7 @@ export const writtenLines = (
 ): Line[] | null => {
   const lang = langOf(engine, language);
   if (lang === null) {
+    stopReading(reading);
     return null;
   }
   let { stream } = reading;
@@ -322,7 +330,9 @@ export const writtenLines = (
     stream.runs += colouredRuns(more);
     stream.lines = [...stream.lines, ...more];
     if (stream.runs > MOST_RUNS) {
-      stopReading(reading);
+      // Given up: plain until it is done, and nothing more read.
+      stream.tokenizer.dispose();
+      stream.tokenizer = null;
       return null;
     }
   }
@@ -347,15 +357,17 @@ export const doneLines = (
     done !== null &&
     done.code === code &&
     done.language === language &&
-    done.most === most
+    (done.whole || most <= done.lines.length)
   ) {
-    return done.lines;
+    return most < done.lines.length ? done.lines.slice(0, most) : done.lines;
   }
   const lang = langOf(engine, language);
   if (lang === null) {
+    stopReading(reading);
     return null;
   }
   let lines: Line[];
+  let whole = true;
   if (
     stream !== null &&
     stream.tokenizer !== null &&
@@ -369,8 +381,10 @@ export const doneLines = (
       ...linesOf(tokenizer.end()),
     ];
   } else {
+    const read = firstLines(code, most);
+    whole = read.length === code.length;
     lines = linesOf(
-      engine.codeToTokens(firstLines(code, most), {
+      engine.codeToTokens(read, {
         lang,
         theme,
         tokenizeMaxLineLength: MOST_LINE,
@@ -381,11 +395,10 @@ export const doneLines = (
   if (lines.length > 1 && lines.at(-1)?.length === 0) {
     lines.pop();
   }
-  lines = lines.slice(0, most);
   stopReading(reading);
-  reading.stream = null;
-  reading.done = { code, language, most, lines };
-  return lines;
+  // Every line read is kept, so Show more and Show less give the same objects.
+  reading.done = { code, language, lines, whole };
+  return most < lines.length ? lines.slice(0, most) : lines;
 };
 
 // The lexers, once loaded: undefined until then, null where they cannot load.

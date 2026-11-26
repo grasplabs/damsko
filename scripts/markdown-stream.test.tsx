@@ -380,7 +380,7 @@ describe("nothing runs on once it is gone", () => {
       root.unmount();
     });
     // What it started comes to an end: the page's live region says what was left to say, a message
-    // at a time, and CodeBlock's worker is stopped a second after the last block has gone.
+    // at a time.
     act(() => {
       vi.advanceTimersByTime(60_000);
     });

@@ -533,16 +533,15 @@ const afterLines = (code: string, count: number) => {
 /**
  * `code`'s first `most` lines, coloured, the rest of them text: all of it text until the lexers
  * have loaded, where they cannot, in a language they do not know, and when the lines are more than
- * MOST_RUNS coloured runs and `capped` (a block drawing more than its fold). While it is written,
- * the lines a newline has ended are coloured, each once, as they come, and the last is text until
- * its newline comes: never coloured in one frame and plain in the next.
+ * MOST_RUNS coloured runs (never the 18 lines a folded block shows: see MOST_LINE). While it is
+ * written, the lines a newline has ended are coloured, each once, as they come, and the last is
+ * text until its newline comes: never coloured in one frame and plain in the next.
  */
 const useLinesOf = (
   code: string,
   language: string,
   streaming: boolean,
-  most: number,
-  capped: boolean
+  most: number
 ): (Line | string)[] => {
   const engine = useSyncExternalStore(watchEngine, currentEngine, noEngine);
   // oxlint-disable-next-line react/hook-use-state -- made once, never replaced
@@ -553,7 +552,7 @@ const useLinesOf = (
     },
     [reading]
   );
-  if (engine === null) {
+  if (engine === null || code === "") {
     return plainLines(code, most);
   }
   if (streaming) {
@@ -569,7 +568,7 @@ const useLinesOf = (
         ];
   }
   const lines = doneLines(reading, engine, code, language, most);
-  return lines === null || (capped && colouredRuns(lines) > MOST_RUNS)
+  return lines === null || colouredRuns(lines) > MOST_RUNS
     ? plainLines(code, most)
     : lines;
 };
@@ -618,15 +617,15 @@ const useOncePerFrame = (code: string, streaming: boolean): string => {
  */
 const useOpen = (streaming: boolean) => {
   const [open, setOpen] = useState(false);
-  const streamed = useRef(streaming);
-  useEffect(() => {
-    if (streaming) {
-      streamed.current = true;
-    } else if (streamed.current) {
-      streamed.current = false;
+  // Opened in the render the writing ends in, never a frame later: no frame draws it folded, and
+  // its lines are read once, for the open block.
+  const [wasStreaming, setWasStreaming] = useState(streaming);
+  if (wasStreaming !== streaming) {
+    setWasStreaming(streaming);
+    if (wasStreaming) {
       setOpen(true);
     }
-  }, [streaming]);
+  }
   return [open, setOpen] as const;
 };
 
@@ -716,8 +715,7 @@ export const useHighlightedCode = (
     useOncePerFrame(code, streaming),
     language,
     streaming,
-    Number.POSITIVE_INFINITY,
-    true
+    Number.POSITIVE_INFINITY
   ).map((line, index) =>
     typeof line === "string" ? (
       line
@@ -980,14 +978,14 @@ const useLines = (
   children: ReactNode,
   language: string,
   streaming: boolean,
-  fold: (count: number) => { drawn: number; capped: boolean }
+  fold: (count: number) => { drawn: number }
 ) => {
   const given = typeof children === "string";
   const parts = given ? [] : listOf(children);
   const count = given ? countLines(children) : parts.length;
-  const { drawn, capped } = fold(count);
+  const { drawn } = fold(count);
   const shown = useOncePerFrame(given ? children : "", streaming);
-  const highlighted = useLinesOf(shown, language, streaming, drawn, capped);
+  const highlighted = useLinesOf(shown, language, streaming, drawn);
   return {
     count,
     lines: given
@@ -1001,11 +999,10 @@ const useLines = (
 
 /**
  * Whether Show more has opened it, and for a count of lines: whether it folds, where (null when
- * every line shows), how many lines are drawn and how many are not, and whether their colours are
- * held to MOST_RUNS. Folded, once the page is live, only the lines that show are drawn, always
- * coloured; else at most MOST_DRAWN (every line when it never folds), coloured only within
- * MOST_RUNS, and a line says how many more. With no script nothing folds, so until the page is live
- * it draws as an open block does.
+ * every line shows), how many lines are drawn and how many are not. Folded, once the page is live,
+ * only the lines that show are drawn; else at most MOST_DRAWN (every line when it never folds),
+ * and a line says how many more. With no script nothing folds, so until the page is live it draws
+ * as an open block does.
  */
 const useFold = (maxLines: number | false, streaming: boolean) => {
   const [open, setOpen] = useOpen(streaming);
@@ -1022,7 +1019,6 @@ const useFold = (maxLines: number | false, streaming: boolean) => {
       folds,
       foldAt,
       drawn: cut ? foldAt : most,
-      capped: !cut,
       more: cut ? 0 : Math.max(0, count - most),
     };
   };

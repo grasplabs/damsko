@@ -265,6 +265,7 @@ declare global {
       faults: string[];
       frames: number;
       seen: number;
+      done: boolean;
     };
   }
 }
@@ -424,7 +425,7 @@ test("the lexers load the first time a block is drawn, never with a page that ha
     return texts.filter((text) => text.includes("WebAssembly.Module")).length;
   };
   await openExample(page, "button", "sizes");
-  await page.waitForTimeout(500);
+  await page.waitForLoadState("networkidle");
   expect(await lexers()).toBe(0);
   await openExample(page, "code-block", "basic");
   const block = page.getByRole("region", { name: "TSX" });
@@ -456,6 +457,10 @@ test("while it is written, the finished lines are coloured once and the line bei
       if (block === null || block.dataset.streaming === undefined) {
         seen.clear();
         placed.clear();
+        // A whole writing watched, from its first frame to its end.
+        if (frames > 0 && window.streamed !== undefined) {
+          window.streamed.done = true;
+        }
         return;
       }
       frames += 1;
@@ -485,7 +490,7 @@ test("while it is written, the finished lines are coloured once and the line bei
         }
       }
       most = Math.max(most, seen.size);
-      window.streamed = { faults, frames, seen: most };
+      window.streamed = { faults, frames, seen: most, done: false };
     };
     new MutationObserver(look).observe(block ?? document.body, {
       subtree: true,
@@ -495,7 +500,11 @@ test("while it is written, the finished lines are coloured once and the line bei
     });
   });
   // Written from nothing again, and done.
-  await page.waitForTimeout(7000);
+  await expect
+    .poll(async () => await page.evaluate(() => window.streamed?.done), {
+      timeout: 15_000,
+    })
+    .toBe(true);
   const streamed = await page.evaluate(() => window.streamed);
   expect(streamed?.frames).toBeGreaterThan(20);
   // Most of its seven lines were coloured while it was written.
@@ -555,10 +564,10 @@ test("a folded block is coloured whatever its lines hold; opened past the most r
   page,
 }) => {
   await openExample(page, "code-block", "any");
-  // 40 lines of a run every other character, each just under the longest line coloured.
+  // 40 lines of a coloured run at every character, each just under the longest line coloured.
   await page
     .getByLabel("Code")
-    .fill(Array.from({ length: 40 }, () => "a,".repeat(240)).join("\n"));
+    .fill(Array.from({ length: 40 }, () => "1,".repeat(124)).join("\n"));
   await page.getByRole("button", { name: "Show", exact: true }).click();
   const block = page.getByRole("region", { name: "TSX" });
   await expect

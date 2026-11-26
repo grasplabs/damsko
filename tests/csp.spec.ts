@@ -206,8 +206,13 @@ test("where a policy refuses WebAssembly, every block is plain and whole, refuse
   // A second more, for anything that would try again.
   await page.waitForTimeout(1000);
   const refused = await page.evaluate(() => window.refused ?? []);
-  expect(refused).toStrictEqual(["script-src wasm-eval"]);
-  // Nothing in the console and nothing thrown: the refusal is the policy's report, once.
-  expect(said).toStrictEqual([]);
+  expect(refused).toHaveLength(1);
+  expect(refused[0]).toMatch(/^script-src/u);
+  // Nothing thrown and nothing from CodeBlock: at most the browser's own note of the refusal, once
+  // (Chromium says nothing at all).
+  expect(
+    said.filter((each) => !/Content[- ]Security[- ]Policy/iu.test(each))
+  ).toStrictEqual([]);
+  expect(said.length).toBeLessThanOrEqual(1);
   expect(await coloured(page)).toBe(false);
 });

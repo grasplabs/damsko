@@ -19,6 +19,7 @@ import {
   MOST_RUNS,
   newReading,
   plainLines,
+  stopReading,
   writtenLines,
 } from "../src/components/code-block-highlight.ts";
 import type { Line } from "../src/components/code-block-highlight.ts";
@@ -143,12 +144,25 @@ describe(doneLines, () => {
       "const a2 = 2;",
     ]);
     expect(plainLines("a\nb\n", ALL)).toStrictEqual(["a", "b"]);
+    // A blank line at the cut is a line.
+    expect(plainLines("a\n\nb", 2)).toStrictEqual(["a", ""]);
+    expect(whole("a\n\nb", "ts", 2)?.map(textOf)).toStrictEqual(["a", ""]);
   });
 
-  test("read again for the same code, it gives the same lines", () => {
+  test("read again for the same code, folded or open, it gives the same lines", () => {
     const reading = newReading();
-    const first = doneLines(reading, engine, "const a = 1;", "ts", ALL);
-    expect(doneLines(reading, engine, "const a = 1;", "ts", ALL)).toBe(first);
+    const code = Array.from(
+      { length: 40 },
+      (_, n) => `const a${n} = ${n};`
+    ).join("\n");
+    const folded = doneLines(reading, engine, code, "ts", 18) ?? [];
+    const open = doneLines(reading, engine, code, "ts", ALL) ?? [];
+    expect(open).toHaveLength(40);
+    expect(doneLines(reading, engine, code, "ts", ALL)).toBe(open);
+    // Folded again, the lines are the open block's.
+    const again = doneLines(reading, engine, code, "ts", 18) ?? [];
+    expect(again[17]).toBe(open[17]);
+    expect(folded.map(textOf)).toStrictEqual(again.map(textOf));
   });
 });
 
@@ -214,6 +228,21 @@ describe(writtenLines, () => {
       ALL
     );
     expect(lines?.map(textOf)).toStrictEqual(["let x = '", "let y"]);
+  });
+
+  test("stopped and read again, a stream starts anew and colours what comes", () => {
+    const reading = newReading();
+    writtenLines(reading, engine, "const a = 1;\n", "ts", ALL);
+    stopReading(reading);
+    const lines = writtenLines(
+      reading,
+      engine,
+      "const a = 1;\nconst b = 2;\nlet",
+      "ts",
+      ALL
+    );
+    expect(lines?.map(textOf)).toStrictEqual(["const a = 1;", "const b = 2;"]);
+    expect(colouredRuns([lines?.[1] ?? []])).toBeGreaterThan(1);
   });
 
   test("past MOST_RUNS runs, a stream gives up: plain from then on", () => {

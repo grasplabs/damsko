@@ -4,7 +4,7 @@
 // one thing for each further claim the docs make to a product: text in each of the three font
 // families (with a letter only the full Latin file has), an element with no style of its own for
 // the base, a choice of mode that is kept, the components' words from a translation library in
-// miniature, built while rendering, and code coloured in CodeBlock's worker. Never run here.
+// miniature, built while rendering, and code coloured by CodeBlock's lexers. Never run here.
 /* oxlint-disable shadcn/no-inline-styles -- the page's app has no StyleX of its own and this file adds no package to it, so its three styles are inline */
 import { Button } from "@grasp-os/ui/components/button";
 import {
