@@ -256,7 +256,7 @@ test("while it is written, a table of many columns keeps each a few words wide a
   const widths = await table
     .getByRole("columnheader")
     .evaluateAll((heads) => heads.map((head) => head.clientWidth));
-  // Eight even columns, together wider than the 326 px a phone gives the answer.
+  // Eight even columns, together wider than the answer's column on a phone.
   expect(new Set(widths).size).toBe(1);
   expect((widths[0] ?? 0) * widths.length).toBeGreaterThan(400);
 });

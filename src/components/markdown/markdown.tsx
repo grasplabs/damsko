@@ -174,8 +174,8 @@ export interface MarkdownProps {
    * any left out is Markdown's own. `a` is given only an address Markdown would lead to, whole;
    * `img` only an http or https one, whole, and giving it is the choice to load pictures. `code`
    * draws code in a sentence and fenced code (`node.type` is `code`), in CodeBlock's place; `pre`,
-   * when given, holds fenced code's `code`. Task boxes, notes and folding sections stay Markdown's
-   * own. `node` is internal: the parser's node, holding the answer as written (its `url` unchecked),
+   * when given, holds fenced code's `code`. Task boxes, notes, folding sections and alerts stay
+   * Markdown's own. `node` is internal: the parser's node, holding the answer as written (its `url` unchecked),
    * to tell what is drawn by; draw from the checked `href` and `src`.
    */
   components?: MarkdownComponents;
