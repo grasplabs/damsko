@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
-import { openExample } from "./example.ts";
+import { drawsWordsOnce, openExample } from "./example.ts";
 
 /**
  * The system's corner as this engine draws it: 20px in the squircle, or its plain-radius stand-in
@@ -408,4 +408,20 @@ test.describe("with several values", () => {
     });
     expect(values).toStrictEqual(["amara", "design-team"]);
   });
+});
+
+test("a long typed value scrolled to the caret is drawn once while it has focus", async ({
+  page,
+}) => {
+  await openExample(page, "combobox", "field");
+  const field = page.getByRole("combobox", { name: "Country" });
+  await field.click();
+  await page.keyboard.type(
+    "Every team, every project and every policy that applies to each of them this year"
+  );
+  expect(
+    await field.evaluate((input: HTMLInputElement) => input.scrollLeft)
+  ).toBeGreaterThan(0);
+  await expect(field).toBeFocused();
+  expect(await drawsWordsOnce(field)).toBe(true);
 });

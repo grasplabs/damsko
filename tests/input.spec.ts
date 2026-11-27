@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
-import { hasFocusRing, openExample } from "./example.ts";
+import { drawsWordsOnce, hasFocusRing, openExample } from "./example.ts";
 
 // The agent fixture: the page's one bridge (window.damskoAgent, site/behaviour/agent.ts) lists
 // every field by its label with its value, and sets a value by that name.
@@ -126,6 +126,23 @@ test("a value that fits shows every letter; a longer one fades at its end until 
 
   await openExample(page, "input", "field-states");
   expect(await fill("Project name")).not.toBe("rgba(0, 0, 0, 0)");
+});
+
+test("a long value scrolled to the caret is drawn once while the field has focus, not twice over itself", async ({
+  page,
+}) => {
+  await openExample(page, "input", "kinds");
+  // Read only, its value longer than the field, with focus.
+  const field = page.getByRole("textbox", { name: "Shared folder" });
+  await field.focus();
+  // Scrolled to its end, as the caret puts it there (the keys do not in every engine).
+  await field.evaluate((input: HTMLInputElement) => {
+    input.scrollLeft = input.scrollWidth;
+  });
+  expect(
+    await field.evaluate((input: HTMLInputElement) => input.scrollLeft)
+  ).toBeGreaterThan(0);
+  expect(await drawsWordsOnce(field)).toBe(true);
 });
 
 test("the password's button shows and hides it, keeps its name in step, and its ring stays inside the field", async ({

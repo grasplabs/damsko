@@ -13,7 +13,7 @@ A chat at its own address. The switch above the page shows each state the produc
 
 ## What it is made of
 
-- **App shell** (the `app-shell-01` block): the page's bar (AppShellHeader) carries the chat's title as the last step of the breadcrumb, renamed in place, and the chat's menu (Copy link, Delete with Undo) at its end.
+- **App shell** (the `app-shell-01` block): the page's bar (AppShellHeader) carries the chat's title as the last step of the breadcrumb, renamed in a popup under it, and the chat's menu (Copy link, Delete with Undo) at its end.
 - **Sidebar**, its Chats group folding from its label with its count, plain rows with this chat active, one still answering with the working mark, All chats last.
 - A column the **PromptInput**'s width (`prompt-input-width`), the **MessageScroller** over the PromptInput. It scrolls itself and follows new words while you are at the end.
 - The person's **Message**, with Copy. The assistant's **Message** holds, in order: its steps in a **ChainOfThought** (each step active while it runs, folded to one line once done), the answer in **MessageResponse** (streaming while words arrive), each claim followed by its source's number (a note named "Source 1", the number its row in **Sources** carries, that the page draws through **MarkdownLinkProvider**; it goes nowhere, so it is not a link), the **Sources** it drew on once it is written, then its actions: Copy, thumbs up and down, Write it again (**MessageAction**).

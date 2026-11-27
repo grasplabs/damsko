@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
-import { liveRegion, openExample, settled } from "./example.ts";
+import { drawsWordsOnce, liveRegion, openExample, settled } from "./example.ts";
 
 /** What the page's live region last said. */
 const said = (page: Page) => liveRegion(page).filter({ hasText: /\S/u }).last();
@@ -300,4 +300,24 @@ test("in a popup, Enter and Escape while an input method composes neither save n
   });
   await page.keyboard.press("Escape");
   await expect(popup).toBeHidden();
+});
+
+test("inline, a long name scrolled to the caret is drawn once while a save works and after it fails", async ({
+  page,
+}) => {
+  await openExample(page, "inline-edit", "async");
+  await page.getByRole("button", { name: "Planning notes" }).click();
+  const field = page.getByRole("textbox", { name: "Document name" });
+  // Longer than the field, scrolled to the caret at its end, and taken, so the save fails.
+  await page.keyboard.type(
+    "Roadmap for every team, and the policies that apply to each of them"
+  );
+  await page.keyboard.press("Enter");
+  await expect(field).toHaveAttribute("readonly", "");
+  expect(
+    await field.evaluate((input: HTMLInputElement) => input.scrollLeft)
+  ).toBeGreaterThan(0);
+  expect(await drawsWordsOnce(field)).toBe(true);
+  await expect(field).toHaveAttribute("aria-invalid", "true");
+  expect(await drawsWordsOnce(field)).toBe(true);
 });
