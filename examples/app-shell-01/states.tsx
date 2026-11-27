@@ -6,6 +6,7 @@ import {
   AppShellPage,
   AppShellPageSkeleton,
 } from "@grasp-os/ui/blocks/app-shell-01/app-shell-01";
+import { Badge } from "@grasp-os/ui/components/badge";
 import { Button } from "@grasp-os/ui/components/button";
 import {
   Empty,
@@ -58,20 +59,32 @@ const states: { value: State; name: string; icon: IconData }[] = [
 ];
 
 // How a page stands in the shell while it loads, when it is not there and when it failed: each
-// keeps its bar (and the fold with it on a phone). Loading, the page's usual layout as skeletons;
+// keeps its bar (and the fold with it on a phone). The parent keeps the sidebar's state here, which
+// the bar shows after the path. Loading, the page's usual layout as skeletons;
 // not there and failed, an Empty that grows into the card's middle, with the way on.
 export default function AppShellStates() {
   const [state, setState] = useState<State>("loading");
+  const [open, setOpen] = useState(true);
+  // The parent keeps whether the sidebar is open, and the bar says so after the path.
+  const sidebarState = (
+    <Badge variant="secondary">
+      {open ? "Sidebar open" : "Sidebar folded"}
+    </Badge>
+  );
   let page = (
     <>
-      <AppShellHeader />
+      {/* The page's name is not known until it has loaded: the bar ends with the step before it. */}
+      <AppShellHeader
+        breadcrumb={[{ label: "Reports", href: "#reports" }]}
+        trailing={sidebarState}
+      />
       <AppShellPageSkeleton />
     </>
   );
   if (state === "missing") {
     page = (
       <>
-        <AppShellHeader title="Not found" />
+        <AppShellHeader title="Not found" trailing={sidebarState} />
         <AppShellPage>
           <Empty size="lg" style={layout.whole}>
             <EmptyHeader>
@@ -93,7 +106,7 @@ export default function AppShellStates() {
   } else if (state === "failed") {
     page = (
       <>
-        <AppShellHeader title="This page didn’t load" />
+        <AppShellHeader title="This page didn’t load" trailing={sidebarState} />
         <AppShellPage>
           <Empty size="lg" variant="destructive" style={layout.whole}>
             <EmptyHeader>
@@ -121,6 +134,8 @@ export default function AppShellStates() {
     <div {...stylex.props(layout.frame)}>
       <AppShell
         style={layout.shell}
+        open={open}
+        onOpenChange={setOpen}
         sidebar={
           <SidebarContent>
             <SidebarGroup>

@@ -107,7 +107,11 @@ import { Collapsible } from "./collapsible";
 import { Input } from "./input";
 import type { InputProps } from "./input";
 import { Sheet, SheetContent } from "./sheet";
-import { sidebarMarker, sidebarMenuItemMarker } from "./sidebar.stylex";
+import {
+  sidebarMarker,
+  sidebarMenuItemMarker,
+  sidebarWrapperMarker,
+} from "./sidebar.stylex";
 import { Skeleton } from "./skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip";
 import type { TooltipProps } from "./tooltip";
@@ -1079,26 +1083,43 @@ export const SidebarProvider = ({
   const element = useRef<HTMLDivElement | null>(null);
 
   // What held focus as the trigger or the keys folded or opened it. Once the change is
-  // drawn, if that went out of reach (folded away with it, hidden on the rail, or a trigger in the
-  // page that shows only while the sidebar is away), focus goes to a trigger still in reach, else
-  // to the open sidebar's current row.
+  // drawn and the sidebar has slid (none of it with reduced motion), if that went out of reach
+  // (folded away with it, hidden on the rail, or a trigger in the page that shows only while the
+  // sidebar is away), focus goes to a trigger still in reach, else to the open sidebar's current
+  // row; unless it folds or opens again first, which starts its own turn.
   const held = useRef<Element | null>(null);
+  const turns = useRef(0);
   useEffect(() => {
     const before = held.current;
     held.current = null;
     if (before === null || inReach(before)) {
       return;
     }
+    turns.current += 1;
+    const turn = turns.current;
     const wrapper = element.current;
-    const trigger = [
-      ...(wrapper?.querySelectorAll<HTMLElement>(
-        '[data-slot="sidebar-trigger"]'
-      ) ?? []),
-    ].find(inReach);
     const sidebar = wrapper?.querySelector<HTMLElement>(
       '[data-slot="sidebar"]'
     );
-    (trigger ?? (open && sidebar ? landingIn(sidebar) : undefined))?.focus();
+    const land = () => {
+      if (turn !== turns.current) {
+        return;
+      }
+      const trigger = [
+        ...(wrapper?.querySelectorAll<HTMLElement>(
+          '[data-slot="sidebar-trigger"]'
+        ) ?? []),
+      ].find(inReach);
+      (trigger ?? (open && sidebar ? landingIn(sidebar) : undefined))?.focus();
+    };
+    const sliding = sidebar?.getAnimations({ subtree: true }) ?? [];
+    const afterSlide = async () => {
+      await Promise.allSettled(
+        sliding.map(async ({ finished }) => await finished)
+      );
+      land();
+    };
+    void afterSlide();
   });
 
   const toggleSidebar = () => {
@@ -1160,7 +1181,7 @@ export const SidebarProvider = ({
         ref={watch}
         data-slot="sidebar-wrapper"
         data-sidebar-key={storageKey}
-        {...stylex.props(styles.wrapper, style)}
+        {...stylex.props(sidebarWrapperMarker, styles.wrapper, style)}
       >
         {children}
       </div>

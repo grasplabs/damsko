@@ -272,6 +272,11 @@
       },
       "files": [
         {
+          "path": "src/blocks/app-shell-01/app-shell-01.stylex.ts",
+          "type": "registry:file",
+          "target": "~/src/blocks/app-shell-01/app-shell-01.stylex.ts"
+        },
+        {
           "path": "src/blocks/app-shell-01/app-shell-01.tsx",
           "type": "registry:file",
           "target": "~/src/blocks/app-shell-01/app-shell-01.tsx"

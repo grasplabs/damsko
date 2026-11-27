@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import type { Locator, Page } from "@playwright/test";
 
-import { openExample } from "./example.ts";
+import { openExample, openExampleAsleep } from "./example.ts";
 
 const TOGGLE = "Show or hide the sidebar";
 const PANEL = "Show or hide the panel";
@@ -121,23 +121,139 @@ test("the fold is kept for the next visit (storageKey)", async ({ page }) => {
   ).toBeHidden();
 });
 
-test("the head's search opens the product's search, and so do its keys", async ({
+test("the head's search opens the product's search, Cmd+K or Ctrl+K by default", async ({
   page,
 }) => {
   await openExample(page, "app-shell-01", "basic");
   const search = page
     .getByRole("complementary", { name: "Sidebar" })
     .getByRole("button", { name: "Search" });
-  await expect(search).toHaveAttribute("aria-keyshortcuts", "/");
-  await expect(search).toHaveAttribute("title", /^Search \(.*\/.*\)$/u);
+  await expect(search).toHaveAttribute(
+    "aria-keyshortcuts",
+    /^(?:Meta|Control)\+K$/u
+  );
+  await expect(search).toHaveAttribute("title", /^Search \(.+K.*\)$/u);
   await search.click();
   const dialog = page.getByRole("dialog", { name: "Search" });
   await expect(dialog).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(dialog).toBeHidden();
-  await page.getByRole("heading", { name: "Spring launch" }).click();
-  await page.keyboard.press("/");
-  await expect(dialog).toBeVisible();
+  await expect(search).toBeFocused();
+});
+
+test("the search's keys open it from the page, never from rich text", async ({
+  page,
+}) => {
+  await openExample(page, "app-shell-01", "composed");
+  const assistant = page.getByRole("region", { name: "Assistant" });
+  await page.getByRole("heading", { name: "Dashboard" }).click();
+  await page.keyboard.press("ControlOrMeta+j");
+  await expect(assistant).toBeVisible();
+  await page.getByRole("button", { name: "Close the assistant" }).click();
+  await expect(assistant).toBeHidden();
+  await page.getByRole("textbox", { name: "Notes" }).click();
+  await page.keyboard.press("ControlOrMeta+j");
+  await expect(assistant).toBeHidden();
+});
+
+test("composed by hand: the overlay stands over the card and keeps the bar's room; covered, the page is out of reach and the overlay is not", async ({
+  page,
+}) => {
+  await openExample(page, "app-shell-01", "composed");
+  const main = page.getByRole("main");
+  const open = main.getByRole("button", { name: "Assistant", exact: true });
+  const bar = main.locator("[data-slot=app-shell-header]");
+  const [barBox, openBox] = await Promise.all([
+    bar.boundingBox(),
+    open.boundingBox(),
+  ]);
+  // The button stands in the bar's row, at its end, past where the bar keeps its own room.
+  expect(
+    Math.abs(
+      (openBox?.y ?? 0) +
+        (openBox?.height ?? 0) / 2 -
+        ((barBox?.y ?? 0) + (barBox?.height ?? 0) / 2)
+    )
+  ).toBeLessThan(1);
+  const padding = await bar.evaluate((node) =>
+    Number(getComputedStyle(node).paddingInlineEnd.replace("px", ""))
+  );
+  expect(padding).toBeGreaterThan(24 + (openBox?.width ?? 0));
+  await open.click();
+  await expect(open).toHaveAttribute("aria-expanded", "true");
+  const covered = await main
+    .getByRole("heading", { name: "Dashboard", level: 1 })
+    .evaluate((title) => title.closest("[inert]") !== null);
+  expect(covered).toBe(true);
+  await open.click();
+  await expect(page.getByRole("region", { name: "Assistant" })).toBeHidden();
+});
+
+test("the sidebar's state is kept by the parent when it holds it (open and onOpenChange)", async ({
+  page,
+}) => {
+  await openExample(page, "app-shell-01", "states");
+  const state = page.getByRole("main").getByText(/^Sidebar (?:open|folded)$/u);
+  await expect(state).toHaveText("Sidebar open");
+  await page
+    .getByRole("complementary", { name: "Sidebar" })
+    .getByRole("button", { name: TOGGLE })
+    .click();
+  await expect(state).toHaveText("Sidebar folded");
+  await page.getByRole("main").getByRole("button", { name: TOGGLE }).click();
+  await expect(state).toHaveText("Sidebar open");
+});
+
+test("before the page wakes, a kept fold is drawn folded, with the bar's fold in place", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    localStorage.setItem("app-shell-01-basic", "false");
+  });
+  const wake = await openExampleAsleep(page, "app-shell-01", "basic");
+  const row = page.locator('[data-slot=sidebar] a[href="#chat"]');
+  await expect(row).toBeHidden();
+  const barFold = page
+    .locator("[data-slot=app-shell-header]")
+    .locator("[data-slot=sidebar-trigger]");
+  await expect(barFold).toBeVisible();
+  await wake();
+  await expect(row).toBeHidden();
+  await expect(barFold).toBeVisible();
+});
+
+test("before the page wakes on a phone, the bar's menu button is already there", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  const wake = await openExampleAsleep(page, "app-shell-01", "basic");
+  const barFold = page
+    .locator("[data-slot=app-shell-header]")
+    .locator("[data-slot=sidebar-trigger]");
+  await expect(barFold).toBeVisible();
+  await wake();
+  await expect(barFold).toBeVisible();
+});
+
+test.describe("with motion", () => {
+  test.use({ reducedMotion: "no-preference" });
+
+  test("focus follows the fold across, once the sidebar has slid", async ({
+    page,
+  }) => {
+    await openExample(page, "app-shell-01", "basic");
+    const sidebar = page.getByRole("complementary", { name: "Sidebar" });
+    const fold = sidebar.getByRole("button", { name: TOGGLE });
+    await fold.focus();
+    await page.keyboard.press("Enter");
+    const barFold = page
+      .getByRole("main")
+      .getByRole("button", { name: TOGGLE });
+    await expect(barFold).toBeFocused();
+    await page.keyboard.press("Enter");
+    await expect(fold).toBeFocused();
+    await expect(barFold).toBeHidden();
+  });
 });
 
 test("the page's name renames in place: Enter saves, and the page says the new name", async ({
@@ -220,7 +336,7 @@ test("on a phone the sidebar is a sheet, and a link followed in it closes it", a
   await expect(page).toHaveURL(/#dashboard$/u);
 });
 
-test("on a phone the sheet's head closes it, and its search opens over the page with the sheet gone", async ({
+test("on a phone the sheet's head closes it, and its search opens over the page with the sheet gone, focus coming back to the bar", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 800 });
@@ -234,7 +350,21 @@ test("on a phone the sheet's head closes it, and its search opens over the page 
   await open.click();
   await sheet.getByRole("button", { name: "Search" }).click();
   await expect(sheet).toBeHidden();
-  await expect(page.getByRole("dialog", { name: "Search" })).toBeVisible();
+  const search = page.getByRole("dialog", { name: "Search" });
+  await expect(search).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(search).toBeHidden();
+  await expect(open).toBeFocused();
+});
+
+test("on a phone with no title yet, the bar ends with the last step", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await openExample(page, "app-shell-01", "states");
+  const trail = page.getByRole("navigation", { name: "Breadcrumb" });
+  await expect(trail).toHaveText("Reports");
+  await expect(trail.getByRole("link", { name: "Reports" })).toBeVisible();
 });
 
 test("on a phone the bar says the page and the step before it, and drops the step when both don't fit", async ({

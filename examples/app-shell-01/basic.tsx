@@ -29,6 +29,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarSeparator,
+  sidebarStateScript,
 } from "@grasp-os/ui/components/sidebar";
 import {
   BrainIcon,
@@ -102,8 +103,8 @@ const places: { name: string; icon: IconData; count?: number }[] = [
   { name: "Integrations", icon: LinkIcon },
 ];
 
-// The sidebar down the start, its head the shell's: the product's mark, the search (the slash
-// too) and the fold. The page beside it as a card draws its own bar: where the page is (its
+// The sidebar down the start, its head the shell's: the product's mark, the search (Cmd+K or
+// Ctrl+K too, where this site's own search does not take them) and the fold. The page beside it as a card draws its own bar: where the page is (its
 // name renames in place) and its actions; the fold stands in the bar only while the sidebar is
 // away, and the fold is kept for the next visit. The page scrolls under its bar. On a phone the
 // bar's fold opens the sidebar as a sheet, and the bar says the page and the step before it.
@@ -112,6 +113,12 @@ export default function AppShellBasic() {
   const [searching, setSearching] = useState(false);
   return (
     <div {...stylex.props(layout.frame)}>
+      <script
+        // oxlint-disable-next-line react/no-danger -- the script is the library's own, from a constant key
+        dangerouslySetInnerHTML={{
+          __html: sidebarStateScript("app-shell-01-basic"),
+        }}
+      />
       <AppShell
         style={layout.shell}
         storageKey="app-shell-01-basic"
@@ -123,8 +130,6 @@ export default function AppShellBasic() {
         onSearch={() => {
           setSearching(true);
         }}
-        // This site keeps Cmd+K for its own search: here the slash opens the example's.
-        searchShortcut="/"
         sidebar={
           <>
             <SidebarContent>
