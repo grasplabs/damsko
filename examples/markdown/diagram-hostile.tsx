@@ -2,8 +2,9 @@ import { Markdown } from "@grasp-os/ui/components/markdown";
 
 // For the spec only (tests/markdown.spec.ts), at /examples/markdown/diagram-hostile; not on the
 // page. Diagrams that try to load something from elsewhere or lead out of a node, through their
-// settings, their nodes or their styles, in several diagram types: each is code, never drawn. And
-// one that tries to put HTML with a handler in a node: drawn, as words.
+// settings, their nodes or their styles, in several diagram types, and one past the bound on its
+// lines: each is code, never drawn. And one that tries to put HTML with a handler in a node:
+// drawn, as words.
 const fence = (code: string) => `\`\`\`mermaid\n${code}\n\`\`\``;
 const answer = [
   fence(
@@ -46,6 +47,7 @@ const answer = [
   fence(
     "flowchart LR\n  A --> B\n  style A fill:url&lpar;relative-entity.png)"
   ),
+  fence(`flowchart TD${"\n  A --> B".repeat(41)}`),
   fence(
     `%%{init: {"htmlLabels": true, "flowchart": {"htmlLabels": true}}}%%\nflowchart LR\n  A["<b onmouseover=alert(1)>bold</b>"] --> B`
   ),

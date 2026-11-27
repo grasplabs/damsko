@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 
 import { expect, test } from "@playwright/test";
-import type { Locator, Page, Route } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 
 import { listenToLiveRegions, openExample, settled } from "./example.ts";
 
@@ -435,7 +435,7 @@ test("untrusted text: a script is never an element, a data link is words, a pict
   const formula = page.locator("[data-slot=markdown-math]");
   await expect(formula.locator(".katex mtext")).toHaveText("\\href");
   await expect(formula.locator("a, [href]")).toHaveCount(0);
-  // Mermaid draws the diagram at its strict level: no handler, no script, no link out of a node.
+  // Pele draws the diagram as SVG text: no handler, no script, no link out of a node.
   const diagram = page.locator("[data-slot=markdown-diagram-drawing] svg");
   await expect(diagram).toHaveCount(1);
   await expect(
@@ -517,44 +517,30 @@ const diagramColours = async (page: Page) =>
       return element ? getComputedStyle(element)[property] : "none";
     };
     return {
-      fill: of(".node rect", "fill"),
-      stroke: of(".node rect", "stroke"),
-      words: of(".node text", "fill"),
-      line: of(".flowchart-link", "stroke"),
+      fill: of(".pele-node rect", "fill"),
+      stroke: of(".pele-node rect", "stroke"),
+      words: of(".pele-node text", "fill"),
+      line: of(".pele-edge path", "stroke"),
     };
   });
 
-/** The tokens as the diagram's theme reads them: each laid on the page's ground, as `rgb()`. */
+/** The tokens as they resolve where the diagram stands. */
 const tokenColours = async (page: Page) =>
   await page.evaluate(() => {
-    const canvas = document.createElement("canvas");
-    canvas.width = 1;
-    canvas.height = 1;
-    const context = canvas.getContext("2d", { willReadFrequently: true });
-    const place = document.querySelector("[data-slot=markdown-diagram]");
+    const place = document.querySelector(
+      "[data-slot=markdown-diagram-drawing]"
+    );
     const probe = document.createElement("span");
     place?.append(probe);
     const resolved = (token: string) => {
       probe.style.color = `var(--damsko-${token})`;
       return getComputedStyle(probe).color;
     };
-    const ground = resolved("background");
-    const laid = (token: string) => {
-      if (context === null) {
-        return "";
-      }
-      context.fillStyle = ground;
-      context.fillRect(0, 0, 1, 1);
-      context.fillStyle = resolved(token);
-      context.fillRect(0, 0, 1, 1);
-      const [red, green, blue] = context.getImageData(0, 0, 1, 1).data;
-      return `rgb(${red}, ${green}, ${blue})`;
-    };
     const colours = {
-      fill: laid("muted"),
-      stroke: laid("mint-deep"),
-      words: laid("foreground"),
-      line: laid("muted-foreground"),
+      fill: resolved("muted"),
+      stroke: resolved("mint-deep"),
+      words: resolved("foreground"),
+      line: resolved("muted-foreground"),
     };
     probe.remove();
     return colours;
@@ -565,22 +551,25 @@ for (const theme of ["light", "dark"] as const) {
     page,
   }) => {
     await openExample(page, "markdown", "math-places", { theme });
-    await expect(
-      page.locator("[data-slot=markdown-diagram-drawing] svg")
-    ).toHaveCount(1);
-    await expect(
-      page.locator("[data-slot=markdown-diagram][aria-busy=true]")
-    ).toHaveCount(0);
+    await expect(page.locator("[data-slot=markdown-diagram]")).toHaveAttribute(
+      "data-diagram",
+      "drawn"
+    );
     expect(await diagramColours(page)).toStrictEqual(await tokenColours(page));
   });
 }
 
-test("diagrams: drawn again in the other colour scheme when the page's changes, and saved on its ground", async ({
+test("diagrams: recoloured in place when the page's colour scheme changes, not drawn again, and saved on its ground", async ({
   page,
 }) => {
   await openExample(page, "markdown", "math-places", { theme: "light" });
+  const frame = page.locator("[data-slot=markdown-diagram]");
+  await expect(frame).toHaveAttribute("data-diagram", "drawn");
   const drawing = page.locator("[data-slot=markdown-diagram-drawing] svg");
-  await expect(drawing).toHaveCount(1);
+  // The drawing itself, marked: the same element once the scheme has changed.
+  await drawing.evaluate((node) => {
+    node.dataset.first = "";
+  });
   const light = await diagramColours(page);
   await page.evaluate(() => {
     document.documentElement.style.colorScheme = "dark";
@@ -588,11 +577,12 @@ test("diagrams: drawn again in the other colour scheme when the page's changes, 
   await expect
     .poll(async () => await diagramColours(page))
     .not.toStrictEqual(light);
-  await expect(
-    page.locator("[data-slot=markdown-diagram][aria-busy=true]")
-  ).toHaveCount(0);
   expect(await diagramColours(page)).toStrictEqual(await tokenColours(page));
-  // The file holds the drawing on its ground: the page's background, as a first rect.
+  await expect(drawing).toHaveAttribute("data-first", "");
+  await expect(frame).toHaveAttribute("data-diagram", "drawn");
+  await expect(frame).toHaveAttribute("aria-busy", "false");
+  // The file holds the drawing on its ground, as it shows now: the page's background, as a first
+  // rect, and its colours written into it, so it looks the same anywhere.
   await page.getByRole("button", { name: "Download diagram" }).click();
   const [file] = await Promise.all([
     page.waitForEvent("download"),
@@ -602,6 +592,8 @@ test("diagrams: drawn again in the other colour scheme when the page's changes, 
   const ground =
     /<svg\b[^>]*>\s*<rect\b[^>]*fill="(?<fill>#[0-9a-f]{6})"/u.exec(saved)
       ?.groups?.fill;
+  expect(saved).toMatch(/--pele-surface:#[0-9a-f]{6}/u);
+  expect(saved).not.toContain("--damsko-");
   const background = await page.evaluate(() => {
     const probe = document.createElement("span");
     document.querySelector("[data-slot=markdown-diagram]")?.append(probe);
@@ -630,9 +622,10 @@ test("diagrams: under forced colours, drawn in the system's colours, its words r
 }) => {
   await page.emulateMedia({ forcedColors: "active" });
   await openExample(page, "markdown", "math-places");
-  await expect(
-    page.locator("[data-slot=markdown-diagram-drawing] svg")
-  ).toHaveCount(1);
+  await expect(page.locator("[data-slot=markdown-diagram]")).toHaveAttribute(
+    "data-diagram",
+    "drawn"
+  );
   const system = await page.evaluate(() => {
     const probe = document.createElement("span");
     probe.style.cssText =
@@ -648,71 +641,59 @@ test("diagrams: under forced colours, drawn in the system's colours, its words r
   expect(drawn.fill).toBe(system.ground);
 });
 
-for (const chunk of ["mermaid.core", "flowDiagram-"]) {
-  test(`diagrams: drawn when a chunk of Mermaid's (${chunk}) fails to load once, as a dropped request does`, async ({
-    page,
-  }) => {
-    let dropped = 0;
-    await page.route(
-      (url) => url.pathname.includes(`/${chunk}`),
-      async (route) => {
-        if (dropped === 0) {
-          dropped += 1;
-          await route.abort("failed");
-          return;
-        }
-        await route.continue();
-      }
-    );
-    await openExample(page, "markdown", "diagram");
-    const diagrams = page.locator("[data-slot=markdown-diagram]");
-    // It is asked for again, and drawn; the one Mermaid cannot read says so.
-    await expect(diagrams.first()).toHaveAttribute("data-diagram", "drawn", {
-      timeout: 15_000,
-    });
-    await expect(diagrams.last()).toHaveAttribute(
-      "data-diagram",
-      "failed:syntax"
-    );
-    expect(dropped).toBe(1);
-  });
-}
-
-test("diagrams: one whose draw never ends is its code once each of its three attempts has taken too long, and leaves nothing in the page", async ({
+test("diagrams: when Pele does not load, each diagram is its code and says so", async ({
   page,
 }) => {
-  // The layout's chunk, asked for while Mermaid draws in the box out of sight: never answered.
-  const held: Route[] = [];
+  // Pele's core, the chunk of its `pele/lazy` entry: every request for it dropped.
+  let dropped = 0;
   await page.route(
-    (url) => url.pathname.includes("/elk-"),
-    (route) => {
-      held.push(route);
+    (url) => /\/lazy\.[\w-]+\.js$/u.test(url.pathname),
+    async (route) => {
+      dropped += 1;
+      await route.abort("failed");
     }
   );
-  await page.clock.install();
-  await openExample(page, "markdown", "math-places");
-  const diagram = page.locator("[data-slot=markdown-diagram]");
-  const boxes = page.locator("body > div[aria-hidden=true]");
-  // The first attempt's box out of sight, with Mermaid's frame in it, drawing; then time stands
-  // still but for the steps below.
-  await expect(boxes.locator("iframe")).toHaveCount(1);
-  const now = await page.evaluate(() => Date.now());
-  await page.clock.pauseAt(now + 1000);
-  // An attempt's box stays until the attempt has taken ten seconds, the longest it may.
-  const timeOut = async () => {
-    await expect(boxes).toHaveCount(1);
-    await page.clock.fastForward(10_000);
-    await expect(boxes).toHaveCount(0);
-  };
-  await timeOut();
-  // Tried again after 0.4 s, and again after 1.6 s.
-  await page.clock.fastForward(400);
-  await timeOut();
-  await page.clock.fastForward(1600);
-  await timeOut();
-  await expect(diagram).toHaveAttribute("data-diagram", "failed:timeout");
-  await expect(page.locator("iframe")).toHaveCount(0);
-  expect(held).toHaveLength(1);
+  await openExample(page, "markdown", "diagram");
+  const diagrams = page.locator("[data-slot=markdown-diagram]");
+  await expect(diagrams.first()).toHaveAttribute("data-diagram", "failed:load");
+  await expect(diagrams.last()).toHaveAttribute("data-diagram", "failed:load");
+  await expect(diagrams.first().getByText("Gateway --> Orders")).toBeVisible();
+  expect(dropped).toBeGreaterThan(0);
+});
+
+test("diagrams: a fence that would hold the page, or whose front matter does not read, settles as its code and says why", async ({
+  page,
+}) => {
+  await openExample(page, "markdown", "diagram-heavy");
+  const diagrams = page.locator("[data-slot=markdown-diagram]");
+  await expect(diagrams).toHaveCount(4);
+  for (const diagram of await diagrams.all()) {
+    // oxlint-disable-next-line no-await-in-loop -- one after the other, down the answer
+    await diagram.scrollIntoViewIfNeeded();
+  }
+  await expect(diagrams.nth(0)).toHaveAttribute(
+    "data-diagram",
+    "skipped:limit"
+  );
+  await expect(diagrams.nth(1)).toHaveAttribute(
+    "data-diagram",
+    "skipped:limit"
+  );
+  await expect(diagrams.nth(2)).toHaveAttribute(
+    "data-diagram",
+    "failed:syntax"
+  );
+  await expect(diagrams.nth(3)).toHaveAttribute(
+    "data-diagram",
+    "failed:syntax"
+  );
+  await expect(
+    page.locator("[data-slot=markdown-diagram][aria-busy=true]")
+  ).toHaveCount(0);
+  await expect(
+    page.locator("[data-slot=markdown-diagram-drawing]")
+  ).toHaveCount(0);
+  await expect(diagrams.nth(1).getByText('0-999999999: "x"')).toBeVisible();
 });
 
 test("diagrams: each one the source check refuses says it was skipped, not that it failed", async ({
@@ -727,13 +708,16 @@ test("diagrams: each one the source check refuses says it was skipped, not that 
   await expect(
     page.locator("[data-slot=markdown-diagram][data-diagram='skipped:source']")
   ).toHaveCount(16);
+  await expect(
+    page.locator("[data-slot=markdown-diagram][data-diagram='skipped:limit']")
+  ).toHaveCount(1);
   await expect(diagrams.last()).toHaveAttribute("data-diagram", "drawn");
 });
 
-test("diagrams: drawn by Mermaid once loaded, only for a diagram; Download as SVG, PNG or MMD, full screen and zoom; one Mermaid cannot read stays code", async ({
+test("diagrams: drawn by Pele once loaded, only for a diagram and only its type; Download as SVG, PNG or MMD, full screen and zoom; one that does not read stays code", async ({
   page,
 }) => {
-  // Mermaid by what it holds, whatever its files are named: dagre, the layout it draws with.
+  // Pele, and its flowchart and its sequence diagram, by what each holds, whatever its file is named.
   const scripts: string[] = [];
   // A body still on its way when the test ends is not read: the page is gone, and so is it.
   page.on("response", async (response) => {
@@ -741,20 +725,22 @@ test("diagrams: drawn by Mermaid once loaded, only for a diagram; Download as SV
       scripts.push(await response.text().catch(() => ""));
     }
   });
-  const mermaidLoaded = () => scripts.some((text) => text.includes("dagre"));
+  const loaded = (marker: string) =>
+    scripts.some((text) => text.includes(marker));
   await openExample(page, "markdown", "answer");
   await expect(page.getByRole("table")).toBeVisible();
-  expect(mermaidLoaded()).toBe(false);
+  expect(loaded("railroadEbnf")).toBe(false);
   await openExample(page, "markdown", "diagram");
   const diagrams = page.locator("[data-slot=markdown-diagram]");
   const drawn = diagrams.nth(0);
   const unread = diagrams.nth(1);
-  await expect(
-    drawn.locator("[data-slot=markdown-diagram-drawing] svg")
-  ).toHaveCount(1);
+  await expect(drawn).toHaveAttribute("data-diagram", "drawn");
+  await expect(unread).toHaveAttribute("data-diagram", "failed:syntax");
   await expect(drawn.getByText("Orders").first()).toBeVisible();
   await expect(unread.locator("svg[aria-roledescription]")).toHaveCount(0);
   await expect(unread.getByText("A --> -->")).toBeVisible();
+  expect(loaded("railroadEbnf")).toBe(true);
+  expect(loaded("pele-sequence")).toBe(false);
   const save = async (format: string) => {
     await drawn.getByRole("button", { name: "Download diagram" }).click();
     const [file] = await Promise.all([
@@ -777,7 +763,6 @@ test("diagrams: drawn by Mermaid once loaded, only for a diagram; Download as SV
         await drawing.evaluate((node) => getComputedStyle(node).transform)
     )
     .not.toBe(before);
-  expect(mermaidLoaded()).toBe(true);
   // Named as a diagram, its code its description, moved by the arrow keys.
   const named = drawn.getByRole("application", { name: "Mermaid diagram" });
   await named.focus();
@@ -797,6 +782,50 @@ test("diagrams: drawn by Mermaid once loaded, only for a diagram; Download as SV
   ).toHaveCount(1);
 });
 
+test("diagrams: every diagram type is drawn, and no drawing holds or asks for anything outside it", async ({
+  page,
+}) => {
+  // Every request but to the site itself.
+  const site = new URL(process.env.BASE_URL ?? "http://localhost").origin;
+  const elsewhere: string[] = [];
+  page.on("request", (request) => {
+    if (new URL(request.url()).origin !== site) {
+      elsewhere.push(request.url());
+    }
+  });
+  await openExample(page, "markdown", "diagram-types");
+  const diagrams = page.locator("[data-slot=markdown-diagram]");
+  await expect(diagrams).toHaveCount(33);
+  for (const diagram of await diagrams.all()) {
+    // oxlint-disable-next-line no-await-in-loop -- one after the other, down the answer
+    await diagram.scrollIntoViewIfNeeded();
+    // oxlint-disable-next-line no-await-in-loop -- one after the other, down the answer
+    await expect(diagram).toHaveAttribute("data-diagram", "drawn");
+  }
+  const drawings = page.locator("[data-slot=markdown-diagram-drawing] > svg");
+  await expect(drawings).toHaveCount(33);
+  // Only SVG's own shapes: no link, picture, foreign element or script, and no address but the
+  // drawing's own in an attribute or a style (its namespaces aside).
+  await expect(
+    drawings.locator(
+      "a, image, img, foreignObject, script, iframe, [href]:not([href^='#']), [*|href]:not([*|href^='#'])"
+    )
+  ).toHaveCount(0);
+  const outside = await drawings.evaluateAll((all) =>
+    all.flatMap((svg) =>
+      [svg, ...svg.querySelectorAll("*")].flatMap((element) =>
+        element
+          .getAttributeNames()
+          .filter((name) => !name.startsWith("xmlns"))
+          .map((name) => element.getAttribute(name) ?? "")
+          .filter((value) => /url\(\s*(?!['"]?#)|@import|\/\//iu.test(value))
+      )
+    )
+  );
+  expect(outside).toStrictEqual([]);
+  expect(elsewhere).toStrictEqual([]);
+});
+
 test("diagrams: one with any way to an address in it is code, so nothing loads, in any diagram type; a drawn one holds no HTML and no handler", async ({
   page,
 }) => {
@@ -808,7 +837,7 @@ test("diagrams: one with any way to an address in it is code, so nothing loads, 
   });
   await openExample(page, "markdown", "diagram-hostile");
   const diagrams = page.locator("[data-slot=markdown-diagram]");
-  await expect(diagrams).toHaveCount(17);
+  await expect(diagrams).toHaveCount(18);
   // Each is weighed, and drawn, once it comes near the screen.
   for (const diagram of await diagrams.all()) {
     // oxlint-disable-next-line no-await-in-loop -- one after the other, down the answer
@@ -817,12 +846,12 @@ test("diagrams: one with any way to an address in it is code, so nothing loads, 
   await expect(
     page.locator("[data-slot=markdown-diagram][aria-busy=true]")
   ).toHaveCount(0);
-  // Sixteen are their code, words and all: an actor's icon among them, at a relative address.
+  // Seventeen are their code, words and all: an actor's icon among them, at a relative address.
   await expect(
     diagrams.filter({
       hasNot: page.locator("[data-slot=markdown-diagram-drawing]"),
     })
-  ).toHaveCount(16);
+  ).toHaveCount(17);
   await expect(diagrams.getByText("relative-icon.png")).toBeVisible();
   await expect(diagrams.getByText("state.png")).toBeVisible();
   // The last is drawn, its HTML as words: no element of HTML's, no handler, no address.
@@ -839,23 +868,21 @@ test("diagrams: one with any way to an address in it is code, so nothing loads, 
   expect(elsewhere).toStrictEqual([]);
 });
 
-test("diagrams: drawn with the source check off, in Mermaid's frame, not one fence loads anything", async ({
+test("diagrams: drawn with the source check off, links and pictures among them, not one fence loads anything", async ({
   page,
 }) => {
-  // Every request for these addresses that reaches the network; one a policy refuses never does.
+  // Every request for these addresses that reaches the network.
   const loaded: string[] = [];
   await page.route(/example\.com|relative-icon/u, async (route) => {
     loaded.push(route.request().url());
     await route.fulfill({ status: 200, contentType: "image/png", body: "" });
   });
   await openExample(page, "markdown", "diagram-unchecked");
-  // Mermaid drew them: only the policy stands between them and their addresses.
+  // Pele drew them: only its options and the drawing's check stand between them and their addresses.
   await expect(page.locator("[data-drawn]")).toHaveAttribute(
     "data-drawn",
-    "8",
-    {
-      timeout: 30_000,
-    }
+    "10",
+    { timeout: 30_000 }
   );
   // Long enough for a load to have started.
   await page.waitForTimeout(1000);

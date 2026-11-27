@@ -252,7 +252,7 @@ const twoFrames = async (page: Page) => {
 
 /**
  * Waits until the page's fonts have loaded, it has drawn twice, and no diagram near the screen is
- * still being drawn by Mermaid (then twice more), so what is measured stands still.
+ * still being drawn by Pele (then twice more), so what is measured stands still.
  */
 export const settled = async (page: Page): Promise<void> => {
   await twoFrames(page);

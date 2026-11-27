@@ -2082,9 +2082,9 @@
         "mdast-util-from-markdown",
         "mdast-util-gfm",
         "mdast-util-math",
-        "mermaid",
         "micromark-extension-gfm",
         "micromark-extension-math",
+        "pele",
         "remend"
       ],
       "registryDependencies": [
@@ -2110,11 +2110,6 @@
           "path": "src/components/markdown/diagram-safe.ts",
           "type": "registry:file",
           "target": "~/src/components/markdown/diagram-safe.ts"
-        },
-        {
-          "path": "src/components/markdown/diagram-theme.ts",
-          "type": "registry:file",
-          "target": "~/src/components/markdown/diagram-theme.ts"
         },
         {
           "path": "src/components/markdown/diagram.tsx",
