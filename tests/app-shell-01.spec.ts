@@ -704,9 +704,15 @@ test("a row says its count, its time, the Working mark and the unread dot in wor
   await expect(
     sidebar.getByRole("link", { name: "Q3 numbers 2h ago Working" })
   ).toBeVisible();
+  const unread = sidebar.getByRole("link", {
+    name: "Kickoff notes 1d ago Unread",
+  });
+  await expect(unread).toBeVisible();
+  // Its name stands out while its dot shows; a read row's stays in its weight.
+  await expect(unread).toHaveCSS("font-weight", "600");
   await expect(
-    sidebar.getByRole("link", { name: "Kickoff notes 1d ago Unread" })
-  ).toBeVisible();
+    sidebar.getByRole("link", { name: "Hiring plan 3d ago" })
+  ).toHaveCSS("font-weight", "400");
   const organisations = sidebar.getByRole("navigation", {
     name: "Organisations",
   });
