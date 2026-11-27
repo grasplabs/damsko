@@ -885,7 +885,7 @@ export interface AppShellHeaderProps {
    * @default "inline"
    */
   renameVariant?: InlineEditVariant;
-  /** The most characters a new name may have. */
+  /** The most a new name may hold, counted as the browser's `maxlength` counts (UTF-16 code units). */
   renameMaxLength?: number;
   /** Said under the field when the rename fails ("That name is taken"), in place of the catalogue's words. */
   renameErrorText?: string;

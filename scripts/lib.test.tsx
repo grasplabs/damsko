@@ -351,6 +351,8 @@ const failToSave = async (): Promise<string> => {
 
 const useSave = () => useAction(save);
 const useSaveNamed = () => useAction(saveNamed);
+const useSaveAgain = () => useAction(save, { runWhileShown: true });
+const useFailingQuietly = () => useAction(failToSave);
 const useFailingSave = () =>
   useAction(failToSave, {
     errorText: "Could not save",
@@ -379,7 +381,7 @@ describe(useAction, () => {
     });
   });
 
-  test("a press while it works or shows its result does nothing", async () => {
+  test("a press while it works, or while it shows that it worked, does nothing", async () => {
     vi.useFakeTimers();
     const action = first(useSave);
     const running = action.run();
@@ -394,6 +396,26 @@ describe(useAction, () => {
     });
     vi.advanceTimersByTime(durations.hold);
     await expect(action.run()).resolves.toMatchObject({ ok: true });
+  });
+
+  test("after a failure a press runs it again at once", async () => {
+    vi.useFakeTimers();
+    const action = first(useFailingQuietly);
+    await action.run();
+    await expect(action.run()).resolves.toStrictEqual({
+      error: problem,
+      ok: false,
+    });
+  });
+
+  test("with runWhileShown each run is new work: it runs again while it shows that it worked", async () => {
+    vi.useFakeTimers();
+    const action = first(useSaveAgain);
+    await action.run();
+    await expect(action.run()).resolves.toStrictEqual({
+      ok: true,
+      value: "saved",
+    });
   });
 
   test("a failure hands back the error and tells onError", async () => {

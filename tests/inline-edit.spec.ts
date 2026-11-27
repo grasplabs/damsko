@@ -237,3 +237,67 @@ test("in a popup, a save that fails keeps it open with the words typed and the c
     page.getByRole("button", { name: "Planning notes" })
   ).toBeFocused();
 });
+
+test("in a popup, a rename right after a rename is tracked: Save waits, a second Enter sends nothing more, and the name follows", async ({
+  page,
+}) => {
+  await openExample(page, "inline-edit", "popup");
+  await page.getByRole("button", { name: "Planning notes" }).click();
+  const popup = page.getByRole("dialog", { name: "Rename" });
+  const field = popup.getByRole("textbox", { name: "Rename" });
+  await page.keyboard.type("Launch notes");
+  await page.keyboard.press("Enter");
+  const first = page.getByRole("button", { name: "Launch notes" });
+  await expect(first).toBeFocused();
+  // At once, while "Changed" may still show: F2, a new name, Enter, and Enter again.
+  await page.keyboard.press("F2");
+  await page.keyboard.type("Launch plan");
+  await page.keyboard.press("Enter");
+  await expect(field).toHaveAttribute("aria-busy", "true");
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("button", { name: "Launch plan" })).toBeFocused();
+  await expect(said(page)).toHaveText("Changed to Launch plan");
+});
+
+test("in a popup, a press on the text while it is open closes it rather than opening it again", async ({
+  page,
+}) => {
+  await openExample(page, "inline-edit", "popup");
+  const text = page.getByRole("button", { name: "Planning notes" });
+  await text.click();
+  const popup = page.getByRole("dialog", { name: "Rename" });
+  await page.keyboard.type("Half typed");
+  await text.click();
+  await expect(popup).toBeHidden();
+  await expect(text).toHaveAttribute("aria-expanded", "false");
+});
+
+test("in a popup, Enter and Escape while an input method composes neither save nor close", async ({
+  page,
+}) => {
+  await openExample(page, "inline-edit", "popup");
+  await page.getByRole("button", { name: "Planning notes" }).click();
+  const popup = page.getByRole("dialog", { name: "Rename" });
+  const field = popup.getByRole("textbox", { name: "Rename" });
+  await page.keyboard.type("nihon");
+  await field.evaluate((element) => {
+    element.dispatchEvent(new CompositionEvent("compositionstart"));
+    for (const key of ["Enter", "Escape"]) {
+      element.dispatchEvent(
+        new KeyboardEvent("keydown", {
+          key,
+          isComposing: true,
+          bubbles: true,
+          cancelable: true,
+        })
+      );
+    }
+  });
+  await expect(popup).toBeVisible();
+  await expect(field).toHaveValue("nihon");
+  await field.evaluate((element) => {
+    element.dispatchEvent(new CompositionEvent("compositionend"));
+  });
+  await page.keyboard.press("Escape");
+  await expect(popup).toBeHidden();
+});
