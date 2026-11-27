@@ -275,6 +275,22 @@ test.describe("with motion", () => {
     await expect(fold).toBeFocused();
   });
 
+  test("focus follows the fold past a working mark in the sidebar, which moves for ever", async ({
+    page,
+  }) => {
+    await openExample(page, "app-shell-01", "frame");
+    const sidebar = page.getByRole("complementary", { name: "Sidebar" });
+    const fold = sidebar.getByRole("button", { name: TOGGLE });
+    await fold.focus();
+    await page.keyboard.press("Enter");
+    const barFold = page
+      .getByRole("main")
+      .getByRole("button", { name: TOGGLE });
+    await expect(barFold).toBeFocused();
+    await page.keyboard.press("Enter");
+    await expect(fold).toBeFocused();
+  });
+
   test("focus the person moves while the sidebar slides stays where they put it", async ({
     page,
   }) => {

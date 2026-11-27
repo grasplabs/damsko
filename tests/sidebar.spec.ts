@@ -1708,3 +1708,25 @@ for (const [width, place] of [
     await expect(field).toHaveValue("Launch notes");
   });
 }
+
+test("a long name gives way before a badge beside it: the row keeps its height and the badge its line", async ({
+  page,
+}) => {
+  await openExample(page, "sidebar", "long-names");
+  const row = sidebarOf(page).getByRole("link", { name: /^The handbook/u });
+  const badge = row.getByText("Draft", { exact: true });
+  const rowBox = await boxOf(row);
+  expect(rowBox.height).toBe(32);
+  const [words, lines] = await badge.evaluate((node) => [
+    node.getBoundingClientRect().height,
+    Number(getComputedStyle(node).lineHeight.replace("px", "")),
+  ]);
+  expect(words).toBeLessThan(lines * 2);
+  // The rows under it stand where a row's height puts them.
+  const sub = await boxOf(
+    sidebarOf(page)
+      .getByRole("link", { name: /first week/iu })
+      .first()
+  );
+  expect(sub.y - (rowBox.y + 32)).toBeLessThan(8);
+});

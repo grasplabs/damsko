@@ -1019,6 +1019,7 @@ const rowWords = (
     row.detail === undefined ? null : (
       <span
         key="words"
+        data-sidebar-lines=""
         {...stylex.props(styles.words, renaming && styles.renaming)}
       >
         <span data-row-name="" {...stylex.props(styles.name)}>

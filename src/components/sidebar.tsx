@@ -575,13 +575,19 @@ const styles = stylex.create({
       default: "100%",
       [onRail()]: ROW,
     },
-    // A row's height at least, and as tall as its lines (a name over a second, quieter line).
+    // A row's height; a name over a second, quieter line (one element marked
+    // `data-sidebar-lines`) grows it to hold both.
     minHeight: {
       default: ROW,
       [COARSE]: size.tapTarget,
       [onRail()]: ROW,
     },
-    height: { default: null, [onRail()]: ROW },
+    height: {
+      default: ROW,
+      [COARSE]: size.tapTarget,
+      ":has(> [data-sidebar-lines])": "auto",
+      [onRail()]: ROW,
+    },
     marginBlock: 0,
     marginInline: {
       default: 0,
@@ -643,12 +649,20 @@ const styles = stylex.create({
   // its count.
   label: {
     flexGrow: 1,
+    // It gives way first, down to nothing, before anything beside it (a badge, a mark at its end):
+    // flex shrinks by weight times width, so its weight is far past any other's.
+    flexShrink: 100_000,
     minWidth: 0,
     overflow: "hidden",
     textOverflow: "ellipsis",
   },
   sm: {
     minHeight: {
+      default: size.controlXs,
+      [COARSE]: size.tapTarget,
+      [onRail()]: ROW,
+    },
+    height: {
       default: size.controlXs,
       [COARSE]: size.tapTarget,
       [onRail()]: ROW,
@@ -661,6 +675,10 @@ const styles = stylex.create({
     cornerShape: radius.shape,
     color: colors.sidebarForeground,
     minHeight: {
+      default: size.sidebarMenuButtonHeightLg,
+      [onRail()]: ROW,
+    },
+    height: {
       default: size.sidebarMenuButtonHeightLg,
       [onRail()]: ROW,
     },
@@ -2030,8 +2048,9 @@ export interface SidebarMenuButtonProps extends SlotPartProps, Own<"button"> {
   /**
    * An `<Icon />` and the words, as bare text; with `asChild`, the link that holds them
    * (`<a href>`, a router's link). The words end in an ellipsis where the row does, and a tooltip
-   * shows them whole while they are cut. An element you write (a `<span>` of two lines, a count, a
-   * product's working mark) is drawn as given.
+   * shows them whole while they are cut, giving way before anything beside them. An element you
+   * write (a count, a product's working mark) is drawn as given; a name over a second line, in one
+   * element marked `data-sidebar-lines`, grows the row to hold both.
    */
   children: ReactNode;
   /**
