@@ -161,6 +161,35 @@ test("the search's keys open it from the page and from rich text, and close it a
   await expect(assistant).toBeVisible();
 });
 
+test("the sidebar's keys fold it from rich text that binds none, and an editor that binds them keeps them", async ({
+  page,
+}) => {
+  await openExample(page, "app-shell-01", "composed");
+  const notes = page.getByRole("textbox", { name: "Notes" });
+  const row = page
+    .getByRole("complementary", { name: "Sidebar" })
+    .getByRole("link", { name: "Dashboard" });
+  await notes.click();
+  await pressKeys(page);
+  await expect(row).toBeHidden();
+  await notes.click();
+  await pressKeys(page);
+  await expect(row).toBeVisible();
+  // An editor that makes text bold on the same keys, and marks them handled, keeps them.
+  await notes.evaluate((editor: HTMLElement) => {
+    editor.addEventListener("keydown", (event) => {
+      if (event.key === "b" && (event.metaKey || event.ctrlKey)) {
+        event.preventDefault();
+        editor.dataset.bold = "yes";
+      }
+    });
+  });
+  await notes.click();
+  await pressKeys(page);
+  await expect(notes).toHaveAttribute("data-bold", "yes");
+  await expect(row).toBeVisible();
+});
+
 test("an editor that binds the search's keys itself keeps them", async ({
   page,
 }) => {
@@ -181,36 +210,42 @@ test("an editor that binds the search's keys itself keeps them", async ({
   await expect(page.getByRole("region", { name: "Assistant" })).toBeHidden();
 });
 
-test("the search's keys close the search dialog they opened, from inside it", async ({
+test("the search's keys close the search dialog they opened, from inside it, and focus goes back", async ({
   page,
 }) => {
   await openExample(page, "app-shell-01", "basic");
-  await page.getByRole("heading", { name: "Spring launch", level: 1 }).click();
+  const projects = page
+    .getByRole("complementary", { name: "Sidebar" })
+    .getByRole("link", { name: "Projects" });
+  await projects.focus();
   await page.keyboard.press("ControlOrMeta+j");
   const dialog = page.getByRole("dialog", { name: "Search" });
   await expect(dialog).toBeVisible();
   await expect(dialog.getByRole("combobox")).toBeFocused();
   await page.keyboard.press("ControlOrMeta+j");
   await expect(dialog).toBeHidden();
+  // The focus goes back to where it was before the keys opened it.
+  await expect(projects).toBeFocused();
 });
 
 test("room under the page: a page that fills the card scrolls its last row clear of the dock", async ({
   page,
 }) => {
   await openExample(page, "app-shell-01", "dock");
-  const scroller = page.getByRole("main").locator("[data-slot=app-shell-page]");
-  await scroller.evaluate((node) => {
-    node.scrollTop = node.scrollHeight;
-  });
-  const last = await page
-    .getByRole("list", { name: "Entries" })
-    .getByRole("listitem")
-    .last()
-    .boundingBox();
-  const dock = await page.getByRole("toolbar", { name: "Dock" }).boundingBox();
-  expect((last?.y ?? 0) + (last?.height ?? 0)).toBeLessThanOrEqual(
-    (dock?.y ?? 0) - 15
-  );
+  const entries = page.getByRole("list", { name: "Entries" });
+  const last = entries.getByRole("listitem").last();
+  const dock = await page.getByRole("group", { name: "Dock" }).boundingBox();
+  // The wheel over the page scrolls it to its end.
+  await entries.hover();
+  await page.mouse.wheel(0, 5000);
+  await expect
+    .poll(async () => {
+      const box = await last.boundingBox();
+      return (box?.y ?? 0) + (box?.height ?? 0);
+    })
+    .toBeLessThanOrEqual((dock?.y ?? 0) - 15);
+  // And it went as far as it goes: past the row, only the room kept for the dock.
+  await expect(last).toBeInViewport();
 });
 
 test("composed by hand: the overlay stands over the card and keeps the bar's room; covered, the page is out of reach and the overlay is not", async ({

@@ -118,11 +118,7 @@ export default function AppShellDock() {
         </AppShellSidebar>
         <AppShellCard
           overlay={
-            <div
-              role="toolbar"
-              aria-label="Dock"
-              {...stylex.props(layout.dock)}
-            >
+            <div role="group" aria-label="Dock" {...stylex.props(layout.dock)}>
               <Button size="sm" variant="outline">
                 <Icon icon={MessageSquareIcon} />
                 Ask
