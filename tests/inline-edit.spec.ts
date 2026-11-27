@@ -167,3 +167,137 @@ test("a field that starts open takes no focus: the page stays where the reader i
     "BODY"
   );
 });
+
+/** Whether the field's words are all chosen. */
+const allChosen = async (field: ReturnType<Page["getByRole"]>) =>
+  await field.evaluate(
+    (input: HTMLInputElement) =>
+      input.selectionEnd !== null &&
+      input.selectionEnd - (input.selectionStart ?? 0) === input.value.length
+  );
+
+test("in a popup, from the keyboard: Enter opens a titled popup with the words chosen, Escape keeps the name, and Save saves; focus goes back to the text", async ({
+  page,
+}) => {
+  await openExample(page, "inline-edit", "popup");
+  const text = page.getByRole("button", { name: "Planning notes" });
+  await expect(text).toHaveAttribute("aria-haspopup", "dialog");
+  await text.focus();
+  await page.keyboard.press("Enter");
+  const popup = page.getByRole("dialog", { name: "Rename" });
+  const field = popup.getByRole("textbox", { name: "Rename" });
+  await expect(field).toBeFocused();
+  await expect(field).toHaveValue("Planning notes");
+  expect(await allChosen(field)).toBe(true);
+  await page.keyboard.type("Something else");
+  await page.keyboard.press("Escape");
+  await expect(popup).toBeHidden();
+  await expect(text).toBeFocused();
+  // F2 opens it again, from the name as it is; Tab reaches Cancel, then Save.
+  await page.keyboard.press("F2");
+  await expect(field).toHaveValue("Planning notes");
+  await page.keyboard.type("Launch notes");
+  await page.keyboard.press("Tab");
+  await expect(popup.getByRole("button", { name: "Cancel" })).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(popup.getByRole("button", { name: "Save" })).toBeFocused();
+  await page.keyboard.press("Enter");
+  const saved = page.getByRole("button", { name: "Launch notes" });
+  await expect(saved).toBeFocused();
+  await expect(popup).toBeHidden();
+  await expect(said(page)).toHaveText("Changed to Launch notes");
+});
+
+test("in a popup, a save that fails keeps it open with the words typed and the caller's words; the field stops at maxLength", async ({
+  page,
+}) => {
+  await openExample(page, "inline-edit", "popup");
+  await page.getByRole("button", { name: "Planning notes" }).click();
+  const popup = page.getByRole("dialog", { name: "Rename" });
+  const field = popup.getByRole("textbox", { name: "Rename" });
+  await expect(field).toHaveAttribute("maxlength", "60");
+  await page.keyboard.type("Roadmap");
+  await page.keyboard.press("Enter");
+  // While it works the field is read only and Save waits.
+  await expect(field).toHaveAttribute("readonly", "");
+  await expect(popup.getByRole("button", { name: "Save" })).toHaveAttribute(
+    "aria-busy",
+    "true"
+  );
+  const why = "Could not rename: that name is already taken";
+  await expect(field).toHaveAccessibleDescription(why);
+  await expect(field).toHaveAttribute("aria-invalid", "true");
+  await expect(field).toHaveValue("Roadmap");
+  await expect(popup).toBeVisible();
+  await expect(said(page)).toHaveText(why);
+  // Cancel keeps the name, and gives the focus back to it.
+  await popup.getByRole("button", { name: "Cancel" }).click();
+  await expect(popup).toBeHidden();
+  await expect(
+    page.getByRole("button", { name: "Planning notes" })
+  ).toBeFocused();
+});
+
+test("in a popup, a rename right after a rename is tracked: Save waits, a second Enter sends nothing more, and the name follows", async ({
+  page,
+}) => {
+  await openExample(page, "inline-edit", "popup");
+  await page.getByRole("button", { name: "Planning notes" }).click();
+  const popup = page.getByRole("dialog", { name: "Rename" });
+  const field = popup.getByRole("textbox", { name: "Rename" });
+  await page.keyboard.type("Launch notes");
+  await page.keyboard.press("Enter");
+  const first = page.getByRole("button", { name: "Launch notes" });
+  await expect(first).toBeFocused();
+  // At once, while "Changed" may still show: F2, a new name, Enter, and Enter again.
+  await page.keyboard.press("F2");
+  await page.keyboard.type("Launch plan");
+  await page.keyboard.press("Enter");
+  await expect(field).toHaveAttribute("aria-busy", "true");
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("button", { name: "Launch plan" })).toBeFocused();
+  await expect(said(page)).toHaveText("Changed to Launch plan");
+});
+
+test("in a popup, a press on the text while it is open closes it rather than opening it again", async ({
+  page,
+}) => {
+  await openExample(page, "inline-edit", "popup");
+  const text = page.getByRole("button", { name: "Planning notes" });
+  await text.click();
+  const popup = page.getByRole("dialog", { name: "Rename" });
+  await page.keyboard.type("Half typed");
+  await text.click();
+  await expect(popup).toBeHidden();
+  await expect(text).toHaveAttribute("aria-expanded", "false");
+});
+
+test("in a popup, Enter and Escape while an input method composes neither save nor close", async ({
+  page,
+}) => {
+  await openExample(page, "inline-edit", "popup");
+  await page.getByRole("button", { name: "Planning notes" }).click();
+  const popup = page.getByRole("dialog", { name: "Rename" });
+  const field = popup.getByRole("textbox", { name: "Rename" });
+  await page.keyboard.type("nihon");
+  await field.evaluate((element) => {
+    element.dispatchEvent(new CompositionEvent("compositionstart"));
+    for (const key of ["Enter", "Escape"]) {
+      element.dispatchEvent(
+        new KeyboardEvent("keydown", {
+          key,
+          isComposing: true,
+          bubbles: true,
+          cancelable: true,
+        })
+      );
+    }
+  });
+  await expect(popup).toBeVisible();
+  await expect(field).toHaveValue("nihon");
+  await field.evaluate((element) => {
+    element.dispatchEvent(new CompositionEvent("compositionend"));
+  });
+  await page.keyboard.press("Escape");
+  await expect(popup).toBeHidden();
+});

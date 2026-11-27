@@ -30,6 +30,7 @@ import {
 } from "@grasp-os/ui/lib/icons";
 import { colors, radius, size, space } from "@grasp-os/ui/lib/tokens.stylex";
 import * as stylex from "@stylexjs/stylex";
+import { useState } from "react";
 
 const layout = stylex.create({
   // The app's window: the card's corner plus the room round it, so the two corners nest.
@@ -58,8 +59,11 @@ const facts = [
 ];
 
 // The page's details in one panel at its end: drag its handle, or move it with the arrow keys. The
-// bar's panel button hides and shows it. On a phone the same button opens it as a sheet.
+// bar's panel button hides and shows it. On a phone the same button opens it as a sheet. The page's
+// name renames in a popup under it (`renameVariant="popup"`): a name already taken fails, and the
+// popup stays open with the words typed.
 export default function AppShellPanel() {
+  const [title, setTitle] = useState("Launch notes");
   return (
     <div {...stylex.props(layout.frame)}>
       <AppShell
@@ -105,7 +109,19 @@ export default function AppShellPanel() {
         }
       >
         <AppShellHeader
-          title="Launch notes"
+          title={title}
+          onRename={async (next) => {
+            await new Promise((done) => {
+              setTimeout(done, 400);
+            });
+            if (next === "Roadmap") {
+              throw new Error("Roadmap is taken");
+            }
+            setTitle(next);
+          }}
+          renameVariant="popup"
+          renameMaxLength={60}
+          renameErrorText="Could not rename: that name is already taken"
           actions={
             <Button variant="outline" size="sm">
               Share
@@ -114,7 +130,7 @@ export default function AppShellPanel() {
         />
         <AppShellPage>
           <PageHeader
-            title="Launch notes"
+            title={title}
             description="What the team agreed on, and what still needs an answer before Thursday."
           />
         </AppShellPage>

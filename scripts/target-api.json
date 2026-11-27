@@ -1369,7 +1369,11 @@
     "src/components/data-table/features.ts": null
   },
   "inline-edit": {
-    "src/components/inline-edit.tsx": ["InlineEdit", "InlineEditProps"]
+    "src/components/inline-edit.tsx": [
+      "InlineEdit",
+      "InlineEditProps",
+      "InlineEditVariant"
+    ]
   },
   "inspector-01": {
     "src/blocks/inspector-01/inspector-01.tsx": [
