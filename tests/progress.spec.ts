@@ -92,6 +92,7 @@ test("a meter reads a value in its range, named by its label, in words of its ow
   await expect(storage).toHaveAttribute("aria-valuenow", "68");
   await expect(storage).toHaveAttribute("aria-valuemin", "0");
   await expect(storage).toHaveAttribute("aria-valuemax", "100");
+  await expect(storage).toHaveAttribute("aria-valuetext", "68 of 100 GB");
   const release = page.getByRole("meter", {
     name: "Companies on the latest release",
   });

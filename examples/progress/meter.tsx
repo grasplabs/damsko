@@ -15,7 +15,11 @@ const layout = stylex.create({
 export default function ProgressMeter() {
   return (
     <div {...stylex.props(layout.column)}>
-      <Meter value={68} max={100}>
+      <Meter
+        value={68}
+        max={100}
+        getAriaValueText={(value) => `${String(value)} of 100 GB`}
+      >
         <MeterLabel>Storage used</MeterLabel>
         <MeterValue>{(_, value) => `${String(value)} of 100 GB`}</MeterValue>
       </Meter>

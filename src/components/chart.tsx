@@ -2443,8 +2443,9 @@ export interface ChartBarListProps {
   /**
    * Where a row's name leads, as a link to the thing the row is: its `href` (an address, or a path
    * on this site), or a router's link as `render` (`render: <Link to="/teams/$id" params={…} />`),
-   * which takes the name as its words. A row it gives nothing, or an address that is not safe, is
-   * its name alone.
+   * which takes the name as its words. `href` is checked (`safeHref`, paths on this site allowed):
+   * a row it gives nothing, or an address that is not safe, is its name alone. A `render` element
+   * is the caller's own and keeps its own address, unchecked.
    */
   rowLink?: (
     row: Readonly<Row>

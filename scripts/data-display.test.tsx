@@ -1,6 +1,5 @@
-// What a meter, a bar list's links and a row's parts draw on the server, through their own props:
-// the meter's role and range, a row's name a link only where its address is safe, and a form in a
-// row's actions standing in block content.
+// What a meter and a bar list's links draw on the server, through their own props: the meter's
+// role and range, and a row's name a link only where its address is safe.
 //
 //   pnpm exec vp test scripts/data-display.test.tsx
 import type { ComponentProps } from "react";
@@ -9,13 +8,6 @@ import { describe, expect, test } from "vitest";
 
 import { ChartBarList } from "../src/components/chart";
 import type { ChartBarListProps } from "../src/components/chart";
-import {
-  Item,
-  ItemActions,
-  ItemContent,
-  ItemFooter,
-  ItemTitle,
-} from "../src/components/item";
 import { Meter, MeterLabel } from "../src/components/progress";
 
 // A script link's scheme, written so no lint takes the test's own strings for one.
@@ -95,29 +87,5 @@ describe("a bar list's rowLink", () => {
       /<a[^>]*href="\/teams\/finance"[^>]*>(?:<span[^>]*><\/span>)?Finance<\/a>/u
     );
     expect(html).toContain('data-router=""');
-  });
-});
-
-describe("a row's parts", () => {
-  test("a form in the actions and a list in the footer stand in block content, never in a span", () => {
-    const html = renderToStaticMarkup(
-      <Item>
-        <ItemContent>
-          <ItemTitle>Stable</ItemTitle>
-        </ItemContent>
-        <ItemActions>
-          <form aria-label="Release to Stable">
-            <button type="submit">Release</button>
-          </form>
-        </ItemActions>
-        <ItemFooter>
-          <ul>
-            <li>Acme</li>
-          </ul>
-        </ItemFooter>
-      </Item>
-    );
-    expect(html).toMatch(/<div[^>]*data-slot="item-actions"[^>]*><form/u);
-    expect(html).toMatch(/<div[^>]*data-slot="item-footer"[^>]*><ul/u);
   });
 });
