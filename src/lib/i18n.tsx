@@ -117,6 +117,22 @@ export interface I18nCatalog {
     /** The safe answer AlertDialogCancel gives when it is given no words of its own. */
     cancel: string;
   };
+  appShell: {
+    /** The button that closes the sidebar's sheet on a narrow window. */
+    close: string;
+    /** Said once while a page loads (AppShellPageSkeleton). */
+    loading: string;
+    /** The name of the page's panel's sheet on a narrow window. */
+    pagePanel: string;
+    /** The name of the title's field while the page is renamed in place. */
+    rename: string;
+    /** The name of the handle between the page and its panel. */
+    resize: string;
+    /** The search button in the sidebar's head. */
+    search: string;
+    /** The bar's button that shows the page's panel and sets it aside. */
+    togglePanel: string;
+  };
   attachment: {
     /** A file's remove action, named for it ("Remove brief.pdf"). */
     remove: (name: string) => string;
@@ -976,6 +992,15 @@ const english: I18nCatalog = {
   },
   alertDialog: {
     cancel: "Cancel",
+  },
+  appShell: {
+    close: "Close",
+    loading: "Loading…",
+    pagePanel: "Details",
+    rename: "Rename",
+    resize: "Resize the panel",
+    search: "Search",
+    togglePanel: "Show or hide the panel",
   },
   attachment: {
     remove: (name) => `Remove ${name}`,

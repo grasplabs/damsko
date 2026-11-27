@@ -1,6 +1,10 @@
 "use client";
 
-import { AppShell } from "@grasp-os/ui/blocks/app-shell-01/app-shell-01";
+import {
+  AppShell,
+  AppShellHeader,
+  AppShellPage,
+} from "@grasp-os/ui/blocks/app-shell-01/app-shell-01";
 import {
   Alert,
   AlertDescription,
@@ -39,8 +43,8 @@ const places = [
   { name: "Dashboard", icon: LayoutDashboardIcon },
 ];
 
-// A notice for the whole product, on every page: `banner` puts it above the header, across the
-// page. Closed, the header takes its place.
+// A notice for the whole product, on every page: `banner` puts it above the page and its bar,
+// across the card. Closed, the bar takes its place.
 export default function AppShellBanner() {
   const [shown, setShown] = useState(true);
   return (
@@ -70,7 +74,6 @@ export default function AppShellBanner() {
             </SidebarGroup>
           </SidebarContent>
         }
-        title="Dashboard"
         banner={
           shown && (
             <Alert
@@ -88,10 +91,13 @@ export default function AppShellBanner() {
           )
         }
       >
-        <PageHeader
-          title="Dashboard"
-          description="This week's numbers, and what changed since Monday."
-        />
+        <AppShellHeader title="Dashboard" />
+        <AppShellPage>
+          <PageHeader
+            title="Dashboard"
+            description="This week's numbers, and what changed since Monday."
+          />
+        </AppShellPage>
       </AppShell>
     </div>
   );

@@ -248,7 +248,9 @@
       "title": "App shell",
       "description": "The frame every page of an app sits in, with its main navigation beside the page.",
       "dependencies": [
-        "@stylexjs/stylex"
+        "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react"
       ],
       "registryDependencies": [
         "@damsko/alert",
@@ -260,7 +262,8 @@
         "@damsko/resizable",
         "@damsko/sheet",
         "@damsko/side-panel",
-        "@damsko/sidebar"
+        "@damsko/sidebar",
+        "@damsko/skeleton"
       ],
       "docs": "https://damsko.joingrasp.com/components/app-shell-01",
       "meta": {
@@ -268,6 +271,11 @@
         "license": "Proprietary, not open source: Damsko's LICENSE (https://github.com/grasplabs/damsko/blob/main/LICENSE). The files stay under it wherever they are installed; only Grasp, its affiliates, its contractors working for Grasp, and partners Grasp has authorised in writing may use them."
       },
       "files": [
+        {
+          "path": "src/blocks/app-shell-01/app-shell-01.stylex.ts",
+          "type": "registry:file",
+          "target": "~/src/blocks/app-shell-01/app-shell-01.stylex.ts"
+        },
         {
           "path": "src/blocks/app-shell-01/app-shell-01.tsx",
           "type": "registry:file",

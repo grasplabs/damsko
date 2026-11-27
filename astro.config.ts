@@ -69,10 +69,12 @@ const stylexOptions: Partial<UserOptions> = {
   // the client builds compute the same names.
   unstable_moduleResolution: { type: "commonJS", rootDir: root },
   // Examples import the tokens as a product does from its packages/ui
-  // (`@grasp-os/ui/lib/tokens.stylex`): StyleX resolves that path to src/lib itself, so the
-  // variables keep the names they are given there.
+  // (`@grasp-os/ui/lib/tokens.stylex`), and a block's variables from its folder
+  // (`@grasp-os/ui/blocks/app-shell-01/app-shell-01.stylex`): StyleX resolves those paths to src
+  // itself, so the variables keep the names they are given there.
   aliases: {
     "@grasp-os/ui/lib/*": [`${root}src/lib/*`],
+    "@grasp-os/ui/blocks/*": [`${root}src/blocks/*`],
   },
   // The dev-only `data-style-src` attribute carried different line numbers in the server and
   // client transforms, which made every island report a hydration mismatch.
@@ -109,8 +111,8 @@ const damskoAliases = [
     replacement: `${root}src/hooks/$1`,
   },
   {
-    find: /^@grasp-os\/ui\/blocks\/(?<block>[a-z0-9-]+)\/(?<file>[a-z0-9-]+)$/u,
-    replacement: `${root}src/blocks/$1/$2.tsx`,
+    find: /^@grasp-os\/ui\/blocks\/(?<block>[a-z0-9-]+)\/(?<file>[a-z0-9.-]+)$/u,
+    replacement: `${root}src/blocks/$1/$2`,
   },
   ...readdirSync(`${root}src/components`, { withFileTypes: true }).flatMap(
     (entry) => {

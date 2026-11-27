@@ -1,10 +1,10 @@
 "use client";
 
-import { AppShell } from "@grasp-os/ui/blocks/app-shell-01/app-shell-01";
 import {
-  BreadcrumbItem,
-  BreadcrumbLink,
-} from "@grasp-os/ui/components/breadcrumb";
+  AppShell,
+  AppShellHeader,
+  AppShellPage,
+} from "@grasp-os/ui/blocks/app-shell-01/app-shell-01";
 import { Button } from "@grasp-os/ui/components/button";
 import { KeyValueList } from "@grasp-os/ui/components/key-value";
 import { PageHeader } from "@grasp-os/ui/components/page-header";
@@ -55,7 +55,6 @@ const layout = stylex.create({
     display: "grid",
     gap: space["4"],
     maxWidth: "42rem",
-    marginBlockStart: space["6"],
   },
   paragraph: {
     margin: 0,
@@ -116,17 +115,6 @@ export default function PageHeaderBand() {
             </SidebarGroup>
           </SidebarContent>
         }
-        breadcrumb={
-          <>
-            <BreadcrumbItem>
-              <BreadcrumbLink href="#notes">Notes</BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbItem>
-              <BreadcrumbLink href="#notes/reports">Reports</BreadcrumbLink>
-            </BreadcrumbItem>
-          </>
-        }
-        title="Finance"
         panel={
           <SidePanel aria-label="Finance details">
             <SidePanelHeader
@@ -151,42 +139,55 @@ export default function PageHeaderBand() {
         panelOpen={details}
         onPanelOpenChange={setDetails}
       >
-        <PageHeader
-          variant="banner"
+        <AppShellHeader
+          breadcrumb={[
+            { label: "Notes", href: "#notes" },
+            { label: "Reports", href: "#notes/reports" },
+          ]}
           title="Finance"
-          description="8 people. Not interviewed yet."
-          actions={
-            <>
-              <Button
-                size="icon-sm"
-                variant="ghost"
-                aria-label="Add to favourites"
-              >
-                <Icon icon={StarIcon} />
-              </Button>
-              <Button size="icon-sm" variant="ghost" aria-label="Copy the link">
-                <Icon icon={LinkIcon} />
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                aria-pressed={details}
-                onClick={() => {
-                  setDetails(!details);
-                }}
-              >
-                Details
-              </Button>
-            </>
-          }
         />
-        <div {...stylex.props(layout.body)}>
-          {paragraphs.map((text) => (
-            <p key={text} {...stylex.props(layout.paragraph)}>
-              {text}
-            </p>
-          ))}
-        </div>
+        <AppShellPage>
+          <PageHeader
+            variant="banner"
+            title="Finance"
+            description="8 people. Not interviewed yet."
+            actions={
+              <>
+                <Button
+                  size="icon-sm"
+                  variant="ghost"
+                  aria-label="Add to favourites"
+                >
+                  <Icon icon={StarIcon} />
+                </Button>
+                <Button
+                  size="icon-sm"
+                  variant="ghost"
+                  aria-label="Copy the link"
+                >
+                  <Icon icon={LinkIcon} />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  aria-pressed={details}
+                  onClick={() => {
+                    setDetails(!details);
+                  }}
+                >
+                  Details
+                </Button>
+              </>
+            }
+          />
+          <div {...stylex.props(layout.body)}>
+            {paragraphs.map((text) => (
+              <p key={text} {...stylex.props(layout.paragraph)}>
+                {text}
+              </p>
+            ))}
+          </div>
+        </AppShellPage>
       </AppShell>
     </div>
   );

@@ -1,10 +1,9 @@
 "use client";
 
-import { AppShell } from "@grasp-os/ui/blocks/app-shell-01/app-shell-01";
 import {
-  BreadcrumbItem,
-  BreadcrumbLink,
-} from "@grasp-os/ui/components/breadcrumb";
+  AppShell,
+  AppShellHeader,
+} from "@grasp-os/ui/blocks/app-shell-01/app-shell-01";
 import { Button } from "@grasp-os/ui/components/button";
 import {
   SidePanel,
@@ -99,15 +98,12 @@ export default function BarActionsSpecimen() {
                 </SidebarGroup>
               </SidebarContent>
             }
-            breadcrumb={
-              <BreadcrumbItem>
-                <BreadcrumbLink href="#reports">Reports</BreadcrumbLink>
-              </BreadcrumbItem>
-            }
-            title="Quarterly review"
-            actions={<Actions />}
           >
-            {null}
+            <AppShellHeader
+              breadcrumb={[{ label: "Reports", href: "#reports" }]}
+              title="Quarterly review"
+              actions={<Actions />}
+            />
           </AppShell>
         </div>
       </figure>

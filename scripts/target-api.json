@@ -1579,10 +1579,23 @@
   },
   "app-shell-01": {
     "src/blocks/app-shell-01/app-shell-01.tsx": [
-      "AppShell",
+      "AppShellSidebarProps",
+      "AppShellSidebar",
+      "AppShellCardProps",
+      "AppShellCard",
+      "AppShellContentProps",
+      "AppShellContent",
       "AppShellProps",
-      "AppShellLabels"
-    ]
+      "AppShell",
+      "AppShellCrumb",
+      "AppShellHeaderProps",
+      "AppShellHeader",
+      "AppShellPageProps",
+      "AppShellPage",
+      "AppShellPageSkeletonProps",
+      "AppShellPageSkeleton"
+    ],
+    "src/blocks/app-shell-01/app-shell-01.stylex.ts": null
   },
   "message": {
     "src/components/message.tsx": [

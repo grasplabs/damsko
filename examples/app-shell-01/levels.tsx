@@ -1,10 +1,10 @@
 "use client";
 
-import { AppShell } from "@grasp-os/ui/blocks/app-shell-01/app-shell-01";
 import {
-  BreadcrumbItem,
-  BreadcrumbLink,
-} from "@grasp-os/ui/components/breadcrumb";
+  AppShell,
+  AppShellHeader,
+  AppShellPage,
+} from "@grasp-os/ui/blocks/app-shell-01/app-shell-01";
 import { PageHeader } from "@grasp-os/ui/components/page-header";
 import {
   SidebarContent,
@@ -158,16 +158,18 @@ export default function AppShellLevels() {
             </SidebarLevel>
           </SidebarLevels>
         }
-        breadcrumb={
-          inSettings ? (
-            <BreadcrumbItem>
-              <BreadcrumbLink href="#settings/general">Settings</BreadcrumbLink>
-            </BreadcrumbItem>
-          ) : undefined
-        }
-        title={page?.name}
       >
-        <PageHeader title={page?.name ?? ""} />
+        <AppShellHeader
+          breadcrumb={
+            inSettings
+              ? [{ label: "Settings", href: "#settings/general" }]
+              : undefined
+          }
+          title={page?.name}
+        />
+        <AppShellPage>
+          <PageHeader title={page?.name ?? ""} />
+        </AppShellPage>
       </AppShell>
     </div>
   );

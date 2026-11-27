@@ -5,7 +5,11 @@
 // window and a Sheet from the end on a narrow one. The headers' Share and More actions are here
 // too, and the window's toasts that say what they did.
 
-import { AppShell } from "@grasp-os/ui/blocks/app-shell-01/app-shell-01";
+import {
+  AppShell,
+  AppShellHeader,
+  AppShellPage,
+} from "@grasp-os/ui/blocks/app-shell-01/app-shell-01";
 import { Inspector } from "@grasp-os/ui/blocks/inspector-01/inspector-01";
 import { Button } from "@grasp-os/ui/components/button";
 import type { ButtonVariant } from "@grasp-os/ui/components/button";
@@ -86,12 +90,6 @@ const layout = stylex.create({
     backgroundColor: colors.background,
   },
   fill: { height: "100%", minHeight: 0 },
-  main: {
-    display: "grid",
-    alignContent: "start",
-    rowGap: space["6"],
-    minWidth: 0,
-  },
   // The plain main area: a ground where the object's own page would be.
   plain: {
     minHeight: 320,
@@ -531,7 +529,6 @@ export function InspectorFrame({
       <AppShell
         style={layout.fill}
         sidebar={sidebar(current)}
-        title={title}
         panel={inspector({
           onClose: () => {
             setPanelOpen(false);
@@ -541,10 +538,11 @@ export function InspectorFrame({
         panelOpen={panelOpen}
         onPanelOpenChange={setPanelOpen}
       >
-        <div {...stylex.props(layout.main)}>
+        <AppShellHeader title={title} />
+        <AppShellPage>
           <PageHeader title={title} description={description} />
           <div aria-hidden {...stylex.props(layout.plain)} />
-        </div>
+        </AppShellPage>
       </AppShell>
       <Toaster toaster={toast} />
     </div>
