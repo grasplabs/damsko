@@ -83,3 +83,24 @@ test("each ring is a named progressbar; a large ring shows its value", async ({
     page.getByRole("progressbar", { name: "Connecting" })
   ).not.toHaveAttribute("aria-valuenow");
 });
+
+test("a meter reads a value in its range, named by its label, in words of its own where given", async ({
+  page,
+}) => {
+  await openExample(page, "progress", "meter");
+  const storage = page.getByRole("meter", { name: "Storage used" });
+  await expect(storage).toHaveAttribute("aria-valuenow", "68");
+  await expect(storage).toHaveAttribute("aria-valuemin", "0");
+  await expect(storage).toHaveAttribute("aria-valuemax", "100");
+  await expect(storage).toHaveAttribute("aria-valuetext", "68 of 100 GB");
+  const release = page.getByRole("meter", {
+    name: "Companies on the latest release",
+  });
+  await expect(release).toHaveAttribute("aria-valuemax", "6");
+  await expect(release).toHaveAttribute("aria-valuetext", "6 of 6 up to date");
+  // The visible reading is shown, and said once: by the meter, not again as text.
+  await expect(page.getByText("6 of 6", { exact: true })).toBeVisible();
+  expect(await page.locator("body").ariaSnapshot()).not.toContain(
+    "text: 6 of 6"
+  );
+});

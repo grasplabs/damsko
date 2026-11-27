@@ -89,6 +89,12 @@ A value below zero runs left from a faint zero line; the names stay where the ro
 
 <Stage path="chart/bar-list-change" label="Below zero" />
 
+## Rows that link
+
+`rowLink` makes each row's name a link to the thing the row is: it is given the row and gives back its `href`, or a router's link as `render` (`render: <Link to="/teams/$id" params={…} />`), which takes the name as its words. The name stays where it was, in Link's look for a link on its own line (`plain`: the ink, medium, underlined under the pointer), with a finger's whole target; each is a stop for Tab in the rows' order, and a screen reader hears the link, then the value. An address that is not safe (anything but http, https, mailto, tel or a path on this site) leaves the row its name alone.
+
+<Stage path="chart/bar-list-links" label="Rows that link" />
+
 ## Area
 
 A line in the value colour with a faint wash under it.
