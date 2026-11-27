@@ -3866,17 +3866,13 @@ export const PromptInputSubmit = ({
   );
   const compact = form?.compact === true;
   const press = async (event: MouseEvent<HTMLElement>) => {
-    if (stoppable) {
-      await onStop?.();
-      return;
-    }
-    // The text takes the focus first: Submit gives way to Stop as the message goes, and focus
-    // would fall to the page's body. Only when the focus is this form's, so an agent's press
-    // never pulls it from elsewhere.
+    // The text takes the focus first: Submit gives way to Stop as the message goes, and Stop to a
+    // Send that is off with nothing typed, and either way focus would fall to the page's body.
+    // Only when the focus is this form's, so an agent's press never pulls it from elsewhere.
     if (focusHere(event.currentTarget.closest("form"))) {
       form?.controller.focus({ at: "end" });
     }
-    await form?.submit();
+    await (stoppable ? onStop?.() : form?.submit());
   };
   return (
     <span
