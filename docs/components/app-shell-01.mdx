@@ -53,9 +53,9 @@ An area with a navigation of its own takes the sidebar while the person is in it
 
 `app-shell-01-sidebar` holds the parts a product's sidebar is made of, drawn with Sidebar's own. AppShellSwitch stands under the head and switches the main list's views (Home | Inbox): a track whose chosen tab rides on a thumb that glides from tab to tab, one tab stop, the arrows, Home and End moving and choosing; a tab's count is a red dot on its icon and is said in its name, and again when it changes. Its children are the rows it switches, which fade from one list to the next; without children it is a level's views of the page.
 
-AppShellNav takes the rows as data, in groups: a group has a small label, a count beside it, folds away (kept under the shell's `storageKey`), may be a landmark of its own and end in a quiet way to all of them. A row is a link (`href`, or a router's link as `render`) or a button, with its icon; at its end a count, short words (`end`), the Working mark or an unread dot, each said in words (`countText`, `endText`, `workingText`, `unreadText`); a second line (`detail`); its name in the regular weight for a thing in a list of them (`quiet`). With `actions` its menu stands behind three dots at its end and on a right-click, a long press, the menu key or Shift+F10; with `onRename` its menu's Rename, F2 or a double-click lays a field over its words, which Enter or leaving saves and Escape leaves. An AppShellNavEmpty says one quiet sentence where there are no rows.
+AppShellNav takes the rows as data, in groups, each row and group with an `id` of its own (two rows may share a name): a group has a small label, a count beside it, folds away (kept under the shell's `storageKey`), may be a landmark of its own and end in a quiet way to all of them. A row is a link (`href`, or a router's link as `render`) or a button, with its icon; at its end a count (said as the number, or `countText`), short words (`end`, said as `endText`), the Working mark or an unread dot, each said in words; a second line (`detail`), the row growing to hold it; its name in the regular weight for a thing in a list of them (`quiet`); and `endAction`, a control of the product's own such as a mark that leads elsewhere. With `actions` its menu stands behind three dots at its end and on a right-click, a long press, the menu key or Shift+F10; with `onRename` the menu's entry marked `rename`, F2 or a double-click lays a field over its words, which Enter or leaving saves and Escape leaves. A row that acts closes the sidebar's sheet, as a link followed does. An AppShellNavEmpty says one quiet sentence where there are no rows.
 
-A level's head is AppShellLevelHeader: Back, its chevron alone and named, and the level's name, a link to its own first page, as one raised row. AppShellProfile is the person at the foot: their face, their name and one quiet line, and their menu over the row, as wide as it, of presses, a submenu of choices with a tick, the theme as icon segments at the end of its row the arrows choose, and lines between.
+A level's head is Sidebar's own SidebarLevelHeader: Back, its chevron alone and named, and the level's name, a link to its own first page with `asChild`, as one raised row. AppShellProfile is the person at the foot: their face, their name and one quiet line, and their menu over the row, as wide as it, of presses, a submenu of choices with a tick, the theme as icon segments at the end of its row the arrows choose, and lines between. The rows' words (the dots' name, the rename field's, the hint, Working and Unread) come from the I18nProvider's `appShell`.
 
 <Stage path="app-shell-01/frame" label="The sidebar's parts" />
 
@@ -209,14 +209,6 @@ A step of `breadcrumb`:
   source="src/blocks/app-shell-01/app-shell-01-sidebar.tsx"
   type="AppShellTab"
   label="AppShellTab"
-/>
-
-### AppShellLevelHeader
-
-<Props
-  source="src/blocks/app-shell-01/app-shell-01-sidebar.tsx"
-  type="AppShellLevelHeaderProps"
-  label="AppShellLevelHeaderProps"
 />
 
 ### AppShellProfile

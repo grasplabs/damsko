@@ -18,7 +18,6 @@ import {
   SidebarTrigger,
 } from "@grasp-os/ui/components/sidebar";
 import {
-  ChevronLeftIcon,
   Icon,
   InboxIcon,
   SettingsIcon,
@@ -79,14 +78,7 @@ export default function SidebarLevelsRail() {
             <div {...stylex.props(layout.boundary)}>
               <SidebarLevel value="settings">
                 <SidebarLevelHeader>
-                  <SidebarMenu>
-                    <SidebarMenuItem>
-                      <SidebarLevelTrigger value="main">
-                        <Icon icon={ChevronLeftIcon} />
-                        Back
-                      </SidebarLevelTrigger>
-                    </SidebarMenuItem>
-                  </SidebarMenu>
+                  <SidebarLevelTrigger value="main" aria-label="Back" />
                   <SidebarLevelTitle>
                     <Icon icon={SettingsIcon} />
                     Settings

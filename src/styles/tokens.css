@@ -510,6 +510,8 @@
   --damsko-menu-gap: 10px;
   /* The narrowest a dropdown menu is, so a short list still reads as a menu. */
   --damsko-menu-width: 249px;
+  /* The narrowest a right-click menu is: tighter than a dropdown's, as it opens beside what was pressed. */
+  --damsko-context-menu-width: 192px;
   /* The edge and shadow of a menu: high lift. */
   --damsko-menu-shadow: var(--damsko-shadow-lg);
   /* Room inside a menu item, round its icon, words and keys. */

@@ -1872,6 +1872,12 @@ export const groups: TokenGroup[] = [
             use: "The narrowest a dropdown menu is, so a short list still reads as a menu.",
           },
           {
+            name: "context-menu-width",
+            category: "size",
+            value: "192px",
+            use: "The narrowest a right-click menu is: tighter than a dropdown's, as it opens beside what was pressed.",
+          },
+          {
             name: "menu-shadow",
             category: "shadow",
             value: "{shadow-lg}",

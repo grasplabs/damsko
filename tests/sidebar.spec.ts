@@ -750,7 +750,8 @@ test("rows are 32px, 8px in and 2px apart, their icons 16px; groups stand 8px ap
   const last = await boxOf(sidebar.getByRole("link", { name: "Integrations" }));
   const label = await wordsOf(sidebar.getByText("From your Apps"));
   const first = await boxOf(sidebar.getByRole("link", { name: "Expenses" }));
-  // The label's own row starts 8px under the group above, its words low in it, 2px over its rows.
+  // The label starts 8px under the group above, as tall as its words and their room, 2px over its
+  // rows.
   expect(first.y - (last.y + last.height)).toBe(8 + 32 + 2);
   expect(first.y - label.bottom).toBeLessThanOrEqual(8);
   // A count: 22px high, 8px in from the row's end, in the middle of its row.
@@ -1286,21 +1287,38 @@ test("levels: a level shown from outside the levels leaves focus where it is", a
   await expect(person).toBeFocused();
 });
 
-test("levels: in forced colours the level's name is not boxed as a row", async ({
+test("levels: in forced colours the level's head is outlined, and its name is not boxed as a row", async ({
   page,
 }) => {
   await openExample(page, "sidebar", "levels");
   await page.emulateMedia({ forcedColors: "active" });
   const sidebar = sidebarOf(page);
   await sidebar.getByRole("link", { name: "Settings" }).click();
-  await expect(sidebar.getByRole("link", { name: "Back" })).toHaveCSS(
-    "border-top-width",
-    "1px"
+  await expect(sidebar.locator("[data-slot=sidebar-level-segment]")).toHaveCSS(
+    "outline-style",
+    "solid"
   );
   await expect(sidebar.getByRole("heading", { name: "Settings" })).toHaveCSS(
     "border-top-width",
     "0px"
   );
+});
+
+test("levels: the way back and the level's name stand as one row, Back its chevron alone", async ({
+  page,
+}) => {
+  await openExample(page, "sidebar", "levels");
+  const sidebar = sidebarOf(page);
+  await sidebar.getByRole("link", { name: "Settings" }).click();
+  const back = sidebar.getByRole("link", { name: "Back" });
+  const title = sidebar.getByRole("heading", { name: "Settings" });
+  const [backBox, titleBox] = await Promise.all([
+    back.boundingBox(),
+    title.boundingBox(),
+  ]);
+  expect(Math.abs((backBox?.y ?? 0) - (titleBox?.y ?? 1))).toBeLessThan(2);
+  expect(backBox?.width).toBe(28);
+  await expect(back).toHaveText("");
 });
 
 test("levels: before the page wakes, the level shown is the only one drawn and in reach", async ({

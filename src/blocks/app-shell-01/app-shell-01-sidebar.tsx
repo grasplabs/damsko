@@ -1,7 +1,8 @@
-// The app shell's sidebar parts, which stand in AppShell's `sidebar`: the rows as data in their
-// groups (AppShellNav), the switch of the main list's views under the head (AppShellSwitch), a
-// level's head as one raised row (AppShellLevelHeader), and the person at the foot with their menu
-// (AppShellProfile). Each is drawn with Sidebar's parts.
+// The app shell's sidebar parts, which stand in AppShell's `sidebar` (or AppShellSidebar): the rows
+// as data in their groups (AppShellNav), the switch of the main list's views under the head
+// (AppShellSwitch), and the person at the foot with their menu (AppShellProfile). Each is drawn with
+// Sidebar's parts; a level's head is Sidebar's own SidebarLevelHeader. Their words come from the
+// I18nProvider (`appShell`).
 //
 //   <AppShell sidebar={
 //     <>
@@ -12,9 +13,10 @@
 //           </AppShellSwitch>
 //         </SidebarLevel>
 //         <SidebarLevel value="settings">
-//           <AppShellLevelHeader back={{ label: "Back", href: "/" }} href="/settings" icon={SettingsIcon}>
-//             Settings
-//           </AppShellLevelHeader>
+//           <SidebarLevelHeader>
+//             <SidebarLevelTrigger value="main" asChild aria-label="Back"><Link to="/" /></SidebarLevelTrigger>
+//             <SidebarLevelTitle asChild><Link to="/settings">Settings</Link></SidebarLevelTitle>
+//           </SidebarLevelHeader>
 //           <AppShellNav aria-label="Settings" groups={settings} />
 //         </SidebarLevel>
 //       </SidebarLevels>
@@ -89,9 +91,9 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "../../components/tooltip";
+import { useI18n } from "../../lib/i18n";
 import {
   CheckIcon,
-  ChevronLeftIcon,
   ChevronRightIcon,
   ChevronsUpDownIcon,
   EllipsisIcon,
@@ -112,7 +114,6 @@ import {
 import { durations, popup } from "../../lib/tokens.values";
 import { announce } from "../../lib/utils";
 import { iconVars } from "../../lib/vars.stylex";
-import type { AppShellCrumb } from "./app-shell-01";
 import { switchMarker } from "./app-shell-01.stylex";
 
 const HOVER = media.hover;
@@ -135,8 +136,6 @@ const MENU_GAP = 6;
 
 const styles = stylex.create({
   // ---- The rows ----
-  // A group label as tall as its words and their room.
-  label: { height: "auto" },
   labelWords: {
     flexGrow: 1,
     minWidth: 0,
@@ -201,7 +200,6 @@ const styles = stylex.create({
     fontVariantNumeric: "tabular-nums",
     color: colors.mutedForeground,
   },
-  tall: { height: "auto", minHeight: size.sidebarMenuButtonHeight },
   empty: {
     margin: 0,
     paddingInline: `calc(${space["2"]} + ${size.sidebarRowInline})`,
@@ -247,8 +245,6 @@ const styles = stylex.create({
         colors.sidebarForeground,
     },
   },
-  // The row's menu on a right-click, a narrow one.
-  contextMenu: { minWidth: "12rem" },
   // The Working mark at a row's end, in an icon's room, never squeezed.
   working: {
     display: "inline-flex",
@@ -330,8 +326,6 @@ const styles = stylex.create({
     outline: { default: "none", [FORCED]: "1px solid CanvasText" },
     outlineOffset: "-1px",
   },
-  // A level's head holds the track's room but draws nothing: the segment stands flat on the sidebar.
-  headTrack: { backgroundColor: "transparent" },
   // The chosen ground, one for the switch: it travels from the tab left to the tab chosen, its
   // leading edge first and its trailing edge after. Until it stands (before script) and in forced
   // colours, the chosen tab draws its own ground instead.
@@ -463,99 +457,6 @@ const styles = stylex.create({
     flexDirection: "column",
     overflow: "hidden",
     pointerEvents: "none",
-  },
-
-  // ---- A level's head ----
-  // Back and its name as one segment, raised out of the track as a chosen tab.
-  head: {
-    display: "flex",
-    flexDirection: "column",
-    flexShrink: 0,
-    gap: size.sidebarRowGap,
-    paddingInline: space["2"],
-    paddingBlockStart: space["1"],
-  },
-  levelSegment: {
-    display: "flex",
-    flexGrow: 1,
-    alignItems: "stretch",
-    minWidth: 0,
-    borderRadius: TAB_CORNER,
-    cornerShape: radius.shape,
-    backgroundColor: { default: colors.control, [FORCED]: "Canvas" },
-    boxShadow: {
-      default: `inset 0 0 0 ${size.hairline} ${colors.borderStrongColor}`,
-      [FORCED]: "none",
-    },
-    outline: { default: null, [FORCED]: `${size.hairline} solid CanvasText` },
-  },
-  part: {
-    position: "relative",
-    display: "flex",
-    alignItems: "center",
-    boxSizing: "border-box",
-    minHeight: {
-      default: size.sidebarMenuButtonHeight,
-      [COARSE]: size.tapTarget,
-    },
-    fontFamily: font.sans,
-    fontSize: font.textSm,
-    lineHeight: font.textSmLine,
-    fontWeight: font.weightMedium,
-    letterSpacing: size.sidebarTracking,
-    textDecoration: "none",
-    backgroundColor: {
-      default: "transparent",
-      [HOVER]: { default: "transparent", ":hover": colors.sidebarHover },
-    },
-    transitionProperty: "color, background-color",
-    transitionDuration: duration.hover,
-    transitionTimingFunction: duration.ease,
-  },
-  // Back: the chevron alone, centred on the rows' icon column, the segment's start corners.
-  back: {
-    justifyContent: "center",
-    flexShrink: 0,
-    width: { default: size.sidebarIconButton, [COARSE]: size.tapTarget },
-    borderStartStartRadius: TAB_CORNER,
-    borderEndStartRadius: TAB_CORNER,
-    cornerShape: radius.shape,
-    color: {
-      default: colors.sidebarSecondaryForeground,
-      [HOVER]: {
-        default: colors.sidebarSecondaryForeground,
-        ":hover": colors.sidebarForeground,
-      },
-      [FORCED]: "LinkText",
-    },
-  },
-  heading: {
-    display: "flex",
-    flexGrow: 1,
-    minWidth: 0,
-    margin: 0,
-    fontSize: "inherit",
-    fontWeight: "inherit",
-  },
-  // The level's own first page: its icon and name, in the sidebar's ink, the segment's end corners.
-  home: {
-    flexGrow: 1,
-    gap: size.sidebarIconGap,
-    minWidth: 0,
-    paddingInline: `calc(${size.sidebarRowInline} - ${INSET})`,
-    borderStartEndRadius: TAB_CORNER,
-    borderEndEndRadius: TAB_CORNER,
-    cornerShape: radius.shape,
-    color: { default: colors.sidebarForeground, [FORCED]: "LinkText" },
-  },
-  // A mark of the level's own before its name (a face), in the icon's box.
-  mark: {
-    display: "inline-flex",
-    flexShrink: 0,
-    alignItems: "center",
-    justifyContent: "center",
-    width: size.sidebarIcon,
-    height: size.sidebarIcon,
   },
 
   // ---- The person at the foot ----
@@ -729,7 +630,10 @@ const styles = stylex.create({
     borderStyle: "solid",
     borderColor: "Highlight",
     transitionProperty: "transform",
-    transitionDuration: duration.mark,
+    transitionDuration: {
+      default: duration.mark,
+      [media.reducedMotion]: "0s",
+    },
     transitionTimingFunction: duration.ease,
   },
   segment: {
@@ -808,20 +712,22 @@ const leads = (where: { href?: string; render?: ReactElement }): boolean =>
 /** One entry of a row's menu: a choice, or a line between choices. */
 export type AppShellRowAction =
   | {
-      /** What `onAction` hears ("rename" starts renaming a row that renames). */
+      /** What `onAction` hears. */
       value: string;
       /** Its words. */
       label: string;
       icon: IconData;
       /** A choice that removes or destroys, in the danger ink. */
       destructive?: boolean;
+      /** It renames the row in place (a row with `onRename`), rather than telling `onAction`. */
+      rename?: boolean;
     }
   | "separator";
 
 /** A row under a row: a page within it. */
 export interface AppShellNavSubRow {
-  /** What it is kept under. @default its label */
-  id?: string;
+  /** What it is kept under, one of its own among its neighbours: two rows may share a name. */
+  id: string;
   /** Its name. */
   label: string;
   /** Where it leads. */
@@ -849,35 +755,37 @@ export interface AppShellNavRow extends AppShellNavSubRow {
   quiet?: boolean;
   /** How many things wait there: a small pill at the row's end. None at 0. */
   count?: number;
-  /** What a screen reader hears of the count ("3 waiting"). */
+  /** What a screen reader hears of the count ("3 waiting"). @default the number */
   countText?: string;
-  /** Something works there now: the Working mark at the row's end. */
+  /** Something works there now: the Working mark at the row's end, said as the I18nProvider's `appShell.working`. */
   working?: boolean;
-  /** What a screen reader hears of the Working mark. */
-  workingText?: string;
-  /** Something there not seen yet: a small dot at the row's end, where the Working mark stands, which wins while both hold. */
+  /**
+   * Something there not seen yet: a small dot at the row's end, where the Working mark stands,
+   * which wins while both hold; said as `appShell.unread`.
+   */
   unread?: boolean;
-  /** What a screen reader hears of the dot ("Unread"). */
-  unreadText?: string;
-  /** Its menu: behind three dots at its end, and on a right-click, a long press, the menu key or Shift+F10. */
+  /**
+   * At its end, after its words: a control of the product's own, such as a SidebarMenuAction that
+   * leads elsewhere with its tooltip. Its menu's dots stand after it.
+   */
+  endAction?: ReactNode;
+  /**
+   * Its menu: behind three dots at its end (named `appShell.more`), and on a right-click, a long
+   * press, the menu key or Shift+F10.
+   */
   actions?: readonly AppShellRowAction[];
-  /** The dots' name ("More for Weekly numbers"). @default its label */
-  actionsLabel?: string;
-  /** Runs with the value of the menu's entry chosen. */
+  /** Runs with the value of the menu's entry chosen, unless it renames. */
   onAction?: (value: string) => void;
   /**
-   * Renamed in place: its menu's `rename`, F2 or a double-click lays a field over its words; runs
-   * with the new name, trimmed, when it is not empty and differs.
+   * Renamed in place: its menu's entry marked `rename`, F2 or a double-click lays a field over its
+   * words; runs with the new name, trimmed, when it is not empty and differs.
    */
   onRename?: (name: string) => void;
-  /** The rename field's name ("Rename Weekly numbers"). @default its label */
-  renameLabel?: string;
-  /** Said of a row that renames, after its name ("Double-click or press F2 to rename"). */
-  renameHint?: string;
 }
 
 /** The last, quiet row of a group: the way to all of them ("All chats"). */
 export interface AppShellNavMore {
+  /** Its words. */
   label: string;
   href?: string;
   render?: ReactElement<Record<string, unknown>>;
@@ -886,8 +794,8 @@ export interface AppShellNavMore {
 
 /** A run of rows, under a small label or none. */
 export interface AppShellNavGroup {
-  /** What its fold is kept under (`storageKey:id`). @default its label */
-  id?: string;
+  /** What it is kept under, and its fold (`storageKey:id`): one of its own among the groups. */
+  id: string;
   /** Its small label above the rows. */
   label?: string;
   rows: readonly AppShellNavRow[];
@@ -1021,7 +929,7 @@ const MenuEntries = ({
 }: {
   actions: readonly AppShellRowAction[];
   menu: "dropdown" | "context";
-  onChoose: (value: string) => void;
+  onChoose: (action: Exclude<AppShellRowAction, "separator">) => void;
 }) => {
   const Item = menu === "dropdown" ? DropdownMenuItem : ContextMenuItem;
   const Separator =
@@ -1034,7 +942,7 @@ const MenuEntries = ({
         icon={action.icon}
         key={action.value}
         onSelect={() => {
-          onChoose(action.value);
+          onChoose(action);
         }}
         variant={action.destructive === true ? "destructive" : "default"}
       >
@@ -1087,7 +995,8 @@ const EndMark = ({
 const rowWords = (
   row: AppShellNavRow,
   renaming: boolean,
-  dots: boolean
+  dots: boolean,
+  words: { working: string; unread: string }
 ): ReactNode[] => {
   const counted = row.count !== undefined && row.count > 0;
   const unread = row.unread === true && row.working !== true;
@@ -1148,9 +1057,9 @@ const rowWords = (
       </EndMark>
     ) : null,
     ...[
-      counted ? row.countText : undefined,
-      row.working === true ? row.workingText : undefined,
-      unread ? row.unreadText : undefined,
+      counted ? (row.countText ?? String(row.count)) : undefined,
+      row.working === true ? words.working : undefined,
+      unread ? words.unread : undefined,
     ].map((said, at) =>
       said === undefined ? null : (
         <span key={`said-${String(at)}`} {...stylex.props(visuallyHidden)}>
@@ -1303,9 +1212,8 @@ const RowButton = ({
     inert: inert || undefined,
     variant: row.quiet === true ? ("quiet" as const) : undefined,
     isActive: row.current === true,
-    // oxlint-disable-next-line shadcn/no-inline-styles -- a StyleX layout style (LayoutStyle), which the rule cannot read
-    style: row.detail === undefined ? undefined : styles.tall,
   };
+  const { isMobile, setOpenMobile } = useSidebar();
   return leads(row) ? (
     <SidebarMenuButton {...own} asChild>
       {linkOf(row, { onClick: row.onClick, children: words })}
@@ -1315,6 +1223,10 @@ const RowButton = ({
       {...own}
       onClick={(event) => {
         row.onClick?.(event);
+        // In the sheet a row that acts closes it, as a link followed does.
+        if (isMobile) {
+          setOpenMobile(false);
+        }
       }}
     >
       {words}
@@ -1331,7 +1243,7 @@ const SubRows = ({
   rows === undefined || rows.length === 0 ? null : (
     <SidebarMenuSub>
       {rows.map((sub) => (
-        <SidebarMenuSubItem key={sub.id ?? sub.label}>
+        <SidebarMenuSubItem key={sub.id}>
           <SidebarMenuSubButton asChild isActive={sub.current === true}>
             {linkOf(sub, { children: sub.label })}
           </SidebarMenuSubButton>
@@ -1348,19 +1260,22 @@ const RowDots = ({
 }: {
   row: AppShellNavRow;
   actions: readonly AppShellRowAction[];
-  onChoose: (value: string) => void;
-}) => (
-  <DropdownMenu>
-    <DropdownMenuTrigger asChild>
-      <SidebarMenuAction aria-label={row.actionsLabel ?? row.label} showOnHover>
-        <Icon icon={EllipsisIcon} />
-      </SidebarMenuAction>
-    </DropdownMenuTrigger>
-    <DropdownMenuContent align="start">
-      <MenuEntries actions={actions} menu="dropdown" onChoose={onChoose} />
-    </DropdownMenuContent>
-  </DropdownMenu>
-);
+  onChoose: (action: Exclude<AppShellRowAction, "separator">) => void;
+}) => {
+  const { more } = useI18n().appShell;
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <SidebarMenuAction aria-label={more(row.label)} showOnHover>
+          <Icon icon={EllipsisIcon} />
+        </SidebarMenuAction>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start">
+        <MenuEntries actions={actions} menu="dropdown" onChoose={onChoose} />
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+};
 
 const Row = ({ row }: { row: AppShellNavRow }) => {
   const hint = useId();
@@ -1373,18 +1288,18 @@ const Row = ({ row }: { row: AppShellNavRow }) => {
     onDone,
     linkOf: link,
   } = useRename(row);
+  const said = useI18n().appShell;
   const actions = row.actions ?? [];
   const hasActions = actions.length > 0;
-  const choose = (value: string): void => {
-    if (value === "rename" && renames) {
+  const choose = (action: Exclude<AppShellRowAction, "separator">): void => {
+    if (action.rename === true && renames) {
       start();
       return;
     }
-    row.onAction?.(value);
+    row.onAction?.(action.value);
   };
-  const words = rowWords(row, renaming, hasActions);
-  const describedBy =
-    renames && !renaming && row.renameHint !== undefined ? hint : undefined;
+  const words = rowWords(row, renaming, hasActions, said);
+  const describedBy = renames && !renaming ? hint : undefined;
   const button = (trigger: Record<string, unknown>) => (
     <RowButton
       describedBy={describedBy}
@@ -1403,14 +1318,15 @@ const Row = ({ row }: { row: AppShellNavRow }) => {
       {at === undefined ? null : (
         <RenameField
           at={at}
-          label={row.renameLabel ?? row.label}
+          label={said.renameRow(row.label)}
           name={row.label}
           onDone={onDone}
         />
       )}
+      {/* Read only as the link's description, never as words after the row. */}
       {describedBy === undefined ? null : (
-        <span id={hint} {...stylex.props(visuallyHidden)}>
-          {row.renameHint}
+        <span id={hint} hidden>
+          {said.renameHint}
         </span>
       )}
       {row.count !== undefined && row.count > 0 && !renaming ? (
@@ -1418,6 +1334,7 @@ const Row = ({ row }: { row: AppShellNavRow }) => {
           <span aria-hidden="true">{row.count}</span>
         </SidebarMenuBadge>
       ) : null}
+      {renaming ? null : row.endAction}
       {hasActions && !renaming ? (
         <RowDots row={row} actions={actions} onChoose={choose} />
       ) : null}
@@ -1431,11 +1348,7 @@ const Row = ({ row }: { row: AppShellNavRow }) => {
           <ContextMenuTrigger aria-label={row.label} tabStop={false}>
             {held}
           </ContextMenuTrigger>
-          <ContextMenuContent
-            finalFocus={renaming ? "none" : link}
-            // oxlint-disable-next-line shadcn/no-inline-styles -- a StyleX layout style (LayoutStyle), which the rule cannot read
-            style={styles.contextMenu}
-          >
+          <ContextMenuContent finalFocus={renaming ? "none" : link}>
             <MenuEntries actions={actions} menu="context" onChoose={choose} />
           </ContextMenuContent>
         </ContextMenu>
@@ -1448,6 +1361,7 @@ const Row = ({ row }: { row: AppShellNavRow }) => {
 };
 
 const MoreRow = ({ more }: { more: AppShellNavMore }) => {
+  const { isMobile, setOpenMobile } = useSidebar();
   const words = (
     <span {...stylex.props(styles.name, styles.more)}>{more.label}</span>
   );
@@ -1461,6 +1375,9 @@ const MoreRow = ({ more }: { more: AppShellNavMore }) => {
         <SidebarMenuButton
           onClick={() => {
             more.onClick?.();
+            if (isMobile) {
+              setOpenMobile(false);
+            }
           }}
         >
           {words}
@@ -1480,7 +1397,7 @@ const Rows = ({
   group.content ?? (
     <SidebarMenu aria-labelledby={labelledBy}>
       {group.rows.map((row) => (
-        <Row key={row.id ?? row.label} row={row} />
+        <Row key={row.id} row={row} />
       ))}
       {group.more === undefined ? null : <MoreRow more={group.more} />}
     </SidebarMenu>
@@ -1507,26 +1424,16 @@ const GroupBody = ({ group }: { group: AppShellNavGroup }) => {
   if (group.collapsible !== true) {
     return (
       <SidebarGroup>
-        <SidebarGroupLabel
-          id={labelId}
-          // oxlint-disable-next-line shadcn/no-inline-styles -- a StyleX layout style (LayoutStyle), which the rule cannot read
-          style={styles.label}
-        >
-          {words}
-        </SidebarGroupLabel>
+        <SidebarGroupLabel id={labelId}>{words}</SidebarGroupLabel>
         <Rows group={group} labelledBy={labelId} />
       </SidebarGroup>
     );
   }
   return (
-    <SidebarCollapsible name={group.id ?? label}>
+    <SidebarCollapsible name={group.id}>
       <SidebarGroup>
         <CollapsibleTrigger asChild>
-          <SidebarGroupLabel
-            asChild
-            // oxlint-disable-next-line shadcn/no-inline-styles -- a StyleX layout style (LayoutStyle), which the rule cannot read
-            style={styles.label}
-          >
+          <SidebarGroupLabel asChild>
             <button id={labelId} type="button">
               {words}
               <span aria-hidden="true" {...stylex.props(styles.chevron)}>
@@ -1569,8 +1476,8 @@ export const AppShellNav = ({
 }: AppShellNavProps) => (
   <SidebarContent aria-label={label}>
     {children}
-    {groups.map((group, index) => (
-      <Group group={group} key={group.id ?? group.label ?? index} />
+    {groups.map((group) => (
+      <Group group={group} key={group.id} />
     ))}
   </SidebarContent>
 );
@@ -1857,6 +1764,7 @@ const Tab = ({
   id,
   tab,
   chosen,
+  stop,
   panel,
   iconOnly,
   onChoose,
@@ -1864,6 +1772,8 @@ const Tab = ({
   id: string;
   tab: AppShellTab;
   chosen: boolean;
+  /** The switch's one tab stop: the chosen tab, or the first when `value` names none. */
+  stop: boolean;
   panel: boolean;
   iconOnly: boolean;
   onChoose: (value: string) => void;
@@ -1888,7 +1798,7 @@ const Tab = ({
         }
       }}
       role="tab"
-      tabIndex={chosen ? 0 : -1}
+      tabIndex={stop ? 0 : -1}
       title={iconOnly ? tab.label : undefined}
       type="button"
       {...stylex.props(styles.tab, chosen && styles.tabChosen, focusRingInset)}
@@ -1933,6 +1843,8 @@ export const AppShellSwitch = ({
   useCountVoice(tabs);
   const iconOnly =
     tabs.length > 2 && tabs.every((tab) => tab.icon !== undefined);
+  // Whether `value` names one of the tabs; if not, the first takes the tab stop.
+  const named = tabs.some((tab) => tab.value === value);
   return (
     <>
       <div data-slot="app-shell-switch" {...stylex.props(styles.row)}>
@@ -1947,9 +1859,10 @@ export const AppShellSwitch = ({
             data-slot="app-shell-switch-thumb"
             {...stylex.props(styles.thumb)}
           />
-          {tabs.map((tab) => (
+          {tabs.map((tab, at) => (
             <Tab
               chosen={tab.value === value}
+              stop={tab.value === value || (!named && at === 0)}
               iconOnly={iconOnly}
               id={id}
               key={tab.value}
@@ -1980,87 +1893,6 @@ export const AppShellSwitch = ({
         </div>
       )}
     </>
-  );
-};
-
-// ---- A level's head ------------------------------------------------------------------------------
-
-/** Every prop an AppShellLevelHeader takes. */
-export interface AppShellLevelHeaderProps {
-  /** The level's name. */
-  children: ReactNode;
-  /** Where Back leads, and its name ("Back"): an `href`, or a router's link as `render`. */
-  back: AppShellCrumb;
-  /** The level's own first page, which its name opens. */
-  href?: string;
-  /** The element the name's link is drawn as, for a router's link (`render: <Link to="/settings" />`). */
-  render?: ReactElement<Record<string, unknown>>;
-  /** Whether the level's own first page is the page shown (`aria-current="page"`). */
-  current?: boolean;
-  /** The level's icon, before its name. */
-  icon?: IconData;
-  /** A mark of the level's own before its name (a face), in the icon's place; hidden from a screen reader. */
-  mark?: ReactNode;
-}
-
-/**
- * A level's head, as one raised row: Back (its chevron alone, named) and the level's name, a link
- * to its own first page, as one segment on the sidebar. Its views, when it has them, are an
- * AppShellSwitch with no rows under it.
- */
-export const AppShellLevelHeader = ({
-  children,
-  back,
-  href,
-  render,
-  current = false,
-  icon,
-  mark,
-}: AppShellLevelHeaderProps) => {
-  let lead: ReactNode = null;
-  if (mark !== undefined) {
-    lead = (
-      <span aria-hidden="true" {...stylex.props(styles.mark)}>
-        {mark}
-      </span>
-    );
-  } else if (icon !== undefined) {
-    lead = <Icon icon={icon} />;
-  }
-  return (
-    <div data-slot="app-shell-level-header" {...stylex.props(styles.head)}>
-      <div {...stylex.props(styles.track, styles.headTrack)}>
-        <div {...stylex.props(styles.levelSegment)}>
-          {linkOf(back, {
-            "aria-label": back.label,
-            title: back.label,
-            "data-slot": "app-shell-level-back",
-            className: stylex.props(styles.part, styles.back, focusRingInset)
-              .className,
-            children: <Icon icon={ChevronLeftIcon} />,
-          })}
-          <h2 {...stylex.props(styles.heading)}>
-            {linkOf(
-              { href, render },
-              {
-                "aria-current": current ? "page" : undefined,
-                className: stylex.props(
-                  styles.part,
-                  styles.home,
-                  focusRingInset
-                ).className,
-                children: (
-                  <>
-                    {lead}
-                    <span {...stylex.props(styles.tabWords)}>{children}</span>
-                  </>
-                ),
-              }
-            )}
-          </h2>
-        </div>
-      </div>
-    </div>
   );
 };
 
@@ -2289,7 +2121,7 @@ export const AppShellProfile = ({
         <SidebarMenuItem>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <SidebarMenuButton aria-label={name} size="lg">
+              <SidebarMenuButton size="lg">
                 <span {...stylex.props(styles.face)}>
                   <Avatar decorative name={name} size="sm">
                     {src === undefined ? null : <AvatarImage src={src} />}

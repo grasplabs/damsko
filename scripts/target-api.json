@@ -1609,8 +1609,6 @@
       "AppShellTab",
       "AppShellSwitchProps",
       "AppShellSwitch",
-      "AppShellLevelHeaderProps",
-      "AppShellLevelHeader",
       "AppShellProfileAction",
       "AppShellProfileChoice",
       "AppShellProfileChoices",

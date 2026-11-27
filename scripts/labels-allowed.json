@@ -1,8 +1,6 @@
 {
   "src/blocks/app-shell-01/app-shell-01-sidebar.tsx#AppShellNavGroup.label": "data",
   "src/blocks/app-shell-01/app-shell-01-sidebar.tsx#AppShellNavMore.label": "data",
-  "src/blocks/app-shell-01/app-shell-01-sidebar.tsx#AppShellNavRow.actionsLabel": "names",
-  "src/blocks/app-shell-01/app-shell-01-sidebar.tsx#AppShellNavRow.renameLabel": "names",
   "src/blocks/app-shell-01/app-shell-01-sidebar.tsx#AppShellNavSubRow.label": "data",
   "src/blocks/app-shell-01/app-shell-01-sidebar.tsx#AppShellProfileAction.label": "data",
   "src/blocks/app-shell-01/app-shell-01-sidebar.tsx#AppShellProfileChoice.label": "data",

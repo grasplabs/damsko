@@ -544,6 +544,7 @@ export const size = stylex.defineConsts({
   tooltipRise: "var(--damsko-tooltip-rise)",
   menuGap: "var(--damsko-menu-gap)",
   menuWidth: "var(--damsko-menu-width)",
+  contextMenuWidth: "var(--damsko-context-menu-width)",
   // Switch: switch.
   switchWidth: "var(--damsko-switch-width)",
   switchHeight: "var(--damsko-switch-height)",

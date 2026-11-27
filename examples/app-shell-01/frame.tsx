@@ -6,7 +6,6 @@ import {
   AppShellPage,
 } from "@grasp-os/ui/blocks/app-shell-01/app-shell-01";
 import {
-  AppShellLevelHeader,
   AppShellNav,
   AppShellNavEmpty,
   AppShellProfile,
@@ -17,16 +16,31 @@ import type {
   AppShellNavRow,
 } from "@grasp-os/ui/blocks/app-shell-01/app-shell-01-sidebar";
 import { PageHeader } from "@grasp-os/ui/components/page-header";
-import { SidebarLevel, SidebarLevels } from "@grasp-os/ui/components/sidebar";
+import {
+  SidebarLevel,
+  SidebarLevelHeader,
+  SidebarLevelTitle,
+  SidebarLevelTrigger,
+  SidebarLevels,
+  SidebarMenuAction,
+  sidebarStateScript,
+} from "@grasp-os/ui/components/sidebar";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@grasp-os/ui/components/tooltip";
 import {
   ArrowLeftRightIcon,
   AudioWaveformIcon,
   BellIcon,
   BuildingIcon,
+  CircleAlertIcon,
   CircleHelpIcon,
   ContrastIcon,
   FlaskConicalIcon,
   HouseIcon,
+  Icon,
   LogOutIcon,
   MonitorIcon,
   MoonIcon,
@@ -73,6 +87,14 @@ const layout = stylex.create({
 
 type View = "home" | "inbox";
 
+interface Note {
+  id: string;
+  name: string;
+  end: string;
+  working?: boolean;
+  unread?: boolean;
+}
+
 const waiting = [
   "Bring in the first conversation with the sponsor.",
   "The agreement on handling data is not signed yet.",
@@ -82,17 +104,24 @@ const waiting = [
 // A whole frame from the shell's sidebar parts: under the head the Home | Inbox switch, the Inbox's
 // count a dot on its bell; the rows as data in groups that fold, with counts, quiet rows with their
 // time at the end, an unread dot, the Working mark and a menu that renames in place; an
-// organisation's own level, with Back and its name as one raised row; the person at the foot with
+// row with a mark of the product's own at its end; an organisation's own level, with Back and its
+// name as one raised row (Sidebar's SidebarLevelHeader); the person at the foot with
 // their menu, the theme as segments at the end of its row.
 export default function AppShellFrame() {
   const [view, setView] = useState<View>("home");
   const [place, setPlace] = useState("home");
   const [theme, setTheme] = useState("system");
-  const [notes, setNotes] = useState([
+  const [notes, setNotes] = useState<Note[]>([
     { id: "q3", name: "Q3 numbers", end: "2h", working: true },
     { id: "kickoff", name: "Kickoff notes", end: "1d", unread: true },
     { id: "hiring", name: "Hiring plan", end: "3d" },
+    // Two of a name: each row is kept by its id.
+    { id: "untitled-1", name: "Untitled", end: "4d" },
+    { id: "untitled-2", name: "Untitled", end: "5d" },
   ]);
+  // What waits in the Inbox: the open questions, and the notes not read yet.
+  const waitingCount =
+    waiting.length + notes.filter((note) => note.unread === true).length;
   const inOrganisation = place.startsWith("acme");
   const go = (to: string): AppShellNavRow["onClick"] =>
     function goTo() {
@@ -128,12 +157,33 @@ export default function AppShellFrame() {
       label: "Organisations",
       landmark: "Organisations",
       collapsible: true,
-      count: 1,
+      count: 2,
       rows: [
         row("acme", "Answering Acme", {
           icon: BuildingIcon,
           count: 3,
           countText: "3 things wait",
+        }),
+        // A row with a control of the product's own at its end: a mark that leads elsewhere.
+        row("brightwater", "Brightwater", {
+          icon: BuildingIcon,
+          endAction: (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <SidebarMenuAction asChild>
+                  <a
+                    href="#brightwater-setup"
+                    aria-label="Brightwater is not read now. Open its Setup"
+                  >
+                    <Icon icon={CircleAlertIcon} />
+                  </a>
+                </SidebarMenuAction>
+              </TooltipTrigger>
+              <TooltipContent side="end">
+                Brightwater is not read now. Open its Setup
+              </TooltipContent>
+            </Tooltip>
+          ),
         }),
       ],
     },
@@ -156,11 +206,23 @@ export default function AppShellFrame() {
           end: note.end,
           endText: `${note.end} ago`,
           working: note.working,
-          workingText: "Being written",
           unread: note.unread,
-          unreadText: "Unread",
+          // Opened, it is read.
+          onClick: () => {
+            setPlace(note.id);
+            setNotes((all) =>
+              all.map((each) =>
+                each.id === note.id ? { ...each, unread: false } : each
+              )
+            );
+          },
           actions: [
-            { value: "rename", label: "Rename", icon: PencilIcon },
+            {
+              value: "rename",
+              label: "Rename",
+              icon: PencilIcon,
+              rename: true,
+            },
             "separator",
             {
               value: "delete",
@@ -169,7 +231,6 @@ export default function AppShellFrame() {
               destructive: true,
             },
           ],
-          actionsLabel: `More for ${note.name}`,
           onAction: (value) => {
             if (value === "delete") {
               setNotes((all) => all.filter((each) => each.id !== note.id));
@@ -182,11 +243,14 @@ export default function AppShellFrame() {
               )
             );
           },
-          renameLabel: `Rename ${note.name}`,
-          renameHint: "Double-click or press F2 to rename",
         })
       ),
-      more: { label: "All notes", href: "#notes" },
+      more: {
+        label: "All notes",
+        onClick: () => {
+          setPlace("notes");
+        },
+      },
     },
   ];
   const inbox: AppShellNavGroup[] = [
@@ -217,6 +281,12 @@ export default function AppShellFrame() {
   const title = titles[place] ?? "Page";
   return (
     <div {...stylex.props(layout.frame)}>
+      <script
+        // oxlint-disable-next-line react/no-danger -- the script is the library's own, from a constant key
+        dangerouslySetInnerHTML={{
+          __html: sidebarStateScript("app-shell-01-frame"),
+        }}
+      />
       <AppShell
         style={layout.shell}
         mark={
@@ -232,11 +302,10 @@ export default function AppShellFrame() {
             <span aria-hidden="true" {...stylex.props(layout.mark)} />
           </a>
         }
+        storageKey="app-shell-01-frame"
         onSearch={() => {
           setPlace("home");
         }}
-        // This site keeps Cmd+K for its own search.
-        searchShortcut={false}
         sidebar={
           <>
             <SidebarLevels value={inOrganisation ? "acme" : "main"}>
@@ -249,8 +318,8 @@ export default function AppShellFrame() {
                       value: "inbox",
                       label: "Inbox",
                       icon: BellIcon,
-                      count: waiting.length,
-                      countText: `${String(waiting.length)} things wait`,
+                      count: waitingCount,
+                      countText: `${String(waitingCount)} things wait`,
                     },
                   ]}
                   value={view}
@@ -271,25 +340,28 @@ export default function AppShellFrame() {
                 </AppShellSwitch>
               </SidebarLevel>
               <SidebarLevel value="acme">
-                <AppShellLevelHeader
-                  back={{
-                    label: "Back",
-                    // A router's link goes here: `render: <Link to="/" />`.
-                    render: (
-                      <a
-                        href="#home"
-                        onClick={() => {
-                          setPlace("home");
-                        }}
-                      />
-                    ),
-                  }}
-                  href="#acme"
-                  current={place === "acme"}
-                  icon={BuildingIcon}
-                >
-                  Answering Acme
-                </AppShellLevelHeader>
+                <SidebarLevelHeader>
+                  {/* A router's link goes here: `<Link to="/" />`. */}
+                  <SidebarLevelTrigger value="main" asChild aria-label="Back">
+                    <a
+                      href="#home"
+                      onClick={() => {
+                        setPlace("home");
+                      }}
+                    />
+                  </SidebarLevelTrigger>
+                  <SidebarLevelTitle asChild isActive={place === "acme"}>
+                    <a
+                      href="#acme"
+                      onClick={() => {
+                        setPlace("acme");
+                      }}
+                    >
+                      <Icon icon={BuildingIcon} />
+                      Answering Acme
+                    </a>
+                  </SidebarLevelTitle>
+                </SidebarLevelHeader>
                 <AppShellNav
                   aria-label="Answering Acme"
                   groups={organisation}
