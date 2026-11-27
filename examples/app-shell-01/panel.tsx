@@ -60,7 +60,7 @@ const facts = [
 
 // The page's details in one panel at its end: drag its handle, or move it with the arrow keys. The
 // bar's panel button hides and shows it. On a phone the same button opens it as a sheet. The page's
-// name renames in a popup under it (`renameVariant="popup"`): a name already taken fails, and the
+// name renames in a popup under it: a name already taken fails, and the
 // popup stays open with the words typed.
 export default function AppShellPanel() {
   const [title, setTitle] = useState("Launch notes");
@@ -119,7 +119,6 @@ export default function AppShellPanel() {
             }
             setTitle(next);
           }}
-          renameVariant="popup"
           renameMaxLength={60}
           renameErrorText="Could not rename: that name is already taken"
           actions={

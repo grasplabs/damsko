@@ -397,7 +397,7 @@ test.describe("with motion", () => {
   });
 });
 
-test("the page's name renames in place: Enter saves, and the page says the new name", async ({
+test("the page's name renames in a popup under it: Enter saves, and the page says the new name", async ({
   page,
 }) => {
   await openExample(page, "app-shell-01", "basic");
@@ -411,6 +411,33 @@ test("the page's name renames in place: Enter saves, and the page says the new n
   await expect(
     page.getByRole("heading", { name: "Summer launch" })
   ).toBeVisible();
+});
+
+test("the bar stays one line while its name renames: working and failed, its height and the name's place unchanged", async ({
+  page,
+}) => {
+  await openExample(page, "app-shell-01", "panel");
+  const bar = page.locator("header").filter({
+    has: page.getByRole("navigation", { name: "Breadcrumb" }),
+  });
+  const name = page
+    .getByRole("navigation", { name: "Breadcrumb" })
+    .getByRole("button", { name: "Launch notes" });
+  const [barBefore, nameBefore] = await Promise.all([
+    bar.boundingBox(),
+    name.boundingBox(),
+  ]);
+  await name.click();
+  const field = page
+    .getByRole("dialog", { name: "Rename" })
+    .getByRole("textbox", { name: "Rename" });
+  await field.fill("Roadmap");
+  await page.keyboard.press("Enter");
+  await expect(field).toHaveAttribute("readonly", "");
+  expect(await bar.boundingBox()).toStrictEqual(barBefore);
+  await expect(field).toHaveAttribute("aria-invalid", "true");
+  expect(await bar.boundingBox()).toStrictEqual(barBefore);
+  expect(await name.boundingBox()).toStrictEqual(nameBefore);
 });
 
 test("the page's name renames in a popup: from the keys, a taken name keeps it open and says why, then a free one saves", async ({

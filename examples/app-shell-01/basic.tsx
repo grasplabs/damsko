@@ -106,7 +106,7 @@ const places: { name: string; icon: IconData; count?: number }[] = [
 // The sidebar down the start, its head the shell's: the product's mark, the search (Cmd+J or
 // Ctrl+J too, which close it again; Cmd+K by default, which this site keeps for its own search) and
 // the fold. The page beside it as a card draws its own bar: where the page is (its
-// name renames in place) and its actions; the fold stands in the bar only while the sidebar is
+// name renames in a popup under it) and its actions; the fold stands in the bar only while the sidebar is
 // away, and the fold is kept for the next visit. The page scrolls under its bar. On a phone the
 // bar's fold opens the sidebar as a sheet, and the bar says the page and the step before it.
 export default function AppShellBasic() {

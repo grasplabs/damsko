@@ -146,6 +146,11 @@ const CLIP_TEXT =
   "@supports (background-clip: text) and (not (-moz-appearance: none))";
 const FADE_END = `linear-gradient(to right, currentColor calc(100% - ${space[5]}), transparent), linear-gradient(transparent, transparent)`;
 const FADE_END_RTL = `linear-gradient(to left, currentColor calc(100% - ${space[5]}), transparent), linear-gradient(transparent, transparent)`;
+// While the field has focus: the same two layers, both empty. The fade's layer is painted where the
+// words stand unscrolled, so on a long value scrolled to the caret it drew a second copy of the words
+// over the plain ink (typing, and read only while a save works or after it failed).
+const NO_FADE =
+  "linear-gradient(transparent, transparent), linear-gradient(transparent, transparent)";
 
 const styles = stylex.create({
   // An icon at the start: it stands over the input, in muted, and lets presses through to it.
@@ -192,7 +197,11 @@ const styles = stylex.create({
     // In forced colours the background is dropped, so the words keep their own colour there.
     backgroundImage: {
       default: null,
-      [CLIP_TEXT]: { default: FADE_END, ":dir(rtl)": FADE_END_RTL },
+      [CLIP_TEXT]: {
+        default: FADE_END,
+        ":dir(rtl)": FADE_END_RTL,
+        ":focus": NO_FADE,
+      },
     },
     backgroundOrigin: {
       default: null,
