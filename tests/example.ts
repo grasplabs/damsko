@@ -529,3 +529,34 @@ export const tokenColour = async (page: Page, token: string): Promise<string> =>
     probe.remove();
     return color;
   }, token);
+
+/**
+ * Whether a text field draws its words once, its own ink and nothing more, as it stands now (with
+ * focus, scrolled, read only). Three pictures of it, its caret hidden: as it is; its ink hidden;
+ * its ink and its background images emptied. The ink shows (the first is not the last), and nothing
+ * else draws the words (the second is the last). The field is left as it was.
+ */
+export const drawsWordsOnce = async (field: Locator): Promise<boolean> => {
+  const set = async (styles: Record<string, string>) => {
+    await field.evaluate((element: HTMLElement, given) => {
+      for (const [name, value] of Object.entries(given)) {
+        element.style.setProperty(name, value, "important");
+      }
+    }, styles);
+  };
+  const before = (await field.getAttribute("style")) ?? "";
+  await set({ "caret-color": "transparent" });
+  const shown = await field.screenshot({ animations: "disabled" });
+  await set({ "-webkit-text-fill-color": "transparent" });
+  const inkless = await field.screenshot({ animations: "disabled" });
+  // Its images emptied, layer for layer, so its fill and corners are drawn as before.
+  await set({
+    "background-image":
+      "linear-gradient(transparent, transparent), linear-gradient(transparent, transparent)",
+  });
+  const bare = await field.screenshot({ animations: "disabled" });
+  await field.evaluate((element: HTMLElement, style) => {
+    element.setAttribute("style", style);
+  }, before);
+  return !shown.equals(bare) && inkless.equals(bare);
+};

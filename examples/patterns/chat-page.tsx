@@ -725,7 +725,7 @@ const NewChat = () => (
 );
 
 // A chat as a page of its own, at its own address: the App shell with the sidebar and its Chats
-// group, the header with the chat's title (renamed in place) and its menu, the MessageScroller in a
+// group, the header with the chat's title (renamed in a popup) and its menu, the MessageScroller in a
 // column the prompt input's width, and the PromptInput at the foot. The assistant's answer shows
 // its steps (ChainOfThought), then its words streaming in, then its sources and its actions. The
 // switch above shows each state a product meets; Answering plays the answer live, and Stop stops

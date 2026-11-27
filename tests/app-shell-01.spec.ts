@@ -413,16 +413,13 @@ test("the page's name renames in a popup under it: Enter saves, and the page say
   ).toBeVisible();
 });
 
-test("the bar stays one line while its name renames: working and failed, its height and the name's place unchanged", async ({
+test("the bar stays one line while its name renames: the name stays where it stood, and the field opens under it", async ({
   page,
 }) => {
-  await openExample(page, "app-shell-01", "panel");
-  const bar = page.locator("header").filter({
-    has: page.getByRole("navigation", { name: "Breadcrumb" }),
-  });
-  const name = page
-    .getByRole("navigation", { name: "Breadcrumb" })
-    .getByRole("button", { name: "Launch notes" });
+  await openExample(page, "app-shell-01", "basic");
+  const crumbs = page.getByRole("navigation", { name: "Breadcrumb" });
+  const bar = page.locator("header").filter({ has: crumbs });
+  const name = crumbs.getByRole("button", { name: "Spring launch" });
   const [barBefore, nameBefore] = await Promise.all([
     bar.boundingBox(),
     name.boundingBox(),
@@ -431,13 +428,15 @@ test("the bar stays one line while its name renames: working and failed, its hei
   const field = page
     .getByRole("dialog", { name: "Rename" })
     .getByRole("textbox", { name: "Rename" });
-  await field.fill("Roadmap");
-  await page.keyboard.press("Enter");
-  await expect(field).toHaveAttribute("readonly", "");
-  expect(await bar.boundingBox()).toStrictEqual(barBefore);
-  await expect(field).toHaveAttribute("aria-invalid", "true");
+  await expect(field).toBeFocused();
+  await page.keyboard.type(" for every team in the northern region, this year");
   expect(await bar.boundingBox()).toStrictEqual(barBefore);
   expect(await name.boundingBox()).toStrictEqual(nameBefore);
+  // The field stands under the bar, not in it.
+  const fieldBox = await field.boundingBox();
+  expect(fieldBox?.y ?? 0).toBeGreaterThanOrEqual(
+    (barBefore?.y ?? 0) + (barBefore?.height ?? 0)
+  );
 });
 
 test("the page's name renames in a popup: from the keys, a taken name keeps it open and says why, then a free one saves", async ({
@@ -892,6 +891,39 @@ test("a row's menu, from its dots or a right-click, renames it in place; F2 does
   await renamed.click({ button: "right" });
   await page.getByRole("menuitem", { name: "Delete" }).click();
   await expect(renamed).toHaveCount(0);
+});
+
+test("a rename ended by Escape gives the focus back to its row only if it went nowhere: F2 on the next row at once opens that row's rename", async ({
+  page,
+}) => {
+  await openExample(page, "app-shell-01", "frame");
+  const sidebar = page.getByRole("complementary", { name: "Sidebar" });
+  const first = sidebar.getByRole("link", { name: /^Kickoff notes/u });
+  const second = sidebar.getByRole("link", { name: /^Hiring plan/u });
+  for (let round = 0; round < 5; round += 1) {
+    // oxlint-disable-next-line no-await-in-loop -- one round after the other
+    await first.focus();
+    // oxlint-disable-next-line no-await-in-loop -- one round after the other
+    await page.keyboard.press("F2");
+    // oxlint-disable-next-line no-await-in-loop -- one round after the other
+    await expect(
+      page.getByRole("textbox", { name: "Rename Kickoff notes" })
+    ).toBeFocused();
+    // oxlint-disable-next-line no-await-in-loop -- one round after the other
+    await page.keyboard.press("Escape");
+    // At once, before the field's row is drawn again: the person moves on.
+    // oxlint-disable-next-line no-await-in-loop -- one round after the other
+    await second.focus();
+    // oxlint-disable-next-line no-await-in-loop -- one round after the other
+    await page.keyboard.press("F2");
+    const field = page.getByRole("textbox", { name: "Rename Hiring plan" });
+    // oxlint-disable-next-line no-await-in-loop -- one round after the other
+    await expect(field).toBeFocused();
+    // oxlint-disable-next-line no-await-in-loop -- one round after the other
+    await page.keyboard.press("Escape");
+    // oxlint-disable-next-line no-await-in-loop -- one round after the other
+    await expect(field).toHaveCount(0);
+  }
 });
 
 test("a row's rename field takes its words' weight, so nothing jumps: an unread row's semibold, a quiet row's regular", async ({

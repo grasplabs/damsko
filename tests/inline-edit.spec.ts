@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
-import { liveRegion, openExample, settled } from "./example.ts";
+import { drawsWordsOnce, liveRegion, openExample, settled } from "./example.ts";
 
 /** What the page's live region last said. */
 const said = (page: Page) => liveRegion(page).filter({ hasText: /\S/u }).last();
@@ -302,48 +302,22 @@ test("in a popup, Enter and Escape while an input method composes neither save n
   await expect(popup).toBeHidden();
 });
 
-/**
- * How many layers draw the field's words: its own ink (the text fill), and the fade's gradient
- * clipped to the text, painted where the words stand unscrolled. One, or a long value scrolled to
- * the caret is drawn twice, over itself.
- */
-const textLayers = async (field: ReturnType<Page["getByRole"]>) =>
-  await field.evaluate((input) => {
-    const style = getComputedStyle(input);
-    const clear = /^(?:transparent|rgba\([^)]*,\s*0\))$/u;
-    const ink = clear.test(style.webkitTextFillColor) ? 0 : 1;
-    const stops =
-      style.backgroundImage.match(/(?:rgba?|oklch|oklab|color)\([^()]*\)/gu) ??
-      [];
-    const fade =
-      style.backgroundClip.startsWith("text") &&
-      stops.some((stop) => !clear.test(stop))
-        ? 1
-        : 0;
-    return ink + fade;
-  });
-
-test("a field with focus draws its words once, never the fade's copy over them: while typing, while a save works, and after it fails", async ({
+test("inline, a long name scrolled to the caret is drawn once while a save works and after it fails", async ({
   page,
 }) => {
-  await openExample(page, "inline-edit", "popup");
+  await openExample(page, "inline-edit", "async");
   await page.getByRole("button", { name: "Planning notes" }).click();
-  const field = page
-    .getByRole("dialog", { name: "Rename" })
-    .getByRole("textbox", { name: "Rename" });
-  // Longer than the field, so the fade is on, and scrolled to the caret at its end.
+  const field = page.getByRole("textbox", { name: "Document name" });
+  // Longer than the field, scrolled to the caret at its end, and taken, so the save fails.
   await page.keyboard.type(
     "Roadmap for every team, and the policies that apply to each of them"
   );
+  await page.keyboard.press("Enter");
+  await expect(field).toHaveAttribute("readonly", "");
   expect(
     await field.evaluate((input: HTMLInputElement) => input.scrollLeft)
   ).toBeGreaterThan(0);
-  expect(await textLayers(field)).toBe(1);
-  await page.keyboard.press("ControlOrMeta+a");
-  await page.keyboard.type("Roadmap");
-  await page.keyboard.press("Enter");
-  await expect(field).toHaveAttribute("readonly", "");
-  expect(await textLayers(field)).toBe(1);
+  expect(await drawsWordsOnce(field)).toBe(true);
   await expect(field).toHaveAttribute("aria-invalid", "true");
-  expect(await textLayers(field)).toBe(1);
+  expect(await drawsWordsOnce(field)).toBe(true);
 });

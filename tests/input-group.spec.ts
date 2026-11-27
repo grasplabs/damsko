@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import { openExample } from "./example.ts";
+import { drawsWordsOnce, openExample } from "./example.ts";
 
 test("a press on an addon's words puts the caret in the input", async ({
   page,
@@ -112,4 +112,22 @@ test("a textarea in a group takes the caret from the words under it", async ({
   await page.keyboard.type("First\nsecond");
   await expect(reply).toHaveValue("First\nsecond");
   await expect(page.getByRole("button", { name: "Send" })).toBeVisible();
+});
+
+test("a long search scrolled to the caret is drawn once while it has focus", async ({
+  page,
+}) => {
+  await openExample(page, "input-group", "search");
+  const field = page.getByRole("searchbox", { name: "Search projects" });
+  await field.fill(
+    "Every team, every project and every policy that applies to each of them this year"
+  );
+  // Scrolled to its end, as the caret puts it there (the keys do not in every engine).
+  await field.evaluate((input: HTMLInputElement) => {
+    input.scrollLeft = input.scrollWidth;
+  });
+  expect(
+    await field.evaluate((input: HTMLInputElement) => input.scrollLeft)
+  ).toBeGreaterThan(0);
+  expect(await drawsWordsOnce(field)).toBe(true);
 });
