@@ -1,6 +1,7 @@
 // A `mermaid` fence drawn by Pele (src/components/markdown/diagram.tsx), through drawDiagram: every
-// diagram type is drawn; a fence the source check refuses, or one Pele cannot read, is its code
-// and says why; and with the check off, what Pele draws still holds no link, picture or address.
+// diagram type is drawn; a fence the source check refuses, one past a limit, or one Pele cannot
+// read is its code and says why, front matter that does not read too; and with the check off,
+// what Pele draws still holds no link, picture or address.
 //
 //   pnpm exec vp test scripts/diagram-draw.test.ts
 import { Window } from "happy-dom";
@@ -11,15 +12,13 @@ import { fences } from "../examples/markdown/diagram-unchecked.tsx";
 import { drawDiagram } from "../src/components/markdown/diagram.tsx";
 
 const window = new Window();
-for (const name of [
-  "DOMParser",
-  "XMLSerializer",
-  "CSSStyleSheet",
-  "CSSStyleRule",
-  "CSSKeyframesRule",
-]) {
+for (const name of ["DOMParser", "XMLSerializer"]) {
   Reflect.set(globalThis, name, Reflect.get(window, name));
 }
+
+/** Forty nodes joined by `&`: `a0 & a1 & … & a39`. */
+const run = (name: string) =>
+  Array.from({ length: 40 }, (_, at) => `${name}${at}`).join(" & ");
 
 describe(drawDiagram, () => {
   test.each(types)("draws a %s", async (_, code) => {
@@ -44,6 +43,33 @@ describe(drawDiagram, () => {
     });
   });
 
+  test.each([
+    '---\ntitle: "Order flow\n---\nflowchart LR\n  A --> B',
+    "---\nconfig: [\n---\nflowchart LR\n  A --> B",
+  ])(
+    "front matter that does not read is a reason, never a throw: %j",
+    async (code) => {
+      await expect(drawDiagram(code, "d")).resolves.toStrictEqual({
+        reason: "failed:syntax",
+      });
+    }
+  );
+
+  test("a fence that fans out or asks for a huge drawing is too large: refused by its parts, else stopped by Pele's own limits", async () => {
+    const fan = `flowchart LR\n  ${run("a")} --"${"lbl ".repeat(55).trim()}"--> ${run("b")}`;
+    await expect(drawDiagram(fan, "d")).resolves.toStrictEqual({
+      reason: "skipped:limit",
+    });
+    await expect(
+      drawDiagram(fan, "d", { check: false })
+    ).resolves.toStrictEqual({
+      reason: "skipped:limit",
+    });
+    await expect(
+      drawDiagram('packet-beta\n0-999999999: "x"', "d")
+    ).resolves.toStrictEqual({ reason: "skipped:limit" });
+  });
+
   test("with the source check off, a drawing holds no link, picture or address but its own", async () => {
     const drawings = await Promise.all(
       fences.map(
@@ -51,12 +77,11 @@ describe(drawDiagram, () => {
           await drawDiagram(code, `unchecked-${at}`, { check: false })
       )
     );
-    for (const drawing of drawings) {
-      const svg = "svg" in drawing ? drawing.svg : "";
-      const root = new DOMParser().parseFromString(
-        svg,
-        "image/svg+xml"
-      ).documentElement;
+    const roots = drawings.flatMap((drawing) =>
+      "svg" in drawing ? [drawing.svg] : []
+    );
+    expect(roots).toHaveLength(fences.length);
+    for (const root of roots) {
       const elements = [root, ...root.querySelectorAll("*")];
       expect(
         elements.filter((element) =>
@@ -74,8 +99,5 @@ describe(drawDiagram, () => {
         values.filter((value) => /\/\/|url\(\s*(?!['"]?#)/iu.test(value))
       ).toStrictEqual([]);
     }
-    expect(drawings.filter((drawing) => "svg" in drawing)).toHaveLength(
-      fences.length
-    );
   });
 });

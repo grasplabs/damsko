@@ -18,13 +18,14 @@ import {
 const window = new Window();
 Reflect.set(globalThis, "DOMParser", window.DOMParser);
 Reflect.set(globalThis, "XMLSerializer", window.XMLSerializer);
-Reflect.set(globalThis, "CSSStyleSheet", window.CSSStyleSheet);
-Reflect.set(globalThis, "CSSStyleRule", window.CSSStyleRule);
-Reflect.set(globalThis, "CSSKeyframesRule", window.CSSKeyframesRule);
 
 const ID = "diagram-1";
 const svg = (inner: string) =>
   `<svg xmlns="http://www.w3.org/2000/svg" id="${ID}" viewBox="0 0 10 10">${inner}</svg>`;
+
+/** `many` nodes joined by `&`: `a0 & a1 & …`. */
+const run = (name: string, many: number) =>
+  Array.from({ length: many }, (_, at) => `${name}${at}`).join(" & ");
 
 describe(drawable, () => {
   test.each([
@@ -91,6 +92,21 @@ describe(drawable, () => {
     expect(drawable(`block-beta\n  ${blocks.join(" ")}`)).toBeFalsy();
   });
 
+  test("words joined by `&` count as the edges they stand for", () => {
+    // Nine by ten is ninety edges, under the hundred parts; eleven by ten is past them.
+    expect(
+      refusalOf(`flowchart LR\n  ${run("a", 9)} --> ${run("b", 10)}`)
+    ).toBeNull();
+    expect(
+      refusalOf(`flowchart LR\n  ${run("a", 11)} --> ${run("b", 10)}`)
+    ).toBe("limit");
+    expect(
+      refusalOf(`flowchart LR\n  ${run("a", 40)} --"words"--> ${run("b", 40)}`)
+    ).toBe("limit");
+    // A few joined words are as many parts as they are words.
+    expect(refusalOf("flowchart LR\n  A & B --> C")).toBeNull();
+  });
+
   test("a line ended by both a `;` and a newline, and a blank line, count once and not at all", () => {
     const steps = Array.from(
       { length: MOST_LINES - 1 },
@@ -106,13 +122,17 @@ describe(drawable, () => {
   });
 });
 
+/** The drawing safeSvg keeps of `inner` in an SVG root, as text; "" when it keeps none. */
+const kept = (inner: string) => {
+  const root = safeSvg(svg(inner));
+  return root === null ? "" : new XMLSerializer().serializeToString(root);
+};
+
 describe(safeSvg, () => {
   test("every handler goes, not every other one", () => {
-    const out =
-      safeSvg(
-        svg('<rect onclick="a()" onmouseover="b()" onfocus="c()" width="1"/>'),
-        ID
-      ) ?? "";
+    const out = kept(
+      '<rect onclick="a()" onmouseover="b()" onfocus="c()" width="1"/>'
+    );
     expect(out).not.toMatch(/\bon\w+=/u);
     expect(out).toContain('width="1"');
   });
@@ -127,7 +147,7 @@ describe(safeSvg, () => {
   ])(
     "an attribute that leads elsewhere, or is the renderer's own note, goes: %s",
     (attribute) => {
-      const out = safeSvg(svg(`<rect ${attribute} width="1"/>`), ID) ?? "";
+      const out = kept(`<rect ${attribute} width="1"/>`);
       expect(out).not.toContain(
         `${attribute.slice(0, attribute.indexOf("="))}=`
       );
@@ -135,77 +155,35 @@ describe(safeSvg, () => {
     }
   );
 
-  test("a style's `url()` to the drawing itself stays, quoted as a browser writes it", () => {
-    const out =
-      safeSvg(
-        svg(
-          `<style>#${ID} .node rect{stroke:url("#${ID}-gradient")} #${ID} .a{fill:url('#g')}</style><rect/>`
-        ),
-        ID
-      ) ?? "";
-    expect(out).toContain(`url("#${ID}-gradient")`);
-    expect(
-      safeSvg(
-        svg(
-          `<style>#${ID} .a{fill:url("https://evil.test/x.png")}</style><rect/>`
-        ),
-        ID
-      )
-    ).not.toContain("<style");
-  });
-
   test("a fill in the drawing itself stays", () => {
-    expect(safeSvg(svg('<rect fill="url(#g)"/>'), ID)).toContain(
-      'fill="url(#g)"'
-    );
+    expect(kept('<rect fill="url(#g)"/>')).toContain('fill="url(#g)"');
   });
 
   test.each([
+    `#${ID} .node rect { stroke: url("#${ID}-gradient") }`,
     ".a { fill: url(https://evil.test/x.png) }",
-    '.a { mask-image: image-set("x.png" 1x) }',
-    ".a { fill: \\75rl(x) }",
+    "@keyframes dash { to { opacity: 0 } }",
     "@import 'x.css';",
-  ])("a style that leads elsewhere goes: %s", (css) => {
-    expect(safeSvg(svg(`<style>${css}</style><rect/>`), ID)).not.toContain(
-      "<style"
-    );
+  ])("a style goes, whatever it holds: %s", (css) => {
+    const out = kept(`<style>${css}</style><rect width="1"/>`);
+    expect(out).not.toContain("<style");
+    expect(out).toContain('width="1"');
   });
 
   test("a link is its words, and no foreign element stays", () => {
-    const out =
-      safeSvg(
-        svg(
-          '<a href="https://evil.test/"><text>out</text></a><foreignObject><div>x</div></foreignObject>'
-        ),
-        ID
-      ) ?? "";
+    const out = kept(
+      '<a href="https://evil.test/"><text>out</text></a><foreignObject><div>x</div></foreignObject>'
+    );
     expect(out).toContain("<text>out</text>");
     expect(out).not.toMatch(/<a\b|foreignObject|evil/u);
   });
 
   test("an element in no SVG namespace goes, and the root must be SVG's", () => {
-    const out =
-      safeSvg(
-        svg(
-          '<g><rect width="1"/></g><g xmlns="http://www.w3.org/1999/xhtml"><rect width="2"/></g>'
-        ),
-        ID
-      ) ?? "";
+    const out = kept(
+      '<g><rect width="1"/></g><g xmlns="http://www.w3.org/1999/xhtml"><rect width="2"/></g>'
+    );
     expect(out).toContain('width="1"');
     expect(out).not.toContain('width="2"');
-    expect(safeSvg('<svg viewBox="0 0 1 1"><rect/></svg>', ID)).toBeNull();
-  });
-
-  test("a style keeps only its rules for the drawing and its keyframes", () => {
-    const out =
-      safeSvg(
-        svg(
-          `<style>#${ID} .node{fill:red}body{display:none}#${ID} a, p{color:red}@keyframes dash{to{opacity:0}}</style><rect/>`
-        ),
-        ID
-      ) ?? "";
-    expect(out).toContain(`#${ID} .node`);
-    expect(out).toContain("@keyframes dash");
-    expect(out).not.toMatch(/body|\bp\b/u);
+    expect(safeSvg('<svg viewBox="0 0 1 1"><rect/></svg>')).toBeNull();
   });
 });

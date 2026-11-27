@@ -111,10 +111,10 @@ const STEP = 0.1;
 const NUDGE = 40;
 
 /**
- * Why a diagram is its code: `skipped` when Damsko does not give it to Pele (`limit`, past a bound
- * on its size; `source`, a way to an address in it), `failed` when Pele was asked and did not draw
- * it (`load`, its code did not load; `syntax`, Pele could not read the fence; `render`, it could
- * not draw it, past one of its own limits too; `output`, what it drew is no SVG).
+ * Why a diagram is its code: `skipped` by design (`limit`, past a bound on its size, Damsko's or
+ * Pele's own; `source`, a way to an address in it), `failed` when Pele was asked and did not draw
+ * it (`load`, its code did not load; `syntax`, Pele could not read the fence, its front matter
+ * too; `render`, anything else it threw; `output`, what it drew is no SVG).
  */
 export type DiagramReason =
   | "skipped:limit"
@@ -124,8 +124,8 @@ export type DiagramReason =
   | "failed:render"
   | "failed:output";
 
-/** A diagram drawn, or why it is not. */
-export type Drawing = { svg: string } | { reason: DiagramReason };
+/** A diagram drawn (its SVG's root, held to SVG's own shapes), or why it is not. */
+export type Drawing = { svg: Element } | { reason: DiagramReason };
 
 type Pele = typeof PeleModule;
 
@@ -142,13 +142,19 @@ const loadPele = async () => {
   }
 };
 
-// Pele reads the fence, never the page: no link and no picture, and its own limits on (its source
-// limit at ours). In a narrow column a wide diagram is laid out upright, as Pele does by default,
-// so its words stay readable rather than shrunk to fit.
+// Pele reads the fence, never the page: no link and no picture, and its own limits on, a second
+// wall behind the source check. Its source at ours. Its edges at 200 and its drawing at 200,000
+// characters: within our limits the largest ordinary diagram measured is about 52,000 characters
+// (a railroad diagram of 30 rules) and none has more than 100 edges, so both leave room, while a
+// fence that fans out (`a & b & …`) or asks for a huge range (a packet of a billion bits) stops
+// there, in milliseconds, rather than drawing megabytes. In a narrow column a wide diagram is laid
+// out upright, as Pele does by default, so its words stay readable rather than shrunk to fit.
 const OPTIONS = {
   links: false,
   images: false,
   limit: MOST_CHARACTERS,
+  maxEdges: 200,
+  outputLimit: 200_000,
 } as const;
 
 /** The fonts a diagram's words are measured in: the tokens' fonts, as they resolve in `place`. */
@@ -167,64 +173,55 @@ const fontsAt = (place: HTMLElement) => {
 /**
  * Draws `code` with Pele, loaded the first time: its SVG, held to SVG's own shapes, or why it is its
  * code. A fence `refusalOf` refuses is never drawn (`check: false` is for the spec that shows Pele
- * alone loads nothing). `width` is the room it has, which Pele lays it out for.
+ * alone loads nothing). With `place`, it is laid out for the room there and measured in the fonts
+ * there, once they have loaded. It never throws: whatever goes wrong on the way is a reason.
  */
 export const drawDiagram = async (
   code: string,
   id: string,
-  {
-    check = true,
-    width,
-    fonts,
-  }: {
-    check?: boolean;
-    width?: number;
-    fonts?: { fontFamily: string; fontFamilyMono: string };
-  } = {}
+  { check = true, place }: { check?: boolean; place?: HTMLElement } = {}
 ): Promise<Drawing> => {
-  const refused = check ? refusalOf(code) : null;
-  if (refused !== null) {
-    return { reason: `skipped:${refused}` };
-  }
-  let pele: Pele;
+  let pele: Pele | null = null;
   try {
-    pele = await loadPele();
-  } catch {
-    return { reason: "failed:load" };
-  }
-  const type = pele.detectType(code);
-  if (type === null) {
-    return { reason: "failed:syntax" };
-  }
-  try {
-    await pele.load(type);
-  } catch {
-    return { reason: "failed:load" };
-  }
-  let svg: string;
-  try {
-    ({ svg } = pele.render(code, {
-      ...OPTIONS,
-      ...fonts,
-      idPrefix: id,
-      ...(width === undefined ? {} : { maxWidth: width }),
-    }));
+    const refused = check ? refusalOf(code) : null;
+    if (refused !== null) {
+      return { reason: `skipped:${refused}` };
+    }
+    try {
+      pele = await loadPele();
+    } catch {
+      return { reason: "failed:load" };
+    }
+    const type = pele.detectType(code);
+    if (type === null) {
+      return { reason: "failed:syntax" };
+    }
+    try {
+      await pele.load(type);
+    } catch {
+      return { reason: "failed:load" };
+    }
+    let room = {};
+    if (place !== undefined) {
+      await document.fonts.ready;
+      room = { ...fontsAt(place), maxWidth: place.clientWidth };
+    }
+    const { svg } = pele.render(code, { ...OPTIONS, ...room, idPrefix: id });
+    const safe = safeSvg(svg);
+    return safe === null ? { reason: "failed:output" } : { svg: safe };
   } catch (error) {
-    const unread =
-      error instanceof pele.PeleError &&
-      ["syntax", "semantic", "unsupported-diagram"].includes(error.code);
-    return { reason: unread ? "failed:syntax" : "failed:render" };
+    const kind =
+      pele !== null && error instanceof pele.PeleError ? error.code : null;
+    if (kind === "limit") {
+      return { reason: "skipped:limit" };
+    }
+    return { reason: kind === null ? "failed:render" : "failed:syntax" };
   }
-  const safe = safeSvg(svg, id);
-  return safe === null ? { reason: "failed:output" } : { svg: safe };
 };
 
 /** The numbers of the drawing's `viewBox`: where it starts, and its size. */
-const boxOf = (svg: string) =>
-  /viewBox="(?<box>[^"]*)"/u
-    .exec(svg)
-    ?.groups?.box?.split(/[\s,]+/u)
-    .map(Number) ?? [];
+const boxOf = (svg: Element) =>
+  (svg.getAttribute("viewBox") ?? "").split(/[\s,]+/u).map(Number);
 
 // Pele's variables that are colours: a file seen anywhere cannot inherit them from the page.
 const COLOURS = [
@@ -261,7 +258,7 @@ const opaque = (
  * The drawing as a file, seen anywhere as it is on the page: Pele's variables as they resolve in
  * `place` (each colour opaque, on the ground) written into it, and the ground under it.
  */
-const fileOf = (svg: string, place: HTMLElement) => {
+const fileOf = (svg: Element, place: HTMLElement) => {
   const probe = document.createElement("span");
   probe.setAttribute("aria-hidden", "true");
   place.append(probe);
@@ -286,14 +283,16 @@ const fileOf = (svg: string, place: HTMLElement) => {
     `--pele-radius:${getComputedStyle(place).getPropertyValue("--pele-radius").trim()}`
   );
   probe.remove();
-  const read = new DOMParser().parseFromString(svg, "image/svg+xml");
-  const root = read.documentElement;
+  const root = svg.cloneNode(true);
+  if (!(root instanceof Element)) {
+    return "";
+  }
   root.setAttribute(
     "style",
     `${settings.join(";")};${root.getAttribute("style") ?? ""}`
   );
   const [x = 0, y = 0, width = 0, height = 0] = boxOf(svg);
-  const under = read.createElementNS("http://www.w3.org/2000/svg", "rect");
+  const under = document.createElementNS("http://www.w3.org/2000/svg", "rect");
   for (const [name, at] of Object.entries({ x, y, width, height })) {
     under.setAttribute(name, String(at));
   }
@@ -309,8 +308,7 @@ const placeIn = (frame: HTMLElement | null) => {
 };
 
 /** The drawing as a PNG, at twice its size (less for a huge one): drawn onto a canvas. */
-const pngOf = async (svg: string) => {
-  const box = boxOf(svg);
+const pngOf = async (svg: string, box: number[]) => {
   const width = box[2] ?? 0;
   const height = box[3] ?? 0;
   if (!(width > 0 && height > 0)) {
@@ -338,25 +336,25 @@ const pngOf = async (svg: string) => {
 };
 
 /** The drawing's own title (the fence's `accTitle`), when it has one. */
-const titleOf = (svg: string) =>
-  new DOMParser()
-    .parseFromString(svg, "image/svg+xml")
-    .querySelector(":root > title")
-    ?.textContent?.trim() ?? "";
+const titleOf = (svg: Element) =>
+  svg.querySelector(":scope > title")?.textContent?.trim() ?? "";
 
 /**
  * The drawing, zoomed by its buttons, moved by a drag and by the arrow keys; named by its title,
- * else as a Mermaid diagram.
+ * else as a Mermaid diagram. In full screen it is drawn again for the room there (Pele is loaded by
+ * then, so that takes milliseconds), and shows the drawing it has until then.
  */
 const View = ({
   svg,
   code,
   title,
+  id,
   big = false,
 }: {
-  svg: string;
+  svg: Element;
   code: string;
   title: string;
+  id: string;
   big?: boolean;
 }) => {
   const words = useI18n().markdown;
@@ -365,12 +363,28 @@ const View = ({
   const [zoom, setZoom] = useState(1);
   const [at, setAt] = useState({ x: 0, y: 0 });
   const [drag, setDrag] = useState<{ x: number; y: number } | null>(null);
+  const [roomy, setRoomy] = useState<Element | null>(null);
   useEffect(() => {
-    const drawing = new DOMParser().parseFromString(svg, "image/svg+xml");
-    box.current?.replaceChildren(
-      document.importNode(drawing.documentElement, true)
-    );
-  }, [svg]);
+    const place = box.current;
+    if (!big || place === null) {
+      return nothing;
+    }
+    let live = true;
+    const draw = async () => {
+      const made = await drawDiagram(code, `${id}-full`, { place });
+      if (live && "svg" in made) {
+        setRoomy(made.svg);
+      }
+    };
+    void draw();
+    return () => {
+      live = false;
+    };
+  }, [big, code, id]);
+  const shown = roomy ?? svg;
+  useEffect(() => {
+    box.current?.replaceChildren(document.importNode(shown, true));
+  }, [shown]);
   const zoomBy = (step: number) => {
     setZoom((now) => Math.min(MOST, Math.max(LEAST, now + step)));
   };
@@ -491,7 +505,7 @@ export const Diagram = ({
   // The last drawing, and the code it is of: its SVG, or null for code Pele did not draw, and why.
   const [drawn, setDrawn] = useState<{
     code: string;
-    svg: string | null;
+    svg: Element | null;
     title: string;
     reason: DiagramReason | null;
   } | null>(null);
@@ -524,12 +538,7 @@ export const Diagram = ({
     }
     let live = true;
     const draw = async () => {
-      // Its words are measured in the page's fonts, once they have loaded.
-      await document.fonts.ready;
-      const made = await drawDiagram(code, id, {
-        width: at.clientWidth,
-        fonts: fontsAt(at),
-      });
+      const made = await drawDiagram(code, id, { place: at });
       if (!live) {
         return;
       }
@@ -555,9 +564,11 @@ export const Diagram = ({
   }, [near, code, id]);
   const busy = near && drawn?.code !== code;
   /** The drawing as a file, as it shows on the page now. */
-  const file = (drawing: string) => {
+  const file = (drawing: Element) => {
     const place = placeIn(frame.current);
-    return place === null ? drawing : fileOf(drawing, place);
+    return place === null
+      ? new XMLSerializer().serializeToString(drawing)
+      : fileOf(drawing, place);
   };
   return (
     // Busy while Pele loads and draws it, once it is near the screen.
@@ -599,7 +610,7 @@ export const Diagram = ({
                   <DropdownMenuItem
                     onSelect={async () => {
                       saveFile(
-                        await pngOf(file(svg)),
+                        await pngOf(file(svg), boxOf(svg)),
                         "diagram.png",
                         "image/png"
                       );
@@ -634,7 +645,13 @@ export const Diagram = ({
                   <DialogHeader>
                     <DialogTitle>{words.mermaid}</DialogTitle>
                   </DialogHeader>
-                  <View svg={svg} code={code} title={drawn?.title ?? ""} big />
+                  <View
+                    svg={svg}
+                    code={code}
+                    title={drawn?.title ?? ""}
+                    id={id}
+                    big
+                  />
                 </DialogContent>
               </Dialog>
             )}
@@ -643,7 +660,7 @@ export const Diagram = ({
         {svg === null ? (
           <Code.CodeBlockContent lineNumbers>{code}</Code.CodeBlockContent>
         ) : (
-          <View svg={svg} code={code} title={drawn?.title ?? ""} />
+          <View svg={svg} code={code} title={drawn?.title ?? ""} id={id} />
         )}
       </Code.CodeBlock>
     </div>

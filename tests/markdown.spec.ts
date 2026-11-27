@@ -661,6 +661,41 @@ test("diagrams: when Pele does not load, each diagram is its code and says so", 
   expect(dropped).toBeGreaterThan(0);
 });
 
+test("diagrams: a fence that would hold the page, or whose front matter does not read, settles as its code and says why", async ({
+  page,
+}) => {
+  await openExample(page, "markdown", "diagram-heavy");
+  const diagrams = page.locator("[data-slot=markdown-diagram]");
+  await expect(diagrams).toHaveCount(4);
+  for (const diagram of await diagrams.all()) {
+    // oxlint-disable-next-line no-await-in-loop -- one after the other, down the answer
+    await diagram.scrollIntoViewIfNeeded();
+  }
+  await expect(diagrams.nth(0)).toHaveAttribute(
+    "data-diagram",
+    "skipped:limit"
+  );
+  await expect(diagrams.nth(1)).toHaveAttribute(
+    "data-diagram",
+    "skipped:limit"
+  );
+  await expect(diagrams.nth(2)).toHaveAttribute(
+    "data-diagram",
+    "failed:syntax"
+  );
+  await expect(diagrams.nth(3)).toHaveAttribute(
+    "data-diagram",
+    "failed:syntax"
+  );
+  await expect(
+    page.locator("[data-slot=markdown-diagram][aria-busy=true]")
+  ).toHaveCount(0);
+  await expect(
+    page.locator("[data-slot=markdown-diagram-drawing]")
+  ).toHaveCount(0);
+  await expect(diagrams.nth(1).getByText('0-999999999: "x"')).toBeVisible();
+});
+
 test("diagrams: each one the source check refuses says it was skipped, not that it failed", async ({
   page,
 }) => {
