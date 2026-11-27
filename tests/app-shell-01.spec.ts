@@ -752,6 +752,27 @@ test("a row's menu, from its dots or a right-click, renames it in place; F2 does
   await expect(renamed).toHaveCount(0);
 });
 
+test("a row's rename field takes its words' weight, so nothing jumps: an unread row's semibold, a quiet row's regular", async ({
+  page,
+}) => {
+  await openExample(page, "app-shell-01", "frame");
+  const sidebar = page.getByRole("complementary", { name: "Sidebar" });
+  const renamedIn = async (name: string, weight: string): Promise<void> => {
+    const row = sidebar.getByRole("link", {
+      name: new RegExp(`^${name}`, "u"),
+    });
+    await expect(row).toHaveCSS("font-weight", weight);
+    await row.focus();
+    await page.keyboard.press("F2");
+    const field = page.getByRole("textbox", { name: `Rename ${name}` });
+    await expect(field).toHaveCSS("font-weight", weight);
+    await page.keyboard.press("Escape");
+    await expect(field).toHaveCount(0);
+  };
+  await renamedIn("Kickoff notes", "600");
+  await renamedIn("Hiring plan", "400");
+});
+
 test("an organisation's level heads itself with Back and its name as one row, its name the level's own first page", async ({
   page,
 }) => {

@@ -1682,6 +1682,24 @@ test("a quiet row's words are in the regular weight, cut where the row ends and 
   await expect(page.getByRole("tooltip")).toHaveText(name);
 });
 
+test("an unread row's words are in the semibold weight, and it says Unread in words; a read quiet row's stay in the regular weight", async ({
+  page,
+}) => {
+  await openExample(page, "sidebar", "unread");
+  const sidebar = sidebarOf(page);
+  const unread = sidebar.getByRole("link", {
+    name: "Payment terms this spring Unread",
+  });
+  await expect(unread).toHaveCSS("font-weight", "600");
+  await expect(unread).toHaveAttribute("data-unread", "true");
+  const read = sidebar.getByRole("link", {
+    name: "Plan for next week",
+    exact: true,
+  });
+  await expect(read).toHaveCSS("font-weight", "400");
+  await expect(read).not.toHaveAttribute("data-unread");
+});
+
 for (const [width, place] of [
   [1440, "beside the page"],
   [390, "in its sheet"],
