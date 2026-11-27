@@ -102,18 +102,19 @@ const places = [
 
 // The shell's parts composed by hand, for a product that lays more round the page: here an
 // assistant whose button stands over the card's end at the bar's height (the bar keeps room for it,
-// `appShellVars.barEndRoom`), which the head's search opens too, and which covers the card while
-// it is open: the page under it fades and is out of reach (`covered`), its button stays.
+// `appShellVars.barEndRoom`), which the head's search and its keys open too (the keys close it
+// again), and which covers the card while it is open: the page under it fades and is out of
+// reach (`covered`), its button stays.
 export default function AppShellComposed() {
   const [assistant, setAssistant] = useState(false);
   return (
     <div {...stylex.props(layout.frame)}>
       <SidebarProvider style={layout.shell}>
         <AppShellSidebar
-          onSearch={() => {
-            setAssistant(true);
-          }}
-          // This site keeps Cmd+K for its own search: here Cmd+J or Ctrl+J opens the assistant.
+          searchOpen={assistant}
+          onSearchOpenChange={setAssistant}
+          // This site keeps Cmd+K for its own search: here Cmd+J or Ctrl+J opens the assistant, and
+          // closes it again.
           searchShortcut="mod+j"
         >
           <SidebarContent>
@@ -186,7 +187,7 @@ export default function AppShellComposed() {
                   title="Dashboard"
                   description="This week's numbers, and what changed since Monday."
                 />
-                {/* Rich text keeps the shell's keys for itself. */}
+                {/* Rich text that binds no keys of its own: the shell's keys open the assistant here too. */}
                 <div
                   aria-label="Notes"
                   aria-multiline="true"

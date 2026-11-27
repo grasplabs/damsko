@@ -125,7 +125,7 @@ test("the fold is kept for the next visit (storageKey)", async ({ page }) => {
   ).toBeHidden();
 });
 
-test("the head's search opens the product's search, Cmd+K or Ctrl+K by default", async ({
+test("the head's search opens the product's search, and names its keys", async ({
   page,
 }) => {
   await openExample(page, "app-shell-01", "basic");
@@ -134,9 +134,9 @@ test("the head's search opens the product's search, Cmd+K or Ctrl+K by default",
     .getByRole("button", { name: "Search" });
   await expect(search).toHaveAttribute(
     "aria-keyshortcuts",
-    /^(?:Meta|Control)\+K$/u
+    /^(?:Meta|Control)\+J$/u
   );
-  await expect(search).toHaveAttribute("title", /^Search \(.+K.*\)$/u);
+  await expect(search).toHaveAttribute("title", /^Search \(.+J.*\)$/u);
   await search.click();
   const dialog = page.getByRole("dialog", { name: "Search" });
   await expect(dialog).toBeVisible();
@@ -145,19 +145,72 @@ test("the head's search opens the product's search, Cmd+K or Ctrl+K by default",
   await expect(search).toBeFocused();
 });
 
-test("the search's keys open it from the page, never from rich text", async ({
+test("the search's keys open it from the page and from rich text, and close it again", async ({
   page,
 }) => {
   await openExample(page, "app-shell-01", "composed");
   const assistant = page.getByRole("region", { name: "Assistant" });
-  await page.getByRole("heading", { name: "Dashboard" }).click();
+  await page.getByRole("heading", { name: "Dashboard", level: 1 }).click();
   await page.keyboard.press("ControlOrMeta+j");
   await expect(assistant).toBeVisible();
-  await page.getByRole("button", { name: "Close the assistant" }).click();
-  await expect(assistant).toBeHidden();
-  await page.getByRole("textbox", { name: "Notes" }).click();
   await page.keyboard.press("ControlOrMeta+j");
   await expect(assistant).toBeHidden();
+  // Rich text that binds no keys of its own: the keys open it from there too.
+  await page.getByRole("textbox", { name: "Notes" }).click();
+  await page.keyboard.press("ControlOrMeta+j");
+  await expect(assistant).toBeVisible();
+});
+
+test("an editor that binds the search's keys itself keeps them", async ({
+  page,
+}) => {
+  await openExample(page, "app-shell-01", "composed");
+  const notes = page.getByRole("textbox", { name: "Notes" });
+  // The editor takes the keys for itself, as one that inserts a link on Cmd+K does.
+  await notes.evaluate((editor: HTMLElement) => {
+    editor.addEventListener("keydown", (event) => {
+      if (event.key === "j" && (event.metaKey || event.ctrlKey)) {
+        event.preventDefault();
+        editor.dataset.heard = "yes";
+      }
+    });
+  });
+  await notes.click();
+  await page.keyboard.press("ControlOrMeta+j");
+  await expect(notes).toHaveAttribute("data-heard", "yes");
+  await expect(page.getByRole("region", { name: "Assistant" })).toBeHidden();
+});
+
+test("the search's keys close the search dialog they opened, from inside it", async ({
+  page,
+}) => {
+  await openExample(page, "app-shell-01", "basic");
+  await page.getByRole("heading", { name: "Spring launch", level: 1 }).click();
+  await page.keyboard.press("ControlOrMeta+j");
+  const dialog = page.getByRole("dialog", { name: "Search" });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole("combobox")).toBeFocused();
+  await page.keyboard.press("ControlOrMeta+j");
+  await expect(dialog).toBeHidden();
+});
+
+test("room under the page: a page that fills the card scrolls its last row clear of the dock", async ({
+  page,
+}) => {
+  await openExample(page, "app-shell-01", "dock");
+  const scroller = page.getByRole("main").locator("[data-slot=app-shell-page]");
+  await scroller.evaluate((node) => {
+    node.scrollTop = node.scrollHeight;
+  });
+  const last = await page
+    .getByRole("list", { name: "Entries" })
+    .getByRole("listitem")
+    .last()
+    .boundingBox();
+  const dock = await page.getByRole("toolbar", { name: "Dock" }).boundingBox();
+  expect((last?.y ?? 0) + (last?.height ?? 0)).toBeLessThanOrEqual(
+    (dock?.y ?? 0) - 15
+  );
 });
 
 test("composed by hand: the overlay stands over the card and keeps the bar's room; covered, the page is out of reach and the overlay is not", async ({

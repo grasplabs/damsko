@@ -303,8 +303,10 @@ export default function AppShellFrame() {
           </a>
         }
         storageKey="app-shell-01-frame"
-        onSearch={() => {
-          setPlace("home");
+        onSearchOpenChange={(open) => {
+          if (open) {
+            setPlace("home");
+          }
         }}
         sidebar={
           <>

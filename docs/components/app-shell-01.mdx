@@ -15,7 +15,7 @@ A block is a ready-made composition of components that a product installs, then 
 
 ## Basic usage
 
-`sidebar` takes the product's Sidebar parts under the sidebar's head, which the shell draws: the product's `mark` at its start, then a search button when the shell has `onSearch`, then the fold. The search opens the product's own dialog, from its button and from Cmd+K or Ctrl+K anywhere on the page (`searchShortcut` changes the keys, `false` turns them off); never in rich text, where the same keys shape the text. This site keeps Cmd+K for its own search, so here the button opens the example's. A CommandDialog as the product's search takes `shortcut={null}`: the shell holds the keys. The page stands beside the sidebar as a card and scrolls on its own.
+`sidebar` takes the product's Sidebar parts under the sidebar's head, which the shell draws: the product's `mark` at its start, then a search button when the shell has `onSearchOpenChange`, then the fold. The search opens the product's own dialog, from its button and from Cmd+K or Ctrl+K anywhere on the page, rich text too (`searchShortcut` changes the keys, `false` turns them off). Give it `searchOpen` and the same keys close it again, from inside its dialog; without it they only open it, and every page shortcut pauses while a dialog is open. An editor that binds the same keys itself keeps them: a key it handles (`preventDefault`) is passed over. This site keeps Cmd+K for its own search, so the examples here take Cmd+J or Ctrl+J. A CommandDialog as the product's search takes `shortcut={null}`: the shell holds the keys. The page stands beside the sidebar as a card and scrolls on its own.
 
 Each page draws its own bar, AppShellHeader, at its top, so a router's page says where it is: `breadcrumb` is the steps before the page, each a name and its `href`, or a router's link as `render` (`render: <Link to="/projects" />`); `title` is the page itself; the bar writes the slash between every two. With `onRename` a press on the page's name, Enter or F2 renames it in place, and `renaming` opens it from elsewhere, such as a menu's Rename. `trailing` stands after the path and gives way to the `actions` at its end. The fold stands in the bar only while the sidebar is away, folded or in its sheet; while it is open, the fold is in the sidebar's head, and focus follows it there when the bar's fold opens the sidebar. Under the bar, AppShellPage is the page's body: as wide as the card, its sides in the page's room, its parts a step apart.
 
@@ -30,6 +30,12 @@ Each page draws its own bar, AppShellHeader, at its top, so a router's page says
 AppShell is its parts composed for a frame of its own. A product that lays more round the page, such as a chat beside it or a dock over its foot, composes the same parts inside its own SidebarProvider: AppShellSidebar (the sidebar under its head), then AppShellCard (the page's card, the main landmark) wherever its own layout puts it, holding AppShellContent (the page's scroller). The card's `overlay` stands over it under the banner and is never covered, for a product's own buttons at the bar's height; the bar keeps room for them at its end when an element round the page sets `appShellVars.barEndRoom`. With `covered`, a panel lies over the whole card: the banner and the page fade out and go out of reach, and the overlay stays.
 
 <Stage path="app-shell-01/composed" label="Composed by hand" />
+
+## Room under the page
+
+A dock the product lays over the card's foot (a bar of its own, through `overlay`) would stand over the end of a page that fills the card, such as a list edge to edge or a workspace. Set `appShellVars.contentRoomBelow` on an element round the page and AppShellContent keeps that much room under the page's end, so its last row scrolls clear of the dock. A page in AppShellPage keeps room below of its own (the `app-shell-page-room-below` token).
+
+<Stage path="app-shell-01/dock" label="Room under the page" />
 
 ## A panel at the end
 
