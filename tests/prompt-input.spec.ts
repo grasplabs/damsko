@@ -113,6 +113,32 @@ test("while the answer comes Send is Stop, and Stop brings Send back", async ({
   await expect(working.getByRole("button", { name: "Stop" })).toHaveCount(0);
 });
 
+test("Stop from the keyboard hands focus to the text, as Send does, not to the page", async ({
+  page,
+}) => {
+  await openExample(page, "prompt-input", "send");
+  const working = form(page, "working");
+  await working.getByRole("button", { name: "Stop" }).focus();
+  await page.keyboard.press("Enter");
+  // Send is back, and off with nothing typed: the focus waits in the text.
+  await expect(working.getByRole("button", { name: "Send" })).toBeDisabled();
+  await expect(
+    working.getByRole("textbox", { name: "Message, working" })
+  ).toBeFocused();
+});
+
+test("Stop pressed by a pointer leaves the focus where the press put it, so a phone's keyboard stays down", async ({
+  page,
+}) => {
+  await openExample(page, "prompt-input", "send");
+  const working = form(page, "working");
+  await working.getByRole("button", { name: "Stop" }).click();
+  await expect(working.getByRole("button", { name: "Send" })).toBeDisabled();
+  await expect(
+    working.getByRole("textbox", { name: "Message, working" })
+  ).not.toBeFocused();
+});
+
 test("once sent, Send is busy and waits; after a failure it sends again", async ({
   page,
 }) => {
