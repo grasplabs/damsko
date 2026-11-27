@@ -563,3 +563,23 @@ test("in a side panel's card the hairline is the top of the row under it: a stac
     );
   expect(short).toBeCloseTo(44, 0);
 });
+
+test("a form stands in a row's actions: its choice and its button are their own stops, and Release sends it", async ({
+  page,
+}) => {
+  await openExample(page, "item", "form");
+  const list = page.getByRole("list", { name: "Release channels" });
+  const beta = list.getByRole("form", { name: "Release to Beta" });
+  await beta.getByRole("combobox", { name: "Version" }).selectOption("4.3");
+  await beta.getByRole("button", { name: "Release" }).click();
+  const row = list
+    .getByRole("listitem")
+    .filter({ has: page.getByRole("form", { name: "Release to Beta" }) });
+  await expect(row).toContainText("Version 4.3");
+  // The other channel's form is its own: Stable keeps its release.
+  await expect(
+    list
+      .getByRole("listitem")
+      .filter({ has: page.getByRole("form", { name: "Release to Stable" }) })
+  ).toContainText("Version 4.1");
+});

@@ -122,6 +122,12 @@ Before the data, `loading` keeps every row's boxes: each part given empty waits 
 
 <Stage path="item/header-footer" label="Header and footer" />
 
+## A form in a row
+
+ItemContent, ItemActions, ItemHeader and ItemFooter are blocks, so a form or a list stands in them as it would anywhere. Here each channel's actions are a small form: a version and the Release button that sends it. Name the form (`aria-label`) when there are several, so each says what it changes.
+
+<Stage path="item/form" label="A form in a row" />
+
 ## Every state
 
 Only a row with a press (`href`, `onClick`, `asChild`) has states: hover, keyboard focus and pressed, forced from its own CSS.

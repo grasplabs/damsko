@@ -18,7 +18,7 @@ The footer's tools stand at its start, a space-1 apart. Those that belong by Sub
 
 ## Send and Stop
 
-Submit by `status`: off while there is nothing to send, Send once there is, a spinner once `submitted`, Stop while `streaming`, and Send again, its arrow unchanged, after an `error`, which the band under the card says.
+Submit by `status`: off while there is nothing to send, Send once there is, a spinner once `submitted`, Stop while `streaming`, and Send again, its arrow unchanged, after an `error`, which the band under the card says. A press on Send hands the focus to the text first, so it never falls to the page as Send turns into Stop. Stop pressed from the keyboard does the same, as Send comes back off with nothing typed; a tap or a click on Stop leaves the focus alone, so a phone's keyboard does not rise over the answer.
 
 <Stage path="prompt-input/send" label="Send and Stop" />
 
@@ -324,7 +324,7 @@ const answer: Record<ChatStatus, MessageStatus> = {
       group: "Submit",
       key: "Press",
       value:
-        "The text takes the focus first, so focus stays in the form as Send turns into Stop.",
+        "The text takes the focus first, so focus stays in the form as Send turns into Stop; from the keyboard, Stop hands it to the text too, as Send comes back off.",
     },
     {
       group: "Card",

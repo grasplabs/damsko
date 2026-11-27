@@ -103,8 +103,9 @@ const places: { name: string; icon: IconData; count?: number }[] = [
   { name: "Integrations", icon: LinkIcon },
 ];
 
-// The sidebar down the start, its head the shell's: the product's mark, the search (Cmd+K or
-// Ctrl+K too, where this site's own search does not take them) and the fold. The page beside it as a card draws its own bar: where the page is (its
+// The sidebar down the start, its head the shell's: the product's mark, the search (Cmd+J or
+// Ctrl+J too, which close it again; Cmd+K by default, which this site keeps for its own search) and
+// the fold. The page beside it as a card draws its own bar: where the page is (its
 // name renames in place) and its actions; the fold stands in the bar only while the sidebar is
 // away, and the fold is kept for the next visit. The page scrolls under its bar. On a phone the
 // bar's fold opens the sidebar as a sheet, and the bar says the page and the step before it.
@@ -127,9 +128,11 @@ export default function AppShellBasic() {
             <span aria-hidden="true" {...stylex.props(layout.mark)} />
           </a>
         }
-        onSearch={() => {
-          setSearching(true);
-        }}
+        searchOpen={searching}
+        onSearchOpenChange={setSearching}
+        // This site keeps Cmd+K for its own search: here Cmd+J or Ctrl+J opens the search, and
+        // closes it again.
+        searchShortcut="mod+j"
         sidebar={
           <>
             <SidebarContent>

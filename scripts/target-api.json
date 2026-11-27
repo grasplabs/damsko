@@ -382,7 +382,13 @@
       "ProgressValueProps",
       "ProgressCircleProps",
       "ProgressVariant",
-      "ProgressSize"
+      "ProgressSize",
+      "Meter",
+      "MeterLabel",
+      "MeterValue",
+      "MeterProps",
+      "MeterLabelProps",
+      "MeterValueProps"
     ],
     "src/components/progress.stylex.ts": null
   },
