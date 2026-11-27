@@ -82,7 +82,10 @@ import {
   useSidebar,
 } from "../../components/sidebar";
 import type { SidebarProviderProps } from "../../components/sidebar";
-import { sidebarWrapperMarker } from "../../components/sidebar.stylex";
+import {
+  sidebarMarker,
+  sidebarWrapperMarker,
+} from "../../components/sidebar.stylex";
 import { Skeleton } from "../../components/skeleton";
 import { useI18n } from "../../lib/i18n";
 import { Icon, PanelRightIcon, SearchIcon, XIcon } from "../../lib/icons";
@@ -468,6 +471,12 @@ export interface AppShellSidebarProps {
    * @default "mod+k"
    */
   searchShortcut?: string | false;
+  /**
+   * Whether the shell listens for `searchShortcut` itself. `false` when the product already does
+   * (a search of its own on the same keys): the button still shows them.
+   * @default true
+   */
+  listenToSearchShortcut?: boolean;
 }
 
 /**
@@ -480,6 +489,7 @@ export const AppShellSidebar = ({
   mark,
   onSearch,
   searchShortcut = SEARCH_SHORTCUT,
+  listenToSearchShortcut = true,
 }: AppShellSidebarProps) => {
   const words = useI18n().appShell;
   const { isMobile, setOpenMobile } = useSidebar();
@@ -493,7 +503,7 @@ export const AppShellSidebar = ({
     onSearch?.();
   };
   // Here, not on the button: the button is in the sheet, which is not there while it is closed.
-  useShortcut(keys === "" ? null : keys, search, {
+  useShortcut(keys === "" || !listenToSearchShortcut ? null : keys, search, {
     when: () => !inRichText(),
     description: words.search,
   });
@@ -591,28 +601,39 @@ export const AppShellCard = ({
   covered = false,
   style,
 }: AppShellCardProps) => (
-  <SidebarInset style={style}>
-    <div {...stylex.props(styles.frame)}>
-      {isBlank(banner) ? null : (
-        <div
-          data-slot="app-shell-banner"
-          inert={covered}
-          {...stylex.props(styles.banner, covered && styles.covered)}
-        >
-          {banner}
+  <>
+    {/* An inset Sidebar's mark beside the card, which SidebarInset draws itself as a card by: the
+      card is one wherever a product's own layout puts it, beside the sidebar or in a group of
+      panels. */}
+    <span
+      aria-hidden="true"
+      data-variant="inset"
+      hidden
+      {...stylex.props(sidebarMarker)}
+    />
+    <SidebarInset style={style}>
+      <div {...stylex.props(styles.frame)}>
+        {isBlank(banner) ? null : (
+          <div
+            data-slot="app-shell-banner"
+            inert={covered}
+            {...stylex.props(styles.banner, covered && styles.covered)}
+          >
+            {banner}
+          </div>
+        )}
+        <div {...stylex.props(styles.area)}>
+          <div
+            inert={covered}
+            {...stylex.props(styles.held, covered && styles.covered)}
+          >
+            {children}
+          </div>
+          {overlay}
         </div>
-      )}
-      <div {...stylex.props(styles.area)}>
-        <div
-          inert={covered}
-          {...stylex.props(styles.held, covered && styles.covered)}
-        >
-          {children}
-        </div>
-        {overlay}
       </div>
-    </div>
-  </SidebarInset>
+    </SidebarInset>
+  </>
 );
 
 /** Every prop an AppShellContent takes. */
@@ -621,14 +642,24 @@ export interface AppShellContentProps {
   children: ReactNode;
   /** The scroller itself, to measure it. */
   ref?: Ref<HTMLDivElement>;
+  /** Layout only. */
+  style?: LayoutStyle;
 }
 
 /**
  * The page's scroller in the card: its bar stays at the top as the page scrolls under it, up and
  * down only; what is wider than the card is cut at its edge.
  */
-export const AppShellContent = ({ children, ref }: AppShellContentProps) => (
-  <div ref={ref} data-slot="app-shell-page" {...stylex.props(styles.page)}>
+export const AppShellContent = ({
+  children,
+  ref,
+  style,
+}: AppShellContentProps) => (
+  <div
+    ref={ref}
+    data-slot="app-shell-page"
+    {...stylex.props(styles.page, style)}
+  >
     {children}
   </div>
 );
@@ -760,6 +791,7 @@ export const AppShell = ({
   mark,
   onSearch,
   searchShortcut,
+  listenToSearchShortcut,
   storageKey,
   open,
   defaultOpen,
@@ -784,6 +816,7 @@ export const AppShell = ({
       mark={mark}
       onSearch={onSearch}
       searchShortcut={searchShortcut}
+      listenToSearchShortcut={listenToSearchShortcut}
     >
       {sidebar}
     </AppShellSidebar>

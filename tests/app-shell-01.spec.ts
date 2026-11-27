@@ -254,6 +254,39 @@ test.describe("with motion", () => {
     await expect(fold).toBeFocused();
     await expect(barFold).toBeHidden();
   });
+
+  test("focus follows the fold though something in the page moves for ever", async ({
+    page,
+  }) => {
+    await openExample(page, "patterns", "chat-page");
+    const sidebar = page.getByRole("complementary", { name: "Sidebar" });
+    const fold = sidebar.getByRole("button", { name: TOGGLE });
+    await fold.focus();
+    await page.keyboard.press("Enter");
+    const barFold = page
+      .getByRole("main")
+      .getByRole("button", { name: TOGGLE });
+    await expect(barFold).toBeFocused();
+    await page.keyboard.press("Enter");
+    await expect(fold).toBeFocused();
+  });
+
+  test("focus the person moves while the sidebar slides stays where they put it", async ({
+    page,
+  }) => {
+    await openExample(page, "app-shell-01", "basic");
+    const fold = page
+      .getByRole("complementary", { name: "Sidebar" })
+      .getByRole("button", { name: TOGGLE });
+    await fold.focus();
+    await page.keyboard.press("Enter");
+    const share = page.getByRole("button", { name: "Share" });
+    await page.waitForTimeout(30);
+    await share.focus();
+    // Past the slide: focus is still on Share.
+    await page.waitForTimeout(600);
+    await expect(share).toBeFocused();
+  });
 });
 
 test("the page's name renames in place: Enter saves, and the page says the new name", async ({

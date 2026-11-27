@@ -1102,7 +1102,12 @@ export const SidebarProvider = ({
       '[data-slot="sidebar"]'
     );
     const land = () => {
-      if (turn !== turns.current) {
+      const active = document.activeElement;
+      // Not after another turn, and not over a place the person moved focus to themselves meanwhile.
+      if (
+        turn !== turns.current ||
+        (active !== null && active !== before && active !== document.body)
+      ) {
         return;
       }
       const trigger = [
@@ -1112,7 +1117,12 @@ export const SidebarProvider = ({
       ].find(inReach);
       (trigger ?? (open && sidebar ? landingIn(sidebar) : undefined))?.focus();
     };
-    const sliding = sidebar?.getAnimations({ subtree: true }) ?? [];
+    // The slide itself: the panel's own transitions, never what moves inside it (a working mark,
+    // a spinner), which may run for ever.
+    const sliding =
+      sidebar
+        ?.querySelector<HTMLElement>('[data-slot="sidebar-container"]')
+        ?.getAnimations() ?? [];
     const afterSlide = async () => {
       await Promise.allSettled(
         sliding.map(async ({ finished }) => await finished)

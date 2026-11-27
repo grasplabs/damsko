@@ -57,9 +57,11 @@ const layout = stylex.create({
     [appShellVars.barEndRoom]: `calc(${size.sidebarIconButton} + ${space["2"]})`,
   },
   // The assistant's button over the card's end, at the bar's height.
+  // The bar's own room lies beside it, nothing to press: its finger's target may reach into it.
   open: {
     position: "absolute",
     display: "flex",
+    "--tap-room-inline": space["2"],
     insetBlockStart: `calc((${size.appShellBar} - ${size.controlXs}) / 2)`,
     insetInlineEnd: size.appShellPageInline,
     zIndex: 25,
