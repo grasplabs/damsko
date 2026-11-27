@@ -20,10 +20,12 @@ import { isRecord, readJson } from "./json.ts";
 
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
-// KaTeX and Mermaid, which a formula and a diagram in the sample answers load on their first draw,
-// loaded before any test runs: else their loading can fall inside a test that weighs the heap.
+// KaTeX and Pele with its flowchart, which a formula and a diagram in the sample answers load on
+// their first draw, loaded before any test runs: else their loading can fall inside a test that
+// weighs the heap.
 await import("katex");
-await import("mermaid");
+const pele = await import("pele/lazy");
+await pele.load("flowchart");
 
 const fixture = readJson(
   `${import.meta.dirname}/fixtures/markdown-answers.json`

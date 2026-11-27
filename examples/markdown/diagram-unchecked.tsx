@@ -6,10 +6,9 @@ import { useEffect, useState } from "react";
 import { drawDiagram } from "../../src/components/markdown/diagram";
 
 // For the spec only (tests/markdown.spec.ts), at /examples/markdown/diagram-unchecked; not on the
-// page. Fences that would load something from elsewhere, given to Mermaid with the source check off:
-// it draws them in its frame, whose policy loads nothing, so none of them loads anything. A picture
-// node (`img:`) is not here: Mermaid reads its picture through the page, outside its frame, so only
-// the source check keeps that one out (markdown/diagram-hostile).
+// page. Fences that would load something from elsewhere, a picture node's picture among them, given
+// to Pele with the source check off: it draws a string with links and pictures off, and the drawing
+// is held to SVG's own shapes, so none of them loads anything.
 const at = "https://example.com";
 export const fences = [
   `%%{init: {"themeCSS": ".node rect { fill: url(${at}/theme.png) }"}}%%\nflowchart LR\n  A --> B`,
@@ -20,6 +19,8 @@ export const fences = [
   `sequenceDiagram\n  participant A\n  properties A: {"class": "x", "icon": "${at}/icon.png"}\n  A->>A: hi`,
   `sequenceDiagram\n  participant A\n  properties A: {"class": "x", "icon": "relative-icon.png"}\n  A->>A: hi`,
   `%%{init: {"htmlLabels": true, "flowchart": {"htmlLabels": true}}}%%\nflowchart LR\n  A["<img src='${at}/label.png'>"] --> B`,
+  `flowchart LR\n  A@{ img: "${at}/shape.png", label: "shape" }\n  B@{ icon: "${at}/icon.svg" }`,
+  `flowchart LR\n  A --> B\n  click A "${at}/node"`,
 ];
 
 export default function MarkdownDiagramUnchecked() {
@@ -32,7 +33,7 @@ export default function MarkdownDiagramUnchecked() {
             await drawDiagram(code, `unchecked-${place}`, { check: false })
         )
       );
-      setDrawn(made.filter((each) => each !== null && "svg" in each).length);
+      setDrawn(made.filter((each) => "svg" in each).length);
     };
     void draw();
   }, []);
