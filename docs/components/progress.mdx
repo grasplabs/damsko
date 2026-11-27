@@ -1,13 +1,13 @@
 ---
 title: Progress
-description: A bar or ring showing how far a task has come, or that it is running.
+description: A bar or ring showing how far a task has come, or that it is running; and the same bar for a reading, as a meter.
 ---
 
 <Head
   lead={frontmatter.description}
   install="pnpm dlx shadcn@4.23.0 add @damsko/progress"
   use={
-    'import { Progress, ProgressCircle, ProgressLabel, ProgressValue } from "@grasp-os/ui/components/progress";'
+    'import { Meter, MeterLabel, MeterValue, Progress, ProgressCircle, ProgressLabel, ProgressValue } from "@grasp-os/ui/components/progress";'
   }
 />
 
@@ -41,6 +41,12 @@ What is under way in a few words, in a `ProgressLabel`, and how far it has come,
 
 <Stage path="progress/rings" label="Circle" />
 
+## Meter
+
+A reading that stands still is a `Meter`, not a progress bar: storage used, seats taken, how many companies run the latest release. It is the same bar, read as a `meter` (WAI-ARIA's Meter pattern): a value between `min` (0) and `max` (100), never unknown, and never a task that will finish. `MeterLabel` names it and `MeterValue` shows the reading, or what a function given as its children makes of it (`{(formatted, value) => …}`); `getAriaValueText` gives a screen reader the same words when the percentage says too little ("6 of 6 up to date"). A `variant` colours the reading only when it says something, near a limit or past it, and the words say it too: there is no colour by thresholds of its own.
+
+<Stage path="progress/meter" label="Meter" />
+
 ## Every state
 
 From not started to done, how far unknown, each variant, as a bar and as a circle.
@@ -73,7 +79,11 @@ From not started to done, how far unknown, each variant, as a bar and as a circl
 <Intent
   of="progress"
   always={["A label that says what is under way, not Loading."]}
-  never={["A bar that goes backwards.", "Colour alone to say it failed."]}
+  never={[
+    "A bar that goes backwards.",
+    "Colour alone to say it failed.",
+    "A reading that stands still, such as storage used: use Meter.",
+  ]}
 />
 
 ## Specification
@@ -207,6 +217,11 @@ From not started to done, how far unknown, each variant, as a bar and as a circl
         "`progressbar`, named by its `ProgressLabel`, or by `aria-label` where no words stand above it, with `aria-valuenow`, `aria-valuemin` and `aria-valuemax`",
     },
     {
+      key: "Meter",
+      value:
+        "`meter`, named by its `MeterLabel` or `aria-label`, with `aria-valuenow`, `aria-valuemin`, `aria-valuemax` and `aria-valuetext`",
+    },
+    {
       key: "Unknown",
       value: "No value: a screen reader hears it is under way",
     },
@@ -253,6 +268,24 @@ From not started to done, how far unknown, each variant, as a bar and as a circl
   source="src/components/progress.tsx"
   type="ProgressCircleProps"
   label="ProgressCircle props"
+/>
+
+<Props
+  source="src/components/progress.tsx"
+  type="MeterProps"
+  label="Meter props"
+/>
+
+<Props
+  source="src/components/progress.tsx"
+  type="MeterLabelProps"
+  label="MeterLabel props"
+/>
+
+<Props
+  source="src/components/progress.tsx"
+  type="MeterValueProps"
+  label="MeterValue props"
 />
 
 </Reference>

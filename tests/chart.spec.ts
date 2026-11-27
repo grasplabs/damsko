@@ -115,6 +115,31 @@ test("bars across are a list of names and values, largest first", async ({
   await expect(rows.last()).toContainText("Travel and accommodation");
 });
 
+test("bars across with rowLink: each row's name is a link, reached by Tab in the rows' order, its value beside it", async ({
+  page,
+}) => {
+  await openExample(page, "chart", "bar-list-links");
+  const figure = page.getByRole("figure", {
+    name: "AI spend by team, November and October",
+  });
+  const links = figure.getByRole("link");
+  await expect(links).toHaveText(["Finance", "Sales", "Support", "Legal"]);
+  await expect(figure.getByRole("link", { name: "Finance" })).toHaveAttribute(
+    "href",
+    "#team-finance"
+  );
+  await expect(
+    figure
+      .getByRole("listitem")
+      .filter({ has: page.getByRole("link", { name: "Finance" }) })
+  ).toContainText("€1,240");
+  await links.first().focus();
+  await page.keyboard.press("Tab");
+  await expect(figure.getByRole("link", { name: "Sales" })).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/#team-sales$/u);
+});
+
 test("a pie's parts are each reached by Tab, named with their value and share, and said in its centre", async ({
   page,
 }) => {

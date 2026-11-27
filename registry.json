@@ -692,11 +692,14 @@
       "description": "Numbers across kinds, over time, as parts of a whole, as flows between stages, or as a spark beside a figure.",
       "dependencies": [
         "@stylexjs/stylex",
+        "@ui-sdk/core",
+        "@ui-sdk/react",
         "react-is",
         "recharts"
       ],
       "registryDependencies": [
-        "@damsko/lib"
+        "@damsko/lib",
+        "@damsko/link"
       ],
       "docs": "https://damsko.joingrasp.com/components/chart",
       "meta": {
@@ -2448,7 +2451,7 @@
       "name": "progress",
       "type": "registry:ui",
       "title": "Progress",
-      "description": "A bar or ring showing how far a task has come, or that it is running.",
+      "description": "A bar or ring showing how far a task has come, or that it is running; and the same bar for a reading, as a meter.",
       "dependencies": [
         "@stylexjs/stylex",
         "@ui-sdk/core",
