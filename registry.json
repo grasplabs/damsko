@@ -1726,9 +1726,11 @@
         "@stylexjs/stylex"
       ],
       "registryDependencies": [
+        "@damsko/button",
         "@damsko/hooks",
         "@damsko/input",
-        "@damsko/lib"
+        "@damsko/lib",
+        "@damsko/popover"
       ],
       "docs": "https://damsko.joingrasp.com/components/inline-edit",
       "meta": {

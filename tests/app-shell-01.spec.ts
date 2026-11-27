@@ -325,6 +325,33 @@ test("the page's name renames in place: Enter saves, and the page says the new n
   ).toBeVisible();
 });
 
+test("the page's name renames in a popup: from the keys, a taken name keeps it open and says why, then a free one saves", async ({
+  page,
+}) => {
+  await openExample(page, "app-shell-01", "panel");
+  const bar = page.getByRole("navigation", { name: "Breadcrumb" });
+  const name = bar.getByRole("button", { name: "Launch notes" });
+  await name.focus();
+  await page.keyboard.press("Enter");
+  const popup = page.getByRole("dialog", { name: "Rename" });
+  const field = popup.getByRole("textbox", { name: "Rename" });
+  await expect(field).toBeFocused();
+  await page.keyboard.type("Roadmap");
+  await page.keyboard.press("Enter");
+  await expect(field).toHaveAccessibleDescription(
+    "Could not rename: that name is already taken"
+  );
+  await expect(field).toHaveValue("Roadmap");
+  await page.keyboard.press("ControlOrMeta+a");
+  await page.keyboard.type("Launch plan");
+  await page.keyboard.press("Enter");
+  await expect(popup).toBeHidden();
+  await expect(bar.getByRole("button", { name: "Launch plan" })).toBeFocused();
+  await expect(
+    page.getByRole("heading", { name: "Launch plan", level: 1 })
+  ).toBeVisible();
+});
+
 test("the end panel resizes from its handle with the arrow keys, and its button hides it", async ({
   page,
 }) => {

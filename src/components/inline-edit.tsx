@@ -11,13 +11,18 @@
 //
 // `onSubmit` may return a promise: the field stays open and read only while it works, closes when
 // it is done, and says so; when it fails the field keeps the words typed and says that it could not
-// save. `validate` refuses a value before it is sent, in the words it returns. A screen reader
-// hears the result once (`inlineEdit.saved`, or `inlineEdit.error`).
+// save (`errorText`, or the catalogue's words). `validate` refuses a value before it is sent, in the
+// words it returns. A screen reader hears the result once (`inlineEdit.saved`, or the error).
+//
+// `variant="popup"` keeps the text where it stands and opens the field in a small Popover beside
+// it, titled by `aria-label`, with Cancel and Save (a page's or a panel's title, renamed without
+// the field taking the title's room). The same rules: Enter or Save saves, Escape or Cancel keeps
+// the value, a press outside keeps it too; it stays open while a save works or after one failed.
 "use client";
 
 import * as stylex from "@stylexjs/stylex";
 import { useEffect, useId, useRef, useState } from "react";
-import type { KeyboardEvent, ReactNode } from "react";
+import type { FocusEvent, KeyboardEvent, ReactNode } from "react";
 
 import { useAction } from "../hooks/use-action";
 import { useI18n } from "../lib/i18n";
@@ -31,9 +36,20 @@ import {
   size,
   space,
 } from "../lib/tokens.stylex";
-import { announce } from "../lib/utils";
+import { announce, renamed } from "../lib/utils";
 import type { LayoutStyle } from "../lib/utils";
+import { Button } from "./button";
 import { Input } from "./input";
+import {
+  Popover,
+  PopoverAnchor,
+  PopoverContent,
+  PopoverFooter,
+  PopoverTitle,
+} from "./popover";
+
+/** Where the field opens: in the text's place, or in a small popup beside it. */
+export type InlineEditVariant = "inline" | "popup";
 
 /** Every prop an InlineEdit takes. */
 export interface InlineEditProps {
@@ -66,6 +82,19 @@ export interface InlineEditProps {
   "aria-label": string;
   /** The read view, when it is more than the value's words (a heading). @default value */
   children?: ReactNode;
+  /**
+   * `inline` opens the field in the text's place; `popup` opens it in a small Popover beside the
+   * text, titled by `aria-label`, with Cancel and Save.
+   * @default "inline"
+   */
+  variant?: InlineEditVariant;
+  /** The most characters the field takes. */
+  maxLength?: number;
+  /**
+   * Said under the field, and to a screen reader, when a save fails ("Could not rename: that name
+   * is taken"), in place of the catalogue's `inlineEdit.error`.
+   */
+  errorText?: string;
   /** Layout only: where it sits and how wide it is. */
   style?: LayoutStyle;
 }
@@ -118,6 +147,12 @@ const styles = stylex.create({
       [media.pointerCoarse]: `min(0px, calc((100% - ${size.tapTarget}) / 2))`,
     },
   },
+  // The popup's form: its title, the field, what it says, and Cancel and Save.
+  form: {
+    display: "grid",
+    rowGap: space[3],
+    margin: 0,
+  },
   // The field and, under it, what it says while it saves or why it did not.
   editor: {
     display: "grid",
@@ -149,6 +184,9 @@ export const InlineEdit = ({
   onEditingChange,
   "aria-label": ariaLabel,
   children,
+  variant = "inline",
+  maxLength,
+  errorText,
   style,
 }: InlineEditProps) => {
   const words = useI18n().inlineEdit;
@@ -172,9 +210,10 @@ export const InlineEdit = ({
       setOpens(opens + 1);
     }
   }
+  const failed = errorText ?? words.error;
   const save = useAction(async (work: Promise<unknown>) => await work, {
     successText: words.saved(draft.trim()),
-    errorText: words.error,
+    errorText: failed,
   });
   const saving = save.status === "loading";
 
@@ -184,6 +223,8 @@ export const InlineEdit = ({
   const backToText = useRef(false);
   // Set once the field is closing, so the blur that follows a key does not save a second time.
   const closing = useRef(false);
+  // Set as the popup opens, so the field's words are chosen as it takes the focus.
+  const choose = useRef(false);
   // Each close asked for, so the render after it can tell whether a host that keeps `editing`
   // closed the field or kept it open.
   const [asked, setAsked] = useState(0);
@@ -221,6 +262,7 @@ export const InlineEdit = ({
 
   useEffect(() => {
     if (opens > 0) {
+      choose.current = true;
       field.current?.focus();
       field.current?.select();
     }
@@ -230,8 +272,8 @@ export const InlineEdit = ({
     if (closing.current || saving) {
       return;
     }
-    const next = draft.trim();
-    if (next === "" || next === value) {
+    const next = renamed(draft, value);
+    if (next === undefined) {
       close(byKey);
       return;
     }
@@ -251,7 +293,7 @@ export const InlineEdit = ({
     if (outcome.ok) {
       close(byKey);
     } else if (!("busy" in outcome)) {
-      setProblem(words.error);
+      setProblem(failed);
     }
   };
 
@@ -272,64 +314,148 @@ export const InlineEdit = ({
   };
 
   const shown = saving ? (save.label ?? "") : problem;
+  const message =
+    shown === "" ? null : (
+      <span
+        id={messageId}
+        {...stylex.props(styles.message, problem !== "" && styles.problem)}
+      >
+        {shown}
+      </span>
+    );
+  const fieldProps = {
+    ref: field,
+    size: "sm" as const,
+    "aria-label": ariaLabel,
+    value: draft,
+    maxLength,
+    onValueChange: (next: string) => {
+      setDraft(next);
+      setProblem("");
+    },
+    readOnly: saving,
+    "aria-busy": saving || undefined,
+    "aria-invalid": problem === "" ? undefined : true,
+    "aria-describedby": shown === "" ? undefined : messageId,
+  };
+  const textProps = {
+    ref: text,
+    "aria-label": value === "" ? ariaLabel : undefined,
+    "aria-describedby": hint,
+    onClick: () => {
+      setEditing(true);
+    },
+    onKeyDown: (event: KeyboardEvent<HTMLButtonElement>) => {
+      if (event.key === "F2") {
+        event.preventDefault();
+        setEditing(true);
+      }
+    },
+    ...stylex.props(styles.text, focusRing),
+  };
+  const hintText = (
+    <span id={hint} {...stylex.props(visuallyHidden)}>
+      {words.edit}
+    </span>
+  );
+  if (variant === "popup") {
+    return (
+      <span data-slot="inline-edit" {...stylex.props(styles.root, style)}>
+        <Popover
+          open={editing}
+          // While a save works it stays; Escape, a press outside or Tab away keep the value.
+          dismissible={!saving}
+          onOpenChange={(open, details) => {
+            if (open) {
+              setEditing(true);
+              return;
+            }
+            close(details.reason === "escape-key");
+            onCancel?.();
+          }}
+        >
+          <PopoverAnchor asChild>
+            <button
+              type="button"
+              {...textProps}
+              aria-haspopup="dialog"
+              aria-expanded={editing}
+            >
+              <span aria-hidden="true" {...stylex.props(styles.target)} />
+              {children ?? value}
+            </button>
+          </PopoverAnchor>
+          <PopoverContent align="start">
+            <form
+              onSubmit={(event) => {
+                event.preventDefault();
+                void submit(true);
+              }}
+              {...stylex.props(styles.form)}
+            >
+              <PopoverTitle>{ariaLabel}</PopoverTitle>
+              <span
+                data-slot="inline-edit-input"
+                {...stylex.props(styles.editor)}
+              >
+                <Input
+                  {...fieldProps}
+                  onFocus={(event: FocusEvent<HTMLInputElement>) => {
+                    if (choose.current) {
+                      choose.current = false;
+                      event.currentTarget.select();
+                    }
+                  }}
+                />
+                {message}
+              </span>
+              <PopoverFooter>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={saving}
+                  onClick={() => {
+                    close(true);
+                    onCancel?.();
+                  }}
+                >
+                  {words.cancel}
+                </Button>
+                <Button
+                  type="submit"
+                  size="sm"
+                  status={saving ? "loading" : "idle"}
+                >
+                  {words.save}
+                </Button>
+              </PopoverFooter>
+            </form>
+          </PopoverContent>
+        </Popover>
+        {hintText}
+      </span>
+    );
+  }
   return (
     <span data-slot="inline-edit" {...stylex.props(styles.root, style)}>
       {editing ? (
         <span data-slot="inline-edit-input" {...stylex.props(styles.editor)}>
           <Input
-            ref={field}
-            size="sm"
-            aria-label={ariaLabel}
-            value={draft}
-            onValueChange={(next: string) => {
-              setDraft(next);
-              setProblem("");
-            }}
-            readOnly={saving}
-            aria-busy={saving || undefined}
-            aria-invalid={problem === "" ? undefined : true}
-            aria-describedby={shown === "" ? undefined : messageId}
+            {...fieldProps}
             onKeyDown={onKeyDown}
             onBlur={() => {
               void submit(false);
             }}
           />
-          {shown === "" ? null : (
-            <span
-              id={messageId}
-              {...stylex.props(
-                styles.message,
-                problem !== "" && styles.problem
-              )}
-            >
-              {shown}
-            </span>
-          )}
+          {message}
         </span>
       ) : (
         <>
-          <button
-            ref={text}
-            type="button"
-            aria-label={value === "" ? ariaLabel : undefined}
-            aria-describedby={hint}
-            onClick={() => {
-              setEditing(true);
-            }}
-            onKeyDown={(event) => {
-              if (event.key === "F2") {
-                event.preventDefault();
-                setEditing(true);
-              }
-            }}
-            {...stylex.props(styles.text, focusRing)}
-          >
+          <button type="button" {...textProps}>
             <span aria-hidden="true" {...stylex.props(styles.target)} />
             {children ?? value}
           </button>
-          <span id={hint} {...stylex.props(visuallyHidden)}>
-            {words.edit}
-          </span>
+          {hintText}
         </>
       )}
     </span>

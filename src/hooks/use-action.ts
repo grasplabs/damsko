@@ -109,6 +109,11 @@ export const useAction = <Args extends unknown[], Result>(
       return;
     }
     setStatus(result);
+    // After a failure the work may be tried again at once (a field with its words corrected); after
+    // a success a second press waits out the tick, so the same work never runs twice by accident.
+    if (result === "error") {
+      running.current = false;
+    }
     timer.current = setTimeout(() => {
       running.current = false;
       if (mounted.current) {

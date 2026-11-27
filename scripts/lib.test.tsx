@@ -18,6 +18,7 @@ import {
   isInvalid,
   nothing,
   ownValue,
+  renamed,
   safeHref,
   safeMediaSrc,
   slotProps,
@@ -26,6 +27,19 @@ import {
 
 // A script link's scheme, written so no lint takes the test's own strings for one.
 const JS = ["java", "script"].join("");
+
+describe(renamed, () => {
+  test("a new name is given trimmed", () => {
+    expect(renamed("  Launch plan ", "Launch notes")).toBe("Launch plan");
+  });
+
+  test.each(["", "   ", "Launch notes", " Launch notes "])(
+    "%j keeps the old name",
+    (draft) => {
+      expect(renamed(draft, "Launch notes")).toBeUndefined();
+    }
+  );
+});
 
 describe(safeHref, () => {
   test("http, https and mailto lead where they say", () => {
