@@ -1,5 +1,5 @@
-// The app shell's variables. StyleX resolves them only when imported straight from a .stylex.ts
-// file, so they live here, beside the shell's parts.
+// The app shell's variables and markers. StyleX resolves them only when imported straight from a
+// .stylex.ts file, so they live here, beside the shell's parts.
 import * as stylex from "@stylexjs/stylex";
 
 export const appShellVars = stylex.defineVars({
@@ -9,3 +9,6 @@ export const appShellVars = stylex.defineVars({
    */
   barEndRoom: "0px",
 });
+
+/** The switch's track, marked so its thumb and tabs follow whether the thumb stands (`data-thumb`). */
+export const switchMarker = stylex.defineMarker();

@@ -29,7 +29,6 @@ import {
 import {
   BuildingIcon,
   ChevronDownIcon,
-  ChevronLeftIcon,
   CircleUserIcon,
   CoinsIcon,
   FolderKanbanIcon,
@@ -165,16 +164,9 @@ export default function SidebarLevelsExample() {
             </SidebarLevel>
             <SidebarLevel value="settings">
               <SidebarLevelHeader>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarLevelTrigger value="main" asChild>
-                      <a href={`#${page}`}>
-                        <Icon icon={ChevronLeftIcon} />
-                        Back
-                      </a>
-                    </SidebarLevelTrigger>
-                  </SidebarMenuItem>
-                </SidebarMenu>
+                <SidebarLevelTrigger value="main" asChild aria-label="Back">
+                  <a href={`#${page}`} />
+                </SidebarLevelTrigger>
                 <SidebarLevelTitle>
                   <Icon icon={SettingsIcon} />
                   Settings

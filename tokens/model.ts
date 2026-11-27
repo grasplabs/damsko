@@ -293,7 +293,7 @@ const step = (colour: string, lightness: number, chroma: number): string => {
   return `oklch(${round(Number(parts.lightness) + lightness)} ${round(Math.max(0, c + chroma))} ${hue})`;
 };
 
-// The sidebar's ground and its page card in a theme, from the theme's own paper, so a product on a
+// The sidebar's ground, its page card and its menu in a theme, from the theme's own paper, so a product on a
 // theme gets a shell that matches it with nothing of its own: by day the card is the paper and the
 // ground round it a step darker; at night the ground is the paper and the card a step up from it.
 // Only in a theme's block: with no theme, the system's neutral greys stand.
@@ -308,6 +308,11 @@ const SHELL_FROM_PAPER: Record<
   "sidebar-card": (paper) => ({
     light: paper.light,
     dark: step(paper.dark, 0.025, 0),
+  }),
+  // The menu from the sidebar's foot: the card by day, at night a step up from the card.
+  "sidebar-menu": (paper) => ({
+    light: paper.light,
+    dark: step(paper.dark, 0.087, 0),
   }),
 };
 

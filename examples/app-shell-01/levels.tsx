@@ -13,6 +13,7 @@ import {
   SidebarLevelHeader,
   SidebarLevels,
   SidebarLevelTitle,
+  SidebarLevelTrigger,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -20,7 +21,6 @@ import {
 import {
   BellIcon,
   BuildingIcon,
-  ChevronLeftIcon,
   CoinsIcon,
   FolderKanbanIcon,
   Icon,
@@ -130,24 +130,27 @@ export default function AppShellLevels() {
             </SidebarLevel>
             <SidebarLevel value="settings">
               <SidebarLevelHeader>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton asChild>
-                      <a
-                        href={`#${last}`}
-                        onClick={() => {
-                          go(last);
-                        }}
-                      >
-                        <Icon icon={ChevronLeftIcon} />
-                        Back
-                      </a>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </SidebarMenu>
-                <SidebarLevelTitle>
-                  <Icon icon={SettingsIcon} />
-                  Settings
+                <SidebarLevelTrigger value="main" asChild aria-label="Back">
+                  <a
+                    href={`#${last}`}
+                    onClick={() => {
+                      go(last);
+                    }}
+                  />
+                </SidebarLevelTrigger>
+                <SidebarLevelTitle
+                  asChild
+                  isActive={path === "settings/general"}
+                >
+                  <a
+                    href="#settings/general"
+                    onClick={() => {
+                      go("settings/general");
+                    }}
+                  >
+                    <Icon icon={SettingsIcon} />
+                    Settings
+                  </a>
                 </SidebarLevelTitle>
               </SidebarLevelHeader>
               <SidebarContent aria-label="Settings">

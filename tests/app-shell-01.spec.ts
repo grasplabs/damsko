@@ -1,7 +1,11 @@
 import { expect, test } from "@playwright/test";
 import type { Locator, Page } from "@playwright/test";
 
-import { openExample, openExampleAsleep } from "./example.ts";
+import {
+  listenToLiveRegions,
+  openExample,
+  openExampleAsleep,
+} from "./example.ts";
 
 const TOGGLE = "Show or hide the sidebar";
 const PANEL = "Show or hide the panel";
@@ -259,6 +263,22 @@ test.describe("with motion", () => {
     page,
   }) => {
     await openExample(page, "patterns", "chat-page");
+    const sidebar = page.getByRole("complementary", { name: "Sidebar" });
+    const fold = sidebar.getByRole("button", { name: TOGGLE });
+    await fold.focus();
+    await page.keyboard.press("Enter");
+    const barFold = page
+      .getByRole("main")
+      .getByRole("button", { name: TOGGLE });
+    await expect(barFold).toBeFocused();
+    await page.keyboard.press("Enter");
+    await expect(fold).toBeFocused();
+  });
+
+  test("focus follows the fold past a working mark in the sidebar, which moves for ever", async ({
+    page,
+  }) => {
+    await openExample(page, "app-shell-01", "frame");
     const sidebar = page.getByRole("complementary", { name: "Sidebar" });
     const fold = sidebar.getByRole("button", { name: TOGGLE });
     await fold.focus();
@@ -646,4 +666,289 @@ test("a slow page keeps its bar and says once that it is loading; a missing or f
   ).toBeVisible();
   await main.getByRole("button", { name: "Try again" }).click();
   await expect(loading).toBeVisible();
+});
+
+test("the view switch is one tab stop: the arrows move and choose, the Inbox's count is said, and its rows take the list's place", async ({
+  page,
+}) => {
+  await openExample(page, "app-shell-01", "frame");
+  const sidebar = page.getByRole("complementary", { name: "Sidebar" });
+  const views = sidebar.getByRole("tablist", { name: "Views" });
+  const home = views.getByRole("tab", { name: "Home" });
+  const inbox = views.getByRole("tab", { name: "Inbox 4 things wait" });
+  await expect(home).toHaveAttribute("aria-selected", "true");
+  await expect(inbox).toHaveAttribute("tabindex", "-1");
+  await home.focus();
+  await page.keyboard.press("ArrowRight");
+  await expect(inbox).toBeFocused();
+  await expect(inbox).toHaveAttribute("aria-selected", "true");
+  const panel = sidebar.getByRole("tabpanel", { name: "Inbox 4 things wait" });
+  await expect(
+    panel.getByRole("navigation", { name: "Inbox" }).getByRole("link", {
+      name: "The agreement on handling data is not signed yet.",
+    })
+  ).toBeVisible();
+  await page.keyboard.press("Home");
+  await expect(home).toHaveAttribute("aria-selected", "true");
+  await expect(sidebar.getByRole("navigation", { name: "Main" })).toBeVisible();
+});
+
+test("a row says its count, its time, the Working mark and the unread dot in words; a group folds, and is a landmark of its own", async ({
+  page,
+}) => {
+  await openExample(page, "app-shell-01", "frame");
+  const sidebar = page.getByRole("complementary", { name: "Sidebar" });
+  await expect(
+    sidebar.getByRole("link", { name: "Answering Acme 3 things wait" })
+  ).toBeVisible();
+  await expect(
+    sidebar.getByRole("link", { name: "Q3 numbers 2h ago Working" })
+  ).toBeVisible();
+  await expect(
+    sidebar.getByRole("link", { name: "Kickoff notes 1d ago Unread" })
+  ).toBeVisible();
+  const organisations = sidebar.getByRole("navigation", {
+    name: "Organisations",
+  });
+  const fold = organisations.getByRole("button", { name: "Organisations 2" });
+  await expect(fold).toHaveAttribute("aria-expanded", "true");
+  await fold.click();
+  await expect(fold).toHaveAttribute("aria-expanded", "false");
+  await expect(
+    organisations.getByRole("link", { name: /Answering Acme/u })
+  ).toBeHidden();
+});
+
+test("a row's menu, from its dots or a right-click, renames it in place; F2 does too, and Escape keeps the name", async ({
+  page,
+}) => {
+  await openExample(page, "app-shell-01", "frame");
+  const sidebar = page.getByRole("complementary", { name: "Sidebar" });
+  const row = sidebar.getByRole("link", { name: /^Hiring plan/u });
+  await row.hover();
+  await sidebar.getByRole("button", { name: "More for Hiring plan" }).click();
+  await page.getByRole("menuitem", { name: "Rename" }).click();
+  const field = page.getByRole("textbox", { name: "Rename Hiring plan" });
+  await expect(field).toBeFocused();
+  await field.fill("Hiring plan 2027");
+  await page.keyboard.press("Enter");
+  const renamed = sidebar.getByRole("link", { name: /^Hiring plan 2027/u });
+  await expect(renamed).toBeFocused();
+  await page.keyboard.press("F2");
+  await page
+    .getByRole("textbox", { name: "Rename Hiring plan 2027" })
+    .fill("Gone");
+  await page.keyboard.press("Escape");
+  await expect(renamed).toBeVisible();
+  await expect(renamed).toBeFocused();
+  await renamed.click({ button: "right" });
+  await page.getByRole("menuitem", { name: "Delete" }).click();
+  await expect(renamed).toHaveCount(0);
+});
+
+test("an organisation's level heads itself with Back and its name as one row, its name the level's own first page", async ({
+  page,
+}) => {
+  await openExample(page, "app-shell-01", "frame");
+  const sidebar = page.getByRole("complementary", { name: "Sidebar" });
+  await sidebar
+    .getByRole("link", { name: "Answering Acme 3 things wait" })
+    .click();
+  const name = sidebar.getByRole("heading", {
+    level: 2,
+    name: "Answering Acme",
+  });
+  await expect(name.getByRole("link")).toHaveAttribute("aria-current", "page");
+  const back = sidebar.getByRole("link", { name: "Back" });
+  const [backBox, nameBox] = await Promise.all([
+    back.boundingBox(),
+    name.boundingBox(),
+  ]);
+  // One row: Back and the name stand side by side, on the same line.
+  expect(Math.abs((backBox?.y ?? 0) - (nameBox?.y ?? 1))).toBeLessThan(2);
+  await back.click();
+  await expect(sidebar.getByRole("navigation", { name: "Main" })).toBeVisible();
+});
+
+test("the person at the foot opens their menu: presses, the theme as segments the arrows choose, a submenu of choices", async ({
+  page,
+}) => {
+  await openExample(page, "app-shell-01", "frame");
+  const person = page
+    .getByRole("complementary", { name: "Sidebar" })
+    .getByRole("button", { name: "Anna de Vries" });
+  await person.click();
+  const menu = page.getByRole("menu");
+  await expect(menu.getByRole("menuitem", { name: "Settings" })).toBeVisible();
+  const theme = menu.getByRole("group", { name: "Appearance" });
+  await expect(
+    theme.getByRole("menuitemradio", { name: "System" })
+  ).toHaveAttribute("aria-checked", "true");
+  await theme.getByRole("menuitemradio", { name: "Dark" }).focus();
+  await page.keyboard.press("ArrowLeft");
+  await expect(
+    theme.getByRole("menuitemradio", { name: "Light" })
+  ).toHaveAttribute("aria-checked", "true");
+  await expect(menu.getByRole("menuitem", { name: "Sign out" })).toBeVisible();
+  await menu.getByRole("menuitem", { name: "Switch organisation" }).click();
+  await expect(
+    page.getByRole("menuitemradio", { name: "Northwind Finance" })
+  ).toHaveAttribute("aria-checked", "true");
+});
+
+test("a row's menu opens from the keys too: Shift+F10 on its link", async ({
+  page,
+}) => {
+  await openExample(page, "app-shell-01", "frame");
+  const sidebar = page.getByRole("complementary", { name: "Sidebar" });
+  await sidebar.getByRole("link", { name: /^Hiring plan/u }).focus();
+  await page.keyboard.press("Shift+F10");
+  await expect(page.getByRole("menuitem", { name: "Rename" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(
+    sidebar.getByRole("link", { name: /^Hiring plan/u })
+  ).toBeFocused();
+});
+
+test("a rename saves as the field is left, keeps the name when blank, and waits while a word is being composed", async ({
+  page,
+}) => {
+  await openExample(page, "app-shell-01", "frame");
+  const sidebar = page.getByRole("complementary", { name: "Sidebar" });
+  await sidebar.getByRole("link", { name: /^Hiring plan/u }).dblclick();
+  const field = page.getByRole("textbox", { name: "Rename Hiring plan" });
+  await field.fill("Hiring");
+  await page.getByRole("heading", { level: 1 }).click();
+  await expect(
+    sidebar.getByRole("link", { name: /^Hiring 3d/u })
+  ).toBeVisible();
+  await sidebar.getByRole("link", { name: /^Hiring 3d/u }).dblclick();
+  const again = page.getByRole("textbox", { name: "Rename Hiring" });
+  await again.fill("   ");
+  await page.keyboard.press("Enter");
+  await expect(
+    sidebar.getByRole("link", { name: /^Hiring 3d/u })
+  ).toBeVisible();
+  await sidebar.getByRole("link", { name: /^Hiring 3d/u }).dblclick();
+  const composing = page.getByRole("textbox", { name: "Rename Hiring" });
+  await composing.fill("Hiring plan");
+  await composing.evaluate((input) => {
+    input.dispatchEvent(
+      new KeyboardEvent("keydown", {
+        key: "Enter",
+        isComposing: true,
+        bubbles: true,
+      })
+    );
+  });
+  await expect(composing).toBeVisible();
+  await page.keyboard.press("Enter");
+  await expect(
+    sidebar.getByRole("link", { name: /^Hiring plan 3d/u })
+  ).toBeVisible();
+});
+
+test("rows are kept by their ids: of two rows of one name, only the one renamed changes", async ({
+  page,
+}) => {
+  await openExample(page, "app-shell-01", "frame");
+  const sidebar = page.getByRole("complementary", { name: "Sidebar" });
+  const second = sidebar.getByRole("link", { name: /^Untitled 5d/u });
+  await second.focus();
+  await page.keyboard.press("F2");
+  await page.getByRole("textbox", { name: "Rename Untitled" }).fill("Budget");
+  await page.keyboard.press("Enter");
+  await expect(
+    sidebar.getByRole("link", { name: /^Budget 5d/u })
+  ).toBeVisible();
+  await expect(
+    sidebar.getByRole("link", { name: /^Untitled 4d/u })
+  ).toBeVisible();
+});
+
+test("deleting a row from its menu leaves focus in the list, on the next row", async ({
+  page,
+}) => {
+  await openExample(page, "app-shell-01", "frame");
+  const sidebar = page.getByRole("complementary", { name: "Sidebar" });
+  await sidebar.getByRole("link", { name: /^Hiring plan/u }).focus();
+  await page.keyboard.press("Shift+F10");
+  await page.getByRole("menuitem", { name: "Delete" }).click();
+  await expect(
+    sidebar.getByRole("link", { name: /^Hiring plan/u })
+  ).toHaveCount(0);
+  await expect(
+    sidebar.getByRole("link", { name: /^Untitled 4d/u })
+  ).toBeFocused();
+});
+
+test("a count is said again when it changes: a note read leaves one less waiting", async ({
+  page,
+}) => {
+  const said = await listenToLiveRegions(page);
+  await openExample(page, "app-shell-01", "frame");
+  const sidebar = page.getByRole("complementary", { name: "Sidebar" });
+  await sidebar
+    .getByRole("link", { name: /^Kickoff notes 1d ago Unread/u })
+    .click();
+  await expect(
+    sidebar.getByRole("tab", { name: "Inbox 3 things wait" })
+  ).toBeVisible();
+  await expect.poll(said).toContain("3 things wait");
+});
+
+test("a group's fold is kept for the next visit", async ({ page }) => {
+  await openExample(page, "app-shell-01", "frame");
+  const sidebar = page.getByRole("complementary", { name: "Sidebar" });
+  const labs = sidebar.getByRole("button", { name: "Labs" });
+  await expect(labs).toHaveAttribute("aria-expanded", "true");
+  await labs.click();
+  await expect(labs).toHaveAttribute("aria-expanded", "false");
+  await page.reload();
+  await expect(
+    page
+      .getByRole("complementary", { name: "Sidebar" })
+      .getByRole("button", { name: "Labs" })
+  ).toHaveAttribute("aria-expanded", "false");
+});
+
+test("a row's own control stands at its end; a row without words of its own says its count as the number", async ({
+  page,
+}) => {
+  await openExample(page, "app-shell-01", "frame");
+  const sidebar = page.getByRole("complementary", { name: "Sidebar" });
+  await expect(
+    sidebar.getByRole("link", {
+      name: "Brightwater is not read now. Open its Setup",
+    })
+  ).toBeVisible();
+  await sidebar
+    .getByRole("link", { name: "Answering Acme 3 things wait" })
+    .click();
+  await expect(sidebar.getByRole("link", { name: "People 2" })).toBeVisible();
+});
+
+test("the person's row says their name and the line under it; the search's keys are Cmd+K or Ctrl+K", async ({
+  page,
+}) => {
+  await openExample(page, "app-shell-01", "frame");
+  const sidebar = page.getByRole("complementary", { name: "Sidebar" });
+  await expect(
+    sidebar.getByRole("button", { name: "Anna de Vries Northwind Finance" })
+  ).toBeVisible();
+  await expect(sidebar.getByRole("button", { name: "Search" })).toHaveAttribute(
+    "aria-keyshortcuts",
+    /^(?:Meta|Control)\+K$/u
+  );
+});
+
+test("on a phone a row that acts closes the sheet, as a link followed does", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await openExample(page, "app-shell-01", "frame");
+  await page.getByRole("button", { name: TOGGLE }).click();
+  const sheet = page.getByRole("dialog", { name: "Sidebar" });
+  await sheet.getByRole("button", { name: "All notes" }).click();
+  await expect(sheet).toBeHidden();
 });

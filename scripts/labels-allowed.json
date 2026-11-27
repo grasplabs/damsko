@@ -1,4 +1,13 @@
 {
+  "src/blocks/app-shell-01/app-shell-01-sidebar.tsx#AppShellNavGroup.label": "data",
+  "src/blocks/app-shell-01/app-shell-01-sidebar.tsx#AppShellNavMore.label": "data",
+  "src/blocks/app-shell-01/app-shell-01-sidebar.tsx#AppShellNavSubRow.label": "data",
+  "src/blocks/app-shell-01/app-shell-01-sidebar.tsx#AppShellProfileAction.label": "data",
+  "src/blocks/app-shell-01/app-shell-01-sidebar.tsx#AppShellProfileChoice.label": "data",
+  "src/blocks/app-shell-01/app-shell-01-sidebar.tsx#AppShellProfileChoices.label": "data",
+  "src/blocks/app-shell-01/app-shell-01-sidebar.tsx#AppShellProfileTheme.label": "data",
+  "src/blocks/app-shell-01/app-shell-01-sidebar.tsx#AppShellRowAction.label": "data",
+  "src/blocks/app-shell-01/app-shell-01-sidebar.tsx#AppShellTab.label": "data",
   "src/blocks/app-shell-01/app-shell-01.tsx#AppShellCrumb.label": "data",
   "src/blocks/connect-api-key-01/connect-api-key-01.tsx#ConnectApiKeyProps.labels": "words",
   "src/blocks/connect-api-key-01/connect-api-key-01.tsx#ConnectApiKeyProvider.addressLabel": "data",
